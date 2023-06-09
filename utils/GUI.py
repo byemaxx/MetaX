@@ -445,7 +445,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
     
     def show_func_threshold_help(self):
-        QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, default 1 (100%).')
+        QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, it will be considered a representative function of that peptide. The default is 1.00 (100%).')
 
     # database builder help
     def show_toolButton_db_type_help(self):

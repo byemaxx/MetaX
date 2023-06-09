@@ -251,10 +251,7 @@ class TaxaFuncAnalyzer:
 
 
 
-
-    def get_stats_anova(self, group_list: list = None) -> pd.DataFrame:
-
-
+    def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func') -> pd.DataFrame:
         group_list_all = sorted(set(self.get_meta_list(self.meta_name)))
 
         if group_list is None:
@@ -263,43 +260,55 @@ class TaxaFuncAnalyzer:
             raise ValueError(f"groups must be in {group_list_all}")
         if len(group_list) <= 2:
             raise ValueError(
-                "groups must be more than 2 for ANOVA test， please use t-test")
+                "groups must be more than 2 for ANOVA test, please use t-test")
 
-        func_name = self.func
-        res = {"Taxon": [], func_name: [], "P-value": [], "f-statistic": []}
+        all_sample_list = [sample for group in group_list for sample in self.get_sample_list_in_a_group(group)]
 
-        print(f"ANOVA test for Taxon-{func_name} in {group_list}")
-        for row in tqdm(self.taxa_func_df.iterrows(), total=len(self.taxa_func_df)):
-            taxon = row[0][0]
-            res["Taxon"].append(taxon)
-            func = row[0][1]
-            res[func_name].append(func)
-            list_for_anova = []
+        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
+            if df_type == 'taxa-func':
+                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func
+            elif df_type == 'func-taxa':
+                df, primary, secondary = self.func_taxa_df, self.func, 'Taxon'
+            elif df_type == 'taxa':
+                df, primary = self.taxa_df, 'Taxon'
+            elif df_type == 'func':
+                df, primary = self.func_df, self.func
 
-            for group in group_list:
-                sample_list = self.get_sample_list_in_a_group(group)
-                list_for_anova.append(row[1][sample_list].to_list())
+            print(f"ANOVA test for {primary} in {group_list}")
 
-            f, p = f_oneway(*list_for_anova)
-            res["P-value"].append(p)
-            res["f-statistic"].append(f)
+            res = {primary: [], "P-value": [], "f-statistic": []}
+            if df_type in ['taxa-func', 'func-taxa']:
+                res[secondary] = []
 
-        res = pd.DataFrame(res)
-        res_all = pd.merge(self.taxa_func_df, res, on=['Taxon', func_name])
-        res_all.index = self.taxa_func_df.index
-        all_sample_list = []
-        for i in group_list:
-            all_sample_list += self.get_sample_list_in_a_group(i)
-        res_all = res_all[['P-value', 'f-statistic'] + all_sample_list]
+            for row in tqdm(df.iterrows(), total=len(df)):
+                primary_value = row[0]
+                if df_type in ['taxa-func', 'func-taxa']:
+                    primary_value = row[0][0]
+                    secondary_value = row[0][1]
+                    res[secondary].append(secondary_value)
 
-        return res_all
+                res[primary].append(primary_value)
+
+                list_for_anova = [row[1][self.get_sample_list_in_a_group(group)].to_list() for group in group_list]
+
+                f, p = f_oneway(*list_for_anova)
+                res["P-value"].append(p)
+                res["f-statistic"].append(f)
+
+            res = pd.DataFrame(res)
+            on_values = [primary]
+            if df_type in ['taxa-func', 'func-taxa']:
+                on_values.append(secondary)
+            res_all = pd.merge(df, res, on=on_values)
+            res_all.index = df.index
+            res_all = res_all[['P-value', 'f-statistic'] + all_sample_list]
+            return res_all
 
     def set_anova(self, group_list: list = None):
         df_anova = self.get_stats_anova(group_list)
         self.anova_df = df_anova
-
-    def get_stats_ttest(self, group_list: list = None) -> pd.DataFrame:
-
+        
+    def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
 
         group_list_all = sorted(set(self.get_meta_list(self.meta_name)))
 
@@ -310,34 +319,47 @@ class TaxaFuncAnalyzer:
         if len(group_list) != 2:
             raise ValueError("groups must be 2")
 
-        func_name = self.func
-        res = {"Taxon": [], func_name: [], "P-value": [], "t-statistic": []}
+        all_sample_list = [sample for group in group_list for sample in self.get_sample_list_in_a_group(group)]
 
-        print(f"t-test for Taxon-{func_name} in {group_list}")
-        for row in tqdm(self.taxa_func_df.iterrows(), total=len(self.taxa_func_df)):
-            taxon = row[0][0]
-            res["Taxon"].append(taxon)
-            func = row[0][1]
-            res[func_name].append(func)
-            list_for_ttest = []
+        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
+            if df_type == 'taxa-func':
+                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func
+            elif df_type == 'func-taxa':
+                df, primary, secondary = self.func_taxa_df, self.func, 'Taxon'
+            elif df_type == 'taxa':
+                df, primary = self.taxa_df, 'Taxon'
+            elif df_type == 'func':
+                df, primary = self.func_df, self.func
 
-            for group in group_list:
-                sample_list = self.get_sample_list_in_a_group(group)
-                list_for_ttest.append(row[1][sample_list].to_list())
+            print(f"t-test for {primary} in {group_list}")
 
-            t, p = ttest_ind(*list_for_ttest)
-            res["P-value"].append(p)
-            res["t-statistic"].append(t)
-        res = pd.DataFrame(res)
-        res_all = pd.merge(self.taxa_func_df, res, on=['Taxon', func_name])
-        res_all.index = self.taxa_func_df.index
-        all_sample_list = []
-        for i in group_list:
-            all_sample_list += self.get_sample_list_in_a_group(i)
-        res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
+            res = {primary: [], "P-value": [], "t-statistic": []}
+            if df_type in ['taxa-func', 'func-taxa']:
+                res[secondary] = []
 
-        return res_all
+            for row in tqdm(df.iterrows(), total=len(df)):
+                primary_value = row[0]
+                if df_type in ['taxa-func', 'func-taxa']:
+                    primary_value = row[0][0]
+                    secondary_value = row[0][1]
+                    res[secondary].append(secondary_value)
 
+                res[primary].append(primary_value)
+
+                list_for_ttest = [row[1][self.get_sample_list_in_a_group(group)].to_list() for group in group_list]
+
+                t, p = ttest_ind(*list_for_ttest)
+                res["P-value"].append(p)
+                res["t-statistic"].append(t)
+
+            res = pd.DataFrame(res)
+            on_values = [primary]
+            if df_type in ['taxa-func', 'func-taxa']:
+                on_values.append(secondary)
+            res_all = pd.merge(df, res, on=on_values)
+            res_all.index = df.index
+            res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
+            return res_all
     # input: a taxon with its function, a function with its taxon,
     # and the peptides in the function or taxon
     # output: a matrix of the intensity of the taxon or function or peptide in each sample
