@@ -9,7 +9,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('HTML Viewer')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setMinimumSize(1280, 720)
+        self.setMinimumSize(1400, 800)
         
         self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
 

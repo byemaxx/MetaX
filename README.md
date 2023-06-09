@@ -1,0 +1,44 @@
+# MetaX
+## Install
+## Usage
+## Change log
+- 2023-06-08:
+    - Version: 1.1.0 :
+        -add Heatmap Plot in Basic Part, Now it can plot any function or taxa indpendent.
+    - Version: 1.0.9 :
+        - move 2 baisc plot to the data overview tab
+        - made a offset if  use Z-Score, Mean centering and Pareto Scaling data normalization to avoid negative values.
+- 2023-06-07:
+    - Version: 1.0.8 :
+        - add all MGnify database to the database builder
+    - Version: 1.0.7 :
+        - All taxa level can be selected in taxaFuncAnalyzer from species to life
+    - Version: 1.0.6 :
+        - change thr baisc plot return to basic tab due to the logics of the function stastics
+        - move T-Test, ANOVA, Tukey to the Cross TEST tab
+        - fix the bug of table export
+    - Version: 1.0.5 :
+        - Fix the bug of ceck_tables_for_taxaFuncAnalyzer
+- 2023-06-06:
+    - Version: 1.0.4 :
+        - modify the layout of diffrent analysis
+        - modifed the way to show the basic plot(using MatplotlibWidget)
+- 2023-06-05:
+    - Version: 1.0.3 :
+        - add network plot
+        - change the way to show the sankey and network plot(using webDialog)
+- 2023-05-29:
+    - Version: 1.0.2 : 
+        - add function to check the table of TaxaFuncAnalyzer and MetaTable
+        - add tiltle for each page
+- 2023-05-27:
+    - Version: 1.0.1 : 
+        - switch tab_widget to stck page when click menu bar
+        - change name to MetaX from TaxaFuncExplorer
+        - show linked number of taxa and function in taxaFuncAnalyzer-others
+        - add function to drag set the order of data pre-processing
+- 2023-05-26: 
+    - add function threshold for set multi table
+    - show number of taxa and function and taxa-function after set multi table
+- 2023-05-19:
+    - Version: 1.0 release

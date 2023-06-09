@@ -1,43 +1,8 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of TaxaFuncExplore
-# Date: 2023-05-19
-# Version: 1.0
-# change logs:
-# 2023-05-26: 
-# 1. add function threshold for set multi table
-# 2. show number of taxa and function and taxa-function after set multi table
-# 2023-05-27:
-# Version: 1.0.1 : 
-# 1.switch tab_widget to stck page when click menu bar
-# 2. change name to MetaX from TaxaFuncExplorer
-# 3. show linked number of taxa and function in taxaFuncAnalyzer-others
-# 4. add function to drag set the order of data pre-processing
-# 2023-05-29:
-# Version: 1.0.2 : 
-# 1. add function to check the table of TaxaFuncAnalyzer and MetaTable
-# 2. add tiltle for each page
-# 2023-06-05:
-# Version: 1.0.3 :
-# 1. add network plot
-# 2. change the way to show the sankey and network plot(using webDialog)
-# 2023-06-06:
-# Version: 1.0.4 :
-# 1. modify the layout of diffrent analysis
-# 2. modifed the way to show the basic plot(using MatplotlibWidget)
-# 2023-06-07:
-# Version: 1.0.5 :
-# 1. Fix the bug of ceck_tables_for_taxaFuncAnalyzer
-# Version: 1.0.6 :
-# 1. change thr baisc plot return to basic tab due to the logics of the function stastics
-# 2. move T-Test, ANOVA, Tukey to the Cross TEST tab
-# 3. fix the bug of table export
-# Version: 1.0.7 :
-# 1. All taxa level can be selected in taxaFuncAnalyzer from species to life
-# Version: 1.0.8 :
-# 1. add all MGnify database to the database builder
 
 
-__version__ = '1.0.8'
+__version__ = '1.1.0'
 
 # import built-in python modules
 import os
@@ -109,12 +74,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
-        self.MainWindow.resize(1200, 800)
+        self.MainWindow.resize(1360, 850)
 
         self.last_path = os.path.join(QDir.homePath(), 'Desktop')
         self.table_dict = {}
         self.table_dialogs = []
         self.web_list = []
+        self.basic_heatmap_list = []
 
         self.tf = None
 
@@ -151,6 +117,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
         self.toolButton__final_peptide_help.clicked.connect(self.show_toolButton_final_peptide_help)
         self.toolButton_lca_threshould_help.clicked.connect(self.show_toolButton_lca_threshould_help)
+        self.pushButton_preprocessing_help.clicked.connect(self.show_pushButton_preprocessing_help)
+        self.pushButton_func_threshold_help.clicked.connect(self.show_func_threshold_help)
+        
+
 
 
 
@@ -169,8 +139,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
 
-        ## PCA Stat
+        ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(self.plot_pca_sns)
+        ### Heatmap
+        self.radioButton_basic_heamap_function.toggled.connect(self.click_basic_heatmap_func)
+        self.radioButton_basic_heatmap_taxa.toggled.connect(self.click_basic_heatmap_taxa)
+        self.pushButton_basic_heatmap_add.clicked.connect(self.add_basic_heatmap_list)
+        self.pushButton_basic_heatmap_drop_item.clicked.connect(self.drop_basic_heatmap_list)
+        self.pushButton_basic_heatmap_clean_list.clicked.connect(self.clean_basic_heatmap_list)
+        self.pushButton_basic_heatmap_plot.clicked.connect(self.plot_basic_list_heatmap)
+
+
 
         ## Differential Analysis
         self.comboBox_top_heatmap_table_dict = {}
@@ -281,7 +260,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def open_output_window(self, func_class, *args, **kwargs):
         self.output_window = OutputWindow(func_class, self, *args, **kwargs)
         self.output_window.show()
-
+    
     def update_network_combobox(self):
         self.comboBox_network_group = CheckableComboBox()
         self.comboBox_network_sample = CheckableComboBox()
@@ -455,14 +434,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         msg_box.addButton(QMessageBox.Cancel)
         switch_button.clicked.connect(self.swith_stack_page_dbuilder)
         msg_box.exec_()
-
+    def show_pushButton_preprocessing_help(self):
+        QMessageBox.information(self.MainWindow, 'Preprocessing Help', 'If you use Z-Score, Mean centering and Pareto Scaling data normalization, the data will be given a minimum offset again to avoid negative values.')
+                                
     def show_toolButton_final_peptide_help(self):
-
         QMessageBox.information(self.MainWindow, 'Final Peptide Help',
-                                 '1. Peptide table can be found in MetaLab-MAG results folder (final_peptides.tsv)\n\n2. You can also crete it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of UHGG (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
+                                 'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
                                     
     def show_toolButton_lca_threshould_help(self):
-        QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'LCA Threshold is the threshold of proportion of LCA in each protein group, default is 1.0')
+        QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
+    
+    def show_func_threshold_help(self):
+        QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, default 1 (100%).')
 
     # database builder help
     def show_toolButton_db_type_help(self):
@@ -526,11 +509,21 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # set comboBox_function_to_stast
             meta_list = self.tf.meta_df.columns.tolist()[1:]
+            self.comboBox_meta_to_stast.clear()
             for i in range(len(meta_list)):
                 self.comboBox_meta_to_stast.addItem(meta_list[i])
                 self.comboBox_remove_batch_effect.addItem(meta_list[i])
-            
 
+            # Remove all items from the layout
+            while self.verticalLayout_overview_plot.count():
+                item = self.verticalLayout_overview_plot.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+            # plot adn add baic info figure to dataOverview tab
+            self.plot_taxa_stats()
+            self.plot_taxa_number()
+            
             # enable basic button
             self.enable_basic_button()
             # go to original table tab
@@ -604,15 +597,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             
             # Remove all items from the layout
-            while self.verticalLayout_basic_plot_all.count():
-                item = self.verticalLayout_basic_plot_all.takeAt(0)
+            while self.verticalLayout_basic_plot.count():
+                item = self.verticalLayout_basic_plot.takeAt(0)
                 widget = item.widget()
                 if widget:
                     widget.deleteLater()
 
             # plot basic stats
-            self.plot_taxa_number()
-            self.plot_taxa_stats()
+
             self.plot_prop_stats()
 
 
@@ -640,11 +632,43 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         except:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
+    
+    def click_basic_heatmap_func(self):
+        self.listWidget_list_for_ploting.clear()
+        self.basic_heatmap_list = []
+        self.update_basic_heatmap_combobox(type_list = 'function')
+    def click_basic_heatmap_taxa(self):
+        self.listWidget_list_for_ploting.clear()
+        self.basic_heatmap_list = []
+        self.update_basic_heatmap_combobox(type_list = 'taxa')
+
+    def drop_basic_heatmap_list(self):
+        slecetion = self.listWidget_list_for_ploting.selectedItems()
+        if len(slecetion) == 0:
+            return
+        item = slecetion[0]
+        self.listWidget_list_for_ploting.takeItem(self.listWidget_list_for_ploting.row(item))
+        self.basic_heatmap_list.remove(item.text())
+    
+    def update_basic_heatmap_combobox(self, type_list = 'taxa'):
+        self.comboBox_basic_heatmap_selection_list.clear()
+        if type_list == 'taxa':
+            taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+            self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
+            self.comboBox_basic_heatmap_selection_list.addItems(taxa_list)
+        elif type_list == 'function':
+            function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
+            self.comboBox_basic_heatmap_selection_list.addItems(function_list)
 
     def update_func_taxa_group_to_combobox(self):
         # reset other taxa and function lebel
         self.label_others_func_num.setText('Linked Number: -')
         self.label_others_taxa_num.setText('Linked Number: -')
+
+        #reset tukey taxa and function lebel
+        self.label_tukey_func_num.setText('Linked Number: -')
+        self.label_tukey_taxa_num.setText('Linked Number: -')
 
         # set function  and taxa list
         function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
@@ -662,9 +686,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # taxa_list = [''] + taxa_list
 
         self.comboBox_tukey_taxa.clear()
+        self.comboBox_tukey_taxa.addItem('')
         self.comboBox_tukey_taxa.addItems(taxa_list)
 
         self.comboBox_others_taxa.clear()
+        self.comboBox_others_taxa.addItem('')
         self.comboBox_others_taxa.addItems(taxa_list)
 
         # set group list
@@ -681,17 +707,30 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # create the CheckableComboBox
         self.comboBox_others_group = CheckableComboBox()
         self.comboBox_anova_group = CheckableComboBox()
+        self.comboBox_basic_group = CheckableComboBox()
         try:
-            self.gridLayout_20.itemAt(0).widget().deleteLater()
+            self.gridLayout_tflink_group.itemAt(0).widget().deleteLater()
+        except Exception as e:
+            print(e)
+        try:
             self.horizontalLayout_anova_group.itemAt(0).widget().deleteLater()
-        except:
-            pass
-        self.gridLayout_20.addWidget(self.comboBox_others_group)
+        except Exception as e:
+            print(e)
+        try:
+            self.verticalLayout_basic_heatmap_group.itemAt(0).widget().deleteLater()
+        except Exception as e:
+            print(e)
+        self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
         self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
+        self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
+        # clean basic heatmap selection list
+        self.clean_basic_heatmap_list()
+        self.comboBox_basic_heatmap_selection_list.clear()
 
         for group in group_list:
             self.comboBox_others_group.addItem(group)
             self.comboBox_anova_group.addItem(group)
+            self.comboBox_basic_group.addItem(group)
 
     def show_others_linked(self):
         func = self.comboBox_others_func.currentText()
@@ -712,52 +751,39 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.comboBox_others_taxa.clear()
                 self.comboBox_others_taxa.addItems(taxa)
         except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', str(e))
+            QMessageBox.warning(self.MainWindow, 'Warning', f"No data! Please check your input.\n\n{e}")
     
+    def update_combobox_and_label(self, current_text, df, label, comboBox):
+        try:
+            df_row = df.loc[current_text, :]
+            items = df_row.index.tolist()
+            num_items = len(items)
+            label.setText(f"Linked Number: {num_items}")
+            comboBox.clear()
+            comboBox.addItem('')
+            comboBox.addItems(items)
+        except Exception as e:
+            self.show_update_link_error_message(str(e))
+
+    def show_update_link_error_message(self, message):
+        QMessageBox.warning(self.MainWindow, 'Warning', f"No data! Please check your input.\n\n{message}")
+
     def show_others_linked_taxa(self):
-        func = self.comboBox_others_func.currentText()
-        try:
-            df = self.tf.func_taxa_df.loc[func, :]
-            taxa =  df.index.tolist()
-            taxa_num = len(taxa)
-            self.label_others_taxa_num.setText(f"Linked Number: {taxa_num}")
-            self.comboBox_others_taxa.clear()
-            self.comboBox_others_taxa.addItem('')
-            self.comboBox_others_taxa.addItems(taxa)
-        except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', str(e))
+        current_text = self.comboBox_others_func.currentText()
+        self.update_combobox_and_label(current_text, self.tf.func_taxa_df, self.label_others_taxa_num, self.comboBox_others_taxa)
+
     def show_others_linked_func(self):
-        taxa = self.comboBox_others_taxa.currentText()
-        try:
-            df = self.tf.taxa_func_df.loc[taxa, :]
-            func = df.index.tolist()
-            func_mun = len(func)
-            self.label_others_func_num.setText(f"Linked Number: {func_mun}")
-            self.comboBox_others_func.clear()
-            # add empty item to comboBox as default
-            self.comboBox_others_func.addItem('')
-            self.comboBox_others_func.addItems(func)
-        except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', str(e))
+        current_text = self.comboBox_others_taxa.currentText()
+        self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_others_func_num, self.comboBox_others_func)
 
     def show_tukey_linked_taxa(self):
-        func = self.comboBox_tukey_func.currentText()
-        try:
-            df = self.tf.func_taxa_df.loc[func, :]
-            taxa = df.index.tolist()
-            self.comboBox_tukey_taxa.clear()
-            self.comboBox_tukey_taxa.addItems(taxa)
-        except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', str(e))
+        current_text = self.comboBox_tukey_func.currentText()
+        self.update_combobox_and_label(current_text, self.tf.func_taxa_df, self.label_tukey_taxa_num, self.comboBox_tukey_taxa)
+
     def show_tukey_linked_func(self):
-        taxa = self.comboBox_tukey_taxa.currentText()
-        try:
-            df = self.tf.taxa_func_df.loc[taxa, :]
-            func = df.index.tolist()
-            self.comboBox_tukey_func.clear()
-            self.comboBox_tukey_func.addItems(func)
-        except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', str(e))       
+        current_text = self.comboBox_tukey_taxa.currentText()
+        self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_tukey_func_num, self.comboBox_tukey_func)
+
 
     def enable_multi_button(self):
         self.pushButton_plot_pca_sns.setEnabled(True)
@@ -777,8 +803,98 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_view_table.setEnabled(True)
         self.pushButton_tukey_fresh.setEnabled(True)
         self.pushButton_plot_network.setEnabled(True)
+        self.radioButton_basic_heamap_function.setEnabled(True)
+        self.radioButton_basic_heatmap_taxa.setEnabled(True)
+        self.pushButton_basic_heatmap_add.setEnabled(True)
+        self.pushButton_basic_heatmap_drop_item.setEnabled(True)
+        self.pushButton_basic_heatmap_clean_list.setEnabled(True)
+        self.pushButton_basic_heatmap_plot.setEnabled(True)
+
+    def add_basic_heatmap_list(self):
+        str_selected = self.comboBox_basic_heatmap_selection_list.currentText()
+        if str_selected == 'All Taxa':
+            self.clean_basic_heatmap_list()
+            self.listWidget_list_for_ploting.addItem('All Taxa')
+
+        elif str_selected == 'All Functions':
+            self.clean_basic_heatmap_list()
+            self.listWidget_list_for_ploting.addItem('All Functions')
+
+        if str_selected != '' and str_selected not in self.basic_heatmap_list:
+            if 'All Taxa' in self.basic_heatmap_list:
+                self.basic_heatmap_list.remove('All Taxa')
+            if 'All Functions' in self.basic_heatmap_list:
+                self.basic_heatmap_list.remove('All Functions')
+            self.basic_heatmap_list.append(str_selected)
+            self.listWidget_list_for_ploting.clear()
+            self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
+    
+    def clean_basic_heatmap_list(self):
+        self.basic_heatmap_list = []
+        self.listWidget_list_for_ploting.clear()
+    
+    def plot_basic_list_heatmap(self):
+        group_list = self.comboBox_basic_group.getCheckedItems()
+        width = self.spinBox_basic_heatmap_width.value()
+        height = self.spinBox_basic_heatmap_height.value()
+        scale = self.comboBox_basic_hetatmap_scale.currentText()
+        sample_list = []
+        if group_list == []:
+            sample_list = self.tf.sample_list
+        else:
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        
+        col_cluster = False
+        row_cluster = False
+        if self.checkBox_basic_hetatmap_row_cluster.isChecked():
+            row_cluster = True
+        if self.checkBox_basic_hetatmap_col_cluster.isChecked():
+            col_cluster = True
+        
+
+        if self.radioButton_basic_heamap_function.isChecked():
+            title = 'Function Heatmap'
+            dft = self.tf.func_df.copy()
+        elif self.radioButton_basic_heatmap_taxa.isChecked():
+            title = 'Taxa Heatmap'
+            dft = self.tf.taxa_df.copy()
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Taxa or Function radio button!')
+            return
+        
+        dft = dft[sample_list]
+
+        if len(self.basic_heatmap_list) == 1:
+            if self.basic_heatmap_list[0] == 'All Taxa' or self.basic_heatmap_list[0] == 'All Functions':
+                df = dft
+            else:
+                df = dft.loc[self.basic_heatmap_list]
+        elif len(self.basic_heatmap_list) > 1:
+            df = dft.loc[self.basic_heatmap_list]
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa or function to the list!')
+            return
+        
+        # if exist row all 0, and cluster is True, then delete this row
+        if row_cluster or col_cluster:
+            # check if all 0 row exist
+            if (df==0).all(axis=1).any():
+                df = df.loc[(df!=0).any(axis=1)]
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+        try:
+            HeatmapPlot(self.tf).plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            
+    
 
 
+        
+
+
+        
 
     # baisc stats
     def get_stats_peptide_num_in_taxa(self):
@@ -798,7 +914,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             
             # Add the new MatplotlibWidget
             self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
-            self.verticalLayout_basic_plot_all.addWidget(self.mat_widget_plot_peptide_num)
+            self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
             
     
@@ -817,7 +933,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             pic = BasicPlot(self.tf).plot_taxa_number()
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
-            self.verticalLayout_basic_plot_all.addWidget(self.mat_widget_plot_taxa_num)
+            self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
 
     def get_stats_func_prop(self):
         if self.tf is None:
@@ -835,7 +951,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # Add the new MatplotlibWidget
             self.mat_widget_plot_func_prop = MatplotlibWidget(pic)
-            self.verticalLayout_basic_plot_all.addWidget(self.mat_widget_plot_func_prop)
+            self.verticalLayout_basic_plot.addWidget(self.mat_widget_plot_func_prop)
     
     def plot_pca_sns(self):
         if self.tf is None:
@@ -973,31 +1089,27 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def tukey_test(self):
         taxa = self.comboBox_tukey_taxa.currentText()
         func = self.comboBox_tukey_func.currentText()
-
+        if taxa == '' and func == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one taxa or one function!')
+            return None
+        elif taxa == '' and func != '':
+            taxa = None
+        elif taxa != '' and func == '':
+            func = None
+        
+        self.show_message('Info', 'Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
-            df = self.tf.get_intensity_matrix(taxon_name=taxa, func_name=func)
-            
+            self.pushButton_tukey_test.setEnabled(False)
+            tukey_test = self.tf.get_stats_tukey_test(taxon_name=taxa, func_name=func)
+            self.show_table(tukey_test)
+            self.update_table_dict('tukey_test', tukey_test)
+            self.pushButton_plot_tukey.setEnabled(True)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
-        if df.empty:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
-
-        else:
-            self.show_message('Info', 'Tukey test is running...\n\n It may take a long time! Please wait...')
-            try:
-                self.pushButton_tukey_test.setEnabled(False)
-                tukey_test = self.tf.get_stats_tukey_test(taxon_name=taxa, func_name=func)
-                self.show_table(tukey_test)
-                self.update_table_dict('tukey_test', tukey_test)
-                self.pushButton_plot_tukey.setEnabled(True)
-            except Exception as e:
-                error_message = traceback.format_exc()
-                QMessageBox.warning(self.MainWindow, 'Erro', error_message)
-                return None
-            finally:
-                self.pushButton_tukey_test.setEnabled(True)
+        finally:
+            self.pushButton_tukey_test.setEnabled(True)
 
 
     def plot_tukey(self):
@@ -1204,6 +1316,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
+            return None
 
         title = ''
         params = {}
@@ -1339,6 +1452,10 @@ def runGUI():
     }}
     QComboBox {{
     font-size: 14px;
+    }}
+    QToolBox {{
+    font-size: 16px;
+    font-weight: bold;
     }}
 
     

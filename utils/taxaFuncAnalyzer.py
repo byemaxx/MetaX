@@ -6,7 +6,7 @@
 # change log: Add a function: remove batch effect
 
 
-# from .reComBat import reComBat
+from .reComBat import reComBat
 
 import pandas as pd
 import numpy as np
@@ -158,8 +158,7 @@ class TaxaFuncAnalyzer:
             # display(batch.head())
             # print(Counter(batch))
 
-            # combat = reComBat()
-            combat = None
+            combat = reComBat()
             df_corrected = combat.fit_transform(df_samples.T, batch).T
 
             df_corrected = np.where(df_corrected < 2, 0, df_corrected)
@@ -224,6 +223,9 @@ class TaxaFuncAnalyzer:
                 print(f'Data normalized by {normalize_method}')
             else:
                 raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore]')
+            
+            # shift values by their absolute minimum to ensure all values are non-negative
+            df_mat = df_mat - df_mat.min()
 
             df[self.sample_list] = df_mat
             return df
@@ -487,7 +489,7 @@ class TaxaFuncAnalyzer:
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str, func_name: str):
+    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
@@ -506,6 +508,9 @@ class TaxaFuncAnalyzer:
         else:
             raise ValueError(
                 "Please input the taxon name or the function name or both of them")
+        if df.empty:
+            raise ValueError(
+                "Got empty dataframe, please check the taxon name or the function name")
 
         df = df[self.sample_list]
         Group = []
