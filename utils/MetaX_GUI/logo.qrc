@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="logo">
+    <file>resources/NorthOmics_logo.png</file>
+    <file>resources/tool_logo.png</file>
+  </qresource>
+</RCC>
