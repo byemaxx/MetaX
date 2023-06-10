@@ -8,7 +8,8 @@ class VolcanoPlot():
     # EXAMPLE: fc_df = sw.call_deseq2(sw.func_taxa_df, ['NDC', 'KES'])
     # plot_volcano(fc_df, 0.01, 1, 'NDC VS KES', (8, 6))
 
-    def plot_volcano(self, df, padj=0.05, log2fc=1, title_name='2 groups', figsize=(8, 6)):
+    def plot_volcano(self, df_fc, padj=0.05, log2fc=1, title_name='2 groups', width=8, height=6):
+        df = df_fc.copy()
         # 计算不同类型的样本数并生成新的图例标签
         count_up = len(df[(df['padj'] < padj) & (
             df['log2FoldChange'] > log2fc)])
@@ -42,7 +43,7 @@ class VolcanoPlot():
         plt.close()
 
         # 绘制火山图
-        plt.figure(figsize=figsize)
+        plt.figure(figsize=( width, height))
         fig = sns.scatterplot(x=df['log2FoldChange'], y=-np.log10(df['padj']), s=50, hue=df['type'], alpha=0.6,
                               palette={'up': '#d23918', 'down': '#68945c', 'normal': '#6b798e'}, linewidth=0.5, edgecolor='black')
 
@@ -54,3 +55,5 @@ class VolcanoPlot():
         fig.legend(handles=handles, labels=labels, loc='upper right')
         plt.show()
         return fig
+
+

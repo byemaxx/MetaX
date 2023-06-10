@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>878</width>
+    <width>992</width>
     <height>648</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>406</width>
-                 <height>481</height>
+                 <width>456</width>
+                 <height>451</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -747,8 +747,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>818</width>
-                 <height>446</height>
+                 <width>920</width>
+                 <height>413</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -761,6 +761,14 @@
                </layout>
               </widget>
               <widget class="QWidget" name="page_3">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>257</width>
+                 <height>69</height>
+                </rect>
+               </property>
                <attribute name="label">
                 <string>PCA</string>
                </attribute>
@@ -830,6 +838,14 @@
                </layout>
               </widget>
               <widget class="QWidget" name="page_4">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>535</width>
+                 <height>250</height>
+                </rect>
+               </property>
                <attribute name="label">
                 <string>Heatmap</string>
                </attribute>
@@ -1542,10 +1558,69 @@
                 <string>FoldChange Calculation </string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_16">
+                <item row="3" column="0" colspan="3">
+                 <widget class="Line" name="line">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_4">
                   <property name="text">
                    <string>Table for Analysis</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="QLabel" name="label_17">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Height</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_13">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Log2FC</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QLabel" name="label_14">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>P-Value</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QLineEdit" name="lineEdit_deseq2_log2fc">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>1</string>
                   </property>
                  </widget>
                 </item>
@@ -1588,81 +1663,6 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QComboBox" name="comboBox_deseq2_group1"/>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QComboBox" name="comboBox_deseq2_group2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0" colspan="3">
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0">
-                 <widget class="QLabel" name="label_13">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Log2FC</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="1">
-                 <widget class="QLabel" name="label_14">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>P-Value</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="2" rowspan="2">
-                 <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Vocano</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="0">
-                 <widget class="QLineEdit" name="lineEdit_deseq2_log2fc">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>1</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="5" column="1">
                  <widget class="QLineEdit" name="lineEdit_deseq2_pvalue">
                   <property name="sizePolicy">
@@ -1673,32 +1673,6 @@
                   </property>
                   <property name="text">
                    <string>0.05</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="0">
-                 <widget class="QLabel" name="label_16">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Width</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="1">
-                 <widget class="QLabel" name="label_17">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Height</string>
                   </property>
                  </widget>
                 </item>
@@ -1718,29 +1692,19 @@
                   </property>
                  </widget>
                 </item>
-                <item row="7" column="0">
-                 <widget class="QLineEdit" name="lineEdit_deseq2_width">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>10</string>
-                  </property>
-                 </widget>
+                <item row="2" column="0">
+                 <widget class="QComboBox" name="comboBox_deseq2_group1"/>
                 </item>
-                <item row="7" column="1">
-                 <widget class="QLineEdit" name="lineEdit_deseq2_length">
+                <item row="6" column="0">
+                 <widget class="QLabel" name="label_16">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>8</string>
+                   <string>Width</string>
                   </property>
                  </widget>
                 </item>
@@ -1757,6 +1721,58 @@
                   </property>
                   <property name="text">
                    <string>Run DESeq2</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QComboBox" name="comboBox_deseq2_group2">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="2" rowspan="2">
+                 <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Vocano</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="QSpinBox" name="spinBox_fc_plot_width">
+                  <property name="minimum">
+                   <number>100</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100000</number>
+                  </property>
+                  <property name="value">
+                   <number>1200</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="1">
+                 <widget class="QSpinBox" name="spinBox_fc_plot_height">
+                  <property name="minimum">
+                   <number>100</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100000</number>
+                  </property>
+                  <property name="value">
+                   <number>800</number>
                   </property>
                  </widget>
                 </item>
@@ -2614,8 +2630,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>878</width>
-     <height>21</height>
+     <width>992</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -2689,8 +2705,6 @@
   <tabstop>comboBox_deseq2_group2</tabstop>
   <tabstop>lineEdit_deseq2_log2fc</tabstop>
   <tabstop>lineEdit_deseq2_pvalue</tabstop>
-  <tabstop>lineEdit_deseq2_width</tabstop>
-  <tabstop>lineEdit_deseq2_length</tabstop>
   <tabstop>listWidget_table_list</tabstop>
   <tabstop>pushButton_view_table</tabstop>
   <tabstop>toolButton_db_path_help</tabstop>

@@ -33,7 +33,7 @@ from MetaX.utils.taxaFuncAnalyzer import TaxaFuncAnalyzer
 # import ploter
 from MetaX.utils.taxaFuncPloter.heatmap_plot import HeatmapPlot
 from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
-from MetaX.utils.taxaFuncPloter.volcano_plot import VolcanoPlot
+from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
 from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
 from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
@@ -1185,14 +1185,28 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             log2fc = float(self.lineEdit_deseq2_log2fc.text())
             pvalue = float(self.lineEdit_deseq2_pvalue.text())
-            width = int(float(self.lineEdit_deseq2_width.text()))
-            lenght = int(float(self.lineEdit_deseq2_length.text()))
-            fig_size = (width, lenght)
+            width = self.spinBox_fc_plot_width.value()
+            height = self.spinBox_fc_plot_height.value()
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
-        VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups', figsize=fig_size)
+        # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
+        try:
+            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
+            home_path = QDir.homePath()
+            metax_path = os.path.join(home_path, 'MetaX')
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+            save_path = os.path.join(metax_path, 'volcano_plot.html')
+            pic.render(save_path)
+            web = webDialog.MyDialog(save_path)
+            self.web_list.append(web)
+            web.show()
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
+            return None
     
 
 
@@ -1202,15 +1216,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             log2fc = float(self.lineEdit_deseq2_log2fc.text())
             pvalue = float(self.lineEdit_deseq2_pvalue.text())
-            width = int(float(self.lineEdit_deseq2_width.text())*150)
-            lenght = int(float(self.lineEdit_deseq2_length.text())*150)
-            print(f'width: {width}, lenght: {lenght}, pvalue: {pvalue}, log2fc: {log2fc}')
+            width = self.spinBox_fc_plot_width.value()
+            height = self.spinBox_fc_plot_height.value()
+            print(f'width: {width}, height: {height}, pvalue: {pvalue}, log2fc: {log2fc}')
         except Exception:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         try:
-            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=lenght, p_value=pvalue, log2fc=log2fc)
+            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, p_value=pvalue, log2fc=log2fc)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
