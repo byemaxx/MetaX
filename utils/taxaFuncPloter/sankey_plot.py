@@ -149,7 +149,7 @@ class SankeyPlot:
             links = value[1]
             num = value[2]
             pic.add(
-                f'{key} (Total: {num}))',
+                f'{key} (Total: {num})',
                 nodes=nodes,
                 links=links,
                 node_align='justify',

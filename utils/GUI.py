@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 # import built-in python modules
 import os
@@ -94,8 +94,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # set network plot width and height
         self.screen = QDesktopWidget().screenGeometry()
-        self.lineEdit_network_width.setText(str(self.screen.width()))
-        self.lineEdit_network_height.setText(str(self.screen.height()))
+        self.spinBox_network_width.setValue(self.screen.width())
+        self.spinBox_network_height.setValue(self.screen.height())
 
 
         # set button click event
@@ -998,11 +998,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     # differential analysis
     def plot_top_heatmap(self):
         table_name = self.comboBox_top_heatmap_table.currentText()
-        width = self.lineEdit_top_heatmap_width.text()
-        length = self.lineEdit_top_heatmap_length.text()
-        top_num = int(self.lineEdit_top_heatmap_number.text())
+        width = self.spinBox_top_heatmap_width.value()
+        length = self.spinBox_top_heatmap_length.value()
+        top_num = self.spinBox_top_heatmap_number.value()
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
-        pvalue = float(self.lineEdit_top_heatmap_pvalue.text())
+        pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
 
@@ -1055,9 +1055,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     def get_top_cross_table(self):
         table_name = self.comboBox_top_heatmap_table.currentText()
-        top_num = int(self.lineEdit_top_heatmap_number.text())
+        top_num = self.spinBox_top_heatmap_number.value()
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
-        pvalue = float(self.lineEdit_top_heatmap_pvalue.text())
+        pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         scale = self.comboBox_top_heatmap_scale.currentText()
 
 
@@ -1218,7 +1218,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.pushButton_deseq2.setEnabled(False)
                 df_deseq2 = self.tf.get_stats_deseq2(df, group_list=group_list)
                 self.show_table(df_deseq2)
-                self.update_table_dict('deseq2', df_deseq2)
+                self.update_table_dict('log2FC', df_deseq2)
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
                 self.pushButton_deseq2_plot_sankey.setEnabled(True)
             except Exception as e:
@@ -1231,10 +1231,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     def plot_deseq2_volcano(self):
-        df = self.table_dict['deseq2']
+        df = self.table_dict['log2FC']
         try:
-            log2fc = float(self.lineEdit_deseq2_log2fc.text())
-            pvalue = float(self.lineEdit_deseq2_pvalue.text())
+            log2fc = self.doubleSpinBox_deseq2_log2fc_min.value()
+            logfc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
+            pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
             group1 = self.comboBox_deseq2_group1.currentText()
@@ -1265,10 +1266,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     #Sankey
     def deseq2_plot_sankey(self):
-        df = self.table_dict['deseq2']
+        df = self.table_dict['log2FC']
         try:
-            log2fc = float(self.lineEdit_deseq2_log2fc.text())
-            pvalue = float(self.lineEdit_deseq2_pvalue.text())
+            log2fc = self.doubleSpinBox_deseq2_log2fc_min.value()
+            pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
             print(f'width: {width}, height: {height}, pvalue: {pvalue}, log2fc: {log2fc}')
@@ -1299,8 +1300,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     # Others Functions #
     # network
     def plot_network(self):
-        width = int(float(self.lineEdit_network_width.text()))
-        height = int(float(self.lineEdit_network_height.text()))
+        width = int(float(self.spinBox_network_width.text()))
+        height = int(float(self.spinBox_network_height.text()))
         sample_list = None
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
