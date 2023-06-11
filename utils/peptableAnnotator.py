@@ -37,10 +37,10 @@ def apply_run(row, db_path, threshold):
 
 def run_2_result(df, db_path, threshold):
     tqdm.pandas()
-    df_t = df
-    print('Counting protein number and peptide length...')
-    df_t['protein_count'] = df_t.loc[:, 'Proteins'].progress_apply(count_protein)
-    df_t['peptide_length'] = df_t.iloc[:,0].progress_apply(stat_length)
+    df_t = df.copy()
+    # print('Counting protein number and peptide length...')
+    # df_t['protein_count'] = df_t.loc[:, 'Proteins'].progress_apply(count_protein)
+    # df_t['peptide_length'] = df_t.iloc[:,0].progress_apply(stat_length)
     print('Running proteins_to_taxa_func...')
     df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
     df_t = pd.concat([df_t, df_t0], axis=1)

@@ -54,8 +54,7 @@ class HeatmapPlot:
         df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
         
         if len(df_plot) < 2:
-            print(f'Not enough significant differences between groups in {func_name}')
-            return 'not'
+            raise ValueError(f"Number of significant differences between groups in {func_name} is less than 2")
 
         fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor="grey", 
                             figsize=fig_size, cmap = cmap, 
@@ -258,7 +257,7 @@ class HeatmapPlot:
         
         dft = dft[dft['P-value'] < pvalue]
         if dft.empty:
-            raise ValueError(f"No significant differences between groups in {func_name}")
+            raise ValueError(f"No significant differences between groups")
         if 'f-statistic' in dft.columns.tolist():
             dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False], ignore_index=True)
         elif 't-statistic' in dft.columns.tolist():
@@ -267,11 +266,10 @@ class HeatmapPlot:
         #display(df_top)
         df_top = df_top.pivot(index='Taxon', columns=func_name, values=plot_type)
         df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
-        if len(df_plot) < 2:
-            print(f'Not enough significant differences between groups in {func_name}')
-            return 'not'
-
-        fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor="grey", cmap = color, 
+        if df_plot.empty:
+            raise ValueError(f"No significant differences between groups")
+        
+        fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor="grey", cmap = color,
                         method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
                         standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
 
@@ -284,38 +282,89 @@ class HeatmapPlot:
         
 
 
-    def get_top_across_table0(self,df, func_name:str, top_number:str = 100, 
-                                        value_type:str = 'p'):
+    def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
+                                       fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
+                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str = None):
+
         dft = df.copy()
-        dft.reset_index(inplace=True)
-        # dft = dft.iloc[:, :4]
-        if value_type == 'f':
-            plot_type = 'f-statistic'
 
-        elif value_type == 'p':
-            plot_type = 'P-value'
+        scale_map ={None: None,
+                    'None': None,
+                    'row': 0,
+                    'column': 1}
+        scale = scale_map.get(scale)
+        print(scale)
 
-        elif value_type == 't':
-            plot_type = 't-statistic'
+        type_map = {'f': ('f-statistic', 'Spectral_r'),
+                    'p': ('P-value', 'Reds_r'),
+                    't': ('t-statistic', 'hot_r')}
 
+        if cmap is None:
+            plot_type, cmap = type_map.get(value_type)
         else:
+            plot_type, _ = type_map.get(value_type)
+
+        if plot_type is None:
             raise ValueError("type must be 'p' or 'f' or 't'")
+
+        
         if plot_type not in df.columns:
             plot_type = 'P-value'
 
         
-        dft = dft[dft['P-value'] < 0.05]
+        dft = dft[dft['P-value'] < pvalue]
+
+
         if 'f-statistic' in dft.columns.tolist():
-            dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False], ignore_index=True)
+            dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False])
+            mat = dft.head(top_number)
+            mat= mat.drop(['P-value', 'f-statistic' ], axis=1)
         elif 't-statistic' in dft.columns.tolist():
-            dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False], ignore_index=True)
-        df_top = dft.head(top_number)
-        #display(df_top)
-        df_top = df_top.pivot(index='Taxon', columns=func_name, values=plot_type)
-        df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
+            dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False])
+            mat = dft.head(top_number)
+            mat= mat.drop(['P-value', 't-statistic'], axis=1)
 
-        return df_plot
+        if len(mat) < 2:
+            row_cluster = False
+        if len(mat.columns) < 2:
+            col_cluster = False
+            
+        meta_df = self.tfobj.meta_df
+        meta_name = self.tfobj.meta_name
 
+    #    # set minimum figure size for efficient visualization
+    #     fig_size = (1,1)
+
+        def assign_colors(groups):
+            colors = distinctipy.get_colors(len(set(groups)))
+            result = []
+            for group in groups:
+                index = sorted(set(groups)).index(group)
+                result.append(colors[index])
+            return result
+
+        # create color list for groups & rename columns
+        col_names = mat.columns.tolist()
+        groups_list = []
+        new_col_names = []
+        for i in col_names:
+            group = meta_df[meta_df['Sample'] == i]
+            group = group[meta_name].values[0]
+            new_col_names.append(f'{i} ({group})')
+            groups_list.append(group)
+        color_list = assign_colors(groups_list)
+        mat.columns = new_col_names
+        if mat.empty:
+            raise ValueError(f"No significant differences between groups in {func_name}")
+        
+
+        fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
+                        cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
+                            standard_scale=scale, col_colors=color_list)
+
+        sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+        plt.close(fig.fig)
+        return sorted_df
 
         
     def _fit_size(self, df):

@@ -1046,9 +1046,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
                                                                           scale = scale, col_cluster = True, row_cluster = True, cmap = cmap)
-            if fig == 'not':
-                QMessageBox.warning(self.MainWindow, 'Warning', 'No significant taxa-function pairs!')
-        except:
+        except ValueError:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
+        except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
     
@@ -1058,6 +1058,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         top_num = int(self.lineEdit_top_heatmap_number.text())
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = float(self.lineEdit_top_heatmap_pvalue.text())
+        scale = self.comboBox_top_heatmap_scale.currentText()
+
 
         
         if sort_by == 'f-statistic (ANOVA)':
@@ -1078,10 +1080,21 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         df = self.table_dict[table_name]
 
+        try:
+            if 'taxa-func' in table_name:
+                df_top_cross = HeatmapPlot(self.tf).get_top_across_table(df=df,func_name=self.tf.func, top_number=top_num, value_type=value_type, pvalue=pvalue)
+            else:
+                df_top_cross = HeatmapPlot(self.tf).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale)
+        except ValueError:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results')
+            return None
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Erro', error_message)
+            return None
 
-        df_top_cross = HeatmapPlot(self.tf).get_top_across_table(df=df,func_name=self.tf.func, top_number=top_num, value_type=value_type, pvalue=pvalue)
-        if df_top_cross == 'not':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'No significant taxa-function pairs!')
+        if df_top_cross.empty:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'df_top is empty!')
             return None
 
         self.update_table_dict('top_cross', df_top_cross)
