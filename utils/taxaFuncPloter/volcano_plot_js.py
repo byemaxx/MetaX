@@ -23,9 +23,11 @@ class VolcanoPlot():
             df['log2FoldChange'] < -log2fc))].index), 'type'] = 'normal'
         count_normal = len(df[df['type'] == 'normal'])
 
-        # create a new column for label of up and down
+        # create a new column for label
         df['label'] = df.index
+        # extract the columns we need
         df = df[['log2FoldChange', 'padj', 'label', 'type']]
+        # -log10(padj)
         df['padj'].fillna(1, inplace=True)
         df['padj'] = df['padj'].apply(lambda x: -np.log10(x))
         df['log2FoldChange'] = df['log2FoldChange'].apply(lambda x: round(x, 3))
@@ -51,16 +53,6 @@ class VolcanoPlot():
             Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(df['log2FoldChange'].tolist())
             .add_yaxis(
-                f"Up ({count_up})",
-                Scatter_up.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-            )
-            .add_yaxis(
-                f"Down ({count_down})",
-                Scatter_down.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-            )
-            .add_yaxis(
                 f"Normal ({count_normal})",
                 Scatter_normal.tolist(),
                 label_opts=opts.LabelOpts(is_show=False),
@@ -72,8 +64,18 @@ class VolcanoPlot():
                 legend_opts=opts.LegendOpts(pos_left='right',  orient='vertical'),
                 tooltip_opts=opts.TooltipOpts(is_show=True, position='top', formatter='{b}: {c}'),
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}}),
-
-
+            ) )
+        
+        if count_up > 0:
+            scatter.add_yaxis(
+                f"Up ({count_up})",
+                Scatter_up.tolist(),
+                label_opts=opts.LabelOpts(is_show=False),
             )
-        )
+        if count_down > 0:
+            scatter.add_yaxis(
+                f"Down ({count_down})",
+                Scatter_down.tolist(),
+                label_opts=opts.LabelOpts(is_show=False) )
+            
         return scatter

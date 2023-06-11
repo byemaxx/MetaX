@@ -3,8 +3,7 @@ from pyecharts.charts import Sankey
 from pyecharts import options as opts
 
 class SankeyPlot:
-        # def __init__(self, tfobj=None):
-        # self.tfobj =  tfobj
+
     # plot sankey diagram from DESeq2 results dataframe
     # input: logFC dataframe from DESeq2
     # output: sankey diagram object
@@ -13,11 +12,22 @@ class SankeyPlot:
     #        pic.render_notebook()
     #     pic.render('sankey.html')
 
-    def convert_logfc_df_for_sankey(self, df, p_value: float = 0.05, log2fc: float = 1) -> list:
+    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc: float = 1) -> list:
         df = df.copy()
-        df = df[df['padj'] < p_value]
-        df = df[df['log2FoldChange'].abs() > log2fc]
-        df = df[['log2FoldChange']]
+        count_up = len(df[(df['padj'] < padj) & (
+            df['log2FoldChange'] > log2fc)])
+        count_down = len(
+            df[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc)])
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] > log2fc), 'type'] = 'up'
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] < -log2fc), 'type'] = 'down'
+        df.loc[~df.index.isin(df[(df['padj'] < padj) & ((df['log2FoldChange'] > log2fc) | (
+            df['log2FoldChange'] < -log2fc))].index), 'type'] = 'normal'
+        count_normal = len(df[df['type'] == 'normal'])
+
+
+
         df['index'] = df.index
 
         index_str = df['index'].str.split("[", expand=True)
@@ -28,67 +38,73 @@ class SankeyPlot:
             taxon_index = 1
             func_index = 0
 
+
+        df = df[['log2FoldChange', 'type']]
+
         df['Taxon'] = index_str[taxon_index].str.replace("]", "")
         df['Function'] = index_str[func_index].str.replace("]", "")
 
-        df_up = df[df['log2FoldChange'] > 0]
-        df_down = df[df['log2FoldChange'] < 0]
+        df_dict = {
+            i: df[df['type'] == i].drop('type', axis=1)
+            for i in ['up', 'down', 'normal']
+        }
 
-        df_list = [df_up, df_down]
 
-        df_out = []
-        for df in df_list:
-            df_t = df['Taxon'].str.split('|', expand=True)
-            df_t = df_t.join(df['Function'])
-            df_t = df_t.join(df['log2FoldChange'])
-            col_name = ['domain', 'phylum', 'class', 'order','family', 'genus', 'species',  'function', 'value']
-            if len(df_t.columns) == 8:
-                col_name.remove('species')
-                print('No species level in the taxonomy')
-            elif len(df_t.columns) == 7:
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No genus and species level in the taxonomy')
-            elif len(df_t.columns) == 6:
-                col_name.remove('family')
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No family, genus and species level in the taxonomy')
-            elif len(df_t.columns) == 5:
-                col_name.remove('order')
-                col_name.remove('family')
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No order, family, genus and species level in the taxonomy')
-            elif len(df_t.columns) == 4:
-                col_name.remove('class')
-                col_name.remove('order')
-                col_name.remove('family')
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No class, order, family, genus and species level in the taxonomy')
-            elif len(df_t.columns) == 3:
-                col_name.remove('phylum')
-                col_name.remove('class')
-                col_name.remove('order')
-                col_name.remove('family')
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No phylum, class, order, family, genus and species level in the taxonomy')
-            elif len(df_t.columns) == 2:
-                col_name.remove('domain')
-                col_name.remove('phylum')
-                col_name.remove('class')
-                col_name.remove('order')
-                col_name.remove('family')
-                col_name.remove('genus')
-                col_name.remove('species')
-                print('No domain, phylum, class, order, family, genus and species level in the taxonomy')
+        df_out_dict = {}
+        for key, df in df_dict.items():
+            if len(df) > 0:
+                df_t = df['Taxon'].str.split('|', expand=True)
+                df_t = df_t.join(df['Function'])
+                df_t = df_t.join(df['log2FoldChange'])
+                col_name = ['domain', 'phylum', 'class', 'order','family', 'genus', 'species',  'function', 'value']
+                if len(df_t.columns) == 8:
+                    col_name.remove('species')
+                    print('No species level in the taxonomy')
+                elif len(df_t.columns) == 7:
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No genus and species level in the taxonomy')
+                elif len(df_t.columns) == 6:
+                    col_name.remove('family')
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No family, genus and species level in the taxonomy')
+                elif len(df_t.columns) == 5:
+                    col_name.remove('order')
+                    col_name.remove('family')
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No order, family, genus and species level in the taxonomy')
+                elif len(df_t.columns) == 4:
+                    col_name.remove('class')
+                    col_name.remove('order')
+                    col_name.remove('family')
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No class, order, family, genus and species level in the taxonomy')
+                elif len(df_t.columns) == 3:
+                    col_name.remove('phylum')
+                    col_name.remove('class')
+                    col_name.remove('order')
+                    col_name.remove('family')
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No phylum, class, order, family, genus and species level in the taxonomy')
+                elif len(df_t.columns) == 2:
+                    col_name.remove('domain')
+                    col_name.remove('phylum')
+                    col_name.remove('class')
+                    col_name.remove('order')
+                    col_name.remove('family')
+                    col_name.remove('genus')
+                    col_name.remove('species')
+                    print('No domain, phylum, class, order, family, genus and species level in the taxonomy')
+                df_t.columns = col_name
+                df_t['value'] = abs(df_t['value'])
+                df_out_dict[key] = [df_t, len(df_t)]
+                # df_out_dict[key] = df_t
+        return df_out_dict
 
-            df_t.columns = col_name
-            df_t['value'] = abs(df_t['value'])
-            df_out.append(df_t)
-        return df_out
 
 
     def create_nodes_links(self, df, value_col='value'):
@@ -121,38 +137,29 @@ class SankeyPlot:
 
 
 
-    def __plot_sankey(self, nodes_up, links_up, nodes_down, links_down, width=2500, height=2000):
-
+    def __plot_sankey(self,link_nodes_dict, width=2500, height=2000):
 
         # Remove duplicate nodes
         # nodes_combined = list({node['name']: node for node in nodes_up + nodes_down}.values())
         width = f'{width}px'
         height = f'{height}px'
         pic = Sankey(init_opts=opts.InitOpts(width=width, height=height))
+        for key, value in link_nodes_dict.items():
+            nodes  = value[0]
+            links = value[1]
+            num = value[2]
+            pic.add(
+                f'{key} (Total: {num}))',
+                nodes=nodes,
+                links=links,
+                node_align='justify',
+                layout_iterations=50,
+                focus_node_mode='adjacency',
+                linestyle_opt=opts.LineStyleOpts(
+                    curve=0.5, opacity=0.2, color="source"),
+                label_opts=opts.LabelOpts(position='right')
+            )
 
-        pic.add(
-            "Up",
-            nodes=nodes_up,
-            links=links_up,
-            node_align='justify',
-            layout_iterations=50,
-            focus_node_mode='adjacency',
-            linestyle_opt=opts.LineStyleOpts(
-                curve=0.5, opacity=0.2, color="source"),
-            label_opts=opts.LabelOpts(position='right')
-        )
-
-        pic.add(
-            "Down",
-            nodes=nodes_down,
-            links=links_down,
-            node_align='justify',
-            layout_iterations=50,
-            focus_node_mode='adjacency',
-            linestyle_opt=opts.LineStyleOpts(
-                curve=0.5, opacity=0.2, color="source"),
-            label_opts=opts.LabelOpts(position='right')
-        )
 
         pic.set_global_opts(
             legend_opts=opts.LegendOpts(selected_mode='single'),
@@ -164,14 +171,13 @@ class SankeyPlot:
         return pic
 
 
-    def plot_fc_sankey(self, fc_df, width=1920, height=1080, p_value=0.05, log2fc=1):
+    def plot_fc_sankey(self, fc_df, width=1920, height=1080, padj=0.05, log2fc=1):
         df_sankey = self.convert_logfc_df_for_sankey(
-            fc_df, p_value=p_value, log2fc=log2fc)
-        print('Creating nodes and links for upregulated...')
-        nodes_up, links_up = self.create_nodes_links(df_sankey[0])
-        print('Creating nodes and links for downregulated...')
-        nodes_down, links_down = self.create_nodes_links(df_sankey[1])
-
-        return self.__plot_sankey(
-            nodes_up, links_up, nodes_down, links_down, width, height
-        )
+            fc_df, padj=padj, log2fc=log2fc)
+        link_nodes_dict = {}
+        for key, value in df_sankey.items():
+            print(f'Creating nodes and links for {key}...')
+            nodes, links = self.create_nodes_links(value[0])
+            link_nodes_dict[key] = [nodes, links, value[1]]
+        pic = self.__plot_sankey(link_nodes_dict, width=width, height=height)
+        return pic

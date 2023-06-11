@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 # import built-in python modules
 import os
@@ -81,6 +81,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.table_dialogs = []
         self.web_list = []
         self.basic_heatmap_list = []
+        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
 
         self.tf = None
 
@@ -150,11 +151,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_plot.clicked.connect(self.plot_basic_list_heatmap)
 
 
-
-        ## Differential Analysis
+        # Corss TEST
+        self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_table_dict = {}
         self.pushButton_plot_top_heatmap.clicked.connect(self.plot_top_heatmap)
         self.pushButton_get_top_cross_table.clicked.connect(self.get_top_cross_table)
+
+        self.tabWidget_3.currentChanged.connect(self.cross_test_tab_change)
         
         ### ANOVA
         self.pushButton_anova_test.clicked.connect(self.anova_test)
@@ -169,6 +172,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # ### T-test
         self.pushButton_ttest.clicked.connect(self.t_test)
 
+        ## Differential Analysis
         # ### DESeq2
         self.pushButton_deseq2.clicked.connect(self.deseq2_test)
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
@@ -184,6 +188,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_others_show_linked_taxa.clicked.connect(self.show_others_linked_taxa)
         self.pushButton_others_show_linked_func.clicked.connect(self.show_others_linked_func)
         self.pushButton_others_fresh_taxa_func.clicked.connect(self.update_func_taxa_group_to_combobox)
+        # Taxa-func link
+        ## Heatmap
+        # set theme list
+        self.comboBox_tflink_cmap.addItems(self.cmap_list)
 
 
         ## Table View
@@ -214,6 +222,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def swith_stack_page_about(self):
         self.stackedWidget.setCurrentIndex(3)
     
+    def cross_test_tab_change(self, index):
+        # Check if the tab with index '2' is selected
+        if index == 2:
+            self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
+        else:
+            self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
+
+    def hide_all_in_layout(self, layout):
+        for i in range(layout.count()):
+            layout.itemAt(i).widget().hide()
+
+    def show_all_in_layout(self, layout):
+        for i in range(layout.count()):
+            layout.itemAt(i).widget().show()
 
     def show_about(self):
         from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
@@ -981,6 +1003,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         top_num = int(self.lineEdit_top_heatmap_number.text())
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = float(self.lineEdit_top_heatmap_pvalue.text())
+        cmap = self.comboBox_top_heatmap_cmap.currentText()
+        scale = self.comboBox_top_heatmap_scale.currentText()
+
+        if cmap == 'Auto':
+            cmap = None
 
         
         if sort_by == 'f-statistic (ANOVA)':
@@ -991,10 +1018,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             value_type = 'p'
 
         # if table name is t_test, then only use p value
-        if table_name == 't_test' and value_type == 'f':
+        if 't_test' in table_name and value_type == 'f':
             QMessageBox.warning(self.MainWindow, 'Warning', 't_test only has p value!')
             return None
-        if table_name == 'anova_test' and value_type == 't':
+        if  'anova_test' in table_name and value_type == 't':
             QMessageBox.warning(self.MainWindow, 'Warning', 'anova_test only has f value!')
             return None
         
@@ -1012,13 +1039,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # print(df.shape)
         # print(df.columns)
         try:
-            fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                                func_name=self.tf.func, top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue)
+            if 'taxa-func' in table_name:
+                fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
+                                func_name=self.tf.func, top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap)
+            else:
+                fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                                                                          value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
+                                                                          scale = scale, col_cluster = True, row_cluster = True, cmap = cmap)
             if fig == 'not':
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No significant taxa-function pairs!')
         except:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
+    
 
     def get_top_cross_table(self):
         table_name = self.comboBox_top_heatmap_table.currentText()
@@ -1058,6 +1091,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def anova_test(self):
         group_list = self.comboBox_anova_group.getCheckedItems()
         self.pushButton_anova_test.setEnabled(False)
+        df_type = self.comboBox_table_for_anova.currentText().lower()
 
         try:
             if not group_list:
@@ -1069,10 +1103,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 return None
             else:
                 self.show_message('Info', 'ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
-                df_anova = self.tf.get_stats_anova(group_list=group_list)
+                df_anova = self.tf.get_stats_anova(group_list=group_list, df_type=df_type)
             self.show_table(df_anova)
-            self.comboBox_top_heatmap_table_dict['anova_test'] = df_anova
-            self.update_table_dict('anova_test', df_anova)
+            table_name = f'anova_test({df_type})'
+            self.comboBox_top_heatmap_table_dict[table_name] = df_anova
+            self.update_table_dict(table_name, df_anova)
             self.comboBox_top_heatmap_table.clear()
             self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_dict.keys())
             self.pushButton_plot_top_heatmap.setEnabled(True)
@@ -1120,6 +1155,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def t_test(self):
         group1 = self.comboBox_ttest_group1.currentText()
         group2 = self.comboBox_ttest_group2.currentText()
+        df_type = self.comboBox_table_for_ttest.currentText().lower()
         if group1 is None or group2 is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two groups!')
             return None
@@ -1131,12 +1167,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                df = self.tf.get_stats_ttest(group_list=group_list)
+                df = self.tf.get_stats_ttest(group_list=group_list, df_type=df_type)
+                table_name = f't_test({df_type})'
                 self.show_table(df)
-                self.update_table_dict('t_test', df)
+                self.update_table_dict(table_name, df)
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
-                self.comboBox_top_heatmap_table_dict['t_test'] = df
+                self.comboBox_top_heatmap_table_dict[table_name] = df
                 self.comboBox_top_heatmap_table.clear()
                 self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_dict.keys())
             except Exception as e:
@@ -1187,13 +1224,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             pvalue = float(self.lineEdit_deseq2_pvalue.text())
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
+            group1 = self.comboBox_deseq2_group1.currentText()
+            group2 = self.comboBox_deseq2_group2.currentText()
+            title_name = f'{group1} vs {group2}'
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
-            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
+            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc = log2fc,  title_name=title_name,  width=width, height=height)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
@@ -1224,7 +1264,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         try:
-            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, p_value=pvalue, log2fc=log2fc)
+            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc=log2fc)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
@@ -1239,7 +1279,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         except Exception:
             error_message = traceback.format_exc()
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your selection! \n\nAyyention: Sankey plot can only generate from Taxa-Func table!\n\n Try to run DESeq2 for Taxa-Func table again!!')
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your selection! \n\nAttenion: Sankey plot can only generate from Taxa-Func table!\n\n Try to run DESeq2 for Taxa-Func table again!!')
 
 
 
@@ -1313,9 +1353,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         taxa = self.comboBox_others_taxa.currentText()
         func = self.comboBox_others_func.currentText()
         group_list = self.comboBox_others_group.getCheckedItems()
-        width = self.lineEdit_others_fig_width.text()
-        length = self.lineEdit_others_fig_length.text()
+        width = self.spinBox_tflink_width.value()
+        height = self.spinBox_tflink_height.value()
         scale = self.comboBox_others_hetatmap_scale.currentText()
+        cmap = self.comboBox_tflink_cmap.currentText()
+        if cmap == 'Auto':
+            cmap = None
 
         row_cluster = False
         col_cluster = False
@@ -1358,10 +1401,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if (df==0).all(axis=1).any():
                 df = df.loc[(df!=0).any(axis=1)]
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+        # same for scale
+        if scale == 'row':
+            if (df==0).all(axis=1).any():
+                df = df.loc[(df!=0).any(axis=1)]
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please change a scale method!')
+        elif scale == 'column':
+            if (df==0).all(axis=0).any():
+                df = df.loc[:, (df!=0).any(axis=0)]
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some columns are all 0, so they are deleted!\n\nIf you want to keep them, please change a scale method!')
 
         try:
             hp = HeatmapPlot(self.tf)
-            hp.plot_basic_heatmap(mat=df, title=title, fig_size=(int(length), int(width)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster)
+            hp.plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -1372,8 +1424,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         taxa = self.comboBox_others_taxa.currentText()
         func = self.comboBox_others_func.currentText()
         group_list = self.comboBox_others_group.getCheckedItems()
-        width = self.lineEdit_others_fig_width.text()
-        length = self.lineEdit_others_fig_length.text()
+        width = self.spinBox_tflink_width.value()
+        height = self.spinBox_tflink_height.value()
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -1395,8 +1447,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
                 return None
             
-            if width and length:
-                params['fig_size'] = (int(length), int(width))
+            if width and height:
+                params['fig_size'] = (int(width), int(height))
             
             LinePlot(self.tf).plot_intensity_line(**params)
         except Exception as e:

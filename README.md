@@ -2,9 +2,18 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-10:
+    - Version: 1.1.2 :
+        - change volcano from sns to pyecharts.
+        - add top heatmap plot for ttes and anova for taxa and func table.
+        - fixed a bug of scale.
+        - add normal nodes and link in FC Sankey plot.
+        - add number shows in FC Sankey plot.
+        - hide top plot when change tab to TUKEY
+
 - 2023-06-08:
     - Version: 1.1.0 :
-        -add Heatmap Plot in Basic Part, Now it can plot any function or taxa indpendent.
+        - add Heatmap Plot in Basic Part, Now it can plot any function or taxa indpendent.
     - Version: 1.0.9 :
         - move 2 baisc plot to the data overview tab
         - made a offset if  use Z-Score, Mean centering and Pareto Scaling data normalization to avoid negative values.
