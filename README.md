@@ -4,6 +4,9 @@
 ## Change log
 - 2023-06-12:
     - Version: 1.16
+        - add some cool function
+        - fix some bugs
+    - Version: 1.16
         - change layout of data overview part
         - add meta table and taxafunc table match check
         - add Ultra-up and Ultra_down for log2FC

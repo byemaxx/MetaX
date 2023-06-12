@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.16'
+__version__ = '1.17'
 
 # import built-in python modules
 import os
@@ -36,6 +36,7 @@ from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
 from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
 from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
 from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
+from MetaX.utils.taxaFuncPloter.line_plot_js import LinePlot_js
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
 
@@ -53,7 +54,7 @@ from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 # import pyqt5 scripts
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget, QPushButton
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir
 
@@ -75,6 +76,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1360, 850)
+
+        self.like_times = 0
 
         self.last_path = os.path.join(QDir.homePath(), 'Desktop')
         self.table_dict = {}
@@ -264,13 +267,24 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         Text_edit.setHtml(about_html)
+        pushButton_like = QPushButton("Like", dialog)
+        pushButton_like.clicked.connect(self.like_us)
 
         dialog_layout = QVBoxLayout()
         dialog_layout.addWidget(Text_edit)
+        dialog_layout.addWidget(pushButton_like)
 
         dialog.setLayout(dialog_layout)
         dialog.exec_()
 
+    def like_us(self):
+        if self.like_times < 5:
+            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
+            self.like_times += 1
+        else:
+            QMessageBox.information(self.MainWindow, "Congratulations!", "You enabled the hidden function!")
+        
+        
 
     def show_message(self, title, message):
         self.msg = QMessageBox(self.MainWindow)
@@ -298,8 +312,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             self.gridLayout_network_group.itemAt(0).widget().deleteLater()
             self.gridLayout_network_sample.itemAt(0).widget().deleteLater()
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             self.gridLayout_network_group.addWidget(self.comboBox_network_group)
             self.gridLayout_network_sample.addWidget(self.comboBox_network_sample)
@@ -747,15 +761,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             self.gridLayout_tflink_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(e)
+            print(f'Cannot delete gridLayout_tflink_group: {e}')
         try:
             self.horizontalLayout_anova_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(e)
+            print(f'Cannot delete horizontalLayout_anova_group: {e}')
         try:
             self.verticalLayout_basic_heatmap_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(e)
+            print(f'Cannot delete verticalLayout_basic_heatmap_group: {e}')
         self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
         self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
         self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
@@ -1470,10 +1484,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
 
-        
 
         params = {}
-
         if group_list:
             params['groups'] = group_list
 
@@ -1481,16 +1493,33 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             params['taxon_name'] = taxa
         if func:
             params['func_name'] = func
+
         try:
-            df = self.tf.get_intensity_matrix(**params)
-            if df.empty:
+            if self.like_times >= 5:
+                if width and height:
+                    params['width'] = width*100
+                    params['height'] = height*100
+
+                pic = LinePlot_js(self.tf).plot_intensity_line(**params)
+                home_path = QDir.homePath()
+                metax_path = os.path.join(home_path, 'MetaX')
+                if not os.path.exists(metax_path):
+                    os.makedirs(metax_path)
+                save_path = os.path.join(metax_path, 'intensity.html')
+                pic.render(save_path)
+                web = webDialog.MyDialog(save_path)
+                self.web_list.append(web)
+                web.show()
+            else:
+                if width and height:
+                    params['width'] = width
+                    params['height'] = height
+                LinePlot(self.tf).plot_intensity_line(**params)
+        except ValueError as e:
+            if 'No data to plot' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
-                return None
-            
-            if width and height:
-                params['fig_size'] = (int(width), int(height))
-            
-            LinePlot(self.tf).plot_intensity_line(**params)
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
         except Exception as e:
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
