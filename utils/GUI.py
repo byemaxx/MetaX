@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.1.6'
+__version__ = '1.16'
 
 # import built-in python modules
 import os
@@ -1135,7 +1135,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if not group_list:
                 self.show_message('Info', 'ANOVA test will use all groups...\n\n It may take a long time! Please wait...')
 
-                df_anova = self.tf.get_stats_anova()
+                df_anova = self.tf.get_stats_anova(df_type=df_type)
             elif len(group_list) < 3:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
                 return None

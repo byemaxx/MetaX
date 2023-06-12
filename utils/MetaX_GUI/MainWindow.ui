@@ -250,6 +250,14 @@
                </layout>
               </widget>
               <widget class="QWidget" name="page_5">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>191</width>
+                 <height>49</height>
+                </rect>
+               </property>
                <attribute name="label">
                 <string>● Function Stast</string>
                </attribute>
@@ -988,17 +996,17 @@
                   </property>
                   <item>
                    <property name="text">
-                    <string>None</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
                     <string>row</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
                     <string>column</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>None</string>
                    </property>
                   </item>
                  </widget>
@@ -1404,12 +1412,12 @@
                 </item>
                 <item>
                  <property name="text">
-                  <string>None</string>
+                  <string>column</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>column</string>
+                  <string>None</string>
                  </property>
                 </item>
                </widget>

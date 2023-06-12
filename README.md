@@ -2,6 +2,12 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-12:
+    - Version: 1.16
+        - change layout of data overview part
+        - add meta table and taxafunc table match check
+        - add Ultra-up and Ultra_down for log2FC
+        - fix some bugs 
 - 2023-06-10:
     - Version: 1.1.3 :
         - cahnge all Linedit to Sinponbox if them only contain number
