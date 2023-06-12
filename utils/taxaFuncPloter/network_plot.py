@@ -71,7 +71,7 @@ class NetworkPlot:
             )
             .set_global_opts(
                 legend_opts=opts.LegendOpts(is_show=False),
-                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}",  subtitle_textstyle_opts=opts.TextStyleOpts(font_size=5)),
+                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}",  subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}}),
             )        
             )

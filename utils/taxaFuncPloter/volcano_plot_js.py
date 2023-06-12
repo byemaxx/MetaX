@@ -7,22 +7,29 @@ import numpy as np
 class VolcanoPlot():
 
 
-    def plot_volcano_js(self, df_fc, padj:float=0.05, log2fc:float=1, title_name:str='2 groups', width:int=1200, height:int=800):
+    def plot_volcano_js(self, df_fc, padj:float=0.05, log2fc_min:float=1, log2fc_max:float = 10, title_name:str='2 groups', width:int=1200, height:int=800):
         df = df_fc.copy()
-
-        # 计算不同类型的样本数并生成新的图例标签
-        count_up = len(df[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc)])
-        count_down = len(
-            df[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc)])
+       
+        
         df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc), 'type'] = 'up'
+            df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max) , 'type'] = 'up'
+        
         df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc), 'type'] = 'down'
-        df.loc[~df.index.isin(df[(df['padj'] < padj) & ((df['log2FoldChange'] > log2fc) | (
-            df['log2FoldChange'] < -log2fc))].index), 'type'] = 'normal'
-        count_normal = len(df[df['type'] == 'normal'])
+            df['log2FoldChange'] > log2fc_max) , 'type'] = 'ultra-up'
+        
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max) , 'type'] = 'down'
+        
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] < -log2fc_max) , 'type'] = 'ultra-down'
+        
+        df.loc[df['type'].isnull(), 'type'] = 'normal'
 
+        count_dict = {}
+        for i in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']:
+            count_dict[i] = len(df[df['type'] == i])    
+        
+       
         # create a new column for label
         df['label'] = df.index
         # extract the columns we need
@@ -38,22 +45,28 @@ class VolcanoPlot():
                 return "#d23918"
             elif type_value == 'down':
                 return "#68945c"
+            elif type_value == 'ultra-up':
+                return "#663d74"
+            elif type_value == 'ultra-down':
+                return "#206864"
             else:
-                return "#6b798e"
+                return "#9aa7b1"
 
         # 创建一个新的列'itemStyle'，其值是一个 ItemStyleOpts 对象
         df['itemStyle'] = df['type'].apply(lambda x: opts.ItemStyleOpts(color=color_mapping(x)))
 
         Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
+        scatter_ultra_up = df[df['type'] == 'ultra-up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
         Scatter_down = df[df['type'] == 'down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
+        scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
         Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
 
-        title = f'Volcano plot of {title_name} (padj < {padj}, log2FoldChange > {log2fc})'
+        title = f'Volcano plot of {title_name} (padj < {padj},  {log2fc_min} < log2FoldChange < {log2fc_max})'
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(df['log2FoldChange'].tolist())
             .add_yaxis(
-                f"Normal ({count_normal})",
+                f"Normal ({count_dict['normal']})",
                 Scatter_normal.tolist(),
                 label_opts=opts.LabelOpts(is_show=False),
             )
@@ -66,16 +79,28 @@ class VolcanoPlot():
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}}),
             ) )
         
-        if count_up > 0:
+        if count_dict['up'] > 0:
             scatter.add_yaxis(
-                f"Up ({count_up})",
+                f"Up ({count_dict['up']})",
                 Scatter_up.tolist(),
                 label_opts=opts.LabelOpts(is_show=False),
             )
-        if count_down > 0:
+        if count_dict['ultra-up'] > 0:
             scatter.add_yaxis(
-                f"Down ({count_down})",
+                f"Ultra-up ({count_dict['ultra-up']})",
+                scatter_ultra_up.tolist(),
+                label_opts=opts.LabelOpts(is_show=False) )
+        if count_dict['down'] > 0:
+            scatter.add_yaxis(
+                f"Down ({count_dict['down']})",
                 Scatter_down.tolist(),
                 label_opts=opts.LabelOpts(is_show=False) )
+        if count_dict['ultra-down'] > 0:
+            scatter.add_yaxis(
+                f"Ultra-down ({count_dict['ultra-down']})",
+                scatter_ultra_down.tolist(),
+                label_opts=opts.LabelOpts(is_show=False) )
+        
+        
             
         return scatter

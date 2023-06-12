@@ -27,6 +27,7 @@ class TaxaFuncAnalyzer:
         self.meta_name = None
         self.group_list = None
 
+        self.func_list = None
         self.func = None
 
         self.clean_df = None
@@ -39,6 +40,7 @@ class TaxaFuncAnalyzer:
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
+        self.check_func_in_df()
         self.set_func('Description')
 
     def _set_original_df(self, df_path: str) -> None:
@@ -57,12 +59,27 @@ class TaxaFuncAnalyzer:
 
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
+    
+    def check_func_in_df(self) -> list:
+        col_names = self.original_df.columns.tolist()
+        func_list = []
+        for i in col_names:
+            if "_prop" in i:
+                i = i.replace("_prop", "")
+                if i == 'Taxon':
+                    continue
+                else:
+                    func_list.append(i)
+        self.func_list = func_list
+        return func_list
+
 
     def set_func(self, func):
         
-        check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs', 
-                      'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 
-                      'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs']
+        # check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs', 
+        #               'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 
+        #               'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs']
+        check_list = self.func_list
         if func not in check_list:
             raise ValueError(f'func must be in {check_list}')
         else:
@@ -127,13 +144,11 @@ class TaxaFuncAnalyzer:
             dic[i] = len(set_i)
         return pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
 
-    def get_stats_func_prop(self) -> pd.DataFrame:
+    def get_stats_func_prop(self, func_name) -> pd.DataFrame:
         df = self.original_df.copy()
-        func = self.func
-        prop_name = f'{func}_prop'
-
-        # filter func are not (NULL, -, NaN, unknown)
-        # df = df[df[f'{func}'] != 'unknown']
+        if func_name not in self.func_list:
+            raise ValueError(f'func_name must be in {self.func_list}')
+        prop_name = f'{func_name}_prop'
 
         df_prop = pd.DataFrame({'prop': ['0-0.1', '0-0.2', '0-0.3', '0-0.4', '0-0.5', '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1', '1'],
                                 'n': [len(df[(df[prop_name] >= i/10) & (df[prop_name] < (i+1)/10)]) for i in range(11)]})

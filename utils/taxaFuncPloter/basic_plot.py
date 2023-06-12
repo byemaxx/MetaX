@@ -44,8 +44,8 @@ class BasicPlot:
         return ax.get_figure()
 
     # input: self.get_stats_func_prop()
-    def plot_prop_stats(self):
-        df = self.tfobj.get_stats_func_prop()
+    def plot_prop_stats(self, func_name = 'Description'):
+        df = self.tfobj.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -53,7 +53,7 @@ class BasicPlot:
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
             ax.bar_label(i,)
-        ax.set_title('Number of peptides in different proportion of function')
+        ax.set_title(f'Number of different proportions of peptides in {func_name}')
         ax.set_xlabel('Proportion of function')
         ax.set_ylabel('Number of peptides')
         ax.legend(title='Proportion of function (frequency)',  ncol=2, loc = 'upper left')

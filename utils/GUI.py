@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.1.3'
+__version__ = '1.1.5'
 
 # import built-in python modules
 import os
@@ -134,6 +134,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_taxafunc_table_help.clicked.connect(self.show_taxafunc_table_help)
         self.toolButton_meta_table_help.clicked.connect(self.show_meta_table_help)
 
+        # Data Overview
+        self.pushButton_overview_func_plot.clicked.connect(self.plot_peptidd_num_in_func)
 
         # set multi table
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
@@ -524,6 +526,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 return
             self.show_message('Information', 'taxaFuncAnalyzer is running, please wait...')
             self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
+    
 
             
     def create_taxaFuncAnalyzer_obj(self, taxafunc_path, meta_path):
@@ -536,13 +539,23 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
-            # set comboBox_function_to_stast
+            # set comboBox_meta_to_stast
             meta_list = self.tf.meta_df.columns.tolist()[1:]
             self.comboBox_meta_to_stast.clear()
             for i in range(len(meta_list)):
                 self.comboBox_meta_to_stast.addItem(meta_list[i])
                 self.comboBox_remove_batch_effect.addItem(meta_list[i])
+            
+            # set comboBox_overview_func_list
+            self.comboBox_overview_func_list.clear()
+            self.comboBox_overview_func_list.addItems(self.tf.func_list)
 
+            # set comboBox_function_to_stast
+            self.comboBox_function_to_stast.clear()
+            self.comboBox_function_to_stast.addItems(self.tf.func_list)
+
+
+            ### update basic plot layout start ###
             # Remove all items from the layout
             while self.verticalLayout_overview_plot.count():
                 item = self.verticalLayout_overview_plot.takeAt(0)
@@ -550,8 +563,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 if widget:
                     widget.deleteLater()
             # plot adn add baic info figure to dataOverview tab
-            self.plot_taxa_stats()
             self.plot_taxa_number()
+            self.plot_taxa_stats()
+            ### update basic plot layout end ###
             
             # enable basic button
             self.enable_basic_button()
@@ -568,6 +582,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def enable_basic_button(self):
 
         self.pushButton_set_multi_table.setEnabled(True)
+        self.pushButton_overview_func_plot.setEnabled(True)
 
 
         
@@ -624,21 +639,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             num_taxa = self.tf.taxa_df.shape[0]
             num_taxa_func = self.tf.taxa_func_df.shape[0]
 
-            
-            # Remove all items from the layout
-            while self.verticalLayout_basic_plot.count():
-                item = self.verticalLayout_basic_plot.takeAt(0)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
-
-            # plot basic stats
-
-            self.plot_prop_stats()
-
 
             # generate basic table
-            self.get_stats_func_prop()
+            self.get_stats_func_prop(function)
             self.get_stats_taxa_level()
             self.get_stats_peptide_num_in_taxa()
             
@@ -967,24 +970,31 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
+    
+    def plot_peptidd_num_in_func(self):
+        # remove the old MatplotlibWidget
+        while self.verticalLayout_overview_func.count():
+            item = self.verticalLayout_overview_func.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
-    def get_stats_func_prop(self):
+        func_name = self.comboBox_overview_func_list.currentText()
+        pic = BasicPlot(self.tf).plot_prop_stats(func_name)
+        self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic)
+        self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
+
+
+
+    def get_stats_func_prop(self, func_name):
         if self.tf is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            df = self.tf.get_stats_func_prop()
+            df = self.tf.get_stats_func_prop(func_name)
             # self.show_table(df)
             self.update_table_dict('stats_func_prop', df)
     
-    def plot_prop_stats(self):
-        if self.tf is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
-        else:
-            pic = BasicPlot(self.tf).plot_prop_stats()
 
-            # Add the new MatplotlibWidget
-            self.mat_widget_plot_func_prop = MatplotlibWidget(pic)
-            self.verticalLayout_basic_plot.addWidget(self.mat_widget_plot_func_prop)
     
     def plot_pca_sns(self):
         if self.tf is None:
@@ -1244,8 +1254,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def plot_deseq2_volcano(self):
         df = self.table_dict['log2FC']
         try:
-            log2fc = self.doubleSpinBox_deseq2_log2fc_min.value()
-            logfc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
+            log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
+            log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
@@ -1258,7 +1268,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             return None
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
-            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc = log2fc,  title_name=title_name,  width=width, height=height)
+            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc_min = log2fc_min, log2fc_max=log2fc_max,  title_name=title_name,  width=width, height=height)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
@@ -1279,17 +1289,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def deseq2_plot_sankey(self):
         df = self.table_dict['log2FC']
         try:
-            log2fc = self.doubleSpinBox_deseq2_log2fc_min.value()
+            log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
+            log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
-            print(f'width: {width}, height: {height}, pvalue: {pvalue}, log2fc: {log2fc}')
+            print(f'width: {width}, height: {height}, pvalue: {pvalue}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}')
         except Exception:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         try:
-            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc=log2fc)
+            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):

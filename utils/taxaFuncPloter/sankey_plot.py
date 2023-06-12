@@ -12,20 +12,25 @@ class SankeyPlot:
     #        pic.render_notebook()
     #     pic.render('sankey.html')
 
-    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc: float = 1) -> list:
+    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc_min: float = 1,log2fc_max:float = 10) -> list:
         df = df.copy()
-        count_up = len(df[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc)])
-        count_down = len(
-            df[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc)])
         df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc), 'type'] = 'up'
+            df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max) , 'type'] = 'up'
+        
         df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc), 'type'] = 'down'
-        df.loc[~df.index.isin(df[(df['padj'] < padj) & ((df['log2FoldChange'] > log2fc) | (
-            df['log2FoldChange'] < -log2fc))].index), 'type'] = 'normal'
-        count_normal = len(df[df['type'] == 'normal'])
+            df['log2FoldChange'] > log2fc_max) , 'type'] = 'ultra-up'
+        
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max) , 'type'] = 'down'
+        
+        df.loc[(df['padj'] < padj) & (
+            df['log2FoldChange'] < -log2fc_max) , 'type'] = 'ultra-down'
+        
+        df.loc[df['type'].isnull(), 'type'] = 'normal'
 
+        count_dict = {}
+        for i in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']:
+            count_dict[i] = len(df[df['type'] == i])    
 
 
         df['index'] = df.index
@@ -46,7 +51,7 @@ class SankeyPlot:
 
         df_dict = {
             i: df[df['type'] == i].drop('type', axis=1)
-            for i in ['up', 'down', 'normal']
+            for i in ['up','ultra-up', 'down', 'ultra-down', 'normal']
         }
 
 
@@ -171,9 +176,9 @@ class SankeyPlot:
         return pic
 
 
-    def plot_fc_sankey(self, fc_df, width=1920, height=1080, padj=0.05, log2fc=1):
+    def plot_fc_sankey(self, fc_df, width=1920, height=1080, padj=0.05, log2fc_min=1, log2fc_max=10):
         df_sankey = self.convert_logfc_df_for_sankey(
-            fc_df, padj=padj, log2fc=log2fc)
+            fc_df, padj=padj, log2fc_min=log2fc_min, log2fc_max=log2fc_max)
         link_nodes_dict = {}
         for key, value in df_sankey.items():
             print(f'Creating nodes and links for {key}...')
