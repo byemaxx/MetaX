@@ -81,9 +81,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.table_dialogs = []
         self.web_list = []
         self.basic_heatmap_list = []
-        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
 
         self.tf = None
+        self.add_theme_to_combobox()
 
 
         # set icon
@@ -152,7 +152,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         # Corss TEST
-        self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_table_dict = {}
         self.pushButton_plot_top_heatmap.clicked.connect(self.plot_top_heatmap)
         self.pushButton_get_top_cross_table.clicked.connect(self.get_top_cross_table)
@@ -190,8 +189,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_others_fresh_taxa_func.clicked.connect(self.update_func_taxa_group_to_combobox)
         # Taxa-func link
         ## Heatmap
-        # set theme list
-        self.comboBox_tflink_cmap.addItems(self.cmap_list)
+
 
 
         ## Table View
@@ -236,6 +234,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def show_all_in_layout(self, layout):
         for i in range(layout.count()):
             layout.itemAt(i).widget().show()
+    
+    def add_theme_to_combobox(self):
+        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
+        self.comboBox_basic_hetatmap_theme.addItems(self.cmap_list)
+        self.comboBox_tflink_cmap.addItems(self.cmap_list)
+        self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
+
+
+
 
     def show_about(self):
         from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
@@ -860,6 +867,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         width = self.spinBox_basic_heatmap_width.value()
         height = self.spinBox_basic_heatmap_height.value()
         scale = self.comboBox_basic_hetatmap_scale.currentText()
+        cmap = self.comboBox_basic_hetatmap_theme.currentText()
+        if cmap == 'Auto':
+            cmap = None
+            
         sample_list = []
         if group_list == []:
             sample_list = self.tf.sample_list
@@ -905,7 +916,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df = df.loc[(df!=0).any(axis=1)]
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
         try:
-            HeatmapPlot(self.tf).plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster)
+            HeatmapPlot(self.tf).plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')

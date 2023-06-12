@@ -3,6 +3,8 @@
 ## Usage
 ## Change log
 - 2023-06-10:
+    - Version: 1.1.3 :
+        - cahnge all Linedit to Sinponbox if them only contain number
     - Version: 1.1.2 :
         - change volcano from sns to pyecharts.
         - add top heatmap plot for ttes and anova for taxa and func table.
