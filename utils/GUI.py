@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 # import built-in python modules
 import os
@@ -523,7 +523,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
         else:
             if self.ceck_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
-                return
+                return None
+
             self.show_message('Information', 'taxaFuncAnalyzer is running, please wait...')
             self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
     
@@ -535,7 +536,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # create taxaFuncAnalyzer obj
         try:
-            self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
+            self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)           
             self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
@@ -627,6 +628,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.show_message('Information', 'Data is Preprocessing, please wait...')
 
         group = self.comboBox_meta_to_stast.currentText()
+
         try:
             self.tf.set_func(function)
             self.tf.set_group(group)
@@ -661,7 +663,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_network_combobox()
             # eanble PCA   button
             self.enable_multi_button()
-        except:
+        except ValueError as e:
+            QMessageBox.warning(self.MainWindow, 'Error', str(e))
+        except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
     

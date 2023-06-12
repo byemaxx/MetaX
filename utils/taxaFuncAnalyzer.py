@@ -72,6 +72,15 @@ class TaxaFuncAnalyzer:
                     func_list.append(i)
         self.func_list = func_list
         return func_list
+    
+    def check_meta_match_df(self) -> bool:
+        meta_list = self.meta_df['Sample'].tolist()
+        try:
+            df = self.original_df.copy()
+            df[meta_list]
+            return True
+        except:
+            return False
 
 
     def set_func(self, func):
@@ -576,6 +585,9 @@ class TaxaFuncAnalyzer:
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                           normalize_method: str = None, transform_method: str = None,
                             batch_list: list = None,  processing_order:list=None):
+        
+        if self.check_meta_match_df() is False:
+            raise ValueError("The meta data does not match the TaxaFunc data, Please check!")
 
         
         df = self.original_df.copy()
