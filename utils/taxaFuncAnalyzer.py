@@ -40,7 +40,8 @@ class TaxaFuncAnalyzer:
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
-        self.check_func_in_df()
+        self._remove_all_zero_row()
+        self.get_func_list_in_df()
         self.set_func('Description')
 
     def _set_original_df(self, df_path: str) -> None:
@@ -60,7 +61,7 @@ class TaxaFuncAnalyzer:
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
     
-    def check_func_in_df(self) -> list:
+    def get_func_list_in_df(self) -> list:
         col_names = self.original_df.columns.tolist()
         func_list = []
         for i in col_names:
@@ -81,7 +82,15 @@ class TaxaFuncAnalyzer:
             return True
         except:
             return False
+    
+    def _remove_all_zero_row(self):
+        df = self.original_df.copy()
+        print(f'original df shape: {df.shape}')
+        df = df.drop(df[(df[self.sample_list] == 0).all(axis=1)].index)
+        print(f'after remove all zero row: {df.shape}')
+        self.original_df = df
 
+    
 
     def set_func(self, func):
         

@@ -66,9 +66,13 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True):
         try:
-            SAMPLE_LIST = self.tfobj.sample_list
-            GROUP_LIST = self.tfobj.group_list
-
+            meta_df = self.tfobj.meta_df
+            SAMPLE_LIST = meta_df['Sample']
+            GROUP_LIST = meta_df[self.tfobj.meta_name]
+            new_sample_name = [
+                f'{SAMPLE_LIST[i]} ({GROUP_LIST[i]})'
+                for i in range(len(SAMPLE_LIST))
+            ]
             # from adjustText import adjust_text
             dft = df[SAMPLE_LIST]
             dft = dft.T
@@ -81,8 +85,8 @@ class BasicPlot:
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], 
                                 hue=GROUP_LIST, s = 100, alpha=0.8)
             if show_label:
-                text = [fig.text(components[i, 0], components[i, 1], s=SAMPLE_LIST[i], size='medium', 
-                            color='black', alpha=0.6) for i in range(len(SAMPLE_LIST))]
+                text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size='medium', 
+                            color='black', alpha=0.6) for i in range(len(new_sample_name))]
             # text = adjust_text(text)
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
                         fontsize=15, fontweight='bold')

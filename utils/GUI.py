@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.17'
+__version__ = '1.18'
 
 # import built-in python modules
 import os
@@ -278,11 +278,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         dialog.exec_()
 
     def like_us(self):
-        if self.like_times < 5:
-            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
+        if self.like_times < 1:
+            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support! \n\n You have unlocked the hidden function!")
+            self.like_times += 1
+        elif self.like_times <2:
+            QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again! \n\n You have unlocked the second hidden function!")
             self.like_times += 1
         else:
-            QMessageBox.information(self.MainWindow, "Congratulations!", "You enabled the hidden function!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "You have unlocked all the hidden functions! \n\n Give us some time to develop more features!")
         
         
 
@@ -1121,7 +1124,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             if 'taxa-func' in table_name:
-                df_top_cross = HeatmapPlot(self.tf).get_top_across_table(df=df,func_name=self.tf.func, top_number=top_num, value_type=value_type, pvalue=pvalue)
+                df_top_cross = HeatmapPlot(self.tf).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue)
             else:
                 df_top_cross = HeatmapPlot(self.tf).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale)
         except ValueError:
@@ -1132,12 +1135,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
 
-        if df_top_cross.empty:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'df_top is empty!')
+        try:
+            if df_top_cross is None:
+                print('df_top_cross is None')
+                return None
+            else:      
+                self.update_table_dict('top_cross', df_top_cross)
+                self.show_table(df_top_cross)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
-
-        self.update_table_dict('top_cross', df_top_cross)
-        self.show_table(df_top_cross)
 
     # ANOVA
     def anova_test(self):
@@ -1495,7 +1503,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             params['func_name'] = func
 
         try:
-            if self.like_times >= 5:
+            if self.like_times >= 1:
                 if width and height:
                     params['width'] = width*100
                     params['height'] = height*100
