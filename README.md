@@ -3,6 +3,11 @@
 ## Usage
 ## Change log
 - 2023-06-12:
+    - Version: 1.18
+        - fix bugs of hetamap
+        - add drag and drop function to Line Edit for input files
+
+- 2023-06-12:
     - Version: 1.16
         - add some cool function
         - fix some bugs

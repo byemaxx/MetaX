@@ -310,7 +310,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     def like_us(self):
         if self.like_times < 1:
-            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support! \n\n You have unlocked the hidden function!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support! \n\n You have unlocked the hidden function!\n\n Now you can use the bar plot in Taxa-Func Link!")
+            self.pushButton_others_plot_line.setText('Plot Bar')
             self.like_times += 1
         elif self.like_times <2:
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again! \n\n You have unlocked the second hidden function!")
@@ -975,7 +976,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df = df.loc[(df!=0).any(axis=1)]
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
         try:
-            HeatmapPlot(self.tf).plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
+            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -1118,7 +1119,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             if 'taxa-func' in table_name:
                 fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                                func_name=self.tf.func, top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap)
+                               top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap)
             else:
                 fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
@@ -1510,7 +1511,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             hp = HeatmapPlot(self.tf)
-            hp.plot_basic_heatmap(mat=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
+            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
