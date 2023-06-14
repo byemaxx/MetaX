@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.18'
+__version__ = '1.19'
 
 # import built-in python modules
 import os
@@ -928,8 +928,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         height = self.spinBox_basic_heatmap_height.value()
         scale = self.comboBox_basic_hetatmap_scale.currentText()
         cmap = self.comboBox_basic_hetatmap_theme.currentText()
+        rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
         if cmap == 'Auto':
-            cmap = None
+            cmap = None            
             
         sample_list = []
         if group_list == []:
@@ -976,7 +977,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df = df.loc[(df!=0).any(axis=1)]
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
         try:
-            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
+            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -1083,6 +1084,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
+        rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
 
         if cmap == 'Auto':
             cmap = None
@@ -1119,11 +1121,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             if 'taxa-func' in table_name:
                 fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                               top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap)
+                               top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa)
             else:
                 fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                          scale = scale, col_cluster = True, row_cluster = True, cmap = cmap)
+                                                                          scale = scale, col_cluster = True, row_cluster = True, cmap = cmap, rename_taxa=rename_taxa)
         except ValueError:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
         except Exception as e:
@@ -1272,6 +1274,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.comboBox_top_heatmap_table_dict[table_name] = df
                 self.comboBox_top_heatmap_table.clear()
                 self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_dict.keys())
+            except ValueError as e:
+                if str(e) == 'sample size must be more than 1 for t-test':
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The sample size of each group must be more than 1 for T-TEST!')
+                    return None
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -1453,18 +1459,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         group_list = self.comboBox_others_group.getCheckedItems()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
-        scale = self.comboBox_others_hetatmap_scale.currentText()
+        scale = self.comboBox_tflink_hetatmap_scale.currentText()
         cmap = self.comboBox_tflink_cmap.currentText()
+        rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         if cmap == 'Auto':
             cmap = None
 
         row_cluster = False
         col_cluster = False
 
-        if self.checkBox_others_hetatmap_row_cluster.isChecked():
+        if self.checkBox_tflink_hetatmap_row_cluster.isChecked():
             row_cluster = True
         
-        if self.checkBox_others_hetatmap_col_cluster.isChecked():
+        if self.checkBox_tflink_hetatmap_col_cluster.isChecked():
             col_cluster = True
 
         
@@ -1511,7 +1518,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             hp = HeatmapPlot(self.tf)
-            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap)
+            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')

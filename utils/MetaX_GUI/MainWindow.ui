@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>98</width>
-                 <height>28</height>
+                 <width>439</width>
+                 <height>513</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -702,8 +702,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>194</width>
-                 <height>61</height>
+                 <width>884</width>
+                 <height>532</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -779,24 +779,14 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>369</width>
-                 <height>235</height>
+                 <width>397</width>
+                 <height>258</height>
                 </rect>
                </property>
                <attribute name="label">
                 <string>● Heatmap</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_30">
-                <item row="2" column="1" rowspan="10">
-                 <widget class="QListWidget" name="listWidget_list_for_ploting">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="2" colspan="2">
                  <widget class="QRadioButton" name="radioButton_basic_heamap_function">
                   <property name="enabled">
@@ -807,11 +797,8 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="0">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_basic_hetatmap_group">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -819,20 +806,17 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Clean List</string>
+                   <string>Groups</string>
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="6">
-                 <widget class="QSpinBox" name="spinBox_basic_heatmap_height">
-                  <property name="minimum">
-                   <number>1</number>
+                <item row="5" column="6">
+                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
+                  <property name="text">
+                   <string>Col Cluster</string>
                   </property>
-                  <property name="maximum">
-                   <number>200</number>
-                  </property>
-                  <property name="value">
-                   <number>8</number>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -849,36 +833,6 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="6">
-                 <widget class="QRadioButton" name="radioButton_basic_heatmap_taxa">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Taxa</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_32">
-                  <property name="text">
-                   <string>selecte for ploting</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="2">
-                 <widget class="QLabel" name="label_31">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Scale</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="4" column="2">
                  <widget class="QLabel" name="label_33">
                   <property name="sizePolicy">
@@ -892,11 +846,24 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
+                <item row="4" column="6">
+                 <widget class="QSpinBox" name="spinBox_basic_heatmap_height">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>200</number>
+                  </property>
+                  <property name="value">
+                   <number>8</number>
+                  </property>
+                 </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_basic_hetatmap_group">
+                <item row="7" column="0">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -904,7 +871,46 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Groups</string>
+                   <string>Clean List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="6">
+                 <widget class="QComboBox" name="comboBox_basic_hetatmap_theme"/>
+                </item>
+                <item row="8" column="2">
+                 <widget class="QLabel" name="label_13">
+                  <property name="text">
+                   <string>Theme</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="2" colspan="5">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Heatmap</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="5">
+                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list"/>
+                </item>
+                <item row="1" column="6">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Add to List</string>
                   </property>
                  </widget>
                 </item>
@@ -915,6 +921,72 @@
                   </property>
                   <property name="checked">
                    <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_32">
+                  <property name="text">
+                   <string>selecte for ploting</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_34">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>List for Ploting</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="6">
+                 <widget class="QRadioButton" name="radioButton_basic_heatmap_taxa">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Taxa</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="6">
+                 <widget class="QSpinBox" name="spinBox_basic_heatmap_width">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>200</number>
+                  </property>
+                  <property name="value">
+                   <number>10</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="2">
+                 <widget class="QLabel" name="label_31">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scale</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1" rowspan="11">
+                 <widget class="QListWidget" name="listWidget_list_for_ploting">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
                  </widget>
                 </item>
@@ -934,59 +1006,10 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="6">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Add to List</string>
-                  </property>
-                 </widget>
+                <item row="0" column="1">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
                 </item>
-                <item row="1" column="1" colspan="5">
-                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list"/>
-                </item>
-                <item row="8" column="2" colspan="5">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Heatmap</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="6">
-                 <widget class="QSpinBox" name="spinBox_basic_heatmap_width">
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>200</number>
-                  </property>
-                  <property name="value">
-                   <number>10</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="6">
-                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
-                  <property name="text">
-                   <string>Col Cluster</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="6">
+                <item row="7" column="6">
                  <widget class="QComboBox" name="comboBox_basic_hetatmap_scale">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1011,28 +1034,12 @@
                   </item>
                  </widget>
                 </item>
-                <item row="4" column="0">
-                 <widget class="QLabel" name="label_34">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                <item row="6" column="2" colspan="3">
+                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_taxa">
                   <property name="text">
-                   <string>List for Ploting</string>
+                   <string>Simplify Taxa Names</string>
                   </property>
                  </widget>
-                </item>
-                <item row="7" column="2">
-                 <widget class="QLabel" name="label_13">
-                  <property name="text">
-                   <string>Theme</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="6">
-                 <widget class="QComboBox" name="comboBox_basic_hetatmap_theme"/>
                 </item>
                </layout>
               </widget>
@@ -1055,10 +1062,16 @@
                 <string>T-TEST</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_13">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_36">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_42">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
-                   <string>Table for Analysis</string>
+                   <string>Group 1</string>
                   </property>
                  </widget>
                 </item>
@@ -1081,19 +1094,6 @@
                   </item>
                  </widget>
                 </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_42">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Group 1</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="1">
                  <widget class="QLabel" name="label_52">
                   <property name="sizePolicy">
@@ -1107,8 +1107,15 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QComboBox" name="comboBox_ttest_group1">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_36">
+                  <property name="text">
+                   <string>Table for Analysis</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QComboBox" name="comboBox_ttest_group2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1117,8 +1124,8 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
-                 <widget class="QComboBox" name="comboBox_ttest_group2">
+                <item row="2" column="0">
+                 <widget class="QComboBox" name="comboBox_ttest_group1">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1362,8 +1369,35 @@
             </item>
             <item row="1" column="0">
              <layout class="QGridLayout" name="gridLayout_top_heatmap_plot">
-              <item row="2" column="1">
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_57">
+                <property name="text">
+                 <string>Sort By</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5">
+               <widget class="QLabel" name="label_58">
+                <property name="text">
+                 <string>Top Number</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="7">
+               <widget class="QLabel" name="label_30">
+                <property name="text">
+                 <string>P-value</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
                <widget class="QComboBox" name="comboBox_top_heatmap_sort_type">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <item>
                  <property name="text">
                   <string>p-value</string>
@@ -1381,29 +1415,20 @@
                 </item>
                </widget>
               </item>
-              <item row="2" column="0">
-               <widget class="QComboBox" name="comboBox_top_heatmap_table"/>
-              </item>
-              <item row="0" column="4" rowspan="4">
-               <widget class="QPushButton" name="pushButton_plot_top_heatmap">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_60">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Plot Top Heatmap</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>false</bool>
+                 <string>Height</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="3">
+              <item row="5" column="4">
                <widget class="QComboBox" name="comboBox_top_heatmap_scale">
                 <item>
                  <property name="text">
@@ -1422,94 +1447,7 @@
                 </item>
                </widget>
               </item>
-              <item row="3" column="3">
-               <widget class="QLabel" name="label_62">
-                <property name="text">
-                 <string>Scale</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_56">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Table</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
-               <widget class="QLabel" name="label_38">
-                <property name="text">
-                 <string>Theme</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="3">
-               <widget class="QComboBox" name="comboBox_top_heatmap_cmap"/>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_57">
-                <property name="text">
-                 <string>Sort By</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_30">
-                <property name="text">
-                 <string>P-value</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QLabel" name="label_60">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Image Height</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="4">
-               <widget class="QPushButton" name="pushButton_get_top_cross_table">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Get Top Table</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_59">
-                <property name="text">
-                 <string>Image Width</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="2">
-               <widget class="QLabel" name="label_58">
-                <property name="text">
-                 <string>Top Number</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
+              <item row="0" column="8">
                <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
                 <property name="decimals">
                  <number>2</number>
@@ -1525,23 +1463,20 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
-               <widget class="QSpinBox" name="spinBox_top_heatmap_width">
-                <property name="minimum">
-                 <number>1</number>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_56">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <property name="maximum">
-                 <number>9999</number>
-                </property>
-                <property name="singleStep">
-                 <number>1</number>
-                </property>
-                <property name="value">
-                 <number>16</number>
+                <property name="text">
+                 <string>Table</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
+              <item row="5" column="1">
                <widget class="QSpinBox" name="spinBox_top_heatmap_length">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1560,7 +1495,14 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="2">
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_59">
+                <property name="text">
+                 <string>Width</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="6">
                <widget class="QSpinBox" name="spinBox_top_heatmap_number">
                 <property name="minimum">
                  <number>1</number>
@@ -1570,6 +1512,110 @@
                 </property>
                 <property name="value">
                  <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="9" rowspan="5">
+               <widget class="QPushButton" name="pushButton_plot_top_heatmap">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Plot Top Heatmap</string>
+                </property>
+                <property name="autoDefault">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="9">
+               <widget class="Line" name="line_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QSpinBox" name="spinBox_top_heatmap_width">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>9999</number>
+                </property>
+                <property name="singleStep">
+                 <number>1</number>
+                </property>
+                <property name="value">
+                 <number>16</number>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="9">
+               <widget class="QPushButton" name="pushButton_get_top_cross_table">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Get Top Table</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="4">
+               <widget class="QComboBox" name="comboBox_top_heatmap_cmap"/>
+              </item>
+              <item row="4" column="5">
+               <widget class="QCheckBox" name="checkBox_top_heatmap_rename_taxa">
+                <property name="text">
+                 <string>Simplify Taxa Names</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="3">
+               <widget class="QLabel" name="label_62">
+                <property name="text">
+                 <string>Scale</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="3">
+               <widget class="QLabel" name="label_38">
+                <property name="text">
+                 <string>Theme</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="comboBox_top_heatmap_table">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>25</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
                </widget>
               </item>
@@ -1906,7 +1952,7 @@
               </widget>
               <widget class="QWidget" name="tab_5">
                <attribute name="title">
-                <string>WGCNA</string>
+                <string>Co-Expression Networks</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_24">
                 <item row="0" column="0">
@@ -2140,6 +2186,12 @@
                 </item>
                 <item row="5" column="3">
                  <widget class="QSpinBox" name="spinBox_tflink_height">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimum">
                    <number>1</number>
                   </property>
@@ -2221,7 +2273,7 @@
                  </widget>
                 </item>
                 <item row="6" column="1">
-                 <widget class="QComboBox" name="comboBox_others_hetatmap_scale">
+                 <widget class="QComboBox" name="comboBox_tflink_hetatmap_scale">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2247,6 +2299,12 @@
                 </item>
                 <item row="5" column="1">
                  <widget class="QSpinBox" name="spinBox_tflink_width">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimum">
                    <number>1</number>
                   </property>
@@ -2325,7 +2383,7 @@
                 <item row="5" column="2">
                  <widget class="QLabel" name="label_20">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -2348,40 +2406,18 @@
                   </property>
                  </widget>
                 </item>
-                <item row="5" column="7" colspan="2">
-                 <widget class="QPushButton" name="pushButton_others_plot_line">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
+                <item row="6" column="3">
+                 <widget class="QComboBox" name="comboBox_tflink_cmap">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                  <property name="text">
-                   <string>Plot Line</string>
-                  </property>
                  </widget>
                 </item>
-                <item row="6" column="7" colspan="2">
-                 <widget class="QPushButton" name="pushButton_others_plot_heatmap">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Heatmap</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="5">
-                 <widget class="QCheckBox" name="checkBox_others_hetatmap_row_cluster">
+                <item row="5" column="4">
+                 <widget class="QCheckBox" name="checkBox_tflink_hetatmap_row_cluster">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2396,8 +2432,8 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="5">
-                 <widget class="QCheckBox" name="checkBox_others_hetatmap_col_cluster">
+                <item row="6" column="4">
+                 <widget class="QCheckBox" name="checkBox_tflink_hetatmap_col_cluster">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -2415,13 +2451,42 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="3">
-                 <widget class="QComboBox" name="comboBox_tflink_cmap">
+                <item row="6" column="5">
+                 <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_taxa">
+                  <property name="text">
+                   <string>Simplify Taxa Names</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="6" colspan="3">
+                 <widget class="QPushButton" name="pushButton_others_plot_line">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Line</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="6" colspan="3">
+                 <widget class="QPushButton" name="pushButton_others_plot_heatmap">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Heatmap</string>
                   </property>
                  </widget>
                 </item>

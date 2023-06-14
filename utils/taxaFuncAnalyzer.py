@@ -384,6 +384,9 @@ class TaxaFuncAnalyzer:
                 res[primary].append(primary_value)
 
                 list_for_ttest = [row[1][self.get_sample_list_in_a_group(group)].to_list() for group in group_list]
+                # check if the sample size more than 1
+                if any(len(i) < 2 for i in list_for_ttest):
+                    raise ValueError(f"sample size must be more than 1 for t-test")
 
                 t, p = ttest_ind(*list_for_ttest)
                 res["P-value"].append(p)
