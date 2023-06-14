@@ -63,7 +63,7 @@ class NetworkPlot:
                 nodes,
                 links,
                 categories,
-                repulsion=50,
+                repulsion=100,
                 friction = 0.6,
                 linestyle_opts=opts.LineStyleOpts(curve=0.2),
                 gravity = 0.1,
@@ -81,6 +81,9 @@ class NetworkPlot:
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', corr_threshold:float=0.5, sample_list:list = None, width:int = 1600, height:int = 900):
         from matplotlib import colormaps
+        #check sample_list length
+        if len(sample_list) < 2:
+            raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
         df_dict = {'taxa': self.tfobj.taxa_df, 'func': self.tfobj.func_df, 'taxa-func': self.tfobj.taxa_func_df}
         df = df_dict[df_type].copy()
@@ -104,9 +107,14 @@ class NetworkPlot:
         max_node_size = node_sizes.max()
         min_node_size = node_sizes.min()
 
-        nodes = [{"name": gene, "symbolSize": (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10} for gene in correlation_matrix.columns]
+        nodes = []
+        for gene in correlation_matrix.columns:
+            node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
+            color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
+            color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
+            nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
+        
         links = []
-
         for i in range(len(correlation_matrix)):
             for j in range(i+1, len(correlation_matrix)):
                 correlation = correlation_matrix.iloc[i, j]
@@ -126,7 +134,7 @@ class NetworkPlot:
                     ),
                 )
             )
-            .add("", nodes, links, repulsion=8000)
+            .add("", nodes, links, repulsion=1500)
             .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
             .set_global_opts(
                 title_opts=opts.TitleOpts(

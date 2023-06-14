@@ -100,6 +100,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.screen = QDesktopWidget().screenGeometry()
         self.spinBox_network_width.setValue(self.screen.width())
         self.spinBox_network_height.setValue(self.screen.height())
+        self.spinBox_co_expr_width.setValue(self.screen.width())
+        self.spinBox_co_expr_height.setValue(self.screen.height())
 
         # set Drag EditLine for input file
         self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path)
@@ -1374,7 +1376,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         height = self.spinBox_co_expr_height.value()
 
 
-        sample_list = None
+        sample_list = self.tf.sample_list
         if self.radioButton_co_expr_bysample.isChecked():
             slected_list = self.comboBox_co_expr_sample.getCheckedItems()
             if len(slected_list) == 0:
@@ -1391,10 +1393,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 for group in groups:
                     sample_list += self.tf.get_sample_list_in_a_group(group)
         try:
+            self.show_message('Info', 'Co-expression network is plotting...\n\n It may take a long time! Please wait...')
             pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height)
-            self.show_message('Info', 'Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
@@ -1404,6 +1405,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             web = webDialog.MyDialog(save_path)
             self.web_list.append(web)
             web.show()
+        except ValueError as e:
+            if 'sample_list should have at least 2' in str(e):
+                QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
@@ -1448,7 +1452,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def plot_network(self):
         width = self.spinBox_network_width.value()
         height = self.spinBox_network_height.value()
-        sample_list = None
+        sample_list =  self.tf.sample_list
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
             if len(slected_list) == 0:
