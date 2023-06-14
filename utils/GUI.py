@@ -817,15 +817,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             self.gridLayout_tflink_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(f'Cannot delete gridLayout_tflink_group: {e}')
+            pass
         try:
             self.horizontalLayout_anova_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(f'Cannot delete horizontalLayout_anova_group: {e}')
+            pass
         try:
             self.verticalLayout_basic_heatmap_group.itemAt(0).widget().deleteLater()
         except Exception as e:
-            print(f'Cannot delete verticalLayout_basic_heatmap_group: {e}')
+            pass
+        
         self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
         self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
         self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
