@@ -49,6 +49,7 @@ from MetaX.utils.MetaX_GUI.OutputWindow import OutputWindow
 from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
 from MetaX.utils.MetaX_GUI.DBBuilderQThread import DBBuilder
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
+from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 
 
 # import pyqt5 scripts
@@ -99,6 +100,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.screen = QDesktopWidget().screenGeometry()
         self.spinBox_network_width.setValue(self.screen.width())
         self.spinBox_network_height.setValue(self.screen.height())
+
+        # set Drag EditLine for input file
+        self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path)
+        self.lineEdit_meta_path = self.make_line_edit_drag_drop(self.lineEdit_meta_path)
+        self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path)
+        self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path)
+        
 
 
         # set button click event
@@ -211,6 +219,29 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_db_type_help.clicked.connect(self.show_toolButton_db_type_help)
         self.toolButton_db_all_meta_help.clicked.connect(self.show_toolButton_db_all_meta_help)
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
+    
+    def make_line_edit_drag_drop(self, old_lineEdit):
+        def create_new_LineEdit(line_edit):
+            new_line_edit = FileDragDropLineEdit(line_edit.parent())
+
+            new_line_edit.setText(line_edit.text())
+            new_line_edit.setReadOnly(line_edit.isReadOnly())
+
+            return new_line_edit
+
+        # 创建一个新的 FileDragDropLineEdit 实例
+        new_lineEdit = create_new_LineEdit(old_lineEdit)
+
+        # 在 UI 中用新的 FileDragDropLineEdit 实例替换旧的 QLineEdit 实例
+        old_lineEdit.parent().layout().replaceWidget(old_lineEdit, new_lineEdit)
+
+        # 删除旧的 QLineEdit 实例
+        old_lineEdit.deleteLater()
+
+        # 返回新的 FileDragDropLineEdit 实例，以便可以在外部使用它
+        return new_lineEdit
+
+
 
     # function of menu bar
     def swith_stack_page_analyzer(self):
@@ -516,16 +547,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     #### TaxaFuncAnalyzer Function ####
     def ceck_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
         import pandas as pd
-        taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
-        meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
-        taxafunc_column_names = taxafunc_table.columns.tolist()
-        if 'Taxon_prop' not in taxafunc_column_names:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table looks like not correct, please check!')
-            return False
-        meta_column_names = meta_table.columns.tolist()
-        if len(meta_column_names) < 1:
-            print(meta_column_names)
-            QMessageBox.warning(self.MainWindow, 'Warning', 'The meta table only has one column, please check!\n\nPlease make sure the first column is sample name and the following columns are meta information!\n\n And make sure the meta table is TSV format (table separated by tab)\n\nPlease check!')
+        try:
+            taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
+            meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
+            taxafunc_column_names = taxafunc_table.columns.tolist()
+            if 'Taxon_prop' not in taxafunc_column_names:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table looks like not correct, please check!')
+                return False
+            meta_column_names = meta_table.columns.tolist()
+            if len(meta_column_names) < 1:
+                print(meta_column_names)
+                QMessageBox.warning(self.MainWindow, 'Warning', 'The meta table only has one column, please check!\n\nPlease make sure the first column is sample name and the following columns are meta information!\n\n And make sure the meta table is TSV format (table separated by tab)\n\nPlease check!')
+                return False
+        except Exception as e:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
             return False
         
         
