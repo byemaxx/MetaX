@@ -23,7 +23,7 @@ class HeatmapPlot:
         #     fig_size = (width, length)
         # else:
         #     width, length, front_title, font_size = self._fit_size(df)
-        func_name = self.tfobj.func
+        func_name = self.tfobj.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
         # dft = dft.iloc[:, :4]
@@ -243,7 +243,7 @@ class HeatmapPlot:
 
 
     def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05):
-        func_name = self.tfobj.func
+        func_name = self.tfobj.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
 

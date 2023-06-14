@@ -28,7 +28,7 @@ class TaxaFuncAnalyzer:
         self.group_list = None
 
         self.func_list = None
-        self.func = None
+        self.func_name = None
 
         self.clean_df = None
         self.taxa_df = None
@@ -101,7 +101,7 @@ class TaxaFuncAnalyzer:
         if func not in check_list:
             raise ValueError(f'func must be in {check_list}')
         else:
-            self.func = func
+            self.func_name = func
 
     # set which group in meta_df to use
     def set_group(self, group: str):
@@ -303,13 +303,13 @@ class TaxaFuncAnalyzer:
 
         if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
             if df_type == 'taxa-func':
-                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func
+                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func_name
             elif df_type == 'func-taxa':
-                df, primary, secondary = self.func_taxa_df, self.func, 'Taxon'
+                df, primary, secondary = self.func_taxa_df, self.func_name, 'Taxon'
             elif df_type == 'taxa':
                 df, primary = self.taxa_df, 'Taxon'
             elif df_type == 'func':
-                df, primary = self.func_df, self.func
+                df, primary = self.func_df, self.func_name
 
             print(f"ANOVA test for {primary} in {group_list}")
 
@@ -360,13 +360,13 @@ class TaxaFuncAnalyzer:
 
         if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
             if df_type == 'taxa-func':
-                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func
+                df, primary, secondary = self.taxa_func_df, 'Taxon', self.func_name
             elif df_type == 'func-taxa':
-                df, primary, secondary = self.func_taxa_df, self.func, 'Taxon'
+                df, primary, secondary = self.func_taxa_df, self.func_name, 'Taxon'
             elif df_type == 'taxa':
                 df, primary = self.taxa_df, 'Taxon'
             elif df_type == 'func':
-                df, primary = self.func_df, self.func
+                df, primary = self.func_df, self.func_name
 
             print(f"t-test for {primary} in {group_list}")
 
@@ -411,18 +411,18 @@ class TaxaFuncAnalyzer:
             dft.reset_index(inplace=True)
 
             if taxon_name is None:
-                dft = dft[dft[self.func] == func_name]
+                dft = dft[dft[self.func_name] == func_name]
                 dft.set_index('Taxon', inplace=True)
             if taxon_name is not None:
                 dft = self.clean_df[(self.clean_df['Taxon'] == taxon_name) & (
-                    self.clean_df[self.func] == func_name)]
+                    self.clean_df[self.func_name] == func_name)]
                 dft.set_index('Sequence', inplace=True)
 
         elif taxon_name is not None and peptide_seq is None:
             dft = self.func_taxa_df.copy()
             dft.reset_index(inplace=True)
             dft = dft[dft['Taxon'] == taxon_name]
-            dft.set_index(self.func, inplace=True)
+            dft.set_index(self.func_name, inplace=True)
 
         elif peptide_seq is not None and taxon_name is None:
             dft = self.original_df[self.original_df['Sequence'] == peptide_seq]
@@ -562,11 +562,11 @@ class TaxaFuncAnalyzer:
 
         # Correct the logic for filtering the dataframe based on taxon_name and func_name
         if taxon_name is not None and func_name is not None:
-            df = df[(df['Taxon'] == taxon_name) & (df[self.func] == func_name)]
+            df = df[(df['Taxon'] == taxon_name) & (df[self.func_name] == func_name)]
         elif taxon_name is not None:
             df = df[df['Taxon'] == taxon_name]
         elif func_name is not None:
-            df = df[df[self.func] == func_name]
+            df = df[df[self.func_name] == func_name]
         else:
             raise ValueError(
                 "Please input the taxon name or the function name or both of them")
@@ -610,7 +610,7 @@ class TaxaFuncAnalyzer:
         # perform data pre-processing
         df = self._data_preprocess(df, normalize_method, transform_method, batch_list, processing_order)
         
-        func_name = self.func
+        func_name = self.func_name
         sample_list = self.sample_list
 
         print(f"Original data shape: {df.shape}")

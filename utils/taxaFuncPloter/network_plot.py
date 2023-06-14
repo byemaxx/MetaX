@@ -54,7 +54,7 @@ class NetworkPlot:
 
 
     
-    def plot_network(self, sample_list:list = None, width:int = 1200, height:int = 800):
+    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800):
         nodes, links, categories = self.create_nodes_links(sample_list)
         c = (
             Graph(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
@@ -77,3 +77,79 @@ class NetworkPlot:
             )
         
         return c
+    
+
+    def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', corr_threshold:float=0.5, sample_list:list = None, width:int = 1600, height:int = 900):
+        from matplotlib import colormaps
+
+        df_dict = {'taxa': self.tfobj.taxa_df, 'func': self.tfobj.func_df, 'taxa-func': self.tfobj.taxa_func_df}
+        df = df_dict[df_type].copy()
+        if extra_cols := sample_list:
+            print(f"Using sample list provided {extra_cols}")
+            df = df[extra_cols]
+        else:
+            print("No sample list provided, using all samples")
+
+        df = self.replace_if_two_index(df)
+
+        df = df.T
+        if  corr_method == 'pearson':
+            correlation_matrix = df.corr(method='pearson')
+        elif corr_method == 'spearman':
+            correlation_matrix = df.corr(method='spearman')
+        else:
+            raise ValueError(f"corr_method should be pearson or spearman, but got {corr_method}")
+
+        node_sizes = correlation_matrix.apply(lambda x: (x > corr_threshold).sum(), axis=1)
+        max_node_size = node_sizes.max()
+        min_node_size = node_sizes.min()
+
+        nodes = [{"name": gene, "symbolSize": (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10} for gene in correlation_matrix.columns]
+        links = []
+
+        for i in range(len(correlation_matrix)):
+            for j in range(i+1, len(correlation_matrix)):
+                correlation = correlation_matrix.iloc[i, j]
+                # create a link if the correlation is above a threshold
+                if correlation > corr_threshold:
+                    color = colormaps.get_cmap('viridis')((correlation - corr_threshold) / corr_threshold) 
+                    color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
+                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color}})
+
+        pic = (
+            Graph(
+                init_opts=opts.InitOpts(
+                    width=f"{width}px",
+                    height=f"{height}px",
+                    animation_opts=opts.AnimationOpts(
+                        animation_threshold=100, animation_easing="cubicOut"
+                    ),
+                )
+            )
+            .add("", nodes, links, repulsion=8000)
+            .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title="Co-expression Network",
+                    subtitle=f"{sample_list}",
+                    subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
+                ), 
+                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}} )
+        ))
+        return pic
+    
+    def replace_if_two_index(self, df):
+        import pandas as pd
+        if isinstance(df.index, pd.MultiIndex):
+            df = df.copy()
+            df.reset_index(inplace=True)
+            # DO NOT USE f-string here, it will cause error
+            df['Taxa-Func'] = df.iloc[:,
+                                        0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
+            df.set_index('Taxa-Func', inplace=True)
+            df = df.drop(df.columns[:2], axis=1)
+        else:
+            df = df.copy()
+        return df
+
+# NetworkPlot(sw).plot_co_expression_network(df_type='taxa-func', corr_threshold=0.8, sample_list=sw.get_sample_list_in_a_group('V1') ).render_notebook()

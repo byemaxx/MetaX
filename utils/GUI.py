@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.19'
+__version__ = '1.20'
 
 # import built-in python modules
 import os
@@ -189,6 +189,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_deseq2.clicked.connect(self.deseq2_test)
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
+
+        # ### Co-Expression Network
+        self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
+
         
         ## Others
         # network
@@ -342,23 +346,34 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.output_window.show()
     
     def update_network_combobox(self):
+        # tklink network
         self.comboBox_network_group = CheckableComboBox()
         self.comboBox_network_sample = CheckableComboBox()
+        # co_expr network
+        self.comboBox_co_expr_group = CheckableComboBox()
+        self.comboBox_co_expr_sample = CheckableComboBox()
         try:
+            # delete the old combobox
             self.gridLayout_network_group.itemAt(0).widget().deleteLater()
             self.gridLayout_network_sample.itemAt(0).widget().deleteLater()
+            self.gridLayout_co_expr_group.itemAt(0).widget().deleteLater()
+            self.gridLayout_co_expr_sample.itemAt(0).widget().deleteLater()
         except Exception as e:
             print(e)
         finally:
             self.gridLayout_network_group.addWidget(self.comboBox_network_group)
             self.gridLayout_network_sample.addWidget(self.comboBox_network_sample)
+            self.gridLayout_co_expr_group.addWidget(self.comboBox_co_expr_group)
+            self.gridLayout_co_expr_sample.addWidget(self.comboBox_co_expr_sample)
         group_list = sorted(set(self.tf.group_list))
-        sample_list = sorted(set(self.tf.sample_list))
+        sample_list = sorted(set(self.tf.sample_list))       
 
         for group in group_list:
             self.comboBox_network_group.addItem(group)
+            self.comboBox_co_expr_group.addItem(group)
         for sample in sample_list:
             self.comboBox_network_sample.addItem(sample)
+            self.comboBox_co_expr_sample.addItem(sample)
 
         
 
@@ -1351,7 +1366,48 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
     
+    def plot_co_expr_network(self):
+        df_type = self.comboBox_co_expr_table.currentText().lower()
+        corr_method = self.comboBox_co_expr_corr_method.currentText()
+        corr_threshold = self.doubleSpinBox_co_expr_corr_threshold.value()
+        width = self.spinBox_co_expr_width.value()
+        height = self.spinBox_co_expr_height.value()
 
+
+        sample_list = None
+        if self.radioButton_co_expr_bysample.isChecked():
+            slected_list = self.comboBox_co_expr_sample.getCheckedItems()
+            if len(slected_list) == 0:
+                print('Did not select any group!, plot all samples')
+            else:
+                sample_list = slected_list
+                # print(f'Plot with selected samples:{sample_list}')
+        elif self.radioButton_co_expr_bygroup.isChecked():
+            groups = self.comboBox_co_expr_group.getCheckedItems()
+            if len(groups) == 0:
+                print('Did not select any group!, plot all samples')
+            else:
+                sample_list = []
+                for group in groups:
+                    sample_list += self.tf.get_sample_list_in_a_group(group)
+        try:
+            pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
+                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height)
+            self.show_message('Info', 'Co-expression network is plotting...\n\n It may take a long time! Please wait...')
+
+            home_path = QDir.homePath()
+            metax_path = os.path.join(home_path, 'MetaX')
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+            save_path = os.path.join(metax_path, 'Co-Expression-network.html')
+            pic.render(save_path)
+            web = webDialog.MyDialog(save_path)
+            self.web_list.append(web)
+            web.show()
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
+            return None
 
     #Sankey
     def deseq2_plot_sankey(self):
@@ -1390,8 +1446,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     # Others Functions #
     # network
     def plot_network(self):
-        width = int(float(self.spinBox_network_width.text()))
-        height = int(float(self.spinBox_network_height.text()))
+        width = self.spinBox_network_width.value()
+        height = self.spinBox_network_height.value()
         sample_list = None
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
@@ -1410,12 +1466,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     sample_list += self.tf.get_sample_list_in_a_group(group)
                 # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
         try:
-            pic = NetworkPlot(self.tf).plot_network(sample_list=sample_list, width=width, height=height)
+            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):
                 os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'network.html')
+            save_path = os.path.join(metax_path, 'TFLink-network.html')
             pic.render(save_path)
             web = webDialog.MyDialog(save_path)
             self.web_list.append(web)
