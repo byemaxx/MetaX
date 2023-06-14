@@ -163,9 +163,13 @@ class TaxaFuncAnalyzer:
         return pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
 
     def get_stats_func_prop(self, func_name) -> pd.DataFrame:
-        df = self.original_df.copy()
         if func_name not in self.func_list:
             raise ValueError(f'func_name must be in {self.func_list}')
+        
+        df = self.original_df.copy()
+        # remove unknown
+        df = df[ (df[func_name].notnull()) & (df[func_name] != 'unknown')]
+        
         prop_name = f'{func_name}_prop'
 
         df_prop = pd.DataFrame({'prop': ['0-0.1', '0-0.2', '0-0.3', '0-0.4', '0-0.5', '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1', '1'],

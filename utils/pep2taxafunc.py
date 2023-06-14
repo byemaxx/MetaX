@@ -25,9 +25,9 @@
 # Version:0.2.5
 # Add function annotation: 
 # 
-# Date: 2023-06-07
+# Date: 2023-06-13
 # Version:0.2.6
-# Nothing change
+# Test if the MGYG did not annotate to species level. Everytthing is ok.
 
 
 from collections import Counter
@@ -153,7 +153,7 @@ pep9 = 'MGYG000004876_02622'
 pep10 = 'MGYG000002766_00930;MGYG000002754_01086;MGYG000004681_00317'
 pep11 = 'MGYG000002864_01541;MGYG000004383_00684;MGYG000004407_01207;MGYG000002754_01423;MGYG000002766_01563;MGYG000001140_00858;MGYG000001176_00975;MGYG000004294_01434'
 pep_null = 'MGYG000000137_01815;MGYG000001639_01406;MGYG000000236_03945'
-
+pep_no_species_level = "MGYG000000385;MGYG000002077;MGYG000003829"
 ### test data
 
 if __name__ == '__main__':
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     print(db_path)
 
     
-    for i in [pep1, pep2, pep3, pep4, pep7, pep8, pep9, pep10, pep11, pep_null]:
+    for i in [pep_no_species_level]:
         print(i)
         protein_list = i.split(';')
         # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/mgyg2eggnog.db')
