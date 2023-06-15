@@ -448,6 +448,24 @@ class TaxaFuncAnalyzer:
         dft = dft[sample_list]
         return dft
 
+    
+        # df = get_top_intensity(sw.taxa_df, top_num=50, method='freq')
+    def get_top_intensity(self, df, top_num: int = 10, method: str = 'mean', sample_list: list = None):
+
+        df = df[sample_list].copy() if sample_list else df.copy()
+
+        if method == 'freq':
+            df['value'] = df.astype(bool).sum(axis=1)
+        elif method == 'mean':
+            df['value'] = df.mean(axis=1)
+        elif method == 'sum':
+            df['value'] = df.sum(axis=1)
+            
+        df = df.sort_values(by='value', ascending=False)
+        df = df[:top_num].drop('value', axis=1)
+        return df
+    
+    
     # input: df, df_type, top_num, show_stats_col
     # output: df
     # df_type: 'anova' or 'ttest' or 'log2fc'

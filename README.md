@@ -2,6 +2,11 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-15:
+    - Version: 1.22
+        - enable combobox searchable
+        - add bar plot for basic stat
+        - add get top list at basic stat part
 - 2023-06-12:
     - Version: 1.18
         - fix bugs of hetamap

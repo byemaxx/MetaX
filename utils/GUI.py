@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.21'
+__version__ = '1.22'
 
 # import built-in python modules
 import os
@@ -36,7 +36,7 @@ from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
 from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
 from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
 from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
-from MetaX.utils.taxaFuncPloter.line_plot_js import LinePlot_js
+from MetaX.utils.taxaFuncPloter.bar_plot_js import BarPlot_js
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
 
@@ -167,13 +167,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(self.plot_pca_sns)
-        ### Heatmap
+        ### Heatmap and Bar
         self.radioButton_basic_heamap_function.toggled.connect(self.click_basic_heatmap_func)
+        self.radioButton_basic_heamap_function.clicked.connect(self.click_basic_heatmap_func)
         self.radioButton_basic_heatmap_taxa.toggled.connect(self.click_basic_heatmap_taxa)
+        self.radioButton_basic_heatmap_taxa.clicked.connect(self.click_basic_heatmap_taxa)
         self.pushButton_basic_heatmap_add.clicked.connect(self.add_basic_heatmap_list)
         self.pushButton_basic_heatmap_drop_item.clicked.connect(self.drop_basic_heatmap_list)
         self.pushButton_basic_heatmap_clean_list.clicked.connect(self.clean_basic_heatmap_list)
         self.pushButton_basic_heatmap_plot.clicked.connect(self.plot_basic_list_heatmap)
+        self.pushButton_basic_bar_plot.clicked.connect(self.plot_basic_bar)
+        self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
 
 
         # Corss TEST
@@ -754,9 +758,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
             self.update_network_combobox()
-            # update comboBox of basic heatmap
-            self.radioButton_basic_heamap_function.setChecked(True)
-            self.update_basic_heatmap_combobox(type_list = 'function')
+
 
 
             # eanble PCA   button
@@ -937,49 +939,112 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_drop_item.setEnabled(True)
         self.pushButton_basic_heatmap_clean_list.setEnabled(True)
         self.pushButton_basic_heatmap_plot.setEnabled(True)
+        self.pushButton_basic_bar_plot.setEnabled(True)
+        self.pushButton_basic_heatmap_add_top.setEnabled(True)
+
+    def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
+            if str_selected is not None and str_list is None:
+                if str_selected == 'All Taxa':
+                    self.clean_basic_heatmap_list()
+                    self.listWidget_list_for_ploting.addItem('All Taxa')
+                    self.basic_heatmap_list = ['All Taxa']
+                elif str_selected == 'All Functions':
+                    self.clean_basic_heatmap_list()
+                    self.listWidget_list_for_ploting.addItem('All Functions')
+                    self.basic_heatmap_list = ['All Functions']
+                elif str_selected != '' and str_selected not in self.basic_heatmap_list:
+                    # check if str_selected is in the list
+                    def check_if_in_list(str_selected):
+                        if self.radioButton_basic_heamap_function.isChecked():
+                            if str_selected in self.function_list:
+                                return True
+                        elif self.radioButton_basic_heatmap_taxa.isChecked():
+                            if str_selected in self.taxa_list:
+                                return True
+                        else:
+                            return False
+                    if not check_if_in_list(str_selected):
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+                        return None
+                    
+                    if 'All Taxa' in self.basic_heatmap_list:
+                        self.basic_heatmap_list.remove('All Taxa')
+                    if 'All Functions' in self.basic_heatmap_list:
+                        self.basic_heatmap_list.remove('All Functions')
+                    self.basic_heatmap_list.append(str_selected)
+                    self.listWidget_list_for_ploting.clear()
+                    self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
+            elif str_list is not None and str_selected is None:
+                if "All Taxa" in self.basic_heatmap_list or "All Functions" in self.basic_heatmap_list:
+                    self.clean_basic_heatmap_list()
+                for str_selected in str_list:
+                    if str_selected not in self.basic_heatmap_list:
+                        self.basic_heatmap_list.append(str_selected)
+                        self.listWidget_list_for_ploting.addItem(str_selected)
+  
 
     def add_basic_heatmap_list(self):
         str_selected = self.comboBox_basic_heatmap_selection_list.currentText()
 
-        if str_selected == 'All Taxa':
-            self.clean_basic_heatmap_list()
-            self.listWidget_list_for_ploting.addItem('All Taxa')
-            self.basic_heatmap_list.append('All Taxa')
-
-        elif str_selected == 'All Functions':
-            self.clean_basic_heatmap_list()
-            self.listWidget_list_for_ploting.addItem('All Functions')
-            self.basic_heatmap_list.append('All Functions')
-
-        
-        elif str_selected != '' and str_selected not in self.basic_heatmap_list:
-            # check if str_selected is in the list
-            def check_if_in_list(str_selected):
-                if self.radioButton_basic_heamap_function.isChecked():
-                    if str_selected in self.function_list:
-                        return True
-                elif self.radioButton_basic_heatmap_taxa.isChecked():
-                    if str_selected in self.taxa_list:
-                        return True
-                else:
-                    return False
-            if not check_if_in_list(str_selected):
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
-                return None
-            
-            if 'All Taxa' in self.basic_heatmap_list:
-                self.basic_heatmap_list.remove('All Taxa')
-            if 'All Functions' in self.basic_heatmap_list:
-                self.basic_heatmap_list.remove('All Functions')
-            self.basic_heatmap_list.append(str_selected)
-            self.listWidget_list_for_ploting.clear()
-            self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
-
+        self.update_basic_heatmap_list(str_selected=str_selected)
     
     def clean_basic_heatmap_list(self):
         self.basic_heatmap_list = []
         self.listWidget_list_for_ploting.clear()
     
+    def add_basic_heatmap_top_list(self):
+        def extract_top_from_test_result(method, top_num, df_type):
+            table_name = method.split('_')[0] + '_test(' + df_type + ')'
+            df = self.table_dict.get(table_name)
+
+            if df is None:
+                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
+                return None
+            if method.split('_')[2] == 'p':
+                df = df.sort_values(by='P-value',ascending = True)
+            elif method.split('_')[2] == 'f':
+                df = df.sort_values(by='f-statistic',ascending = False)
+            elif method.split('_')[2] == 't':
+                df = df.sort_values(by='t-statistic',ascending = False)
+            df = df.head(top_num)
+            index_list = df.index.tolist()
+            return index_list
+        
+        top_num = self.spinBox_basic_heatmap_top_num.value()
+        group_list = self.comboBox_basic_group.getCheckedItems()
+        sample_list = []
+        if group_list == []:
+            sample_list = self.tf.sample_list
+        else:
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+    
+
+
+        method_dict = {'Average Intensity': 'mean', 'Frequency in Samples': 'freq', 'Total Intensity': 'sum',
+                       'ANOVA(p-value)': 'anova_test_p', 'ANOVA(f-statistic)': 'anova_test_f', 'T-TEST(p-value)': 't_test_p','T-TEST(t-statistic)': 't_test_t'}
+        method = method_dict[self.comboBox_basic_heatmap_top_by.currentText()]
+        
+        
+        if self.radioButton_basic_heamap_function.isChecked():
+            df = self.tf.func_df
+            df_type = 'func'
+        elif self.radioButton_basic_heatmap_taxa.isChecked():
+            df = self.tf.taxa_df
+            df_type = 'taxa'
+        else:
+            return None
+        
+        if method in ['mean', 'freq', 'sum']:
+            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
+            index_list = df.index.tolist()
+            self.update_basic_heatmap_list(str_list=index_list)
+        else:
+            index_list = extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
+            self.update_basic_heatmap_list(str_list=index_list)
+        
+
+
     def plot_basic_list_heatmap(self):
         group_list = self.comboBox_basic_group.getCheckedItems()
         width = self.spinBox_basic_heatmap_width.value()
@@ -1035,14 +1100,73 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df = df.loc[(df!=0).any(axis=1)]
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
         try:
-            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
+            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
+        
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
             
     
+    def plot_basic_bar(self):
+        group_list = self.comboBox_basic_group.getCheckedItems()
+        width = self.spinBox_basic_heatmap_width.value()*100
+        height = self.spinBox_basic_heatmap_height.value()*100
+        rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
+         
+            
+        sample_list = []
+        if group_list == []:
+            sample_list = self.tf.sample_list
+        else:
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        
 
+        if self.radioButton_basic_heamap_function.isChecked():
+            title = 'Bar Plot of Function'
+            dft = self.tf.func_df.copy()
+        elif self.radioButton_basic_heatmap_taxa.isChecked():
+            title = 'Bar Plot of Taxa'
+            dft = self.tf.taxa_df.copy()
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Taxa or Function radio button!')
+            return
+        
+        dft = dft[sample_list]
 
+        if len(self.basic_heatmap_list) == 1:
+            if self.basic_heatmap_list[0] == 'All Taxa' or self.basic_heatmap_list[0] == 'All Functions':
+                df = dft
+            else:
+                df = dft.loc[self.basic_heatmap_list]            
+        elif len(self.basic_heatmap_list) > 1:
+            df = dft.loc[self.basic_heatmap_list]
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa or function to the list!')
+            return None
+        
+        if len(df) > 100:
+            reply = QMessageBox.question(self.MainWindow, 'Warning', 
+                                        'The list is over 100 items. It is not recommended to plot bar plot. Do you want to continue?', 
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return None
+
+        try:
+            pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
+            home_path = QDir.homePath()
+            metax_path = os.path.join(home_path, 'MetaX')
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+            save_path = os.path.join(metax_path, 'intensity.html')
+            pic.render(save_path)
+            web = webDialog.MyDialog(save_path)
+            self.web_list.append(web)
+            web.show()
+        
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
         
 
 
@@ -1632,6 +1756,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         group_list = self.comboBox_others_group.getCheckedItems()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
+        rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -1648,11 +1773,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             if self.like_times >= 1:
+                if rename_taxa:
+                    params['rename_taxa'] = rename_taxa
+                    
                 if width and height:
                     params['width'] = width*100
                     params['height'] = height*100
 
-                pic = LinePlot_js(self.tf).plot_intensity_line(**params)
+                pic = BarPlot_js(self.tf).plot_intensity_bar(**params)
                 home_path = QDir.homePath()
                 metax_path = os.path.join(home_path, 'MetaX')
                 if not os.path.exists(metax_path):
