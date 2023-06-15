@@ -779,8 +779,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>397</width>
-                 <height>258</height>
+                 <width>884</width>
+                 <height>532</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -794,6 +794,9 @@
                   </property>
                   <property name="text">
                    <string>Functions</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -902,7 +905,14 @@
                  </widget>
                 </item>
                 <item row="1" column="1" colspan="5">
-                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list"/>
+                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
                 </item>
                 <item row="1" column="6">
                  <widget class="QPushButton" name="pushButton_basic_heatmap_add">

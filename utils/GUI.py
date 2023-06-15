@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.20'
+__version__ = '1.21'
 
 # import built-in python modules
 import os
@@ -50,6 +50,7 @@ from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
 from MetaX.utils.MetaX_GUI.DBBuilderQThread import DBBuilder
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
+from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 
 
 # import pyqt5 scripts
@@ -85,6 +86,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.table_dialogs = []
         self.web_list = []
         self.basic_heatmap_list = []
+        self.function_list = []
+        self.taxa_list = []
+
 
         self.tf = None
         self.add_theme_to_combobox()
@@ -108,7 +112,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.lineEdit_meta_path = self.make_line_edit_drag_drop(self.lineEdit_meta_path)
         self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path)
         self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path)
-        
+
+        # set ComboBox eanble searchable
+        self.comboBox_basic_heatmap_selection_list = self.make_combobox_searchable(self.comboBox_basic_heatmap_selection_list)
+        self.comboBox_tukey_func = self.make_combobox_searchable(self.comboBox_tukey_func)
+        self.comboBox_tukey_taxa = self.make_combobox_searchable(self.comboBox_tukey_taxa)
+        self.comboBox_others_func = self.make_combobox_searchable(self.comboBox_others_func)
+        self.comboBox_others_taxa = self.make_combobox_searchable(self.comboBox_others_taxa)
 
 
         # set button click event
@@ -225,6 +235,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_db_type_help.clicked.connect(self.show_toolButton_db_type_help)
         self.toolButton_db_all_meta_help.clicked.connect(self.show_toolButton_db_all_meta_help)
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
+
+    def make_combobox_searchable(self, odl_combobox):
+        new_combobox = ExtendedComboBox(odl_combobox.parent())
+        new_combobox.setEditable(True)
+
+        odl_combobox.parent().layout().replaceWidget(odl_combobox, new_combobox)
+        odl_combobox.deleteLater()
+
+        return new_combobox
+
     
     def make_line_edit_drag_drop(self, old_lineEdit):
         def create_new_LineEdit(line_edit):
@@ -563,7 +583,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     #### TaxaFuncAnalyzer Function ####
-    def ceck_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
+    def check_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
         import pandas as pd
         try:
             taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
@@ -592,10 +612,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         elif meta_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
         else:
-            if self.ceck_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
-                return None
-
             self.show_message('Information', 'taxaFuncAnalyzer is running, please wait...')
+            if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
+                return None
             self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
     
 
@@ -726,11 +745,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_table_dict('function', self.tf.func_df)
             self.update_table_dict('taxa-func', self.tf.taxa_func_df)
             self.update_table_dict('func-taxa', self.tf.func_taxa_df)
+
+            # get taxa and function list
+            self.function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
             
             # update taxa and function and group in comboBox
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
             self.update_network_combobox()
+            # update comboBox of basic heatmap
+            self.radioButton_basic_heamap_function.setChecked(True)
+            self.update_basic_heatmap_combobox(type_list = 'function')
+
+
             # eanble PCA   button
             self.enable_multi_button()
         except ValueError as e:
@@ -759,13 +787,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
         self.comboBox_basic_heatmap_selection_list.clear()
         if type_list == 'taxa':
-            taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+            self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
             self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
-            self.comboBox_basic_heatmap_selection_list.addItems(taxa_list)
+            self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_list)
         elif type_list == 'function':
-            function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
             self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
-            self.comboBox_basic_heatmap_selection_list.addItems(function_list)
+            self.comboBox_basic_heatmap_selection_list.addItems(self.function_list)
 
     def update_func_taxa_group_to_combobox(self):
         # reset other taxa and function lebel
@@ -776,28 +804,21 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.label_tukey_func_num.setText('Linked Number: -')
         self.label_tukey_taxa_num.setText('Linked Number: -')
 
-        # set function  and taxa list
-        function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
-        # uncomment the following line if set function list to empty as default
-        # function_list = [''] + function_list
 
         self.comboBox_tukey_func.clear()
-        self.comboBox_tukey_func.addItems(function_list)
+        self.comboBox_tukey_func.addItems(self.function_list)
 
         self.comboBox_others_func.clear()
-        self.comboBox_others_func.addItems(function_list)
+        self.comboBox_others_func.addItems(self.function_list)
 
-        taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
-        # uncomment the following line if set taxa list to empty as default
-        # taxa_list = [''] + taxa_list
 
         self.comboBox_tukey_taxa.clear()
         self.comboBox_tukey_taxa.addItem('')
-        self.comboBox_tukey_taxa.addItems(taxa_list)
+        self.comboBox_tukey_taxa.addItems(self.taxa_list)
 
         self.comboBox_others_taxa.clear()
         self.comboBox_others_taxa.addItem('')
-        self.comboBox_others_taxa.addItems(taxa_list)
+        self.comboBox_others_taxa.addItems(self.taxa_list)
 
         # set group list
         group_list = sorted(set(self.tf.group_list))
@@ -919,15 +940,33 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     def add_basic_heatmap_list(self):
         str_selected = self.comboBox_basic_heatmap_selection_list.currentText()
+
         if str_selected == 'All Taxa':
             self.clean_basic_heatmap_list()
             self.listWidget_list_for_ploting.addItem('All Taxa')
+            self.basic_heatmap_list.append('All Taxa')
 
         elif str_selected == 'All Functions':
             self.clean_basic_heatmap_list()
             self.listWidget_list_for_ploting.addItem('All Functions')
+            self.basic_heatmap_list.append('All Functions')
 
-        if str_selected != '' and str_selected not in self.basic_heatmap_list:
+        
+        elif str_selected != '' and str_selected not in self.basic_heatmap_list:
+            # check if str_selected is in the list
+            def check_if_in_list(str_selected):
+                if self.radioButton_basic_heamap_function.isChecked():
+                    if str_selected in self.function_list:
+                        return True
+                elif self.radioButton_basic_heatmap_taxa.isChecked():
+                    if str_selected in self.taxa_list:
+                        return True
+                else:
+                    return False
+            if not check_if_in_list(str_selected):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+                return None
+            
             if 'All Taxa' in self.basic_heatmap_list:
                 self.basic_heatmap_list.remove('All Taxa')
             if 'All Functions' in self.basic_heatmap_list:
@@ -935,6 +974,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.basic_heatmap_list.append(str_selected)
             self.listWidget_list_for_ploting.clear()
             self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
+
     
     def clean_basic_heatmap_list(self):
         self.basic_heatmap_list = []
