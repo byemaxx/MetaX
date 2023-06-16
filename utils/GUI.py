@@ -636,6 +636,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # set comboBox_meta_to_stast
             meta_list = self.tf.meta_df.columns.tolist()[1:]
             self.comboBox_meta_to_stast.clear()
+            self.comboBox_remove_batch_effect.clear()
             for i in range(len(meta_list)):
                 self.comboBox_meta_to_stast.addItem(meta_list[i])
                 self.comboBox_remove_batch_effect.addItem(meta_list[i])
