@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.23'
+__version__ = '1.24'
 
 # import built-in python modules
 import os
@@ -760,7 +760,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
             self.update_network_combobox()
-
+            
+            # clean basic heatmap selection list
+            self.clean_basic_heatmap_list()
+            self.comboBox_basic_heatmap_selection_list.clear()
 
 
             # eanble PCA   button
@@ -839,6 +842,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_others_group = CheckableComboBox()
         self.comboBox_anova_group = CheckableComboBox()
         self.comboBox_basic_group = CheckableComboBox()
+        self.comboBox_basic_pca_group = CheckableComboBox()
         try:
             self.gridLayout_tflink_group.itemAt(0).widget().deleteLater()
         except Exception as e:
@@ -851,18 +855,23 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.verticalLayout_basic_heatmap_group.itemAt(0).widget().deleteLater()
         except Exception as e:
             pass
+        try:
+            self.verticalLayout_basic_pca.itemAt(0).widget().deleteLater()
+        except Exception as e:
+            pass
         
         self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
         self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
         self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
-        # clean basic heatmap selection list
-        self.clean_basic_heatmap_list()
-        self.comboBox_basic_heatmap_selection_list.clear()
+        self.verticalLayout_basic_pca.addWidget(self.comboBox_basic_pca_group)
 
         for group in group_list:
             self.comboBox_others_group.addItem(group)
             self.comboBox_anova_group.addItem(group)
             self.comboBox_basic_group.addItem(group)
+            self.comboBox_basic_pca_group.addItem(group)
+        
+
 
     def show_others_linked(self):
         func = self.comboBox_others_func.currentText()
@@ -1251,9 +1260,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                           'Peptide': self.tf.clean_df}
             table_name = self.comboBox_table4pca.currentText()
             show_label = self.checkBox_pca_if_show_lable.isChecked()
-
+            group_list = self.comboBox_basic_pca_group.getCheckedItems()
+            df = table_dict[table_name]
             try:
-                BasicPlot(self.tf).plot_pca_sns(table_dict[table_name], table_name, show_label)
+                BasicPlot(self.tf).plot_pca_sns(df, table_name, show_label, group_list)
             except Exception as e:
                 # error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Warning', "Current Table Can't Plot PCA!")

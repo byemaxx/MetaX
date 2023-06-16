@@ -64,9 +64,11 @@ class BasicPlot:
         return ax.get_figure()
         
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True):
+    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, group_list = None):
         try:
             meta_df = self.tfobj.meta_df
+            if group_list is not None:
+                meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
             SAMPLE_LIST = meta_df['Sample']
             GROUP_LIST = meta_df[self.tfobj.meta_name]
             new_sample_name = [

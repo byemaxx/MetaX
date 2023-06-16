@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>944</width>
+    <width>1047</width>
     <height>707</height>
    </rect>
   </property>
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>98</width>
-                 <height>28</height>
+                 <width>484</width>
+                 <height>480</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -254,8 +254,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>191</width>
-                 <height>49</height>
+                 <width>277</width>
+                 <height>59</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -696,7 +696,55 @@
                 <string>PCA</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_26">
+                <item row="2" column="0">
+                 <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="text">
+                   <string>Show Labels</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="0">
+                 <widget class="QLabel" name="label_69">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Groups</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_pca"/>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QPushButton" name="pushButton_plot_pca_sns">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot PCA</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
                  <widget class="QComboBox" name="comboBox_table4pca">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -726,35 +774,10 @@
                   </item>
                  </widget>
                 </item>
-                <item row="0" column="1" rowspan="2">
-                 <widget class="QPushButton" name="pushButton_plot_pca_sns">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot PCA</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="0">
-                 <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="layoutDirection">
-                   <enum>Qt::LeftToRight</enum>
-                  </property>
+                 <widget class="QLabel" name="label_70">
                   <property name="text">
-                   <string>Show Labels</string>
+                   <string>Table</string>
                   </property>
                  </widget>
                 </item>
@@ -3217,8 +3240,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>944</width>
-     <height>21</height>
+     <width>1047</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
