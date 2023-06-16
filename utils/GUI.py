@@ -1261,6 +1261,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             table_name = self.comboBox_table4pca.currentText()
             show_label = self.checkBox_pca_if_show_lable.isChecked()
             group_list = self.comboBox_basic_pca_group.getCheckedItems()
+            if len(group_list) == 0:
+                group_list = None
+            
             df = table_dict[table_name]
             try:
                 BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, group_list=group_list)
