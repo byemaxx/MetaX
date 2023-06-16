@@ -1101,10 +1101,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.listWidget_co_expr_focus_list.clear()
     
     def drop_co_expr_list(self):
-        str_selected = self.listWidget_co_expr_focus_list.currentItem().text()
-        self.co_expr_focus_list.remove(str_selected)
-        self.listWidget_co_expr_focus_list.clear()
-        self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list)
+        str_selected = self.listWidget_co_expr_focus_list.selectedItems()
+        if len(str_selected) == 0:
+            return None
+        item = str_selected[0]
+        self.listWidget_co_expr_focus_list.takeItem(self.listWidget_co_expr_focus_list.row(item))
+        self.co_expr_focus_list.remove(item.text())
+   
 
     def update_co_expr_lsit(self, str_selected):
         df_type = self.comboBox_co_expr_table.currentText()
