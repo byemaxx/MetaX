@@ -57,6 +57,7 @@ class TaxaFuncAnalyzer:
         # replace space with _ and remove Intensity_
         meta['Sample'] = meta.iloc[:, 0].str.replace(
             ' ', '_').str.replace('Intensity_', '')
+        meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
@@ -547,11 +548,12 @@ class TaxaFuncAnalyzer:
         counts_df = counts_df.sort_index()
 
         # Create meta data
-        meta_df = self.meta_df
+        meta_df = self.meta_df.copy()
         meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
 
         meta_df.set_index('Sample', inplace=True)
         meta_df = meta_df.sort_index()
+        meta_df = meta_df.replace('_', '-', regex=True)
 
         dds = DeseqDataSet(
             counts=counts_df,

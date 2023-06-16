@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.22'
+__version__ = '1.23'
 
 # import built-in python modules
 import os
@@ -637,6 +637,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             meta_list = self.tf.meta_df.columns.tolist()[1:]
             self.comboBox_meta_to_stast.clear()
             self.comboBox_remove_batch_effect.clear()
+            self.comboBox_remove_batch_effect.addItem('None')
             for i in range(len(meta_list)):
                 self.comboBox_meta_to_stast.addItem(meta_list[i])
                 self.comboBox_remove_batch_effect.addItem(meta_list[i])
