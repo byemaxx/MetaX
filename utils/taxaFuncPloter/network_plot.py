@@ -79,7 +79,9 @@ class NetworkPlot:
         return c
     
 
-    def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', corr_threshold:float=0.5, sample_list:list = None, width:int = 1600, height:int = 900):
+    def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
+                                   corr_threshold:float=0.5, sample_list:list = None, 
+                                   width:int = 1600, height:int = 900, focus_list:list = []):
         from matplotlib import colormaps
         #check sample_list length
         if len(sample_list) < 2:
@@ -108,11 +110,22 @@ class NetworkPlot:
         min_node_size = node_sizes.min()
 
         nodes = []
-        for gene in correlation_matrix.columns:
-            node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
-            color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
-            color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-            nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
+        if focus_list is not None and len(focus_list) > 0:
+            for gene in correlation_matrix.columns:
+                if gene in focus_list:
+                    node_size = 50
+                    color = '#ff0000'
+                else:
+                    node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
+                    color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
+                    color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
+                nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
+        else:
+            for gene in correlation_matrix.columns:
+                node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
+                color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
+                color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
+                nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
         
         links = []
         for i in range(len(correlation_matrix)):
@@ -153,11 +166,11 @@ class NetworkPlot:
             df.reset_index(inplace=True)
             # DO NOT USE f-string here, it will cause error
             df['Taxa-Func'] = df.iloc[:,
-                                        0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
+                                        0].astype(str) + ' <' + df.iloc[:, 1].astype(str) + '>'
             df.set_index('Taxa-Func', inplace=True)
             df = df.drop(df.columns[:2], axis=1)
         else:
             df = df.copy()
         return df
 
-# NetworkPlot(sw).plot_co_expression_network(df_type='taxa-func', corr_threshold=0.8, sample_list=sw.get_sample_list_in_a_group('V1') ).render_notebook()
+# NetworkPlot(sw).plot_co_expression_network(df_type='func', corr_threshold=0.8, sample_list=sw.get_sample_list_in_a_group('V1') , focus_list=["'glutamate synthase"]).render_notebook()

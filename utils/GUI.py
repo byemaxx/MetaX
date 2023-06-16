@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.25'
+__version__ = '1.26'
 
 # import built-in python modules
 import os
@@ -87,9 +87,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_deseq2_tables_lsit = []
         self.table_dialogs = []
         self.web_list = []
-        self.basic_heatmap_list = []
-        self.function_list = []
+        self.func_list = []
         self.taxa_list = []
+        self.taxa_func_list = []
+        self.basic_heatmap_list = []
+        self.co_expr_focus_list = []
 
 
 
@@ -122,6 +124,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_tukey_taxa = self.make_combobox_searchable(self.comboBox_tukey_taxa)
         self.comboBox_others_func = self.make_combobox_searchable(self.comboBox_others_func)
         self.comboBox_others_taxa = self.make_combobox_searchable(self.comboBox_others_taxa)
+        self.comboBox_co_expr_slecet_list = self.make_combobox_searchable(self.comboBox_co_expr_slecet_list)
 
 
         # set button click event
@@ -210,6 +213,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # ### Co-Expression Network
         self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
+        self.comboBox_co_expr_table.currentIndexChanged.connect(self.update_co_expr_select_lsit)
+        self.pushButton_co_expr_add_to_list.clicked.connect(self.add_co_expr_to_list)
+        self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
+        self.pushButton_co_expr_clean_list.clicked.connect(self.clean_co_expr_list)
 
         
         ## Others
@@ -241,6 +248,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_db_type_help.clicked.connect(self.show_toolButton_db_type_help)
         self.toolButton_db_all_meta_help.clicked.connect(self.show_toolButton_db_all_meta_help)
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
+
+
+
+
+
 
     def make_combobox_searchable(self, odl_combobox):
         new_combobox = ExtendedComboBox(odl_combobox.parent())
@@ -756,13 +768,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_table_dict('func-taxa', self.tf.func_taxa_df)
 
             # get taxa and function list
-            self.function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
-            self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+            # self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+            # self.func_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.taxa_list = self.tf.taxa_df.index.tolist()
+            self.func_list = self.tf.func_df.index.tolist()
+            self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
+
+
             
             # update taxa and function and group in comboBox
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
             self.update_network_combobox()
+            # update comboBox_co_expr_slecet_list
+            self.update_co_expr_select_lsit()
             
             # clean basic heatmap selection list
             self.clean_basic_heatmap_list()
@@ -801,9 +820,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
             self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_list)
         elif type_list == 'function':
-            self.function_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.func_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
             self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
-            self.comboBox_basic_heatmap_selection_list.addItems(self.function_list)
+            self.comboBox_basic_heatmap_selection_list.addItems(self.func_list)
 
     def update_func_taxa_group_to_combobox(self):
         # reset other taxa and function lebel
@@ -816,10 +835,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         self.comboBox_tukey_func.clear()
-        self.comboBox_tukey_func.addItems(self.function_list)
+        self.comboBox_tukey_func.addItems(self.func_list)
 
         self.comboBox_others_func.clear()
-        self.comboBox_others_func.addItems(self.function_list)
+        self.comboBox_others_func.addItems(self.func_list)
 
 
         self.comboBox_tukey_taxa.clear()
@@ -957,6 +976,21 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_add_top.setEnabled(True)
         self.pushButton_co_expr_plot.setEnabled(True)
 
+    def update_co_expr_select_lsit(self):
+        self.comboBox_co_expr_slecet_list.clear()
+        self.co_expr_focus_list.clear()
+        self.listWidget_co_expr_focus_list.clear()
+
+        current_table = self.comboBox_co_expr_table.currentText()
+        update_list = []
+        if current_table == 'Taxa':
+            update_list = self.taxa_list
+        elif current_table == 'Func':
+            update_list = self.func_list
+        elif current_table == 'Taxa-Func':
+            update_list = self.taxa_func_list
+        self.comboBox_co_expr_slecet_list.addItems(update_list)
+
     def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
             if str_selected is not None and str_list is None:
                 if str_selected == 'All Taxa':
@@ -971,7 +1005,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     # check if str_selected is in the list
                     def check_if_in_list(str_selected):
                         if self.radioButton_basic_heamap_function.isChecked():
-                            if str_selected in self.function_list:
+                            if str_selected in self.func_list:
                                 return True
                         elif self.radioButton_basic_heatmap_taxa.isChecked():
                             if str_selected in self.taxa_list:
@@ -1058,7 +1092,33 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             index_list = extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
             self.update_basic_heatmap_list(str_list=index_list)
         
+    def add_co_expr_to_list(self):
+        str_selected = self.comboBox_co_expr_slecet_list.currentText()
+        self.update_co_expr_lsit(str_selected=str_selected)
+    
+    def clean_co_expr_list(self):
+        self.co_expr_focus_list = []
+        self.listWidget_co_expr_focus_list.clear()
+    
+    def drop_co_expr_list(self):
+        str_selected = self.listWidget_co_expr_focus_list.currentItem().text()
+        self.co_expr_focus_list.remove(str_selected)
+        self.listWidget_co_expr_focus_list.clear()
+        self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list)
 
+    def update_co_expr_lsit(self, str_selected):
+        df_type = self.comboBox_co_expr_table.currentText()
+        list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list}
+        if str_selected == '':
+            return None
+        elif str_selected not in list_dict[df_type]:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+        elif str_selected not in self.co_expr_focus_list:
+            self.co_expr_focus_list.append(str_selected)
+            self.listWidget_co_expr_focus_list.clear()
+            self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list) 
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'This item has been added!')
 
     def plot_basic_list_heatmap(self):
         group_list = self.comboBox_basic_group.getCheckedItems()
@@ -1570,6 +1630,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         corr_threshold = self.doubleSpinBox_co_expr_corr_threshold.value()
         width = self.spinBox_co_expr_width.value()
         height = self.spinBox_co_expr_height.value()
+        focus_list = self.co_expr_focus_list
 
 
         sample_list = self.tf.sample_list
@@ -1591,7 +1652,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             self.show_message('Info', 'Co-expression network is plotting...\n\n It may take a long time! Please wait...')
             pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
-                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height)
+                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):

@@ -466,21 +466,21 @@ class TaxaFuncAnalyzer:
         df = df[:top_num].drop('value', axis=1)
         return df
     
+    def replace_if_two_index(self, df):
+        if isinstance(df.index, pd.MultiIndex):
+            df = df.copy()
+            df.reset_index(inplace=True)
+            # DO NOT USE f-string here, it will cause error
+            df['Taxa-Func'] = df.iloc[:,
+                                        0].astype(str) + ' <' + df.iloc[:, 1].astype(str) + '>'
+            df.set_index('Taxa-Func', inplace=True)
+            df = df.drop(df.columns[:2], axis=1)
+        return df
     
     # input: df, df_type, top_num, show_stats_col
     # output: df
     # df_type: 'anova' or 'ttest' or 'log2fc'
     def get_top_intensity_matrix_of_test_res(self, df, df_type: str = None, top_num: int = 100, show_stats_cols: bool = False):
-        def replace_if_two_index(df):
-            if isinstance(df.index, pd.MultiIndex):
-                df = df.copy()
-                df.reset_index(inplace=True)
-                # DO NOT USE f-string here, it will cause error
-                df['Taxa-Func'] = df.iloc[:,
-                                          0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
-                df.set_index('Taxa-Func', inplace=True)
-                df = df.drop(df.columns[:2], axis=1)
-            return df
 
         dft = df.copy()
         if df_type is None:
@@ -500,7 +500,7 @@ class TaxaFuncAnalyzer:
                                   True, False], ignore_index=False)
             dft = dft.drop('abs_log2FoldChange', axis=1)
 
-        dft = replace_if_two_index(dft)
+        dft = self.replace_if_two_index(dft)
 
         if show_stats_cols:
             dft = dft.head(top_num)
@@ -516,18 +516,6 @@ class TaxaFuncAnalyzer:
 
     def get_stats_deseq2(self, df, group_list: list):
 
-        def replace_if_two_index(df):
-            if isinstance(df.index, pd.MultiIndex):
-                df = df.copy()
-                df.reset_index(inplace=True)
-                # DO NOT USE f-string here, it will cause error
-                df['Taxa-Func'] = df.iloc[:,
-                                            0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
-                df.set_index('Taxa-Func', inplace=True)
-                df = df.drop(df.columns[:2], axis=1)
-            else:
-                df = df.copy()
-            return df
 
         sample_list = []
         for i in group_list:
@@ -536,7 +524,7 @@ class TaxaFuncAnalyzer:
 
         # Create intensity matrix
         df = df[sample_list]
-        df = replace_if_two_index(df)
+        df = self.replace_if_two_index(df)
         
         counts_df = df.T
         # if the max value > 10000, divide by 100
@@ -563,9 +551,19 @@ class TaxaFuncAnalyzer:
             refit_cooks=True)
 
         dds.deseq2()
-        stat_res = DeseqStats(dds)
         
-        stat_res.summary()
+        try:
+            stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=True, independent_filter=True)
+            stat_res.summary()
+        except KeyError as e:
+            if 'cooks' in str(e):
+                print('cooks_filter is not available, use cooks_filter=False')
+                stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=False, independent_filter=True)
+                stat_res.summary()
+            else:
+                raise e
+        except Exception as e:
+            raise e
 
         res = stat_res.results_df
         res_merged = pd.merge(res, df, left_index=True, right_index=True)
@@ -685,7 +683,7 @@ class TaxaFuncAnalyzer:
             raise ValueError("Please input the correct taxa level (s, g, f, o, c, p, d, l)")
         
         if level != 's':
-            df_t['Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
+            df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
             dfc = df_t
 
 
