@@ -516,14 +516,13 @@ class TaxaFuncAnalyzer:
 
     def get_stats_deseq2(self, df, group_list: list):
 
-
         def replace_if_two_index(df):
             if isinstance(df.index, pd.MultiIndex):
                 df = df.copy()
                 df.reset_index(inplace=True)
                 # DO NOT USE f-string here, it will cause error
                 df['Taxa-Func'] = df.iloc[:,
-                                          0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
+                                            0].astype(str) + ' [' + df.iloc[:, 1].astype(str) + ']'
                 df.set_index('Taxa-Func', inplace=True)
                 df = df.drop(df.columns[:2], axis=1)
             else:
@@ -537,8 +536,8 @@ class TaxaFuncAnalyzer:
 
         # Create intensity matrix
         df = df[sample_list]
-
         df = replace_if_two_index(df)
+        
         counts_df = df.T
         # if the max value > 10000, divide by 100
         if counts_df.max().max() > 10000:
@@ -547,13 +546,15 @@ class TaxaFuncAnalyzer:
         counts_df = counts_df.astype(int)
         counts_df = counts_df.sort_index()
 
+
         # Create meta data
         meta_df = self.meta_df.copy()
         meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
 
         meta_df.set_index('Sample', inplace=True)
-        meta_df = meta_df.sort_index()
         meta_df = meta_df.replace('_', '-', regex=True)
+        meta_df = meta_df.sort_index()
+        
 
         dds = DeseqDataSet(
             counts=counts_df,
@@ -563,11 +564,18 @@ class TaxaFuncAnalyzer:
 
         dds.deseq2()
         stat_res = DeseqStats(dds)
+        
         stat_res.summary()
 
         res = stat_res.results_df
         res_merged = pd.merge(res, df, left_index=True, right_index=True)
 
+
+        # check order
+        res_group_2 = stat_res.LFC.columns[1].split('_')[3]
+        input_group_1 = group_list[0].replace('_', '-')
+        if res_group_2 == input_group_1:
+            res_merged["log2FoldChange"] = -res_merged["log2FoldChange"]
         return res_merged
 
     # Get the Tukey test result of a taxon or a function

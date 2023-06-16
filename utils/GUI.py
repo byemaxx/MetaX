@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.24'
+__version__ = '1.25'
 
 # import built-in python modules
 import os
@@ -35,7 +35,7 @@ from MetaX.utils.taxaFuncPloter.heatmap_plot import HeatmapPlot
 from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
 from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
 from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
-from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
+# from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
 from MetaX.utils.taxaFuncPloter.bar_plot_js import BarPlot_js
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
@@ -952,6 +952,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_plot.setEnabled(True)
         self.pushButton_basic_bar_plot.setEnabled(True)
         self.pushButton_basic_heatmap_add_top.setEnabled(True)
+        self.pushButton_co_expr_plot.setEnabled(True)
 
     def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
             if str_selected is not None and str_list is None:
@@ -1787,29 +1788,28 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             params['func_name'] = func
 
         try:
-            if self.like_times >= 1:
-                if rename_taxa:
-                    params['rename_taxa'] = rename_taxa
-                    
-                if width and height:
-                    params['width'] = width*100
-                    params['height'] = height*100
+            if rename_taxa:
+                params['rename_taxa'] = rename_taxa
+                
+            if width and height:
+                params['width'] = width*100
+                params['height'] = height*100
 
-                pic = BarPlot_js(self.tf).plot_intensity_bar(**params)
-                home_path = QDir.homePath()
-                metax_path = os.path.join(home_path, 'MetaX')
-                if not os.path.exists(metax_path):
-                    os.makedirs(metax_path)
-                save_path = os.path.join(metax_path, 'intensity.html')
-                pic.render(save_path)
-                web = webDialog.MyDialog(save_path)
-                self.web_list.append(web)
-                web.show()
-            else:
-                if width and height:
-                    params['width'] = width
-                    params['height'] = height
-                LinePlot(self.tf).plot_intensity_line(**params)
+            pic = BarPlot_js(self.tf).plot_intensity_bar(**params)
+            home_path = QDir.homePath()
+            metax_path = os.path.join(home_path, 'MetaX')
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+            save_path = os.path.join(metax_path, 'intensity.html')
+            pic.render(save_path)
+            web = webDialog.MyDialog(save_path)
+            self.web_list.append(web)
+            web.show()
+            # else:
+            #     if width and height:
+            #         params['width'] = width
+            #         params['height'] = height
+            #     LinePlot(self.tf).plot_intensity_line(**params)
         except ValueError as e:
             if 'No data to plot' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
