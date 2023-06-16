@@ -77,17 +77,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
-        self.MainWindow.resize(1360, 850)
+        self.MainWindow.resize(1360, 860)
 
         self.like_times = 0
 
         self.last_path = os.path.join(QDir.homePath(), 'Desktop')
         self.table_dict = {}
+        self.comboBox_top_heatmap_table_list = []
+        self.comboBox_deseq2_tables_lsit = []
         self.table_dialogs = []
         self.web_list = []
         self.basic_heatmap_list = []
         self.function_list = []
         self.taxa_list = []
+
 
 
         self.tf = None
@@ -181,7 +184,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         # Corss TEST
-        self.comboBox_top_heatmap_table_dict = {}
         self.pushButton_plot_top_heatmap.clicked.connect(self.plot_top_heatmap)
         self.pushButton_get_top_cross_table.clicked.connect(self.get_top_cross_table)
 
@@ -718,7 +720,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # clean tables and comboBox before set multi table
         self.table_dict = {}
-        self.comboBox_top_heatmap_table_dict = {}
+        self.comboBox_top_heatmap_table_list = []
+        self.comboBox_deseq2_tables_lsit = []
 
         self.show_message('Information', 'Data is Preprocessing, please wait...')
 
@@ -1376,7 +1379,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 print('df_top_cross is None')
                 return None
             else:      
-                self.update_table_dict('top_cross', df_top_cross)
+                self.update_table_dict(f'top_cross[{table_name}]', df_top_cross)
                 self.show_table(df_top_cross)
         except Exception as e:
             error_message = traceback.format_exc()
@@ -1402,10 +1405,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df_anova = self.tf.get_stats_anova(group_list=group_list, df_type=df_type)
             self.show_table(df_anova)
             table_name = f'anova_test({df_type})'
-            self.comboBox_top_heatmap_table_dict[table_name] = df_anova
+            self.comboBox_top_heatmap_table_list.append(table_name)
+            self.comboBox_top_heatmap_table_list.reverse()
             self.update_table_dict(table_name, df_anova)
             self.comboBox_top_heatmap_table.clear()
-            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_dict.keys())
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
             self.pushButton_plot_top_heatmap.setEnabled(True)
             self.pushButton_get_top_cross_table.setEnabled(True)
         except Exception as e:
@@ -1469,9 +1473,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.update_table_dict(table_name, df)
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
-                self.comboBox_top_heatmap_table_dict[table_name] = df
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
                 self.comboBox_top_heatmap_table.clear()
-                self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_dict.keys())
+                self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
             except ValueError as e:
                 if str(e) == 'sample size must be more than 1 for t-test':
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The sample size of each group must be more than 1 for T-TEST!')
@@ -1486,7 +1491,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     #DESeq2 
     def deseq2_test(self):
 
-        table_name = {'Function': self.tf.func_df, 'Taxa': self.tf.taxa_df, 'Taxa-Func': self.tf.taxa_func_df}
+        table_name = {'Func': self.tf.func_df, 'Taxa': self.tf.taxa_df, 'Taxa-Func': self.tf.taxa_func_df}
         df = table_name[self.comboBox_table_for_deseq2.currentText()]
 
         group1 = self.comboBox_deseq2_group1.currentText()
@@ -1505,7 +1510,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.pushButton_deseq2.setEnabled(False)
                 df_deseq2 = self.tf.get_stats_deseq2(df, group_list=group_list)
                 self.show_table(df_deseq2)
-                self.update_table_dict('log2FC', df_deseq2)
+                res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
+                self.update_table_dict(res_table_name, df_deseq2)
+
+                self.comboBox_deseq2_tables_lsit.append(res_table_name)
+                self.comboBox_deseq2_tables_lsit.reverse()
+
+                # update comboBox_deseq2_tables
+                self.comboBox_deseq2_tables.clear()
+                self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_lsit)
+                
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
                 self.pushButton_deseq2_plot_sankey.setEnabled(True)
             except Exception as e:
@@ -1518,8 +1532,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     def plot_deseq2_volcano(self):
-        df = self.table_dict['log2FC']
         try:
+            table_name = self.comboBox_deseq2_tables.currentText()
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
             log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
@@ -1527,13 +1541,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             height = self.spinBox_fc_plot_height.value()
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
-            title_name = f'{group1} vs {group2}'
+            title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
+            df = self.table_dict[table_name]
             pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc_min = log2fc_min, log2fc_max=log2fc_max,  title_name=title_name,  width=width, height=height)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
@@ -1596,10 +1611,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     #Sankey
     def deseq2_plot_sankey(self):
-        df = self.table_dict['log2FC']
+
         try:
+            table_name = self.comboBox_deseq2_tables.currentText()
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
             log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
+            group1 = self.comboBox_deseq2_group1.currentText()
+            group2 = self.comboBox_deseq2_group2.currentText()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
@@ -1608,8 +1626,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
+        if table_name == 'deseq2(func)':
+            QMessageBox.warning(self.MainWindow, 'Error', f'Function table is not supported for Sankey plot!')
+            return None
         try:
-            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max)
+            df = self.table_dict[table_name]
+            title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
+
+            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX')
             if not os.path.exists(metax_path):

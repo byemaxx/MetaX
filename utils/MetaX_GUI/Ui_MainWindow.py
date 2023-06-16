@@ -1975,7 +1975,7 @@ class Ui_metaX_main(object):
         self.label_3.setText(_translate("metaX_main", "Group 2"))
         self.comboBox_table_for_deseq2.setItemText(0, _translate("metaX_main", "Taxa-Func"))
         self.comboBox_table_for_deseq2.setItemText(1, _translate("metaX_main", "Taxa"))
-        self.comboBox_table_for_deseq2.setItemText(2, _translate("metaX_main", "Function"))
+        self.comboBox_table_for_deseq2.setItemText(2, _translate("metaX_main", "Func"))
         self.label_63.setText(_translate("metaX_main", "Max Log2FC"))
         self.label_16.setText(_translate("metaX_main", "Width (px)"))
         self.pushButton_deseq2.setText(_translate("metaX_main", "Run DESeq2"))
