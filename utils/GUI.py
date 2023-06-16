@@ -1263,10 +1263,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             group_list = self.comboBox_basic_pca_group.getCheckedItems()
             df = table_dict[table_name]
             try:
-                BasicPlot(self.tf).plot_pca_sns(df, table_name, show_label, group_list)
+                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, group_list=group_list)
             except Exception as e:
-                # error_message = traceback.format_exc()
-                QMessageBox.warning(self.MainWindow, 'Warning', "Current Table Can't Plot PCA!")
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
     # differential analysis
     def plot_top_heatmap(self):

@@ -66,15 +66,17 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, group_list = None):
         try:
-            meta_df = self.tfobj.meta_df
+            meta_df = self.tfobj.meta_df.copy()
             if group_list is not None:
                 meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
+
             SAMPLE_LIST = meta_df['Sample']
             GROUP_LIST = meta_df[self.tfobj.meta_name]
             new_sample_name = [
-                f'{SAMPLE_LIST[i]} ({GROUP_LIST[i]})'
+                f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
                 for i in range(len(SAMPLE_LIST))
             ]
+
             # from adjustText import adjust_text
             dft = df[SAMPLE_LIST]
             dft = dft.T
