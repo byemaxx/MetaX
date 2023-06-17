@@ -2,6 +2,13 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-16:
+    - Version: 1.27
+        - added function of focus item at co-expression part
+        - added get top list at co-expression part
+        - fixed bugs of deseq2 groups order
+        - fixed bugs of deseq2 when cannot run cook fit
+        - added sankey plot for taxa only
 - 2023-06-15:
     - Version: 1.22
         - enable combobox searchable
