@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.26'
+__version__ = '1.27'
 
 # import built-in python modules
 import os
@@ -217,6 +217,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_co_expr_add_to_list.clicked.connect(self.add_co_expr_to_list)
         self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
         self.pushButton_co_expr_clean_list.clicked.connect(self.clean_co_expr_list)
+        self.pushButton_co_expr_add_top.clicked.connect(self.add_co_expr_top_list)
 
         
         ## Others
@@ -768,8 +769,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_table_dict('func-taxa', self.tf.func_taxa_df)
 
             # get taxa and function list
-            # self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
-            # self.func_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+            self.taxa_list_linked = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+            self.func_list_linked = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
             self.taxa_list = self.tf.taxa_df.index.tolist()
             self.func_list = self.tf.func_df.index.tolist()
             self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
@@ -816,11 +817,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
         self.comboBox_basic_heatmap_selection_list.clear()
         if type_list == 'taxa':
-            self.taxa_list = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
             self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
             self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_list)
         elif type_list == 'function':
-            self.func_list = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
             self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
             self.comboBox_basic_heatmap_selection_list.addItems(self.func_list)
 
@@ -835,19 +834,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         self.comboBox_tukey_func.clear()
-        self.comboBox_tukey_func.addItems(self.func_list)
+        self.comboBox_tukey_func.addItems(self.func_list_linked)
 
         self.comboBox_others_func.clear()
-        self.comboBox_others_func.addItems(self.func_list)
+        self.comboBox_others_func.addItems(self.func_list_linked)
 
 
         self.comboBox_tukey_taxa.clear()
         self.comboBox_tukey_taxa.addItem('')
-        self.comboBox_tukey_taxa.addItems(self.taxa_list)
+        self.comboBox_tukey_taxa.addItems(self.taxa_list_linked)
 
         self.comboBox_others_taxa.clear()
         self.comboBox_others_taxa.addItem('')
-        self.comboBox_others_taxa.addItems(self.taxa_list)
+        self.comboBox_others_taxa.addItems(self.taxa_list_linked)
 
         # set group list
         group_list = sorted(set(self.tf.group_list))
@@ -914,7 +913,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.comboBox_others_taxa.clear()
                 self.comboBox_others_taxa.addItems(taxa)
         except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', f"No data! Please check your input.\n\n{e}")
+            QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
     def update_combobox_and_label(self, current_text, df, label, comboBox):
         try:
@@ -975,6 +974,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_bar_plot.setEnabled(True)
         self.pushButton_basic_heatmap_add_top.setEnabled(True)
         self.pushButton_co_expr_plot.setEnabled(True)
+        self.comboBox_co_expr_table.setEnabled(True)
+        self.pushButton_co_expr_add_to_list.setEnabled(True)
+        self.pushButton_co_expr_add_top.setEnabled(True)
+
 
     def update_co_expr_select_lsit(self):
         self.comboBox_co_expr_slecet_list.clear()
@@ -1041,23 +1044,24 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.basic_heatmap_list = []
         self.listWidget_list_for_ploting.clear()
     
-    def add_basic_heatmap_top_list(self):
-        def extract_top_from_test_result(method, top_num, df_type):
-            table_name = method.split('_')[0] + '_test(' + df_type + ')'
-            df = self.table_dict.get(table_name)
+    def extract_top_from_test_result(self, method, top_num, df_type):
+        table_name = method.split('_')[0] + '_test(' + df_type + ')'
+        df = self.table_dict.get(table_name)
 
-            if df is None:
-                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
-                return None
-            if method.split('_')[2] == 'p':
-                df = df.sort_values(by='P-value',ascending = True)
-            elif method.split('_')[2] == 'f':
-                df = df.sort_values(by='f-statistic',ascending = False)
-            elif method.split('_')[2] == 't':
-                df = df.sort_values(by='t-statistic',ascending = False)
-            df = df.head(top_num)
-            index_list = df.index.tolist()
-            return index_list
+        if df is None:
+            QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
+            return None
+        if method.split('_')[2] == 'p':
+            df = df.sort_values(by='P-value',ascending = True)
+        elif method.split('_')[2] == 'f':
+            df = df.sort_values(by='f-statistic',ascending = False)
+        elif method.split('_')[2] == 't':
+            df = df.sort_values(by='t-statistic',ascending = False)
+        df = df.head(top_num)
+        index_list = df.index.tolist()
+        return index_list
+    
+    def add_basic_heatmap_top_list(self):
         
         top_num = self.spinBox_basic_heatmap_top_num.value()
         group_list = self.comboBox_basic_group.getCheckedItems()
@@ -1089,7 +1093,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             index_list = df.index.tolist()
             self.update_basic_heatmap_list(str_list=index_list)
         else:
-            index_list = extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
+            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
             self.update_basic_heatmap_list(str_list=index_list)
         
     def add_co_expr_to_list(self):
@@ -1109,19 +1113,60 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.co_expr_focus_list.remove(item.text())
    
 
-    def update_co_expr_lsit(self, str_selected):
-        df_type = self.comboBox_co_expr_table.currentText()
-        list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list}
-        if str_selected == '':
-            return None
-        elif str_selected not in list_dict[df_type]:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
-        elif str_selected not in self.co_expr_focus_list:
-            self.co_expr_focus_list.append(str_selected)
-            self.listWidget_co_expr_focus_list.clear()
-            self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list) 
+    def update_co_expr_lsit(self, str_selected=None, str_list=None):
+        if str_list is None and str_selected is not None:
+            df_type = self.comboBox_co_expr_table.currentText()
+            list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list}
+            if str_selected == '':
+                return None
+            elif str_selected not in list_dict[df_type]:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'Please select a valid item!')
+            elif str_selected not in self.co_expr_focus_list:
+                self.co_expr_focus_list.append(str_selected)
+                self.listWidget_co_expr_focus_list.clear()
+                self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list) 
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'This item has been added!')
+        elif str_list is not None and str_selected is None:
+            for i in str_list:
+                if i not in self.co_expr_focus_list:
+                    if len(i) ==2:
+                        i = f'{i[0]} <{i[1]}>'
+                    self.co_expr_focus_list.append(i)
+                    self.listWidget_co_expr_focus_list.addItem(i)
+
+    def add_co_expr_top_list(self):
+        top_num = self.spinBox_co_expr_top_num.value()
+        groups_list = self.comboBox_co_expr_group.getCheckedItems()
+        # get sample list
+        if self.radioButton_co_expr_bygroup.isChecked():
+            sample_list = []
+            if groups_list == []:
+                sample_list = self.tf.sample_list
+            else:
+                for group in groups_list:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        elif self.radioButton_co_expr_bysample.isChecked():
+            sample_list = self.comboBox_co_expr_sample.getCheckedItems()
+        # get method
+        method_dict = {'Average Intensity': 'mean', 'Frequency in Samples': 'freq', 'Total Intensity': 'sum',
+                       'ANOVA(p-value)': 'anova_test_p', 'ANOVA(f-statistic)': 'anova_test_f', 'T-TEST(p-value)': 't_test_p','T-TEST(t-statistic)': 't_test_t'}
+        method = method_dict[self.comboBox_co_expr_top_by.currentText()]
+        # get df type
+        df_type = self.comboBox_co_expr_table.currentText().lower()
+        df_dict = {'taxa': self.tf.taxa_df, 'func': self.tf.func_df, 'taxa-func': self.tf.taxa_func_df}
+        df = df_dict[df_type]
+        
+        if method in ['mean', 'freq', 'sum']:
+            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
+            index_list = df.index.tolist()
+            self.update_co_expr_lsit(str_list=index_list)
         else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'This item has been added!')
+            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
+            self.update_co_expr_lsit(str_list=index_list)
+        
+
+
 
     def plot_basic_list_heatmap(self):
         group_list = self.comboBox_basic_group.getCheckedItems()
