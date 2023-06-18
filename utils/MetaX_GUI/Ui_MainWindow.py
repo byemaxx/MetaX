@@ -1859,7 +1859,7 @@ class Ui_metaX_main(object):
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(1)
+        self.tabWidget_2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
         metaX_main.setTabOrder(self.toolButton__final_peptide_help, self.lineEdit_final_peptide_path)
         metaX_main.setTabOrder(self.lineEdit_final_peptide_path, self.pushButton_get_final_peptide_path)

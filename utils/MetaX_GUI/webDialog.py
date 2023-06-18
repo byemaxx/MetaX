@@ -9,7 +9,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('HTML Viewer')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setMinimumSize(1400, 900)
+        self.resize(1800, 1000)
         
         self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
 
@@ -57,6 +57,6 @@ class MyDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dialog = MyDialog(html_path="C:/Users/ZAL/Desktop/sankey.html")
+    dialog = MyDialog(html_path="./sankey.html")
     dialog.show()
     sys.exit(app.exec_())
