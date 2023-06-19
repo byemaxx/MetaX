@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.30'
+__version__ = '1.31'
 
 # import built-in python modules
 import os
@@ -794,6 +794,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # clean basic heatmap selection list
             self.clean_basic_heatmap_list()
             self.comboBox_basic_heatmap_selection_list.clear()
+
+            # clean comboBox of deseq2
+            self.comboBox_deseq2_tables_lsit = []
+            self.comboBox_deseq2_tables.clear()            
 
 
             # eanble PCA   button
