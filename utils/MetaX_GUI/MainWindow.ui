@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1047</width>
-    <height>707</height>
+    <height>694</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>484</width>
-                 <height>480</height>
+                 <width>490</width>
+                 <height>500</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -254,8 +254,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>277</width>
-                 <height>59</height>
+                 <width>191</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1626,7 +1626,7 @@
               <item row="0" column="8">
                <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
                 <property name="decimals">
-                 <number>2</number>
+                 <number>3</number>
                 </property>
                 <property name="maximum">
                  <double>1.000000000000000</double>
@@ -2060,7 +2060,7 @@
                    </sizepolicy>
                   </property>
                   <property name="decimals">
-                   <number>2</number>
+                   <number>3</number>
                   </property>
                   <property name="maximum">
                    <double>1.000000000000000</double>
@@ -3399,7 +3399,7 @@
      <x>0</x>
      <y>0</y>
      <width>1047</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\ZAL\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_metaX_main(object):
     def setupUi(self, metaX_main):
         metaX_main.setObjectName("metaX_main")
-        metaX_main.resize(1047, 707)
+        metaX_main.resize(1047, 694)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 484, 480))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 490, 500))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -154,7 +154,7 @@ class Ui_metaX_main(object):
         self.gridLayout_27.addLayout(self.verticalLayout_overview_plot, 0, 0, 1, 1)
         self.toolBox_2.addItem(self.page_2, "")
         self.page_5 = QtWidgets.QWidget()
-        self.page_5.setGeometry(QtCore.QRect(0, 0, 277, 59))
+        self.page_5.setGeometry(QtCore.QRect(0, 0, 191, 49))
         self.page_5.setObjectName("page_5")
         self.gridLayout_20 = QtWidgets.QGridLayout(self.page_5)
         self.gridLayout_20.setObjectName("gridLayout_20")
@@ -872,7 +872,7 @@ class Ui_metaX_main(object):
         self.comboBox_top_heatmap_scale.addItem("")
         self.gridLayout_top_heatmap_plot.addWidget(self.comboBox_top_heatmap_scale, 5, 4, 1, 1)
         self.doubleSpinBox_top_heatmap_pvalue = QtWidgets.QDoubleSpinBox(self.tab_2)
-        self.doubleSpinBox_top_heatmap_pvalue.setDecimals(2)
+        self.doubleSpinBox_top_heatmap_pvalue.setDecimals(3)
         self.doubleSpinBox_top_heatmap_pvalue.setMaximum(1.0)
         self.doubleSpinBox_top_heatmap_pvalue.setSingleStep(0.01)
         self.doubleSpinBox_top_heatmap_pvalue.setProperty("value", 0.05)
@@ -1105,7 +1105,7 @@ class Ui_metaX_main(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.doubleSpinBox_deseq2_pvalue.sizePolicy().hasHeightForWidth())
         self.doubleSpinBox_deseq2_pvalue.setSizePolicy(sizePolicy)
-        self.doubleSpinBox_deseq2_pvalue.setDecimals(2)
+        self.doubleSpinBox_deseq2_pvalue.setDecimals(3)
         self.doubleSpinBox_deseq2_pvalue.setMaximum(1.0)
         self.doubleSpinBox_deseq2_pvalue.setSingleStep(0.01)
         self.doubleSpinBox_deseq2_pvalue.setProperty("value", 0.05)
@@ -1830,7 +1830,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1047, 26))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1047, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")

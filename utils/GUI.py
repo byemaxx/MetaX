@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.29'
+__version__ = '1.30'
 
 # import built-in python modules
 import os
@@ -1640,9 +1640,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.show_table(df_deseq2)
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)
-
-                self.comboBox_deseq2_tables_lsit.append(res_table_name)
-                self.comboBox_deseq2_tables_lsit.reverse()
+                if res_table_name not in self.comboBox_deseq2_tables_lsit:
+                    self.comboBox_deseq2_tables_lsit.append(res_table_name)
+                    self.comboBox_deseq2_tables_lsit.reverse()
+                else:
+                    self.comboBox_deseq2_tables_lsit.remove(res_table_name)
+                    self.comboBox_deseq2_tables_lsit.append(res_table_name)
+                    self.comboBox_deseq2_tables_lsit.reverse()
 
                 # update comboBox_deseq2_tables
                 self.comboBox_deseq2_tables.clear()

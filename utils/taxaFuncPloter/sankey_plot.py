@@ -34,8 +34,8 @@ class SankeyPlot:
 
         df['index'] = df.index
 
-        if '[' in df['index'][0]:
-            index_str = df['index'].str.split("[", expand=True)
+        if '<' in df['index'][0]:
+            index_str = df['index'].str.split("<", expand=True)
             if '|' in index_str[0][0]:
                 taxon_index = 0
                 func_index = 1
@@ -44,8 +44,8 @@ class SankeyPlot:
                 func_index = 0
             df = df[['log2FoldChange', 'type']]
 
-            df['Taxon'] = index_str[taxon_index].str.replace("]", "")
-            df['Function'] = index_str[func_index].str.replace("]", "")
+            df['Taxon'] = index_str[taxon_index].str.replace(">", "")
+            df['Function'] = index_str[func_index].str.replace(">", "")
 
         else:
             df = df[['log2FoldChange', 'type']]
