@@ -1520,9 +1520,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 df_anova = self.tf.get_stats_anova(group_list=group_list, df_type=df_type)
             self.show_table(df_anova)
             table_name = f'anova_test({df_type})'
-            self.comboBox_top_heatmap_table_list.append(table_name)
-            self.comboBox_top_heatmap_table_list.reverse()
             self.update_table_dict(table_name, df_anova)
+            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+            if table_name not in self.comboBox_top_heatmap_table_list:
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+            else:
+                self.comboBox_top_heatmap_table_list.remove(table_name)
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
             self.comboBox_top_heatmap_table.clear()
             self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
             self.pushButton_plot_top_heatmap.setEnabled(True)
@@ -1588,8 +1594,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.update_table_dict(table_name, df)
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
+                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+                if table_name not in self.comboBox_top_heatmap_table_list:
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+                else:
+                    self.comboBox_top_heatmap_table_list.remove(table_name)
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+
                 self.comboBox_top_heatmap_table.clear()
                 self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
             except ValueError as e:
