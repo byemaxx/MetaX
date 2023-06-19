@@ -3,6 +3,7 @@ from MetaX.utils.MetaX_GUI import logo_rc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import Qt
 
 class MyDialog(QDialog):
     def __init__(self, parent=None):
@@ -12,6 +13,8 @@ class MyDialog(QDialog):
         self.resize(1300, 700)
         if parent:
             self.setWindowIcon(parent.windowIcon())
+            
+        self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
 
         self.gridLayout = QtWidgets.QGridLayout(self)
         self.gridLayout.setObjectName("gridLayout")
