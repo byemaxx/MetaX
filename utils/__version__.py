@@ -1,2 +1,2 @@
 # create version file
-__version__ = '1.27'
+__version__ = '1.28'
