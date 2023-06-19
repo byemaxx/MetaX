@@ -1,2 +1,15 @@
-utils/taxaFuncPloter/__pycache__/*
+utils/taxaFuncPloter/__pycache__/GUI.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/GUI.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/__init__.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/__init__.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/__version__.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/databaseBuilder.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/databaseBuilder.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/pep2taxafunc.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/pep2taxafunc.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/peptableAnnotator.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/peptableAnnotator.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/taxaFuncAnalyzer.cpython-310.pyc
+utils/taxaFuncPloter/__pycache__/taxaFuncAnalyzer.cpython-311.pyc
+
 tests/test.ipynb

@@ -9,7 +9,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('LCA Threshold Help')
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.resize(1200, 600)
+        self.resize(1300, 600)
         if parent:
             self.setWindowIcon(parent.windowIcon())
 
