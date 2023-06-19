@@ -362,7 +362,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again! \n\n You have unlocked the second hidden function!")
             self.like_times += 1
         else:
-            QMessageBox.information(self.MainWindow, "Thank you!", "You have unlocked all the hidden functions! \n\n Give us some time to develop more features!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "More fetures are coming soon!")
         
         
 
@@ -578,10 +578,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                                  'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
                                     
     def show_toolButton_lca_threshould_help(self):
-        QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
-    
+        # QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
+        from MetaX.utils.MetaX_GUI.Ui_LCA_help import MyDialog
+        lca_help = MyDialog(self.MainWindow)
+        lca_help.exec_()
+
+
     def show_func_threshold_help(self):
-        QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, it will be considered a representative function of that peptide. The default is 1.00 (100%).')
+        # QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, it will be considered a representative function of that peptide. The default is 1.00 (100%).')
+        from MetaX.utils.MetaX_GUI.Ui_func_threshold_help import MyDialog
+        lca_help = MyDialog(self.MainWindow)
+        lca_help.exec_()
 
     # database builder help
     def show_toolButton_db_type_help(self):
