@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.32'
+__version__ = '1.33'
 
 # import built-in python modules
 import os
@@ -1096,6 +1096,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
             table_name = method.split('_')[0] +'(' + df_type + ')'
             df =  self.table_dict.get(table_name)
+            df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
+
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
                 return None
@@ -1113,8 +1115,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     df = df.sort_values(by='log2FoldChange',ascending = True)    
             
         else:
+            # method = 'anova_test_p', 'anova_test_f', 't_test_p', 't_test_t'
             table_name = method.split('_')[0] + '_test(' + df_type + ')'
             df = self.table_dict.get(table_name)
+            df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
 
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
@@ -1886,6 +1890,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list) -> list:
+        df_type = df_type.lower()
         method_dict = {'Average Intensity': 'mean', 
                        'Frequency in Samples': 'freq', 
                        'Total Intensity': 'sum',
