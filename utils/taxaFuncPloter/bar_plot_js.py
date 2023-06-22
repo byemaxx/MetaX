@@ -65,11 +65,14 @@ class BarPlot_js:
             c.add_yaxis(name, list(df.loc[name, :]), stack="stack1", category_gap="50%")
             
             c.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-            c.set_global_opts(datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,), opts.DataZoomOpts(type_="slider", range_start=0, range_end=100,),],
-                            legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",),
-                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom",),
-                            title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
-            )
+                            
+            
+        c.set_global_opts(
+            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
+                        legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",),
+                        toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
+                        title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
+                        xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)))
 
         return c
     

@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.34'
+__version__ = '1.35'
 
 # import built-in python modules
 import os
@@ -1016,8 +1016,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_view_table.setEnabled(True)
         self.pushButton_tukey_fresh.setEnabled(True)
         self.pushButton_plot_network.setEnabled(True)
-        # self.radioButton_basic_heamap_function.setEnabled(True)
-        # self.radioButton_basic_heatmap_taxa.setEnabled(True)
         self.pushButton_basic_heatmap_add.setEnabled(True)
         self.pushButton_basic_heatmap_drop_item.setEnabled(True)
         self.pushButton_basic_heatmap_clean_list.setEnabled(True)
@@ -1321,12 +1319,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             if plot_type == 'heatmap':
-                if row_cluster or col_cluster:
-                    # if exist row all 0, and cluster is True, then delete this row
-                    # check if all 0 row exist
-                    if (df==0).all(axis=1).any():
-                        df = df.loc[(df!=0).any(axis=1)]
-                        QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+                if (row_cluster or col_cluster) and (df==0).all(axis=1).any():
+                    df = df.loc[(df!=0).any(axis=1)]
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
                 HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
             
             elif plot_type == 'bar':
