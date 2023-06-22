@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.33'
+__version__ = '1.34'
 
 # import built-in python modules
 import os
@@ -78,6 +78,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1360, 860)
+        self.MainWindow.setWindowTitle("MetaX v" + __version__)
 
         self.like_times = 0
 
@@ -795,7 +796,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
             self.peptide_list = self.tf.peptide_df.index.tolist()
 
-            
+            # update group and sample in comboBox of basic analysis
+            self.update_basic_group_and_sample()
             # update taxa and function and group in comboBox
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
@@ -809,7 +811,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # update comboBox of basic peptide query
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.peptide_list)
+            self.comboBox_basic_peptide_query.addItems(self.tf.original_df['Sequence'].tolist())
 
             # clean comboBox of deseq2
             self.comboBox_deseq2_tables_lsit = []
@@ -886,7 +888,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_others_taxa.clear()
         self.comboBox_others_taxa.addItem('')
         self.comboBox_others_taxa.addItems(self.taxa_list_linked)
-
+    
         # set group list
         group_list = sorted(set(self.tf.group_list))
         self.comboBox_ttest_group1.clear()
@@ -901,36 +903,46 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # create the CheckableComboBox
         self.comboBox_others_group = CheckableComboBox()
         self.comboBox_anova_group = CheckableComboBox()
-        self.comboBox_basic_group = CheckableComboBox()
-        self.comboBox_basic_pca_group = CheckableComboBox()
-        try:
-            self.gridLayout_tflink_group.itemAt(0).widget().deleteLater()
-        except Exception as e:
-            pass
-        try:
-            self.horizontalLayout_anova_group.itemAt(0).widget().deleteLater()
-        except Exception as e:
-            pass
-        try:
-            self.verticalLayout_basic_heatmap_group.itemAt(0).widget().deleteLater()
-        except Exception as e:
-            pass
-        try:
-            self.verticalLayout_basic_pca.itemAt(0).widget().deleteLater()
-        except Exception as e:
-            pass
-        
+
+        layout_list = [self.gridLayout_tflink_group, self.horizontalLayout_anova_group]
+        for i in layout_list:
+            try:
+                i.itemAt(0).widget().deleteLater()
+            except Exception as e:
+                pass
+
         self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
         self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
-        self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
-        self.verticalLayout_basic_pca.addWidget(self.comboBox_basic_pca_group)
 
         for group in group_list:
             self.comboBox_others_group.addItem(group)
             self.comboBox_anova_group.addItem(group)
+        
+    def update_basic_group_and_sample(self):
+        group_list = sorted(set(self.tf.group_list))
+        sample_list = sorted(set(self.tf.sample_list))  
+
+        self.comboBox_basic_group = CheckableComboBox()
+        self.comboBox_basic_pca_group = CheckableComboBox()
+        self.comboBox_basic_sample = CheckableComboBox()
+
+        layout_list = [self.verticalLayout_basic_heatmap_sample, self.verticalLayout_basic_heatmap_group, self.verticalLayout_basic_pca]
+        for i in layout_list:
+            try:
+                i.itemAt(0).widget().deleteLater()
+            except Exception as e:
+                pass
+
+        self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
+        self.verticalLayout_basic_pca.addWidget(self.comboBox_basic_pca_group)
+        self.verticalLayout_basic_heatmap_sample.addWidget(self.comboBox_basic_sample)
+
+        for group in group_list:
             self.comboBox_basic_group.addItem(group)
             self.comboBox_basic_pca_group.addItem(group)
-        
+        for sample in sample_list:
+            self.comboBox_basic_sample.addItem(sample)
+
 
 
     def show_others_linked(self):
@@ -1021,6 +1033,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_tfnet_add_to_list.setEnabled(True)
         self.pushButton_tfnet_add_top.setEnabled(True)
         self.pushButton_tflink_filter.setEnabled(True)
+        self.pushButton_basic_peptide_query.setEnabled(True)
 
 
     def update_co_expr_select_lsit(self):
@@ -1137,13 +1150,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def add_basic_heatmap_top_list(self):
         
         top_num = self.spinBox_basic_heatmap_top_num.value()
-        group_list = self.comboBox_basic_group.getCheckedItems()
-        sample_list = []
-        if group_list == []:
-            sample_list = self.tf.sample_list
+        # get sample list
+        if self.radioButton_basic_heatmap_group.isChecked():
+            group_list = self.comboBox_basic_group.getCheckedItems()
+            sample_list = []
+            if group_list == []:
+                sample_list = self.tf.sample_list
+            else:
+                for group in group_list:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
-            for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+            sample_list = self.comboBox_basic_sample.getCheckedItems()
+            if sample_list == []:
+                sample_list = self.tf.sample_list
     
         method = self.comboBox_basic_heatmap_top_by.currentText()
         df_type = self.comboBox_basic_table.currentText()
@@ -1229,13 +1248,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if cmap == 'Auto':
             cmap = None            
             
-        sample_list = []
-        if group_list == []:
-            sample_list = self.tf.sample_list
+        # get sample list
+        if self.radioButton_basic_heatmap_group.isChecked():
+            group_list = self.comboBox_basic_group.getCheckedItems()
+            sample_list = []
+            if group_list == []:
+                sample_list = self.tf.sample_list
+            else:
+                for group in group_list:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
-            for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
-        
+            sample_list = self.comboBox_basic_sample.getCheckedItems()
+            if sample_list == []:
+                sample_list = self.tf.sample_list
+    
         col_cluster = False
         row_cluster = False
         if self.checkBox_basic_hetatmap_row_cluster.isChecked():
@@ -1338,11 +1364,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         peptide = self.comboBox_basic_peptide_query.currentText()
         if peptide == '':
             return None
-        elif peptide not in self.peptide_list:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please input a peptide in the list!')
-            return None
         else:
             df = self.tf.original_df.loc[self.tf.original_df['Sequence'] == peptide]
+            if len(df) == 0:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
+                return None
+            cols = df.columns.tolist()
+            for col in self.tf.sample_list:
+                cols.remove(col)
+                cols.append(col)
+            df = df.reindex(columns=cols)
             df = df.T
             df.reset_index(inplace=True)
             df.columns = ['Name', 'Value']
