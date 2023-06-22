@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.35'
+__version__ = '1.36'
 
 # import built-in python modules
 import os
@@ -131,6 +131,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_basic_peptide_query = self.make_combobox_searchable(self.comboBox_basic_peptide_query)
         self.comboBox_tfnet_selecte_list = self.make_combobox_searchable(self.comboBox_tfnet_selecte_list)
         
+        # link double click event to list widget
+        self.listWidget_table_list.itemDoubleClicked.connect(self.show_table_in_list)
+        self.listWidget_tfnet_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
+        self.listWidget_co_expr_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
+        self.listWidget_list_for_ploting.itemDoubleClicked.connect(self.copy_to_clipboard)
 
 
         # set button click event
@@ -299,7 +304,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # 返回新的 FileDragDropLineEdit 实例，以便可以在外部使用它
         return new_lineEdit
 
-
+    # double click listwidget item to copy to clipboard
+    def copy_to_clipboard(self, item):
+        clipboard = QApplication.clipboard()
+        text = item.text()
+        clipboard.setText(text)
+        QMessageBox.information(self.MainWindow, "Copy to clipboard", f"{text}\n\nhas been copied to clipboard.")
 
     # function of menu bar
     def swith_stack_page_analyzer(self):
