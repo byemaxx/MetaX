@@ -31,6 +31,7 @@ class TaxaFuncAnalyzer:
         self.func_name = None
 
         self.clean_df = None
+        self.peptide_df = None
         self.taxa_df = None
         self.func_df = None
         self.taxa_func_df = None
@@ -302,7 +303,7 @@ class TaxaFuncAnalyzer:
 
         all_sample_list = [sample for group in group_list for sample in self.get_sample_list_in_a_group(group)]
 
-        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
+        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']:
             if df_type == 'taxa-func':
                 df, primary, secondary = self.taxa_func_df, 'Taxon', self.func_name
             elif df_type == 'func-taxa':
@@ -311,6 +312,8 @@ class TaxaFuncAnalyzer:
                 df, primary = self.taxa_df, 'Taxon'
             elif df_type == 'func':
                 df, primary = self.func_df, self.func_name
+            elif df_type == 'peptide':
+                df, primary = self.peptide_df, 'Sequence'
 
             print(f"ANOVA test for {primary} in {group_list}")
 
@@ -359,7 +362,7 @@ class TaxaFuncAnalyzer:
 
         all_sample_list = [sample for group in group_list for sample in self.get_sample_list_in_a_group(group)]
 
-        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func']:
+        if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']:
             if df_type == 'taxa-func':
                 df, primary, secondary = self.taxa_func_df, 'Taxon', self.func_name
             elif df_type == 'func-taxa':
@@ -368,6 +371,8 @@ class TaxaFuncAnalyzer:
                 df, primary = self.taxa_df, 'Taxon'
             elif df_type == 'func':
                 df, primary = self.func_df, self.func_name
+            elif df_type == 'peptide':
+                df, primary = self.peptide_df, 'Sequence'
 
             print(f"t-test for {primary} in {group_list}")
 
@@ -454,6 +459,7 @@ class TaxaFuncAnalyzer:
     def get_top_intensity(self, df, top_num: int = 10, method: str = 'mean', sample_list: list = None):
 
         df = df[sample_list].copy() if sample_list else df.copy()
+        df = self.replace_if_two_index(df)
 
         if method == 'freq':
             df['value'] = df.astype(bool).sum(axis=1)
@@ -523,6 +529,7 @@ class TaxaFuncAnalyzer:
             sample_list += sample
 
         # Create intensity matrix
+        df = df.copy()
         df = df[sample_list]
         df = self.replace_if_two_index(df)
         
@@ -695,6 +702,10 @@ class TaxaFuncAnalyzer:
         dfc = dfc[(dfc[f'{func_name}_prop'] >= func_threshold) & (dfc[func_name].notnull()) & (dfc[func_name] != 'unknown')].copy()
 
         dfc_with_peptides = dfc[['Sequence', 'Taxon', func_name] + sample_list]
+        
+        df_peptide = dfc_with_peptides.copy()
+        df_peptide.index = df_peptide['Sequence']
+        df_peptide = df_peptide.drop(['Sequence', 'Taxon', func_name], axis=1)
 
         # extract 'taxa' and 'func' and sample intensity
         extract_list = ['Taxon', func_name] + sample_list
@@ -712,3 +723,4 @@ class TaxaFuncAnalyzer:
         self.taxa_func_df = df_taxa_func
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
+        self.peptide_df = df_peptide

@@ -2,6 +2,12 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-21:
+    - Version: 1.32
+        - add peptide table for all stats
+        - add get_top_index_list function to some part
+        - add filter to tflink
+        - add peptide query in basic part
 - 2023-06-16:
     - Version: 1.27
         - added function of focus item at co-expression part

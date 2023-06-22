@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.31'
+__version__ = '1.32'
 
 # import built-in python modules
 import os
@@ -23,7 +23,7 @@ sys.path.append(a)
 
 import ctypes
 import platform
-
+import pandas as pd
 
 # import core scripts of TaxaFuncExplore
 # from MetaX.utils.peptableAnnotator import peptableAnnotate
@@ -90,8 +90,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.func_list = []
         self.taxa_list = []
         self.taxa_func_list = []
+        self.peptide_list = []
         self.basic_heatmap_list = []
         self.co_expr_focus_list = []
+        self.tfnet_fcous_list = []
 
 
 
@@ -125,6 +127,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_others_func = self.make_combobox_searchable(self.comboBox_others_func)
         self.comboBox_others_taxa = self.make_combobox_searchable(self.comboBox_others_taxa)
         self.comboBox_co_expr_slecet_list = self.make_combobox_searchable(self.comboBox_co_expr_slecet_list)
+        self.comboBox_basic_peptide_query = self.make_combobox_searchable(self.comboBox_basic_peptide_query)
+        self.comboBox_tfnet_selecte_list = self.make_combobox_searchable(self.comboBox_tfnet_selecte_list)
+        
 
 
         # set button click event
@@ -174,16 +179,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(self.plot_pca_sns)
         ### Heatmap and Bar
-        self.radioButton_basic_heamap_function.toggled.connect(self.click_basic_heatmap_func)
-        self.radioButton_basic_heamap_function.clicked.connect(self.click_basic_heatmap_func)
-        self.radioButton_basic_heatmap_taxa.toggled.connect(self.click_basic_heatmap_taxa)
-        self.radioButton_basic_heatmap_taxa.clicked.connect(self.click_basic_heatmap_taxa)
+        self.comboBox_basic_table.currentIndexChanged.connect(self.set_basic_heatmap_selection_list)
+
         self.pushButton_basic_heatmap_add.clicked.connect(self.add_basic_heatmap_list)
         self.pushButton_basic_heatmap_drop_item.clicked.connect(self.drop_basic_heatmap_list)
         self.pushButton_basic_heatmap_clean_list.clicked.connect(self.clean_basic_heatmap_list)
-        self.pushButton_basic_heatmap_plot.clicked.connect(self.plot_basic_list_heatmap)
-        self.pushButton_basic_bar_plot.clicked.connect(self.plot_basic_bar)
         self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
+        self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
+        self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
+        ### Peptide Qeruy
+        self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
+
 
 
         # Corss TEST
@@ -221,16 +227,22 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         
         ## Others
-        # network
+        # taxa-func link network
         self.pushButton_plot_network.clicked.connect(self.plot_network) 
-        # sankey
+        self.comboBox_tfnet_table.currentIndexChanged.connect(self.update_tfnet_select_lsit)
+        self.pushButton_tfnet_add_to_list.clicked.connect(self.add_tfnet_selected_to_list)
+        self.pushButton_tfnet_add_top.clicked.connect(self.add_tfnet_top_list)
+        self.pushButton_tfnet_drop_item.clicked.connect(self.remove_tfnet_selected_from_list)
+        self.pushButton_tfnet_clean_list.clicked.connect(self.clear_tfnet_focus_list)
+
+        # Taxa-func link
         self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_intensity_matrix)
         self.pushButton_others_plot_heatmap.clicked.connect(self.plot_others_heatmap)
-        self.pushButton_others_plot_line.clicked.connect(self.plot_others_line)
+        self.pushButton_others_plot_line.clicked.connect(self.plot_others_bar)
         self.pushButton_others_show_linked_taxa.clicked.connect(self.show_others_linked_taxa)
         self.pushButton_others_show_linked_func.clicked.connect(self.show_others_linked_func)
         self.pushButton_others_fresh_taxa_func.clicked.connect(self.update_func_taxa_group_to_combobox)
-        # Taxa-func link
+        self.pushButton_tflink_filter.clicked.connect(self.filter_tflink)
         ## Heatmap
 
 
@@ -366,7 +378,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         
 
-    def show_message(self, title, message):
+    def show_message(self,message,title='Information'):
         self.msg = QMessageBox(self.MainWindow)
         self.msg.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool)
         self.msg.setEnabled(False)
@@ -504,7 +516,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     # show table in Table_list
     def show_table_in_list(self):
         try:
-            self.show_message('Information', 'Data is loading, please wait...')
+            self.show_message('Data is loading, please wait...')
             table_name = self.listWidget_table_list.currentItem().text()
             df = self.table_dict[table_name]
             self.show_table(df)
@@ -610,7 +622,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     #### TaxaFuncAnalyzer Function ####
     def check_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
-        import pandas as pd
         try:
             taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
             meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
@@ -638,7 +649,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         elif meta_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
         else:
-            self.show_message('Information', 'taxaFuncAnalyzer is running, please wait...')
+            self.show_message('taxaFuncAnalyzer is running, please wait...')
             if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
                 return None
             self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
@@ -743,7 +754,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_lsit = []
 
-        self.show_message('Information', 'Data is Preprocessing, please wait...')
+        self.show_message('Data is Preprocessing, please wait...')
 
         group = self.comboBox_meta_to_stast.currentText()
 
@@ -769,7 +780,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # go to basic analysis tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
             # add tables to table dict
-            self.update_table_dict('peptide', self.tf.clean_df)
+            self.update_table_dict('clean', self.tf.clean_df)
+            self.update_table_dict('peptide', self.tf.peptide_df)
             self.update_table_dict('taxa', self.tf.taxa_df)
             self.update_table_dict('function', self.tf.func_df)
             self.update_table_dict('taxa-func', self.tf.taxa_func_df)
@@ -781,7 +793,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.taxa_list = self.tf.taxa_df.index.tolist()
             self.func_list = self.tf.func_df.index.tolist()
             self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
-
+            self.peptide_list = self.tf.peptide_df.index.tolist()
 
             
             # update taxa and function and group in comboBox
@@ -795,9 +807,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.clean_basic_heatmap_list()
             self.comboBox_basic_heatmap_selection_list.clear()
 
+            # update comboBox of basic peptide query
+            self.comboBox_basic_peptide_query.clear()
+            self.comboBox_basic_peptide_query.addItems(self.peptide_list)
+
             # clean comboBox of deseq2
             self.comboBox_deseq2_tables_lsit = []
-            self.comboBox_deseq2_tables.clear()            
+            self.comboBox_deseq2_tables.clear()
+
+            # set innitial value of basic heatmap selection list
+            self.set_basic_heatmap_selection_list()
+            # set innitial value of taxa-func link network selection list
+            self.update_tfnet_select_lsit()
 
 
             # eanble PCA   button
@@ -808,14 +829,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
-    def click_basic_heatmap_func(self):
+
+
+    def set_basic_heatmap_selection_list(self):
+        type_list = self.comboBox_basic_table.currentText().lower()
         self.listWidget_list_for_ploting.clear()
         self.basic_heatmap_list = []
-        self.update_basic_heatmap_combobox(type_list = 'function')
-    def click_basic_heatmap_taxa(self):
-        self.listWidget_list_for_ploting.clear()
-        self.basic_heatmap_list = []
-        self.update_basic_heatmap_combobox(type_list = 'taxa')
+        self.update_basic_heatmap_combobox(type_list = type_list)
+
+
 
     def drop_basic_heatmap_list(self):
         slecetion = self.listWidget_list_for_ploting.selectedItems()
@@ -830,9 +852,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if type_list == 'taxa':
             self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
             self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_list)
-        elif type_list == 'function':
+        elif type_list == 'func':
             self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
             self.comboBox_basic_heatmap_selection_list.addItems(self.func_list)
+        elif type_list == 'taxa-func':
+            self.comboBox_basic_heatmap_selection_list.addItem('All Taxa-Functions')
+            self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_func_list)
+        elif type_list == 'peptide':
+            self.comboBox_basic_heatmap_selection_list.addItem('All Peptides')
+            self.comboBox_basic_heatmap_selection_list.addItems(self.peptide_list)
 
     def update_func_taxa_group_to_combobox(self):
         # reset other taxa and function lebel
@@ -976,8 +1004,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_view_table.setEnabled(True)
         self.pushButton_tukey_fresh.setEnabled(True)
         self.pushButton_plot_network.setEnabled(True)
-        self.radioButton_basic_heamap_function.setEnabled(True)
-        self.radioButton_basic_heatmap_taxa.setEnabled(True)
+        # self.radioButton_basic_heamap_function.setEnabled(True)
+        # self.radioButton_basic_heatmap_taxa.setEnabled(True)
         self.pushButton_basic_heatmap_add.setEnabled(True)
         self.pushButton_basic_heatmap_drop_item.setEnabled(True)
         self.pushButton_basic_heatmap_clean_list.setEnabled(True)
@@ -986,8 +1014,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_add_top.setEnabled(True)
         self.pushButton_co_expr_plot.setEnabled(True)
         self.comboBox_co_expr_table.setEnabled(True)
+        self.comboBox_basic_table.setEnabled(True)
         self.pushButton_co_expr_add_to_list.setEnabled(True)
         self.pushButton_co_expr_add_top.setEnabled(True)
+        self.comboBox_tfnet_table.setEnabled(True)
+        self.pushButton_tfnet_add_to_list.setEnabled(True)
+        self.pushButton_tfnet_add_top.setEnabled(True)
+        self.pushButton_tflink_filter.setEnabled(True)
 
 
     def update_co_expr_select_lsit(self):
@@ -1003,43 +1036,46 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             update_list = self.func_list
         elif current_table == 'Taxa-Func':
             update_list = self.taxa_func_list
+        elif current_table == 'Peptide':
+            update_list = self.peptide_list
         self.comboBox_co_expr_slecet_list.addItems(update_list)
 
     def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
             if str_selected is not None and str_list is None:
-                if str_selected == 'All Taxa':
-                    self.clean_basic_heatmap_list()
-                    self.listWidget_list_for_ploting.addItem('All Taxa')
-                    self.basic_heatmap_list = ['All Taxa']
-                elif str_selected == 'All Functions':
-                    self.clean_basic_heatmap_list()
-                    self.listWidget_list_for_ploting.addItem('All Functions')
-                    self.basic_heatmap_list = ['All Functions']
-                elif str_selected != '' and str_selected not in self.basic_heatmap_list:
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                    if str_selected == i:
+                        self.clean_basic_heatmap_list()
+                        self.listWidget_list_for_ploting.addItem(i)
+                        self.basic_heatmap_list = [i]
+                        break
+
+                if str_selected != '' and str_selected not in self.basic_heatmap_list:
                     # check if str_selected is in the list
                     def check_if_in_list(str_selected):
-                        if self.radioButton_basic_heamap_function.isChecked():
-                            if str_selected in self.func_list:
-                                return True
-                        elif self.radioButton_basic_heatmap_taxa.isChecked():
-                            if str_selected in self.taxa_list:
-                                return True
+                        df_type = self.comboBox_basic_table.currentText()
+                        list_dict = {'Taxa':self.taxa_list, 'Func':self.func_list, 'Taxa-Func':self.taxa_func_list, 'Peptide':self.peptide_list}
+                        if str_selected in list_dict[df_type]:
+                            return True
                         else:
                             return False
+                    
                     if not check_if_in_list(str_selected):
                         QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
                         return None
-                    
-                    if 'All Taxa' in self.basic_heatmap_list:
-                        self.basic_heatmap_list.remove('All Taxa')
-                    if 'All Functions' in self.basic_heatmap_list:
-                        self.basic_heatmap_list.remove('All Functions')
+                    for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                        if i in self.basic_heatmap_list:
+                            self.basic_heatmap_list.remove(i)
+
                     self.basic_heatmap_list.append(str_selected)
                     self.listWidget_list_for_ploting.clear()
                     self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
+            
             elif str_list is not None and str_selected is None:
-                if "All Taxa" in self.basic_heatmap_list or "All Functions" in self.basic_heatmap_list:
-                    self.clean_basic_heatmap_list()
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                    if i in self.basic_heatmap_list:
+                        self.clean_basic_heatmap_list()
+
+
                 for str_selected in str_list:
                     if str_selected not in self.basic_heatmap_list:
                         self.basic_heatmap_list.append(str_selected)
@@ -1056,18 +1092,40 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.listWidget_list_for_ploting.clear()
     
     def extract_top_from_test_result(self, method, top_num, df_type):
-        table_name = method.split('_')[0] + '_test(' + df_type + ')'
-        df = self.table_dict.get(table_name)
+        if method.split('_')[0] == 'deseq2':
+            # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
+            table_name = method.split('_')[0] +'(' + df_type + ')'
+            df =  self.table_dict.get(table_name)
+            if df is None:
+                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
+                return None
+            if method.split('_')[1] == 'up':
+                df = df[df['log2FoldChange'] > 0]
+                if method.split('_')[2] == 'p':
+                    df = df.sort_values(by='padj',ascending = True)
+                elif method.split('_')[2] == 'l2fc':
+                    df = df.sort_values(by='log2FoldChange',ascending = False)
+            elif method.split('_')[1] == 'down':
+                df = df[df['log2FoldChange'] < 0]
+                if method.split('_')[2] == 'p':
+                    df = df.sort_values(by='padj',ascending = True)
+                elif method.split('_')[2] == 'l2fc':
+                    df = df.sort_values(by='log2FoldChange',ascending = True)    
+            
+        else:
+            table_name = method.split('_')[0] + '_test(' + df_type + ')'
+            df = self.table_dict.get(table_name)
 
-        if df is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
-            return None
-        if method.split('_')[2] == 'p':
-            df = df.sort_values(by='P-value',ascending = True)
-        elif method.split('_')[2] == 'f':
-            df = df.sort_values(by='f-statistic',ascending = False)
-        elif method.split('_')[2] == 't':
-            df = df.sort_values(by='t-statistic',ascending = False)
+            if df is None:
+                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
+                return None
+            if method.split('_')[2] == 'p':
+                df = df.sort_values(by='P-value',ascending = True)
+            elif method.split('_')[2] == 'f':
+                df = df.sort_values(by='f-statistic',ascending = False)
+            elif method.split('_')[2] == 't':
+                df = df.sort_values(by='t-statistic',ascending = False)
+        
         df = df.head(top_num)
         index_list = df.index.tolist()
         return index_list
@@ -1083,29 +1141,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             for group in group_list:
                 sample_list.extend(self.tf.get_sample_list_in_a_group(group))
     
+        method = self.comboBox_basic_heatmap_top_by.currentText()
+        df_type = self.comboBox_basic_table.currentText()
 
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
 
-        method_dict = {'Average Intensity': 'mean', 'Frequency in Samples': 'freq', 'Total Intensity': 'sum',
-                       'ANOVA(p-value)': 'anova_test_p', 'ANOVA(f-statistic)': 'anova_test_f', 'T-TEST(p-value)': 't_test_p','T-TEST(t-statistic)': 't_test_t'}
-        method = method_dict[self.comboBox_basic_heatmap_top_by.currentText()]
-        
-        
-        if self.radioButton_basic_heamap_function.isChecked():
-            df = self.tf.func_df
-            df_type = 'func'
-        elif self.radioButton_basic_heatmap_taxa.isChecked():
-            df = self.tf.taxa_df
-            df_type = 'taxa'
-        else:
-            return None
-        
-        if method in ['mean', 'freq', 'sum']:
-            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
-            index_list = df.index.tolist()
-            self.update_basic_heatmap_list(str_list=index_list)
-        else:
-            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
-            self.update_basic_heatmap_list(str_list=index_list)
+        self.update_basic_heatmap_list(str_list=index_list)
         
     def add_co_expr_to_list(self):
         str_selected = self.comboBox_co_expr_slecet_list.currentText()
@@ -1127,7 +1168,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def update_co_expr_lsit(self, str_selected=None, str_list=None):
         if str_list is None and str_selected is not None:
             df_type = self.comboBox_co_expr_table.currentText()
-            list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list}
+            list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list, 'Peptide': self.peptide_list}
             if str_selected == '':
                 return None
             elif str_selected not in list_dict[df_type]:
@@ -1159,33 +1200,28 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         elif self.radioButton_co_expr_bysample.isChecked():
             sample_list = self.comboBox_co_expr_sample.getCheckedItems()
-        # get method
-        method_dict = {'Average Intensity': 'mean', 'Frequency in Samples': 'freq', 'Total Intensity': 'sum',
-                       'ANOVA(p-value)': 'anova_test_p', 'ANOVA(f-statistic)': 'anova_test_f', 'T-TEST(p-value)': 't_test_p','T-TEST(t-statistic)': 't_test_t'}
-        method = method_dict[self.comboBox_co_expr_top_by.currentText()]
-        # get df type
-        df_type = self.comboBox_co_expr_table.currentText().lower()
-        df_dict = {'taxa': self.tf.taxa_df, 'func': self.tf.func_df, 'taxa-func': self.tf.taxa_func_df}
-        df = df_dict[df_type]
-        
-        if method in ['mean', 'freq', 'sum']:
-            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
-            index_list = df.index.tolist()
-            self.update_co_expr_lsit(str_list=index_list)
-        else:
-            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
-            self.update_co_expr_lsit(str_list=index_list)
+
+        method = self.comboBox_co_expr_top_by.currentText()
+        df_type = self.comboBox_co_expr_table.currentText()
+
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        self.update_co_expr_lsit(str_list=index_list)
+
         
 
+            
 
-
-    def plot_basic_list_heatmap(self):
+    def plot_basic_list(self, plot_type='heatmap'):
         group_list = self.comboBox_basic_group.getCheckedItems()
         width = self.spinBox_basic_heatmap_width.value()
         height = self.spinBox_basic_heatmap_height.value()
         scale = self.comboBox_basic_hetatmap_scale.currentText()
         cmap = self.comboBox_basic_hetatmap_theme.currentText()
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
+
+        table_name = self.comboBox_basic_table.currentText()
+        table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+
         if cmap == 'Auto':
             cmap = None            
             
@@ -1203,107 +1239,110 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if self.checkBox_basic_hetatmap_col_cluster.isChecked():
             col_cluster = True
         
+        if self.checkBox_basic_heatmap_plot_peptide.isChecked():
+            title = f'{plot_type.capitalize()} of Peptide'
+            if len(self.basic_heatmap_list) == 0:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+                return None
+            elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
+                df = self.tf.peptide_df.copy()
 
-        if self.radioButton_basic_heamap_function.isChecked():
-            title = 'Function Heatmap'
-            dft = self.tf.func_df.copy()
-        elif self.radioButton_basic_heatmap_taxa.isChecked():
-            title = 'Taxa Heatmap'
-            dft = self.tf.taxa_df.copy()
+            else:
+                if table_name == 'Taxa':
+                    df = self.tf.clean_df.loc[self.tf.clean_df['Taxon'].isin(self.basic_heatmap_list)]
+                    df.index = df['Sequence']
+
+                elif table_name == 'Func':
+                    df = self.tf.clean_df.loc[self.tf.clean_df[self.tf.func_name].isin(self.basic_heatmap_list)]
+                    df.index = df['Sequence']
+
+                elif table_name == 'Taxa-Func':
+                    df_all = None
+                    for i in self.basic_heatmap_list:
+                        taxon = i.split(' <')[0]
+                        func = i.split(' <')[1][:-1]
+                        dft = self.tf.clean_df.loc[(self.tf.clean_df['Taxon'] == taxon) & (self.tf.clean_df[self.tf.func_name] == func)]
+                        if df_all is None:
+                            df_all = dft
+                        else:
+                            df_all = pd.concat([df_all, dft])
+                    df = df_all
+                    df.index = df['Sequence']
+
+                else: # Peptide
+                    df = self.tf.peptide_df.copy()
+                    df = df.loc[self.basic_heatmap_list]
+                
+                df = df[sample_list]
+
         else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Taxa or Function radio button!')
-            return
-        
-        dft = dft[sample_list]
+            title = f'{plot_type.capitalize()} of {table_name.capitalize()}'
+            dft = table_name_dict[table_name]
+            dft = dft[sample_list]
 
-        if len(self.basic_heatmap_list) == 1:
-            if self.basic_heatmap_list[0] == 'All Taxa' or self.basic_heatmap_list[0] == 'All Functions':
+            if  len(self.basic_heatmap_list) == 0:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+                return None
+            elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
                 df = dft
             else:
                 df = dft.loc[self.basic_heatmap_list]
-        elif len(self.basic_heatmap_list) > 1:
-            df = dft.loc[self.basic_heatmap_list]
-        else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa or function to the list!')
-            return
-        
-        # if exist row all 0, and cluster is True, then delete this row
-        if row_cluster or col_cluster:
-            # check if all 0 row exist
-            if (df==0).all(axis=1).any():
-                df = df.loc[(df!=0).any(axis=1)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+
+
         try:
-            HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
-        
-        except Exception as e:
-            error_message = traceback.format_exc()
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            if plot_type == 'heatmap':
+                if row_cluster or col_cluster:
+                    # if exist row all 0, and cluster is True, then delete this row
+                    # check if all 0 row exist
+                    if (df==0).all(axis=1).any():
+                        df = df.loc[(df!=0).any(axis=1)]
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+                HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
             
-    
-    def plot_basic_bar(self):
-        group_list = self.comboBox_basic_group.getCheckedItems()
-        width = self.spinBox_basic_heatmap_width.value()*100
-        height = self.spinBox_basic_heatmap_height.value()*100
-        rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
-         
-            
-        sample_list = []
-        if group_list == []:
-            sample_list = self.tf.sample_list
-        else:
-            for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
-        
-
-        if self.radioButton_basic_heamap_function.isChecked():
-            title = 'Bar Plot of Function'
-            dft = self.tf.func_df.copy()
-        elif self.radioButton_basic_heatmap_taxa.isChecked():
-            title = 'Bar Plot of Taxa'
-            dft = self.tf.taxa_df.copy()
-        else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Taxa or Function radio button!')
-            return
-        
-        dft = dft[sample_list]
-
-        if len(self.basic_heatmap_list) == 1:
-            if self.basic_heatmap_list[0] == 'All Taxa' or self.basic_heatmap_list[0] == 'All Functions':
-                df = dft
-            else:
-                df = dft.loc[self.basic_heatmap_list]            
-        elif len(self.basic_heatmap_list) > 1:
-            df = dft.loc[self.basic_heatmap_list]
-        else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa or function to the list!')
-            return None
-        
-        if len(df) > 100:
-            reply = QMessageBox.question(self.MainWindow, 'Warning', 
+            elif plot_type == 'bar':
+                width = width*100
+                height = height*100
+                df = df.loc[(df!=0).any(axis=1)]
+                if len(df) > 100:
+                    reply = QMessageBox.question(self.MainWindow, 'Warning', 
                                         'The list is over 100 items. It is not recommended to plot bar plot. Do you want to continue?', 
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.No:
-                return None
+                    if reply == QMessageBox.No:
+                        return None
 
-        try:
-            pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'intensity.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
-        
+                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
+                self.save_and_show_js_plot(pic, title)
+
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-        
+            
 
 
+    def save_and_show_js_plot(self, pic, title):
+        home_path = QDir.homePath()
+        metax_path = os.path.join(home_path, 'MetaX')
+        if not os.path.exists(metax_path):
+            os.makedirs(metax_path)
+        save_path = os.path.join(metax_path, f'{title}.html')
+        pic.render(save_path)
+        web = webDialog.MyDialog(save_path)
+        self.web_list.append(web)
+        web.show()
+
+    def peptide_query(self):
+        peptide = self.comboBox_basic_peptide_query.currentText()
+        if peptide == '':
+            return None
+        elif peptide not in self.peptide_list:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please input a peptide in the list!')
+            return None
+        else:
+            df = self.tf.original_df.loc[self.tf.original_df['Sequence'] == peptide]
+            df = df.T
+            df.reset_index(inplace=True)
+            df.columns = ['Name', 'Value']
+            self.set_pd_to_QTableWidget(df, self.tableWidget_basic_peptide_query)
         
 
     # baisc stats
@@ -1513,14 +1552,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         try:
             if not group_list:
-                self.show_message('Info', 'ANOVA test will use all groups...\n\n It may take a long time! Please wait...')
+                self.show_message('ANOVA test will use all groups...\n\n It may take a long time! Please wait...')
 
                 df_anova = self.tf.get_stats_anova(df_type=df_type)
             elif len(group_list) < 3:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
                 return None
             else:
-                self.show_message('Info', 'ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
+                self.show_message('ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
                 df_anova = self.tf.get_stats_anova(group_list=group_list, df_type=df_type)
             self.show_table(df_anova)
             table_name = f'anova_test({df_type})'
@@ -1557,7 +1596,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         elif taxa != '' and func == '':
             func = None
         
-        self.show_message('Info', 'Tukey test is running...\n\n It may take a long time! Please wait...')
+        self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
             tukey_test = self.tf.get_stats_tukey_test(taxon_name=taxa, func_name=func)
@@ -1588,7 +1627,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two different groups!')
             return None
         else:
-            self.show_message('Info', 'T-test is running...\n\n It may take a long time! Please wait...')
+            self.show_message('T-test is running...\n\n It may take a long time! Please wait...')
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
@@ -1623,7 +1662,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     #DESeq2 
     def deseq2_test(self):
 
-        table_name = {'Func': self.tf.func_df, 'Taxa': self.tf.taxa_df, 'Taxa-Func': self.tf.taxa_func_df}
+        table_name = {'Func': self.tf.func_df, 'Taxa': self.tf.taxa_df, 'Taxa-Func': self.tf.taxa_func_df, 'Peptide': self.tf.peptide_df}
         df = table_name[self.comboBox_table_for_deseq2.currentText()]
 
         group1 = self.comboBox_deseq2_group1.currentText()
@@ -1637,7 +1676,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         else:
             group_list = [group1, group2]
-            self.show_message('Info', 'DESeq2 is running...\n\n It may take a long time! Please wait...')
+            self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
                 self.pushButton_deseq2.setEnabled(False)
                 df_deseq2 = self.tf.get_stats_deseq2(df, group_list=group_list)
@@ -1726,18 +1765,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 for group in groups:
                     sample_list += self.tf.get_sample_list_in_a_group(group)
         try:
-            self.show_message('Info', 'Co-expression network is plotting...\n\n It may take a long time! Please wait...')
+            self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
             pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'Co-Expression-network.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
+            self.save_and_show_js_plot(pic, 'co-expression network')
         except ValueError as e:
             if 'sample_list should have at least 2' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
@@ -1763,23 +1794,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
-        if table_name == 'deseq2(func)':
-            QMessageBox.warning(self.MainWindow, 'Error', f'Function table is not supported for Sankey plot!')
+        if table_name == 'deseq2(func)' or table_name == 'deseq2(peptide)':
+            QMessageBox.warning(self.MainWindow, 'Error', f'{table_name} table is not supported for Sankey plot!')
             return None
         try:
             df = self.table_dict[table_name]
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
 
             pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'sankey.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
+            self.save_and_show_js_plot(pic, f'Sankay plot {title_name}')
+            
             # subprocess.Popen(save_path, shell=True)
             # QMessageBox.information(self.MainWindow, 'Information', f'Sankey plot is saved in {save_path}')
 
@@ -1791,37 +1815,126 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     # Others Functions #
     # network
+    def update_tfnet_select_lsit(self):
+        df_type = self.comboBox_tfnet_table.currentText()
+        if df_type == 'Taxa-Func':
+            self.comboBox_tfnet_selecte_list.clear()
+            self.comboBox_tfnet_selecte_list.addItems(self.taxa_func_list)
+        elif df_type == 'Taxa':
+            self.comboBox_tfnet_selecte_list.clear()
+            self.comboBox_tfnet_selecte_list.addItems(self.taxa_list)
+        elif df_type == 'Func':
+            self.comboBox_tfnet_selecte_list.clear()
+            self.comboBox_tfnet_selecte_list.addItems(self.func_list)
+    
+    def add_tfnet_selected_to_list(self):
+        selected = self.comboBox_tfnet_selecte_list.currentText()
+        self.update_tfnet_focus_list_and_widget(str_selected=selected)
+
+
+    def update_tfnet_focus_list_and_widget(self, str_selected: str = '', str_list: list = None):
+        if str_selected == '' and str_list is None:
+            return None
+        elif str_selected != '' and str_list is None:
+            if str_selected not in self.tfnet_fcous_list:
+                self.tfnet_fcous_list.append(str_selected)
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{str_selected} is already in the list!')
+        elif str_selected == '' and str_list is not None:
+            for i in str_list:
+                if i not in self.tfnet_fcous_list:
+                    self.tfnet_fcous_list.append(i)
+                else:
+                    continue
+        else:
+            return None
+        self.listWidget_tfnet_focus_list.clear()
+        self.listWidget_tfnet_focus_list.addItems(self.tfnet_fcous_list)
+    
+    def remove_tfnet_selected_from_list(self):
+        selected = self.listWidget_tfnet_focus_list.selectedItems()
+        if len(selected) == 0:
+            return None
+        item = selected[0]
+        self.listWidget_tfnet_focus_list.takeItem(self.listWidget_tfnet_focus_list.row(item))
+        self.tfnet_fcous_list.remove(item.text())
+
+    
+    def clear_tfnet_focus_list(self):
+        self.tfnet_fcous_list = []
+        self.listWidget_tfnet_focus_list.clear()
+    
+    def add_tfnet_top_list(self):
+        top_num = self.spinBox_tfnet_top_num.value()
+        df_type = self.comboBox_tfnet_table.currentText()
+
+        sample_list =  self.tf.sample_list
+        if self.radioButton_network_bysample.isChecked():
+            slected_list = self.comboBox_network_sample.getCheckedItems()
+            sample_list = slected_list
+
+        elif self.radioButton_network_bygroup.isChecked():
+            groups = self.comboBox_network_group.getCheckedItems()
+            sample_list = []
+            for group in groups:
+                sample_list += self.tf.get_sample_list_in_a_group(group)
+
+        
+        method = self.comboBox_tfnet_top_by.currentText()
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        self.update_tfnet_focus_list_and_widget(str_list=index_list)
+
+
+    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list) -> list:
+        method_dict = {'Average Intensity': 'mean', 
+                       'Frequency in Samples': 'freq', 
+                       'Total Intensity': 'sum',
+                       'ANOVA(p-value)': 'anova_test_p', 
+                       'ANOVA(f-statistic)': 'anova_test_f', 
+                       'T-TEST(p-value)': 't_test_p',
+                       'T-TEST(t-statistic)': 't_test_t',
+                       'Deseq2-up(p-value)': 'deseq2_up_p', 
+                       'Deseq2-down(p-value)': 'deseq2_down_p', 
+                       'Deseq2-up(log2FC)': 'deseq2_up_l2fc', 
+                       'Deseq2-down(log2FC)': 'deseq2_down_l2fc'}
+        method = method_dict[method]
+        
+        table_dict = {'taxa': self.tf.taxa_df, 
+                      'func': self.tf.func_df,
+                      'taxa-func': self.tf.taxa_func_df,
+                      'peptide': self.tf.peptide_df}
+        df = table_dict[df_type.lower()]
+
+        if method in ['mean', 'freq', 'sum']:
+            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
+            index_list = df.index.tolist()
+            return index_list
+        else:
+            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
+            return index_list
+        
+
+
     def plot_network(self):
         width = self.spinBox_network_width.value()
         height = self.spinBox_network_height.value()
         sample_list =  self.tf.sample_list
+        focus_list = self.tfnet_fcous_list
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
-            if len(slected_list) == 0:
-                print('Did not select any group!, plot all samples')
-            else:
-                sample_list = slected_list
+            sample_list = slected_list
+
                 # print(f'Plot with selected samples:{sample_list}')
         elif self.radioButton_network_bygroup.isChecked():
             groups = self.comboBox_network_group.getCheckedItems()
-            if len(groups) == 0:
-                print('Did not select any group!, plot all samples')
-            else:
-                sample_list = []
-                for group in groups:
-                    sample_list += self.tf.get_sample_list_in_a_group(group)
-                # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
+            sample_list = []
+            for group in groups:
+                sample_list += self.tf.get_sample_list_in_a_group(group)
+            # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
         try:
-            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'TFLink-network.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
+            self.show_message('Plotting network...')
+            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list)
+            self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -1853,7 +1966,20 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             self.show_table(df)
 
+    def filter_tflink(self):
+        top_num = self.spinBox_tflink_top_num.value()
+        method = self.comboBox_tflink_top_by.currentText()
+        sample_list =  self.tf.sample_list
+        taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list)
+        func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list)
+        if taxa_list:
+            self.comboBox_others_taxa.clear()
+            self.comboBox_others_taxa.addItems(taxa_list)
+        if func_list:
+            self.comboBox_others_func.clear()
+            self.comboBox_others_func.addItems(func_list)
 
+        pass
     # Plot Heatmap
     def plot_others_heatmap(self):
         taxa = self.comboBox_others_taxa.currentText()
@@ -1919,6 +2045,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Some columns are all 0, so they are deleted!\n\nIf you want to keep them, please change a scale method!')
 
         try:
+            self.show_message('Plotting heatmap, please wait...')
             hp = HeatmapPlot(self.tf)
             hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
         except Exception as e:
@@ -1927,7 +2054,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             
     
     # Plot Line
-    def plot_others_line(self):
+    def plot_others_bar(self):
         taxa = self.comboBox_others_taxa.currentText()
         func = self.comboBox_others_func.currentText()
         group_list = self.comboBox_others_group.getCheckedItems()
@@ -1955,22 +2082,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if width and height:
                 params['width'] = width*100
                 params['height'] = height*100
-
+            
+            self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tf).plot_intensity_bar(**params)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'intensity.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
-            # else:
-            #     if width and height:
-            #         params['width'] = width
-            #         params['height'] = height
-            #     LinePlot(self.tf).plot_intensity_line(**params)
+            self.save_and_show_js_plot(pic, 'Intensity Bar Plot')
+
+
         except ValueError as e:
             if 'No data to plot' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')

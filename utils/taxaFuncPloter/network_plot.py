@@ -6,7 +6,7 @@ class NetworkPlot:
         self.tfobj = tfobj
     
 
-    def create_nodes_links(self, sample_list:list = None):
+    def create_nodes_links(self, sample_list:list = None, focus_list:list = []):
         df = self.tfobj.taxa_func_df.copy()
         extra_cols = sample_list
         if extra_cols:
@@ -34,28 +34,70 @@ class NetworkPlot:
 
         def normalize(value):
             scaled_value = 100 * (value - min_value) / (max_value - min_value)
-            return max(scaled_value, 5)  # set a minimum size
+            return max(scaled_value, 10)  # set a minimum size
 
 
         taxa = df["taxa"].unique().tolist()
         functions = df["function"].unique().tolist()
-        nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]} for taxon in taxa] + [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]} for function in functions]
+        nodes = []
+        if focus_list is not None and len(focus_list) > 0:
+            for taxon in taxa:
+                if taxon in focus_list:
+                    nodes.append({"name": taxon, "category": 1, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]})
+                else:
+                    nodes.append({"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]})
+            for function in functions:
+                if function in focus_list:
+                    nodes.append({"name": function, "category": 3, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
+                else:
+                    nodes.append({"name": function, "category": 2, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
+            
+            links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
+            
+            categories = [
+                {"name": "Taxa", "itemStyle": {"normal": {"color": "#f1c40f"}}},
+                {"name": "Focus_Taxa", "itemStyle": {"normal": {"color": "#ff0000"}}},
+                {"name": "Function", "itemStyle": {"normal": {"color": "#95a5a6"}}},
+                {"name": "Focus_Function", "itemStyle": {"normal": {"color": "#27ae60"}}},
+            ]
 
-        links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
+            return nodes, links, categories
+                    
+            
+        else:
+            nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]} for taxon in taxa] + [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]} for function in functions]
 
-        # 定义不同类别节点的样式
-        categories = [
-            {"name": "Taxa", "itemStyle": {"normal": {"color": "#ff7f50"}}},
-            {"name": "Function", "itemStyle": {"normal": {"color": "#87cefa"}}},
-        ]
+            links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
+            categories = [
+                {"name": "Taxa", "itemStyle": {"normal": {"color": "#f1c40f"}}},
+                {"name": "Function", "itemStyle": {"normal": {"color": "#95a5a6"}}},
+            ]
 
 
         return nodes, links, categories
 
 
     
-    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800):
-        nodes, links, categories = self.create_nodes_links(sample_list)
+    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800, focus_list:list = []):
+        # preprocess focus_list
+        if focus_list is not None and focus_list:
+            new_list = []
+            for i in focus_list:
+                if i in self.tfobj.taxa_df.index.tolist():
+                    new_list.append(i)
+                elif i in self.tfobj.func_df.index.tolist():
+                    new_list.append(i)
+                elif i.startswith('d__Bacteria') and ' <' in i:
+                    taxon = i.split(' <')[0]
+                    func = i.split(' <')[1][:-1]
+                    new_list.extend((taxon, func))
+                else:
+                    print(f"Warning: {i} is not in taxa or function list")
+            nodes, links, categories = self.create_nodes_links(sample_list, new_list)
+        else:
+            nodes, links, categories = self.create_nodes_links(sample_list)
+
+
         c = (
             Graph(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add(
@@ -75,7 +117,7 @@ class NetworkPlot:
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}}),
             )        
             )
-        
+
         return c
     
 
@@ -87,7 +129,7 @@ class NetworkPlot:
         if len(sample_list) < 2:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
-        df_dict = {'taxa': self.tfobj.taxa_df, 'func': self.tfobj.func_df, 'taxa-func': self.tfobj.taxa_func_df}
+        df_dict = {'taxa': self.tfobj.taxa_df, 'func': self.tfobj.func_df, 'taxa-func': self.tfobj.taxa_func_df, 'peptide': self.tfobj.peptide_df}
         df = df_dict[df_type].copy()
         if extra_cols := sample_list:
             print(f"Using sample list provided {extra_cols}")
