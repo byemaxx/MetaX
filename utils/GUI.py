@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.36'
+__version__ = '1.37'
 
 # import built-in python modules
 import os
@@ -1332,6 +1332,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 if (row_cluster or col_cluster) and (df==0).all(axis=1).any():
                     df = df.loc[(df!=0).any(axis=1)]
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+                self.show_message(f'Plotting {plot_type}...')
                 HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
             
             elif plot_type == 'bar':
@@ -1344,7 +1345,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if reply == QMessageBox.No:
                         return None
-
+                self.show_message(f'Plotting {plot_type}...')
                 pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
                 self.save_and_show_js_plot(pic, title)
 

@@ -7,18 +7,19 @@ class BarPlot_js:
         self.tfobj =  tfobj
     # plot intensity line for each sample
     # Example: plot_intensity_line(sw, func_name=func_name, taxon_name=taxon_name, fig_size=(30,20))
+
     def rename_taxa(self, df):
-        if df.index.name == 'Taxon':
-            index_list = [i.split('|')[-1] for i in df.index.tolist()]
-            df.index = index_list
-        elif 'd__Bacteria' in df.index.tolist()[0]:
-            new_index_list = []
-            for i in df.index.tolist():
-                taxon = i.split(' <')[0].split('|')[-1]
-                func = i.split(' <')[1][:-1]
-                new_index = f'{taxon} <{func}>'
-                new_index_list.append(new_index)
-            df.index = new_index_list
+        first_index = df.index[0]
+        if 'd__Bacteria' in first_index:
+            if '<' not in first_index:
+                index_list = [i.split('|')[-1] for i in df.index]
+                df.index = index_list
+            else:
+                new_index_list = [
+                    f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
+                    for i in df.index
+                ]
+                df.index = new_index_list
         return df
 
     def plot_intensity_bar(self, taxon_name:str=None, groups:list = None, func_name:str=None, peptide_seq=None, width:int=1200, height:int=800, df= None, title:str=None, rename_taxa:bool=False):

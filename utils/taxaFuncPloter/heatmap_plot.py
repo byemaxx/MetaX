@@ -8,18 +8,20 @@ class HeatmapPlot:
         self.tfobj =  tfobj
     # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
+    
+
     def rename_taxa(self, df):
-        if df.index.name == 'Taxon':
-            index_list = [i.split('|')[-1] for i in df.index.tolist()]
-            df.index = index_list
-        elif 'd__Bacteria' in df.index.tolist()[0]:
-            new_index_list = []
-            for i in df.index.tolist():
-                taxon = i.split(' <')[0].split('|')[-1]
-                func = i.split(' <')[1][:-1]
-                new_index = f'{taxon} <{func}>'
-                new_index_list.append(new_index)
-            df.index = new_index_list
+        first_index = df.index[0]
+        if 'd__Bacteria' in first_index:
+            if '<' not in first_index:
+                index_list = [i.split('|')[-1] for i in df.index]
+                df.index = index_list
+            else:
+                new_index_list = [
+                    f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
+                    for i in df.index
+                ]
+                df.index = new_index_list
         return df
 
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
