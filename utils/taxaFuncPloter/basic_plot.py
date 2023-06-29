@@ -102,3 +102,54 @@ class BasicPlot:
         except Exception as e:
             plt.close('all')
             raise e
+
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, group_list = None):
+        import numpy as np
+        meta_df = self.tfobj.meta_df.copy()
+        if group_list is not None:
+            meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
+
+        SAMPLE_LIST = meta_df['Sample']
+        GROUP_LIST = meta_df[self.tfobj.meta_name]
+        new_sample_name = [
+            f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
+            for i in range(len(SAMPLE_LIST))
+        ]
+
+        # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+        group_order = sorted(list(set(GROUP_LIST)))
+        ordered_sample_list = []
+        ordered_sample_name = []
+        for group in group_order:
+            samples_in_group = [sample for sample, group_sample in zip(SAMPLE_LIST, GROUP_LIST) if group_sample == group]
+            sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, GROUP_LIST) if group_sample == group]
+            ordered_sample_list.extend(samples_in_group)
+            ordered_sample_name.extend(sample_names_in_group)
+
+        # Reorder the dataframe according to the new sample list order
+        dft = df[ordered_sample_list]
+
+        # replace 0 to NaN
+        dft = dft.replace(0, np.nan)
+
+        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+        sns.set_theme(style="ticks", rc=custom_params)
+
+        # set size
+        plt.figure(figsize=(10, 8))
+        if show_fliers:
+            ax = sns.boxplot(data=dft, showfliers=True)
+            ylimit = np.quantile(dft.mean(), 0.75) * 3
+        else:
+            ax = sns.boxplot(data=dft, showfliers=False)
+            ylimit = np.quantile(dft.mean(), 0.75) * 2
+        # set x label
+        ax.set_xticklabels(ordered_sample_name, rotation=90, horizontalalignment='right')
+        ax.set_xlabel('Sample')
+        ax.set_ylabel('Intensity')
+        ax.set_title(f'Intensity Boxplot of {table_name}')
+        # set y limit as the 4th quantile of average peptide number
+        ax.set_ylim(0, ylimit)
+        plt.show()
+        # plt.close()
+        return ax

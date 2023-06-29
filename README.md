@@ -2,6 +2,9 @@
 ## Install
 ## Usage
 ## Change log
+- 2023-06-29:
+    - Version: 1.38
+            - add boxplot for basic part
 - 2023-06-21:
     - Version: 1.32
         - add peptide table for all stats
