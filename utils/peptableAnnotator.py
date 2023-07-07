@@ -44,6 +44,13 @@ def run_2_result(df, db_path, threshold):
     print('Running proteins_to_taxa_func...')
     df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
     df_t = pd.concat([df_t, df_t0], axis=1)
+    # reorder the columns
+    cols = df_t.columns.tolist()
+    sample_cols = [col for col in cols if col.startswith('Intensity_')]
+    for col in sample_cols:
+        cols.remove(col)
+        cols.append(col)
+    df_t = df_t.reindex(columns=cols)
     return df_t
 
 def save_result(df, output_path):

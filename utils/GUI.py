@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.39'
+__version__ = '1.40'
 
 # import built-in python modules
 import os
@@ -680,7 +680,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             
     def update_after_tfobj(self):
         try:
-            self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
+            # filter original_df
+            cols = self.tf.original_df.columns.tolist()
+            pre_list = ['Sequence', 'Proteins', 'LCA_level']
+            for col in cols:
+                if '_prop' in col:
+                    pre_list.extend([col.split('_prop')[0], col])
+            sample_list = self.tf.sample_list
+            new_cols = pre_list + sample_list
+            new_original_df = self.tf.original_df[new_cols]
+            self.set_pd_to_QTableWidget(new_original_df.head(200), self.tableWidget_taxa_func_view)
+            # self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
             # set comboBox_meta_to_stast
@@ -1444,6 +1454,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             item = self.overview_filter_listwidget.item(i)
             if item.checkState() == QtCore.Qt.Checked:
                 selected_items.append(item.text())
+        if len(selected_items) == 0:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one item!')
+            return None
         # filter
         selected_name = self.comboBox_overview_filter_by.currentText()
         new_df = self.tf.meta_df.loc[self.tf.meta_df[selected_name].isin(selected_items)]
