@@ -14,3 +14,5 @@ utils/taxaFuncPloter/__pycache__/taxaFuncAnalyzer.cpython-311.pyc
 
 tests/test.ipynb
 utils/MetaX_GUI/__pycache__/Ui_MainWindow.cpython-310.pyc
+utils/__pycache__/GUI.cpython-311.pyc
+utils/taxaFuncPloter/__pycache__/basic_plot.cpython-311.pyc

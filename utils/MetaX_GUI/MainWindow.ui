@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>511</width>
-                 <height>487</height>
+                 <height>460</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -254,8 +254,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>191</width>
-                 <height>49</height>
+                 <width>511</width>
+                 <height>460</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -283,6 +283,56 @@
                 </item>
                 <item row="1" column="0" colspan="2">
                  <layout class="QVBoxLayout" name="verticalLayout_overview_func"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="page">
+               <attribute name="label">
+                <string>● Filter Samples</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_29">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_82">
+                  <property name="text">
+                   <string>Filter By</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="4">
+                 <layout class="QVBoxLayout" name="verticalLayout_overview_filter"/>
+                </item>
+                <item row="0" column="1" colspan="3">
+                 <widget class="QComboBox" name="comboBox_overview_filter_by"/>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QPushButton" name="pushButton_overview_select_all">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="text">
+                   <string>Select All</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QPushButton" name="pushButton_overview_clear_select">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="text">
+                   <string>Clear Select</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QPushButton" name="pushButton_overview_run_filter">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Run Filter</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>

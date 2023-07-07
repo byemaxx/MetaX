@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.38'
+__version__ = '1.39'
 
 # import built-in python modules
 import os
@@ -56,7 +56,7 @@ from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 # import pyqt5 scripts
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget, QPushButton
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir
 
@@ -176,6 +176,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # Data Overview
         self.pushButton_overview_func_plot.clicked.connect(self.plot_peptidd_num_in_func)
+        self.comboBox_overview_filter_by.currentIndexChanged.connect(self.update_overview_filter)
+        self.pushButton_overview_select_all.clicked.connect(self.overview_filter_select_all)
+        self.pushButton_overview_clear_select.clicked.connect(self.overview_filter_deselect_all)
+        self.pushButton_overview_run_filter.clicked.connect(self.overview_filter_run)
 
         # set multi table
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
@@ -664,17 +668,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.show_message('taxaFuncAnalyzer is running, please wait...')
             if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
                 return None
-            self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
+            # self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
+            try:
+                self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
+                self.update_after_tfobj()
+                        
+            except:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
-
             
-    def create_taxaFuncAnalyzer_obj(self, taxafunc_path, meta_path):
-        # msg_box = MyMessageBox()
-        # msg_box.show_msg('taxaFuncAnalyzer is running, please wait...')
-
-        # create taxaFuncAnalyzer obj
+    def update_after_tfobj(self):
         try:
-            self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)           
             self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
@@ -690,6 +695,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # set comboBox_overview_func_list
             self.comboBox_overview_func_list.clear()
             self.comboBox_overview_func_list.addItems(self.tf.func_list)
+
+            # ser comboBox_overview_sample_filter
+            self.comboBox_overview_filter_by.clear()
+            self.comboBox_overview_filter_by.addItems(self.tf.meta_df.columns.tolist())
+            # update items in verticalLayout_overview_filter
+            self.update_overview_filter()
+
 
             # set comboBox_function_to_stast
             self.comboBox_function_to_stast.clear()
@@ -724,7 +736,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         self.pushButton_set_multi_table.setEnabled(True)
         self.pushButton_overview_func_plot.setEnabled(True)
-
+        self.pushButton_overview_run_filter.setEnabled(True)
 
         
     def set_multi_table(self):
@@ -1378,15 +1390,71 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None
             cols = df.columns.tolist()
-            for col in self.tf.sample_list:
-                cols.remove(col)
-                cols.append(col)
+            
+            pre_list = ['Sequence', 'Proteins', 'LCA_level']
+            for col in cols:
+                if '_prop' in col:
+                    pre_list.append(col.split('_prop')[0])
+                    pre_list.append(col)
+            sample_list = [i for i in cols if i not in pre_list]
+            # reorder columns
+            cols = pre_list + sample_list
             df = df.reindex(columns=cols)
             df = df.T
             df.reset_index(inplace=True)
             df.columns = ['Name', 'Value']
             self.set_pd_to_QTableWidget(df, self.tableWidget_basic_peptide_query)
         
+    # data overview
+    # filter sample
+    def update_overview_filter(self):
+        col_name = self.comboBox_overview_filter_by.currentText()
+        if col_name == '':
+            return None
+        # clear verticalLayout_overview_filter
+        for i in reversed(range(self.verticalLayout_overview_filter.count())):
+            self.verticalLayout_overview_filter.itemAt(i).widget().setParent(None)
+        # add new filter and make it checkable
+        items = self.tf.meta_df[col_name].unique()
+        self.overview_filter_listwidget = QListWidget()
+        for item in items:
+            list_item = QListWidgetItem(item)
+            list_item.setFlags(list_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            list_item.setCheckState(QtCore.Qt.Checked)
+            self.overview_filter_listwidget.addItem(list_item)
+
+        # add listwidget to verticalLayout_overview_filter
+        self.verticalLayout_overview_filter.addWidget(self.overview_filter_listwidget)
+
+    def overview_filter_select_all(self):
+        if self.overview_filter_listwidget is None:
+            return None
+        for i in range(self.overview_filter_listwidget.count()):
+            self.overview_filter_listwidget.item(i).setCheckState(QtCore.Qt.Checked)
+    def overview_filter_deselect_all(self):
+        if self.overview_filter_listwidget is None:
+            return None
+        for i in range(self.overview_filter_listwidget.count()):
+            self.overview_filter_listwidget.item(i).setCheckState(QtCore.Qt.Unchecked)
+    
+    def overview_filter_run(self):
+        # get selected items
+        selected_items = []
+        for i in range(self.overview_filter_listwidget.count()):
+            item = self.overview_filter_listwidget.item(i)
+            if item.checkState() == QtCore.Qt.Checked:
+                selected_items.append(item.text())
+        # filter
+        selected_name = self.comboBox_overview_filter_by.currentText()
+        new_df = self.tf.meta_df.loc[self.tf.meta_df[selected_name].isin(selected_items)]
+
+        # update tfobj
+        self.tf.update_meta(new_df)
+        self.show_message('Filtering...')
+        self.update_after_tfobj()
+        QMessageBox.information(self.MainWindow, 'Info', 'Filtering finished!')
+
+
 
     # baisc stats
     def get_stats_peptide_num_in_taxa(self):

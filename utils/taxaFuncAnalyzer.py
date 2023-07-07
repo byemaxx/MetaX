@@ -63,6 +63,10 @@ class TaxaFuncAnalyzer:
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
     
+    def update_meta(self, meta_df: str) -> None:
+        self.meta_df = meta_df
+        self.sample_list = meta_df['Sample'].tolist()
+    
     def get_func_list_in_df(self) -> list:
         col_names = self.original_df.columns.tolist()
         func_list = []
