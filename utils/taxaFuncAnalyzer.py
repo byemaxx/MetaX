@@ -65,7 +65,12 @@ class TaxaFuncAnalyzer:
     
     def update_meta(self, meta_df: str) -> None:
         self.meta_df = meta_df
-        self.sample_list = meta_df['Sample'].tolist()
+        old_sample_list = self.sample_list
+        new_sample_list = meta_df['Sample'].tolist()
+        # dorop the samples not in meta_df from original_df
+        drop_list = list(set(old_sample_list) - set(new_sample_list))
+        self.original_df = self.original_df.drop(drop_list, axis=1)
+        self.sample_list = new_sample_list
         self._remove_all_zero_row()
 
     
