@@ -254,8 +254,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>511</width>
-                 <height>460</height>
+                 <width>191</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -287,6 +287,14 @@
                </layout>
               </widget>
               <widget class="QWidget" name="page">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>261</width>
+                 <height>75</height>
+                </rect>
+               </property>
                <attribute name="label">
                 <string>● Filter Samples</string>
                </attribute>
@@ -3871,6 +3879,159 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="page_db_update">
+       <layout class="QGridLayout" name="gridLayout_30">
+        <item row="1" column="3" colspan="2">
+         <widget class="QComboBox" name="comboBox_db_update_built_in_method">
+          <item>
+           <property name="text">
+            <string>dbCAN (HUMAN GUT)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>dbCAN (COW RUMEN)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>dbCAN (MARINE)</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QPushButton" name="pushButton_db_update_open_table_path">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_84">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Old Database Path</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QPushButton" name="pushButton_open_old_db_path">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_85">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>New Database Save Path</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QRadioButton" name="radioButton_db_update_by_table">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>By TSV Table</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2" colspan="2">
+         <widget class="QLineEdit" name="lineEdit_db_update_old_db_path"/>
+        </item>
+        <item row="2" column="3">
+         <widget class="QLineEdit" name="lineEdit_db_update_tsv_path"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="radioButton_db_update_by_built_in">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>By built-in</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="5">
+         <widget class="QPushButton" name="pushButton_db_update_run">
+          <property name="text">
+           <string>Run</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4">
+         <widget class="QPushButton" name="pushButton_open_new_db_path">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2" colspan="2">
+         <widget class="QLineEdit" name="lineEdit_db_update_new_db_path"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="QToolButton" name="toolButton_db_update_built_in_help">
+          <property name="text">
+           <string>?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QToolButton" name="toolButton_db_update_table_help">
+          <property name="text">
+           <string>?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="5">
+         <widget class="QLabel" name="label_83">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>22</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Database Updater</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -3892,6 +4053,7 @@
     <addaction name="actionTaxaFuncAnalyzer"/>
     <addaction name="actionPeptide_to_TaxaFunc"/>
     <addaction name="actionDatabase_Builder"/>
+    <addaction name="actionDatabase_Update"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -3920,6 +4082,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About and More</string>
+   </property>
+  </action>
+  <action name="actionDatabase_Update">
+   <property name="text">
+    <string>Databas Updater</string>
    </property>
   </action>
  </widget>

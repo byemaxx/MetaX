@@ -128,10 +128,21 @@ class BasicPlot:
 
         # Reorder the dataframe according to the new sample list order
         dft = df[ordered_sample_list]
+        
+        # not necessary #
+        # calculate the Q3 in each column and select the max Q3 * 2 as the ylimit
+        # max_list = []
+        # for col in dft.columns:
+        #     q3 = np.quantile(dft[col], 0.75)
+        #     iqr = np.quantile(dft[col], 0.75) - np.quantile(dft[col], 0.25)
+        #     max_list.append(q3 + 1.5 * iqr)
+        
+        # # import statistics
+        # # ylimit = max(max_list) * 2
+        # ylimit = np.quantile(dft.mean(), 0.75) * 2
 
         # replace 0 to NaN
         dft = dft.replace(0, np.nan)
-
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         sns.set_theme(style="ticks", rc=custom_params)
 
@@ -139,17 +150,19 @@ class BasicPlot:
         plt.figure(figsize=(10, 8))
         if show_fliers:
             ax = sns.boxplot(data=dft, showfliers=True)
-            ylimit = np.quantile(dft.mean(), 0.75) * 3
+            # ylimit = np.quantile(dft.mean(), 0.75) * 3
         else:
             ax = sns.boxplot(data=dft, showfliers=False)
-            ylimit = np.quantile(dft.mean(), 0.75) * 2
+            # ylimit = np.quantile(dft.mean(), 0.75) * 2
         # set x label
         ax.set_xticklabels(ordered_sample_name, rotation=90, horizontalalignment='right')
         ax.set_xlabel('Sample')
         ax.set_ylabel('Intensity')
         ax.set_title(f'Intensity Boxplot of {table_name}')
+        # move the botton up
+        plt.subplots_adjust(bottom=0.2)
         # set y limit as the 4th quantile of average peptide number
-        ax.set_ylim(0, ylimit)
+        # ax.set_ylim(0, ylimit)
         plt.show()
         # plt.close()
         return ax

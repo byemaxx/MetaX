@@ -28,6 +28,10 @@
 # Date: 2023-06-13
 # Version:0.2.6
 # Test if the MGYG did not annotate to species level. Everytthing is ok.
+#
+# Date: 2023-07-10
+# Version:0.2.7
+# change the way to extract the function annotation, extract all except the specific column
 
 
 from collections import Counter
@@ -88,8 +92,17 @@ def find_LCA(taxa_list: list, threshold: float =1.0):
 # return a dict of anatation of each protein
 def query_protein_from_db(conn, protein_list):
     c = conn.cursor()
-    sql = 'SELECT eggNOG_OGs, max_annot_lvl, COG_category, Description,Preferred_name, GOs, EC, KEGG_ko, KEGG_Pathway, KEGG_Module,KEGG_Reaction, KEGG_rclass, BRITE, KEGG_TC, CAZy, BiGG_Reaction, PFAMs from mgyg2eggnog where query = ?'
-    re_dict = {'eggNOG_OGs': [], 'max_annot_lvl': [], 'COG_category': [], 'Description': [], 'Preferred_name': [], 'GOs': [], 'EC': [], 'KEGG_ko': [], 'KEGG_Pathway': [], 'KEGG_Module': [], 'KEGG_Reaction': [], 'KEGG_rclass': [], 'BRITE': [], 'KEGG_TC': [], 'CAZy': [], 'BiGG_Reaction': [], 'PFAMs': []}
+    # get all columns name
+    c.execute('select * from mgyg2eggnog')
+    col_name = [tuple[0] for tuple in c.description]
+    # remove the columns that not need
+    for i in ['query', 'seed_ortholog', 'evalue', 'score']:
+        if i in col_name:
+            col_name.remove(i)
+   
+    sql = 'SELECT ' + ','.join(col_name) + ' from mgyg2eggnog where query = ?'
+    re_dict = {i: [] for i in col_name}
+    
     for i in protein_list:
         re = c.execute(sql, (i,)).fetchone()
         if re is not None:
@@ -162,11 +175,12 @@ if __name__ == '__main__':
     
     import os
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(current_dir, r'TaxaFuncExplore_database\TaxaFuncExplore.db')
+    db_path = 'C:/Users/Qing/Desktop/New Folder/MetaX-human-gut_new.db'
+    # db_path = os.path.join(current_dir, r'TaxaFuncExplore_database\TaxaFuncExplore.db')
     print(db_path)
 
     
-    for i in [pep_no_species_level]:
+    for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
         print(i)
         protein_list = i.split(';')
         # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/mgyg2eggnog.db')

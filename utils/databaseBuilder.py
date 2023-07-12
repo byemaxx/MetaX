@@ -148,6 +148,9 @@ def build_mgyg2eggnog_db(save_path, db_name, dir_name = 'mgyg2eggnog', mgyg_dir 
     df = pd.concat(df_list, ignore_index=True)
     df = df.drop_duplicates()
     df = df.rename(columns=lambda x: x.replace('#', ''))
+    # drop cols with no annotation info
+    dorp_list = ['seed_ortholog', 'evalue', 'score']
+    df.drop(dorp_list, axis=1, inplace=True)
     df.set_index('query', inplace=True)
     print("Annotation files concatenated completely.")
 

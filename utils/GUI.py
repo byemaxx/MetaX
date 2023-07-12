@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.41'
+__version__ = '1.42'
 
 # import built-in python modules
 import os
@@ -48,6 +48,7 @@ from MetaX.utils.MetaX_GUI.CheckableComboBox import CheckableComboBox
 from MetaX.utils.MetaX_GUI.OutputWindow import OutputWindow
 from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
 from MetaX.utils.MetaX_GUI.DBBuilderQThread import DBBuilder
+from MetaX.utils.MetaX_GUI.DBUpdaterQThread import DBUpdater
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
@@ -82,7 +83,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         self.like_times = 0
 
-        self.last_path = os.path.join(QDir.homePath(), 'Desktop')
+        # self.last_path = os.path.join(QDir.homePath(), 'Desktop')
+        self.last_path = QDir.homePath()
         self.table_dict = {}
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_lsit = []
@@ -106,6 +108,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionTaxaFuncAnalyzer.setIcon(qta.icon('mdi.chart-areaspline'))
         self.actionPeptide_to_TaxaFunc.setIcon(qta.icon('mdi6.link-variant'))
         self.actionDatabase_Builder.setIcon(qta.icon('mdi.database'))
+        self.actionDatabase_Update.setIcon(qta.icon('mdi.update'))
         self.actionAbout.setIcon(qta.icon('mdi.information-outline'))
 
         # set network plot width and height
@@ -143,6 +146,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
         self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
         self.actionDatabase_Builder.triggered.connect(self.swith_stack_page_dbuilder)
+        self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
         self.actionAbout.triggered.connect(self.show_about)
 
 
@@ -160,6 +164,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_lca_threshould_help.clicked.connect(self.show_toolButton_lca_threshould_help)
         self.pushButton_preprocessing_help.clicked.connect(self.show_pushButton_preprocessing_help)
         self.pushButton_func_threshold_help.clicked.connect(self.show_func_threshold_help)
+        self.toolButton_db_update_built_in_help.clicked.connect(self.show_toolButton_db_update_built_in_help)
+        self.toolButton_db_update_table_help.clicked.connect(self.show_toolButton_db_update_table_help)
+        
         
 
 
@@ -268,6 +275,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_get_db_save_path.clicked.connect(self.set_lineEdit_db_save_path)
         self.pushButton_run_db_builder.clicked.connect(self.run_db_builder)
 
+        # Database Database Updater
+        self.pushButton_db_update_open_table_path.clicked.connect(self.set_lineEdit_db_update_tsv_path)
+        self.pushButton_open_old_db_path.clicked.connect(self.set_lineEdit_db_update_old_db_path)
+        self.pushButton_open_new_db_path.clicked.connect(self.set_lineEdit_db_update_new_db_path)
+        self.pushButton_db_update_run.clicked.connect(self.run_db_updater)
+
         # help button click event
         self.toolButton_db_type_help.clicked.connect(self.show_toolButton_db_type_help)
         self.toolButton_db_all_meta_help.clicked.connect(self.show_toolButton_db_all_meta_help)
@@ -326,8 +339,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def swith_stack_page_dbuilder(self):
         self.stackedWidget.setCurrentIndex(2)
     
-    def swith_stack_page_about(self):
+    def swith_stack_page_db_update(self):
         self.stackedWidget.setCurrentIndex(3)
+    
+    # def swith_stack_page_about(self):
+    #     self.stackedWidget.setCurrentIndex(3)
     
     def cross_test_tab_change(self, index):
         # Check if the tab with index '2' is selected
@@ -498,6 +514,43 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
 
+    ## Database Updater
+    def set_lineEdit_db_update_tsv_path(self):
+        tsv_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Database Update TSV', self.last_path, 'tsv (*.tsv *)')[0]
+        self.last_path = os.path.dirname(tsv_path)
+        self.lineEdit_db_update_tsv_path.setText(tsv_path)
+    
+    def set_lineEdit_db_update_old_db_path(self):
+        old_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Old Database', self.last_path, 'sqlite3 (*.db)')[0]
+        self.last_path = os.path.dirname(old_db_path)
+        self.lineEdit_db_update_old_db_path.setText(old_db_path)
+    
+    def set_lineEdit_db_update_new_db_path(self):
+        new_db_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save New Database', self.last_path, 'sqlite3 (*.db)')[0]
+        self.last_path = os.path.dirname(new_db_path)
+        self.lineEdit_db_update_new_db_path.setText(new_db_path)
+    
+    def run_db_updater(self):
+        update_type = 'built-in' if self.radioButton_db_update_by_built_in.isChecked() else 'custom'
+        built_in_db_name = self.comboBox_db_update_built_in_method.currentText()
+        tsv_path = f'''{self.lineEdit_db_update_tsv_path.text()}'''
+        old_db_path = f'''{self.lineEdit_db_update_old_db_path.text()}'''
+        new_db_path = f'''{self.lineEdit_db_update_new_db_path.text()}'''
+        if old_db_path == '' or new_db_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select old and new database!')
+            return None
+        if update_type == 'custom' and tsv_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select update tsv!')
+            return None
+        try:
+            self.open_output_window(DBUpdater, update_type, tsv_path, old_db_path, new_db_path,  built_in_db_name)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', error_message)
+    
+    ## Database Updater
+
+
     # Peptide to TaxaFunc
     def run_peptide2taxafunc(self):
         db_path = f'''{self.lineEdit_db_path.text()}'''
@@ -585,7 +638,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         switch_button.clicked.connect(self.swith_stack_page_pep2taxafunc)
         msg_box.exec_()
 
-    # TODO: add a function supprt to create meta table
     def show_meta_table_help(self):
         QMessageBox.information(self.MainWindow, 'Meta Table Help', 'Meta Table shuoled be TSV format (table separated by tab) \nand make sure the first column is sample name')
 
@@ -629,7 +681,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         QMessageBox.information(self.MainWindow, 'Database Annotation Folder Help', 'You may find it in MetaLab-MAG folder or just leave it, we will download it for you')
 
 
-
+    def show_toolButton_db_update_built_in_help(self):
+        QMessageBox.information(self.MainWindow, 'Database Update Built-in Help', 'Some Database are built-in method, you select one of them, and we will download and update it automatically')
+    def show_toolButton_db_update_table_help(self):
+        QMessageBox.information(self.MainWindow, 'Database Update Table Help', 'Extend the database by adding new database to the database table\n\nMake sure the column separator is tab\n\nMake sure the first column is Protein name and other columns are function annotation')
 
 
     #### Help info function End ####
@@ -800,9 +855,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.get_stats_taxa_level()
             self.get_stats_peptide_num_in_taxa()
             
-            QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \n\nNumber of function: {num_func}\nNumber of taxa: {num_taxa}\nNumber of taxa-function: {num_taxa_func}')
-            # go to basic analysis tab
-            self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
             # add tables to table dict
             self.update_table_dict('clean', self.tf.clean_df)
             self.update_table_dict('peptide', self.tf.peptide_df)
@@ -848,6 +900,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # eanble PCA   button
             self.enable_multi_button()
+
+            QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \n\nNumber of function: {num_func}\nNumber of taxa: {num_taxa}\nNumber of taxa-function: {num_taxa_func}')
+            # go to basic analysis tab
+            self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+            
         except ValueError as e:
             QMessageBox.warning(self.MainWindow, 'Error', str(e))
         except Exception as e:
@@ -1275,10 +1332,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             group_list = self.comboBox_basic_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                sample_list = self.tf.sample_list
-            else:
-                for group in group_list:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                group_list = list(set(self.tf.group_list))
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
             sample_list = self.comboBox_basic_sample.getCheckedItems()
             if sample_list == []:
@@ -2196,6 +2252,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         params = {}
         if group_list:
             params['groups'] = group_list
+        else:
+            params['groups'] = list(set(self.tf.group_list))
+
 
         if taxa:
             params['taxon_name'] = taxa
@@ -2304,5 +2363,5 @@ def runGUI():
 
 
 if __name__ == '__main__':
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     runGUI()

@@ -14,4 +14,4 @@ tqdm==4.65.0
 PyQtWebEngine==5.15.6
 
 
-# PyQtWebEngine distinctipy   matplotlib numpy pandas pydeseq2 pyecharts PyQt5  qtawesome qt_material scikit_learn scipy seaborn statsmodels tqdm setuptools_scm
+# PyQtWebEngine distinctipy   matplotlib numpy pandas pydeseq2 pyecharts PyQt5  qtawesome qt_material scikit_learn scipy seaborn statsmodels tqdm setuptools_scm fastcluster

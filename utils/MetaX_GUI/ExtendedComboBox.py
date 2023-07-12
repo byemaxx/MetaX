@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QSortFilterProxyModel
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QTimer
 from PyQt5.QtWidgets import QCompleter, QComboBox
 
 class ExtendedComboBox(QComboBox):
@@ -17,12 +17,28 @@ class ExtendedComboBox(QComboBox):
         self.completer = QCompleter(self.pFilterModel, self)
         # always show all (filtered) completions
         self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-        self.setCompleter(self.completer)
 
         # connect signals
-        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)
-        self.completer.activated.connect(self.on_completer_activated)
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.updateFilter)
+        self.lineEdit().textEdited.connect(self.startTimer)
 
+        self.completer.activated.connect(self.on_completer_activated)
+        self.textToSearch = ""
+
+    # start timer when text edited
+    def startTimer(self, text):
+        self.textToSearch = text
+        self.timer.start(300)
+
+    # update filter after 300ms and with at least 3 characters
+    def updateFilter(self):
+        if len(self.textToSearch) >= 2:
+            self.pFilterModel.setFilterFixedString(self.textToSearch)
+            self.setCompleter(self.completer)
+        else:
+            self.setCompleter(None)
 
     # on selection of an item from the completer, select the corresponding item from combobox
     def on_completer_activated(self, text):
@@ -31,13 +47,11 @@ class ExtendedComboBox(QComboBox):
             self.setCurrentIndex(index)
             self.activated[str].emit(self.itemText(index))
 
-
     # on model change, update the models of the filter and completer as well
     def setModel(self, model):
         super(ExtendedComboBox, self).setModel(model)
         self.pFilterModel.setSourceModel(model)
         self.completer.setModel(self.pFilterModel)
-
 
     # on model column change, update the model column of the filter and completer as well
     def setModelColumn(self, column):
