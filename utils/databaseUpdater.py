@@ -43,7 +43,7 @@ def merge_dbcan(file_path):
     merged_df = pd.concat(dataframes)
     tar.close()
 
-    new_cols = ['query','dbcan_EC', 'dbcan_HMMER', 'dbcan_eCAMI', 'dbcan_DIAMOND', 'dbcan_NumOfTools']
+    new_cols = ['ID','dbcan_EC', 'dbcan_HMMER', 'dbcan_eCAMI', 'dbcan_DIAMOND', 'dbcan_NumOfTools']
     merged_df.columns = new_cols
     merged_df.drop(['dbcan_NumOfTools'], axis=1, inplace=True)
     merged_df['dbcan_HMMER'] = merged_df['dbcan_HMMER'].str.split('(').str[0]
@@ -55,9 +55,9 @@ def merge_dbcan(file_path):
 def get_new_anno_df(file_path) -> pd.DataFrame:
     df = pd.read_csv(file_path, sep='\t')
     print(f'{get_time()} new annotation: {df.shape}')
-    print(f'{get_time()} new annotation columns: {df.columns}, the first column will be used as query')
-    # rename the first column to query
-    df.rename(columns={df.columns[0]: 'query'}, inplace=True)
+    print(f'{get_time()} new annotation columns: {df.columns}, the first column will be used as ID')
+    # rename the first column to ID
+    df.rename(columns={df.columns[0]: 'ID'}, inplace=True)
     return df
 
 def create_new_database(old_db_path, new_db_path, new_anno_df):
@@ -69,25 +69,25 @@ def create_new_database(old_db_path, new_db_path, new_anno_df):
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    # open mgyg2eggnog table and merge the new_anno_df by query
-    print(f'{get_time()} open mgyg2eggnog table...')
+    # open id2annotation table and merge the new_anno_df by ID
+    print(f'{get_time()} open id2annotation table...')
     # select 1000 rows for test
-    # mgyg2eggnog = pd.read_sql_query("SELECT * FROM mgyg2eggnog LIMIT 1000", conn)
-    mgyg2eggnog = pd.read_sql_query("SELECT * FROM mgyg2eggnog", conn)
-    print(f'{get_time()} merge mgyg2eggnog table...')
-    new_df = pd.merge(mgyg2eggnog, new_anno_df, on='query', how='left')
+    # id2annotation = pd.read_sql_ID("SELECT * FROM id2annotation LIMIT 1000", conn)
+    id2annotation = pd.read_sql_query("SELECT * FROM id2annotation", conn)
+    print(f'{get_time()} merge id2annotation table...')
+    new_df = pd.merge(id2annotation, new_anno_df, on='ID', how='left')
     new_df = new_df.fillna('-')
-    new_df.set_index('query', inplace=True)
+    new_df.set_index('ID', inplace=True)
 
     # save the new dataframe to a new database file
     new_conn = sqlite3.connect(output_path)
-    print(f'{get_time()} write new_mgyg2eggnog table to new database...')
-    new_df.to_sql('mgyg2eggnog', new_conn, if_exists='replace', index=True)
-    # copy the mgyg2taxon table from old database to the new database
-    mgyg2taxon = pd.read_sql_query("SELECT * FROM mgyg2taxon", conn)
-    mgyg2taxon.set_index('Species_rep', inplace=True)
-    print(f'{get_time()} write mgyg2taxon table to new database...')
-    mgyg2taxon.to_sql('mgyg2taxon', new_conn, if_exists='replace', index=True)
+    print(f'{get_time()} write new id2annotation table to new database...')
+    new_df.to_sql('id2annotation', new_conn, if_exists='replace', index=True)
+    # copy the id2taxa table from old database to the new database
+    id2taxa = pd.read_sql_query("SELECT * FROM id2taxa", conn)
+    id2taxa.set_index('ID', inplace=True)
+    print(f'{get_time()} write id2taxa table to new database...')
+    id2taxa.to_sql('id2taxa', new_conn, if_exists='replace', index=True)
     # close the connection
     conn.close()
     new_conn.close()
@@ -96,10 +96,10 @@ def create_new_database(old_db_path, new_db_path, new_anno_df):
 def check_table_match(old_db_path, new_df):
     conn = sqlite3.connect(old_db_path)
     c = conn.cursor()
-    new_df.rename(columns={new_df.columns[0]: 'query'}, inplace=True)
-    check_name = new_df['query'].tolist()[0]
+    new_df.rename(columns={new_df.columns[0]: 'ID'}, inplace=True)
+    check_name = new_df['ID'].tolist()[0]
     # check if the check_name is in the old database
-    c.execute("SELECT * FROM mgyg2eggnog WHERE query = ?", (check_name,))
+    c.execute("SELECT * FROM id2annotation WHERE ID = ?", (check_name,))
     result = c.fetchone()
     conn.close()
     if result:
@@ -129,11 +129,9 @@ def get_built_in_df(built_in_db_name) -> pd.DataFrame:
         download_file(url, save_dir)
         # extract the file
         file_path = os.path.join(save_dir, 'dbCAN_overview.tar.gz')
-        df = merge_dbcan(file_path)
-        return df
-    # Todo: add other built-in database
+        return merge_dbcan(file_path)
     elif built_in_db_name == 'CAZy':
-        pass
+        print(f'{get_time()} CAZy is not supported yet!')
         
         
         
@@ -153,7 +151,7 @@ def run_db_update(update_type, tsv_path, old_db_path, new_db_path,  built_in_db_
             create_new_database(old_db_path, new_db_path, new_anno_df)
     except Exception as e:
         print(f'{get_time()} Error: {e}')
-        sys.exit(1)      
+        print(f'{get_time()} Failed!')
         
 
 

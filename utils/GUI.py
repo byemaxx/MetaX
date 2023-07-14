@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.43'
+__version__ = '1.44'
 
 # import built-in python modules
 import os
@@ -26,8 +26,7 @@ import platform
 import pandas as pd
 
 # import core scripts of TaxaFuncExplore
-# from MetaX.utils.peptableAnnotator import peptableAnnotate
-# from MetaX.utils.databaseBuilder import download_and_build_database
+
 from MetaX.utils.taxaFuncAnalyzer import TaxaFuncAnalyzer
 
 # import ploter
@@ -47,7 +46,8 @@ from MetaX.utils.MetaX_GUI.MatplotlibFigureCanvas import MatplotlibWidget
 from MetaX.utils.MetaX_GUI.CheckableComboBox import CheckableComboBox
 from MetaX.utils.MetaX_GUI.OutputWindow import OutputWindow
 from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
-from MetaX.utils.MetaX_GUI.DBBuilderQThread import DBBuilder
+from MetaX.utils.MetaX_GUI.DBBuilderMAGQThread import DBBuilderMAG
+from MetaX.utils.MetaX_GUI.DBBuilderOwnQThread import DBBuilderOwn
 from MetaX.utils.MetaX_GUI.DBUpdaterQThread import DBUpdater
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
@@ -269,12 +269,23 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_view_table.clicked.connect(self.show_table_in_list)
 
 
-        # Database Builder
+        ## Database Builder
+        # MGnify
         self.pushButton_get_all_meta_path.clicked.connect(self.set_lineEdit_db_all_meta_path)
         self.pushButton_get_db_anno_folder.clicked.connect(self.set_lineEdit_db_anno_folder)
         self.pushButton_get_db_save_path.clicked.connect(self.set_lineEdit_db_save_path)
         self.pushButton_run_db_builder.clicked.connect(self.run_db_builder)
-
+        # own table
+        self.toolButton_db_own_anno_help.clicked.connect(self.show_toolButton_db_own_anno_help)
+        self.toolButton_own_taxa_help.clicked.connect(self.show_toolButton_own_taxa_help)
+        self.pushButton_db_own_open_anno.clicked.connect(self.set_lineEdit_db_own_anno_path)
+        self.pushButton_db_own_open_taxa.clicked.connect(self.set_lineEdit_db_own_taxa_path)
+        self.pushButton_db_own_open_db_save_path.clicked.connect(self.set_lineEdit_db_own_db_save_path)
+        self.pushButton_db_own_run_build_db.clicked.connect(self.run_db_builder_own_table)
+        
+        
+        
+        
         # Database Database Updater
         self.pushButton_db_update_open_table_path.clicked.connect(self.set_lineEdit_db_update_tsv_path)
         self.pushButton_open_old_db_path.clicked.connect(self.set_lineEdit_db_update_old_db_path)
@@ -508,12 +519,44 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         print(f'''save_path: {save_path}, \nmeta_path: {meta_path}, \nmgyg_dir: {mgyg_dir}, \ndb_type: {db_type}''')
         
         try:
-            self.open_output_window(DBBuilder, save_path, db_type, meta_path, mgyg_dir)
+            self.open_output_window(DBBuilderMAG, save_path, db_type, meta_path, mgyg_dir)
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
-
+    ## Database builder by own Table
+    def show_toolButton_db_own_anno_help(self):
+        QMessageBox.information(self.MainWindow, 'Help', 'Select a TSV table(separated by tab), and make sure the first column is protein name joined Genome by "_", e.g.   "Genome1_protein1"   \n\nand other columns are annotation information.')
+    def show_toolButton_own_taxa_help(self):
+        QMessageBox.information(self.MainWindow, 'Help', 'Select a TSV table(separated by tab), and make sure the first column is Genome name,e.g.  "Genome1" \n\nand second column is taxa.\n\nMake sure the taxa format like: \nd__Bacteria;p__Firmicutes;c__Bacilli;o__Erysipelotrichales;f__Erysipelotrichaceae;g__Bulleidia;s__Bulleidia moorei')
+    def set_lineEdit_db_own_anno_path(self):
+        own_anno_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Annotation Table', self.last_path, 'tsv (*.tsv)')[0]
+        self.last_path = os.path.dirname(own_anno_path)
+        self.lineEdit_db_own_anno_path.setText(own_anno_path)
+    def set_lineEdit_db_own_taxa_path(self):
+        own_taxa_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Taxa Table', self.last_path, 'tsv (*.tsv)')[0]
+        self.last_path = os.path.dirname(own_taxa_path)
+        self.lineEdit_db_own_taxa_path.setText(own_taxa_path)
+    def set_lineEdit_db_own_db_save_path(self):
+        own_db_save_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save Database', self.last_path, 'sqlite3 (*.db)')[0]
+        self.last_path = os.path.dirname(own_db_save_path)
+        self.lineEdit_db_own_db_save_path.setText(own_db_save_path)
+    def run_db_builder_own_table(self):
+        anno_path = f'''{self.lineEdit_db_own_anno_path.text()}'''
+        taxa_path = f'''{self.lineEdit_db_own_taxa_path.text()}'''
+        save_path = f'''{self.lineEdit_db_own_db_save_path.text()}'''
+        if anno_path == '' or taxa_path == '' or save_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select all files')
+            return
+        else:
+            try:
+                self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', error_message)
+    
+    
+    
     ## Database Updater
     def set_lineEdit_db_update_tsv_path(self):
         tsv_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Database Update TSV', self.last_path, 'tsv (*.tsv *)')[0]

@@ -88,7 +88,7 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
     print(f'After filtering Intensity 0 in all samples and removing other columns: {df.shape}')
     
     # remove human proteins and reversed proteins
-    df = remove_human(df)
+    # df = remove_human(df)
     df = remove_reversed(df)
     
     # run the function proteins_to_taxa_func

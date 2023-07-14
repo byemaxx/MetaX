@@ -6,7 +6,7 @@
 #   2. the MGYG to Taxa mapping file 
 
 # output:
-# A SQLite database with two tables: 1. eggnog 2. mgyg2eggnog in one database
+# A SQLite database with two tables: 1. eggnog 2. id2annotation in one database
 # 
 # change log:
 # 2023-06-07: add database for chicken-gut, cow-rumen, human-oral, marine, non-model-fish-gut, pig-gut, zebrafish-fecal
@@ -48,8 +48,8 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
         print(f"{file_name} downloaded.")
 
 
-# Create mgyg2taxon database and return a list of MGYG IDs
-def build_mgyg2taxon_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv', meta_path = None):
+# Create id2taxa database and return a list of MGYG IDs
+def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv', meta_path = None):
     if meta_path is None:
         df = pd.read_csv(os.path.join(save_path, file_name), sep='\t', header=0, index_col=0)
     else:
@@ -57,12 +57,14 @@ def build_mgyg2taxon_db(save_path, db_name, file_name = 'genomes-all_metadata.ts
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     df = df[['Species_rep', 'Lineage']]
+    # rename the columns
+    df.columns = ['ID', 'Taxa']
     df = df.drop_duplicates()
-    df.set_index('Species_rep', inplace=True)
+    df.set_index('ID', inplace=True)
     db_path = os.path.join(save_path, db_name)
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    table_name = "mgyg2taxon"
+    table_name = "id2taxa"
     query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';"
     result = c.execute(query).fetchall()
     
@@ -70,9 +72,9 @@ def build_mgyg2taxon_db(save_path, db_name, file_name = 'genomes-all_metadata.ts
         print(f"{table_name} already exists in db. Skip building.")
     else:
     
-        df.to_sql("mgyg2taxon", conn, index= True, if_exists= 'replace')
+        df.to_sql("id2taxa", conn, index= True, if_exists= 'replace')
         
-        print("mgyg2taxon database built completely.")
+        print("id2taxa database built completely.")
     return df.index.tolist()
 
 
@@ -95,8 +97,6 @@ def create_download_list(mgyg_list, db_type = "human-gut"):
 
 
 
-
-
 def download_file(url, save_path):
     file_name = url.split('/')[-1]
     with urllib.request.urlopen(url) as response, open(os.path.join(save_path, file_name), 'wb') as out_file:
@@ -105,8 +105,8 @@ def download_file(url, save_path):
     return file_name
 
 
-def download_mgyg2eggnog(down_list, save_path):
-    dir_name = 'mgyg2eggnog'
+def download_id2annotation(down_list, save_path):
+    dir_name = 'id2annotation'
     os.makedirs(os.path.join(save_path, dir_name), exist_ok=True)
     
     need_download_list = []
@@ -131,7 +131,7 @@ def read_file(args):
     file_path = args[0]
     return pd.read_csv(file_path, sep='\t', header=0, index_col= None)
 
-def build_mgyg2eggnog_db(save_path, db_name, dir_name = 'mgyg2eggnog', mgyg_dir = None):
+def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
     
 
     if mgyg_dir is None:
@@ -148,18 +148,25 @@ def build_mgyg2eggnog_db(save_path, db_name, dir_name = 'mgyg2eggnog', mgyg_dir 
     df = pd.concat(df_list, ignore_index=True)
     df = df.drop_duplicates()
     df = df.rename(columns=lambda x: x.replace('#', ''))
+    #rename the first column to ID
+    df.rename(columns={df.columns[0]: "ID"}, inplace=True)
     # drop cols with no annotation info
-    dorp_list = ['seed_ortholog', 'evalue', 'score']
-    df.drop(dorp_list, axis=1, inplace=True)
-    df.set_index('query', inplace=True)
+    drop_list = ['seed_ortholog', 'evalue', 'score']
+    columns_exist = all(col in df.columns for col in drop_list)
+    if columns_exist:
+        df.drop(drop_list, axis=1, inplace=True)
+    else:
+        print(f"Columns {drop_list} not found. Skip dropping.")
+
+    df.set_index('ID', inplace=True)
     print("Annotation files concatenated completely.")
 
-    # df.to_csv(os.path.join(save_path, 'mgyg2eggnog.tsv'), sep='\t')
+    # df.to_csv(os.path.join(save_path, 'id2annotation.tsv'), sep='\t')
 
     # Check if table exists
     conn = sqlite3.connect(os.path.join(save_path, db_name))
     c = conn.cursor()
-    table_name = "mgyg2eggnog"
+    table_name = "id2annotation"
     query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';"
     result = c.execute(query).fetchall()
 
@@ -167,14 +174,14 @@ def build_mgyg2eggnog_db(save_path, db_name, dir_name = 'mgyg2eggnog', mgyg_dir 
     if len(result) > 0:
         print(f"{table_name} already exists in db. Skip building.")
     else:
-        print("mgyg2eggnog database building...")
-        df.to_sql("mgyg2eggnog", conn, index=True, if_exists='replace')
-        print("mgyg2eggnog database built completely.")
+        print("id2annotation database building...")
+        df.to_sql("id2annotation", conn, index=True, if_exists='replace')
+        print("id2annotation database built completely.")
 
 def query_download_list(db_path):
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    sql = "SELECT DISTINCT Species_rep FROM mgyg2taxon"
+    sql = "SELECT DISTINCT Species_rep FROM id2taxa"
     result = c.execute(sql).fetchall()
     return [i[0] for i in result]
 
@@ -186,35 +193,35 @@ def check_db(db_path):
 
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='mgyg2taxon';"
-    sql2 = "SELECT name FROM sqlite_master WHERE type='table' AND name='mgyg2eggnog';"
+    sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='id2taxa';"
+    sql2 = "SELECT name FROM sqlite_master WHERE type='table' AND name='id2annotation';"
     result = c.execute(sql).fetchall()
     result2 = c.execute(sql2).fetchall()
     if len(result) == 0:
-        return "no mgyg2taxon"
+        return "no id2taxa"
     else:
-        return "no mgyg2eggnog" if len(result2) == 0 else "all exists"
+        return "no id2annotation" if len(result2) == 0 else "all exists"
 
 def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgyg_dir=None):
     db_path = os.path.join(save_path, db_name)
     status = check_db(db_path)
 
-    if status in ["no db", "no mgyg2taxon"]:
+    if status in ["no db", "no id2taxa"]:
         if meta_path is None:
             download_mgyg2taxa(save_path, db_type)
-        mgyg_list = build_mgyg2taxon_db(save_path, db_name, meta_path= meta_path)
+        mgyg_list = build_id2taxa_db(save_path, db_name, meta_path= meta_path)
         down_list = create_download_list(mgyg_list, db_type)
         if mgyg_dir is None:
-            download_mgyg2eggnog(down_list, save_path)
-        build_mgyg2eggnog_db(save_path, db_name, mgyg_dir=mgyg_dir)
+            download_id2annotation(down_list, save_path)
+        build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
 
 
-    elif status == "no mgyg2eggnog":
-        print("The database already exists. Skip building mgyg2taxon.")
+    elif status == "no id2annotation":
+        print("The database already exists. Skip building id2taxa.")
         down_list = create_download_list(query_download_list(db_path), db_type)
         if mgyg_dir is None:
-            download_mgyg2eggnog(down_list, save_path)
-        build_mgyg2eggnog_db(save_path, db_name, mgyg_dir=mgyg_dir)
+            download_id2annotation(down_list, save_path)
+        build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
 
     else:
         print("The database already exists and complete. Skip building.")
@@ -289,7 +296,7 @@ if __name__ == "__main__":
                         # default= "test_download\genomes-all_metadata.tsv",
                         help='path of the genomes-all_metadata.tsv if you already downloaded')
     parser.add_argument('--mgyg_dir', metavar='PATH', type=str,
-                        # default= "test_download\mgyg2eggnog",
+                        # default= "test_download\id2annotation",
                         help='directory of eggNOG annotation of UHGG if you already downloaded')
     parser.add_argument('--db_type', metavar='PATH', type=str,default="human-gut",
                         help='The db type for download. (human-gut,human-oral, chicken-gut, cow-rumen,	marine, non-model-fish-gut, pig-gut, zebrafish-fecal)')

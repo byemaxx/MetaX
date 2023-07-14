@@ -3700,157 +3700,7 @@
            <bool>true</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>MGnify Database Type</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QToolButton" name="toolButton_db_anno_folder_help">
-             <property name="text">
-              <string>?</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2" colspan="2">
-            <widget class="QComboBox" name="comboBox_db_type">
-             <item>
-              <property name="text">
-               <string>human-gut(v2.0.1)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>human-oral(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>chicken-gut(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>cow-rumen(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>pig-gut(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>marine(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>zebrafish-fecal(v1.0)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>non-model-fish-gut(v2.0)</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLineEdit" name="lineEdit_db_anno_folder">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Automatically download if you don't have</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="4">
-            <widget class="QPushButton" name="pushButton_run_db_builder">
-             <property name="text">
-              <string>Go</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QPushButton" name="pushButton_get_all_meta_path">
-             <property name="text">
-              <string>Open</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLineEdit" name="lineEdit_db_all_meta_path">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Automatically download if you don't have</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>genomes-all_metadata Table (Optional)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>eggNOG Annotation Folder (Optional)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QToolButton" name="toolButton_db_type_help">
-             <property name="text">
-              <string>?</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QPushButton" name="pushButton_get_db_anno_folder">
-             <property name="text">
-              <string>Open</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QToolButton" name="toolButton_db_all_meta_help">
-             <property name="text">
-              <string>?</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>Database Save Path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="3">
-            <widget class="QPushButton" name="pushButton_get_db_save_path">
-             <property name="text">
-              <string>Open</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QLineEdit" name="lineEdit_db_save_path"/>
-           </item>
-           <item row="0" column="0" colspan="4">
+           <item row="0" column="1">
             <widget class="QLabel" name="label_48">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -3872,6 +3722,261 @@
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="3">
+            <widget class="QTabWidget" name="tabWidget_5">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tab_11">
+              <attribute name="title">
+               <string>From MGnify</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_31">
+               <item row="1" column="0">
+                <widget class="QLabel" name="label">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>MGnify Database Type</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QToolButton" name="toolButton_db_all_meta_help">
+                 <property name="text">
+                  <string>?</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_anno_folder">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Automatically download if you don't have</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>Database Save Path</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_all_meta_path">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Automatically download if you don't have</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>eggNOG Annotation Folder (Optional)</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QPushButton" name="pushButton_get_db_anno_folder">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_save_path"/>
+               </item>
+               <item row="1" column="1">
+                <widget class="QToolButton" name="toolButton_db_type_help">
+                 <property name="text">
+                  <string>?</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QToolButton" name="toolButton_db_anno_folder_help">
+                 <property name="text">
+                  <string>?</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_9">
+                 <property name="text">
+                  <string>genomes-all_metadata Table (Optional)</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="3">
+                <widget class="QPushButton" name="pushButton_get_all_meta_path">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="3">
+                <widget class="QPushButton" name="pushButton_get_db_save_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2" colspan="2">
+                <widget class="QComboBox" name="comboBox_db_type">
+                 <item>
+                  <property name="text">
+                   <string>human-gut(v2.0.1)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>human-oral(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>chicken-gut(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>cow-rumen(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>pig-gut(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>marine(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>zebrafish-fecal(v1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>non-model-fish-gut(v2.0)</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="6" column="0" colspan="4">
+                <widget class="QPushButton" name="pushButton_run_db_builder">
+                 <property name="text">
+                  <string>Go</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_14">
+              <attribute name="title">
+               <string>From Own Table</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_32">
+               <item row="2" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_own_taxa_path"/>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_88">
+                 <property name="text">
+                  <string>Database Save Path</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_86">
+                 <property name="text">
+                  <string>Annotation Table</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QToolButton" name="toolButton_db_own_anno_help">
+                 <property name="text">
+                  <string>?</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_87">
+                 <property name="text">
+                  <string>Taxa Table</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QPushButton" name="pushButton_db_own_open_db_save_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_own_anno_path"/>
+               </item>
+               <item row="2" column="3">
+                <widget class="QPushButton" name="pushButton_db_own_open_taxa">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QPushButton" name="pushButton_db_own_open_anno">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QToolButton" name="toolButton_own_taxa_help">
+                 <property name="text">
+                  <string>?</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_db_own_db_save_path"/>
+               </item>
+               <item row="4" column="0" colspan="4">
+                <widget class="QPushButton" name="pushButton_db_own_run_build_db">
+                 <property name="text">
+                  <string>Go</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </widget>
            </item>
           </layout>
@@ -4099,17 +4204,6 @@
   <tabstop>toolButton_lca_threshould_help</tabstop>
   <tabstop>doubleSpinBox_LCA_threshold</tabstop>
   <tabstop>pushButton_run_peptide2taxafunc</tabstop>
-  <tabstop>toolButton_db_type_help</tabstop>
-  <tabstop>comboBox_db_type</tabstop>
-  <tabstop>toolButton_db_all_meta_help</tabstop>
-  <tabstop>lineEdit_db_all_meta_path</tabstop>
-  <tabstop>pushButton_get_all_meta_path</tabstop>
-  <tabstop>toolButton_db_anno_folder_help</tabstop>
-  <tabstop>lineEdit_db_anno_folder</tabstop>
-  <tabstop>pushButton_get_db_anno_folder</tabstop>
-  <tabstop>lineEdit_db_save_path</tabstop>
-  <tabstop>pushButton_get_db_save_path</tabstop>
-  <tabstop>pushButton_run_db_builder</tabstop>
   <tabstop>comboBox_taxa_level_to_stast</tabstop>
   <tabstop>toolButton_meta_table_help</tabstop>
   <tabstop>comboBox_function_to_stast</tabstop>

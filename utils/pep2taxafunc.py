@@ -32,6 +32,10 @@
 # Date: 2023-07-10
 # Version:0.2.7
 # change the way to extract the function annotation, extract all except the specific column
+#
+# Date: 2023-07-14
+# Version:0.2.8
+# change the sql query: table name form mgyg2eggnog and  mgyg2taxon to id2annotation and id2taxa
 
 
 from collections import Counter
@@ -47,7 +51,7 @@ def open_eggnog_db(db_path):
 def query_taxon_from_db(conn, protein_list):
     c = conn.cursor()
     taxa = []
-    sql = 'SELECT Lineage from mgyg2taxon where Species_rep = ?'
+    sql = 'SELECT Taxa from id2taxa where ID = ?'
     for i in protein_list:
         i = i.split('_')[0]
         if re := c.execute(sql, (i,)).fetchone():
@@ -93,14 +97,14 @@ def find_LCA(taxa_list: list, threshold: float =1.0):
 def query_protein_from_db(conn, protein_list):
     c = conn.cursor()
     # get all columns name
-    c.execute('select * from mgyg2eggnog')
+    c.execute('select * from id2annotation')
     col_name = [tuple[0] for tuple in c.description]
     # remove the columns that not need
-    for i in ['query', 'seed_ortholog', 'evalue', 'score']:
+    for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
         if i in col_name:
             col_name.remove(i)
    
-    sql = 'SELECT ' + ','.join(col_name) + ' from mgyg2eggnog where query = ?'
+    sql = 'SELECT ' + ','.join(col_name) + ' from id2annotation where ID = ?'
     re_dict = {i: [] for i in col_name}
     
     for i in protein_list:
@@ -173,17 +177,15 @@ if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    import os
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = 'C:/Users/Qing/Desktop/New Folder/MetaX-human-gut_new.db'
-    # db_path = os.path.join(current_dir, r'TaxaFuncExplore_database\TaxaFuncExplore.db')
+    db_path = 'C:/Users/Qing/Desktop/111/MetaX-human-gut-new.db'
+
     print(db_path)
 
     
     for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
         print(i)
         protein_list = i.split(';')
-        # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/mgyg2eggnog.db')
+        # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/id2annotation.db')
         re = proteins_to_taxa_func(protein_list, threshold = 1, db_path=db_path)
         keys = list(re.keys())
         for i in range(len(keys)):
