@@ -47,6 +47,8 @@ class TaxaFuncAnalyzer:
 
     def _set_original_df(self, df_path: str) -> None:
         self.original_df = pd.read_csv(df_path, sep='\t')
+        if 'Taxon_prop' not in self.original_df.columns:
+            raise ValueError("The TaxaFunc data must have Taxon_prop column!")
         self.original_df.columns = self.original_df.columns.str.replace(
             ' ', '_').str.replace('Intensity_', '')
 
@@ -62,6 +64,9 @@ class TaxaFuncAnalyzer:
 
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
+        
+        if self.check_meta_match_df() is False:
+            raise ValueError("The meta data does not match the TaxaFunc data, Please check!")
     
     def update_meta(self, meta_df: str) -> None:
         self.meta_df = meta_df
@@ -646,8 +651,6 @@ class TaxaFuncAnalyzer:
                           normalize_method: str = None, transform_method: str = None,
                             batch_list: list = None,  processing_order:list=None):
         
-        if self.check_meta_match_df() is False:
-            raise ValueError("The meta data does not match the TaxaFunc data, Please check!")
 
         
         df = self.original_df.copy()

@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.42'
+__version__ = '1.43'
 
 # import built-in python modules
 import os
@@ -406,7 +406,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again! \n\n You have unlocked the second hidden function!")
             self.like_times += 1
         else:
-            QMessageBox.information(self.MainWindow, "Thank you!", "More fetures are coming soon!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "I am just kidding! \n\nThere is no any hidden function!\n\n But you can still like us on GitHub!")
         
         
 
@@ -690,25 +690,26 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     #### Help info function End ####
 
 
-
+    #### Deprecated Function ####
     #### TaxaFuncAnalyzer Function ####
-    def check_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
-        try:
-            taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
-            meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
-            taxafunc_column_names = taxafunc_table.columns.tolist()
-            if 'Taxon_prop' not in taxafunc_column_names:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table looks like not correct, please check!')
-                return False
-            meta_column_names = meta_table.columns.tolist()
-            if len(meta_column_names) < 1:
-                print(meta_column_names)
-                QMessageBox.warning(self.MainWindow, 'Warning', 'The meta table only has one column, please check!\n\nPlease make sure the first column is sample name and the following columns are meta information!\n\n And make sure the meta table is TSV format (table separated by tab)\n\nPlease check!')
-                return False
-        except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
-            return False
-        
+    # def check_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
+    #     try:
+    #         taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
+    #         meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
+    #         taxafunc_column_names = taxafunc_table.columns.tolist()
+    #         if 'Taxon_prop' not in taxafunc_column_names:
+    #             QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table looks like not correct, please check!')
+    #             return False
+    #         meta_column_names = meta_table.columns.tolist()
+    #         if len(meta_column_names) < 1:
+    #             print(meta_column_names)
+    #             QMessageBox.warning(self.MainWindow, 'Warning', 'The meta table only has one column, please check!\n\nPlease make sure the first column is sample name and the following columns are meta information!\n\n And make sure the meta table is TSV format (table separated by tab)\n\nPlease check!')
+    #             return False
+    #     except Exception as e:
+    #         QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
+    #         return False
+    #### Deprecated Function ####
+     
         
     def set_taxaFuncAnalyzer(self):
 
@@ -721,16 +722,22 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
         else:
             self.show_message('taxaFuncAnalyzer is running, please wait...')
-            if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
-                return None
-            # self.create_taxaFuncAnalyzer_obj(taxafunc_path, meta_path)
+            # Deprecated function
+            # if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
+            #     return None
+            # Deprecated function
             try:
                 self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
                 self.update_after_tfobj()
                         
             except:
                 error_message = traceback.format_exc()
-                QMessageBox.warning(self.MainWindow, 'Error', error_message)
+                if "The TaxaFunc data must have Taxon_prop column!" in error_message:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
+                elif "The meta data does not match the TaxaFunc data, Please check!" in error_message:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The meta data does not match the TaxaFunc data, Please check!')
+                else:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
     
             
     def update_after_tfobj(self):
