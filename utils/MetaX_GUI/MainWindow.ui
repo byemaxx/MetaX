@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>493</width>
-                 <height>462</height>
+                 <height>467</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -254,7 +254,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>183</width>
+                 <width>191</width>
                  <height>49</height>
                 </rect>
                </property>
@@ -292,7 +292,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>261</width>
-                 <height>74</height>
+                 <height>75</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -378,7 +378,122 @@
             </item>
             <item row="2" column="0">
              <layout class="QGridLayout" name="gridLayout_15">
-              <item row="3" column="1">
+              <item row="1" column="1">
+               <widget class="QPushButton" name="pushButton_preprocessing_help">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>?</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3" rowspan="3">
+               <widget class="QListWidget" name="listWidget_data_processing_order">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>167796</height>
+                 </size>
+                </property>
+                <property name="dragDropMode">
+                 <enum>QAbstractItemView::InternalMove</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Outlier Handling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Rmove Batch Effect</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Data Transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Data Normalization</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_40">
+                <property name="text">
+                 <string>Data Transformation</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QComboBox" name="comboBox_set_data_normalization">
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>None</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Standard Scaling (Z-Score)</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Min-Max Scaling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Pareto Scaling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Mean centering</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Normalization by sum</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_41">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Data Normalization</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
                <widget class="QComboBox" name="comboBox_set_data_transformation">
                 <property name="layoutDirection">
                  <enum>Qt::LeftToRight</enum>
@@ -410,54 +525,7 @@
                 </item>
                </widget>
               </item>
-              <item row="2" column="3" rowspan="3">
-               <widget class="QListWidget" name="listWidget_data_processing_order">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>167796</height>
-                 </size>
-                </property>
-                <property name="dragDropMode">
-                 <enum>QAbstractItemView::InternalMove</enum>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Rmove Batch Effect</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Data Transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Data Normalization</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
               <item row="3" column="0">
-               <widget class="QLabel" name="label_40">
-                <property name="text">
-                 <string>Data Transformation</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
                <widget class="QLabel" name="label_43">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -473,20 +541,7 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_41">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Data Normalization</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
+              <item row="3" column="1">
                <widget class="QComboBox" name="comboBox_remove_batch_effect">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -499,19 +554,6 @@
                   <string>None</string>
                  </property>
                 </item>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QPushButton" name="pushButton_preprocessing_help">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>?</string>
-                </property>
                </widget>
               </item>
               <item row="1" column="3">
@@ -546,11 +588,15 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
-               <widget class="QComboBox" name="comboBox_set_data_normalization">
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_89">
+                <property name="text">
+                 <string>Outlier Handling</string>
                 </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QComboBox" name="comboBox_outlier_handling">
                 <item>
                  <property name="text">
                   <string>None</string>
@@ -558,27 +604,17 @@
                 </item>
                 <item>
                  <property name="text">
-                  <string>Standard Scaling (Z-Score)</string>
+                  <string>KNN</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Min-Max Scaling</string>
+                  <string>Mean</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Pareto Scaling</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Mean centering</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Normalization by sum</string>
+                  <string>Mean+KNN</string>
                  </property>
                 </item>
                </widget>
@@ -754,8 +790,25 @@
                 <string>PCA and Box</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_26">
-                <item row="0" column="1">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_pca"/>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_69">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Groups (Default all)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_70">
+                  <property name="text">
+                   <string>Table</string>
+                  </property>
+                 </widget>
                 </item>
                 <item row="1" column="1">
                  <widget class="QComboBox" name="comboBox_table4pca">
@@ -787,23 +840,10 @@
                   </item>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_69">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                <item row="4" column="0">
+                 <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
                   <property name="text">
-                   <string>Groups (Default all)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_70">
-                  <property name="text">
-                   <string>Table</string>
+                   <string>show Fliers</string>
                   </property>
                  </widget>
                 </item>
@@ -820,6 +860,19 @@
                   </property>
                   <property name="text">
                    <string>Plot PCA</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_pca"/>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QPushButton" name="pushButton_plot_box_sns">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Plot Box</string>
                   </property>
                  </widget>
                 </item>
@@ -840,19 +893,19 @@
                  </widget>
                 </item>
                 <item row="3" column="1">
-                 <widget class="QPushButton" name="pushButton_plot_box_sns">
+                 <widget class="QPushButton" name="pushButton_plot_corr">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="text">
-                   <string>Plot Box</string>
+                   <string>Plot Corr</string>
                   </property>
                  </widget>
                 </item>
                 <item row="3" column="0">
-                 <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                 <widget class="QCheckBox" name="checkBox_corr_cluster">
                   <property name="text">
-                   <string>show Fliers</string>
+                   <string>Cluster</string>
                   </property>
                  </widget>
                 </item>
@@ -2693,23 +2746,19 @@
                <layout class="QGridLayout" name="gridLayout_34">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_33">
-                  <item row="11" column="4">
-                   <widget class="QLabel" name="label_95">
-                    <property name="text">
-                     <string>Cluster Number</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="3">
-                   <widget class="QLabel" name="label_91">
+                  <item row="3" column="1">
+                   <widget class="QLabel" name="label_99">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Sort by</string>
+                     <string>Selecte Top</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -2729,47 +2778,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="4">
-                   <widget class="QLabel" name="label_96">
-                    <property name="text">
-                     <string>Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="5">
-                   <widget class="QSpinBox" name="spinBox_trends_width">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>200</number>
-                    </property>
-                    <property name="value">
-                     <number>16</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="5">
-                   <widget class="QPushButton" name="pushButton_trends_plot_interactive_line">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Plot Interactive Line</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="0">
-                   <widget class="QPushButton" name="pushButton_trends_clean_list">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
+                  <item row="10" column="4">
+                   <widget class="QLabel" name="label_92">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2777,39 +2787,21 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Clean List</string>
+                     <string>Height</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="5">
-                   <widget class="QPushButton" name="pushButton_trends_add_top">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
+                  <item row="11" column="4">
+                   <widget class="QLabel" name="label_95">
                     <property name="text">
-                     <string>Add Top to List</string>
+                     <string>Cluster Number</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1" colspan="3">
-                   <layout class="QVBoxLayout" name="verticalLayout_trends_group"/>
-                  </item>
-                  <item row="8" column="4">
-                   <widget class="QLabel" name="label_97">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_100">
                     <property name="text">
-                     <string>Width</string>
+                     <string>selecte for ploting</string>
                     </property>
                    </widget>
                   </item>
@@ -2829,94 +2821,6 @@
                     </property>
                     <property name="value">
                      <number>10</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="0">
-                   <widget class="QLabel" name="label_98">
-                    <property name="text">
-                     <string>List for Plotting</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="15" column="4">
-                   <widget class="QLabel" name="label_93">
-                    <property name="text">
-                     <string>Select Cluster</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="4">
-                   <widget class="QPushButton" name="pushButton_trends_get_trends_table">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Get ClusterTable</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1" colspan="4">
-                   <widget class="QComboBox" name="comboBox_trends_selection_list">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>650</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QLabel" name="label_99">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Selecte Top</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="1" rowspan="11" colspan="3">
-                   <widget class="QListWidget" name="listWidget_trends_list_for_ploting">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="14" column="4" colspan="2">
-                   <widget class="QPushButton" name="pushButton_trends_plot_trends">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Plot Trends</string>
                     </property>
                    </widget>
                   </item>
@@ -2979,15 +2883,38 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QRadioButton" name="radioButton_trends_group">
+                  <item row="1" column="0">
+                   <widget class="QRadioButton" name="radioButton_trends_sample">
                     <property name="text">
-                     <string>Group</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
+                     <string>Sample</string>
                     </property>
                    </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="QLabel" name="label_98">
+                    <property name="text">
+                     <string>List for Plotting</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="5">
+                   <widget class="QPushButton" name="pushButton_trends_add_top">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Add Top to List</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="15" column="5">
+                   <widget class="QComboBox" name="comboBox_trends_get_cluster_name"/>
                   </item>
                   <item row="0" column="5">
                    <widget class="QComboBox" name="comboBox_trends_table">
@@ -3016,31 +2943,24 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="1" column="1" colspan="3">
-                   <layout class="QVBoxLayout" name="verticalLayout_trends_sample"/>
-                  </item>
-                  <item row="11" column="5">
-                   <widget class="QSpinBox" name="spinBox_trends_num_cluster">
-                    <property name="minimum">
-                     <number>1</number>
+                  <item row="17" column="4">
+                   <widget class="QPushButton" name="pushButton_trends_get_trends_table">
+                    <property name="enabled">
+                     <bool>false</bool>
                     </property>
-                    <property name="value">
-                     <number>5</number>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QRadioButton" name="radioButton_trends_sample">
                     <property name="text">
-                     <string>Sample</string>
+                     <string>Get ClusterTable</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="15" column="5">
-                   <widget class="QComboBox" name="comboBox_trends_get_cluster_name"/>
-                  </item>
-                  <item row="10" column="4">
-                   <widget class="QLabel" name="label_92">
+                  <item row="3" column="3">
+                   <widget class="QLabel" name="label_91">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -3048,7 +2968,91 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Height</string>
+                     <string>Sort by</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="1" rowspan="12" colspan="3">
+                   <widget class="QListWidget" name="listWidget_trends_list_for_ploting">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="4">
+                   <widget class="QLabel" name="label_97">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" colspan="3">
+                   <layout class="QVBoxLayout" name="verticalLayout_trends_group"/>
+                  </item>
+                  <item row="1" column="1" colspan="3">
+                   <layout class="QVBoxLayout" name="verticalLayout_trends_sample"/>
+                  </item>
+                  <item row="17" column="5">
+                   <widget class="QPushButton" name="pushButton_trends_plot_interactive_line">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot Interactive Line</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="5">
+                   <widget class="QSpinBox" name="spinBox_trends_width">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>200</number>
+                    </property>
+                    <property name="value">
+                     <number>16</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="14" column="4" colspan="2">
+                   <widget class="QPushButton" name="pushButton_trends_plot_trends">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot Trends</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QRadioButton" name="radioButton_trends_group">
+                    <property name="text">
+                     <string>Group</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -3065,10 +3069,43 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_100">
+                  <item row="0" column="4">
+                   <widget class="QLabel" name="label_96">
                     <property name="text">
-                     <string>selecte for ploting</string>
+                     <string>Table</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="11" column="0">
+                   <widget class="QPushButton" name="pushButton_trends_clean_list">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Clean List</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="15" column="4">
+                   <widget class="QLabel" name="label_93">
+                    <property name="text">
+                     <string>Select Cluster</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="11" column="5">
+                   <widget class="QSpinBox" name="spinBox_trends_num_cluster">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>5</number>
                     </property>
                    </widget>
                   </item>
@@ -3085,6 +3122,29 @@
                     </property>
                     <property name="text">
                      <string>Add to List</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1" colspan="4">
+                   <widget class="QComboBox" name="comboBox_trends_selection_list">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>650</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="16" column="4" colspan="2">
+                   <widget class="QCheckBox" name="checkBox">
+                    <property name="text">
+                     <string>Get Intnsity Results</string>
                     </property>
                    </widget>
                   </item>
@@ -4543,7 +4603,7 @@
      <x>0</x>
      <y>0</y>
      <width>1052</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

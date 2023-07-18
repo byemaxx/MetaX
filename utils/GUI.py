@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.45'
+__version__ = '1.46'
 
 # import built-in python modules
 import os
@@ -897,15 +897,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         taxa_level = name_dict[taxa_input]
         
         func_threshold = self.doubleSpinBox_func_threshold.value()
-
+        outlier_detect_method = 'half'
+        outlier_handle_method = self.comboBox_outlier_handling.currentText()
         normalize_method = self.comboBox_set_data_normalization.currentText()
         transform_method = self.comboBox_set_data_transformation.currentText()
-        bacth_group =  self.comboBox_remove_batch_effect.currentText()
+        batch_group =  self.comboBox_remove_batch_effect.currentText()
 
 
-        batch_list = self.tf.meta_df[bacth_group].tolist() if bacth_group != 'None' else None
+        batch_list = self.tf.meta_df[batch_group].tolist() if batch_group != 'None' else None
 
-        
+        if outlier_handle_method != 'None':
+            outlier_handle_method = outlier_handle_method.lower()
 
         if normalize_method != 'None' or transform_method != 'None':
             transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 
@@ -918,9 +920,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         processing_order = []
         for i in range(self.listWidget_data_processing_order.count()):
             processing_order.append(self.listWidget_data_processing_order.item(i).text())
-        processing_order_dict = {'Rmove Batch Effect': 'batch', 'Data Normalization': 'normalize', 'Data Transformation': 'transform'}
+        processing_order_dict = {'Rmove Batch Effect': 'batch', 
+                                 'Data Normalization': 'normalize', 
+                                 'Data Transformation': 'transform',
+                                 'Outlier Handling': 'outlier'}
         processing_order = [processing_order_dict[i] for i in processing_order]
-        # processing_order: ['batch', 'transform', 'normalize']
 
 
         # clean tables and comboBox before set multi table
@@ -937,6 +941,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.tf.set_group(group)
             self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
                                      normalize_method = normalize_method, transform_method = transform_method, 
+                                     outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                      batch_list = batch_list, processing_order = processing_order)
 
 
@@ -1178,6 +1183,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     def enable_multi_button(self):
         self.pushButton_plot_pca_sns.setEnabled(True)
+        self.pushButton_plot_corr.setEnabled(True)
         self.pushButton_plot_box_sns.setEnabled(True)
         self.pushButton_anova_test.setEnabled(True)
         self.pushButton_tukey_test.setEnabled(True)
@@ -1630,7 +1636,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         height = self.spinBox_trends_height.value()
         table_name = self.comboBox_trends_table.currentText()
         table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
-        title = f'Cluster of {table_name.capitalize()}'
+        title = f'{table_name.capitalize()} Cluster'
         num_cluster = self.spinBox_trends_num_cluster.value()
         
 

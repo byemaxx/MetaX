@@ -57,9 +57,9 @@ class TrendsPlot:
                 axs[i].set_xlabel('Group')
                 axs[i].set_ylabel('Standardized Value')
                 axs[i].tick_params(axis='x', rotation=90)  # Rotate x-axis labels
-                # set bottom tight
-                plt.subplots_adjust(bottom=0,  top=0.95)
-
+            
+            # set bottom tight
+            # plt.subplots_adjust(bottom=0.05,  top=0.98, left=0.086, right=0.98, hspace=0.4)
             # plt.tight_layout()
             # plt.show()
             plt.close()

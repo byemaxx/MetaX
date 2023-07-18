@@ -327,23 +327,107 @@ class TaxaFuncAnalyzer:
 
             df[self.sample_list] = df_mat
             return df
+    # set outlier to nan
+    def _outlier_detection(self, df: pd.DataFrame, method: str = 'half') -> pd.DataFrame:            
+        if method == 'half':
+            df = df.copy()
+            df_mat = df[self.sample_list]
+            groups = self.group_dict
+            print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
+            print('Row number before outlier detection:', len(df_mat))
+            for key, value in groups.items():
+                cols = value
+                nonzero_ratio = (df_mat[cols] > 0).sum(axis=1) / len(cols)
+                zero_rows = nonzero_ratio <= 0.5
+                nonzero_rows = nonzero_ratio > 0.5
+                equal_rows = nonzero_ratio == 0.5
+                df_mat.loc[equal_rows, cols] = np.nan
+                df_mat.loc[zero_rows, cols] = df_mat.loc[zero_rows, cols].applymap(lambda x: np.nan if x > 0 else x)
+                df_mat.loc[nonzero_rows, cols] = df_mat.loc[nonzero_rows, cols].applymap(lambda x: np.nan if x == 0 else x)
+                print(f'Group: {key}, Sample: {len(value)}, Zero rows: {zero_rows.sum()}, Nonzero rows: {nonzero_rows.sum()}, Equal rows: {equal_rows.sum()}')
+            
+            df[self.sample_list] = df_mat
+            # remove rows in  df[self.sample_list] with all nan and all 0
+            print('remove rows only contain NaN or 0')
+            selected_cols = df[self.sample_list]
+            df = df[(selected_cols > 0).any(axis=1)]
+            print('Row number after outlier detection:', len(df))
+            return df
+        else:
+            raise ValueError('outlier_method must be in [half]')
+    
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'knn') -> pd.DataFrame:
+        if method not in ['knn', 'mean', 'mean+knn']:
+            raise ValueError('missing_value_method must be in [knn, mean, mean+knn]')
+        print(f'Missing value imputation by {method}...')
+        df = df.copy()
+        print('Row Number Before Imputation: ', len(df))
+        # remove rows with all 0
+        df = df.loc[(df != 0).any(axis=1)]
+        df_mat = df[self.sample_list]
+        df_mat.index = df.index
+        if method == 'knn':
+            from sklearn.impute import KNNImputer
+            imputer = KNNImputer(n_neighbors=5)
+            df_filled = imputer.fit_transform(df_mat)
+            df_filled = pd.DataFrame(df_filled, columns=df_mat.columns)
+            df_filled.index = df.index
+            df[self.sample_list] = df_filled
+        else:  # mean or mean+knn
+            groups = self.group_dict
+            for group, cols in groups.items():
+                # calculate the mean of each group without nan
+                group_mean = df_mat[cols].mean(axis=1)
+                # fill nan with group mean
+                df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
+            df[self.sample_list] = df_mat
+            if method == 'mean+knn':
+                #check if there are still nan
+                if df[self.sample_list].isnull().values.any():
+                    df = self._handle_missing_value(df, method='knn')
+        # remove rows of df[self.sample_list] including nan
+        df = df.dropna(subset=self.sample_list)
+        print('Row Number After Imputation: ', len(df))
+        return df
 
-    def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, transform_method: str = None, batch_list: list = None, processing_order:list=None) -> pd.DataFrame:
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'half',handle_method: str = 'knn') -> pd.DataFrame:
+        if self.group_list is None:
+            raise ValueError('You must set set group before handle outlier')
+        
+        if handle_method is None or handle_method == 'None':
+            print('outlier_handle_method is not set, skip outlier handling')
+            return df
+        elif detect_method == 'None' or detect_method is None:
+            detect_method = 'half'
+
+        df = df.copy()
+        df = self._outlier_detection(df, method=detect_method)
+        df = self._handle_missing_value(df, method=handle_method)
+        return df
+
+           
+
+    def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
+                         transform_method: str = None, batch_list: list = None, 
+                         outlier_detect_method: str = None, outlier_handle_method: str = None,
+                         processing_order:list=None) -> pd.DataFrame:
         df = df.copy()
         if processing_order is None:
-            processing_order = ['batch', 'transform', 'normalize']
+            processing_order = ['outlier' ,'batch', 'transform', 'normalize']
         else:
             processing_order = processing_order
         # perform data processing in order
         for process in processing_order:
-            if process == 'batch':
+            if process == 'outlier':
+                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method)
+            elif process == 'batch':
                 df = self._remove_batch_effect(df, batch_list)
             elif process == 'transform':
                 df = self._data_transform(df, transform_method)
             elif process == 'normalize':
                 df = self._data_normalization(df, normalize_method)
             else:
-                raise ValueError('processing_order must be in [batch, transform, normalize]')
+                raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
         return df
     
 
@@ -690,13 +774,16 @@ class TaxaFuncAnalyzer:
 
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                           normalize_method: str = None, transform_method: str = None,
+                          outlier_detect_method: str = None, outlier_handle_method: str = None,
                             batch_list: list = None,  processing_order:list=None):
         
 
         
         df = self.original_df.copy()
         # perform data pre-processing
-        df = self._data_preprocess(df, normalize_method, transform_method, batch_list, processing_order)
+        df = self._data_preprocess(df=df, normalize_method=normalize_method, transform_method = transform_method,
+                                   batch_list= batch_list, outlier_detect_method= outlier_detect_method, 
+                                   outlier_handle_method = outlier_handle_method, processing_order=processing_order)
         
         func_name = self.func_name
         sample_list = self.sample_list
