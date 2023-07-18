@@ -3,6 +3,7 @@ import seaborn as sns
 from sklearn.decomposition import PCA
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 class BasicPlot:
     def __init__(self, tfobj):
@@ -104,45 +105,9 @@ class BasicPlot:
             raise e
 
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, group_list = None):
-        import numpy as np
-        meta_df = self.tfobj.meta_df.copy()
-        if group_list is not None:
-            meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
-
-        SAMPLE_LIST = meta_df['Sample']
-        GROUP_LIST = meta_df[self.tfobj.meta_name]
-        new_sample_name = [
-            f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
-            for i in range(len(SAMPLE_LIST))
-        ]
-
-        # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-        group_order = sorted(list(set(GROUP_LIST)))
-        ordered_sample_list = []
-        ordered_sample_name = []
-        for group in group_order:
-            samples_in_group = [sample for sample, group_sample in zip(SAMPLE_LIST, GROUP_LIST) if group_sample == group]
-            sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, GROUP_LIST) if group_sample == group]
-            ordered_sample_list.extend(samples_in_group)
-            ordered_sample_name.extend(sample_names_in_group)
-
-        # Reorder the dataframe according to the new sample list order
-        dft = df[ordered_sample_list]
         
-        # not necessary #
-        # calculate the Q3 in each column and select the max Q3 * 2 as the ylimit
-        # max_list = []
-        # for col in dft.columns:
-        #     q3 = np.quantile(dft[col], 0.75)
-        #     iqr = np.quantile(dft[col], 0.75) - np.quantile(dft[col], 0.25)
-        #     max_list.append(q3 + 1.5 * iqr)
+        dft, ordered_sample_name = self.get_renamed_df(df, group_list)
         
-        # # import statistics
-        # # ylimit = max(max_list) * 2
-        # ylimit = np.quantile(dft.mean(), 0.75) * 2
-
-        # replace 0 to NaN
-        dft = dft.replace(0, np.nan)
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         sns.set_theme(style="ticks", rc=custom_params)
 
@@ -166,3 +131,58 @@ class BasicPlot:
         plt.show()
         # plt.close()
         return ax
+    
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, group_list = None):
+        dft, ordered_sample_name = self.get_renamed_df(df, group_list)
+        dft.columns = ordered_sample_name
+
+        corr = dft.corr()
+        mask = np.triu(np.ones_like(corr, dtype=bool))
+
+        try:
+            if cluster:
+                ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm')
+            if not cluster:
+                ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
+            plt.xticks(rotation=90)  
+            #set title
+            plt.title(f'Correlation of {table_name}')
+            plt.show()
+            # plt.close()
+            return ax
+        except Exception as e:
+            plt.close('all')
+            raise e
+    
+    
+        
+        
+    def get_renamed_df(self, df, group_list):
+        df = df.copy()
+        meta_df = self.tfobj.meta_df.copy()
+        if group_list is not None:
+            meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
+
+        SAMPLE_LIST = meta_df['Sample']
+        GROUP_LIST = meta_df[self.tfobj.meta_name]
+        new_sample_name = [
+            f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
+            for i in range(len(SAMPLE_LIST))
+        ]
+
+        # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+        group_order = sorted(list(set(GROUP_LIST)))
+        ordered_sample_list = []
+        ordered_sample_name = []
+        for group in group_order:
+            samples_in_group = [sample for sample, group_sample in zip(SAMPLE_LIST, GROUP_LIST) if group_sample == group]
+            sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, GROUP_LIST) if group_sample == group]
+            ordered_sample_list.extend(samples_in_group)
+            ordered_sample_name.extend(sample_names_in_group)
+
+        # Reorder the dataframe according to the new sample list order
+        dft = df[ordered_sample_list]
+
+        dft = dft.replace(0, np.nan)
+        return dft, ordered_sample_name
+        

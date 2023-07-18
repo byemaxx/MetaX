@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.46'
+__version__ = '1.47'
 
 # import built-in python modules
 import os
@@ -201,8 +201,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         ## Basic Stat
-        self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_pca_box_sns('pca'))
-        self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_pca_box_sns('box'))
+        self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
+        self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
+        self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
         ### Heatmap and Bar
         self.comboBox_basic_table.currentIndexChanged.connect(self.set_basic_heatmap_selection_list)
 
@@ -1893,7 +1894,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     
 
     
-    def plot_pca_box_sns(self, method:str ='pca'):
+    def plot_basic_info_sns(self, method:str ='pca'):
         if self.tf is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
             
@@ -1923,6 +1924,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     self.show_message('Box is running, please wait...')
                     show_fliers = self.checkBox_box_if_show_fliers.isChecked()
                     BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, group_list=group_list)
+                except Exception as e:
+                    error_message = traceback.format_exc()
+                    QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            elif method == 'corr':
+                try:
+                    cluster = self.checkBox_corr_cluster.isChecked()
+                    self.show_message('Correlation is running, please wait...')
+                    BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, group_list=group_list)
                 except Exception as e:
                     error_message = traceback.format_exc()
                     QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
