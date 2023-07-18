@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.47'
+__version__ = '1.48'
 
 # import built-in python modules
 import os
@@ -1693,7 +1693,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
             
             # save table to dict
-            self.update_table_dict('cluster', cluster_df)
+            save_table_name = f'cluster({table_name.lower()})'
+            self.update_table_dict(save_table_name, cluster_df)
             # set cluster list to comboBox_trends_get_cluster_name
             cluster_list = [f'Cluster {i}' for i in range(1, num_cluster+1)]
             self.comboBox_trends_get_cluster_name.clear()
@@ -1713,10 +1714,23 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         width = self.spinBox_trends_width.value()*100
         height = self.spinBox_trends_height.value()*100
         table_name = self.comboBox_trends_table.currentText().capitalize()
-        title = f'Cluster {cluster_num+1} of {table_name}'
-        df = self.table_dict['cluster'].copy()
+        title = f'Cluster {cluster_num+1} of {table_name} (Cluster Score)'
+        get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
+        save_table_name = f'cluster({table_name.lower()})'
+        
+        df = self.table_dict[save_table_name].copy()
         df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
         self.show_message(f'Plotting interactive line plot...')
+        
+        if get_intensity:
+            title = f'Cluster {cluster_num+1} of {table_name} (Intensity)'
+            table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+            dft = table_name_dict[table_name]
+            dft = self.tf.get_stats_mean_df_by_group(dft)
+            extract_row = df.index.tolist()
+            extract_col = df.columns.tolist()
+            df = dft.loc[extract_row, extract_col]
+            
         try:
             pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=False)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
@@ -1728,8 +1742,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def get_trends_cluster_table(self):
         cluster_name = self.comboBox_trends_get_cluster_name.currentText()
         cluster_num = int(cluster_name.split(' ')[1]) - 1
-        df = self.table_dict['cluster'].copy()
+        table_name = self.comboBox_trends_table.currentText().capitalize()
+        get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
+        save_table_name = f'cluster({table_name.lower()})'
+        
+        df = self.table_dict[save_table_name].copy()
         df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
+        if get_intensity:
+            table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+            dft = table_name_dict[table_name]
+            dft = self.tf.get_stats_mean_df_by_group(dft)
+            extract_row = df.index.tolist()
+            extract_col = df.columns.tolist()
+            df = dft.loc[extract_row, extract_col]            
         self.show_table(df)
 
     ## Trends plot end

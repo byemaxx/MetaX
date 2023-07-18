@@ -3142,7 +3142,7 @@
                    </widget>
                   </item>
                   <item row="16" column="4" colspan="2">
-                   <widget class="QCheckBox" name="checkBox">
+                   <widget class="QCheckBox" name="checkBox_get_trends_cluster_intensity">
                     <property name="text">
                      <string>Get Intnsity Results</string>
                     </property>
