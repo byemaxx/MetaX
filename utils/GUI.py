@@ -54,7 +54,8 @@ from MetaX.utils.MetaX_GUI.DBUpdaterQThread import DBUpdater
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
-from MetaX.utils.MetaX_GUI.Ui_Show_plt_Dialog import Ui_Plt_Dialog
+# from MetaX.utils.MetaX_GUI.ShowPltDialog import PltDialog
+from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
 
 
 # import pyqt5 scripts
@@ -1678,10 +1679,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # plot trends and get cluster table
             fig, cluster_df = TrendsPlot(self.tf).plot_trends(df= df, num_cluster = num_cluster, width=width, height=height, title=title)
             # create a dialog to show the figure
-            plt_dialog = QtWidgets.QDialog() # Create a QDialog instance.
-            ui = Ui_Plt_Dialog() # Create an instance of your UI class.
-            ui.setupUi(plt_dialog) # Call the setupUi method, passing the QDialog instance.
-            ui.set_fig(fig) # Set the figure.
+            # plt_dialog = PltDialog(self.MainWindow, fig)
+            plt_size= (width*50,height*num_cluster*50)
+            plt_dialog = ExportablePlotDialog(None,fig, plt_size)
             plt_dialog.show() # Show the dialog.
             self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
             

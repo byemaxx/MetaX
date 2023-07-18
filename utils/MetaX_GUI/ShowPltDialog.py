@@ -1,16 +1,23 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import  QDir
 
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QSizePolicy, QHBoxLayout, QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import os
 
 
-class Ui_Plt_Dialog(object):
+class PltDialog(QDialog):
+    def __init__(self, parent=None, fig=None):
+        super(PltDialog, self).__init__(parent)
+        self.fig = fig
+        self.setupUi(self)
+        if parent is not None:
+            self.setWindowIcon(parent.windowIcon())
+        
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1200, 800)
+        Dialog.resize(1600, 900)
         # set flag to maximize the window and show the close button
         Dialog.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowCloseButtonHint)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
@@ -29,10 +36,10 @@ class Ui_Plt_Dialog(object):
         self.gridLayout.addWidget(self.pushButton_export, 1, 0, 1, 1)
         self.pushButton_export.clicked.connect(self.export_plot)
         
-
         self.retranslateUi(Dialog)
         self.toolBox.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        self.set_fig(self.fig)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -41,21 +48,18 @@ class Ui_Plt_Dialog(object):
         self.pushButton_export.setText(_translate("Dialog", "Export Figure"))
         
     def export_plot(self):
-        # check if self.fig exists
-        if not hasattr(self, 'fig'):
-            QtWidgets.QMessageBox.warning(None, "Export Plot", "Please create a plot first!", QtWidgets.QMessageBox.Ok)
+        if self.fig is None:
+            QtWidgets.QMessageBox.warning(None, "Export Plot", "No plot to export!", QtWidgets.QMessageBox.Ok)
             return
-
         # open a dialog to select the path to save the plot
         desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
         file_path = QtWidgets.QFileDialog.getSaveFileName(None, 'Save File', desktop_path, "PNG (*.png);;PDF (*.pdf);;All Files (*)")
-
+        print(file_path)
         if file_path:
             self.fig.savefig(file_path[0]) # You should add [0] here because getSaveFileName returns a tuple
             QtWidgets.QMessageBox.information(None, "Export Plot", "Plot exported successfully!", QtWidgets.QMessageBox.Ok)
         else:
             QtWidgets.QMessageBox.warning(None, "Export Plot", "Please select a path to save the plot!", QtWidgets.QMessageBox.Ok)
-
 
     def set_fig(self, fig):
         self.fig = fig

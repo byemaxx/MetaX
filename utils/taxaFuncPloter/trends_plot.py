@@ -57,7 +57,10 @@ class TrendsPlot:
                 axs[i].set_xlabel('Group')
                 axs[i].set_ylabel('Standardized Value')
                 axs[i].tick_params(axis='x', rotation=90)  # Rotate x-axis labels
-            plt.tight_layout()
+                # set bottom tight
+                plt.subplots_adjust(bottom=0,  top=0.95)
+
+            # plt.tight_layout()
             # plt.show()
             plt.close()
             return fig, clustered_df
