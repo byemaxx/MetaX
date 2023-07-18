@@ -4,6 +4,10 @@
 # Data: 2023-05-23
 # Version: 1.1
 # change log: Add a function: remove batch effect
+# Data: 2023-07-17
+# Version: 1.2
+# 1. Added a new function to check which attributes are set
+# 2. Added a new function to set the group_dict
 
 
 from .reComBat import reComBat
@@ -26,6 +30,7 @@ class TaxaFuncAnalyzer:
         self.meta_df = None
         self.meta_name = None
         self.group_list = None
+        self.group_dict = None
 
         self.func_list = None
         self.func_name = None
@@ -44,7 +49,7 @@ class TaxaFuncAnalyzer:
         self._remove_all_zero_row()
         self.get_func_list_in_df()
         self.set_func('Description')
-
+        
     def _set_original_df(self, df_path: str) -> None:
         self.original_df = pd.read_csv(df_path, sep='\t')
         if 'Taxon_prop' not in self.original_df.columns:
@@ -120,7 +125,15 @@ class TaxaFuncAnalyzer:
             raise ValueError(f'func must be in {check_list}')
         else:
             self.func_name = func
-
+   
+    # set a dict of sample group links
+    def _set_group_dict(self):
+        group_dict = {
+            group: self.get_sample_list_in_a_group(group)
+            for group in list(set(self.get_meta_list(self.meta_name)))
+        }
+        self.group_dict = group_dict
+        
     # set which group in meta_df to use
     def set_group(self, group: str):
         if group not in self.meta_df.columns:
@@ -128,6 +141,8 @@ class TaxaFuncAnalyzer:
         self.group_list = self.get_meta_list(group)
         self.meta_name = group
         print(f'group is set to {group}\n {set(self.group_list)}')
+        self._set_group_dict()
+
 
     # get the groups of each meta column
     def get_meta_list(self, meta: str = None) -> list:
@@ -136,6 +151,7 @@ class TaxaFuncAnalyzer:
         else:
             return self.meta_df[meta].tolist()
 
+        
     # input a group name, return the sample list in this group
     def get_sample_list_in_a_group(self, group: str = None) -> list:
         if self.group_list is None:
@@ -145,6 +161,33 @@ class TaxaFuncAnalyzer:
             raise ValueError(f'group must be in {set(self.group_list)}')
         else:
             return self.meta_df[self.meta_df[self.meta_name] == group]['Sample'].tolist()
+    
+    # input a sample name, return the group name of this sample
+    def get_group_of_a_sample(self, sample: str = None) -> str:
+        if self.group_list is None:
+            print('group is not set, please set group first.')
+            return None
+        if sample not in self.sample_list:
+            raise ValueError(f'sample must be in {set(self.sample_list)}')
+        else:
+            return self.meta_df[self.meta_df['Sample'] == sample][self.meta_name].tolist()[0]
+
+    # get a mean df by group
+    def get_stats_mean_df_by_group(self, df: pd.DataFrame = None) -> pd.DataFrame:
+        data = df.copy()
+        group_means = pd.DataFrame()
+        for group, samples in self.group_dict.items():
+            # only use samples that are in the data
+            valid_samples = [sample for sample in samples if sample in data.columns]
+            if not valid_samples:
+                print(f'Warning: none of the samples in group "{group}" are found in the data.')
+                continue
+            group_data = data[valid_samples]
+            # calculate the mean of the samples in the group
+            group_mean = group_data.mean(axis=1)
+            # add the group mean to the group_means dataframe
+            group_means[group] = group_mean
+        return group_means
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:
         df = self.original_df.copy()
@@ -303,8 +346,6 @@ class TaxaFuncAnalyzer:
                 raise ValueError('processing_order must be in [batch, transform, normalize]')
         return df
     
-
-
 
     def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func') -> pd.DataFrame:
         group_list_all = sorted(set(self.get_meta_list(self.meta_name)))
@@ -738,3 +779,11 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
         self.peptide_df = df_peptide
+    
+    # New function to check which attributes are set
+    def check_attributes(self):
+        for attr in vars(self):
+            if getattr(self, attr) is None:
+                print(f"{attr} : None")
+            else:
+                print(f"{attr} : set")

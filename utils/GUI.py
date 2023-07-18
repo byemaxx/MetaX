@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.44'
+__version__ = '1.45'
 
 # import built-in python modules
 import os
@@ -38,6 +38,8 @@ from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
 from MetaX.utils.taxaFuncPloter.bar_plot_js import BarPlot_js
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
+from MetaX.utils.taxaFuncPloter.trends_plot import TrendsPlot
+from MetaX.utils.taxaFuncPloter.trends_plot_js import TrendsPlot_js
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -52,6 +54,7 @@ from MetaX.utils.MetaX_GUI.DBUpdaterQThread import DBUpdater
 from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
+from MetaX.utils.MetaX_GUI.Ui_Show_plt_Dialog import Ui_Plt_Dialog
 
 
 # import pyqt5 scripts
@@ -78,7 +81,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
-        self.MainWindow.resize(1360, 860)
+        self.MainWindow.resize(1440, 900)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
 
         self.like_times = 0
@@ -89,6 +92,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_lsit = []
         self.table_dialogs = []
+        self.plt_dialogs = []
         self.web_list = []
         self.func_list = []
         self.taxa_list = []
@@ -96,6 +100,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.peptide_list = []
         self.basic_heatmap_list = []
         self.co_expr_focus_list = []
+        self.trends_cluster_list = []
         self.tfnet_fcous_list = []
 
 
@@ -130,7 +135,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_tukey_taxa = self.make_combobox_searchable(self.comboBox_tukey_taxa)
         self.comboBox_others_func = self.make_combobox_searchable(self.comboBox_others_func)
         self.comboBox_others_taxa = self.make_combobox_searchable(self.comboBox_others_taxa)
-        self.comboBox_co_expr_slecet_list = self.make_combobox_searchable(self.comboBox_co_expr_slecet_list)
+        self.comboBox_co_expr_select_list = self.make_combobox_searchable(self.comboBox_co_expr_select_list)
+        self.comboBox_trends_selection_list = self.make_combobox_searchable(self.comboBox_trends_selection_list)
         self.comboBox_basic_peptide_query = self.make_combobox_searchable(self.comboBox_basic_peptide_query)
         self.comboBox_tfnet_selecte_list = self.make_combobox_searchable(self.comboBox_tfnet_selecte_list)
         
@@ -205,6 +211,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
         self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
+
+        
         ### Peptide Qeruy
         self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
 
@@ -237,11 +245,23 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # ### Co-Expression Network
         self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
-        self.comboBox_co_expr_table.currentIndexChanged.connect(self.update_co_expr_select_lsit)
+        self.comboBox_co_expr_table.currentIndexChanged.connect(self.update_co_expr_select_list)
         self.pushButton_co_expr_add_to_list.clicked.connect(self.add_co_expr_to_list)
         self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
         self.pushButton_co_expr_clean_list.clicked.connect(self.clean_co_expr_list)
         self.pushButton_co_expr_add_top.clicked.connect(self.add_co_expr_top_list)
+        
+        # ### Trends Cluster
+        self.pushButton_trends_plot_trends.clicked.connect(self.plot_trends_cluster)
+        self.comboBox_trends_table.currentIndexChanged.connect(self.update_trends_select_list)
+        self.pushButton_trends_add.clicked.connect(self.add_trends_list)
+        self.pushButton_trends_add_top.clicked.connect(self.add_trends_top_list)
+        self.pushButton_trends_drop_item.clicked.connect(self.drop_trends_list)
+        self.pushButton_trends_clean_list.clicked.connect(self.clean_trends_list)
+        self.pushButton_trends_get_trends_table.clicked.connect(self.get_trends_cluster_table)
+        self.pushButton_trends_plot_interactive_line.clicked.connect(self.plot_trends_interactive_line)
+        
+        
 
         
         ## Others
@@ -470,6 +490,30 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         for sample in sample_list:
             self.comboBox_network_sample.addItem(sample)
             self.comboBox_co_expr_sample.addItem(sample)
+    
+    def update_trends_cluster_combobox(self):
+        # trends cluster
+        self.comboBox_trends_group = CheckableComboBox()
+        self.comboBox_trends_sample = CheckableComboBox()
+
+        try:
+            # delete the old combobox
+            self.verticalLayout_trends_group.itemAt(0).widget().deleteLater()
+            self.verticalLayout_trends_sample.itemAt(0).widget().deleteLater()
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.verticalLayout_trends_group.addWidget(self.comboBox_trends_group)
+            self.verticalLayout_trends_sample.addWidget(self.comboBox_trends_sample)
+
+        group_list = sorted(set(self.tf.group_list))
+        sample_list = sorted(set(self.tf.sample_list))       
+
+        for group in group_list:
+            self.comboBox_trends_group.addItem(group)
+        for sample in sample_list:
+            self.comboBox_trends_sample.addItem(sample)
 
         
 
@@ -927,8 +971,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.update_func_taxa_group_to_combobox()
             # update comboBox of network plot
             self.update_network_combobox()
-            # update comboBox_co_expr_slecet_list
-            self.update_co_expr_select_lsit()
+            # update comboBox of trends cluster
+            self.update_trends_cluster_combobox()
+            # update comboBox_co_expr_select_list
+            self.update_co_expr_select_list()
+            # update comboBox_trends_selection_list
+            self.update_trends_select_list()
             
             # clean basic heatmap selection list
             self.clean_basic_heatmap_list()
@@ -947,8 +995,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # set innitial value of taxa-func link network selection list
             self.update_tfnet_select_lsit()
 
-
-            # eanble PCA   button
+            # enable all buttons
             self.enable_multi_button()
 
             QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \n\nNumber of function: {num_func}\nNumber of taxa: {num_taxa}\nNumber of taxa-function: {num_taxa_func}')
@@ -1072,7 +1119,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.comboBox_basic_pca_group.addItem(group)
         for sample in sample_list:
             self.comboBox_basic_sample.addItem(sample)
-
+    
 
 
     def show_others_linked(self):
@@ -1163,10 +1210,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_tfnet_add_top.setEnabled(True)
         self.pushButton_tflink_filter.setEnabled(True)
         self.pushButton_basic_peptide_query.setEnabled(True)
+        self.pushButton_trends_plot_trends.setEnabled(True)
+        self.pushButton_trends_add.setEnabled(True)
+        self.pushButton_trends_add_top.setEnabled(True)
+        self.pushButton_trends_drop_item.setEnabled(True)
+        self.pushButton_trends_clean_list.setEnabled(True)
+        self.comboBox_trends_table.setEnabled(True)
 
 
-    def update_co_expr_select_lsit(self):
-        self.comboBox_co_expr_slecet_list.clear()
+    def update_co_expr_select_list(self):
+        self.comboBox_co_expr_select_list.clear()
         self.co_expr_focus_list.clear()
         self.listWidget_co_expr_focus_list.clear()
 
@@ -1180,7 +1233,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             update_list = self.taxa_func_list
         elif current_table == 'Peptide':
             update_list = self.peptide_list
-        self.comboBox_co_expr_slecet_list.addItems(update_list)
+        self.comboBox_co_expr_select_list.addItems(update_list)
 
     def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
             if str_selected is not None and str_list is None:
@@ -1301,7 +1354,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.update_basic_heatmap_list(str_list=index_list)
         
     def add_co_expr_to_list(self):
-        str_selected = self.comboBox_co_expr_slecet_list.currentText()
+        str_selected = self.comboBox_co_expr_select_list.currentText()
         self.update_co_expr_lsit(str_selected=str_selected)
     
     def clean_co_expr_list(self):
@@ -1468,11 +1521,211 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.show_message(f'Plotting {plot_type}...')
                 pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
                 self.save_and_show_js_plot(pic, title)
-
+                
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+    
+    
+    ## Trends plot
+    def update_trends_select_list(self):
+        self.comboBox_trends_selection_list.clear()
+        self.trends_cluster_list.clear()
+        self.listWidget_trends_list_for_ploting.clear()
+        
+        current_table = self.comboBox_trends_table.currentText().lower()
+        self.update_trends_select_combobox(type_list=current_table)
+        
+    def update_trends_select_combobox(self, type_list):
+        if type_list == 'taxa':
+            self.comboBox_trends_selection_list.addItem('All Taxa')
+            self.comboBox_trends_selection_list.addItems(self.taxa_list)
+        elif type_list == 'func':
+            self.comboBox_trends_selection_list.addItem('All Functions')
+            self.comboBox_trends_selection_list.addItems(self.func_list)
+        elif type_list == 'taxa-func':
+            self.comboBox_trends_selection_list.addItem('All Taxa-Functions')
+            self.comboBox_trends_selection_list.addItems(self.taxa_func_list)
+        elif type_list == 'peptide':
+            self.comboBox_trends_selection_list.addItem('All Peptides')
+            self.comboBox_trends_selection_list.addItems(self.peptide_list)       
+        
+        
+    def add_trends_list(self):
+        str_selected = self.comboBox_trends_selection_list.currentText()
+        self.update_trends_list(str_selected=str_selected)
+    
+    def clean_trends_list(self):
+        self.trends_cluster_list = []
+        self.listWidget_trends_list_for_ploting.clear()
+    
+    def drop_trends_list(self):
+        str_selected = self.listWidget_trends_list_for_ploting.selectedItems()
+        if len(str_selected) == 0:
+            return None
+        item = str_selected[0]
+        self.listWidget_trends_list_for_ploting.takeItem(self.listWidget_trends_list_for_ploting.row(item))
+        self.trends_cluster_list.remove(item.text())
+    
+    def update_trends_list(self, str_selected=None, str_list=None):
+        if str_list is None and str_selected is not None:
+            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                if str_selected == i:
+                    self.clean_trends_list()
+                    self.listWidget_trends_list_for_ploting.addItem(i)
+                    self.trends_cluster_list = [i]
+                    break
+                
+            if str_selected != '' and str_selected not in self.trends_cluster_list:
+                def check_if_in_list(str_selected):
+                    df_type = self.comboBox_trends_table.currentText()
+                    list_dict = {'Taxa':self.taxa_list, 'Func':self.func_list, 'Taxa-Func':self.taxa_func_list, 'Peptide':self.peptide_list}
+                    if str_selected in list_dict[df_type]:
+                        return True
+                    else:
+                        return False
+                if not check_if_in_list(str_selected):
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+                    return None
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                    if i in self.trends_cluster_list:
+                        self.trends_cluster_list.remove(i)
+                
+                self.trends_cluster_list.append(str_selected)
+                self.listWidget_trends_list_for_ploting.clear()
+                self.listWidget_trends_list_for_ploting.addItems(self.trends_cluster_list)
+        
+        elif str_list is not None and str_selected is None:
+            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
+                if i in self.trends_cluster_list:
+                    self.clean_trends_list()
+            for str_selected in str_list:
+                if str_selected not in self.trends_cluster_list:
+                    self.trends_cluster_list.append(str_selected)
+                    self.listWidget_trends_list_for_ploting.addItem(str_selected)
+    
+    def add_trends_top_list(self):
+        top_num = self.spinBox_trends_top_num.value()
+        groups_list = self.comboBox_trends_group.getCheckedItems()
+        # get sample list
+        if self.radioButton_trends_group.isChecked():
+            sample_list = []
+            if groups_list == []:
+                sample_list = self.tf.sample_list
+            else:
+                for group in groups_list:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        elif self.radioButton_trends_sample.isChecked():
+            sample_list = self.comboBox_trends_sample.getCheckedItems()
+        
+        method = self.comboBox_trends_top_by.currentText()
+        df_type = self.comboBox_trends_table.currentText()
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        self.update_trends_list(str_list=index_list)
+        
+    def plot_trends_cluster(self):
+        group_list = self.comboBox_trends_group.getCheckedItems()
+        width = self.spinBox_trends_width.value()
+        height = self.spinBox_trends_height.value()
+        table_name = self.comboBox_trends_table.currentText()
+        table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+        title = f'Cluster of {table_name.capitalize()}'
+        num_cluster = self.spinBox_trends_num_cluster.value()
+        
+
+        # get sample list and check if the sample list at least has 2 groups
+        if self.radioButton_trends_group.isChecked():
+            group_list = self.comboBox_trends_group.getCheckedItems()
+            sample_list = []
+            if group_list == []:
+                group_list = list(set(self.tf.group_list))
+            elif len(group_list) == 1:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 2 groups!')
+                return None
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        else:
+            sample_list = self.comboBox_trends_sample.getCheckedItems()
+            if sample_list == []:
+                sample_list = self.tf.sample_list
+            else:
+                # check if the sample list at least has 2 groups
+                group_check = []
+                for i in sample_list:
+                    group_check.append(self.tf.get_group_of_a_sample(i))
+                if len(set(group_check)) == 1:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Selected samples are in the same group, please select at least 2 groups!')
+                    return None
+                
+        
+        # get df
+        dft = table_name_dict[table_name]
+        dft = dft[sample_list]
+        if  len(self.trends_cluster_list) == 0:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+            return None
+        elif len(self.trends_cluster_list) < num_cluster and self.trends_cluster_list[0] not in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'The number of items in the list is less than the number of clusters!, Please reset the number of clusters or add more items to the list!')
+            return None
+        elif len(self.trends_cluster_list) == 1 and self.trends_cluster_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
+            df = dft
+        else:
+            df = dft.loc[self.trends_cluster_list]
+        
+        try:
+            df = df.loc[(df!=0).any(axis=1)]
+            self.show_message(f'Plotting trends cluster...')
+            # plot trends and get cluster table
+            fig, cluster_df = TrendsPlot(self.tf).plot_trends(df= df, num_cluster = num_cluster, width=width, height=height, title=title)
+            # create a dialog to show the figure
+            plt_dialog = QtWidgets.QDialog() # Create a QDialog instance.
+            ui = Ui_Plt_Dialog() # Create an instance of your UI class.
+            ui.setupUi(plt_dialog) # Call the setupUi method, passing the QDialog instance.
+            ui.set_fig(fig) # Set the figure.
+            plt_dialog.show() # Show the dialog.
+            self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
             
+            # save table to dict
+            self.update_table_dict('cluster', cluster_df)
+            # set cluster list to comboBox_trends_get_cluster_name
+            cluster_list = [f'Cluster {i}' for i in range(1, num_cluster+1)]
+            self.comboBox_trends_get_cluster_name.clear()
+            self.comboBox_trends_get_cluster_name.addItems(cluster_list)
+            # eanble the button
+            self.pushButton_trends_get_trends_table.setEnabled(True)
+            self.pushButton_trends_plot_interactive_line.setEnabled(True)
+                
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')    
+        
+                
+    def plot_trends_interactive_line(self):
+        cluster_name = self.comboBox_trends_get_cluster_name.currentText()
+        cluster_num = int(cluster_name.split(' ')[1]) - 1
+        width = self.spinBox_trends_width.value()*100
+        height = self.spinBox_trends_height.value()*100
+        table_name = self.comboBox_trends_table.currentText().capitalize()
+        title = f'Cluster {cluster_num+1} of {table_name}'
+        df = self.table_dict['cluster'].copy()
+        df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
+        self.show_message(f'Plotting interactive line plot...')
+        try:
+            pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=False)
+            self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
+        except Exception as e:
+            error_message = traceback.format_exc()
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        
+    
+    def get_trends_cluster_table(self):
+        cluster_name = self.comboBox_trends_get_cluster_name.currentText()
+        cluster_num = int(cluster_name.split(' ')[1]) - 1
+        df = self.table_dict['cluster'].copy()
+        df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
+        self.show_table(df)
+
+    ## Trends plot end
 
 
     def save_and_show_js_plot(self, pic, title):
@@ -1486,6 +1739,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.web_list.append(web)
         web.show()
 
+        
+        
+    
     def peptide_query(self):
         peptide = self.comboBox_basic_peptide_query.currentText()
         if peptide == '':
