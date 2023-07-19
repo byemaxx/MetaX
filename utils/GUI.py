@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.48'
+__version__ = '1.49'
 
 # import built-in python modules
 import os
@@ -740,7 +740,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         switch_button.clicked.connect(self.swith_stack_page_dbuilder)
         msg_box.exec_()
     def show_pushButton_preprocessing_help(self):
-        QMessageBox.information(self.MainWindow, 'Preprocessing Help', 'If you use Z-Score, Mean centering and Pareto Scaling data normalization, the data will be given a minimum offset again to avoid negative values.')
+        QMessageBox.information(self.MainWindow, 'Preprocessing Help', 'Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...\
+            \nKNN: Outliers will be imputed by KNN (K=5)...\nMean: Outliers will be imputed by mean of each sample in the group...\
+            \nMedian: Outliers will be imputed by median of each sample...\nMean(Median)+KNN: Outliers will be imputed by mean of each sample in the group, then imputed by KNN (K=5)...\
+            \n\nIf you use Z-Score, Mean centering and Pareto Scaling data normalization, the data will be given a minimum offset again to avoid negative values.')
                                 
     def show_toolButton_final_peptide_help(self):
         QMessageBox.information(self.MainWindow, 'Final Peptide Help',

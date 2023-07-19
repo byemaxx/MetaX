@@ -357,8 +357,8 @@ class TaxaFuncAnalyzer:
             raise ValueError('outlier_method must be in [half]')
     
     def _handle_missing_value(self, df: pd.DataFrame, method: str = 'knn') -> pd.DataFrame:
-        if method not in ['knn', 'mean', 'mean+knn']:
-            raise ValueError('missing_value_method must be in [knn, mean, mean+knn]')
+        if method not in ['knn', 'mean', 'mean+knn', 'median', 'median+knn']:
+            raise ValueError(f'Outlires handling method must be in [knn, mean, mean+knn, median, median+knn], you set: {method}')
         print(f'Missing value imputation by {method}...')
         df = df.copy()
         print('Row Number Before Imputation: ', len(df))
@@ -373,15 +373,24 @@ class TaxaFuncAnalyzer:
             df_filled = pd.DataFrame(df_filled, columns=df_mat.columns)
             df_filled.index = df.index
             df[self.sample_list] = df_filled
-        else:  # mean or mean+knn
+        else:  
             groups = self.group_dict
-            for group, cols in groups.items():
-                # calculate the mean of each group without nan
-                group_mean = df_mat[cols].mean(axis=1)
-                # fill nan with group mean
-                df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
+            if method == 'mean':
+                for _, cols in groups.items():
+                    # calculate the mean of each group without nan
+                    group_mean = df_mat[cols].mean(axis=1)
+                    # fill nan with group mean
+                    df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
+            elif method == 'median':
+                for _, cols in groups.items():
+                    # calculate the mean of each group without nan
+                    group_mean = df_mat[cols].median(axis=1)
+                    # fill nan with group mean
+                    df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
+                
             df[self.sample_list] = df_mat
-            if method == 'mean+knn':
+            if method.endswith('+knn'):
+                df = self._handle_missing_value(df, method=method.split('+')[0])
                 #check if there are still nan
                 if df[self.sample_list].isnull().values.any():
                     df = self._handle_missing_value(df, method='knn')
