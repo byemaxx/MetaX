@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.49'
+__version__ = '1.50'
 
 # import built-in python modules
 import os
@@ -541,8 +541,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         current_path = os.path.dirname(os.path.abspath(__file__))
         parent_path = os.path.dirname(current_path)
         test_data_dir = os.path.join(parent_path, 'tests/example_data')
-        example_taxafunc_path = os.path.join(test_data_dir, 'SW_TaxaFunc.tsv').replace('\\', '/')
-        example_meta_path = os.path.join(test_data_dir, 'SW_Meta.tsv').replace('\\', '/')
+        example_taxafunc_path = os.path.join(test_data_dir, 'Example_TaxaFunc.tsv').replace('\\', '/')
+        example_meta_path = os.path.join(test_data_dir, 'Example_Meta.tsv').replace('\\', '/')
         self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
         self.lineEdit_meta_path.setText(example_meta_path)
 
@@ -1109,19 +1109,25 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         group_list = sorted(set(self.tf.group_list))
         sample_list = sorted(set(self.tf.sample_list))  
 
-        self.comboBox_basic_group = CheckableComboBox()
         self.comboBox_basic_pca_group = CheckableComboBox()
+        self.comboBox_basic_pca_sample = CheckableComboBox()
+        self.comboBox_basic_group = CheckableComboBox()
         self.comboBox_basic_sample = CheckableComboBox()
 
-        layout_list = [self.verticalLayout_basic_heatmap_sample, self.verticalLayout_basic_heatmap_group, self.verticalLayout_basic_pca]
+        layout_list = [self.verticalLayout_basic_heatmap_sample, 
+                       self.verticalLayout_basic_heatmap_group, 
+                       self.verticalLayout_basic_pca_group,
+                       self.verticalLayout_basic_pca_sample]
+        
         for i in layout_list:
             try:
                 i.itemAt(0).widget().deleteLater()
             except Exception as e:
                 pass
 
+        self.verticalLayout_basic_pca_group.addWidget(self.comboBox_basic_pca_group)
+        self.verticalLayout_basic_pca_sample.addWidget(self.comboBox_basic_pca_sample)
         self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
-        self.verticalLayout_basic_pca.addWidget(self.comboBox_basic_pca_group)
         self.verticalLayout_basic_heatmap_sample.addWidget(self.comboBox_basic_sample)
 
         for group in group_list:
@@ -1129,6 +1135,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.comboBox_basic_pca_group.addItem(group)
         for sample in sample_list:
             self.comboBox_basic_sample.addItem(sample)
+            self.comboBox_basic_pca_sample.addItem(sample)
+
     
 
 
@@ -1520,6 +1528,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
             
             elif plot_type == 'bar':
+                show_legend = self.checkBox_basic_bar_show_legend.isChecked()
                 width = width*100
                 height = height*100
                 df = df.loc[(df!=0).any(axis=1)]
@@ -1530,7 +1539,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     if reply == QMessageBox.No:
                         return None
                 self.show_message(f'Plotting {plot_type}...')
-                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa)
+                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend)
                 self.save_and_show_js_plot(pic, title)
                 
         except Exception as e:
@@ -1719,6 +1728,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         table_name = self.comboBox_trends_table.currentText().capitalize()
         title = f'Cluster {cluster_num+1} of {table_name} (Cluster Score)'
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
+        show_legend = self.checkBox_trends_plot_interactive_show_legend.isChecked()
+        rename_taxa = self.checkBox_trends_plot_interactive_rename_taxa.isChecked()
         save_table_name = f'cluster({table_name.lower()})'
         
         df = self.table_dict[save_table_name].copy()
@@ -1735,7 +1746,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             df = dft.loc[extract_row, extract_col]
             
         try:
-            pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=False)
+            pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
         except Exception as e:
             error_message = traceback.format_exc()
@@ -1923,46 +1934,52 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
-        if self.tf is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
-            
-        elif self.tf.func_df is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please Set Multi Table First!')
-        else:
-            table_dict = {'Function': self.tf.func_df, 
-                          'Taxa': self.tf.taxa_df, 
-                          'Taxa-Function': self.tf.taxa_func_df, 
-                          'Peptide': self.tf.clean_df}
-            table_name = self.comboBox_table4pca.currentText()
-            show_label = self.checkBox_pca_if_show_lable.isChecked()
+
+        table_dict = {'Function': self.tf.func_df, 
+                        'Taxa': self.tf.taxa_df, 
+                        'Taxa-Function': self.tf.taxa_func_df, 
+                        'Peptide': self.tf.clean_df}
+        table_name = self.comboBox_table4pca.currentText()
+        show_label = self.checkBox_pca_if_show_lable.isChecked()
+        
+        # get sample list
+        if self.radioButton_basic_pca_group.isChecked():
             group_list = self.comboBox_basic_pca_group.getCheckedItems()
-            if len(group_list) == 0:
-                group_list = None
-            
-            df = table_dict[table_name]
-            if method == 'pca':
-                try:
-                    self.show_message('PCA is running, please wait...')
-                    BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, group_list=group_list)
-                except Exception as e:
-                    error_message = traceback.format_exc()
-                    QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-            elif method == 'box':
-                try:
-                    self.show_message('Box is running, please wait...')
-                    show_fliers = self.checkBox_box_if_show_fliers.isChecked()
-                    BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, group_list=group_list)
-                except Exception as e:
-                    error_message = traceback.format_exc()
-                    QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-            elif method == 'corr':
-                try:
-                    cluster = self.checkBox_corr_cluster.isChecked()
-                    self.show_message('Correlation is running, please wait...')
-                    BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, group_list=group_list)
-                except Exception as e:
-                    error_message = traceback.format_exc()
-                    QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            sample_list = []
+            if group_list == []:
+                group_list = list(set(self.tf.group_list))
+            for group in group_list:
+                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        else:
+            sample_list = self.comboBox_basic_pca_sample.getCheckedItems()
+            if sample_list == []:
+                sample_list = self.tf.sample_list
+                        
+        dft = table_dict[table_name]
+        df = dft[sample_list]
+        if method == 'pca':
+            try:
+                self.show_message('PCA is running, please wait...')
+                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        elif method == 'box':
+            try:
+                self.show_message('Box is running, please wait...')
+                show_fliers = self.checkBox_box_if_show_fliers.isChecked()
+                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        elif method == 'corr':
+            try:
+                cluster = self.checkBox_corr_cluster.isChecked()
+                self.show_message('Correlation is running, please wait...')
+                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
     # differential analysis
     def plot_top_heatmap(self):
@@ -2593,6 +2610,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
+        show_legend = self.checkBox_tflink_bar_show_legend.isChecked()
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -2617,6 +2635,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if width and height:
                 params['width'] = width*100
                 params['height'] = height*100
+            
+            params['show_legend'] = show_legend
             
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tf).plot_intensity_bar(**params)

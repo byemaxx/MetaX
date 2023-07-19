@@ -1,3 +1,4 @@
 *.pyc
 tests/test.ipynb
 */__pycache__/*
+tests/example_data/MetaX-human-gut-new.db

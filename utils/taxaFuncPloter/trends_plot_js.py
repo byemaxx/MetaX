@@ -17,7 +17,7 @@ class TrendsPlot_js:
                 df.index = new_index_list
         return df
     
-    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, rename_taxa:bool=False):
+    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, rename_taxa:bool=False, show_legend:bool=False):
         # rename taxa
         if rename_taxa:
             df = self.rename_taxa(df)
@@ -49,12 +49,18 @@ class TrendsPlot_js:
             label_opts=opts.LabelOpts(is_show=False),
         )
 
-        c.set_global_opts(
-            legend_opts=opts.LegendOpts(is_show=False),
-            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
-            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
-            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
-            title_opts=opts.TitleOpts(title=title, pos_left="center"),
-        )
+        # set global options
+        if show_legend:
+            c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",),
+                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
+                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
+                            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
+                            title_opts=opts.TitleOpts(title=title, pos_left="center"),)
+        else:
+            c.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
+                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
+                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
+                            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
+                            title_opts=opts.TitleOpts(title=title, pos_left="center"),)
 
         return c

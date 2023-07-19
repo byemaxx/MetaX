@@ -330,7 +330,6 @@ class TaxaFuncAnalyzer:
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str = 'half') -> pd.DataFrame:            
         if method == 'half':
-            df = df.copy()
             df_mat = df[self.sample_list]
             groups = self.group_dict
             print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
@@ -364,7 +363,6 @@ class TaxaFuncAnalyzer:
         if method not in ['knn', 'mean', 'mean+knn', 'median', 'median+knn']:
             raise ValueError(f'Outlires handling method must be in [knn, mean, mean+knn, median, median+knn], you set: {method}')
         print(f'Missing value imputation by {method}...')
-        df = df.copy()
         print('Row Number Before Imputation: ', len(df))
         # remove rows with all 0
         df = df.loc[(df != 0).any(axis=1)]

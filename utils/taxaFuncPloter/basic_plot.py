@@ -65,21 +65,18 @@ class BasicPlot:
         return ax.get_figure()
         
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, group_list = None):
+    def plot_pca_sns(self, df, table_name = 'Table', show_label = True):
         try:
-            meta_df = self.tfobj.meta_df.copy()
-            if group_list is not None:
-                meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
+            dft= df
+            
+            sample_list = dft.columns
+            new_sample_name = []
+            group_list = []
+            for i in sample_list:
+                group = self.tfobj.get_group_of_a_sample(i)
+                new_sample_name.append(f'{i} ({group})')
+                group_list.append(group)
 
-            SAMPLE_LIST = meta_df['Sample']
-            GROUP_LIST = meta_df[self.tfobj.meta_name]
-            new_sample_name = [
-                f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
-                for i in range(len(SAMPLE_LIST))
-            ]
-
-            # from adjustText import adjust_text
-            dft = df[SAMPLE_LIST]
             dft = dft.T
             mat = dft.values
             plt.figure(figsize=(10, 8))
@@ -88,7 +85,7 @@ class BasicPlot:
             total_var = pca.explained_variance_ratio_.sum() * 100
 
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], 
-                                hue=GROUP_LIST, s = 100, alpha=0.8)
+                                hue=group_list, s = 100, alpha=0.8)
             if show_label:
                 text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size='medium', 
                             color='black', alpha=0.6) for i in range(len(new_sample_name))]
@@ -104,10 +101,32 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, group_list = None):
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False):
+        dft = df
         
-        dft, ordered_sample_name = self.get_renamed_df(df, group_list)
+        # create a new dataframe with new sample names and sorted by group
+        sample_list = dft.columns
+        new_sample_name = []
+        group_list = []
+        for i in sample_list:
+            group = self.tfobj.get_group_of_a_sample(i)
+            new_sample_name.append(f'{i} ({group})')
+            group_list.append(group)
         
+            # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+            group_order = sorted(list(set(group_list)))
+            ordered_sample_list = []
+            ordered_sample_name = []
+            for group in group_order:
+                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
+                sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
+                ordered_sample_list.extend(samples_in_group)
+                ordered_sample_name.extend(sample_names_in_group)
+        dft = dft[ordered_sample_list]
+        # replace 0 with nan
+        dft = dft.replace(0, np.nan)
+        
+        # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         sns.set_theme(style="ticks", rc=custom_params)
 
@@ -115,27 +134,29 @@ class BasicPlot:
         plt.figure(figsize=(10, 8))
         if show_fliers:
             ax = sns.boxplot(data=dft, showfliers=True)
-            # ylimit = np.quantile(dft.mean(), 0.75) * 3
         else:
             ax = sns.boxplot(data=dft, showfliers=False)
-            # ylimit = np.quantile(dft.mean(), 0.75) * 2
         # set x label
-        ax.set_xticklabels(ordered_sample_name, rotation=90, horizontalalignment='right')
+        ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right')
         ax.set_xlabel('Sample')
         ax.set_ylabel('Intensity')
         ax.set_title(f'Intensity Boxplot of {table_name}')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)
-        # set y limit as the 4th quantile of average peptide number
-        # ax.set_ylim(0, ylimit)
         plt.show()
         # plt.close()
         return ax
     
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, group_list = None):
-        dft, ordered_sample_name = self.get_renamed_df(df, group_list)
-        dft.columns = ordered_sample_name
-
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False):
+        dft= df
+        
+        sample_list = dft.columns
+        new_sample_name = []
+        for i in sample_list:
+            group = self.tfobj.get_group_of_a_sample(i)
+            new_sample_name.append(f'{i} ({group})')
+        dft.columns = new_sample_name
+        
         corr = dft.corr()
         mask = np.triu(np.ones_like(corr, dtype=bool))
 
@@ -157,32 +178,4 @@ class BasicPlot:
     
         
         
-    def get_renamed_df(self, df, group_list):
-        df = df.copy()
-        meta_df = self.tfobj.meta_df.copy()
-        if group_list is not None:
-            meta_df = meta_df[meta_df[self.tfobj.meta_name].isin(group_list)]
-
-        SAMPLE_LIST = meta_df['Sample']
-        GROUP_LIST = meta_df[self.tfobj.meta_name]
-        new_sample_name = [
-            f'{SAMPLE_LIST.iloc[i]} ({GROUP_LIST.iloc[i]})'
-            for i in range(len(SAMPLE_LIST))
-        ]
-
-        # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-        group_order = sorted(list(set(GROUP_LIST)))
-        ordered_sample_list = []
-        ordered_sample_name = []
-        for group in group_order:
-            samples_in_group = [sample for sample, group_sample in zip(SAMPLE_LIST, GROUP_LIST) if group_sample == group]
-            sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, GROUP_LIST) if group_sample == group]
-            ordered_sample_list.extend(samples_in_group)
-            ordered_sample_name.extend(sample_names_in_group)
-
-        # Reorder the dataframe according to the new sample list order
-        dft = df[ordered_sample_list]
-
-        dft = dft.replace(0, np.nan)
-        return dft, ordered_sample_name
         
