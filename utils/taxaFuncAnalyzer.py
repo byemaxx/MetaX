@@ -335,17 +335,21 @@ class TaxaFuncAnalyzer:
             groups = self.group_dict
             print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
             print('Row number before outlier detection:', len(df_mat))
+
             for key, value in groups.items():
                 cols = value
                 nonzero_ratio = (df_mat[cols] > 0).sum(axis=1) / len(cols)
+
                 zero_rows = nonzero_ratio <= 0.5
                 nonzero_rows = nonzero_ratio > 0.5
                 equal_rows = nonzero_ratio == 0.5
+
                 df_mat.loc[equal_rows, cols] = np.nan
-                df_mat.loc[zero_rows, cols] = df_mat.loc[zero_rows, cols].applymap(lambda x: np.nan if x > 0 else x)
-                df_mat.loc[nonzero_rows, cols] = df_mat.loc[nonzero_rows, cols].applymap(lambda x: np.nan if x == 0 else x)
+                df_mat.loc[zero_rows, cols] = df_mat.loc[zero_rows, cols].where(df_mat.loc[zero_rows, cols] <= 0)
+                df_mat.loc[nonzero_rows, cols] = df_mat.loc[nonzero_rows, cols].where(df_mat.loc[nonzero_rows, cols] > 0)
+
                 print(f'Group: {key}, Sample: {len(value)}, Zero rows: {zero_rows.sum()}, Nonzero rows: {nonzero_rows.sum()}, Equal rows: {equal_rows.sum()}')
-            
+
             df[self.sample_list] = df_mat
             # remove rows in  df[self.sample_list] with all nan and all 0
             print('remove rows only contain NaN or 0')
