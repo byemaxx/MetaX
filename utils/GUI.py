@@ -912,6 +912,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         if outlier_handle_method != 'None':
             outlier_handle_method = outlier_handle_method.lower()
+            # messagebox to confirm and warning
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle('Warning')
+            msg_box.setText(f'''Outlier will be imputed by {outlier_handle_method} method,\nIt may take a long time, do you want to continue?''')
+            msg_box.addButton(QMessageBox.Yes)
+            msg_box.addButton(QMessageBox.No)
+            if msg_box.exec_() == QMessageBox.No:
+                return None
+            
 
         if normalize_method != 'None' or transform_method != 'None':
             transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 

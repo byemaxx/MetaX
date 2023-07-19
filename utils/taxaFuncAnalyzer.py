@@ -351,7 +351,7 @@ class TaxaFuncAnalyzer:
 
             df[self.sample_list] = df_mat
             # remove rows in  df[self.sample_list] with all nan and all 0
-            print('remove rows only contain NaN or 0')
+            print('remove rows only contain NaN or 0...\nRow Number Before Remove: ', len(df))
             selected_cols = df[self.sample_list]
             df = df[(selected_cols > 0).any(axis=1)]
             print('Row number after outlier detection:', len(df))
@@ -377,28 +377,32 @@ class TaxaFuncAnalyzer:
             df[self.sample_list] = df_filled
         else:  
             groups = self.group_dict
-            if method == 'mean':
-                for _, cols in groups.items():
+            for _, cols in groups.items():
+                if method == 'mean':
                     # calculate the mean of each group without nan
                     group_mean = df_mat[cols].mean(axis=1)
                     # fill nan with group mean
                     df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
-            elif method == 'median':
-                for _, cols in groups.items():
+                elif method == 'median':
                     # calculate the mean of each group without nan
                     group_mean = df_mat[cols].median(axis=1)
                     # fill nan with group mean
                     df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
-                
+
             df[self.sample_list] = df_mat
             if method.endswith('+knn'):
-                df = self._handle_missing_value(df, method=method.split('+')[0])
-                #check if there are still nan
-                if df[self.sample_list].isnull().values.any():
+                #check if there are still nan, count how many rows with nan
+                nan_rows_num = df_mat.isnull().any(axis=1).sum()
+                if nan_rows_num.sum() > 0:
+                    # count rows with nan
+                    print(f'After [{method.split("+")[0]}], there are [{nan_rows_num}] rows still with nan, impute by knn...')
                     df = self._handle_missing_value(df, method='knn')
+                else:
+                    print('No missing value after imputation, skip knn imputation')
         # remove rows of df[self.sample_list] including nan
+        print('remove rows still with nan after outliers handling...\nRow Number Before Remove: ', len(df))
         df = df.dropna(subset=self.sample_list)
-        print('Row Number After Imputation: ', len(df))
+        print('Row Number in the end: ', len(df))
         return df
 
     def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'half',handle_method: str = 'knn') -> pd.DataFrame:
