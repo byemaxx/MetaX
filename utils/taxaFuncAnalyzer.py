@@ -332,7 +332,7 @@ class TaxaFuncAnalyzer:
         if method == 'half':
             df_mat = df[self.sample_list]
             groups = self.group_dict
-            print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
+            print('\nOutlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
             print('Row number before outlier detection:', len(df_mat))
 
             for key, value in groups.items():
@@ -351,7 +351,7 @@ class TaxaFuncAnalyzer:
 
             df[self.sample_list] = df_mat
             # remove rows in  df[self.sample_list] with all nan and all 0
-            print('remove rows only contain NaN or 0...\nRow Number Before Remove: ', len(df))
+            print('remove rows only contain NaN or 0 after outlier detection...\nRow Number Before Remove: ', len(df))
             selected_cols = df[self.sample_list]
             df = df[(selected_cols > 0).any(axis=1)]
             print('Row number after outlier detection:', len(df))
@@ -360,30 +360,34 @@ class TaxaFuncAnalyzer:
             raise ValueError('outlier_method must be in [half]')
     
     def _handle_missing_value(self, df: pd.DataFrame, method: str = 'knn') -> pd.DataFrame:
+        def rum_knn(df_mat):
+            from sklearn.impute import KNNImputer
+            imputer = KNNImputer(n_neighbors=5)
+            df_filled = imputer.fit_transform(df_mat)
+            df_filled = pd.DataFrame(df_filled, columns=df_mat.columns)
+            df_filled.index = df.index
+            return df_filled
+
         if method not in ['knn', 'mean', 'mean+knn', 'median', 'median+knn']:
-            raise ValueError(f'Outlires handling method must be in [knn, mean, mean+knn, median, median+knn], you set: {method}')
-        print(f'Missing value imputation by {method}...')
+            raise ValueError(f'Outliers handling method must be in [knn, mean, mean+knn, median, median+knn], you set: {method}')
+        print(f'\nMissing value imputation by [{method}]...')
         print('Row Number Before Imputation: ', len(df))
         # remove rows with all 0
         df = df.loc[(df != 0).any(axis=1)]
         df_mat = df[self.sample_list]
         df_mat.index = df.index
         if method == 'knn':
-            from sklearn.impute import KNNImputer
-            imputer = KNNImputer(n_neighbors=5)
-            df_filled = imputer.fit_transform(df_mat)
-            df_filled = pd.DataFrame(df_filled, columns=df_mat.columns)
-            df_filled.index = df.index
+            df_filled = rum_knn(df_mat)
             df[self.sample_list] = df_filled
         else:  
             groups = self.group_dict
             for _, cols in groups.items():
-                if method == 'mean':
+                if method.startswith('mean'):
                     # calculate the mean of each group without nan
                     group_mean = df_mat[cols].mean(axis=1)
                     # fill nan with group mean
                     df_mat.loc[:, cols] = df_mat.loc[:, cols].T.fillna(group_mean).T
-                elif method == 'median':
+                elif method.startswith('median'):
                     # calculate the mean of each group without nan
                     group_mean = df_mat[cols].median(axis=1)
                     # fill nan with group mean
