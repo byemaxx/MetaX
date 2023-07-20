@@ -419,7 +419,7 @@ class TaxaFuncAnalyzer:
 
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
-            print(f'Number of rows with missing value after {method}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')    
+            print(f'''Number of rows with missing value after {method.split('+')[0]}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)''')    
             df[self.sample_list] = df_mat
 
             if method.endswith('+knn'):
