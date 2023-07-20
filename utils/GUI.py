@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.54'
+__version__ = '1.55'
 
 # import built-in python modules
 import os
@@ -1022,7 +1022,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # update comboBox of basic peptide query
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tf.original_df['Sequence'].tolist())
+            self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
 
             # clean comboBox of deseq2
             self.comboBox_deseq2_tables_lsit = []
@@ -1825,7 +1825,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if peptide == '':
             return None
         else:
-            df = self.tf.original_df.loc[self.tf.original_df['Sequence'] == peptide]
+            df = self.tf.clean_df.loc[self.tf.clean_df['Sequence'] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None

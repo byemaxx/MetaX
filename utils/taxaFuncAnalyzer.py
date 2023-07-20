@@ -394,15 +394,15 @@ class TaxaFuncAnalyzer:
             return df
 
         print(f'\nMissing value Handling by [{method}]...')
+        # count the rows with missing value
+        num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
+        print(f'Number of rows with NA before [{method}]: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')
 
         if method == 'knn':
             imputer = KNNImputer(n_neighbors=5)
             df_filled = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
             df[self.sample_list] = df_filled
         elif method in {'mean', 'mean+knn', 'median', 'median+knn'}:
-            # count the rows with missing value
-            num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
-            print(f'Number of rows with missing value before {method}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')
             fill_method = method.split('+')[0]
             # Define a function to fill na values in a series
             def fill_na(series, fill_method):
@@ -419,7 +419,7 @@ class TaxaFuncAnalyzer:
 
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
-            print(f'''Number of rows with missing value after {method.split('+')[0]}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)''')    
+            print(f'''Number of rows with missing value after [{method.split('+')[0]}]: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)''')    
             df[self.sample_list] = df_mat
 
             if method.endswith('+knn'):
