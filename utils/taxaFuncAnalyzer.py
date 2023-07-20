@@ -25,6 +25,7 @@ from pydeseq2.dds import DeseqDataSet
 class TaxaFuncAnalyzer:
     def __init__(self, df_path, meta_path):
         self.original_df = None
+        self.preprocessed_df = None
 
         self.sample_list = None
         self.meta_df = None
@@ -340,8 +341,7 @@ class TaxaFuncAnalyzer:
         if method == 'half-zero':
             print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
 
-            for key, value in groups.items():
-                cols = value
+            for key, cols in groups.items():
                 nonzero_ratio = (df_mat[cols] > 0).sum(axis=1) / len(cols)
 
                 zero_rows = nonzero_ratio <= 0.5
@@ -358,8 +358,7 @@ class TaxaFuncAnalyzer:
         elif method == "iqr":
             print('Outlier detection by IQR (if sample is out of 1.5*IQR, set to nan)...') 
             # calculate the IQR of each group
-            for key, value in groups.items():
-                cols = value
+            for _, cols in groups.items():
                 q1 = df_mat[cols].quantile(0.25)
                 q3 = df_mat[cols].quantile(0.75)
                 iqr = q3 - q1
@@ -396,8 +395,13 @@ class TaxaFuncAnalyzer:
         elif method in {'mean', 'mean+knn', 'median', 'median+knn'}:
             fill_method = method.split('+')[0]
             fill_func = df_mat.mean if fill_method == 'mean' else df_mat.median
-            group_mean = fill_func(axis=1)
-            df_mat = df_mat.T.fillna(group_mean).T
+            # Compute fill values for each row
+            fill_values = fill_func(axis=1)
+            # count the number of missing value in each group
+            for _, cols in self.group_dict.items():
+                df_mat[cols].fillna(fill_values, inplace=True)
+
+                
             df[self.sample_list] = df_mat
 
             if method.endswith('+knn'):
@@ -803,6 +807,8 @@ class TaxaFuncAnalyzer:
         df = self._data_preprocess(df=df, normalize_method=normalize_method, transform_method = transform_method,
                                    batch_list= batch_list, outlier_detect_method= outlier_detect_method, 
                                    outlier_handle_method = outlier_handle_method, processing_order=processing_order)
+        # save the processed df
+        self.preprocessed_df = df
         
         func_name = self.func_name
         sample_list = self.sample_list

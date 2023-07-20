@@ -161,6 +161,7 @@ class BasicPlot:
         mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
+            plt.figure(figsize=(16, 12))
             if cluster:
                 ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm')
             if not cluster:

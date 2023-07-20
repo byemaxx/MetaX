@@ -177,7 +177,7 @@ if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    db_path = 'C:/Users/Qing/Desktop/111/MetaX-human-gut-new.db'
+    db_path = 'tests/example_data/MetaX-human-gut-new.db'
 
     print(db_path)
 

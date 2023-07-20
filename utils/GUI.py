@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.52'
+__version__ = '1.53'
 
 # import built-in python modules
 import os
@@ -975,7 +975,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                                      outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                      batch_list = batch_list, processing_order = processing_order)
 
-
+            num_peptide = self.tf.peptide_df.shape[0]
             num_func = self.tf.func_df.shape[0]
             num_taxa = self.tf.taxa_df.shape[0]
             num_taxa_func = self.tf.taxa_func_df.shape[0]
@@ -987,7 +987,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.get_stats_peptide_num_in_taxa()
             
             # add tables to table dict
-            self.update_table_dict('clean', self.tf.clean_df)
+            self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
+            self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
             self.update_table_dict('peptide', self.tf.peptide_df)
             self.update_table_dict('taxa', self.tf.taxa_df)
             self.update_table_dict('function', self.tf.func_df)
@@ -1035,7 +1036,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # enable all buttons
             self.enable_multi_button()
 
-            QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \n\nNumber of function: {num_func}\nNumber of taxa: {num_taxa}\nNumber of taxa-function: {num_taxa_func}')
+            QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \
+                \n\nNumber of peptide: {num_peptide}\
+                \nNumber of function: {num_func}\
+                \nNumber of taxa: {num_taxa}\
+                \nNumber of taxa-function: {num_taxa_func}')
             # go to basic analysis tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
             
