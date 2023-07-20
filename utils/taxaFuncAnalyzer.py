@@ -17,10 +17,12 @@ import numpy as np
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from scipy.stats import f_oneway
 from scipy.stats import ttest_ind
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from pydeseq2.ds import DeseqStats
 from pydeseq2.dds import DeseqDataSet
 
+import warnings
+warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
     def __init__(self, df_path, meta_path):
@@ -129,9 +131,10 @@ class TaxaFuncAnalyzer:
    
     # set a dict of sample group links
     def _set_group_dict(self):
+        group_list = list(set(self.get_meta_list(self.meta_name)))
+        group_list = sorted(group_list)
         group_dict = {
-            group: self.get_sample_list_in_a_group(group)
-            for group in list(set(self.get_meta_list(self.meta_name)))
+            group: self.get_sample_list_in_a_group(group) for group in group_list
         }
         self.group_dict = group_dict
         
@@ -339,7 +342,7 @@ class TaxaFuncAnalyzer:
         print('\nRow number before outlier detection:', len(df_mat))
         
         if method == 'half-zero':
-            print('Outlier detection by half (if half samples are 0 or half samples are not 0, set to nan)...')
+            print('Outlier detection by [half-zero] (if half samples are 0 or half samples are not 0, set to nan)...')
 
             for key, cols in groups.items():
                 nonzero_ratio = (df_mat[cols] > 0).sum(axis=1) / len(cols)
@@ -352,11 +355,11 @@ class TaxaFuncAnalyzer:
                 df_mat.loc[zero_rows, cols] = df_mat.loc[zero_rows, cols].where(df_mat.loc[zero_rows, cols] <= 0)
                 df_mat.loc[nonzero_rows, cols] = df_mat.loc[nonzero_rows, cols].where(df_mat.loc[nonzero_rows, cols] > 0)
 
-                print(f'Group: {key}, Sample: {len(value)}, Zero rows: {zero_rows.sum()}, Nonzero rows: {nonzero_rows.sum()}, Equal rows: {equal_rows.sum()}')
+                print(f'Group: {key}, Sample: {len(cols)}, Zero rows: {zero_rows.sum()}, Nonzero rows: {nonzero_rows.sum()}, Equal rows: {equal_rows.sum()}')
 
 
         elif method == "iqr":
-            print('Outlier detection by IQR (if sample is out of 1.5*IQR, set to nan)...') 
+            print('Outlier detection by [IQR] (if sample is out of 1.5*IQR, set to nan)...') 
             # calculate the IQR of each group
             for _, cols in groups.items():
                 q1 = df_mat[cols].quantile(0.25)
@@ -373,35 +376,50 @@ class TaxaFuncAnalyzer:
 
     def _handle_missing_value(self, df: pd.DataFrame, method: str = 'knn') -> pd.DataFrame:
         from sklearn.impute import KNNImputer
+        from joblib import Parallel, delayed
+
         # remove rows in  df[self.sample_list] with all nan and all 0
-        print('Remove rows only contain NaN or 0 after outlier detection...\nRow Number Before Remove: ', len(df))
+        print('\nStart to handle missing value...')
+        print('Remove rows only contain NaN or 0 after outlier detection...')
+        row_num_before = len(df)
         df = df[(df[self.sample_list] > 0).any(axis=1)]
-        print('Row Number After Remove:', len(df))
+        print(f'Row Number After Remove: {row_num_before} -> {len(df)}')
         
 
         df_mat = df[self.sample_list]
+        df_mat.index = df.index
 
         if not df_mat.isnull().any().any():
             print('No missing value, skip outlier handling')
             return df
 
         print(f'\nMissing value Handling by [{method}]...')
-        print('Row Number Before Handling: ', len(df))
 
         if method == 'knn':
             imputer = KNNImputer(n_neighbors=5)
             df_filled = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
             df[self.sample_list] = df_filled
         elif method in {'mean', 'mean+knn', 'median', 'median+knn'}:
+            # count the rows with missing value
+            num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
+            print(f'Number of rows with missing value before {method}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')
             fill_method = method.split('+')[0]
-            fill_func = df_mat.mean if fill_method == 'mean' else df_mat.median
-            # Compute fill values for each row
-            fill_values = fill_func(axis=1)
-            # count the number of missing value in each group
-            for _, cols in self.group_dict.items():
-                df_mat[cols].fillna(fill_values, inplace=True)
+            # Define a function to fill na values in a series
+            def fill_na(series, fill_method):
+                fill_func = series.mean if fill_method == 'mean' else series.median
+                return series.fillna(fill_func())
 
-                
+            for n, (_, cols) in enumerate(self.group_dict.items(), start=1):
+                df_mat.loc[:, cols] = Parallel(n_jobs=-1)(
+                    delayed(fill_na)(df_mat.loc[i, cols], fill_method) 
+                    for i in tqdm(df_mat.index, 
+                                desc=f'Processing group [{_}]: [{n} of {len(self.group_dict)}]' ,
+                                leave=False)
+                )
+
+            # count the rows with missing value
+            num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
+            print(f'Number of rows with missing value after {method}: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')    
             df[self.sample_list] = df_mat
 
             if method.endswith('+knn'):
@@ -410,12 +428,13 @@ class TaxaFuncAnalyzer:
         elif method in {'drop', 'None'}:
             print(f"Missing value handling method is set to [{method}], the rows with missing value will be dropped.")
        
-        # check if there is still missing value
-        if df[self.sample_list].isnull().any().any():
-            print(f'Row Number Before Final Remove: {len(df)}')
+        # check if there is still missing value, and count the number of rows with missing value
+        final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
+        if final_na_num > 0:
+            print(f'\nThere are still missing value in the data: {final_na_num} in {len(df)}')
             df = df.dropna(subset=self.sample_list)
 
-        print('Row number after missing value handling:', len(df))
+        print(f'\nRow number after missing value handling: {len(df)}\n')
         return df
 
 

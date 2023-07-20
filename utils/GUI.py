@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.53'
+__version__ = '1.54'
 
 # import built-in python modules
 import os
@@ -69,8 +69,8 @@ import qtawesome as qta
 from qt_material import apply_stylesheet
 
 # hide console in windows
-if platform.system() == "Windows":
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+# if platform.system() == "Windows":
+#     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 
 
