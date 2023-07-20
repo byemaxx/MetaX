@@ -406,6 +406,8 @@ class TaxaFuncAnalyzer:
             fill_method = method.split('+')[0]
             # Define a function to fill na values in a series
             def fill_na(series, fill_method):
+                if series.isnull().all():
+                    return series  # If all values are NaN, return the original series
                 fill_func = series.mean if fill_method == 'mean' else series.median
                 return series.fillna(fill_func())
 
