@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.55'
+__version__ = '1.56'
 
 # import built-in python modules
 import os
@@ -146,6 +146,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.listWidget_tfnet_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
         self.listWidget_co_expr_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
         self.listWidget_list_for_ploting.itemDoubleClicked.connect(self.copy_to_clipboard)
+        self.listWidget_trends_list_for_ploting.itemDoubleClicked.connect(self.copy_to_clipboard)
 
 
         # set button click event

@@ -331,31 +331,42 @@ class TaxaFuncAnalyzer:
 
             df[self.sample_list] = df_mat
             return df
+
+    
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str = 'half-zero') -> pd.DataFrame:
+        print(f'\n{self.get_current_time()} Start to detect outlier...')
+        
         if method is None or method == 'None':
             print('outlier_method is not set, outlier detection did not perform.')
             return df
         
         df_mat = df[self.sample_list]
         groups = self.group_dict
-        print('\nRow number before outlier detection:', len(df_mat))
+        print(f'\nRow number before outlier detection: [{len(df_mat)}]')
         
         if method == 'half-zero':
             print('Outlier detection by [half-zero] (if half samples are 0 or half samples are not 0, set to nan)...')
 
-            for key, cols in groups.items():
-                nonzero_ratio = (df_mat[cols] > 0).sum(axis=1) / len(cols)
 
-                zero_rows = nonzero_ratio <= 0.5
-                nonzero_rows = nonzero_ratio > 0.5
+            for key, cols in groups.items():
+                nonzero_count = (df_mat[cols] > 0).sum(axis=1)
+                total_count = len(cols)
+                nonzero_ratio = nonzero_count / total_count
+
+                normal_rows = nonzero_count.isin([0, total_count])
+                abnormal_rows_gt_half = (nonzero_ratio > 0.5) & ~normal_rows
+                abnormal_rows_lt_half = (nonzero_ratio < 0.5) & ~normal_rows
                 equal_rows = nonzero_ratio == 0.5
 
+                df_mat.loc[abnormal_rows_gt_half, cols] = df_mat.loc[abnormal_rows_gt_half, cols].where(df_mat.loc[abnormal_rows_gt_half, cols] > 0, np.nan)
+                df_mat.loc[abnormal_rows_lt_half, cols] = df_mat.loc[abnormal_rows_lt_half, cols].where(df_mat.loc[abnormal_rows_lt_half, cols] <= 0, np.nan)
                 df_mat.loc[equal_rows, cols] = np.nan
-                df_mat.loc[zero_rows, cols] = df_mat.loc[zero_rows, cols].where(df_mat.loc[zero_rows, cols] <= 0)
-                df_mat.loc[nonzero_rows, cols] = df_mat.loc[nonzero_rows, cols].where(df_mat.loc[nonzero_rows, cols] > 0)
 
-                print(f'Group: {key}, Sample: {len(cols)}, Zero rows: {zero_rows.sum()}, Nonzero rows: {nonzero_rows.sum()}, Equal rows: {equal_rows.sum()}')
+                print(f'Group: [{key}], Samples: [{total_count}], Rows -> Normal: [{normal_rows.sum()}], '
+                    f'Non-zero ratio > 0.5: [{abnormal_rows_gt_half.sum()}], '
+                    f'Zero ratio > 0.5: [{abnormal_rows_lt_half.sum()}], '
+                    f'Equal: [{equal_rows.sum()}]')
 
 
         elif method == "iqr":
@@ -379,11 +390,11 @@ class TaxaFuncAnalyzer:
         from joblib import Parallel, delayed
 
         # remove rows in  df[self.sample_list] with all nan and all 0
-        print('\nStart to handle missing value...')
+        print(f'\n{self.get_current_time()} Start to handle missing value...')
         print('Remove rows only contain NaN or 0 after outlier detection...')
         row_num_before = len(df)
         df = df[(df[self.sample_list] > 0).any(axis=1)]
-        print(f'Row Number After Remove: {row_num_before} -> {len(df)}')
+        print(f'Row Number After Remove: [{row_num_before}] -> [{len(df)}]')
         
 
         df_mat = df[self.sample_list]
@@ -433,10 +444,11 @@ class TaxaFuncAnalyzer:
         # check if there is still missing value, and count the number of rows with missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
-            print(f'\nThere are still missing value in the data: {final_na_num} in {len(df)}')
+            print(f'\nThere are still missing value in the data: [{final_na_num} in {len(df)}]')
             df = df.dropna(subset=self.sample_list)
 
-        print(f'\nRow number after missing value handling: {len(df)}\n')
+        print(f'\nRow number after missing value handling: [{len(df)}]\n')
+        print(f'{self.get_current_time()} Data processing finished.')
         return df
 
 
@@ -920,3 +932,7 @@ class TaxaFuncAnalyzer:
                 print(f"{attr} : None")
             else:
                 print(f"{attr} : set")
+    
+    def get_current_time(self):
+        import time
+        return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
