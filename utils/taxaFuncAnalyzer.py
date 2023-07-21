@@ -385,9 +385,11 @@ class TaxaFuncAnalyzer:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'knn') -> pd.DataFrame:
-        from sklearn.impute import KNNImputer
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'none+none') -> pd.DataFrame:
+        from sklearn.experimental import enable_iterative_imputer
+        from sklearn.impute import KNNImputer, IterativeImputer
         from joblib import Parallel, delayed
+        from tqdm import tqdm
 
         # remove rows in  df[self.sample_list] with all nan and all 0
         print(f'\n{self.get_current_time()} Start to handle missing value...')
@@ -395,7 +397,6 @@ class TaxaFuncAnalyzer:
         row_num_before = len(df)
         df = df[(df[self.sample_list] > 0).any(axis=1)]
         print(f'Row Number After Remove: [{row_num_before}] -> [{len(df)}]')
-        
 
         df_mat = df[self.sample_list]
         df_mat.index = df.index
@@ -404,55 +405,76 @@ class TaxaFuncAnalyzer:
             print('No missing value, skip outlier handling')
             return df
 
-        print(f'\nMissing value Handling by [{method}]...')
-        # count the rows with missing value
-        num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
-        print(f'Number of rows with NA before [{method}]: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)')
+        method1, method2 = method.split("+")
 
-        if method == 'knn':
-            imputer = KNNImputer(n_neighbors=5)
-            df_filled = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
-            df[self.sample_list] = df_filled
-        elif method in {'mean', 'mean+knn', 'median', 'median+knn'}:
-            fill_method = method.split('+')[0]
-            # Define a function to fill na values in a series
-            def fill_na(series, fill_method):
-                if series.isnull().all():
-                    return series  # If all values are NaN, return the original series
-                fill_func = series.mean if fill_method == 'mean' else series.median
-                return series.fillna(fill_func())
+        def fill_na(series, fill_method):
+            if series.isnull().all():
+                return series
+            fill_func = series.mean if fill_method == 'mean' else series.median
+            return series.fillna(fill_func())
 
-            for n, (_, cols) in enumerate(self.group_dict.items(), start=1):
-                df_mat.loc[:, cols] = Parallel(n_jobs=-1)(
-                    delayed(fill_na)(df_mat.loc[i, cols], fill_method) 
-                    for i in tqdm(df_mat.index, 
-                                desc=f'Processing group [{_}]: [{n} of {len(self.group_dict)}]' ,
-                                leave=False)
-                )
-
+        def impute_method(df, method):
+            df_mat = df[self.sample_list]
+            df_mat.index = df.index
+            print(f'\nMissing value Handling by [{method}]...')
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
-            print(f'''Number of rows with missing value after [{method.split('+')[0]}]: {num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)''')    
-            df[self.sample_list] = df_mat
+            print(f'Number of rows with NA before [{method}]: [{num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)]')
 
-            if method.endswith('+knn'):
-                df = self._handle_missing_value(df, method='knn')
-        
-        elif method in {'drop', 'None'}:
-            print(f"Missing value handling method is set to [{method}], the rows with missing value will be dropped.")
-       
-        # check if there is still missing value, and count the number of rows with missing value
+            if method in {'knn', 'regression', 'multiple'}:
+                if method == 'knn':
+                    imputer = KNNImputer(n_neighbors=5)
+                elif method in {'regression', 'multiple'}:
+                    imputer = IterativeImputer(random_state=0, n_nearest_features=5 if method == 'multiple' else None)
+                df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
+
+            elif method in {'mean', 'median'}:
+                for n, (_, cols) in enumerate(self.group_dict.items(), start=1):
+                    df_mat.loc[:, cols] = Parallel(n_jobs=-1)(
+                        delayed(fill_na)(df_mat.loc[i, cols], method) 
+                        for i in tqdm(df_mat.index, 
+                                    desc=f'Processing group [{_}]: [{n} of {len(self.group_dict)}]' ,
+                                    leave=False)
+                    )
+                df[self.sample_list] = df_mat
+                
+            elif method == 'none':
+                df = df.dropna(subset=self.sample_list)
+            else:
+                raise ValueError(f'Invalid method: {method}')
+
+
+            final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
+            if final_na_num > 0:
+                print(f'\nThere are still missing value in the data: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
+
+            return df
+
+        ### main function ###
+        if method1 == 'none':
+            df = df.dropna(subset=self.sample_list)
+        else:
+            df = impute_method(df, method1)
+
+        if df[self.sample_list].isnull().any().any():
+            if method2 == 'none':
+                df = df.dropna(subset=self.sample_list)
+            else:
+                df = impute_method(df, method2)
+        # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
-            print(f'\nThere are still missing value in the data: [{final_na_num} in {len(df)}]')
+            print(f'->Number of rows with NA after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.sample_list)
+        print(f'\nFinal number of rows after missing value handling: [{len(df)}]')
+        print(f'\n{self.get_current_time()} Data processing finished.\n')
 
-        print(f'\nRow number after missing value handling: [{len(df)}]\n')
-        print(f'{self.get_current_time()} Data processing finished.')
         return df
 
 
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'None',handle_method: str = 'None') -> pd.DataFrame:
+
+
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'none+none') -> pd.DataFrame:
         if self.group_list is None:
             raise ValueError('You must set set group before handling outlier')
 

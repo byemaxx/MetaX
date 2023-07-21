@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.56'
+__version__ = '1.57'
 
 # import built-in python modules
 import os
@@ -743,13 +743,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def show_pushButton_preprocessing_help(self):
         QMessageBox.information(self.MainWindow, 'Preprocessing Help', \
             'IQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
-            \n\nHalf-Zero: In a group, if more than half are 0 and the rest are not 0, the non-zero value will be marked as NaN, if less than half are 0, the 0 value will be marked as NaN, if 0 and non-zero are equal, all the value will be marked as NaN.\
-            \n\n\nKNN: Outliers will be imputed by KNN (K=5)...\
-            \n\nMean: Outliers will be imputed by mean of each sample in the group...\
+            \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
+            \n\n\nMean: Outliers will be imputed by mean of each sample in the group...\
             \n\nMedian: Outliers will be imputed by median of each sample...\
-            \n\nMean(Median)+KNN: Outliers will be imputed by mean of each sample in the group, then imputed by KNN (K=5)...\
-            \n\n\nIf you use Z-Score, Mean centering and Pareto Scaling data normalization, the data will be given a minimum offset again to avoid negative values.')
-                                
+            \n\n\nKNN: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbors to fill in missing values.\
+            \n\nRegression: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modeling each feature with missing values as a function of other features, in turn.\
+            \n\nMultiple: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of nearest features.\
+            \n\n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.')
+                        
     def show_toolButton_final_peptide_help(self):
         QMessageBox.information(self.MainWindow, 'Final Peptide Help',
                                  'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
@@ -907,7 +908,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         func_threshold = self.doubleSpinBox_func_threshold.value()
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
-        outlier_handle_method = self.comboBox_outlier_handling.currentText()
+        outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
+        outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
+        outlier_handle_method = f'{outlier_handle_method1.lower()}+{outlier_handle_method2.lower()}'
         normalize_method = self.comboBox_set_data_normalization.currentText()
         transform_method = self.comboBox_set_data_transformation.currentText()
         batch_group =  self.comboBox_remove_batch_effect.currentText()
@@ -917,23 +920,33 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         if outlier_detect_method != 'None':
             outlier_detect_method = outlier_detect_method.lower()
-            if outlier_handle_method in ['None', 'Drop', 'dorp']:
+            if outlier_handle_method1 == 'None':
                 msg_box = QMessageBox()
                 msg_box.setWindowTitle('Warning')
-                msg_box.setText(f'''Outlier will be detected by {outlier_detect_method} method. However, outlier will not be handled.\
+                msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method. However, outlier will not be handled.\
                     \n\nAll rows with outlier will be dropped, it may cause some problems in the following analysis.\
                     \n\nDo you want to continue?''')
                 msg_box.addButton(QMessageBox.Yes)
                 msg_box.addButton(QMessageBox.No)
                 if msg_box.exec_() == QMessageBox.No:
                     return None
+        if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'None':
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle('Warning')
+            msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method and handled by [{outlier_handle_method1}] method.\
+                \nHowever,you did not select the second outlier handling method.\
+                \n\nIf your data contains an even number of samples in a group, there may be rows that cannot be filled by [{outlier_handle_method1}], and these rows will be dropped.\
+                \n\nDo you want to continue?''')
+            msg_box.addButton(QMessageBox.Yes)
+            msg_box.addButton(QMessageBox.No)
+            if msg_box.exec_() == QMessageBox.No:
+                return None
             
-        if outlier_handle_method != 'None':
-            outlier_handle_method = outlier_handle_method.lower()
+        if outlier_handle_method1 != 'None' or outlier_handle_method2 != 'None':
             # messagebox to confirm and warning
             msg_box = QMessageBox()
             msg_box.setWindowTitle('Warning')
-            msg_box.setText(f'''Outlier will be handled by {outlier_handle_method} method,\n\nIt may take a long time.\
+            msg_box.setText(f'''Outlier will be handled by [{outlier_handle_method}] method,\n\nIt may take a long time.\
                 \n\nDo you want to continue?''')
             msg_box.addButton(QMessageBox.Yes)
             msg_box.addButton(QMessageBox.No)
