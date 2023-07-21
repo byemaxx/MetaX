@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.57'
+__version__ = '1.58'
 
 # import built-in python modules
 import os
@@ -1987,6 +1987,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                         'Peptide': self.tf.clean_df}
         table_name = self.comboBox_table4pca.currentText()
         show_label = self.checkBox_pca_if_show_lable.isChecked()
+        width = self.spinBox_basic_pca_width.value()
+        height = self.spinBox_basic_pca_height.value()
         
         # get sample list
         if self.radioButton_basic_pca_group.isChecked():
@@ -2006,7 +2008,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if method == 'pca':
             try:
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label)
+                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -2014,7 +2016,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             try:
                 self.show_message('Box is running, please wait...')
                 show_fliers = self.checkBox_box_if_show_fliers.isChecked()
-                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers)
+                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -2022,7 +2024,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster)
+                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')

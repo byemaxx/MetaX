@@ -65,7 +65,7 @@ class BasicPlot:
         return ax.get_figure()
         
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True):
+    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8):
         try:
             dft= df
             
@@ -76,15 +76,15 @@ class BasicPlot:
                 group = self.tfobj.get_group_of_a_sample(i)
                 new_sample_name.append(f'{i} ({group})')
                 group_list.append(group)
-
+                
             dft = dft.T
             mat = dft.values
-            plt.figure(figsize=(10, 8))
+            plt.figure(figsize=(width, height))
             pca = PCA(n_components=2)
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
 
-            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], 
+            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1],
                                 hue=group_list, s = 100, alpha=0.8)
             if show_label:
                 text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size='medium', 
@@ -101,7 +101,7 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False):
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8):
         dft = df
         
         # create a new dataframe with new sample names and sorted by group
@@ -131,7 +131,7 @@ class BasicPlot:
         sns.set_theme(style="ticks", rc=custom_params)
 
         # set size
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(width, height))
         if show_fliers:
             ax = sns.boxplot(data=dft, showfliers=True)
         else:
@@ -147,7 +147,7 @@ class BasicPlot:
         # plt.close()
         return ax
     
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False):
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8):
         dft= df
         
         sample_list = dft.columns
@@ -161,10 +161,10 @@ class BasicPlot:
         mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
-            plt.figure(figsize=(16, 12))
             if cluster:
-                ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm')
+                ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm', figsize=(width, height))
             if not cluster:
+                plt.figure(figsize=(width, height))
                 ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
             plt.xticks(rotation=90)  
             #set title

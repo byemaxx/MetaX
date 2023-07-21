@@ -20,6 +20,8 @@ from scipy.stats import ttest_ind
 from tqdm.auto import tqdm
 from pydeseq2.ds import DeseqStats
 from pydeseq2.dds import DeseqDataSet
+from joblib import Parallel, delayed
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -335,6 +337,13 @@ class TaxaFuncAnalyzer:
     
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str = 'half-zero') -> pd.DataFrame:
+        from scipy.stats import zscore
+        from statsmodels.discrete.count_model import ZeroInflatedPoisson
+        from statsmodels.discrete.discrete_model import NegativeBinomial
+        from statsmodels.tools.tools import add_constant
+
+
+
         print(f'\n{self.get_current_time()} Start to detect outlier...')
         
         if method is None or method == 'None':
@@ -342,14 +351,14 @@ class TaxaFuncAnalyzer:
             return df
         
         df_mat = df[self.sample_list]
-        groups = self.group_dict
+        groups_dict = self.group_dict
         print(f'\nRow number before outlier detection: [{len(df_mat)}]')
         
         if method == 'half-zero':
             print('Outlier detection by [half-zero] (if half samples are 0 or half samples are not 0, set to nan)...')
 
 
-            for key, cols in groups.items():
+            for key, cols in groups_dict.items():
                 nonzero_count = (df_mat[cols] > 0).sum(axis=1)
                 total_count = len(cols)
                 nonzero_ratio = nonzero_count / total_count
@@ -366,20 +375,40 @@ class TaxaFuncAnalyzer:
                 print(f'Group: [{key}], Samples: [{total_count}], Rows -> Normal: [{normal_rows.sum()}], '
                     f'Non-zero ratio > 0.5: [{abnormal_rows_gt_half.sum()}], '
                     f'Zero ratio > 0.5: [{abnormal_rows_lt_half.sum()}], '
-                    f'Equal: [{equal_rows.sum()}]')
-
+                    f'Equal: [{equal_rows.sum()}] (Total Abnormal: [{total_count-normal_rows.sum()} {100*(total_count-normal_rows.sum())/total_count:.2f}%])')
 
         elif method == "iqr":
             print('Outlier detection by [IQR] (if sample is out of 1.5*IQR, set to nan)...') 
             # calculate the IQR of each group
-            for _, cols in groups.items():
+            for group, cols in groups_dict.items():
                 q1 = df_mat[cols].quantile(0.25)
                 q3 = df_mat[cols].quantile(0.75)
                 iqr = q3 - q1
                 outlier = (df_mat[cols] < (q1 - 1.5 * iqr)) | (df_mat[cols] > (q3 + 1.5 * iqr))
                 # set the outlier to nan
                 df_mat.loc[outlier.any(axis=1), cols] = np.nan
-                
+                print(f'Group: [{group}], Samples: [{len(cols)}], Outlier: [{outlier.any(axis=1).sum()} in {len(df_mat)} ({outlier.any(axis=1).sum()/len(df_mat)*100:.2f}%)]')
+        elif method =='z-score':
+            print('Outlier detection by [z-score] (if sample is out of 3*std, set to nan)...')
+            for group, cols in groups_dict.items():
+                z = np.abs(zscore(df_mat[cols]))
+                df_mat.loc[(z > 3).any(axis=1), cols] = np.nan
+                print(f'Group: [{group}], Samples: [{len(cols)}], Outlier: [{(z > 3).any(axis=1).sum()} in {len(df_mat)} ({(z > 3).any(axis=1).sum()/len(df_mat)*100:.2f}%)]')
+        elif method in ['zero-inflated-poisson', 'negative-binomial']:
+            for group, cols in groups_dict.items():
+                for col in cols:
+                    data = df_mat[col]
+                    data_const = add_constant(data)
+                    model = ZeroInflatedPoisson(endog=data, exog=data_const).fit() if method == 'zero-inflated-poisson' else NegativeBinomial(endog=data, exog=data_const).fit()
+                    # calculate the predicted value
+                    pred_prob = model.predict(data_const)
+                    # mark the outlier as nan
+                    df_mat.loc[pred_prob < 0.01, col] = np.nan
+                    print(f'Group: [{group}], Sample: [{col}], Outlier: [{(pred_prob < 0.01).sum()} in {len(df_mat)} ({(pred_prob < 0.01).sum()/len(df_mat)*100:.2f}%)]')
+                    
+        else:
+            raise ValueError(f'Invalid outlier method: {method}')
+            
         df[self.sample_list] = df_mat
         return df
 
@@ -388,8 +417,6 @@ class TaxaFuncAnalyzer:
     def _handle_missing_value(self, df: pd.DataFrame, method: str = 'none+none') -> pd.DataFrame:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
-        from joblib import Parallel, delayed
-        from tqdm import tqdm
 
         # remove rows in  df[self.sample_list] with all nan and all 0
         print(f'\n{self.get_current_time()} Start to handle missing value...')
