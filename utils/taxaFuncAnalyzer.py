@@ -372,10 +372,10 @@ class TaxaFuncAnalyzer:
                 df_mat.loc[abnormal_rows_lt_half, cols] = df_mat.loc[abnormal_rows_lt_half, cols].where(df_mat.loc[abnormal_rows_lt_half, cols] <= 0, np.nan)
                 df_mat.loc[equal_rows, cols] = np.nan
 
-                print(f'Group: [{key}], Samples: [{total_count}], Rows -> Normal: [{normal_rows.sum()}], '
-                    f'Non-zero ratio > 0.5: [{abnormal_rows_gt_half.sum()}], '
-                    f'Zero ratio > 0.5: [{abnormal_rows_lt_half.sum()}], '
-                    f'Equal: [{equal_rows.sum()}] (Total Abnormal: [{total_count-normal_rows.sum()} {100*(total_count-normal_rows.sum())/total_count:.2f}%])')
+                print(f'Group: [{key}], Samples: [{total_count}], Normal: [{normal_rows.sum()}], Abnormal: [{(abnormal_rows_gt_half | abnormal_rows_lt_half | equal_rows).sum()}],'
+                    f'(Non-zero > 0.5: [{abnormal_rows_gt_half.sum()}], '
+                    f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], '
+                    f'Equal: [{equal_rows.sum()}]) Total Abnormal Ratio: [{((abnormal_rows_gt_half | abnormal_rows_lt_half | equal_rows).sum())/len(df_mat)*100:.2f}%]')
 
         elif method == "iqr":
             print('Outlier detection by [IQR] (if sample is out of 1.5*IQR, set to nan)...') 
