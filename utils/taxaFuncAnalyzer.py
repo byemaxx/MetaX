@@ -48,6 +48,7 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = None
 
         self.anova_df = None
+        self.outlier_stats = None
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
@@ -338,6 +339,8 @@ class TaxaFuncAnalyzer:
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str = 'half-zero') -> pd.DataFrame:
         from scipy.stats import zscore
+        from scipy.spatial import distance
+        from scipy.stats import chi2
         from statsmodels.discrete.count_model import ZeroInflatedPoisson
         from statsmodels.discrete.discrete_model import NegativeBinomial
         from statsmodels.tools.tools import add_constant
@@ -389,27 +392,78 @@ class TaxaFuncAnalyzer:
                 df_mat.loc[outlier.any(axis=1), cols] = np.nan
                 print(f'Group: [{group}], Samples: [{len(cols)}], Outlier: [{outlier.any(axis=1).sum()} in {len(df_mat)} ({outlier.any(axis=1).sum()/len(df_mat)*100:.2f}%)]')
         elif method =='z-score':
-            print('Outlier detection by [z-score] (if sample is out of 3*std, set to nan)...')
+            print('Outlier detection by [z-score] (if samples in a group are out of 3*std, set to nan)...')
             for group, cols in groups_dict.items():
                 z = np.abs(zscore(df_mat[cols]))
-                df_mat.loc[(z > 3).any(axis=1), cols] = np.nan
+                df_mat.loc[(z > 2.5).any(axis=1), cols] = np.nan
                 print(f'Group: [{group}], Samples: [{len(cols)}], Outlier: [{(z > 3).any(axis=1).sum()} in {len(df_mat)} ({(z > 3).any(axis=1).sum()/len(df_mat)*100:.2f}%)]')
+        
         elif method in ['zero-inflated-poisson', 'negative-binomial']:
+            print(f'Outlier detection by [{method}] (if the predicted value is less than 0.01, set to nan)...')
             for group, cols in groups_dict.items():
-                for col in cols:
-                    data = df_mat[col]
-                    data_const = add_constant(data)
-                    model = ZeroInflatedPoisson(endog=data, exog=data_const).fit() if method == 'zero-inflated-poisson' else NegativeBinomial(endog=data, exog=data_const).fit()
-                    # calculate the predicted value
-                    pred_prob = model.predict(data_const)
-                    # mark the outlier as nan
-                    df_mat.loc[pred_prob < 0.01, col] = np.nan
-                    print(f'Group: [{group}], Sample: [{col}], Outlier: [{(pred_prob < 0.01).sum()} in {len(df_mat)} ({(pred_prob < 0.01).sum()/len(df_mat)*100:.2f}%)]')
-                    
+                # Concatenate all columns in the group into a single column
+                data = df_mat[cols].values.flatten()
+                data_const = add_constant(data)
+                model = ZeroInflatedPoisson(endog=data, exog=data_const).fit() if method == 'zero-inflated-poisson' else NegativeBinomial(endog=data, exog=data_const).fit()
+                # calculate the predicted value
+                pred_prob = model.predict(data_const)
+                
+                # reshape pred_prob to match the original data shape
+                pred_prob = pred_prob.reshape(-1, len(cols))
+                
+                # mark the outlier as nan
+                for i, col in enumerate(cols):
+                    df_mat.loc[pred_prob[:, i] < 0.01, col] = np.nan
+                print(f'Group: [{group}], Outlier: [{(pred_prob < 0.01).sum()} in {len(data)} ({(pred_prob < 0.01).sum()/len(data)*100:.2f}%)]')
+
+        elif method == 'mahalanobis-distance':
+        #Compute the Mahalanobis Distance for each group
+            print('Outlier detection by [mahalanobis] (if the Mahalanobis Distance is greater than the threshold(0.01), set to nan)...')
+            for group, cols in groups_dict.items():
+                # Get the data for this group
+                data = df_mat[cols]
+                
+                # Compute the mean and covariance matrix
+                mean = data.mean()
+                cov = data.cov()
+                inv_cov = np.linalg.inv(cov)
+
+                # Compute the Mahalanobis distance for each data point
+                mahalanobis_dist = data.apply(lambda x: distance.mahalanobis(x, mean, inv_cov), axis=1)
+
+                # Compute the threshold for outlier detection (assuming a chi-square distribution)
+                threshold = chi2.ppf((1-0.01), df=len(cols))  # 99% confidence
+
+                # Mark the outliers as nan
+                outliers = mahalanobis_dist > threshold
+                df_mat.loc[outliers, cols] = np.nan
+
+                print(f'Group: [{group}], Outlier: [{outliers.sum()} in {len(df_mat)} ({outliers.sum()/len(df_mat)*100:.2f}%)]')            
+            
+        
         else:
             raise ValueError(f'Invalid outlier method: {method}')
-            
+        
         df[self.sample_list] = df_mat
+        # statistics the number
+        num_row_with_outlier = df_mat.isnull().any(axis=1).sum()
+        num_col_with_outlier = df_mat.isnull().any(axis=0).sum()
+        num_nan = df_mat.isnull().sum().sum()
+        self.outlier_stats = {'num_row_with_outlier': num_row_with_outlier, 'num_col_with_outlier': num_col_with_outlier, 'num_nan': num_nan}
+        print(f'\n[{num_nan}] values are set to NaN. in [{num_row_with_outlier}] rows and [{num_col_with_outlier}] columns.')
+        
+        print('Remove rows only contain NaN or 0 after outlier detection...')
+        row_num_before = len(df)
+        # remove rows in  df[self.sample_list] with all nan and all 0
+        df = df[(df[self.sample_list] > 0).any(axis=1)]
+        row_num_after = len(df)
+        num_row_with_outlier_after = df[self.sample_list].isnull().any(axis=1).sum()
+        print(f'Row Number After Remove: [{row_num_before} -> {row_num_after}]')
+        # print the number of row with nan
+        if num_row_with_outlier_after > 0:
+            print(f'The Number of rows still with nan: [{num_row_with_outlier_after} in {row_num_after} ({num_row_with_outlier/row_num_after*100:.2f}%)]')
+        
+        print(f'\n{self.get_current_time()} Outlier detection finished.\n')
         return df
 
     
@@ -418,12 +472,8 @@ class TaxaFuncAnalyzer:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
-        # remove rows in  df[self.sample_list] with all nan and all 0
+       
         print(f'\n{self.get_current_time()} Start to handle missing value...')
-        print('Remove rows only contain NaN or 0 after outlier detection...')
-        row_num_before = len(df)
-        df = df[(df[self.sample_list] > 0).any(axis=1)]
-        print(f'Row Number After Remove: [{row_num_before}] -> [{len(df)}]')
 
         df_mat = df[self.sample_list]
         df_mat.index = df.index
@@ -508,6 +558,8 @@ class TaxaFuncAnalyzer:
         df = df.copy()
         df = self._outlier_detection(df, method=detect_method)
         df = self._handle_missing_value(df, method=handle_method)
+        if detect_method not in ['none', 'None']:
+            self.outlier_stats['final_row_num'] = len(df)
         return df
 
            

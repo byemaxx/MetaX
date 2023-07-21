@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.58'
+__version__ = '1.59'
 
 # import built-in python modules
 import os
@@ -1049,12 +1049,19 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # enable all buttons
             self.enable_multi_button()
-
+            
+            # show message
+            if outlier_detect_method != 'None':
+                nan_stats_str = f'\n[{self.tf.outlier_stats["num_nan"]}] outliers were detected in [{self.tf.outlier_stats["num_row_with_outlier"]}] rows and [{self.tf.outlier_stats["num_col_with_outlier"]}] columns.\
+                    \nLeft rows after Outliers Handling: [{self.tf.outlier_stats["final_row_num"]}] ({self.tf.outlier_stats["final_row_num"]/self.tf.original_df.shape[0]*100:.2f}%)'
+            else:    
+                nan_stats_str = ''
             QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \
-                \n\nNumber of peptide: {num_peptide}\
-                \nNumber of function: {num_func}\
-                \nNumber of taxa: {num_taxa}\
-                \nNumber of taxa-function: {num_taxa_func}')
+                \n{nan_stats_str}\
+                \n\nNumber of peptide: [{num_peptide}]\
+                \nNumber of function: [{num_func}]\
+                \nNumber of taxa: [{num_taxa}]\
+                \nNumber of taxa-function: [{num_taxa_func}]')
             # go to basic analysis tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
             

@@ -442,6 +442,11 @@
                 </item>
                 <item>
                  <property name="text">
+                  <string>Mahalanobis-Distance</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
                   <string>Zero-Inflated-Poisson</string>
                  </property>
                 </item>
