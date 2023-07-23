@@ -48,7 +48,7 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = None
 
         self.anova_df = None
-        self.outlier_stats = None
+        self.outlier_stats = {"num_row_with_outlier": None, "num_col_with_outlier": None, "num_nan": None, "final_row_num": None}
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
@@ -492,7 +492,7 @@ class TaxaFuncAnalyzer:
 
         def impute_method(df, method):
             df_mat = df[self.sample_list]
-            df_mat.index = df.index
+            # df_mat.index = df.index
             print(f'\nMissing value Handling by [{method}]...')
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
