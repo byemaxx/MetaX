@@ -452,16 +452,16 @@ class TaxaFuncAnalyzer:
         self.outlier_stats = {'num_row_with_outlier': num_row_with_outlier, 'num_col_with_outlier': num_col_with_outlier, 'num_nan': num_nan}
         print(f'\n[{num_nan}] values are set to NaN. in [{num_row_with_outlier}] rows and [{num_col_with_outlier}] columns.')
         
-        print('Remove rows only contain NaN or 0 after outlier detection...')
+        print('\nRemove rows only contain NaN or 0 after outlier detection...')
         row_num_before = len(df)
         # remove rows in  df[self.sample_list] with all nan and all 0
         df = df[(df[self.sample_list] > 0).any(axis=1)]
         row_num_after = len(df)
         num_row_with_outlier_after = df[self.sample_list].isnull().any(axis=1).sum()
-        print(f'Row Number After Remove: [{row_num_before} -> {row_num_after}]')
+        print(f'Row Number: from [{row_num_before}] to [{row_num_after}] ({(row_num_after)/row_num_before*100:.2f}% left)')
         # print the number of row with nan
         if num_row_with_outlier_after > 0:
-            print(f'The Number of rows still with nan: [{num_row_with_outlier_after} in {row_num_after} ({num_row_with_outlier/row_num_after*100:.2f}%)]')
+            print(f'The Number of rows still with nan: [{num_row_with_outlier_after}] in [{row_num_after}] ({num_row_with_outlier_after/row_num_after*100:.2f}%)')
         
         print(f'\n{self.get_current_time()} Outlier detection finished.\n')
         return df
@@ -546,7 +546,7 @@ class TaxaFuncAnalyzer:
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
-            print(f'->Number of rows with NA after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
+            print(f'->Number of rows with NA after [{method}]: [{final_na_num}] in [{len(df)}] ({final_na_num/len(df)*100:.2f}%)')
             df = df.dropna(subset=self.sample_list)
         print(f'\nFinal number of rows after missing value handling: [{len(df)}]')
         print(f'\n{self.get_current_time()} Data processing finished.\n')
