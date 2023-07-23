@@ -468,11 +468,11 @@ class TaxaFuncAnalyzer:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'none+none') -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'none+none', by_group:bool = True) -> pd.DataFrame:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
-       
+
         print(f'\n{self.get_current_time()} Start to handle missing value...')
 
         df_mat = df[self.sample_list]
@@ -484,7 +484,7 @@ class TaxaFuncAnalyzer:
 
         method1, method2 = method.split("+")
 
-        def fill_na(args):
+        def fill_na_mean_median(args):
             df_group, fill_method = args
             df_group = df_group.copy()
             fill_func = lambda x: x.mean() if fill_method == 'mean' else x.median()
@@ -493,6 +493,15 @@ class TaxaFuncAnalyzer:
             missing_rows = df_group.isnull().any(axis=1)
             df_group.loc[missing_rows] = df_group[missing_rows].apply(lambda row: row.fillna(fill_func(row.dropna())), axis=1)
 
+            return df_group
+
+        def apply_imputer(df, cols, method):
+            df_group = df.loc[:, cols].copy()
+            if method == 'knn':
+                imputer = KNNImputer(n_neighbors=5)
+            elif method in {'regression', 'multiple'}:
+                imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
+            df_group.loc[:, cols] = imputer.fit_transform(df_group)
             return df_group
 
         def impute_method(df, method):
@@ -504,22 +513,28 @@ class TaxaFuncAnalyzer:
             print(f'Number of rows with NA before [{method}]: [{num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)]')
 
             if method in {'knn', 'regression', 'multiple'}:
-                if method == 'knn':
-                    imputer = KNNImputer(n_neighbors=5)
-                elif method in {'regression', 'multiple'}:
-                    imputer = IterativeImputer(random_state=0, n_nearest_features=5 if method == 'multiple' else None)
-                df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
+                if not by_group:
+                    if method == 'knn':
+                        imputer = KNNImputer(n_neighbors=5)
+                    elif method in {'regression', 'multiple'}:
+                        imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
+                    df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
+                else: # by_group is True
+                    results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in self.group_dict.items())
+                    df_mat_filled = pd.concat(results, axis=1)
+                    df_mat_filled = df_mat_filled[df_mat.columns]
+                    df[self.sample_list] = df_mat_filled
 
             elif method in {'mean', 'median'}:
                 results = Parallel(n_jobs=-1)(
-                    delayed(fill_na)([df_mat.loc[:, cols], method]) 
+                    delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
                     for _, cols in self.group_dict.items()
                 )
                 # Ensure the order of results is the same as the original column order
                 df_mat_filled = pd.concat(results, axis=1)
                 df_mat_filled = df_mat_filled[df_mat.columns]
                 df[self.sample_list] = df_mat_filled
-                
+
             elif method == 'none':
                 df = df.dropna(subset=self.sample_list)
             else:
@@ -529,7 +544,8 @@ class TaxaFuncAnalyzer:
             final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
             if final_na_num > 0:
                 print(f'\nThere are still missing value in the data: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
-
+            else:
+                print(f'\nNo missing value after [{method}]')
             return df
 
         ### main function ###
@@ -546,7 +562,7 @@ class TaxaFuncAnalyzer:
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
-            print(f'->Number of rows with NA after [{method}]: [{final_na_num}] in [{len(df)}] ({final_na_num/len(df)*100:.2f}%)')
+            print(f'\nDrop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.sample_list)
         print(f'\nFinal number of rows after missing value handling: [{len(df)}]')
         print(f'\n{self.get_current_time()} Data processing finished.\n')
