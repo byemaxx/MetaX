@@ -484,16 +484,21 @@ class TaxaFuncAnalyzer:
 
         method1, method2 = method.split("+")
 
-        def fill_na(series, fill_method):
-            if series.isnull().all():
-                return series
-            fill_func = series.mean if fill_method == 'mean' else series.median
-            return series.fillna(fill_func())
+        def fill_na(args):
+            df_group, fill_method = args
+            df_group = df_group.copy()
+            fill_func = lambda x: x.mean() if fill_method == 'mean' else x.median()
+
+            # Only process rows with missing values
+            missing_rows = df_group.isnull().any(axis=1)
+            df_group.loc[missing_rows] = df_group[missing_rows].apply(lambda row: row.fillna(fill_func(row.dropna())), axis=1)
+
+            return df_group
 
         def impute_method(df, method):
             df_mat = df[self.sample_list]
             # df_mat.index = df.index
-            print(f'\nMissing value Handling by [{method}]...')
+            print(f'\nFill NA by [{method}]...')
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
             print(f'Number of rows with NA before [{method}]: [{num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)]')
@@ -506,14 +511,14 @@ class TaxaFuncAnalyzer:
                 df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
 
             elif method in {'mean', 'median'}:
-                for n, (_, cols) in enumerate(self.group_dict.items(), start=1):
-                    df_mat.loc[:, cols] = Parallel(n_jobs=-1)(
-                        delayed(fill_na)(df_mat.loc[i, cols], method) 
-                        for i in tqdm(df_mat.index, 
-                                    desc=f'Processing group [{_}]: [{n} of {len(self.group_dict)}]' ,
-                                    leave=False)
-                    )
-                df[self.sample_list] = df_mat
+                results = Parallel(n_jobs=-1)(
+                    delayed(fill_na)([df_mat.loc[:, cols], method]) 
+                    for _, cols in self.group_dict.items()
+                )
+                # Ensure the order of results is the same as the original column order
+                df_mat_filled = pd.concat(results, axis=1)
+                df_mat_filled = df_mat_filled[df_mat.columns]
+                df[self.sample_list] = df_mat_filled
                 
             elif method == 'none':
                 df = df.dropna(subset=self.sample_list)
