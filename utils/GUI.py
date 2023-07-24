@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.6.0'
+__version__ = '1.6.1'
 
 # import built-in python modules
 import os
@@ -907,12 +907,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         taxa_level = name_dict[taxa_input]
         
         func_threshold = self.doubleSpinBox_func_threshold.value()
+        # outlier detect and handle
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
         outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
         outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
         outlier_handle_method = f'{outlier_handle_method1.lower()}+{outlier_handle_method2.lower()}'
+        outlier_handle_by_group = True if self.comboBox_outlier_handling_group_or_sample.currentText() == 'Each Group' else False
+        # data normalization and transformation
         normalize_method = self.comboBox_set_data_normalization.currentText()
         transform_method = self.comboBox_set_data_transformation.currentText()
+        # batch effect
         batch_group =  self.comboBox_remove_batch_effect.currentText()
 
 
@@ -987,6 +991,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
                                      normalize_method = normalize_method, transform_method = transform_method, 
                                      outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
+                                     outlier_handle_by_group = outlier_handle_by_group,
                                      batch_list = batch_list, processing_order = processing_order)
 
             num_peptide = self.tf.peptide_df.shape[0]

@@ -473,7 +473,7 @@ class TaxaFuncAnalyzer:
         from sklearn.impute import KNNImputer, IterativeImputer
 
 
-        print(f'\n{self.get_current_time()} Start to handle missing value...')
+        print(f'\n{self.get_current_time()} Start to handle missing value...\n')
 
         df_mat = df[self.sample_list]
         df_mat.index = df.index
@@ -507,35 +507,43 @@ class TaxaFuncAnalyzer:
         def impute_method(df, method):
             df_mat = df[self.sample_list]
             # df_mat.index = df.index
-            print(f'\nFill NA by [{method}]...')
+            print(f'Fill NA by [{method}]...')
             # count the rows with missing value
             num_rows_with_missing_value = df_mat.isnull().any(axis=1).sum()
             print(f'Number of rows with NA before [{method}]: [{num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)]')
 
             if method in {'knn', 'regression', 'multiple'}:
                 if not by_group:
+                    print(f'Fill NA by [{method}] on the [All Samples]...')
                     if method == 'knn':
                         imputer = KNNImputer(n_neighbors=5)
                     elif method in {'regression', 'multiple'}:
                         imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
                     df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
                 else: # by_group is True
+                    print(f'Fill NA by [{method}] within [Each Group]...')
                     results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in self.group_dict.items())
                     df_mat_filled = pd.concat(results, axis=1)
                     df_mat_filled = df_mat_filled[df_mat.columns]
                     df[self.sample_list] = df_mat_filled
 
             elif method in {'mean', 'median'}:
-                results = Parallel(n_jobs=-1)(
-                    delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
-                    for _, cols in self.group_dict.items()
-                )
-                # Ensure the order of results is the same as the original column order
-                df_mat_filled = pd.concat(results, axis=1)
-                df_mat_filled = df_mat_filled[df_mat.columns]
-                df[self.sample_list] = df_mat_filled
+                if not by_group:
+                    print(f'Fill NA by [{method}] on the [All Samples]...')
+                    df[self.sample_list] = df_mat.apply(lambda x: x.fillna(x.mean() if method == 'mean' else x.median()), axis=1)
+                else:
+                    print(f'Fill NA by [{method}] within [Each Group]...')
+                    results = Parallel(n_jobs=-1)(
+                        delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
+                        for _, cols in self.group_dict.items()
+                    )
+                    # Ensure the order of results is the same as the original column order
+                    df_mat_filled = pd.concat(results, axis=1)
+                    df_mat_filled = df_mat_filled[df_mat.columns]
+                    df[self.sample_list] = df_mat_filled
 
             elif method == 'none':
+                print('NO HANDLING FOR MISSING VALUE, DROP ROWS WITH MISSING VALUE')
                 df = df.dropna(subset=self.sample_list)
             else:
                 raise ValueError(f'Invalid method: {method}')
@@ -543,9 +551,9 @@ class TaxaFuncAnalyzer:
 
             final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
             if final_na_num > 0:
-                print(f'\nThere are still missing value in the data: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
+                print(f'There are still missing value in the data: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             else:
-                print(f'\nNo missing value after [{method}]')
+                print(f'No missing value after [{method}]')
             return df
 
         ### main function ###
@@ -562,9 +570,9 @@ class TaxaFuncAnalyzer:
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
-            print(f'\nDrop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
+            print(f'Drop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.sample_list)
-        print(f'\nFinal number of rows after missing value handling: [{len(df)}]')
+        print(f'Final number of rows after missing value handling: [{len(df)}]')
         print(f'\n{self.get_current_time()} Data processing finished.\n')
 
         return df
@@ -572,13 +580,13 @@ class TaxaFuncAnalyzer:
 
 
 
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'none+none') -> pd.DataFrame:
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'none+none', by_group:bool=True) -> pd.DataFrame:
         if self.group_list is None:
             raise ValueError('You must set set group before handling outlier')
 
         df = df.copy()
         df = self._outlier_detection(df, method=detect_method)
-        df = self._handle_missing_value(df, method=handle_method)
+        df = self._handle_missing_value(df, method=handle_method, by_group=by_group)
         if detect_method not in ['none', 'None']:
             self.outlier_stats['final_row_num'] = len(df)
         return df
@@ -588,7 +596,7 @@ class TaxaFuncAnalyzer:
     def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
                          transform_method: str = None, batch_list: list = None, 
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         processing_order:list=None) -> pd.DataFrame:
+                         outlier_handle_by_group: bool = True, processing_order:list=None) -> pd.DataFrame:
         df = df.copy()
         if processing_order is None:
             processing_order = ['outlier' ,'batch', 'transform', 'normalize']
@@ -597,7 +605,7 @@ class TaxaFuncAnalyzer:
         # perform data processing in order
         for process in processing_order:
             if process == 'outlier':
-                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method)
+                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, by_group=outlier_handle_by_group)
             elif process == 'batch':
                 df = self._remove_batch_effect(df, batch_list)
             elif process == 'transform':
@@ -953,7 +961,7 @@ class TaxaFuncAnalyzer:
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                           normalize_method: str = None, transform_method: str = None,
                           outlier_detect_method: str = None, outlier_handle_method: str = None,
-                            batch_list: list = None,  processing_order:list=None):
+                          outlier_handle_by_group: bool = True, batch_list: list = None, processing_order:list=None):
         
 
         
