@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.61.1'
+__version__ = '1.62.0'
 
 # import built-in python modules
 import os
@@ -40,6 +40,7 @@ from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
 from MetaX.utils.taxaFuncPloter.trends_plot import TrendsPlot
 from MetaX.utils.taxaFuncPloter.trends_plot_js import TrendsPlot_js
+from MetaX.utils.taxaFuncPloter.pca_plot_js import PcaPlot_js
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -205,6 +206,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
         self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
         self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
+        self.pushButton_plot_pca_js.clicked.connect(lambda: self.plot_basic_info_sns('pca_3d'))
         ### Heatmap and Bar
         self.comboBox_basic_table.currentIndexChanged.connect(self.set_basic_heatmap_selection_list)
 
@@ -1299,6 +1301,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_trends_drop_item.setEnabled(True)
         self.pushButton_trends_clean_list.setEnabled(True)
         self.comboBox_trends_table.setEnabled(True)
+        self.pushButton_plot_pca_js.setEnabled(True)
 
 
     def update_co_expr_select_list(self):
@@ -1838,7 +1841,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     ## Trends plot end
 
 
-    def save_and_show_js_plot(self, pic, title):
+    def save_and_show_js_plot(self, pic, title, width=None, height=None):
         home_path = QDir.homePath()
         metax_path = os.path.join(home_path, 'MetaX')
         if not os.path.exists(metax_path):
@@ -1846,6 +1849,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         save_path = os.path.join(metax_path, f'{title}.html')
         pic.render(save_path)
         web = webDialog.MyDialog(save_path)
+        if width is not None and height is not None:
+            web.resize(width, height)
         self.web_list.append(web)
         web.show()
 
@@ -2011,9 +2016,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # get sample list
         if self.radioButton_basic_pca_group.isChecked():
             group_list = self.comboBox_basic_pca_group.getCheckedItems()
+            # resort group list by group name
+            group_list = sorted(group_list)
+
             sample_list = []
             if group_list == []:
                 group_list = list(set(self.tf.group_list))
+                group_list = sorted(group_list)
             for group in group_list:
                 sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
@@ -2030,6 +2039,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        elif method == 'pca_3d':
+            try:
+                self.show_message('PCA is running, please wait...')
+                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, width=width, height=height)
+                self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}', width=width*120, height=height*120)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+                
         elif method == 'box':
             try:
                 self.show_message('Box is running, please wait...')
