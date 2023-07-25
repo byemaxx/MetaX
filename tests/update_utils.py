@@ -1,11 +1,44 @@
 import os
 import shutil
+import stat
 
+def on_rm_error(func, path, exc_info):
+    """
+    处理删除目录时的错误
+    """
+    # 设置文件或目录的权限以便删除
+    os.chmod(path, stat.S_IWRITE)
+    # 删除文件或目录
+    os.remove(path)
+    
+    
+def force_remove_dir(dir_path):
+    """
+    强制删除文件夹，如果文件夹不存在则跳过
+    """
+    try:
+        shutil.rmtree(dir_path, onerror=on_rm_error)
+    except FileNotFoundError:
+        pass
+    
 
+def remove_pycache(dir_path):
+    """
+    删除文件夹及其子文件夹中所有名为 __pycache__ 的文件夹
+    """
+    for root, dirs, files in os.walk(dir_path):
+        for dir_name in dirs:
+            if dir_name == '__pycache__':
+                dir_path = os.path.join(root, dir_name)
+                force_remove_dir(dir_path)
+                
+
+    
 def update_desktop():
 
     # remove the utlis folder from the path
     desktop_path = os.path.join(os.path.expanduser('~'), 'Desktop')
+    desktop_metax_path = os.path.join(desktop_path, 'MetaX_Suite/MetaX')
     desktop_metax_utils_path = os.path.join(desktop_path, 'MetaX_Suite/MetaX/MetaX/utils')
     # check if the utils folder exists
     if not os.path.exists(desktop_metax_utils_path):
@@ -14,7 +47,7 @@ def update_desktop():
         return
     # remove the utlis folder from the path
     if os.path.exists(desktop_metax_utils_path):
-        shutil.rmtree(desktop_metax_utils_path)
+        force_remove_dir(desktop_metax_utils_path)
         print(f'utils folder removed from {desktop_metax_utils_path}')
 
     # copy the utils folder to the path
@@ -23,6 +56,8 @@ def update_desktop():
     # copy the new utils folder to desktop_metax_utils_path
     print(f'utils folder copied from \n{new_utils_path} \nto \n{desktop_metax_utils_path}')
     shutil.copytree(new_utils_path, desktop_metax_utils_path)
+    # remove all __pycache__ folder in the utils folder and its subfolders
+    remove_pycache(desktop_metax_path)
     print('utils folder copied successfully!')
 
 def update_z():
@@ -33,7 +68,8 @@ def update_z():
     # get directory list of Z:/Qing/MetaX
     dir_list = os.listdir('Z:/Qing/MetaX')
     if old_dir := next((i for i in dir_list if i.startswith('Update')), None):
-        shutil.rmtree(f'Z:/Qing/MetaX/{old_dir}')
+        force_remove_dir(f'Z:/Qing/MetaX/{old_dir}')
+        os.remove(f'Z:/Qing/MetaX/{old_dir}')
         print(f'utils folder removed from Z:/Qing/MetaX/{old_dir}')
 
     # get Version number from ../utils/GUI.py
@@ -48,8 +84,10 @@ def update_z():
     new_dir_name = f'Update_{version}'
 
     # create new directory
-    os.mkdir(f'Z:/Qing/MetaX/{new_dir_name}')
-    os.mkdir(f'Z:/Qing/MetaX/{new_dir_name}/MetaX')
+    if not os.path.exists(f'Z:/Qing/MetaX/{new_dir_name}'):
+        os.mkdir(f'Z:/Qing/MetaX/{new_dir_name}')
+        if not os.path.exists(f'Z:/Qing/MetaX/{new_dir_name}/MetaX'):
+            os.mkdir(f'Z:/Qing/MetaX/{new_dir_name}/MetaX')
     
     z_update_path = f'Z:/Qing/MetaX/{new_dir_name}/MetaX/utils'
 
@@ -58,6 +96,8 @@ def update_z():
     # copy the new utils folder to desktop_metax_utils_path
     print(f'utils folder copied from \n{new_utils_path} to {z_update_path}')
     shutil.copytree(new_utils_path, z_update_path)
+    # remove the __pycache__ folder in the utils folder
+    remove_pycache(z_update_path)
     print('utils folder copied successfully!')
     
 def create_zip_and_move():

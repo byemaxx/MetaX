@@ -44,6 +44,9 @@ def run_2_result(df, db_path, threshold):
     print('Running proteins_to_taxa_func...')
     df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
     df_t = pd.concat([df_t, df_t0], axis=1)
+    # add the columns of None and None_prop
+    df_t['None'] = 'none'
+    df_t['None_prop'] = '1.0'
     # reorder the columns
     cols = df_t.columns.tolist()
     sample_cols = [col for col in cols if col.startswith('Intensity_')]

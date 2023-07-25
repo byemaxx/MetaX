@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.62.3'
+__version__ = '1.63.0'
 
 # import built-in python modules
 import os
@@ -2034,6 +2034,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         df = dft[sample_list]
         if method == 'pca':
             try:
+                row_num = df.shape[0]
+                if row_num < 2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
+                    return None
                 self.show_message('PCA is running, please wait...')
                 BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height)
             except Exception as e:
@@ -2041,6 +2045,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
         elif method == 'pca_3d':
             try:
+                row_num = df.shape[0]
+                if row_num < 3:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
+                    return None
                 self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, width=width, height=height)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}', width=width*120, height=height*120)
@@ -2331,7 +2339,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.pushButton_deseq2_plot_sankey.setEnabled(True)
             except Exception as e:
                 error_message = traceback.format_exc()
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nCurrent data cannot do DESeq2!\n\nAre you using normalized data?')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}\n\nPlease check your setting!')
                 return None
             finally:
                 self.pushButton_deseq2.setEnabled(True)
