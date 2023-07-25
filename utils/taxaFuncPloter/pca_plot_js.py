@@ -33,10 +33,13 @@ class PcaPlot_js:
         pca_df = pd.DataFrame(components, columns=['PC1', 'PC2', 'PC3'])
         pca_df['group'] = group_list
         pca_df['sample_name'] = new_sample_name
+        group_num = len(pca_df['group'].unique())
+        colors = self.get_distinct_colors(group_num)
 
         scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height))
 
-        for group in pca_df['group'].unique():
+        for i, group in enumerate(pca_df['group'].unique()):
+            color = colors[i]
             group_df = pca_df[pca_df['group'] == group]
             # Create a list of tuples, each tuple is a pair of (x, y, z)
             xyz_data = list(
@@ -54,6 +57,7 @@ class PcaPlot_js:
                 xaxis3d_opts=opts.Axis3DOpts(type_="value", name=x_name),
                 yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
                 zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
+                itemstyle_opts=opts.ItemStyleOpts(color=color),
 
             )
 
@@ -67,6 +71,26 @@ class PcaPlot_js:
         # scatter3d.render_notebook()
 
         return scatter3d
+    
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [ WHITE, BLACK]
+        existing_colors = [(0, 0, 0), (1, 1, 1)]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
+        converted_colors = []
+        converted_colors.extend(
+            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
+        )
+        return converted_colors
+
 
 
 

@@ -28,8 +28,10 @@ class TrendsPlot_js:
             Line(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(list(df.columns))
         )
-
+        colors = self.get_distinct_colors(len(df))
+        
         for i in range(df.shape[0]):
+            color = colors[i]
             c.add_yaxis(
                 series_name=df.index[i],
                 y_axis=list(df.iloc[i, :]),
@@ -37,6 +39,7 @@ class TrendsPlot_js:
                 is_hover_animation=True,
                 linestyle_opts=opts.LineStyleOpts(opacity=0.5),
                 label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=color),
             )
 
         # add average line
@@ -64,3 +67,22 @@ class TrendsPlot_js:
                             title_opts=opts.TitleOpts(title=title, pos_left="center"),)
 
         return c
+    
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [WHITE, BLACK]
+        existing_colors = [(0, 0, 0), (1, 1, 1)]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
+        converted_colors = []
+        converted_colors.extend(
+            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
+        )
+        return converted_colors

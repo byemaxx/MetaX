@@ -45,7 +45,7 @@ class BarPlot_js:
             new_col_names.append(f'{i} ({group})')
             groups_list.append(group)
         df.columns = new_col_names
-        
+        colors = self.get_distinct_colors(len(df))
         # create title
         if title is None:
             if taxon_name is None:
@@ -65,8 +65,14 @@ class BarPlot_js:
             .add_xaxis(list(df.columns))
         )
 
-        for name in df.index:
-            c.add_yaxis(name, list(df.loc[name, :]), stack="stack1", category_gap="50%")
+        for i, name in enumerate(df.index):
+            color = colors[i]
+            c.add_yaxis(name, list(df.loc[name, :]), 
+                        stack="stack1", 
+                        category_gap="50%",
+                        itemstyle_opts=opts.ItemStyleOpts(color=color),
+                        )
+            
             
             c.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
                             
@@ -86,3 +92,22 @@ class BarPlot_js:
         
         return c
     
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [WHITE, BLACK]
+        existing_colors = [(0, 0, 0), (1, 1, 1)]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
+        converted_colors = []
+        converted_colors.extend(
+            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
+        )
+        return converted_colors
+
