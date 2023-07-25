@@ -1,3 +1,4 @@
+import contextlib
 import os
 import shutil
 import stat
@@ -16,10 +17,8 @@ def force_remove_dir(dir_path):
     """
     强制删除文件夹，如果文件夹不存在则跳过
     """
-    try:
+    with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(dir_path, onerror=on_rm_error)
-    except FileNotFoundError:
-        pass
     
 
 def remove_pycache(dir_path):

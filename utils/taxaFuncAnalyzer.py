@@ -284,7 +284,6 @@ class TaxaFuncAnalyzer:
             print('transform_method is not set, data transform did not perform.')
             return df
         else:
-            df = df.copy()
             df_mat = df[self.sample_list]
 
             transform_operations = {
@@ -298,7 +297,7 @@ class TaxaFuncAnalyzer:
             if transform_method is not None:
                 if transform_method in transform_operations:
                     df_mat = transform_operations[transform_method](df_mat)
-                    print(f'Data transformed by {transform_method}')
+                    print(f'Data transformed by [{transform_method}]')
                 else:
                     raise ValueError('transform_method must be in [None, log2, log10, sqrt, cube]')
 
@@ -861,10 +860,13 @@ class TaxaFuncAnalyzer:
         df = self.replace_if_two_index(df)
         
         counts_df = df.T
-        # if the max value > 10000, divide by 100
-        if counts_df.max().max() > 10000:
-            counts_df = counts_df/100
-        
+        # make sure the max value is not larger than int32
+        if counts_df.max().max() > 2147483647:
+            times = counts_df.max().max() / 2147483647
+            divide = int(times) + 1
+            counts_df = counts_df / divide
+            print(f'Warning: the max value is [{counts_df.max().max()}], [{times}] times larger than int32, all values are divided by [{divide}]')
+                
         counts_df = counts_df.astype(int)
         counts_df = counts_df.sort_index()
 
@@ -889,7 +891,6 @@ class TaxaFuncAnalyzer:
             clinical=meta_df,
             design_factors=self.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
             refit_cooks=True)
-
         dds.deseq2()
         
         try:
