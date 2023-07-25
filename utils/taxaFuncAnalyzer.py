@@ -874,14 +874,20 @@ class TaxaFuncAnalyzer:
         meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
 
         meta_df.set_index('Sample', inplace=True)
+        
+        # ! Deseq2 would make mistake if the meta name and sample contain '_'
+        # ! replace '_' with '-' in meta_df
         meta_df = meta_df.replace('_', '-', regex=True)
+        columns = meta_df.columns
+        meta_df.columns = [i.replace('_', '-') for i in columns]
+        
         meta_df = meta_df.sort_index()
         
 
         dds = DeseqDataSet(
             counts=counts_df,
             clinical=meta_df,
-            design_factors=self.meta_name,
+            design_factors=self.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
             refit_cooks=True)
 
         dds.deseq2()
