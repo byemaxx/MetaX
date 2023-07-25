@@ -68,7 +68,6 @@ def update_z():
     dir_list = os.listdir('Z:/Qing/MetaX')
     if old_dir := next((i for i in dir_list if i.startswith('Update')), None):
         force_remove_dir(f'Z:/Qing/MetaX/{old_dir}')
-        os.remove(f'Z:/Qing/MetaX/{old_dir}')
         print(f'utils folder removed from Z:/Qing/MetaX/{old_dir}')
 
     # get Version number from ../utils/GUI.py

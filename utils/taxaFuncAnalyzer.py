@@ -1061,6 +1061,7 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
         self.peptide_df = df_peptide
+        print("Multi-tables setting finished.\n")
     
     # New function to check which attributes are set
     def check_attributes(self):
