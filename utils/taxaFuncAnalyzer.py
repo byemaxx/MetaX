@@ -987,7 +987,7 @@ class TaxaFuncAnalyzer:
         print("Starting to set Function table...")
         # filter prop = 100% and func are not (NULL, -, NaN)
         df_func = df[(df[f'{func_name}_prop'] >= func_threshold) & (df[func_name].notnull()) &
-                     (df[func_name] != 'unknown')].copy()
+                     (df[func_name] != 'unknown') & (df[func_name] != '-') & (df[func_name] != 'NaN')].copy()
         
 
 
@@ -1036,7 +1036,7 @@ class TaxaFuncAnalyzer:
         print(f"Taxa number: {df_taxa.shape[0]}")
 
         dfc = dfc[(dfc['Taxon'] != 'unknown')]
-        dfc = dfc[(dfc[f'{func_name}_prop'] >= func_threshold) & (dfc[func_name].notnull()) & (dfc[func_name] != 'unknown')].copy()
+        dfc = dfc[(dfc[f'{func_name}_prop'] >= func_threshold) & (dfc[func_name].notnull()) & (dfc[func_name] != 'unknown') &  (dfc[func_name] != '-')].copy()
 
         dfc_with_peptides = dfc[['Sequence', 'Taxon', func_name] + sample_list]
         

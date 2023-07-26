@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.63.1'
+__version__ = '1.64.2'
 
 # import built-in python modules
 import os
@@ -543,7 +543,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def load_example_for_analyzer(self):
         current_path = os.path.dirname(os.path.abspath(__file__))
         parent_path = os.path.dirname(current_path)
-        test_data_dir = os.path.join(parent_path, 'tests/example_data')
+        test_data_dir = os.path.join(parent_path, 'data/example_data')
         example_taxafunc_path = os.path.join(test_data_dir, 'Example_TaxaFunc.tsv').replace('\\', '/')
         example_meta_path = os.path.join(test_data_dir, 'Example_Meta.tsv').replace('\\', '/')
         self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
@@ -1372,16 +1372,29 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.basic_heatmap_list = []
         self.listWidget_list_for_ploting.clear()
     
-    def extract_top_from_test_result(self, method, top_num, df_type):
+    def extract_top_from_test_result(self, method, top_num, df_type, filtered):
         if method.split('_')[0] == 'deseq2':
             # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
             table_name = method.split('_')[0] +'(' + df_type + ')'
             df =  self.table_dict.get(table_name)
             df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
-
+            
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
                 return None
+            
+            if filtered:
+                print('filtered enabled')
+                p_value = self.doubleSpinBox_deseq2_pvalue.value()
+                log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
+                log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
+                if log2fc_min > log2fc_max:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'log2fc_min should be smaller than log2fc_max!')
+                    return None
+                df = df[(df['padj'] < p_value) & (abs(df['log2FoldChange']) > log2fc_min) & (abs(df['log2FoldChange']) < log2fc_max)]
+                print(f'p_value: {p_value}, {log2fc_min} < log2fc < {log2fc_max}, df.shape: {df.shape}')
+                
+                
             if method.split('_')[1] == 'up':
                 df = df[df['log2FoldChange'] > 0]
                 if method.split('_')[2] == 'p':
@@ -1394,12 +1407,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     df = df.sort_values(by='padj',ascending = True)
                 elif method.split('_')[2] == 'l2fc':
                     df = df.sort_values(by='log2FoldChange',ascending = True)    
-            
+                
         else:
             # method = 'anova_test_p', 'anova_test_f', 't_test_p', 't_test_t'
             table_name = method.split('_')[0] + '_test(' + df_type + ')'
             df = self.table_dict.get(table_name)
             df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
+            if filtered:
+                print('filtered enabled')
+                p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                df = df[df['P-value'] < p_value]
+                print(f'p_value: {p_value}, df.shape: {df.shape}')
+
 
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
@@ -1411,6 +1430,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             elif method.split('_')[2] == 't':
                 df = df.sort_values(by='t-statistic',ascending = False)
         
+        row_num = df.shape[0]
+        if row_num < top_num:
+            QMessageBox.warning(self.MainWindow, 'Warning', f"Filtered result has only {df.shape[0]} rows, less than your setting [{top_num}]!")
+        print(f'[{row_num}] rows were added to the list.')
         df = df.head(top_num)
         index_list = df.index.tolist()
         return index_list
@@ -1418,6 +1441,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def add_basic_heatmap_top_list(self):
         
         top_num = self.spinBox_basic_heatmap_top_num.value()
+        filtered = self.checkBox_basic_heatmap_top_filtered.isChecked()
         # get sample list
         if self.radioButton_basic_heatmap_group.isChecked():
             group_list = self.comboBox_basic_group.getCheckedItems()
@@ -1435,7 +1459,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         method = self.comboBox_basic_heatmap_top_by.currentText()
         df_type = self.comboBox_basic_table.currentText()
 
-        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
 
         self.update_basic_heatmap_list(str_list=index_list)
         
@@ -1481,6 +1505,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def add_co_expr_top_list(self):
         top_num = self.spinBox_co_expr_top_num.value()
         groups_list = self.comboBox_co_expr_group.getCheckedItems()
+        filtered = self.checkBox_co_expr_top_filtered.isChecked()
         # get sample list
         if self.radioButton_co_expr_bygroup.isChecked():
             sample_list = []
@@ -1495,7 +1520,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         method = self.comboBox_co_expr_top_by.currentText()
         df_type = self.comboBox_co_expr_table.currentText()
 
-        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         self.update_co_expr_lsit(str_list=index_list)
 
         
@@ -1694,6 +1719,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def add_trends_top_list(self):
         top_num = self.spinBox_trends_top_num.value()
         groups_list = self.comboBox_trends_group.getCheckedItems()
+        filtered = self.checkBox_trends_top_filtered.isChecked()
         # get sample list
         if self.radioButton_trends_group.isChecked():
             sample_list = []
@@ -1707,7 +1733,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         method = self.comboBox_trends_top_by.currentText()
         df_type = self.comboBox_trends_table.currentText()
-        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         self.update_trends_list(str_list=index_list)
         
     def plot_trends_cluster(self):
@@ -1862,7 +1888,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if peptide == '':
             return None
         else:
-            df = self.tf.clean_df.loc[self.tf.clean_df['Sequence'] == peptide]
+            df = self.tf.preprocessed_df.loc[self.tf.preprocessed_df['Sequence'] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None
@@ -2357,6 +2383,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
+            if log2fc_min > log2fc_max:
+                QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
+                return None
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
@@ -2429,6 +2458,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
+            if log2fc_min > log2fc_max:
+                QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
+                return None
             print(f'width: {width}, height: {height}, pvalue: {pvalue}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}')
         except Exception:
             error_message = traceback.format_exc()
@@ -2507,6 +2539,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def add_tfnet_top_list(self):
         top_num = self.spinBox_tfnet_top_num.value()
         df_type = self.comboBox_tfnet_table.currentText()
+        filtered = self.checkBox_tfnet_top_filtered.isChecked()
 
         sample_list =  self.tf.sample_list
         if self.radioButton_network_bysample.isChecked():
@@ -2521,11 +2554,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         
         method = self.comboBox_tfnet_top_by.currentText()
-        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list)
+        index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         self.update_tfnet_focus_list_and_widget(str_list=index_list)
 
 
-    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list) -> list:
+    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list,filtered:bool = False) -> list:
         df_type = df_type.lower()
         method_dict = {'Average Intensity': 'mean', 
                        'Frequency in Samples': 'freq', 
@@ -2551,7 +2584,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             index_list = df.index.tolist()
             return index_list
         else:
-            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type)
+            index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type, filtered=filtered)
             return index_list
         
 
@@ -2610,9 +2643,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def filter_tflink(self):
         top_num = self.spinBox_tflink_top_num.value()
         method = self.comboBox_tflink_top_by.currentText()
+        filtered = self.checkBox_tflink_top_filtered.isChecked()
+        
         sample_list =  self.tf.sample_list
-        taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list)
-        func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list)
+        taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
+        func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         if taxa_list:
             self.comboBox_others_taxa.clear()
             self.comboBox_others_taxa.addItems(taxa_list)
@@ -2717,9 +2752,21 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         if taxa:
             params['taxon_name'] = taxa
+            # checek num in taxa
+            num = len(self.tf.get_intensity_matrix(taxon_name=taxa))
         if func:
             params['func_name'] = func
-
+            num = len(self.tf.get_intensity_matrix(func_name=func))
+        
+        if func and taxa:
+            num = len(self.tf.get_intensity_matrix(taxon_name=taxa, func_name=func))
+        
+        # check num if > 100
+        if num > 100:
+            reply = QMessageBox.question(self.MainWindow, 'Warning', f'The number of items [{num}] is more than 100, it may take a long time to plot.\nDo you want to continue?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return None
+            
         try:
             if rename_taxa:
                 params['rename_taxa'] = rename_taxa

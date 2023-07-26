@@ -3,6 +3,8 @@
 # output: table of final peptides with taxonomic and functional information
 
 from .pep2taxafunc import proteins_to_taxa_func
+from .convert_ID_to_name import add_pathway_name_to_df, add_ec_name_to_df
+
 
 import pandas as pd
 import re
@@ -35,6 +37,26 @@ def apply_run(row, db_path, threshold):
     result = run_pep2taxafunc(row, db_path, threshold)
     return pd.Series(result)
 
+def add_additional_columns(df):
+    try:
+        print("Trying to add 'EC_DE', 'EC_AN', 'EC_CC' and 'EC_CA' to the dataframe...")
+        df = add_ec_name_to_df(df)
+        print("Additional EC columns added!")
+    except Exception as e:
+        print('Error: add additional EC columns failed!')
+        print(e)
+    
+    try:
+        print("Trying to add 'KEGG_Pathway_name' to the dataframe...")
+        df = add_pathway_name_to_df(df)
+        print("Additional KEGG_Pathway_name column added!")
+    except Exception as e:
+        print('Error: add additional KEGG_Pathway_name column failed!')
+        print(e)
+    
+    return df
+        
+
 def run_2_result(df, db_path, threshold):
     tqdm.pandas()
     df_t = df.copy()
@@ -44,6 +66,11 @@ def run_2_result(df, db_path, threshold):
     print('Running proteins_to_taxa_func...')
     df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
     df_t = pd.concat([df_t, df_t0], axis=1)
+    # change the column names of 'Description'	'Description_prop' to 'eggNOG_Description'	'eggNOG_Description_prop'
+    df_t.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
+    
+    # try to add pathway name and EC name
+    df_t = add_additional_columns(df_t)
     # add the columns of None and None_prop
     df_t['None'] = 'none'
     df_t['None_prop'] = '1.0'
@@ -103,12 +130,12 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
     
     
 # if __name__ == '__main__':
-#     final_peptides_path = 'tests/sweetener_final_human_removed.tsv'
-#     output_path = 'tests/sw4analysis_230508.tsv'
-#     db_path = 'TaxaFuncExplore/TaxaFuncExplore_database/TaxaFuncExplore.db'
+#     final_peptides_path = 'C:/Users/Qing/Desktop/Example_final_peptide.tsv'
+#     output_path = 'C:/Users/Qing/Desktop/1.tsv'
+#     db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut-new.db'
 #     threshold = 1
 #     t0 = time.time()
-#     main(final_peptides_path, output_path, db_path, threshold)
+#     peptableAnnotate(final_peptides_path, output_path, db_path, threshold)
 #     print(f'Running time: {time.time() - t0} seconds')
     
 if __name__ == '__main__':

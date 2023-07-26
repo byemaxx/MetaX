@@ -115,7 +115,7 @@ def query_protein_from_db(conn, protein_list):
                 if func not in ['', '-']:
                     re_dict[list(re_dict.keys())[j]].append(func)
                 else:
-                    re_dict[list(re_dict.keys())[j]].append('unknown')
+                    re_dict[list(re_dict.keys())[j]].append('-')
 
         else:
             for v in re_dict.values():

@@ -130,4 +130,4 @@ def create_zip_and_move():
 if __name__ == '__main__':
     update_desktop()
     update_z()
-    create_zip_and_move()
+    # create_zip_and_move()
