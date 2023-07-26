@@ -54,7 +54,7 @@ class TaxaFuncAnalyzer:
         self._set_meta(meta_path)
         self._remove_all_zero_row()
         self.get_func_list_in_df()
-        self.set_func('Description')
+        # self.set_func('eggNOG_Description')
         
     def _set_original_df(self, df_path: str) -> None:
         self.original_df = pd.read_csv(df_path, sep='\t')
