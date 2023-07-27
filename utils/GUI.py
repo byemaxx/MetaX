@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.3'
+__version__ = '1.65.5'
 
 # import built-in python modules
 import os
@@ -63,8 +63,9 @@ from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 # import pyqt5 scripts
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, \
+    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
+from PyQt5.QtGui import QIcon,QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDir
 from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
 
@@ -2919,6 +2920,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 def runGUI():
     app = QtWidgets.QApplication(sys.argv)
+    
+    #### splash screen start ####
+    splash = QSplashScreen()
+    icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+    splash.setPixmap(QPixmap(icon_path))
+    splash.show()
+    app.processEvents()
+    #### splash screen end ####
+     
     MainWindow = QtWidgets.QMainWindow()
     ui = metaXGUI(MainWindow)
     
@@ -2971,6 +2981,7 @@ def runGUI():
     app.setStyleSheet(stylesheet + custom_css.format(**os.environ))
 
     MainWindow.show()
+    splash.finish(MainWindow)
     sys.exit(app.exec_())
 
 
