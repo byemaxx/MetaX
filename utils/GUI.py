@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.5'
+__version__ = '1.65.6'
 
 # import built-in python modules
 import os
@@ -96,7 +96,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.last_path = QDir.homePath()
         self.table_dict = {}
         self.comboBox_top_heatmap_table_list = []
-        self.comboBox_deseq2_tables_lsit = []
+        self.comboBox_deseq2_tables_list = []
         self.table_dialogs = []
         self.plt_dialogs = []
         self.web_list = []
@@ -1001,7 +1001,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # clean tables and comboBox before set multi table
         self.table_dict = {}
         self.comboBox_top_heatmap_table_list = []
-        self.comboBox_deseq2_tables_lsit = []
+        self.comboBox_top_heatmap_table.clear()
+        self.comboBox_deseq2_tables_list = []
 
         self.show_message('Data is Preprocessing, please wait...')
 
@@ -1066,7 +1067,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
 
             # clean comboBox of deseq2
-            self.comboBox_deseq2_tables_lsit = []
+            self.comboBox_deseq2_tables_list = []
             self.comboBox_deseq2_tables.clear()
 
             # set innitial value of basic heatmap selection list
@@ -2457,17 +2458,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.show_table(df_deseq2)
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)
-                if res_table_name not in self.comboBox_deseq2_tables_lsit:
-                    self.comboBox_deseq2_tables_lsit.append(res_table_name)
-                    self.comboBox_deseq2_tables_lsit.reverse()
+                if res_table_name not in self.comboBox_deseq2_tables_list:
+                    self.comboBox_deseq2_tables_list.append(res_table_name)
+                    self.comboBox_deseq2_tables_list.reverse()
                 else:
-                    self.comboBox_deseq2_tables_lsit.remove(res_table_name)
-                    self.comboBox_deseq2_tables_lsit.append(res_table_name)
-                    self.comboBox_deseq2_tables_lsit.reverse()
+                    self.comboBox_deseq2_tables_list.remove(res_table_name)
+                    self.comboBox_deseq2_tables_list.append(res_table_name)
+                    self.comboBox_deseq2_tables_list.reverse()
 
                 # update comboBox_deseq2_tables
                 self.comboBox_deseq2_tables.clear()
-                self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_lsit)
+                self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
                 
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
                 self.pushButton_deseq2_plot_sankey.setEnabled(True)
