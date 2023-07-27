@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.6'
+__version__ = '1.65.7'
 
 # import built-in python modules
 import os
@@ -1473,12 +1473,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         text_list = []
         if result == QDialog.Accepted:
             text = self.input_window.text_edit.toPlainText()
-            print(text)
+            # print(text)
             if text is None or text == '':
                 return None
             text_list = text.split('\n')
             text_list = [i.strip() for i in text_list if i.strip() != '']
-            # print(f'text_list: {text_list}')
         else:
             return None
                 
