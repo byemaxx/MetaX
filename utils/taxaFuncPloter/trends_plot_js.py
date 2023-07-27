@@ -48,7 +48,7 @@ class TrendsPlot_js:
             y_axis=list(df.mean()),
             # is_smooth=True,
             is_hover_animation=True,
-            linestyle_opts=opts.LineStyleOpts(opacity=1, color='red', width=3),
+            linestyle_opts=opts.LineStyleOpts(opacity=1, color='red', width=3, type_='dashed'),
             label_opts=opts.LabelOpts(is_show=False),
         )
 
