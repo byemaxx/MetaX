@@ -1470,11 +1470,17 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         # open a new window allowing user to input text with comma or new line
         self.input_window = InputWindow(self.MainWindow)
         result = self.input_window.exec_()
+        text_list = []
         if result == QDialog.Accepted:
             text = self.input_window.text_edit.toPlainText()
+            print(text)
+            if text is None or text == '':
+                return None
             text_list = text.split('\n')
             text_list = [i.strip() for i in text_list if i.strip() != '']
             # print(f'text_list: {text_list}')
+        else:
+            return None
                 
         # check if the text_list is valid
         drop_list = []
