@@ -750,22 +750,29 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         switch_button.clicked.connect(self.swith_stack_page_dbuilder)
         msg_box.exec_()
     def show_pushButton_preprocessing_help(self):
-        QMessageBox.information(self.MainWindow, 'Preprocessing Help', \
-            'Outliers Detection:\
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle('Preprocessing Help')
+        msg_box.setStyleSheet('QLabel{min-width: 800px;}')
+        msg_box.setWindowFlags(msg_box.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        help_text ='''Outliers Detection:\
             \nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
             \n\nZero-Inflated Poisson: This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).\
+            \n\nZ-Score: Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.\
+            \n\nMahalanobis Distance: Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.\
             \n\nNegative Binomial: This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).\
             \n\nIn all methods, the data is grouped, and each group of data is treated separately. The outliers are detected for each group.\
             \n\n\nOutliers Imputation:\
-            \nMean: Outliers will be imputed by mean of each sample in the group...\
-            \n\nMedian: Outliers will be imputed by median of each sample...\
+            \nMean: Outliers will be imputed by mean.\
+            \n\nMedian: Outliers will be imputed by median.\
             \n\nKNN: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbors to fill in missing values.\
             \n\nRegression: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modeling each feature with missing values as a function of other features, in turn.\
             \n\nMultiple: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of nearest features.\
             \n\n\nData Normalization:\
-            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.')
-                        
+            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.'''
+        msg_box.setText(help_text)
+        msg_box.exec_()
+                
     def show_toolButton_final_peptide_help(self):
         QMessageBox.information(self.MainWindow, 'Final Peptide Help',
                                  'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
@@ -1378,7 +1385,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
   
 
     def add_basic_heatmap_list(self):
-        str_selected = self.comboBox_basic_heatmap_selection_list.currentText()
+        str_selected = self.comboBox_basic_heatmap_selection_list.currentText().strip()
 
         self.update_basic_heatmap_list(str_selected=str_selected)
     
@@ -1525,7 +1532,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.add_a_list_to_list_window(df_type, 'co_expr')
      
     def add_co_expr_to_list(self):
-        str_selected = self.comboBox_co_expr_select_list.currentText()
+        str_selected = self.comboBox_co_expr_select_list.currentText().strip()
         self.update_co_expr_lsit(str_selected=str_selected)
     
     def clean_co_expr_list(self):
@@ -1725,7 +1732,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         
     def add_trends_list(self):
-        str_selected = self.comboBox_trends_selection_list.currentText()
+        str_selected = self.comboBox_trends_selection_list.currentText().strip()
         self.update_trends_list(str_selected=str_selected)
     
     def clean_trends_list(self):
@@ -1985,7 +1992,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
     
     def peptide_query(self):
-        peptide = self.comboBox_basic_peptide_query.currentText()
+        peptide = self.comboBox_basic_peptide_query.currentText().strip()
         if peptide == '':
             return None
         else:
@@ -2353,8 +2360,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     #TUKEY
     def tukey_test(self):
-        taxa = self.comboBox_tukey_taxa.currentText()
-        func = self.comboBox_tukey_func.currentText()
+        taxa = self.comboBox_tukey_taxa.currentText().strip()
+        func = self.comboBox_tukey_func.currentText().strip()
         if taxa == '' and func == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one taxa or one function!')
             return None
@@ -2605,7 +2612,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.add_a_list_to_list_window(df_type,'tfnet')
     
     def add_tfnet_selected_to_list(self):
-        selected = self.comboBox_tfnet_selecte_list.currentText()
+        selected = self.comboBox_tfnet_selecte_list.currentText().strip()
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
@@ -2720,8 +2727,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     # link
     def get_intensity_matrix(self):
-        taxa = self.comboBox_others_taxa.currentText()
-        func = self.comboBox_others_func.currentText()
+        taxa = self.comboBox_others_taxa.currentText().strip()
+        func = self.comboBox_others_func.currentText().strip()
         group_list = self.comboBox_others_group.getCheckedItems()
 
         if not taxa and not func:

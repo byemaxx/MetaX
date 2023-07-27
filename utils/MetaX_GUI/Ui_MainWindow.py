@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_metaX_main(object):
     def setupUi(self, metaX_main):
         metaX_main.setObjectName("metaX_main")
-        metaX_main.resize(1045, 684)
+        metaX_main.resize(1048, 684)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 489, 459))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 491, 463))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -2575,7 +2575,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1045, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1048, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -2781,7 +2781,7 @@ class Ui_metaX_main(object):
         self.comboBox_basic_heatmap_top_by.setItemText(10, _translate("metaX_main", "Deseq2-down(log2FC)"))
         self.pushButton_basic_heatmap_add_top.setText(_translate("metaX_main", "Add Top to List"))
         self.pushButton_basic_heatmap_add_a_list.setText(_translate("metaX_main", "Add a list"))
-        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_13), _translate("metaX_main", "Heatmap, Bar and Trends"))
+        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_13), _translate("metaX_main", "Heatmap and Bar"))
         self.label_81.setText(_translate("metaX_main", "Peptide"))
         self.pushButton_basic_peptide_query.setText(_translate("metaX_main", "Query"))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_10), _translate("metaX_main", "Peptide Query"))

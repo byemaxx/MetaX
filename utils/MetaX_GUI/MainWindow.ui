@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1045</width>
+    <width>1048</width>
     <height>684</height>
    </rect>
   </property>
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>489</width>
-                 <height>459</height>
+                 <width>491</width>
+                 <height>463</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1114,7 +1114,7 @@
               </widget>
               <widget class="QWidget" name="tab_13">
                <attribute name="title">
-                <string>Heatmap, Bar and Trends</string>
+                <string>Heatmap and Bar</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_24">
                 <item row="0" column="0">
@@ -4985,8 +4985,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1045</width>
-     <height>23</height>
+     <width>1048</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
