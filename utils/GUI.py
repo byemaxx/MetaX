@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.64.3'
+__version__ = '1.65.2'
 
 # import built-in python modules
 import os
@@ -57,6 +57,7 @@ from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 # from MetaX.utils.MetaX_GUI.ShowPltDialog import PltDialog
 from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
+from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 
 
 # import pyqt5 scripts
@@ -65,6 +66,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir
+from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
+
 
 import qtawesome as qta
 from qt_material import apply_stylesheet
@@ -216,6 +219,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
         self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
+        self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
 
         
         ### Peptide Qeruy
@@ -255,6 +259,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
         self.pushButton_co_expr_clean_list.clicked.connect(self.clean_co_expr_list)
         self.pushButton_co_expr_add_top.clicked.connect(self.add_co_expr_top_list)
+        self.pushButton_co_expr_add_a_list.clicked.connect(self.add_a_list_to_co_expr)
         
         # ### Trends Cluster
         self.pushButton_trends_plot_trends.clicked.connect(self.plot_trends_cluster)
@@ -265,6 +270,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_trends_clean_list.clicked.connect(self.clean_trends_list)
         self.pushButton_trends_get_trends_table.clicked.connect(self.get_trends_cluster_table)
         self.pushButton_trends_plot_interactive_line.clicked.connect(self.plot_trends_interactive_line)
+        self.pushButton_trends_add_a_list.clicked.connect(self.add_a_list_to_trends_list)
         
         
 
@@ -277,6 +283,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_tfnet_add_top.clicked.connect(self.add_tfnet_top_list)
         self.pushButton_tfnet_drop_item.clicked.connect(self.remove_tfnet_selected_from_list)
         self.pushButton_tfnet_clean_list.clicked.connect(self.clear_tfnet_focus_list)
+        self.pushButton_tfnet_add_a_list.clicked.connect(self.add_a_list_to_tfnet_focus_list)
 
         # Taxa-func link
         self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_intensity_matrix)
@@ -406,7 +413,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     def show_about(self):
-        from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
 
         dialog = QDialog(self.MainWindow)
         dialog.setWindowTitle("About")
@@ -1302,7 +1308,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_trends_clean_list.setEnabled(True)
         self.comboBox_trends_table.setEnabled(True)
         self.pushButton_plot_pca_js.setEnabled(True)
-
+        self.pushButton_trends_add_a_list.setEnabled(True)
+        self.pushButton_co_expr_add_a_list.setEnabled(True)
+        self.pushButton_basic_heatmap_add_a_list.setEnabled(True)
+        self.pushButton_co_expr_drop_item.setEnabled(True)
+        self.pushButton_co_expr_clean_list.setEnabled(True)
+        self.pushButton_tfnet_drop_item.setEnabled(True)
+        self.pushButton_tfnet_clean_list.setEnabled(True)
+        self.pushButton_tfnet_add_a_list.setEnabled(True)
 
     def update_co_expr_select_list(self):
         self.comboBox_co_expr_select_list.clear()
@@ -1438,6 +1451,49 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         index_list = df.index.tolist()
         return index_list
     
+    def add_a_list_to_list_window(self, df_type, aim_list):
+        def check_if_in_list(str_selected, df_type):
+                    list_dict = {'Taxa':self.taxa_list, 'Func':self.func_list, 'Taxa-Func':self.taxa_func_list, 'Peptide':self.peptide_list}
+                    if str_selected in list_dict[df_type]:
+                        return True
+                    else:
+                        return False
+        # open a new window allowing user to input text with comma or new line
+        self.input_window = InputWindow(self.MainWindow)
+        result = self.input_window.exec_()
+        if result == QDialog.Accepted:
+            text = self.input_window.text_edit.toPlainText()
+            text_list = text.split('\n')
+            text_list = [i.strip() for i in text_list if i.strip() != '']
+            # print(f'text_list: {text_list}')
+                
+        # check if the text_list is valid
+        drop_list = []
+        for i in text_list:
+            if not check_if_in_list(i, df_type):
+                text_list.remove(i)
+                drop_list.append(i)
+        if len(drop_list) > 0:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'The following items are not in the list and will be dropped:\n{drop_list}')
+        if len(text_list) == 0:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'No valid item was added!')
+            return None
+        if aim_list == 'trends':
+            self.update_trends_list(str_list=text_list)
+        elif aim_list == 'co_expr':
+            self.update_co_expr_lsit(str_list=text_list)
+        elif aim_list == 'basic_heatmap':
+            self.update_basic_heatmap_list(str_list=text_list)
+        elif aim_list == 'tfnet':
+            self.update_tfnet_focus_list_and_widget(str_list=text_list)
+        else:
+            return None
+        QMessageBox.information(self.MainWindow, 'Information', f'{len(text_list)} items were added to the list.')
+    
+    def add_a_list_to_heatmap(self):
+        df_type = self.comboBox_basic_table.currentText()
+        self.add_a_list_to_list_window(df_type, 'basic_heatmap')
+           
     def add_basic_heatmap_top_list(self):
         
         top_num = self.spinBox_basic_heatmap_top_num.value()
@@ -1462,7 +1518,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
 
         self.update_basic_heatmap_list(str_list=index_list)
-        
+    
+    def add_a_list_to_co_expr(self):
+        df_type = self.comboBox_co_expr_table.currentText()
+        self.add_a_list_to_list_window(df_type, 'co_expr')
+     
     def add_co_expr_to_list(self):
         str_selected = self.comboBox_co_expr_select_list.currentText()
         self.update_co_expr_lsit(str_selected=str_selected)
@@ -1679,6 +1739,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.listWidget_trends_list_for_ploting.takeItem(self.listWidget_trends_list_for_ploting.row(item))
         self.trends_cluster_list.remove(item.text())
     
+    def add_a_list_to_trends_list(self):
+        df_type = self.comboBox_trends_table.currentText()
+        self.add_a_list_to_list_window(df_type=df_type, aim_list='trends')
+                
     def update_trends_list(self, str_selected=None, str_list=None):
         if str_list is None and str_selected is not None:
             for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides']:
@@ -1823,20 +1887,56 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
         show_legend = self.checkBox_trends_plot_interactive_show_legend.isChecked()
         rename_taxa = self.checkBox_trends_plot_interactive_rename_taxa.isChecked()
+        plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
+        
         save_table_name = f'cluster({table_name.lower()})'
         
         df = self.table_dict[save_table_name].copy()
         df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
         self.show_message(f'Plotting interactive line plot...')
         
-        if get_intensity:
-            title = f'Cluster {cluster_num+1} of {table_name} (Intensity)'
+        if plot_samples  or get_intensity:
             table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
             dft = table_name_dict[table_name]
-            dft = self.tf.get_stats_mean_df_by_group(dft)
-            extract_row = df.index.tolist()
-            extract_col = df.columns.tolist()
-            df = dft.loc[extract_row, extract_col]
+            # get sample list
+            if self.radioButton_trends_group.isChecked():
+                group_list = self.comboBox_trends_group.getCheckedItems()
+                sample_list = []
+                if group_list == []:
+                    group_list = list(set(self.tf.group_list))
+                for group in group_list:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+            else:
+                sample_list = self.comboBox_trends_sample.getCheckedItems()
+                if sample_list == []:
+                    sample_list = self.tf.sample_list
+                    group_list = self.tf.group_list
+                else:
+                    group_list = []
+                    for i in sample_list:
+                        group_list.append(self.tf.get_group_of_a_sample(i))
+                    group_list = list(set(group_list)).sort()
+            title = f'Cluster {cluster_num+1} of {table_name} (Intensity)'
+            if get_intensity: # get intensity and plot samples
+                if plot_samples:
+                    dft = dft[sample_list]
+                    extract_row = df.index.tolist()
+                    # extract_col = df.columns.tolist()
+                    extract_col = sample_list
+                    df = dft.loc[extract_row, extract_col]
+                else:
+                    dft = self.tf.get_stats_mean_df_by_group(dft)
+                    extract_row = df.index.tolist()
+                    # extract_col = df.columns.tolist()
+                    extract_col = group_list
+                    df = dft.loc[extract_row, extract_col]
+            else: # plot_samples and not get_intensity
+                dft = dft[sample_list]
+                extract_row = df.index.tolist()
+                # extract_col = df.columns.tolist()
+                extract_col = sample_list
+                df = dft.loc[extract_row, extract_col]
+                
             
         try:
             pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend)
@@ -2498,6 +2598,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         elif df_type == 'Func':
             self.comboBox_tfnet_selecte_list.clear()
             self.comboBox_tfnet_selecte_list.addItems(self.func_list)
+    
+    def add_a_list_to_tfnet_focus_list(self):
+        df_type = self.comboBox_tfnet_table.currentText()
+        self.add_a_list_to_list_window(df_type,'tfnet')
     
     def add_tfnet_selected_to_list(self):
         selected = self.comboBox_tfnet_selecte_list.currentText()

@@ -43,7 +43,8 @@ class TrendsPlot:
         try:    
             # Plot the line plots for each cluster with rotated x-axis labels
             fig, axs = plt.subplots(n_clusters, 1, figsize=(width, height*n_clusters))
-
+            if n_clusters == 1:
+                axs = [axs]
             for i in range(n_clusters):
                 cluster_data = clustered_df[clustered_df['Cluster'] == i]
                 avg_data = cluster_data.drop('Cluster', axis=1).mean()

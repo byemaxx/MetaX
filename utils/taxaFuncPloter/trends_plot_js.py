@@ -37,7 +37,7 @@ class TrendsPlot_js:
                 y_axis=list(df.iloc[i, :]),
                 # is_smooth=True,
                 is_hover_animation=True,
-                linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+                linestyle_opts=opts.LineStyleOpts(opacity=0.9, width=2),
                 label_opts=opts.LabelOpts(is_show=False),
                 itemstyle_opts=opts.ItemStyleOpts(color=color),
             )

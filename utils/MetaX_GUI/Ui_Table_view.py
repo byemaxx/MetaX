@@ -2,7 +2,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtCore import  Qt, QDir
 import os
-
+import io
+import csv
 
 class Ui_Table_view(QtWidgets.QDialog):
 
@@ -38,6 +39,8 @@ class Ui_Table_view(QtWidgets.QDialog):
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
+        self.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)  # set right-click menu policy
+        self.tableWidget.customContextMenuRequested.connect(self.openMenu)  # set right-click menu
         self.verticalLayout_2.addWidget(self.tableWidget)
 
         self.previous_page_button.clicked.connect(self.previous_page)  
@@ -97,4 +100,29 @@ class Ui_Table_view(QtWidgets.QDialog):
             QMessageBox.information(self, 'Information', 'Export successfully!')
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
+
+    
+    def openMenu(self, position):
+        menu = QtWidgets.QMenu()
+        copy_action = menu.addAction("Copy")
+        action = menu.exec_(self.tableWidget.mapToGlobal(position))
+
+        if action == copy_action:
+            self.copy_selection_to_clipboard()
+
+    def copy_selection_to_clipboard(self):
+        selection = self.tableWidget.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            colcount = columns[-1] - columns[0] + 1
+            table = [[''] * colcount for _ in range(rowcount)]
+            for index in selection:
+                row = index.row() - rows[0]
+                column = index.column() - columns[0]
+                table[row][column] = index.data()
+            stream = io.StringIO()
+            csv.writer(stream).writerows(table)
+            QtWidgets.QApplication.clipboard().setText(stream.getvalue())
 
