@@ -4518,7 +4518,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Peptide to TaxaFunc</string>
+              <string>Peptide Annotator</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
@@ -5009,12 +5009,12 @@
   </widget>
   <action name="actionTaxaFuncAnalyzer">
    <property name="text">
-    <string>TaxaFuncAnalyzer</string>
+    <string>TaxaFunc Analyzer</string>
    </property>
   </action>
   <action name="actionPeptide_to_TaxaFunc">
    <property name="text">
-    <string>Peptide to TaxaFunc</string>
+    <string>Peptide Annotator</string>
    </property>
   </action>
   <action name="actionDatabase_Builder">

@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.8'
+__version__ = '1.65.9'
 
 # import built-in python modules
 import os
