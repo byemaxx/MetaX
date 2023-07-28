@@ -2843,7 +2843,7 @@ class Ui_metaX_main(object):
         self.label_16.setText(_translate("metaX_main", "Width (px)"))
         self.pushButton_deseq2.setText(_translate("metaX_main", "Run DESeq2"))
         self.label_4.setText(_translate("metaX_main", "Table for Analysis"))
-        self.label_14.setText(_translate("metaX_main", "P-Value"))
+        self.label_14.setText(_translate("metaX_main", "P-adjust"))
         self.label_17.setText(_translate("metaX_main", "Height (px)"))
         self.label_2.setText(_translate("metaX_main", "Group 1"))
         self.label_64.setText(_translate("metaX_main", "Tables"))

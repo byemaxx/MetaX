@@ -2520,7 +2520,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>P-Value</string>
+                   <string>P-adjust</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
