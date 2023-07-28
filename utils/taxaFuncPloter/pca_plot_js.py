@@ -7,7 +7,7 @@ class PcaPlot_js:
     def __init__(self, tfobj=None):
         self.tfobj = tfobj
 
-    def plot_pca_pyecharts_3d(self, df, table_name='Table',  width=10, height=8):
+    def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, width=10, height=8):
         width = f'{width*100}px'
         height = f'{height*100}px'
 
@@ -58,6 +58,7 @@ class PcaPlot_js:
                 yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
                 zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
                 itemstyle_opts=opts.ItemStyleOpts(color=color),
+                label_opts=opts.LabelOpts(is_show=show_label),
 
             )
 

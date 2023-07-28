@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.7'
+__version__ = '1.65.8'
 
 # import built-in python modules
 import os
@@ -2190,7 +2190,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, width=width, height=height)
+                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}', width=width*120, height=height*120)
             except Exception as e:
                 error_message = traceback.format_exc()
