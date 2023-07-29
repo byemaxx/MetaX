@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>491</width>
-                 <height>463</height>
+                 <height>459</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3889,17 +3889,17 @@
                   </property>
                   <item>
                    <property name="text">
-                    <string>None</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
                     <string>row</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
                     <string>column</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>None</string>
                    </property>
                   </item>
                  </widget>
@@ -4986,7 +4986,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

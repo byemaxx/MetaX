@@ -766,14 +766,15 @@ class TaxaFuncAnalyzer:
 
         # Create the samples list of groups
         if groups is not None:
-            group_list_all = list(set(self.get_meta_list(self.meta_name)))
+            group_list_all = self.group_list
             if any(i not in group_list_all for i in groups):
                 raise ValueError(f"groups must be in {group_list_all}")
+            groups = sorted(groups)
             sample_list = []
             for i in groups:
                 sample_list += self.get_sample_list_in_a_group(i)
         else:
-            groups = list(set(self.get_meta_list(self.meta_name)))
+            groups = self.group_list
             sample_list = self.sample_list
 
         # Get the intensity matrix of the samples

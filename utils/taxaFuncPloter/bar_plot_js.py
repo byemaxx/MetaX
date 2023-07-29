@@ -54,12 +54,10 @@ class BarPlot_js:
                 title = f'{taxon_name}'
             elif peptide_seq is not None:
                 title = f'The intensity of {peptide_seq}'
-            elif taxon_name is None and func_name is None:
-                title = 'The intensity of '
             else:
                 title = f'{taxon_name}\n{func_name}'
-            
-            
+
+
         c = (
             Bar(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(list(df.columns))
@@ -72,10 +70,10 @@ class BarPlot_js:
                         category_gap="50%",
                         itemstyle_opts=opts.ItemStyleOpts(color=color),
                         )
-            
-            
+
+
             c.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                            
+
         if show_legend:
             c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",),
                 datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
@@ -88,8 +86,8 @@ class BarPlot_js:
                             toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
                             title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
                             xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)))
-        
-        
+
+
         return c
     
     def get_distinct_colors(self, n):  
@@ -101,10 +99,9 @@ class BarPlot_js:
         WHITE = (1, 1, 1)
         BLACK = (0, 0, 0)
 
-        # generated colours will be as distinct as possible from these colours
+        # generated colors will be as distinct as possible from these colors
         input_colors = [WHITE, BLACK]
-        existing_colors = [(0, 0, 0), (1, 1, 1)]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.8,colorblind_type="Deuteranomaly")
         converted_colors = []
         converted_colors.extend(
             f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
