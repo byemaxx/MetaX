@@ -166,8 +166,9 @@ class TaxaFuncAnalyzer:
             return None
         if group not in self.group_list:
             raise ValueError(f'group must be in {set(self.group_list)}')
-        else:
-            return self.meta_df[self.meta_df[self.meta_name] == group]['Sample'].tolist()
+        sample_list =  self.meta_df[self.meta_df[self.meta_name] == group]['Sample'].tolist()
+        sample_list = sorted(sample_list)
+        return sample_list
     
     # input a sample name, return the group name of this sample
     def get_group_of_a_sample(self, sample: str = None) -> str:
