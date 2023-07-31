@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.10'
+__version__ = '1.65.11'
 
 # import built-in python modules
 import os
@@ -67,7 +67,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, \
     QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
 from PyQt5.QtGui import QIcon,QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDir
-from PyQt5.QtWidgets import QTextEdit, QDialog, QVBoxLayout
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 
 
 import qtawesome as qta
@@ -354,16 +354,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             return new_line_edit
 
-        # 创建一个新的 FileDragDropLineEdit 实例
+        # Create a new FileDragDropLineEdit instance
         new_lineEdit = create_new_LineEdit(old_lineEdit)
 
-        # 在 UI 中用新的 FileDragDropLineEdit 实例替换旧的 QLineEdit 实例
+        # Replace the old QLineEdit instance with the new FileDragDropLineEdit instance
         old_lineEdit.parent().layout().replaceWidget(old_lineEdit, new_lineEdit)
 
-        # 删除旧的 QLineEdit 实例
+        # Delete the old QLineEdit instance
         old_lineEdit.deleteLater()
 
-        # 返回新的 FileDragDropLineEdit 实例，以便可以在外部使用它
+        # Return the new FileDragDropLineEdit instance
         return new_lineEdit
 
     # double click listwidget item to copy to clipboard
@@ -411,30 +411,30 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
 
 
-
-
     def show_about(self):
 
         dialog = QDialog(self.MainWindow)
         dialog.setWindowTitle("About")
-        dialog.resize(600, 400)
+        dialog.resize(800, 600)
 
-        Text_edit = QTextEdit(dialog)
-        Text_edit.setReadOnly(True)
+        Text_browser = QTextBrowser(dialog)
+        Text_browser.setOpenExternalLinks(True) # allow links to open in external browser
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MetaX_GUI\\resources\\logo.png")
         print(logo_path)
 
-        about_html =f'''<h1>Meta-X</h1><h4>Version: {__version__}</h4><h4>NorthOmics Lab</h4><img src='{logo_path}' width='200' height='200' align='right' />
+        about_html =f'''<h1>Meta-X</h1><h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4><img src='{logo_path}' width='200' height='200' align='right' />
         <p>Meta-X is a tool for linking the peptide to the taxonomy and function in metaproteomics.</p>
-        <p>For more information, please visit: <a href='https://wiki.imetalab.ca/'>https://wiki.imetalab.ca/</a></p>'''
+        <p>For more information, please visit:</p>
+        <p>GitHub: <a href='https://github.com/byemaxx/MetaX'>The MetaX Project</a></p>
+        <p>iMeta: <a href='https://wiki.imetalab.ca/'>iMetaWiki Page</a></p>
+        '''
 
-
-        Text_edit.setHtml(about_html)
+        Text_browser.setHtml(about_html)
         pushButton_like = QPushButton("Like", dialog)
         pushButton_like.clicked.connect(self.like_us)
 
         dialog_layout = QVBoxLayout()
-        dialog_layout.addWidget(Text_edit)
+        dialog_layout.addWidget(Text_browser)
         dialog_layout.addWidget(pushButton_like)
 
         dialog.setLayout(dialog_layout)
