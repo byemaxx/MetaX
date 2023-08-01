@@ -21,8 +21,6 @@ sys.path.append(a)
 
 ####### add parent path to sys.path #######
 
-import ctypes
-import platform
 import pandas as pd
 
 # import core scripts of TaxaFuncExplore
@@ -74,6 +72,8 @@ import qtawesome as qta
 from qt_material import apply_stylesheet
 
 # hide console in windows
+# import ctypes
+# import platform
 # if platform.system() == "Windows":
 #     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 

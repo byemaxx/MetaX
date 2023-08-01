@@ -1,209 +1,196 @@
-# TaxaFuncAnalyzer
+# Table of Contents
 
-The `TaxaFuncAnalyzer` class provides a comprehensive analysis of taxonomic and functional features in metaproteomics data. It reads data from input files, processes the data, and computes various statistics.
+- [Table of Contents](#table-of-contents)
+  - [Class: TaxaFuncAnalyzer ](#class-taxafuncanalyzer-)
+    - [`__init__(self, df, meta_df, func_name, meta_name, sample_list, group_list)` ](#__init__self-df-meta_df-func_name-meta_name-sample_list-group_list-)
+    - [`get_sample_list_in_a_group(self, group)` ](#get_sample_list_in_a_groupself-group-)
+    - [`get_meta_list(self, meta)` ](#get_meta_listself-meta-)
+    - [`get_stats_anova(self, group_list, df_type)` ](#get_stats_anovaself-group_list-df_type-)
+    - [`get_stats_ttest(self, group_list, df_type)` ](#get_stats_ttestself-group_list-df_type-)
+    - [`get_intensity_matrix(self, func_name, taxon_name, peptide_seq, groups)` ](#get_intensity_matrixself-func_name-taxon_name-peptide_seq-groups-)
+    - [`get_top_intensity(self, df, top_num, method, sample_list)` ](#get_top_intensityself-df-top_num-method-sample_list-)
+    - [`replace_if_two_index(self, df)` ](#replace_if_two_indexself-df-)
+    - [`get_top_intensity_matrix_of_test_res(self, df, df_type, top_num, show_stats_cols)` ](#get_top_intensity_matrix_of_test_resself-df-df_type-top_num-show_stats_cols-)
+    - [`get_stats_deseq2(self, df, group_list)` ](#get_stats_deseq2self-df-group_list-)
+    - [`get_stats_tukey_test(self, taxon_name, func_name)` ](#get_stats_tukey_testself-taxon_name-func_name-)
+    - [`set_multi_tables(self, level, func_threshold, normalize_method, transform_method, outlier_detect_method, outlier_handle_method, outlier_handle_by_group, batch_list, processing_order)` ](#set_multi_tablesself-level-func_threshold-normalize_method-transform_method-outlier_detect_method-outlier_handle_method-outlier_handle_by_group-batch_list-processing_order-)
+    - [`check_attributes(self)` ](#check_attributesself-)
+    - [`get_current_time(self)` ](#get_current_timeself-)
 
-## Table of Contents
+---
 
-- [TaxaFuncAnalyzer](#taxafuncanalyzer)
-  - [Table of Contents](#table-of-contents)
-  - [1. Introduction](#1-introduction)
-  - [2. Class Attributes](#2-class-attributes)
-  - [3. Initialization](#3-initialization)
-  - [4. Private Methods](#4-private-methods)
-    - [4.1 \_\_set\_original\_df](#41-__set_original_df)
-    - [4.2 \_\_set\_meta](#42-__set_meta)
-  - [5. Public Methods](#5-public-methods)
-    - [5.1 set\_func](#51-set_func)
-    - [5.2 set\_group](#52-set_group)
-    - [5.3 get\_meta\_list](#53-get_meta_list)
-    - [5.4 get\_sample\_list\_in\_a\_group](#54-get_sample_list_in_a_group)
-    - [5.5 get\_stats\_peptide\_num\_in\_taxa](#55-get_stats_peptide_num_in_taxa)
-    - [5.6 get\_stats\_taxa\_level](#56-get_stats_taxa_level)
-    - [5.7 get\_stats\_func\_prop](#57-get_stats_func_prop)
-    - [5.8 set\_multi\_tables](#58-set_multi_tables)
-    - [5.9 get\_stats\_anova](#59-get_stats_anova)
-    - [5.10 set\_anova](#510-set_anova)
-    - [5.11 get\_stats\_ttest](#511-get_stats_ttest)
-    - [5.12 get\_intensity\_matrix](#512-get_intensity_matrix)
-    - [5.13 get\_top\_intensity\_matrix\_of\_test\_res](#513-get_top_intensity_matrix_of_test_res)
-    - [5.14 get\_stats\_tukey\_test](#514-get_stats_tukey_test)
-      - [Parameters](#parameters)
-      - [Returns](#returns)
-      - [Example Usage](#example-usage)
+## Class: TaxaFuncAnalyzer <a name="class-taxafuncanalyzer"></a>
+This is the main class of the script. The class contains methods for analyzing taxonomic functions in a dataset.
 
-## 1. Introduction
+### `__init__(self, df, meta_df, func_name, meta_name, sample_list, group_list)` <a name="init"></a>
+The initialization method for the `TaxaFuncAnalyzer` class. It sets the initial state of the instance.
 
-The `TaxaFuncAnalyzer` class is designed for analyzing metaproteomics data. It takes two input files: a data file (df_path) and a metadata file (meta_path). The data file should be a tab-separated file with peptide sequences, taxonomic information, functional annotations, and sample intensities. The metadata file should be a tab-separated file containing sample information and group assignments.
+**Parameters:**
 
-## 2. Class Attributes
+- `df` (pandas DataFrame): The input data frame that contains the main data.
+- `meta_df` (pandas DataFrame): The metadata associated with the main data.
+- `func_name` (str): The name of the function to be analyzed.
+- `meta_name` (str): The name of the metadata.
+- `sample_list` (list of str): The list of samples in the data.
+- `group_list` (list of str): The list of groups in the data.
 
-- `original_df`: A pandas DataFrame of the original data file
-- `sample_list`: A list of sample names
-- `meta_df`: A pandas DataFrame of the metadata file
-- `meta_name`: The name of the column used for group assignment
-- `group_list`: A list of unique group names in the metadata
-- `func`: The functional annotation column used for analysis
-- `clean_df`: A cleaned pandas DataFrame with only relevant data
-- `taxa_df`: A pandas DataFrame with taxa-level data
-- `func_df`: A pandas DataFrame with functional annotation data
-- `taxa_func_df`: A pandas DataFrame with taxa and functional annotation data combined
-- `func_taxa_df`: A pandas DataFrame with functional annotation and taxa data combined
-- `anova_df`: A pandas DataFrame with ANOVA test results
+**Returns:**
 
-## 3. Initialization
+- This is the constructor method and does not return a value.
 
-The `__init__` method initializes the class with the provided data and metadata file paths.
+### `get_sample_list_in_a_group(self, group)` <a name="get_sample_list_in_a_group"></a>
+Returns a list of samples that belong to a certain group.
 
-```python
-def __init__(self, df_path, meta_path):
-```
-## 4. Private Methods
+**Parameters:**
 
-### 4.1 __set_original_df
-This method reads the data file and creates a pandas DataFrame with cleaned column names.
+- `group` (str): The name of the group to be examined.
 
-```python
-def __set_original_df(self, df_path: str)
-```
+**Returns:**
 
-### 4.2 __set_meta
+- list: A list of samples that belong to the specified group.
 
-This method reads the metadata file and creates a pandas DataFrame with cleaned column names.
+### `get_meta_list(self, meta)` <a name="get_meta_list"></a>
+Returns a list of metadata values.
 
-```python
-def __set_meta(self, meta_path: str)
-```
+**Parameters:**
 
-## 5. Public Methods
+- `meta` (str): The name of the metadata.
 
-### 5.1 set_func
+**Returns:**
 
-This method sets the functional annotation column used for analysis.
+- list: A list of metadata values.
 
-```python
-def set_func(self, func: str)
-```
+### `get_stats_anova(self, group_list, df_type)` <a name="get_stats_anova"></a>
+Performs an ANOVA test and returns the results.
 
-### 5.2 set_group
+**Parameters:**
 
-This method sets the group assignment column used for analysis.
+- `group_list` (list of str): The list of groups to be included in the test.
+- `df_type` (str): The type of the data frame. It can be one of the following: 'taxa-func', 'func-taxa', 'taxa', 'func', 'peptide'.
 
-```python
-def set_group(self, group: str)
-```
+**Returns:**
 
-### 5.3 get_meta_list
+- DataFrame: A dataframe containing the results of the ANOVA test.
 
-This method returns a list of unique values in the specified metadata column.
 
-```python
-def get_meta_list(self, meta_name: str) -> List[str]:
-```
+### `get_stats_ttest(self, group_list, df_type)` <a name="get_stats_ttest"></a>
+Performs a t-test and returns the results.
 
-### 5.4 get_sample_list_in_a_group
+**Parameters:**
 
-This method returns a list of sample names in a specified group.
+- `group_list` (list of str): The list of groups to be included in the test.
+- `df_type` (str): The type of the data frame.
 
-```python
-def get_sample_list_in_a_group(self, group_name: str) -> List[str]:
-```
+**Returns:**
 
-### 5.5 get_stats_peptide_num_in_taxa
+- DataFrame: A dataframe containing the results of the t-test.
 
-This method calculates the number of peptides in each taxonomic group.
+### `get_intensity_matrix(self, func_name, taxon_name, peptide_seq, groups)` <a name="get_intensity_matrix"></a>
+Generates a matrix of the intensity of the taxon or function or peptide in each sample.
 
-```python
-def get_stats_peptide_num_in_taxa(self, level: str) -> pd.DataFrame:
-```
+**Parameters:**
 
-### 5.6 get_stats_taxa_level
+- `func_name` (str): The name of the function.
+- `taxon_name` (str): The name of the taxon.
+- `peptide_seq` (str): The sequence of the peptide.
+- `groups` (list of str): The list of groups.
 
-This method calculates the relative abundance of taxa at a specified taxonomic level.
+**Returns:**
 
-```python
-def get_stats_taxa_level(self, level: str) -> pd.DataFrame:
-```
+- DataFrame: A dataframe containing the intensity matrix.
 
-### 5.7 get_stats_func_prop
+### `get_top_intensity(self, df, top_num, method, sample_list)` <a name="get_top_intensity"></a>
+Returns the top intensity values.
 
-This method calculates the proportion of functional annotations in each group.
+**Parameters:**
 
-```python
-def get_stats_func_prop(self) -> pd.DataFrame:
-```
+- `df` (pandas DataFrame): The input data frame.
+- `top_num` (int): The number of top intensities to return.
+- `method` (str): The method to use for calculating the intensity. It can be one of the following: 'freq', 'mean', 'sum'.
+- `sample_list` (list of str): The list of samples.
 
-### 5.8 set_multi_tables
+**Returns:**
 
-This method sets up multiple data tables for downstream analysis.
+- DataFrame: A dataframe containing the top intensity values.
 
-```python
-def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
-                    normalize_method: str = None, transform_method: str None,
-                    batch_list: list = None,  processing_order:list=None)
-```
-+ level: s = Speceis; g = 'Genus'
-- func_threshold: The shreshould to filter the function.(defaute: 100%)
-+ normalize_method: None, mean, sum, minmax, zscore
-- transform_method: None, log2, log10, sqrt, cube
-+ batch_list: a list for samples
-- processing_order: a list like ['batch', 'transform', 'normalize']
+### `replace_if_two_index(self, df)` <a name="replace_if_two_index"></a>
+Replaces the index if there are two indices.
 
-### 5.9 get_stats_anova
+**Parameters:**
 
-This method performs an ANOVA test to compare the mean intensity values of functional annotations across groups.
+- `df` (pandas DataFrame): The input data frame.
 
-```python
-def get_stats_anova(self) -> pd.DataFrame:
-```
+**Returns:**
 
-### 5.10 set_anova
+- DataFrame: The modified dataframe.
 
-This method sets the ANOVA DataFrame with the test results.
+### `get_top_intensity_matrix_of_test_res(self, df, df_type, top_num, show_stats_cols)` <a name="get_top_intensity_matrix_of_test_res"></a>
+Returns the top intensity matrix of test results.
 
-```python
-def set_anova(self, anova_df: pd.DataFrame)
-```
+**Parameters:**
 
-### 5.11 get_stats_ttest
+- `df` (pandas DataFrame): The input data frame.
+- `df_type` (str): The type of the data frame. It can be one of the following: 'anova', 'ttest', 'log2fc'.
+- `top_num` (int): The number of top intensities to return.
+- `show_stats_cols` (bool): Whether to show statistics columns.
 
-This method performs a t-test to compare the mean intensity values of functional annotations between two groups.
+**Returns:**
 
-```python
-def get_stats_ttest(self, group_list=['group1', 'group2') -> pd.DataFrame:
-```
+- DataFrame: A dataframe containing the top intensity matrix of test results.
 
-### 5.12 get_intensity_matrix
+### `get_stats_deseq2(self, df, group_list)` <a name="get_stats_deseq2"></a>
+Performs a DESeq2 test and returns the results.
 
-This method returns the intensity matrix for the specified functional annotation and taxonomic level.
+**Parameters:**
 
-```python
-def get_intensity_matrix(self, func: str, level: str) -> pd.DataFrame:
-```
+- `df` (pandas DataFrame): The input data frame.
+- `group_list` (list of str): The list of groups to be included in the test.
 
-### 5.13 get_top_intensity_matrix_of_test_res
+**Returns:**
 
-This method returns the top intensity matrix based on the test results.
+- DataFrame: A dataframe containing the results of the DESeq2 test.
 
-```python
-def get_top_intensity_matrix_of_test_res(self, test_res: pd.DataFrame, n: int, level: str) -> pd.DataFrame:
-```
+### `get_stats_tukey_test(self, taxon_name, func_name)` <a name="get_stats_tukey_test"></a>
+Performs a Tukey's test and returns the results.
 
-### 5.14 get_stats_tukey_test
+**Parameters:**
 
-This method calculates and returns the Tukey test result for a given taxon name and/or function name.
-```python
-def get_stats_tukey_test(self, taxon_name:str, func_name:str): -> pd.DataFrame:
-```
-#### Parameters
-- `taxon_name`: the name of the taxon (optional)
-- `func_name`: the name of the function (optional)
+- `taxon_name` (str): The name of the taxon.
+- `func_name` (str): The name of the function.
 
-#### Returns
-- `tukey_result`: the result of the Tukey test
+**Returns:**
 
-#### Example Usage
-```python
-my_object = MyClass()
-result = my_object.get_stats_tukey_test('taxon_1', 'function_1')
-print(result)
-```
+- DataFrame: A dataframe containing the results of the Tukey's test.
+
+### `set_multi_tables(self, level, func_threshold, normalize_method, transform_method, outlier_detect_method, outlier_handle_method, outlier_handle_by_group, batch_list, processing_order)` <a name="set_multi_tables"></a>
+Sets multiple tables for further analysis.
+
+**Parameters:**
+
+- `level` (str): The taxonomic level to consider.
+- `func_threshold` (float): The function threshold to use.
+- `normalize_method` (str): The method to use for normalization.
+- `transform_method` (str): The method to use for transformation.
+- `outlier_detect_method` (str): The method to use for outlier detection.
+- `outlier_handle_method` (str): The method to use for handling outliers.
+- `outlier_handle_by_group` (bool): Whether to handle outliers by group.
+- `batch_list` (list of str): The list of batches.
+- `processing_order` (list of str): The order of processing steps.
+
+**Returns:**
+
+- None
+
+### `check_attributes(self)` <a name="check_attributes"></a>
+Checks which attributes are set and returns them.
+
+**Returns:**
+
+- dict: A dictionary containing the set attributes.
+
+### `get_current_time(self)` <a name="get_current_time"></a>
+Returns the current time.
+
+**Returns:**
+
+- str: The current time in the format "yyyy-mm-dd hh:mm:ss".
