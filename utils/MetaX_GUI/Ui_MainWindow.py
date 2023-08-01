@@ -2674,7 +2674,7 @@ class Ui_metaX_main(object):
         item.setText(_translate("metaX_main", "Data Normalization"))
         self.listWidget_data_processing_order.setSortingEnabled(__sortingEnabled)
         self.label_90.setText(_translate("metaX_main", "Secondary Handling Method"))
-        self.label_69.setText(_translate("metaX_main", "Ouliers Detection Method"))
+        self.label_69.setText(_translate("metaX_main", "Outliers  Detection Method"))
         self.comboBox_outlier_handling_method2.setItemText(0, _translate("metaX_main", "None"))
         self.comboBox_outlier_handling_method2.setItemText(1, _translate("metaX_main", "KNN"))
         self.comboBox_outlier_handling_method2.setItemText(2, _translate("metaX_main", "multiple"))
