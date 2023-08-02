@@ -25,7 +25,7 @@ class BasicPlot:
         ax.legend(title='Taxa level (frequency)',  ncol=2)
         # plt.show()
         plt.close()
-        return ax.get_figure()
+        return ax
 
     # input: self.get_stats_taxa_level()
     def plot_taxa_number(self):
@@ -42,7 +42,7 @@ class BasicPlot:
         ax.set_ylabel('Number of taxa')
         # plt.show()
         plt.close()
-        return ax.get_figure()
+        return ax
 
     # input: self.get_stats_func_prop()
     def plot_prop_stats(self, func_name = 'Description'):
@@ -62,7 +62,7 @@ class BasicPlot:
         plt.subplots_adjust(bottom=0.25)
         # plt.show()
         plt.close()
-        return ax.get_figure()
+        return ax
         
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8):

@@ -2,7 +2,7 @@
 # This script is used to build the GUI of TaxaFuncExplore
 
 
-__version__ = '1.65.11'
+__version__ = '1.66.0'
 
 # import built-in python modules
 import os
@@ -195,11 +195,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_meta_table_help.clicked.connect(self.show_meta_table_help)
 
         # Data Overview
-        self.pushButton_overview_func_plot.clicked.connect(self.plot_peptidd_num_in_func)
+        self.pushButton_overview_func_plot.clicked.connect(self.plot_peptide_num_in_func)
         self.comboBox_overview_filter_by.currentIndexChanged.connect(self.update_overview_filter)
         self.pushButton_overview_select_all.clicked.connect(self.overview_filter_select_all)
         self.pushButton_overview_clear_select.clicked.connect(self.overview_filter_deselect_all)
         self.pushButton_overview_run_filter.clicked.connect(self.overview_filter_run)
+        self.pushButton_overview_tax_plot_new_window.clicked.connect(self.plot_taxa_number_new_window)
+        self.pushButton_overview_peptide_plot_new_window.clicked.connect(self.plot_taxa_stats_new_window)     
 
         # set multi table
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
@@ -919,6 +921,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_set_multi_table.setEnabled(True)
         self.pushButton_overview_func_plot.setEnabled(True)
         self.pushButton_overview_run_filter.setEnabled(True)
+        self.pushButton_overview_tax_plot_new_window.setEnabled(True)
+        self.pushButton_overview_peptide_plot_new_window.setEnabled(True)
 
         
     def set_multi_table(self):
@@ -2092,13 +2096,16 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
             # BasicPlot(self.tf).plot_taxa_stats()
-            pic = BasicPlot(self.tf).plot_taxa_stats()
+            pic = BasicPlot(self.tf).plot_taxa_stats().get_figure()
             
             # Add the new MatplotlibWidget
             self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
-            
+    def plot_taxa_stats_new_window(self):
+        pic = BasicPlot(self.tf).plot_taxa_stats()
+        pic.figure.show()
+        
     
     def get_stats_taxa_level(self):
         if self.tf is None:
@@ -2112,12 +2119,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         if self.tf is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            pic = BasicPlot(self.tf).plot_taxa_number()
+            pic = BasicPlot(self.tf).plot_taxa_number().get_figure()
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
-    def plot_peptidd_num_in_func(self):
+    def plot_taxa_number_new_window(self):
+        pic = BasicPlot(self.tf).plot_taxa_number()
+        pic.figure.show()
+
+        
+
+    def plot_peptide_num_in_func(self):
         # remove the old MatplotlibWidget
         while self.verticalLayout_overview_func.count():
             item = self.verticalLayout_overview_func.takeAt(0)
@@ -2126,10 +2139,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 widget.deleteLater()
 
         func_name = self.comboBox_overview_func_list.currentText()
+        new_window = self.checkBox_overview_func_plot_new_window.isChecked()
         pic = BasicPlot(self.tf).plot_prop_stats(func_name)
-        self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic)
+        if new_window:
+            pic.figure.show()
+        self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
         self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
-
 
 
     def get_stats_func_prop(self, func_name):

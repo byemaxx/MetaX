@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>491</width>
-                 <height>459</height>
+                 <height>463</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -245,6 +245,26 @@
                </attribute>
                <layout class="QGridLayout" name="gridLayout_27">
                 <item row="0" column="0">
+                 <widget class="QPushButton" name="pushButton_overview_tax_plot_new_window">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Plot taxa stats in new window</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QPushButton" name="pushButton_overview_peptide_plot_new_window">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Plot peptide stats in new window</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="2">
                  <layout class="QVBoxLayout" name="verticalLayout_overview_plot"/>
                 </item>
                </layout>
@@ -254,8 +274,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>191</width>
-                 <height>49</height>
+                 <width>491</width>
+                 <height>463</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -263,6 +283,9 @@
                </attribute>
                <layout class="QGridLayout" name="gridLayout_20">
                 <item row="0" column="1">
+                 <widget class="QComboBox" name="comboBox_overview_func_list"/>
+                </item>
+                <item row="0" column="2">
                  <widget class="QPushButton" name="pushButton_overview_func_plot">
                   <property name="enabled">
                    <bool>false</bool>
@@ -279,9 +302,13 @@
                  </widget>
                 </item>
                 <item row="0" column="0">
-                 <widget class="QComboBox" name="comboBox_overview_func_list"/>
+                 <widget class="QCheckBox" name="checkBox_overview_func_plot_new_window">
+                  <property name="text">
+                   <string>Plot in new window</string>
+                  </property>
+                 </widget>
                 </item>
-                <item row="1" column="0" colspan="2">
+                <item row="1" column="0" colspan="3">
                  <layout class="QVBoxLayout" name="verticalLayout_overview_func"/>
                 </item>
                </layout>
@@ -4986,7 +5013,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
