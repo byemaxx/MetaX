@@ -15,7 +15,6 @@
     - [`get_stats_tukey_test(self, taxon_name, func_name)` ](#get_stats_tukey_testself-taxon_name-func_name-)
     - [`set_multi_tables(self, level, func_threshold, normalize_method, transform_method, outlier_detect_method, outlier_handle_method, outlier_handle_by_group, batch_list, processing_order)` ](#set_multi_tablesself-level-func_threshold-normalize_method-transform_method-outlier_detect_method-outlier_handle_method-outlier_handle_by_group-batch_list-processing_order-)
     - [`check_attributes(self)` ](#check_attributesself-)
-    - [`get_current_time(self)` ](#get_current_timeself-)
 
 ---
 
@@ -187,10 +186,3 @@ Checks which attributes are set and returns them.
 **Returns:**
 
 - dict: A dictionary containing the set attributes.
-
-### `get_current_time(self)` <a name="get_current_time"></a>
-Returns the current time.
-
-**Returns:**
-
-- str: The current time in the format "yyyy-mm-dd hh:mm:ss".

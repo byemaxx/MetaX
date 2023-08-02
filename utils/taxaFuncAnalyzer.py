@@ -347,7 +347,7 @@ class TaxaFuncAnalyzer:
 
 
 
-        print(f'\n{self.get_current_time()} Start to detect outlier...')
+        print(f'\n{self._get_current_time()} Start to detect outlier...')
         
         if method is None or method == 'None':
             print('outlier_method is not set, outlier detection did not perform.')
@@ -463,7 +463,7 @@ class TaxaFuncAnalyzer:
         if num_row_with_outlier_after > 0:
             print(f'The Number of rows still with nan: [{num_row_with_outlier_after}] in [{row_num_after}] ({num_row_with_outlier_after/row_num_after*100:.2f}%)')
         
-        print(f'\n{self.get_current_time()} Outlier detection finished.\n')
+        print(f'\n{self._get_current_time()} Outlier detection finished.\n')
         return df
 
     
@@ -473,7 +473,7 @@ class TaxaFuncAnalyzer:
         from sklearn.impute import KNNImputer, IterativeImputer
 
 
-        print(f'\n{self.get_current_time()} Start to handle missing value...\n')
+        print(f'\n{self._get_current_time()} Start to handle missing value...\n')
 
         df_mat = df[self.sample_list]
         df_mat.index = df.index
@@ -573,7 +573,7 @@ class TaxaFuncAnalyzer:
             print(f'Drop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.sample_list)
         print(f'Final number of rows after missing value handling: [{len(df)}]')
-        print(f'\n{self.get_current_time()} Data processing finished.\n')
+        print(f'\n{self._get_current_time()} Data processing finished.\n')
 
         return df
 
@@ -1071,6 +1071,6 @@ class TaxaFuncAnalyzer:
             else:
                 print(f"{attr} : set")
     
-    def get_current_time(self):
+    def _get_current_time(self):
         import time
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
