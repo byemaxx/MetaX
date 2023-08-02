@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# This script is used to build the GUI of TaxaFuncExplore
+# This script is used to build the GUI of MetaX
 
-
-__version__ = '1.66.0'
 
 # import built-in python modules
 import os
@@ -18,13 +16,13 @@ path = Path(myDir)
 a=str(path.parent.absolute())
 
 sys.path.append(a)
-
 ####### add parent path to sys.path #######
 
-import pandas as pd
+# import Version
+from MetaX.utils.version import __version__
 
-# import core scripts of TaxaFuncExplore
 
+# import core scripts of MetaX
 from MetaX.utils.taxaFuncAnalyzer import TaxaFuncAnalyzer
 
 # import ploter
@@ -58,15 +56,15 @@ from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
 from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 
 
+# import third-party modules
+import pandas as pd
 # import pyqt5 scripts
-
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, \
     QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
 from PyQt5.QtGui import QIcon,QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDir
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
-
 
 import qtawesome as qta
 from qt_material import apply_stylesheet
