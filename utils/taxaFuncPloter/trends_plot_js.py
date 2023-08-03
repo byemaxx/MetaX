@@ -2,7 +2,9 @@ from pyecharts.charts import Line
 from pyecharts import options as opts
 
 class TrendsPlot_js:
-    
+    def __init__(self, tfobj):
+        self.tfobj =  tfobj
+        
     def rename_taxa(self, df):
         first_index = df.index[0]
         if 'd__Bacteria' in first_index:
@@ -17,12 +19,30 @@ class TrendsPlot_js:
                 df.index = new_index_list
         return df
     
-    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, rename_taxa:bool=False, show_legend:bool=False):
+    def _add_group_name_to_sample(self, df):
+        #rename columns (sample name)
+        col_names = df.columns.tolist()
+        meta_df = self.tfobj.meta_df
+        meta_name = self.tfobj.meta_name
+        groups_list = []
+        new_col_names = []
+        for i in col_names:
+            group = meta_df[meta_df['Sample'] == i]
+            group = group[meta_name].values[0]
+            new_col_names.append(f'{i} ({group})')
+            groups_list.append(group)
+        df.columns = new_col_names
+        return df
+        
+    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, rename_taxa:bool=False, show_legend:bool=False, add_group_name:bool=False):
         # rename taxa
         if rename_taxa:
             df = self.rename_taxa(df)
         if title is None:
             title = 'Trends of Cluster'
+        
+        if add_group_name:
+            df = self._add_group_name_to_sample(df)
             
         c = (
             Line(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))

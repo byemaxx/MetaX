@@ -1955,7 +1955,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 
             
         try:
-            pic = TrendsPlot_js().plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend)
+            pic = TrendsPlot_js(self.tf).plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend, add_group_name = plot_samples)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
         except Exception as e:
             error_message = traceback.format_exc()
