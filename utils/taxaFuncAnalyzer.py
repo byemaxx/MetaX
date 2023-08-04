@@ -237,7 +237,7 @@ class TaxaFuncAnalyzer:
         
         df = self.original_df.copy()
         # remove unknown
-        df = df[ (df[func_name].notnull()) & (df[func_name] != 'unknown')]
+        df = df[ (df[func_name].notnull()) & (df[func_name] != 'unknown') & (df[func_name] != '-')]
         
         prop_name = f'{func_name}_prop'
 
