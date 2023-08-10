@@ -1410,6 +1410,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if filtered:
                 print('filtered enabled')
                 p_value = self.doubleSpinBox_deseq2_pvalue.value()
+                p_value = round(p_value, 5)
+                
                 log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
                 log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
                 if log2fc_min > log2fc_max:
@@ -2505,6 +2507,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
             log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
+            pvalue = round(pvalue, 5)
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
             group1 = self.comboBox_deseq2_group1.currentText()
@@ -2583,6 +2586,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
+            pvalue = round(pvalue, 5)
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
             if log2fc_min > log2fc_max:
