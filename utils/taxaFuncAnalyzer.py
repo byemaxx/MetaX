@@ -504,7 +504,7 @@ class TaxaFuncAnalyzer:
 
         method_list = method.split("+")
         method1, method2 = method_list[0], method_list[0] if len(method_list) == 1 else method_list[1]
-
+        
         def fill_na_mean_median(args):
             df_group, fill_method = args
             df_group = df_group.copy()
@@ -525,7 +525,7 @@ class TaxaFuncAnalyzer:
             df_group.loc[:, cols] = imputer.fit_transform(df_group)
             return df_group
 
-        def impute_method(df, method):
+        def impute_method(df, method, by_group):
             df_mat = df[self.sample_list]
             # df_mat.index = df.index
             print(f'Fill NA by [{method}]...')
@@ -585,13 +585,13 @@ class TaxaFuncAnalyzer:
         if method1 == 'drop':
             df = df.dropna(subset=self.sample_list)
         else:
-            df = impute_method(df, method1)
+            df = impute_method(df, method1, by_group)
 
         if df[self.sample_list].isnull().any().any():
             if method2 == 'drop':
                 df = df.dropna(subset=self.sample_list)
             elif method1 != method2:
-                df = impute_method(df, method2)
+                df = impute_method(df, method2,by_group)
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
         if final_na_num > 0:
@@ -1000,7 +1000,8 @@ class TaxaFuncAnalyzer:
         # perform data pre-processing
         df = self._data_preprocess(df=df, normalize_method=normalize_method, transform_method = transform_method,
                                    batch_list= batch_list, outlier_detect_method= outlier_detect_method, 
-                                   outlier_handle_method = outlier_handle_method, processing_order=processing_order)
+                                   outlier_handle_method = outlier_handle_method, outlier_handle_by_group = outlier_handle_by_group,
+                                   processing_order=processing_order)
         # save the processed df
         self.preprocessed_df = df
         
