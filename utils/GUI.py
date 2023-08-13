@@ -757,13 +757,15 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         help_text ='''Outliers Detection:\
             \nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
+            \n\nZero-Dominant: This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.\
             \n\nZero-Inflated Poisson: This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).\
             \n\nZ-Score: Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.\
             \n\nMahalanobis Distance: Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.\
             \n\nNegative Binomial: This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).\
             \n\nIn all methods, the data is grouped, and each group of data is treated separately. The outliers are detected for each group.\
             \n\n\nOutliers Imputation:\
-            \nMean: Outliers will be imputed by mean.\
+            \nOriginal: Outliers will be filled by original value (Remove rows only contain NA and 0 after Outliers Detection).\
+            \n\nMean: Outliers will be imputed by mean.\
             \n\nMedian: Outliers will be imputed by median.\
             \n\nKNN: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbors to fill in missing values.\
             \n\nRegression: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modeling each feature with missing values as a function of other features, in turn.\
@@ -948,7 +950,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         if outlier_detect_method != 'None':
             outlier_detect_method = outlier_detect_method.lower()
-            if outlier_handle_method1 == 'None':
+            if outlier_handle_method1 == 'Drop':
                 msg_box = QMessageBox()
                 msg_box.setWindowTitle('Warning')
                 msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method. However, outlier will not be handled.\
@@ -958,7 +960,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 msg_box.addButton(QMessageBox.No)
                 if msg_box.exec_() == QMessageBox.No:
                     return None
-        if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'None':
+        if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'Drop':
             msg_box = QMessageBox()
             msg_box.setWindowTitle('Warning')
             msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method and handled by [{outlier_handle_method1}] method.\
@@ -970,7 +972,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             if msg_box.exec_() == QMessageBox.No:
                 return None
             
-        if outlier_handle_method1 != 'None' or outlier_handle_method2 != 'None':
+        if outlier_handle_method1 != 'Drop' or outlier_handle_method2 != 'Drop':
             # messagebox to confirm and warning
             msg_box = QMessageBox()
             msg_box.setWindowTitle('Warning')

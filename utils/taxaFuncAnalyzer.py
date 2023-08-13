@@ -344,7 +344,8 @@ class TaxaFuncAnalyzer:
         from statsmodels.discrete.count_model import ZeroInflatedPoisson
         from statsmodels.discrete.discrete_model import NegativeBinomial
         from statsmodels.tools.tools import add_constant
-
+        
+        df = df.copy()
 
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
@@ -379,7 +380,25 @@ class TaxaFuncAnalyzer:
                     f'(Non-zero > 0.5: [{abnormal_rows_gt_half.sum()}], '
                     f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], '
                     f'Equal: [{equal_rows.sum()}]) Total Abnormal Ratio: [{((abnormal_rows_gt_half | abnormal_rows_lt_half | equal_rows).sum())/len(df_mat)*100:.2f}%]')
+        
+        elif method == 'zero-dominant':
+            print('Outlier detection by [zero-dominant] (if half or more half samples are 0, set to nan)...')
 
+            for key, cols in groups_dict.items():
+                nonzero_count = (df_mat[cols] > 0).sum(axis=1)
+                total_count = len(cols)
+                nonzero_ratio = nonzero_count / total_count
+
+                normal_rows = nonzero_count.isin([0, total_count])
+                abnormal_rows_lt_half = (nonzero_ratio <= 0.5) & ~normal_rows
+
+                df_mat.loc[abnormal_rows_lt_half, cols] = df_mat.loc[abnormal_rows_lt_half, cols].where(df_mat.loc[abnormal_rows_lt_half, cols] <= 0, np.nan)
+
+                print(f'Group: [{key}], Samples: [{total_count}], Normal: [{normal_rows.sum()}], Abnormal: [{abnormal_rows_lt_half.sum()}], '
+                    f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], Total Abnormal Ratio: [{abnormal_rows_lt_half.sum()/len(df_mat)*100:.2f}%]')
+
+            
+            
         elif method == "iqr":
             print('Outlier detection by [IQR] (if sample is out of 1.5*IQR, set to nan)...') 
             # calculate the IQR of each group
@@ -468,11 +487,12 @@ class TaxaFuncAnalyzer:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'none+none', by_group:bool = True) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:bool = True) -> pd.DataFrame:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
-
+        df = df.copy()
+        
         print(f'\n{self._get_current_time()} Start to handle missing value...\n')
 
         df_mat = df[self.sample_list]
@@ -482,7 +502,8 @@ class TaxaFuncAnalyzer:
             print('No missing value, skip outlier handling')
             return df
 
-        method1, method2 = method.split("+")
+        method_list = method.split("+")
+        method1, method2 = method_list[0], method_list[0] if len(method_list) == 1 else method_list[1]
 
         def fill_na_mean_median(args):
             df_group, fill_method = args
@@ -541,8 +562,12 @@ class TaxaFuncAnalyzer:
                     df_mat_filled = pd.concat(results, axis=1)
                     df_mat_filled = df_mat_filled[df_mat.columns]
                     df[self.sample_list] = df_mat_filled
+            
+            elif method == 'original':
+                print(f'Fill NA by {method}, keep the original data...')
+                df = self.original_df[self.original_df.iloc[:, 0].isin(df.iloc[:, 0])]
 
-            elif method == 'none':
+            elif method == 'drop':
                 print('NO HANDLING FOR MISSING VALUE, DROP ROWS WITH MISSING VALUE')
                 df = df.dropna(subset=self.sample_list)
             else:
@@ -557,15 +582,15 @@ class TaxaFuncAnalyzer:
             return df
 
         ### main function ###
-        if method1 == 'none':
+        if method1 == 'drop':
             df = df.dropna(subset=self.sample_list)
         else:
             df = impute_method(df, method1)
 
         if df[self.sample_list].isnull().any().any():
-            if method2 == 'none':
+            if method2 == 'drop':
                 df = df.dropna(subset=self.sample_list)
-            else:
+            elif method1 != method2:
                 df = impute_method(df, method2)
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
@@ -580,11 +605,10 @@ class TaxaFuncAnalyzer:
 
 
 
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'none+none', by_group:bool=True) -> pd.DataFrame:
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', by_group:bool=True) -> pd.DataFrame:
         if self.group_list is None:
             raise ValueError('You must set set group before handling outlier')
 
-        df = df.copy()
         df = self._outlier_detection(df, method=detect_method)
         df = self._handle_missing_value(df, method=handle_method, by_group=by_group)
         if detect_method not in ['none', 'None']:
