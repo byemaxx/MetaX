@@ -102,7 +102,7 @@ class NetworkPlot:
                     print(f"Warning: {i} is not in taxa or function list")
             nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only)
         else:
-            nodes, links, categories = self.create_nodes_links(sample_list, plot_list_only)
+            nodes, links, categories = self.create_nodes_links(sample_list)
 
 
         c = (
