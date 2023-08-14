@@ -1078,9 +1078,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.set_basic_heatmap_selection_list()
             # set innitial value of taxa-func link network selection list
             self.update_tfnet_select_lsit()
-
+            # Disable some buttons
+            self.disable_multi_button()
             # enable all buttons
             self.enable_multi_button()
+            
             
             # show message
             if outlier_detect_method != 'None':
@@ -1277,6 +1279,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         current_text = self.comboBox_tukey_taxa.currentText()
         self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_tukey_func_num, self.comboBox_tukey_func)
 
+    def disable_multi_button(self):
+        self.pushButton_plot_top_heatmap.setEnabled(False)
+        self.pushButton_get_top_cross_table.setEnabled(False)
+        self.pushButton_plot_tukey.setEnabled(False)
+        self.pushButton_deseq2_plot_vocano.setEnabled(False)
+        self.pushButton_deseq2_plot_sankey.setEnabled(False)
+        self.pushButton_trends_get_trends_table.setEnabled(False)
+        self.pushButton_trends_plot_interactive_line.setEnabled(False)
 
     def enable_multi_button(self):
         self.pushButton_plot_pca_sns.setEnabled(True)
@@ -1910,10 +1920,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
         
         save_table_name = f'cluster({table_name.lower()})'
-        
-        df = self.table_dict[save_table_name].copy()
-        df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
-        self.show_message(f'Plotting interactive line plot...')
+        try:
+            df = self.table_dict[save_table_name].copy()
+            df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
+            self.show_message(f'Plotting interactive line plot...')
+        except:
+            QMessageBox.warning(self.MainWindow, 'Error', f'Please plot trends cluster first!')
+            return None
         
         if plot_samples  or get_intensity:
             table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
@@ -1972,9 +1985,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         table_name = self.comboBox_trends_table.currentText().capitalize()
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
         save_table_name = f'cluster({table_name.lower()})'
+        try:
+            df = self.table_dict[save_table_name].copy()
+            df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
+        except:
+            QMessageBox.warning(self.MainWindow, 'Error', f'Please plot trends cluster first!')
+            return None
         
-        df = self.table_dict[save_table_name].copy()
-        df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
         if get_intensity:
             table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
             dft = table_name_dict[table_name]
@@ -2731,6 +2748,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         height = self.spinBox_network_height.value()
         sample_list =  self.tf.sample_list
         focus_list = self.tfnet_fcous_list
+        plot_list_only = self.checkBox_tf_link_net_plot_list_only.isChecked()
+        
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
             sample_list = slected_list
@@ -2744,7 +2763,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
         try:
             self.show_message('Plotting network...')
-            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list)
+            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()

@@ -6,7 +6,7 @@ class NetworkPlot:
         self.tfobj = tfobj
     
 
-    def create_nodes_links(self, sample_list:list = None, focus_list:list = []):
+    def create_nodes_links(self, sample_list:list = None, focus_list:list = [], plot_list_only:bool = False):
         df = self.tfobj.taxa_func_df.copy()
         extra_cols = sample_list
         if extra_cols:
@@ -24,7 +24,9 @@ class NetworkPlot:
         colname[1] = 'function'
         df.columns = colname
         df = df[['taxa', 'function', 'sum']]
-
+        
+        if plot_list_only:
+            df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
 
         taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
         function_sum = df.groupby('function')['sum'].sum().to_dict()
@@ -78,7 +80,9 @@ class NetworkPlot:
 
 
     
-    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800, focus_list:list = []):
+    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800, focus_list: list = None, plot_list_only:bool = False):
+        if focus_list is None:
+            focus_list = []
         # preprocess focus_list
         if focus_list is not None and focus_list:
             new_list = []
@@ -93,9 +97,9 @@ class NetworkPlot:
                     new_list.extend((taxon, func))
                 else:
                     print(f"Warning: {i} is not in taxa or function list")
-            nodes, links, categories = self.create_nodes_links(sample_list, new_list)
+            nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only)
         else:
-            nodes, links, categories = self.create_nodes_links(sample_list)
+            nodes, links, categories = self.create_nodes_links(sample_list, plot_list_only)
 
 
         c = (

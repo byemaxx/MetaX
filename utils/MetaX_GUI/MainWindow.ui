@@ -3894,6 +3894,13 @@
                   </property>
                  </widget>
                 </item>
+                <item row="11" column="9" colspan="2">
+                 <widget class="QCheckBox" name="checkBox_tf_link_net_plot_list_only">
+                  <property name="text">
+                   <string>Plot List Only</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </widget>
               <widget class="QWidget" name="tab_8">
