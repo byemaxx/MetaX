@@ -15,7 +15,7 @@ class NetworkPlot:
         else:
             print("No sample list provided, using all samples")
 
-        
+
         df = df.loc[~(df==0).all(axis=1)]
         df['sum'] = df.sum(axis=1)
         df.reset_index(inplace=True)
@@ -24,7 +24,7 @@ class NetworkPlot:
         colname[1] = 'function'
         df.columns = colname
         df = df[['taxa', 'function', 'sum']]
-        
+
         if plot_list_only:
             df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
 
@@ -35,8 +35,11 @@ class NetworkPlot:
         max_value = max(max(taxa_sum.values()), max(function_sum.values()))
 
         def normalize(value):
+            if max_value == min_value:
+                return 30
             scaled_value = 100 * (value - min_value) / (max_value - min_value)
             return max(scaled_value, 10)  # set a minimum size
+
 
 
         taxa = df["taxa"].unique().tolist()
@@ -53,9 +56,9 @@ class NetworkPlot:
                     nodes.append({"name": function, "category": 3, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
                 else:
                     nodes.append({"name": function, "category": 2, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
-            
+
             links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
-            
+
             categories = [
                 {"name": "Taxa", "itemStyle": {"normal": {"color": "#f1c40f"}}},
                 {"name": "Focus_Taxa", "itemStyle": {"normal": {"color": "#ff0000"}}},
@@ -64,8 +67,8 @@ class NetworkPlot:
             ]
 
             return nodes, links, categories
-                    
-            
+
+
         else:
             nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]} for taxon in taxa] + [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]} for function in functions]
 
