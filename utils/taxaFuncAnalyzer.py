@@ -28,6 +28,7 @@ warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
     def __init__(self, df_path, meta_path):
+        self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
 
@@ -115,6 +116,7 @@ class TaxaFuncAnalyzer:
     def _remove_all_zero_row(self):
         df = self.original_df.copy()
         print(f'original df shape: {df.shape}')
+        self.original_row_num = df.shape[0]
         df = df.drop(df[(df[self.sample_list] == 0).all(axis=1)].index)
         print(f'after remove all zero row: {df.shape}')
         self.original_df = df

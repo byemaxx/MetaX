@@ -6,6 +6,7 @@
 import os
 import sys
 import traceback
+import logging
 
 ####### add parent path to sys.path #######
 myDir = os.getcwd()
@@ -76,8 +77,8 @@ from qt_material import apply_stylesheet
 #     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 
-
-class metaXGUI(Ui_MainWindow.Ui_metaX_main):
+###############   Class MetaXGUI Begin   ###############
+class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     def __init__(self, MainWindow):
         super().__init__()
         self.setupUi(MainWindow)
@@ -87,6 +88,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1440, 900)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
+
+        self.logger = LoggerManager()
 
         self.like_times = 0
 
@@ -372,6 +375,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         text = item.text()
         clipboard.setText(text)
         QMessageBox.information(self.MainWindow, "Copy to clipboard", f"{text}\n\nhas been copied to clipboard.")
+        self.logger.write_log(f'Copied {text} to clipboard.')
 
     # function of menu bar
     def swith_stack_page_analyzer(self):
@@ -562,7 +566,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         mgyg_dir = f'''{self.lineEdit_db_anno_folder.text()}'''
         db_type = self.comboBox_db_type.currentText().split('(')[0].strip()
 
-        
+        self.logger.write_log(f'run_db_builder: save_path:{save_path} meta_path:{meta_path} mgyg_dir:{mgyg_dir} db_type:{db_type}')
 
         if  not os.path.exists(save_path):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid save path')
@@ -606,6 +610,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             return
         else:
             try:
+                self.logger.write_log(f'run_db_builder_own_table: anno_path:{anno_path} taxa_path:{taxa_path} save_path:{save_path}')
                 self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
             except Exception as e:
                 error_message = traceback.format_exc()
@@ -642,9 +647,11 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select update tsv!')
             return None
         try:
+            self.logger.write_log(f'run_db_updater: update_type:{update_type} tsv_path:{tsv_path} old_db_path:{old_db_path} new_db_path:{new_db_path} built_in_db_name:{built_in_db_name}')
             self.open_output_window(DBUpdater, update_type, tsv_path, old_db_path, new_db_path,  built_in_db_name)
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'Error when run_db_updater: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
     ## Database Updater
@@ -657,8 +664,6 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         peptide2taxafunc_outpath = f'''{self.lineEdit_peptide2taxafunc_outpath.text()}'''
         threshold = float(self.doubleSpinBox_LCA_threshold.value())
 
-
-
         if db_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select database!')
         elif final_peptide_path == '':
@@ -667,8 +672,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select peptide2taxafunc outpath!')
         else:
             try:
+                self.logger.write_log(f'run_peptide2taxafunc: db_path:{db_path} final_peptide_path:{final_peptide_path} peptide2taxafunc_outpath:{peptide2taxafunc_outpath} threshold:{threshold}')
                 self.open_output_window(PeptideAnnotator, final_peptide_path, peptide2taxafunc_outpath, db_path, threshold)
             except Exception as e:
+                self.logger.write_log(f'run_peptide2taxafunc error: {e}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
     
     #### TaxaFuncAnalyzer ####
@@ -678,7 +685,10 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def update_table_dict(self, table_name, df):
         self.table_dict[table_name] = df
         self.listWidget_table_list.clear()
-        self.listWidget_table_list.addItems(list(self.table_dict.keys()))
+        self.listWidget_table_list.addItems(
+            list(self.table_dict.keys()))
+        
+        self.logger.write_log(f'table_dict updated: {table_name}')
 
 
     # show table in Table_list
@@ -689,6 +699,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             df = self.table_dict[table_name]
             self.show_table(df)
         except Exception as e:
+            self.logger.write_log(f'show_table_in_list error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
     # show table in Ui_Table_view
@@ -832,6 +843,13 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     #         return False
     #### Deprecated Function ####
      
+    def show_taxaFuncAnalyzer_init(self):
+        original_row_num = self.tf.original_row_num
+        zero_removed_row_num = self.tf.original_df.shape[0]
+        sample_num = len(self.tf.sample_list)
+        out_msg = f'Original row number: [{original_row_num}]\n\nAfter removing zero rows: [{zero_removed_row_num}]\n\nSample number: [{sample_num}]'
+        QMessageBox.information(self.MainWindow, 'Information', out_msg)
+        self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
 
@@ -849,11 +867,14 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             #     return None
             # Deprecated function
             try:
+                self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
                 self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
                 self.update_after_tfobj()
-                        
+                self.show_taxaFuncAnalyzer_init()
+
             except:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
                 if "The TaxaFunc data must have Taxon_prop column!" in error_message:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
                 elif "The meta data does not match the TaxaFunc data, Please check!" in error_message:
@@ -910,6 +931,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(1)
         except:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'update_after_tfobj error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
         # add tables to table dict
@@ -1013,6 +1035,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         group = self.comboBox_meta_to_stast.currentText()
 
         try:
+            self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_list: {batch_list}, processing_order: {processing_order}')
             self.tf.set_func(function)
             self.tf.set_group(group)
             self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
@@ -1090,19 +1113,26 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     \nLeft rows after Outliers Handling: [{self.tf.outlier_stats["final_row_num"]}] ({self.tf.outlier_stats["final_row_num"]/self.tf.original_df.shape[0]*100:.2f}%)'
             else:    
                 nan_stats_str = ''
-            QMessageBox.information(self.MainWindow, 'Information', f'TaxaFunc data is ready! \
+                msg = f'TaxaFunc data is ready! \
                 \n{nan_stats_str}\
                 \n\nNumber of peptide: [{num_peptide}]\
                 \nNumber of function: [{num_func}]\
                 \nNumber of taxa: [{num_taxa}]\
-                \nNumber of taxa-function: [{num_taxa_func}]')
+                \nNumber of taxa-function: [{num_taxa_func}]'
+            
+            self.logger.write_log(msg.replace('\n', ''))
+            QMessageBox.information(self.MainWindow, 'Information', msg )
+            
+            
             # go to basic analysis tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
             
         except ValueError as e:
+            self.logger.write_log(f'set_multi_table: {str(e)}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', str(e))
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'set_multi_table: {str(error_message)}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
 
@@ -1230,6 +1260,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
     def show_others_linked(self):
         func = self.comboBox_others_func.currentText()
         taxa = self.comboBox_others_taxa.currentText()
+        self.logger.write_log(f'show_others_linked: func: {func}, taxa: {taxa}')
         try:
             if not func and not taxa:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select function or taxa!')
@@ -1246,6 +1277,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.comboBox_others_taxa.clear()
                 self.comboBox_others_taxa.addItems(taxa)
         except Exception as e:
+            self.logger.write_log(f'show_others_linked error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
     def update_combobox_and_label(self, current_text, df, label, comboBox):
@@ -1409,6 +1441,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.listWidget_list_for_ploting.clear()
     
     def extract_top_from_test_result(self, method, top_num, df_type, filtered):
+        self.logger.write_log(f'extract_top_from_test_result: method={method}, top_num={top_num}, df_type={df_type}, filtered={filtered}')
+        
         if method.split('_')[0] == 'deseq2':
             # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
             table_name = method.split('_')[0] +'(' + df_type + ')'
@@ -1417,10 +1451,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
+                self.logger.write_log(f'extract_top_from_test_result: {method.split("_")[0]} of {df_type} is None')
                 return None
             
             if filtered:
                 print('filtered enabled')
+                self.logger.write_log('filtered enabled')
                 p_value = self.doubleSpinBox_deseq2_pvalue.value()
                 p_value = round(p_value, 5)
                 
@@ -1430,7 +1466,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'log2fc_min should be smaller than log2fc_max!')
                     return None
                 df = df[(df['padj'] < p_value) & (abs(df['log2FoldChange']) > log2fc_min) & (abs(df['log2FoldChange']) < log2fc_max)]
-                print(f'p_value: {p_value}, {log2fc_min} < log2fc < {log2fc_max}, df.shape: {df.shape}')
+                output = f'p_value: {p_value}, {log2fc_min} < log2fc < {log2fc_max}, df.shape: {df.shape}'
+                print(output)
+                self.logger.write_log(output)
                 
                 
             if method.split('_')[1] == 'up':
@@ -1453,9 +1491,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
             if filtered:
                 print('filtered enabled')
+                self.logger.write_log('filtered enabled')
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
                 df = df[df['P-value'] < p_value]
-                print(f'p_value: {p_value}, df.shape: {df.shape}')
+                output = f'p_value: {p_value}, df.shape: {df.shape}'
+                print(output)
+                self.logger.write_log('filtered enabled')
 
 
             if df is None:
@@ -1470,7 +1511,9 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         row_num = df.shape[0]
         if row_num < top_num:
-            QMessageBox.warning(self.MainWindow, 'Warning', f"Filtered result has only {df.shape[0]} rows, less than your setting [{top_num}]!")
+            output = f"Filtered result has only {df.shape[0]} rows, less than your setting [{top_num}]!"
+            QMessageBox.warning(self.MainWindow, 'Warning', output)
+            self.logger.write_log(output)
         print(f'[{row_num}] rows were added to the list.')
         df = df.head(top_num)
         index_list = df.index.tolist()
@@ -1706,6 +1749,18 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 if (row_cluster or col_cluster) and (df==0).all(axis=1).any():
                     df = df.loc[(df!=0).any(axis=1)]
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+                
+                # check if the list is too long
+                if (row_cluster or col_cluster) and len(df) > 10000: 
+                    reply = QMessageBox.question(self.MainWindow, 'Warning', 
+                                        'The list is over 10000 items. It is not recommended to plot the heatmap with cluster!\n\nDo you want to continue?',
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if reply == QMessageBox.No:
+                        return
+                    else:
+                        pass
+                
+                # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
                 HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
             
@@ -1726,6 +1781,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_basic_list error: {error_message}', 'e')
+            self.logger.write_log(f'plot_basic_list: plot_type: {plot_type}, table_name: {table_name}, sample_list: {sample_list}, width: {width}, height: {height}, scale: {scale}, cmap: {cmap}, row_cluster: {row_cluster}, col_cluster: {col_cluster}, rename_taxa: {rename_taxa}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
     
     
@@ -1904,6 +1961,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_trends_cluster error: {error_message}', 'e')
+            self.logger.write_log(f'plot_trends_cluster: table_name: {table_name}, num_cluster: {num_cluster}, width: {width}, height: {height}, title: {title}, sample_list: {sample_list}, group_list: {group_list}, df: {df.shape}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')    
         
                 
@@ -1976,6 +2035,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_trends_interactive_line error: {error_message}', 'e')
+            self.logger.write_log(f'plot_trends_interactive_line: cluster_num: {cluster_num}, width: {width}, height: {height}, table_name: {table_name}, title: {title}, get_intensity: {get_intensity}, show_legend: {show_legend}, rename_taxa: {rename_taxa}, plot_samples: {plot_samples}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
         
     
@@ -2006,11 +2067,12 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     def save_and_show_js_plot(self, pic, title, width=None, height=None):
         home_path = QDir.homePath()
-        metax_path = os.path.join(home_path, 'MetaX')
+        metax_path = os.path.join(home_path, 'MetaX/html')
         if not os.path.exists(metax_path):
             os.makedirs(metax_path)
         save_path = os.path.join(metax_path, f'{title}.html')
         pic.render(save_path)
+        self.logger.write_log(f'html saved: {save_path}', 'i')
         web = webDialog.MyDialog(save_path)
         if width is not None and height is not None:
             web.resize(width, height)
@@ -2095,7 +2157,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.tf.update_meta(new_df)
         self.show_message('Filtering...')
         self.update_after_tfobj()
-        QMessageBox.information(self.MainWindow, 'Info', 'Filtering finished!')
+        self.show_taxaFuncAnalyzer_init()
         # switch tab to the first tab of toolBox_2
         self.toolBox_2.setCurrentIndex(0)
 
@@ -2216,6 +2278,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
         elif method == 'pca_3d':
             try:
@@ -2228,6 +2291,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}', width=width*120, height=height*120)
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
                 
         elif method == 'box':
@@ -2237,6 +2301,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
         elif method == 'corr':
             try:
@@ -2245,6 +2310,7 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height)
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
     # differential analysis
@@ -2303,6 +2369,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_top_heatmap error: {error_message}')
+            self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
     
 
@@ -2343,6 +2411,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             return None
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'get_top_cross_table error: {error_message}', 'e')
+            self.logger.write_log(f'get_top_cross_table: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, pvalue: {pvalue}, sort_by: {sort_by}', 'e')
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
 
@@ -2392,6 +2462,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.pushButton_get_top_cross_table.setEnabled(True)
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'anova_test error: {error_message}', 'e')
+            self.logger.write_log(f'anova_test: group_list: {group_list}, df_type: {df_type}', 'e')
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
         finally:
@@ -2419,6 +2491,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.pushButton_plot_tukey.setEnabled(True)
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'tukey_test error: {error_message}', 'e')
+            self.logger.write_log(f'tukey_test: taxa: {taxa}, func: {func}', 'e')
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
         finally:
@@ -2468,6 +2542,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                     return None
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f't_test error: {error_message}', 'e')
+                self.logger.write_log(f't_test: group_list: {group_list}, df_type: {df_type}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
                 return None
             finally:
@@ -2513,6 +2589,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.pushButton_deseq2_plot_sankey.setEnabled(True)
             except Exception as e:
                 error_message = traceback.format_exc()
+                self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
+                self.logger.write_log(f'deseq2_test: group_list: {group_list}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}\n\nPlease check your setting!')
                 return None
             finally:
@@ -2537,6 +2615,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 return None
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
+            self.logger.write_log(f'plot_deseq2_volcano: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, pvalue: {pvalue}, width: {width}, height: {height}, group1: {group1}, group2: {group2}, title_name: {title_name}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
@@ -2554,6 +2634,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             web.show()
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
+            self.logger.write_log(f'plot_deseq2_volcano: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, pvalue: {pvalue}, width: {width}, height: {height}, group1: {group1}, group2: {group2}, title_name: {title_name}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
     
@@ -2592,6 +2674,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_co_expr_network error: {error_message}', 'e')
+            self.logger.write_log(f'plot_co_expr_network: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
 
@@ -2631,6 +2715,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         except Exception:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'deseq2_plot_sankey error: {error_message}', 'e')
+            self.logger.write_log(f'deseq2_plot_sankey: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, group1: {group1}, group2: {group2}, pvalue: {pvalue}, width: {width}, height: {height}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your selection! \n\nAttenion: Sankey plot can only generate from Taxa-Func table!\n\n Try to run DESeq2 for Taxa-Func table again!!')
 
 
@@ -2767,6 +2853,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_network error: {error_message}', 'e')
+            self.logger.write_log(f'plot_network: sample_list:{sample_list}, focus_list:{focus_list}, plot_list_only:{plot_list_only}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
     # link
@@ -2882,6 +2970,8 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
             hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
         except Exception as e:
             error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_others_heatmap error: {error_message}', 'e')
+            self.logger.write_log(f'plot_others_heatmap: {params}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
             
     
@@ -2964,12 +3054,62 @@ class metaXGUI(Ui_MainWindow.Ui_metaX_main):
         db_save_path = QFileDialog.getExistingDirectory(self.MainWindow, 'Select Save Folder for MetaX-DataBase.db', self.last_path)
         self.last_path = db_save_path
         self.lineEdit_db_save_path.setText(db_save_path)
- 
+###############   Class MetaXGUI End   ###############
 
 
+###############   Class LoggerManager Begin   ###############
+class LoggerManager:
+    def __init__(self):
+        self.setup_logging()
+        
+    def setup_logging(self):
+        """
+        Configure logging settings.
+        """
+        # Disable matplotlib logging for warnings
+        matplotlib_logger = logging.getLogger('matplotlib')
+        matplotlib_logger.setLevel(logging.WARNING)
+        
+        home_path = os.path.expanduser("~")
+        metax_path = os.path.join(home_path, 'MetaX')
+        if not os.path.exists(metax_path):
+            os.makedirs(metax_path)
+        log_path = os.path.join(metax_path, 'MetaX.log')
+        log_format = '%(asctime)s - %(levelname)s - %(message)s'
+        logging.basicConfig(filename=log_path, level=logging.DEBUG, format=log_format)
+
+    def write_log(self, msg:str, level:str='i'):
+        level_dict = {
+            'd': logging.debug, 
+            'i': logging.info, 
+            'w': logging.warning, 
+            'e': logging.error, 
+            'c': logging.critical
+        }
+        msg = msg.replace('\n', ' ').replace('\r', '')
+        log_func = level_dict.get(level, logging.info)
+        log_func(msg)
+
+        
+###############   Class LoggerManager End   ###############
+    
+def global_exception_handler(type, value, tb):
+    error_msg = "".join(traceback.format_exception(type, value, tb))
+    print("Uncaught exception:", error_msg)
+    LoggerManager().write_log(error_msg, 'e')  # Using an instance to call write_log
+
+    # Display the error message in a GUI dialog
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Critical)
+    msg_box.setWindowTitle("Error")
+    msg_box.setText("An unexpected error occurred:")
+    msg_box.setInformativeText(error_msg)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.exec_()
 
 
 def runGUI():
+    
     app = QtWidgets.QApplication(sys.argv)
     
     #### splash screen start ####
@@ -2981,7 +3121,7 @@ def runGUI():
     #### splash screen end ####
      
     MainWindow = QtWidgets.QMainWindow()
-    ui = metaXGUI(MainWindow)
+    ui = MetaXGUI(MainWindow)
     
     app.setStyleSheet('QPushButton, QLabel {font-size: 12pt;}')
 
@@ -3038,4 +3178,5 @@ def runGUI():
 
 if __name__ == '__main__':
     # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    sys.excepthook = global_exception_handler
     runGUI()
