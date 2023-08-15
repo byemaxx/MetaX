@@ -3061,6 +3061,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 class LoggerManager:
     def __init__(self):
         self.setup_logging()
+        self.write_log('------------------------------MetaX Started------------------------------', 'i')
         
     def setup_logging(self):
         """
