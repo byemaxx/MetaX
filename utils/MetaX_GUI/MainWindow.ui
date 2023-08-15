@@ -53,67 +53,6 @@
             <string>Data Import</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="2" column="1">
-             <widget class="QToolButton" name="toolButton_taxafunc_table_help">
-              <property name="text">
-               <string>?</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>TaxaFunc Table</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3">
-             <widget class="QPushButton" name="pushButton_get_taxafunc_path">
-              <property name="text">
-               <string>Open</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>Meta Table</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QToolButton" name="toolButton_meta_table_help">
-              <property name="text">
-               <string>?</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
-             <widget class="QLineEdit" name="lineEdit_taxafunc_path">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QPushButton" name="pushButton_load_example_for_analyzer">
-              <property name="text">
-               <string>Load Example Data</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QLineEdit" name="lineEdit_meta_path"/>
-            </item>
             <item row="3" column="3">
              <widget class="QPushButton" name="pushButton_get_meta_path">
               <property name="text">
@@ -121,7 +60,7 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="2">
+            <item row="5" column="2">
              <widget class="QPushButton" name="pushButton_run_taxaFuncAnalyzer">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -137,6 +76,57 @@
               </property>
               <property name="flat">
                <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QToolButton" name="toolButton_taxafunc_table_help">
+              <property name="text">
+               <string>?</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QPushButton" name="pushButton_get_taxafunc_path">
+              <property name="text">
+               <string>Open</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="lineEdit_meta_path"/>
+            </item>
+            <item row="3" column="1">
+             <widget class="QToolButton" name="toolButton_meta_table_help">
+              <property name="text">
+               <string>?</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>TaxaFunc Table</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Meta Table</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pushButton_load_example_for_analyzer">
+              <property name="text">
+               <string>Load Example Data</string>
               </property>
              </widget>
             </item>
@@ -164,6 +154,16 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="lineEdit_taxafunc_path">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
              </widget>
             </item>
@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>491</width>
-                 <height>459</height>
+                 <height>463</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5035,7 +5035,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -5053,7 +5053,16 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuOthers">
+    <property name="title">
+     <string>Others</string>
+    </property>
+    <addaction name="actionRestore_Last_TaxaFunc"/>
+    <addaction name="actionSave_TaxaFunc"/>
+    <addaction name="actionExport_Log_File"/>
+   </widget>
    <addaction name="menuTools"/>
+   <addaction name="menuOthers"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionTaxaFuncAnalyzer">
@@ -5079,6 +5088,21 @@
   <action name="actionDatabase_Update">
    <property name="text">
     <string>Databas Updater</string>
+   </property>
+  </action>
+  <action name="actionRestore_Last_TaxaFunc">
+   <property name="text">
+    <string>Restore Last TaxaFunc</string>
+   </property>
+  </action>
+  <action name="actionExport_Log_File">
+   <property name="text">
+    <string>Export Log File</string>
+   </property>
+  </action>
+  <action name="actionSave_TaxaFunc">
+   <property name="text">
+    <string>Save TaxaFunc</string>
    </property>
   </action>
  </widget>

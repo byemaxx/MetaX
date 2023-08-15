@@ -4,10 +4,12 @@
 
 # import built-in python modules
 import os
+import shutil
 import sys
 import traceback
 import logging
-
+import pickle
+import datetime
 ####### add parent path to sys.path #######
 myDir = os.getcwd()
 sys.path.append(myDir)
@@ -61,11 +63,11 @@ from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 import pandas as pd
 # import pyqt5 scripts
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, \
-    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
-from PyQt5.QtGui import QIcon,QPixmap
-from PyQt5.QtCore import Qt, QTimer, QDir
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QCheckBox,  QComboBox
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 
 import qtawesome as qta
 from qt_material import apply_stylesheet
@@ -122,6 +124,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionDatabase_Builder.setIcon(qta.icon('mdi.database'))
         self.actionDatabase_Update.setIcon(qta.icon('mdi.update'))
         self.actionAbout.setIcon(qta.icon('mdi.information-outline'))
+        self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.restore'))
+        self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
+        self.actionSave_TaxaFunc.setIcon(qta.icon('mdi.content-save'))
+        
 
         # set network plot width and height
         self.screen = QDesktopWidget().screenGeometry()
@@ -162,6 +168,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionDatabase_Builder.triggered.connect(self.swith_stack_page_dbuilder)
         self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
         self.actionAbout.triggered.connect(self.show_about)
+        self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
+        self.actionExport_Log_File.triggered.connect(self.export_log_file)
+        self.actionSave_TaxaFunc.triggered.connect(self.save_taxafunc_obj)
 
 
 
@@ -334,8 +343,157 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
 
 
+        # Initiate QSettings
+        self.init_QSettings()
+
+        # Check and load settings
+        self.loadSettings()
+
+        # Save settings every 1 minute
+        self.timer = QTimer(self.MainWindow)
+        self.timer.timeout.connect(self.saveSettings)
+        self.timer.start(60000)
+
+    def init_QSettings(self):
+        home_directory = QDir.homePath()
+        settings_path = os.path.join(home_directory, "MetaX")
+        if not os.path.exists(settings_path):
+            os.makedirs(settings_path)
+        self.settings = QSettings(os.path.join(settings_path, "settings.ini"), QSettings.IniFormat)
+    
 
 
+    def loadSettings(self):
+        line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+        for name in line_edit_names:
+            widget = getattr(self, name, None)
+            if widget and isinstance(widget, QtWidgets.QLineEdit):
+                settings_key = f"widget/{name}"
+                widget.setText(self.settings.value(f"{settings_key}/text", "", type=str))
+        # load self.last_path
+        last_path = self.settings.value("last_path", "", type=str)
+        if last_path:
+            self.last_path = last_path
+        # load time and version
+        print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
+
+
+    def saveSettings(self):
+        line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+        for name in line_edit_names:
+            widget = getattr(self, name, None)
+            if widget and isinstance(widget, QtWidgets.QLineEdit):
+                settings_key = f"widget/{name}"
+                self.settings.setValue(f"{settings_key}/text", widget.text())
+        # save self.last_path
+        self.settings.setValue("last_path", self.last_path)
+        # save time and version
+        self.settings.setValue("time", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.settings.setValue("version", __version__)
+
+    def save_taxafunc_obj(self, close_save = False):
+        if self.tf.taxa_df is None:
+            QMessageBox.warning(self.MainWindow, "Warning", "Please set TaxaFunc first.")
+            return
+        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        with open(path, 'wb') as f:
+            pickle.dump(self.tf, f)
+            
+        # save tab_set_taxa_func
+        for widget in self.tab_set_taxa_func.findChildren(QtWidgets.QWidget):
+            settings_key = f"tab_set_taxa_func/{widget.objectName()}"
+            if isinstance(widget, QtWidgets.QComboBox):
+                #save items
+                items = [widget.itemText(i) for i in range(widget.count())]
+                self.settings.setValue(f"{settings_key}/items", items)
+                self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
+                
+                self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
+
+            elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+                self.settings.setValue(f"{settings_key}/value", widget.value())
+
+            elif isinstance(widget, QtWidgets.QListWidget):
+                items = []
+                for index in range(widget.count()):
+                    items.append(widget.item(index).text())
+                # print(f"Saving items for {widget.objectName()}: {items}") 
+                self.settings.setValue(f"{settings_key}/items", items)
+        
+        self.logger.write_log(f"Save taxafunc object to {path}.")
+        if not close_save:
+            QMessageBox.information(self.MainWindow, "Save taxafunc object", f"Taxafunc object has been saved to {path}.")
+            
+    def load_taxafunc_obj_from_file(self):
+        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                obj = pickle.load(f)
+            return obj
+        else:
+            QMessageBox.warning(self.MainWindow, "Warning", "No taxafunc object found. Please run TaxaFuncAnalyzer first.")
+            return None
+        
+    def export_log_file(self):
+        log_path = os.path.join(QDir.homePath(), "MetaX", "MetaX.log")
+        if os.path.exists(path):
+            #select a file to save
+            file_path, _ = QFileDialog.getSaveFileName(self.MainWindow, "Save log file", log_path, "Log file (*.log)")
+            if file_path:
+                shutil.copy(log_path, file_path)
+                QMessageBox.information(self.MainWindow, "Export log file", f"Log file has been exported to {file_path}")
+        else:
+            QMessageBox.warning(self.MainWindow, "Warning", "No log file found.")
+            
+    def run_restore_taxafunc_obj(self):
+        self.set_multi_table(restore_taxafunc = True)
+        self.restore_settings_after_load_taxafunc_obj()
+        self.logger.write_log(f"Restore taxafunc object from last time.")
+        
+    def restore_settings_after_load_taxafunc_obj(self):
+        # update tab_set_taxa_func
+        for widget in self.tab_set_taxa_func.findChildren(QtWidgets.QWidget):
+            settings_key = f"tab_set_taxa_func/{widget.objectName()}"
+            
+            if isinstance(widget, QtWidgets.QComboBox):
+                items = self.settings.value(f"{settings_key}/items", [], type=list)
+                widget.clear()
+                widget.addItems(items)
+                index = self.settings.value(f"{settings_key}/currentIndex", 0, type=int)
+                widget.setCurrentIndex(index)
+
+            elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+                value = self.settings.value(f"{settings_key}/value", 0.0, type=float)
+                widget.setValue(value)
+
+            elif isinstance(widget, QtWidgets.QListWidget):
+                items = self.settings.value(f"{settings_key}/items", [], type=list)
+                widget.clear()
+                widget.addItems(items) 
+        self.pushButton_set_multi_table.setEnabled(True)      
+
+    def closeEvent(self, event):
+        if self.tf is not None and self.tf.taxa_df is not None:
+            reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX with saving TaxaFunc?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                self.saveSettings()
+                self.save_taxafunc_obj(close_save = True)
+                event.accept()
+            elif reply == QMessageBox.No:
+                self.saveSettings()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                self.saveSettings()
+                event.accept()
+            else:
+                event.ignore()
+        self.logger.write_log(f"#################### MetaX closed ####################")
+
+        
 
 
     def make_combobox_searchable(self, odl_combobox):
@@ -947,194 +1105,208 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_overview_peptide_plot_new_window.setEnabled(True)
 
         
-    def set_multi_table(self):
-        function = self.comboBox_function_to_stast.currentText()
-        taxa_input = self.comboBox_taxa_level_to_stast.currentText()
-        name_dict = {'Species': 's', 'Genus': 'g', 'Family': 'f', 'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
-        
-        taxa_level = name_dict[taxa_input]
-        
-        func_threshold = self.doubleSpinBox_func_threshold.value()
-        # outlier detect and handle
-        outlier_detect_method = self.comboBox_outlier_detection.currentText()
-        outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
-        outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
-        outlier_handle_method = f'{outlier_handle_method1.lower()}+{outlier_handle_method2.lower()}'
-        outlier_handle_by_group = True if self.comboBox_outlier_handling_group_or_sample.currentText() == 'Each Group' else False
-        # data normalization and transformation
-        normalize_method = self.comboBox_set_data_normalization.currentText()
-        transform_method = self.comboBox_set_data_transformation.currentText()
-        # batch effect
-        batch_group =  self.comboBox_remove_batch_effect.currentText()
+    def set_multi_table(self, restore_taxafunc=False):
+        if restore_taxafunc == False:
+
+            function = self.comboBox_function_to_stast.currentText()
+            taxa_input = self.comboBox_taxa_level_to_stast.currentText()
+            name_dict = {'Species': 's', 'Genus': 'g', 'Family': 'f', 'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
+            
+            taxa_level = name_dict[taxa_input]
+            
+            func_threshold = self.doubleSpinBox_func_threshold.value()
+            func_threshold = round(func_threshold, 3)
+            # outlier detect and handle
+            outlier_detect_method = self.comboBox_outlier_detection.currentText()
+            outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
+            outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
+            outlier_handle_method = f'{outlier_handle_method1.lower()}+{outlier_handle_method2.lower()}'
+            outlier_handle_by_group = True if self.comboBox_outlier_handling_group_or_sample.currentText() == 'Each Group' else False
+            # data normalization and transformation
+            normalize_method = self.comboBox_set_data_normalization.currentText()
+            transform_method = self.comboBox_set_data_transformation.currentText()
+            # batch effect
+            batch_group =  self.comboBox_remove_batch_effect.currentText()
 
 
-        batch_list = self.tf.meta_df[batch_group].tolist() if batch_group != 'None' else None
-        
-        if outlier_detect_method != 'None':
-            outlier_detect_method = outlier_detect_method.lower()
-            if outlier_handle_method1 == 'Drop':
+            batch_list = self.tf.meta_df[batch_group].tolist() if batch_group != 'None' else None
+            
+            if outlier_detect_method != 'None':
+                outlier_detect_method = outlier_detect_method.lower()
+                if outlier_handle_method1 == 'Drop':
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle('Warning')
+                    msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method. However, outlier will not be handled.\
+                        \n\nAll rows with outlier will be dropped, it may cause some problems in the following analysis.\
+                        \n\nDo you want to continue?''')
+                    msg_box.addButton(QMessageBox.Yes)
+                    msg_box.addButton(QMessageBox.No)
+                    if msg_box.exec_() == QMessageBox.No:
+                        return None
+            if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'Drop':
                 msg_box = QMessageBox()
                 msg_box.setWindowTitle('Warning')
-                msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method. However, outlier will not be handled.\
-                    \n\nAll rows with outlier will be dropped, it may cause some problems in the following analysis.\
+                msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method and handled by [{outlier_handle_method1}] method.\
+                    \nHowever,you did not select the second outlier handling method.\
+                    \n\nIf your data contains an even number of samples in a group, there may be rows that cannot be filled by [{outlier_handle_method1}], and these rows will be dropped.\
                     \n\nDo you want to continue?''')
                 msg_box.addButton(QMessageBox.Yes)
                 msg_box.addButton(QMessageBox.No)
                 if msg_box.exec_() == QMessageBox.No:
                     return None
-        if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'Drop':
-            msg_box = QMessageBox()
-            msg_box.setWindowTitle('Warning')
-            msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method and handled by [{outlier_handle_method1}] method.\
-                \nHowever,you did not select the second outlier handling method.\
-                \n\nIf your data contains an even number of samples in a group, there may be rows that cannot be filled by [{outlier_handle_method1}], and these rows will be dropped.\
-                \n\nDo you want to continue?''')
-            msg_box.addButton(QMessageBox.Yes)
-            msg_box.addButton(QMessageBox.No)
-            if msg_box.exec_() == QMessageBox.No:
-                return None
-            
-        if outlier_handle_method1 != 'Drop' or outlier_handle_method2 != 'Drop':
-            # messagebox to confirm and warning
-            msg_box = QMessageBox()
-            msg_box.setWindowTitle('Warning')
-            msg_box.setText(f'''Outlier will be handled by [{outlier_handle_method}] method,\n\nIt may take a long time.\
-                \n\nDo you want to continue?''')
-            msg_box.addButton(QMessageBox.Yes)
-            msg_box.addButton(QMessageBox.No)
-            if msg_box.exec_() == QMessageBox.No:
-                return None
-            
+                
+            if outlier_handle_method1 != 'Drop' or outlier_handle_method2 != 'Drop':
+                # messagebox to confirm and warning
+                msg_box = QMessageBox()
+                msg_box.setWindowTitle('Warning')
+                msg_box.setText(f'''Outlier will be handled by [{outlier_handle_method}] method,\n\nIt may take a long time.\
+                    \n\nDo you want to continue?''')
+                msg_box.addButton(QMessageBox.Yes)
+                msg_box.addButton(QMessageBox.No)
+                if msg_box.exec_() == QMessageBox.No:
+                    return None
+                
 
-        if normalize_method != 'None' or transform_method != 'None':
-            transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 
-                              'Square root transformation': 'sqrt', 'Cube root transformation': 'cube'}
-            normalize_dict = {'None': None, 'Mean centering': 'mean','Standard Scaling (Z-Score)' : 'zscore',
-                              'Min-Max Scaling': 'minmax', 'Pareto Scaling': 'pareto'}
-            normalize_method = normalize_dict[normalize_method]
-            transform_method = transform_dict[transform_method]
+            if normalize_method != 'None' or transform_method != 'None':
+                transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 
+                                'Square root transformation': 'sqrt', 'Cube root transformation': 'cube'}
+                normalize_dict = {'None': None, 'Mean centering': 'mean','Standard Scaling (Z-Score)' : 'zscore',
+                                'Min-Max Scaling': 'minmax', 'Pareto Scaling': 'pareto'}
+                normalize_method = normalize_dict[normalize_method]
+                transform_method = transform_dict[transform_method]
 
-        processing_order = []
-        for i in range(self.listWidget_data_processing_order.count()):
-            processing_order.append(self.listWidget_data_processing_order.item(i).text())
-        processing_order_dict = {'Rmove Batch Effect': 'batch', 
-                                 'Data Normalization': 'normalize', 
-                                 'Data Transformation': 'transform',
-                                 'Outlier Handling': 'outlier'}
-        processing_order = [processing_order_dict[i] for i in processing_order]
+            processing_order = []
+            for i in range(self.listWidget_data_processing_order.count()):
+                processing_order.append(self.listWidget_data_processing_order.item(i).text())
+            processing_order_dict = {'Rmove Batch Effect': 'batch', 
+                                    'Data Normalization': 'normalize', 
+                                    'Data Transformation': 'transform',
+                                    'Outlier Handling': 'outlier'}
+            processing_order = [processing_order_dict[i] for i in processing_order]
 
 
-        # clean tables and comboBox before set multi table
-        self.table_dict = {}
-        self.comboBox_top_heatmap_table_list = []
-        self.comboBox_top_heatmap_table.clear()
-        self.comboBox_deseq2_tables_list = []
-
-        self.show_message('Data is Preprocessing, please wait...')
-
-        group = self.comboBox_meta_to_stast.currentText()
-
-        try:
-            self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_list: {batch_list}, processing_order: {processing_order}')
-            self.tf.set_func(function)
-            self.tf.set_group(group)
-            self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
-                                     normalize_method = normalize_method, transform_method = transform_method, 
-                                     outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
-                                     outlier_handle_by_group = outlier_handle_by_group,
-                                     batch_list = batch_list, processing_order = processing_order)
-
-            num_peptide = self.tf.peptide_df.shape[0]
-            num_func = self.tf.func_df.shape[0]
-            num_taxa = self.tf.taxa_df.shape[0]
-            num_taxa_func = self.tf.taxa_func_df.shape[0]
-
-
-            # generate basic table
-            self.get_stats_func_prop(function)
-            self.get_stats_taxa_level()
-            self.get_stats_peptide_num_in_taxa()
-            
-            # add tables to table dict
-            self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
-            self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
-            self.update_table_dict('peptide', self.tf.peptide_df)
-            self.update_table_dict('taxa', self.tf.taxa_df)
-            self.update_table_dict('function', self.tf.func_df)
-            self.update_table_dict('taxa-func', self.tf.taxa_func_df)
-            self.update_table_dict('func-taxa', self.tf.func_taxa_df)
-
-            # get taxa and function list
-            self.taxa_list_linked = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
-            self.func_list_linked = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
-            self.taxa_list = self.tf.taxa_df.index.tolist()
-            self.func_list = self.tf.func_df.index.tolist()
-            self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
-            self.peptide_list = self.tf.peptide_df.index.tolist()
-
-            # update group and sample in comboBox of basic analysis
-            self.update_basic_group_and_sample()
-            # update taxa and function and group in comboBox
-            self.update_func_taxa_group_to_combobox()
-            # update comboBox of network plot
-            self.update_network_combobox()
-            # update comboBox of trends cluster
-            self.update_trends_cluster_combobox()
-            # update comboBox_co_expr_select_list
-            self.update_co_expr_select_list()
-            # update comboBox_trends_selection_list
-            self.update_trends_select_list()
-            
-            # clean basic heatmap selection list
-            self.clean_basic_heatmap_list()
-            self.comboBox_basic_heatmap_selection_list.clear()
-
-            # update comboBox of basic peptide query
-            self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
-
-            # clean comboBox of deseq2
+            # clean tables and comboBox before set multi table
+            self.table_dict = {}
+            self.comboBox_top_heatmap_table_list = []
+            self.comboBox_top_heatmap_table.clear()
             self.comboBox_deseq2_tables_list = []
-            self.comboBox_deseq2_tables.clear()
 
-            # set innitial value of basic heatmap selection list
-            self.set_basic_heatmap_selection_list()
-            # set innitial value of taxa-func link network selection list
-            self.update_tfnet_select_lsit()
-            # Disable some buttons
-            self.disable_multi_button()
-            # enable all buttons
-            self.enable_multi_button()
-            
-            
-            # show message
-            if outlier_detect_method != 'None':
-                nan_stats_str = f'\n[{self.tf.outlier_stats["num_nan"]}] outliers were detected in [{self.tf.outlier_stats["num_row_with_outlier"]}] rows and [{self.tf.outlier_stats["num_col_with_outlier"]}] columns.\
-                    \nLeft rows after Outliers Handling: [{self.tf.outlier_stats["final_row_num"]}] ({self.tf.outlier_stats["final_row_num"]/self.tf.original_df.shape[0]*100:.2f}%)'
-            else:    
-                nan_stats_str = ''
-                msg = f'TaxaFunc data is ready! \
-                \n{nan_stats_str}\
-                \n\nNumber of peptide: [{num_peptide}]\
-                \nNumber of function: [{num_func}]\
-                \nNumber of taxa: [{num_taxa}]\
-                \nNumber of taxa-function: [{num_taxa_func}]'
-            
-            self.logger.write_log(msg.replace('\n', ''))
-            QMessageBox.information(self.MainWindow, 'Information', msg )
-            
-            
-            # go to basic analysis tab
-            self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
-            
-        except ValueError as e:
-            self.logger.write_log(f'set_multi_table: {str(e)}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', str(e))
-        except Exception as e:
-            error_message = traceback.format_exc()
-            self.logger.write_log(f'set_multi_table: {str(error_message)}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', error_message)
-    
+            self.show_message('Data is Preprocessing, please wait...')
+
+            group = self.comboBox_meta_to_stast.currentText()
+
+            try:
+                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_list: {batch_list}, processing_order: {processing_order}')
+                self.tf.set_func(function)
+                self.tf.set_group(group)
+                self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
+                                        normalize_method = normalize_method, transform_method = transform_method, 
+                                        outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
+                                        outlier_handle_by_group = outlier_handle_by_group,
+                                        batch_list = batch_list, processing_order = processing_order)
+
+            except ValueError as e:
+                self.logger.write_log(f'set_multi_table: {str(e)}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', str(e))
+                return None
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'set_multi_table: {str(error_message)}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', error_message)
+                return None
+        
+        else: # restore_taxafunc is True
+            self.tf = self.load_taxafunc_obj_from_file()
+            if self.tf == None:
+                return None
+            else:
+                self.restore_settings_after_load_taxafunc_obj()
+
+        num_peptide = self.tf.peptide_df.shape[0]
+        num_func = self.tf.func_df.shape[0]
+        num_taxa = self.tf.taxa_df.shape[0]
+        num_taxa_func = self.tf.taxa_func_df.shape[0]
+
+
+        # generate basic table
+        self.get_stats_func_prop(self.tf.func_name)
+        self.get_stats_taxa_level()
+        self.get_stats_peptide_num_in_taxa()
+        
+        # add tables to table dict
+        self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
+        self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
+        self.update_table_dict('peptide', self.tf.peptide_df)
+        self.update_table_dict('taxa', self.tf.taxa_df)
+        self.update_table_dict('function', self.tf.func_df)
+        self.update_table_dict('taxa-func', self.tf.taxa_func_df)
+        self.update_table_dict('func-taxa', self.tf.func_taxa_df)
+
+        # get taxa and function list
+        self.taxa_list_linked = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
+        self.func_list_linked = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
+        self.taxa_list = self.tf.taxa_df.index.tolist()
+        self.func_list = self.tf.func_df.index.tolist()
+        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
+        self.peptide_list = self.tf.peptide_df.index.tolist()
+
+        # update group and sample in comboBox of basic analysis
+        self.update_basic_group_and_sample()
+        # update taxa and function and group in comboBox
+        self.update_func_taxa_group_to_combobox()
+        # update comboBox of network plot
+        self.update_network_combobox()
+        # update comboBox of trends cluster
+        self.update_trends_cluster_combobox()
+        # update comboBox_co_expr_select_list
+        self.update_co_expr_select_list()
+        # update comboBox_trends_selection_list
+        self.update_trends_select_list()
+        
+        # clean basic heatmap selection list
+        self.clean_basic_heatmap_list()
+        self.comboBox_basic_heatmap_selection_list.clear()
+
+        # update comboBox of basic peptide query
+        self.comboBox_basic_peptide_query.clear()
+        self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
+
+        # clean comboBox of deseq2
+        self.comboBox_deseq2_tables_list = []
+        self.comboBox_deseq2_tables.clear()
+
+        # set innitial value of basic heatmap selection list
+        self.set_basic_heatmap_selection_list()
+        # set innitial value of taxa-func link network selection list
+        self.update_tfnet_select_lsit()
+        # Disable some buttons
+        self.disable_multi_button()
+        # enable all buttons
+        self.enable_multi_button()
+        
+        
+        # show message
+        outlier_detect_method = self.comboBox_outlier_detection.currentText()
+        if outlier_detect_method != 'None':
+            nan_stats_str = f'\n[{self.tf.outlier_stats["num_nan"]}] outliers were detected in [{self.tf.outlier_stats["num_row_with_outlier"]}] rows and [{self.tf.outlier_stats["num_col_with_outlier"]}] columns.\
+                \nLeft rows after Outliers Handling: [{self.tf.outlier_stats["final_row_num"]}] ({self.tf.outlier_stats["final_row_num"]/self.tf.original_df.shape[0]*100:.2f}%)'
+        else:    
+            nan_stats_str = ''
+        msg = f'TaxaFunc data is ready! \
+        \n{nan_stats_str}\
+        \n\nFunction: [{self.tf.func_name}]\
+        \nNumber of peptide: [{num_peptide}]\
+        \nNumber of function: [{num_func}]\
+        \nNumber of taxa: [{num_taxa}]\
+        \nNumber of taxa-function: [{num_taxa_func}]'
+        
+        self.logger.write_log(msg.replace('\n', ''))
+        QMessageBox.information(self.MainWindow, 'Information', msg )
+        
+        
+        # go to basic analysis tab
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        
 
 
     def set_basic_heatmap_selection_list(self):
@@ -3061,7 +3233,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 class LoggerManager:
     def __init__(self):
         self.setup_logging()
-        self.write_log('------------------------------MetaX Started------------------------------', 'i')
+        self.write_log(f'------------------------------ MetaX Started Version {__version__} ------------------------------', 'i')
         
     def setup_logging(self):
         """
@@ -3097,7 +3269,7 @@ class LoggerManager:
 def global_exception_handler(type, value, tb):
     error_msg = "".join(traceback.format_exception(type, value, tb))
     print("Uncaught exception:", error_msg)
-    LoggerManager().write_log(error_msg, 'e')  # Using an instance to call write_log
+    LoggerManager().write_log(error_msg, 'c')  # Using an instance to call write_log
 
     # Display the error message in a GUI dialog
     msg_box = QMessageBox()
@@ -3110,7 +3282,10 @@ def global_exception_handler(type, value, tb):
 
 
 def runGUI():
-    
+    class CustomMainWindow(QtWidgets.QMainWindow):
+        def closeEvent(self, event):
+            ui.closeEvent(event) 
+            
     app = QtWidgets.QApplication(sys.argv)
     
     #### splash screen start ####
@@ -3121,7 +3296,7 @@ def runGUI():
     app.processEvents()
     #### splash screen end ####
      
-    MainWindow = QtWidgets.QMainWindow()
+    MainWindow = CustomMainWindow()
     ui = MetaXGUI(MainWindow)
     
     app.setStyleSheet('QPushButton, QLabel {font-size: 12pt;}')
