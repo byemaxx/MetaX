@@ -5055,14 +5055,21 @@
    </widget>
    <widget class="QMenu" name="menuOthers">
     <property name="title">
-     <string>Others</string>
+     <string>File</string>
     </property>
     <addaction name="actionRestore_Last_TaxaFunc"/>
     <addaction name="actionSave_TaxaFunc"/>
+   </widget>
+   <widget class="QMenu" name="menuDev">
+    <property name="title">
+     <string>Dev</string>
+    </property>
     <addaction name="actionExport_Log_File"/>
+    <addaction name="actionHide_Show_Console"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuOthers"/>
+   <addaction name="menuDev"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionTaxaFuncAnalyzer">
@@ -5103,6 +5110,11 @@
   <action name="actionSave_TaxaFunc">
    <property name="text">
     <string>Save TaxaFunc</string>
+   </property>
+  </action>
+  <action name="actionHide_Show_Console">
+   <property name="text">
+    <string>Show/Hide Console</string>
    </property>
   </action>
  </widget>

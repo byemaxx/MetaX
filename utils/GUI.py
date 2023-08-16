@@ -127,7 +127,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.restore'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionSave_TaxaFunc.setIcon(qta.icon('mdi.content-save'))
-        
+        self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
 
         # set network plot width and height
         self.screen = QDesktopWidget().screenGeometry()
@@ -171,8 +171,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.actionSave_TaxaFunc.triggered.connect(self.save_taxafunc_obj)
-
-
+        self.console_visible = False
+        self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
 
 
         # peptide2taxafunc
@@ -353,6 +353,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.timer = QTimer(self.MainWindow)
         self.timer.timeout.connect(self.saveSettings)
         self.timer.start(60000)
+        
+    
+    def show_hide_console(self):
+        from ctypes import windll
+        hwnd = windll.kernel32.GetConsoleWindow()
+        style = windll.user32.GetWindowLongW(hwnd, -16)  # GWL_STYLE = -16
+        style &= ~0x00080000
+        windll.user32.SetWindowLongW(hwnd, -16, style)
+
+        if hwnd:
+            if self.console_visible:
+                windll.user32.ShowWindow(hwnd, 0)
+                self.console_visible = False
+            else:
+                windll.user32.ShowWindow(hwnd, 1)
+                self.console_visible = True
+
 
     def init_QSettings(self):
         home_directory = QDir.homePath()
@@ -426,9 +443,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             
     def load_taxafunc_obj_from_file(self):
         path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        saved_date = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
         if os.path.exists(path):
             with open(path, 'rb') as f:
                 obj = pickle.load(f)
+            print(f"Loaded taxafunc object saved at {saved_date}.")
             return obj
         else:
             QMessageBox.warning(self.MainWindow, "Warning", "No taxafunc object found. Please run TaxaFuncAnalyzer first.")
@@ -438,7 +457,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         log_path = os.path.join(QDir.homePath(), "MetaX", "MetaX.log")
         if os.path.exists(path):
             #select a file to save
-            file_path, _ = QFileDialog.getSaveFileName(self.MainWindow, "Save log file", log_path, "Log file (*.log)")
+            # default output path is self.last_path
+            file_path, _ = QFileDialog.getSaveFileName(self.MainWindow, "Export log file", self.last_path, "Log file (*.log)")
             if file_path:
                 shutil.copy(log_path, file_path)
                 QMessageBox.information(self.MainWindow, "Export log file", f"Log file has been exported to {file_path}")
@@ -643,13 +663,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_co_expr_group = CheckableComboBox()
         self.comboBox_co_expr_sample = CheckableComboBox()
         try:
-            # delete the old combobox
+            # delete the old combobox 
             self.gridLayout_network_group.itemAt(0).widget().deleteLater()
             self.gridLayout_network_sample.itemAt(0).widget().deleteLater()
             self.gridLayout_co_expr_group.itemAt(0).widget().deleteLater()
             self.gridLayout_co_expr_sample.itemAt(0).widget().deleteLater()
-        except Exception as e:
-            print(e)
+        except AttributeError:
+            pass
         finally:
             self.gridLayout_network_group.addWidget(self.comboBox_network_group)
             self.gridLayout_network_sample.addWidget(self.comboBox_network_sample)
@@ -675,8 +695,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.verticalLayout_trends_group.itemAt(0).widget().deleteLater()
             self.verticalLayout_trends_sample.itemAt(0).widget().deleteLater()
 
-        except Exception as e:
-            print(e)
+        except AttributeError:
+            pass
         finally:
             self.verticalLayout_trends_group.addWidget(self.comboBox_trends_group)
             self.verticalLayout_trends_sample.addWidget(self.comboBox_trends_sample)
@@ -1262,7 +1282,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.update_co_expr_select_list()
         # update comboBox_trends_selection_list
         self.update_trends_select_list()
-        
+
         # clean basic heatmap selection list
         self.clean_basic_heatmap_list()
         self.comboBox_basic_heatmap_selection_list.clear()
@@ -1274,7 +1294,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         # clean comboBox of deseq2
         self.comboBox_deseq2_tables_list = []
         self.comboBox_deseq2_tables.clear()
-
+        
         # set innitial value of basic heatmap selection list
         self.set_basic_heatmap_selection_list()
         # set innitial value of taxa-func link network selection list
