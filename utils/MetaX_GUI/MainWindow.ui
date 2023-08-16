@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>491</width>
-                 <height>463</height>
+                 <width>340</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3048,6 +3048,13 @@
                   </property>
                   <property name="text">
                    <string>Add a list</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="18" column="7">
+                 <widget class="QCheckBox" name="checkBox_co_expr_plot_list_only">
+                  <property name="text">
+                   <string>Plot List Only</string>
                   </property>
                  </widget>
                 </item>

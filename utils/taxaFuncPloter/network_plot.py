@@ -119,18 +119,22 @@ class NetworkPlot:
                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"),
             )
             .set_global_opts(
-                legend_opts=opts.LegendOpts(is_show=False),
-                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}",  subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
+                title_opts=opts.TitleOpts(title=f"Taxa-Function Network",  subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}}),
-            )        
+            )  
             )
+        if sample_list:
+            c.set_global_opts(
+                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}", subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
+                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}})
+            )  
 
         return c
     
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
                                    corr_threshold:float=0.5, sample_list:list = None, 
-                                   width:int = 1600, height:int = 900, focus_list:list = []):
+                                   width:int = 1600, height:int = 900, focus_list:list = [], plot_list_only:bool = False):
         from matplotlib import colormaps
         #check sample_list length
         if len(sample_list) < 2:
@@ -153,28 +157,53 @@ class NetworkPlot:
             correlation_matrix = df.corr(method='spearman')
         else:
             raise ValueError(f"corr_method should be pearson or spearman, but got {corr_method}")
-
+            
         node_sizes = correlation_matrix.apply(lambda x: (x > corr_threshold).sum(), axis=1)
         max_node_size = node_sizes.max()
         min_node_size = node_sizes.min()
+        
+        categories = [{"name": "Focused", "itemStyle": {"normal": {"color": "#ff0000"}}}, 
+                      {"name": "Normal", "itemStyle": {"normal": {"color": "#9AF10F"}}}]
+
+        linked_nodes = set()
+        if focus_list:
+            for i in range(len(correlation_matrix)):
+                for j in range(i+1, len(correlation_matrix)):
+                    node_i = correlation_matrix.columns[i]
+                    node_j = correlation_matrix.columns[j]
+                    correlation = correlation_matrix.iloc[i, j]
+                    if correlation > corr_threshold:
+                        if node_i in focus_list or node_j in focus_list:
+                            linked_nodes.add(node_i)
+                            linked_nodes.add(node_j)
 
         nodes = []
-        if focus_list is not None and len(focus_list) > 0:
-            for gene in correlation_matrix.columns:
-                if gene in focus_list:
+        for item in correlation_matrix.columns:
+            if focus_list and len(focus_list) > 0:
+                if plot_list_only and item not in focus_list and item not in linked_nodes:
+                    continue
+
+                if item in focus_list:
                     node_size = 50
                     color = '#ff0000'
+                    category = 0  # Focus category
                 else:
-                    node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
+                    node_size = (node_sizes[item] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
                     color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
                     color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-                nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
-        else:
-            for gene in correlation_matrix.columns:
-                node_size = (node_sizes[gene] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
+                    category = 1  # Normal category
+            else:
+                node_size = (node_sizes[item] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
                 color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
                 color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-                nodes.append({"name": gene, "symbolSize": node_size, "itemStyle": {"color": color}})
+                category = 1  # Normal category
+            
+            nodes.append({
+                "name": item, 
+                "symbolSize": node_size, 
+                "itemStyle": {"color": color},
+                "category": category
+            })
         
         links = []
         for i in range(len(correlation_matrix)):
@@ -186,6 +215,7 @@ class NetworkPlot:
                     color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
                     links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color}})
 
+            
         pic = (
             Graph(
                 init_opts=opts.InitOpts(
@@ -196,12 +226,15 @@ class NetworkPlot:
                     ),
                 )
             )
-            .add("", nodes, links, repulsion=1500)
-            .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+            .add("", nodes, links,
+                 categories=categories,
+                 repulsion=1500,
+                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"))
             .set_global_opts(
+                legend_opts=opts.LegendOpts(is_show=True),
                 title_opts=opts.TitleOpts(
                     title="Co-expression Network",
-                    subtitle=f"{sample_list}",
+                    subtitle=f"{sample_list}" if sample_list != self.tfobj.sample_list else "",
                     subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ), 
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}} )

@@ -2838,6 +2838,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         width = self.spinBox_co_expr_width.value()
         height = self.spinBox_co_expr_height.value()
         focus_list = self.co_expr_focus_list
+        plot_list_only = self.checkBox_co_expr_plot_list_only.isChecked()
 
 
         sample_list = self.tf.sample_list
@@ -2859,7 +2860,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
             pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
-                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list)
+                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'co-expression network')
         except ValueError as e:
             if 'sample_list should have at least 2' in str(e):
