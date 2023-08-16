@@ -48,7 +48,6 @@ class TaxaFuncAnalyzer:
         self.taxa_func_df = None
         self.func_taxa_df = None
 
-        self.anova_df = None
         self.outlier_stats = {"num_row_with_outlier": None, "num_col_with_outlier": None, "num_nan": None, "final_row_num": None}
 
         self._set_original_df(df_path)

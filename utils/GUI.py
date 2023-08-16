@@ -491,7 +491,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 event.accept()
             else:
                 event.ignore()
-        self.logger.write_log(f"#################### MetaX closed ####################")
+        self.logger.write_log(f"############################## MetaX closed ##############################")
 
         
 
@@ -1196,7 +1196,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             group = self.comboBox_meta_to_stast.currentText()
 
             try:
-                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_list: {batch_list}, processing_order: {processing_order}')
+                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_group}, processing_order: {processing_order}')
                 self.tf.set_func(function)
                 self.tf.set_group(group)
                 self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
