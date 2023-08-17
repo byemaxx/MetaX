@@ -126,7 +126,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionAbout.setIcon(qta.icon('mdi.information-outline'))
         self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.restore'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
-        self.actionSave_TaxaFunc.setIcon(qta.icon('mdi.content-save'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
 
         # set network plot width and height
@@ -170,7 +169,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionAbout.triggered.connect(self.show_about)
         self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
-        self.actionSave_TaxaFunc.triggered.connect(self.save_taxafunc_obj)
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
 
@@ -351,7 +349,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # Save settings every 1 minute
         self.timer = QTimer(self.MainWindow)
-        self.timer.timeout.connect(self.saveSettings)
+        self.timer.timeout.connect(self.save_basic_settings)
         self.timer.start(60000)
         
     
@@ -395,7 +393,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
 
 
-    def saveSettings(self):
+    def save_basic_settings(self):
         line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
         for name in line_edit_names:
             widget = getattr(self, name, None)
@@ -408,11 +406,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.settings.setValue("time", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.settings.setValue("version", __version__)
 
-    def save_taxafunc_obj(self, close_save = False):
+    def save_taxafunc_obj(self, path=None, no_message = False):
         if self.tf.taxa_df is None:
             QMessageBox.warning(self.MainWindow, "Warning", "Please set TaxaFunc first.")
             return
-        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        
+        if path is None:
+            path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        elif os.path.isdir(path):
+            path = os.path.join(path, "taxafunc_obj.pkl")
+        # if not os.path.exists(path): # if path does not exist, create it
+        elif not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        else:
+            raise ValueError(f"Invalid path: {path}")
+        
         with open(path, 'wb') as f:
             pickle.dump(self.tf, f)
             
@@ -438,7 +446,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.settings.setValue(f"{settings_key}/items", items)
         
         self.logger.write_log(f"Save taxafunc object to {path}.")
-        if not close_save:
+        print(f"Save taxafunc object to {path}.")
+        if not no_message:
             QMessageBox.information(self.MainWindow, "Save taxafunc object", f"Taxafunc object has been saved to {path}.")
             
     def load_taxafunc_obj_from_file(self):
@@ -493,24 +502,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_set_multi_table.setEnabled(True)      
 
     def closeEvent(self, event):
-        if self.tf is not None and self.tf.taxa_df is not None:
-            reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX with saving TaxaFunc?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                self.saveSettings()
-                self.save_taxafunc_obj(close_save = True)
-                event.accept()
-            elif reply == QMessageBox.No:
-                self.saveSettings()
-                event.accept()
-            else:
-                event.ignore()
+        reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.save_basic_settings()
+            event.accept()
         else:
-            reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                self.saveSettings()
-                event.accept()
-            else:
-                event.ignore()
+            event.ignore()
         self.logger.write_log(f"############################## MetaX closed ##############################")
 
         
@@ -1224,6 +1221,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                         outlier_handle_by_group = outlier_handle_by_group,
                                         batch_list = batch_list, processing_order = processing_order)
+                # save taxafunc obj as pickle file
+                self.save_taxafunc_obj(no_message=True)
 
             except ValueError as e:
                 self.logger.write_log(f'set_multi_table: {str(e)}', 'e')
