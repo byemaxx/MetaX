@@ -1091,11 +1091,18 @@ class TaxaFuncAnalyzer:
     
     # New function to check which attributes are set
     def check_attributes(self):
+        status = {"Set": [], "Not set": []}
         for attr in vars(self):
             if getattr(self, attr) is None:
-                print(f"{attr} : None")
+                status["Not set"].append(attr)
             else:
-                print(f"{attr} : set")
+                status["Set"].append(attr)
+        for key, value in status.items():
+            # print with format
+            print(f"{key}:")
+            for attr in value:
+                print(f"  {attr}")
+            print()
     
     def _get_current_time(self):
         import time
