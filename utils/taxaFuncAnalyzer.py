@@ -757,7 +757,7 @@ class TaxaFuncAnalyzer:
         return res_all
     
     def get_intensity_matrix(self, func_name: str = None, taxon_name: str = None,
-                             peptide_seq: str = None, groups: list = None):
+                             peptide_seq: str = None, sample_list: list = None) -> pd.DataFrame:
     # input: a taxon with its function, a function with its taxon,
     # and the peptides in the function or taxon
     # output: a matrix of the intensity of the taxon or function or peptide in each sample
@@ -789,17 +789,22 @@ class TaxaFuncAnalyzer:
                 "Please input either func_name or taxon_name or peptide_seq")
 
         # Create the samples list of groups
-        if groups is not None:
-            group_list_all = self.group_list
-            if any(i not in group_list_all for i in groups):
-                raise ValueError(f"groups must be in {group_list_all}")
-            groups = sorted(groups)
-            sample_list = []
-            for i in groups:
-                sample_list += self.get_sample_list_in_a_group(i)
-        else:
-            groups = self.group_list
+        if sample_list is None:
             sample_list = self.sample_list
+        elif any(i not in self.sample_list for i in sample_list):
+            raise ValueError(
+                f"sample_list must be in {self.sample_list}")
+        # if groups is not None:
+        #     group_list_all = self.group_list
+        #     if any(i not in group_list_all for i in groups):
+        #         raise ValueError(f"groups must be in {group_list_all}")
+        #     groups = sorted(groups)
+        #     sample_list = []
+        #     for i in groups:
+        #         sample_list += self.get_sample_list_in_a_group(i)
+        # else:
+        #     groups = self.group_list
+        #     sample_list = self.sample_list
 
         # Get the intensity matrix of the samples
         dft = dft[sample_list]

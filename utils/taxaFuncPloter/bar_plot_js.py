@@ -37,12 +37,12 @@ class BarPlot_js:
         return df
     
     
-    def plot_intensity_bar(self, taxon_name:str=None, groups:list = None, 
+    def plot_intensity_bar(self, taxon_name:str=None, sample_list:list = None, 
                            func_name:str=None, peptide_seq=None, 
                            width:int=1200, height:int=800, df= None, 
                            title:str=None, rename_taxa:bool=False, show_legend:bool=True):
         if df is None:
-            df = self.tfobj.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, groups= groups)
+            df = self.tfobj.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
                 raise ValueError('No data to plot')
         # rename taxa

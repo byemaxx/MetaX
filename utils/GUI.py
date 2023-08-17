@@ -33,7 +33,6 @@ from MetaX.utils.taxaFuncPloter.heatmap_plot import HeatmapPlot
 from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
 from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
 from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
-# from MetaX.utils.taxaFuncPloter.line_plot import LinePlot
 from MetaX.utils.taxaFuncPloter.bar_plot_js import BarPlot_js
 from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
 from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
@@ -297,7 +296,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_tfnet_add_a_list.clicked.connect(self.add_a_list_to_tfnet_focus_list)
 
         # Taxa-func link
-        self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_intensity_matrix)
+        self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_tflink_intensity_matrix)
         self.pushButton_others_plot_heatmap.clicked.connect(self.plot_others_heatmap)
         self.pushButton_others_plot_line.clicked.connect(self.plot_others_bar)
         self.pushButton_others_show_linked_taxa.clicked.connect(self.show_others_linked_taxa)
@@ -652,61 +651,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.output_window = OutputWindow(func_class, self, *args, **kwargs)
         self.output_window.show()
     
-    def update_network_combobox(self):
-        # tklink network
-        self.comboBox_network_group = CheckableComboBox()
-        self.comboBox_network_sample = CheckableComboBox()
-        # co_expr network
-        self.comboBox_co_expr_group = CheckableComboBox()
-        self.comboBox_co_expr_sample = CheckableComboBox()
-        try:
-            # delete the old combobox 
-            self.gridLayout_network_group.itemAt(0).widget().deleteLater()
-            self.gridLayout_network_sample.itemAt(0).widget().deleteLater()
-            self.gridLayout_co_expr_group.itemAt(0).widget().deleteLater()
-            self.gridLayout_co_expr_sample.itemAt(0).widget().deleteLater()
-        except AttributeError:
-            pass
-        finally:
-            self.gridLayout_network_group.addWidget(self.comboBox_network_group)
-            self.gridLayout_network_sample.addWidget(self.comboBox_network_sample)
-            self.gridLayout_co_expr_group.addWidget(self.comboBox_co_expr_group)
-            self.gridLayout_co_expr_sample.addWidget(self.comboBox_co_expr_sample)
-        group_list = sorted(set(self.tf.group_list))
-        sample_list = sorted(set(self.tf.sample_list))       
 
-        for group in group_list:
-            self.comboBox_network_group.addItem(group)
-            self.comboBox_co_expr_group.addItem(group)
-        for sample in sample_list:
-            self.comboBox_network_sample.addItem(sample)
-            self.comboBox_co_expr_sample.addItem(sample)
-    
-    def update_trends_cluster_combobox(self):
-        # trends cluster
-        self.comboBox_trends_group = CheckableComboBox()
-        self.comboBox_trends_sample = CheckableComboBox()
-
-        try:
-            # delete the old combobox
-            self.verticalLayout_trends_group.itemAt(0).widget().deleteLater()
-            self.verticalLayout_trends_sample.itemAt(0).widget().deleteLater()
-
-        except AttributeError:
-            pass
-        finally:
-            self.verticalLayout_trends_group.addWidget(self.comboBox_trends_group)
-            self.verticalLayout_trends_sample.addWidget(self.comboBox_trends_sample)
-
-        group_list = sorted(set(self.tf.group_list))
-        sample_list = sorted(set(self.tf.sample_list))       
-
-        for group in group_list:
-            self.comboBox_trends_group.addItem(group)
-        for sample in sample_list:
-            self.comboBox_trends_sample.addItem(sample)
-
-        
 
 
     def set_lineEdit_db_path(self):
@@ -1102,6 +1047,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             
             # enable basic button
             self.enable_basic_button()
+            
+            # disable multi table button
+            self.enable_multi_button(False)
+            
             # go to original table tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(1)
         except:
@@ -1269,14 +1218,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
         self.peptide_list = self.tf.peptide_df.index.tolist()
 
-        # update group and sample in comboBox of basic analysis
-        self.update_basic_group_and_sample()
+        # update group and sample in comboBox
+        self.update_group_and_sample_combobox()
         # update taxa and function and group in comboBox
         self.update_func_taxa_group_to_combobox()
-        # update comboBox of network plot
-        self.update_network_combobox()
-        # update comboBox of trends cluster
-        self.update_trends_cluster_combobox()
+
         # update comboBox_co_expr_select_list
         self.update_co_expr_select_list()
         # update comboBox_trends_selection_list
@@ -1302,9 +1248,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         # set initial value of taxa-func link network selection list
         self.update_tfnet_select_list()
         # Disable some buttons
-        self.disable_multi_button()
+        self.disable_button_after_multiple()
         # enable all buttons
-        self.enable_multi_button()
+        self.enable_multi_button(True)
         
         
         # show message
@@ -1361,6 +1307,65 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         elif type_list == 'peptide':
             self.comboBox_basic_heatmap_selection_list.addItem('All Peptides')
             self.comboBox_basic_heatmap_selection_list.addItems(self.peptide_list)
+    
+    def update_group_and_sample_combobox(self):
+        # set group list
+        group_list = sorted(set(self.tf.group_list))
+        sample_list = sorted(set(self.tf.sample_list))
+
+        # update normal comboBox
+        self.comboBox_ttest_group1.clear()
+        self.comboBox_ttest_group1.addItems(group_list)
+        self.comboBox_ttest_group2.clear()
+        self.comboBox_ttest_group2.addItems(group_list)
+        self.comboBox_deseq2_group1.clear()
+        self.comboBox_deseq2_group1.addItems(group_list)
+        self.comboBox_deseq2_group2.clear()
+        self.comboBox_deseq2_group2.addItems(group_list)
+        
+        # create the CheckableComboBox for group layout
+        group_layout_dict = {
+            self.verticalLayout_basic_pca_group: "comboBox_basic_pca_group",
+            self.verticalLayout_basic_heatmap_group: "comboBox_basic_group",
+            self.horizontalLayout_anova_group : "comboBox_anova_group",
+            self.gridLayout_co_expr_group : "comboBox_co_expr_group",
+            self.verticalLayout_trends_group : "comboBox_trends_group",
+            self.gridLayout_network_group : "comboBox_network_group",
+            self.gridLayout_tflink_group : "comboBox_tflink_group", 
+        }
+        # create the CheckableComboBox for sample layout
+        sample_layout_dict = {
+            self.verticalLayout_basic_pca_sample: "comboBox_basic_pca_sample",
+            self.verticalLayout_basic_heatmap_sample: "comboBox_basic_sample",
+            self.gridLayout_co_expr_sample : "comboBox_co_expr_sample",
+            self.verticalLayout_trends_sample : "comboBox_trends_sample",
+            self.gridLayout_network_sample : "comboBox_network_sample",
+            self.gridLayout_tflink_sample : "comboBox_tflink_sample", 
+        }
+
+        # create the CheckableComboBox and add items
+        for layout, combobox_name in group_layout_dict.items():
+            try:
+                layout.itemAt(0).widget().deleteLater()
+            except Exception as e:
+                pass
+            new_combobox = CheckableComboBox()
+            setattr(self, combobox_name, new_combobox)  # Assign to the attribute
+            layout.addWidget(new_combobox)
+            for group in group_list:
+                new_combobox.addItem(group)
+                
+        for layout, combobox_name in sample_layout_dict.items():
+            try:
+                layout.itemAt(0).widget().deleteLater()
+            except Exception as e:
+                pass
+            new_combobox = CheckableComboBox()
+            setattr(self, combobox_name, new_combobox)  # Assign to the attribute
+            layout.addWidget(new_combobox)
+            for sample in sample_list:
+                new_combobox.addItem(sample)
+        
 
     def update_func_taxa_group_to_combobox(self):
         # reset other taxa and function lebel
@@ -1387,66 +1392,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_others_taxa.addItem('')
         self.comboBox_others_taxa.addItems(self.taxa_list_linked)
     
-        # set group list
-        group_list = sorted(set(self.tf.group_list))
-        self.comboBox_ttest_group1.clear()
-        self.comboBox_ttest_group1.addItems(group_list)
-        self.comboBox_ttest_group2.clear()
-        self.comboBox_ttest_group2.addItems(group_list)
-        self.comboBox_deseq2_group1.clear()
-        self.comboBox_deseq2_group1.addItems(group_list)
-        self.comboBox_deseq2_group2.clear()
-        self.comboBox_deseq2_group2.addItems(group_list)
-
-        # create the CheckableComboBox
-        self.comboBox_others_group = CheckableComboBox()
-        self.comboBox_anova_group = CheckableComboBox()
-
-        layout_list = [self.gridLayout_tflink_group, self.horizontalLayout_anova_group]
-        for i in layout_list:
-            try:
-                i.itemAt(0).widget().deleteLater()
-            except Exception as e:
-                pass
-
-        self.gridLayout_tflink_group.addWidget(self.comboBox_others_group)
-        self.horizontalLayout_anova_group.addWidget(self.comboBox_anova_group)
-
-        for group in group_list:
-            self.comboBox_others_group.addItem(group)
-            self.comboBox_anova_group.addItem(group)
-        
-    def update_basic_group_and_sample(self):
-        group_list = sorted(set(self.tf.group_list))
-        sample_list = sorted(set(self.tf.sample_list))  
-
-        self.comboBox_basic_pca_group = CheckableComboBox()
-        self.comboBox_basic_pca_sample = CheckableComboBox()
-        self.comboBox_basic_group = CheckableComboBox()
-        self.comboBox_basic_sample = CheckableComboBox()
-
-        layout_list = [self.verticalLayout_basic_heatmap_sample, 
-                       self.verticalLayout_basic_heatmap_group, 
-                       self.verticalLayout_basic_pca_group,
-                       self.verticalLayout_basic_pca_sample]
-        
-        for i in layout_list:
-            try:
-                i.itemAt(0).widget().deleteLater()
-            except Exception as e:
-                pass
-
-        self.verticalLayout_basic_pca_group.addWidget(self.comboBox_basic_pca_group)
-        self.verticalLayout_basic_pca_sample.addWidget(self.comboBox_basic_pca_sample)
-        self.verticalLayout_basic_heatmap_group.addWidget(self.comboBox_basic_group)
-        self.verticalLayout_basic_heatmap_sample.addWidget(self.comboBox_basic_sample)
-
-        for group in group_list:
-            self.comboBox_basic_group.addItem(group)
-            self.comboBox_basic_pca_group.addItem(group)
-        for sample in sample_list:
-            self.comboBox_basic_sample.addItem(sample)
-            self.comboBox_basic_pca_sample.addItem(sample)
 
     
 
@@ -1475,6 +1420,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
     def update_combobox_and_label(self, current_text, df, label, comboBox):
+        if not current_text:
+            return None
         try:
             df_row = df.loc[current_text, :]
             items = df_row.index.tolist()
@@ -1505,7 +1452,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         current_text = self.comboBox_tukey_taxa.currentText()
         self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_tukey_func_num, self.comboBox_tukey_func)
 
-    def disable_multi_button(self):
+    def disable_button_after_multiple(self):
         self.pushButton_plot_top_heatmap.setEnabled(False)
         self.pushButton_get_top_cross_table.setEnabled(False)
         self.pushButton_plot_tukey.setEnabled(False)
@@ -1514,57 +1461,62 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.pushButton_trends_get_trends_table.setEnabled(False)
         self.pushButton_trends_plot_interactive_line.setEnabled(False)
 
-    def enable_multi_button(self):
-        self.pushButton_plot_pca_sns.setEnabled(True)
-        self.pushButton_plot_corr.setEnabled(True)
-        self.pushButton_plot_box_sns.setEnabled(True)
-        self.pushButton_anova_test.setEnabled(True)
-        self.pushButton_tukey_test.setEnabled(True)
-        self.pushButton_ttest.setEnabled(True)
-        self.pushButton_deseq2.setEnabled(True)
-        self.pushButton_others_get_intensity_matrix.setEnabled(True)
-        self.pushButton_others_plot_heatmap.setEnabled(True)
-        self.pushButton_others_plot_line.setEnabled(True)
-        self.pushButton_others_show_linked_func.setEnabled(True)
-        self.pushButton_others_show_linked_taxa.setEnabled(True)
-        self.pushButton_others_fresh_taxa_func.setEnabled(True)
-        self.pushButton_show_linked_taxa.setEnabled(True)
-        self.pushButton_show_linked_func.setEnabled(True)
-        self.pushButton_others_fresh_taxa_func.setEnabled(True)
-        self.pushButton_view_table.setEnabled(True)
-        self.pushButton_tukey_fresh.setEnabled(True)
-        self.pushButton_plot_network.setEnabled(True)
-        self.pushButton_basic_heatmap_add.setEnabled(True)
-        self.pushButton_basic_heatmap_drop_item.setEnabled(True)
-        self.pushButton_basic_heatmap_clean_list.setEnabled(True)
-        self.pushButton_basic_heatmap_plot.setEnabled(True)
-        self.pushButton_basic_bar_plot.setEnabled(True)
-        self.pushButton_basic_heatmap_add_top.setEnabled(True)
-        self.pushButton_co_expr_plot.setEnabled(True)
-        self.comboBox_co_expr_table.setEnabled(True)
-        self.comboBox_basic_table.setEnabled(True)
-        self.pushButton_co_expr_add_to_list.setEnabled(True)
-        self.pushButton_co_expr_add_top.setEnabled(True)
-        self.comboBox_tfnet_table.setEnabled(True)
-        self.pushButton_tfnet_add_to_list.setEnabled(True)
-        self.pushButton_tfnet_add_top.setEnabled(True)
-        self.pushButton_tflink_filter.setEnabled(True)
-        self.pushButton_basic_peptide_query.setEnabled(True)
-        self.pushButton_trends_plot_trends.setEnabled(True)
-        self.pushButton_trends_add.setEnabled(True)
-        self.pushButton_trends_add_top.setEnabled(True)
-        self.pushButton_trends_drop_item.setEnabled(True)
-        self.pushButton_trends_clean_list.setEnabled(True)
-        self.comboBox_trends_table.setEnabled(True)
-        self.pushButton_plot_pca_js.setEnabled(True)
-        self.pushButton_trends_add_a_list.setEnabled(True)
-        self.pushButton_co_expr_add_a_list.setEnabled(True)
-        self.pushButton_basic_heatmap_add_a_list.setEnabled(True)
-        self.pushButton_co_expr_drop_item.setEnabled(True)
-        self.pushButton_co_expr_clean_list.setEnabled(True)
-        self.pushButton_tfnet_drop_item.setEnabled(True)
-        self.pushButton_tfnet_clean_list.setEnabled(True)
-        self.pushButton_tfnet_add_a_list.setEnabled(True)
+    def enable_multi_button(self, state=True):
+        list_button = [
+        self.pushButton_plot_pca_sns,
+        self.pushButton_plot_corr,
+        self.pushButton_plot_box_sns,
+        self.pushButton_anova_test,
+        self.pushButton_tukey_test,
+        self.pushButton_ttest,
+        self.pushButton_deseq2,
+        self.pushButton_others_get_intensity_matrix,
+        self.pushButton_others_plot_heatmap,
+        self.pushButton_others_plot_line,
+        self.pushButton_others_show_linked_func,
+        self.pushButton_others_show_linked_taxa,
+        self.pushButton_others_fresh_taxa_func,
+        self.pushButton_show_linked_taxa,
+        self.pushButton_show_linked_func,
+        self.pushButton_others_fresh_taxa_func,
+        self.pushButton_view_table,
+        self.pushButton_tukey_fresh,
+        self.pushButton_plot_network,
+        self.pushButton_basic_heatmap_add,
+        self.pushButton_basic_heatmap_drop_item,
+        self.pushButton_basic_heatmap_clean_list,
+        self.pushButton_basic_heatmap_plot,
+        self.pushButton_basic_bar_plot,
+        self.pushButton_basic_heatmap_add_top,
+        self.pushButton_co_expr_plot,
+        self.comboBox_co_expr_table,
+        self.comboBox_basic_table,
+        self.pushButton_co_expr_add_to_list,
+        self.pushButton_co_expr_add_top,
+        self.comboBox_tfnet_table,
+        self.pushButton_tfnet_add_to_list,
+        self.pushButton_tfnet_add_top,
+        self.pushButton_tflink_filter,
+        self.pushButton_basic_peptide_query,
+        self.pushButton_trends_plot_trends,
+        self.pushButton_trends_add,
+        self.pushButton_trends_add_top,
+        self.pushButton_trends_drop_item,
+        self.pushButton_trends_clean_list,
+        self.comboBox_trends_table,
+        self.pushButton_plot_pca_js,
+        self.pushButton_trends_add_a_list,
+        self.pushButton_co_expr_add_a_list,
+        self.pushButton_basic_heatmap_add_a_list,
+        self.pushButton_co_expr_drop_item,
+        self.pushButton_co_expr_clean_list,
+        self.pushButton_tfnet_drop_item,
+        self.pushButton_tfnet_clean_list,
+        self.pushButton_tfnet_add_a_list]
+        
+        for i in list_button:
+            i.setEnabled(state)
+
 
     def update_co_expr_select_list(self):
         self.comboBox_co_expr_select_list.clear()
@@ -2063,18 +2015,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     
     def add_trends_top_list(self):
         top_num = self.spinBox_trends_top_num.value()
-        groups_list = self.comboBox_trends_group.getCheckedItems()
+        selected_groups = self.comboBox_trends_group.getCheckedItems()
         filtered = self.checkBox_trends_top_filtered.isChecked()
         # get sample list
         if self.radioButton_trends_group.isChecked():
-            sample_list = []
-            if groups_list == []:
-                sample_list = self.tf.sample_list
-            else:
-                for group in groups_list:
+            if selected_groups:
+                sample_list = []
+                for group in selected_groups:
                     sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+            else:
+                sample_list = self.tf.sample_list
+                    
         elif self.radioButton_trends_sample.isChecked():
-            sample_list = self.comboBox_trends_sample.getCheckedItems()
+            selected_samples = self.comboBox_trends_sample.getCheckedItems()
+            if selected_samples:
+                sample_list = selected_samples
+            else:
+                sample_list = self.tf.sample_list
         
         method = self.comboBox_trends_top_by.currentText()
         df_type = self.comboBox_trends_table.currentText()
@@ -2976,16 +2933,24 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         df_type = self.comboBox_tfnet_table.currentText()
         filtered = self.checkBox_tfnet_top_filtered.isChecked()
 
-        sample_list =  self.tf.sample_list
+        
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
-            sample_list = slected_list
+            if slected_list:
+                sample_list = slected_list
+            else:
+                sample_list = self.tf.sample_list
 
         elif self.radioButton_network_bygroup.isChecked():
-            groups = self.comboBox_network_group.getCheckedItems()
-            sample_list = []
-            for group in groups:
-                sample_list += self.tf.get_sample_list_in_a_group(group)
+            selected_groups = self.comboBox_network_group.getCheckedItems()
+            if selected_groups:
+                sample_list = []
+                for group in selected_groups:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+            else:
+                sample_list = self.tf.sample_list
+        else:
+            raise ValueError('radioButton_network_bysample or radioButton_network_bygroup should be checked!')
 
         
         method = self.comboBox_tfnet_top_by.currentText()
@@ -2998,6 +2963,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         method_dict = {'Average Intensity': 'mean', 
                        'Frequency in Samples': 'freq', 
                        'Total Intensity': 'sum',
+                       'Number of links': 'links',
                        'ANOVA(p-value)': 'anova_test_p', 
                        'ANOVA(f-statistic)': 'anova_test_f', 
                        'T-TEST(p-value)': 't_test_p',
@@ -3008,17 +2974,34 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                        'Deseq2-down(log2FC)': 'deseq2_down_l2fc'}
         method = method_dict[method]
         
+        print(sample_list)
+        
         table_dict = {'taxa': self.tf.taxa_df, 
                       'func': self.tf.func_df,
                       'taxa-func': self.tf.taxa_func_df,
                       'peptide': self.tf.peptide_df}
-        df = table_dict[df_type.lower()]
 
         if method in ['mean', 'freq', 'sum']:
+            df = table_dict[df_type.lower()]
             df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
             index_list = df.index.tolist()
             return index_list
-        else:
+        
+        elif method == 'links':
+            if df_type in ['taxa-func', 'peptide']:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{method} is only available for [taxa] and [func] table!')
+                return None
+            elif df_type in 'taxa':
+                df = self.tf.taxa_func_df
+            elif df_type in 'func':
+                df = self.tf.func_taxa_df
+            df = df[sample_list]
+            df = df.loc[(df!=0).any(axis=1)]
+            index_list = df.index.get_level_values(0).value_counts().index.tolist()
+            return index_list[:top_num] if top_num <= len(index_list) else index_list
+
+        else: # p-value or f-statistic and log2FC
+            df = table_dict[df_type.lower()]
             index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type, filtered=filtered)
             return index_list
         
@@ -3053,19 +3036,33 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
     # link
-    def get_intensity_matrix(self):
+    def get_tflink_intensity_matrix(self):
         taxa = self.comboBox_others_taxa.currentText().strip()
         func = self.comboBox_others_func.currentText().strip()
-        group_list = self.comboBox_others_group.getCheckedItems()
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
             return None
 
         params = {}
-
-        if group_list:
-            params['groups'] = group_list
+        
+        # extract sample list
+        if self.radioButton_tflink_group.isChecked():
+            selected_groups = self.comboBox_tflink_group.getCheckedItems()
+            if not selected_groups:
+                sample_list = self.tf.sample_list
+            else:
+                sample_list = []
+                for group in selected_groups:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        elif self.radioButton_tflink_sample.isChecked():
+            selected_samples = self.comboBox_tflink_sample.getCheckedItems()
+            if not selected_samples:
+                sample_list = self.tf.sample_list
+            else:
+                sample_list = selected_samples
+                
+        params['sample_list'] = sample_list
 
         if taxa:
             params['taxon_name'] = taxa
@@ -3078,13 +3075,34 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
         else:
             self.show_table(df)
-
+            
+            
+    def get_sample_list_tflink(self):
+        # get sample list
+        if self.radioButton_tflink_group.isChecked():
+            selected_groups = self.comboBox_tflink_group.getCheckedItems()
+            if not selected_groups:
+                sample_list = self.tf.sample_list
+            else:
+                sample_list = []
+                for group in selected_groups:
+                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+        elif self.radioButton_tflink_sample.isChecked():
+            selected_samples = self.comboBox_tflink_sample.getCheckedItems()
+            if not selected_samples:
+                sample_list = self.tf.sample_list
+            else:
+                sample_list = selected_samples
+        return sample_list
+        
     def filter_tflink(self):
         top_num = self.spinBox_tflink_top_num.value()
         method = self.comboBox_tflink_top_by.currentText()
         filtered = self.checkBox_tflink_top_filtered.isChecked()
         
-        sample_list =  self.tf.sample_list
+        # get sample list
+        sample_list = self.get_sample_list_tflink()
+        
         taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         if taxa_list:
@@ -3099,7 +3117,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     def plot_others_heatmap(self):
         taxa = self.comboBox_others_taxa.currentText()
         func = self.comboBox_others_func.currentText()
-        group_list = self.comboBox_others_group.getCheckedItems()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         scale = self.comboBox_tflink_hetatmap_scale.currentText()
@@ -3125,10 +3142,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         title = ''
         params = {}
-
-        if group_list:
-            params['groups'] = group_list
-
+        params['sample_list'] = self.get_sample_list_tflink()
+        
         if taxa:
             params['taxon_name'] = taxa
             title = taxa
@@ -3174,7 +3189,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     def plot_others_bar(self):
         taxa = self.comboBox_others_taxa.currentText()
         func = self.comboBox_others_func.currentText()
-        group_list = self.comboBox_others_group.getCheckedItems()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
@@ -3185,10 +3199,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         params = {}
-        if group_list:
-            params['groups'] = group_list
-        else:
-            params['groups'] = list(set(self.tf.group_list))
+
+        params['sample_list'] = self.get_sample_list_tflink()
 
 
         if taxa:

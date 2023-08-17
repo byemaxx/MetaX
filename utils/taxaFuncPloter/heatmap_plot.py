@@ -176,7 +176,7 @@ class HeatmapPlot:
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels())
             fig.ax_col_dendrogram.set_title(f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})")
 
-            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95)
+            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
             plt.show()
             return fig
         except Exception as e:
@@ -246,7 +246,7 @@ class HeatmapPlot:
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels())
         fig.ax_col_dendrogram.set_title(title)
 
-        plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95)
+        plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
         plt.show()
         return fig
 
