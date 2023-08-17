@@ -289,7 +289,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         ## Others
         # taxa-func link network
         self.pushButton_plot_network.clicked.connect(self.plot_network) 
-        self.comboBox_tfnet_table.currentIndexChanged.connect(self.update_tfnet_select_lsit)
+        self.comboBox_tfnet_table.currentIndexChanged.connect(self.update_tfnet_select_list)
         self.pushButton_tfnet_add_to_list.clicked.connect(self.add_tfnet_selected_to_list)
         self.pushButton_tfnet_add_top.clicked.connect(self.add_tfnet_top_list)
         self.pushButton_tfnet_drop_item.clicked.connect(self.remove_tfnet_selected_from_list)
@@ -1294,10 +1294,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_deseq2_tables_list = []
         self.comboBox_deseq2_tables.clear()
         
-        # set innitial value of basic heatmap selection list
+        # clear list of taxa-func link network
+        self.clear_tfnet_focus_list()
+        
+        # set initial value of basic heatmap selection list
         self.set_basic_heatmap_selection_list()
-        # set innitial value of taxa-func link network selection list
-        self.update_tfnet_select_lsit()
+        # set initial value of taxa-func link network selection list
+        self.update_tfnet_select_list()
         # Disable some buttons
         self.disable_multi_button()
         # enable all buttons
@@ -2915,7 +2918,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
     # Others Functions #
     # network
-    def update_tfnet_select_lsit(self):
+    def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
         if df_type == 'Taxa-Func':
             self.comboBox_tfnet_selecte_list.clear()
