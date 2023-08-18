@@ -126,6 +126,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.restore'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
+        self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
+        # set menu bar click event
+        self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
+        self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
+        self.actionDatabase_Builder.triggered.connect(self.swith_stack_page_dbuilder)
+        self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
+        self.actionAbout.triggered.connect(self.show_about)
+        self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
+        self.actionExport_Log_File.triggered.connect(self.export_log_file)
+        self.console_visible = False
+        self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
+        self.actionCheck_Update.triggered.connect(self.check_update)
 
         # set network plot width and height
         self.screen = QDesktopWidget().screenGeometry()
@@ -160,18 +172,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         # set button click event
-        # set menu bar click event
-        self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
-        self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
-        self.actionDatabase_Builder.triggered.connect(self.swith_stack_page_dbuilder)
-        self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
-        self.actionAbout.triggered.connect(self.show_about)
-        self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
-        self.actionExport_Log_File.triggered.connect(self.export_log_file)
-        self.console_visible = False
-        self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
-
-
         # peptide2taxafunc
         self.pushButton_get_db_path.clicked.connect(self.set_lineEdit_db_path)
         self.pushButton_get_final_peptide_path.clicked.connect(self.set_lineEdit_final_peptide_path)
@@ -588,6 +588,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.comboBox_tflink_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
 
+    def check_update(self):
+        QMessageBox.information(self.MainWindow, "Check for update", "This function is not available yet.")
 
     def show_about(self):
 
@@ -598,7 +600,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         Text_browser = QTextBrowser(dialog)
         Text_browser.setOpenExternalLinks(True) # allow links to open in external browser
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MetaX_GUI\\resources\\logo.png")
-        print(logo_path)
 
         about_html =f'''<h1>Meta-X</h1><h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4><img src='{logo_path}' width='200' height='200' align='right' />
         <p>Meta-X is a tool for linking the peptide to the taxonomy and function in metaproteomics.</p>
@@ -1203,7 +1204,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         # add tables to table dict
         self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
-        self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
+        # self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
         self.update_table_dict('peptide', self.tf.peptide_df)
         self.update_table_dict('taxa', self.tf.taxa_df)
         self.update_table_dict('function', self.tf.func_df)
@@ -2321,7 +2322,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             df = self.tf.get_stats_peptide_num_in_taxa()
             # self.show_table(df)
-            self.update_table_dict('stats_peptide_num_in_taxa', df)
+            # self.update_table_dict('stats_peptide_num_in_taxa', df)
     
     def plot_taxa_stats(self):
         if self.tf is None:
@@ -2345,7 +2346,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             df = self.tf.get_stats_taxa_level()
             # self.show_table(df)
-            self.update_table_dict('stats_taxa_level', df)
+            # self.update_table_dict('stats_taxa_level', df)
     
     def plot_taxa_number(self):
         if self.tf is None:
@@ -2385,7 +2386,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             df = self.tf.get_stats_func_prop(func_name)
             # self.show_table(df)
-            self.update_table_dict('stats_func_prop', df)
+            # self.update_table_dict('stats_func_prop', df)
     
 
     

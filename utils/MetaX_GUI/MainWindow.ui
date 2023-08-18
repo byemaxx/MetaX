@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>491</width>
-                 <height>463</height>
+                 <width>340</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5110,6 +5110,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionCheck_Update"/>
    </widget>
    <widget class="QMenu" name="menuOthers">
     <property name="title">
@@ -5167,6 +5168,11 @@
   <action name="actionHide_Show_Console">
    <property name="text">
     <string>Show/Hide Console</string>
+   </property>
+  </action>
+  <action name="actionCheck_Update">
+   <property name="text">
+    <string>Check Update</string>
    </property>
   </action>
  </widget>
