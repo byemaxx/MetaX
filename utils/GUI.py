@@ -2974,9 +2974,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                        'Deseq2-up(log2FC)': 'deseq2_up_l2fc', 
                        'Deseq2-down(log2FC)': 'deseq2_down_l2fc'}
         method = method_dict[method]
-        
-        print(sample_list)
-        
+                
         table_dict = {'taxa': self.tf.taxa_df, 
                       'func': self.tf.func_df,
                       'taxa-func': self.tf.taxa_func_df,

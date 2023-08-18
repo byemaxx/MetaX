@@ -112,10 +112,13 @@ class NetworkPlot:
                 nodes,
                 links,
                 categories,
-                repulsion=100,
+                repulsion= 1000,
+                is_focusnode=True,
+                is_layout_animation= True,
                 friction = 0.6,
-                linestyle_opts=opts.LineStyleOpts(curve=0.2),
-                gravity = 0.1,
+                linestyle_opts=opts.LineStyleOpts(curve=0.2, opacity=0.5),
+                # itemstyle_opts=opts.ItemStyleOpts(border_width=0.5, border_color="rgba(0,0,0,0.5)", opacity=0.8),
+                gravity = 0.05,
                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"),
             )
             .set_global_opts(
@@ -228,7 +231,8 @@ class NetworkPlot:
             )
             .add("", nodes, links,
                  categories=categories,
-                 repulsion=1500,
+                 repulsion= 1000,
+                 is_layout_animation= True,
                  label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"))
             .set_global_opts(
                 legend_opts=opts.LegendOpts(is_show=True),
