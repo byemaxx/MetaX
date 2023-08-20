@@ -918,7 +918,7 @@ class TaxaFuncAnalyzer:
 
         dds = DeseqDataSet(
             counts=counts_df,
-            clinical=meta_df,
+            metadata=meta_df,
             design_factors=self.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
             refit_cooks=True)
         dds.deseq2()
@@ -941,10 +941,16 @@ class TaxaFuncAnalyzer:
 
 
         # check order
-        res_group_2 = stat_res.LFC.columns[1].split('_')[3]
-        input_group_1 = group_list[0].replace('_', '-')
-        if res_group_2 == input_group_1:
+        res_group = stat_res.LFC.columns[1]
+        res_group_2 = stat_res.LFC.columns[1].split('_vs_')[1]
+        input_group_2 = group_list[1].replace('_', '-')
+        print(f'res_group_2: {res_group_2}')
+        print(f'input_group_2: {input_group_2}')
+        if res_group_2 == input_group_2:
+            print(f'Res group order [{res_group}] is correct, keep original log2FoldChange values')
+        else:
             res_merged["log2FoldChange"] = -res_merged["log2FoldChange"]
+            print(f'Res group order [{res_group}] is incorrect, reverse log2FoldChange values')
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
