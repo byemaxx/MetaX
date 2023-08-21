@@ -3316,6 +3316,8 @@ def global_exception_handler(type, value, tb):
 
 
 def runGUI():
+    sys.excepthook = global_exception_handler
+
     class CustomMainWindow(QtWidgets.QMainWindow):
         def closeEvent(self, event):
             ui.closeEvent(event) 
@@ -3388,5 +3390,4 @@ def runGUI():
 
 if __name__ == '__main__':
     # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-    sys.excepthook = global_exception_handler
     runGUI()
