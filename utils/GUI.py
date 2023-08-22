@@ -2788,15 +2788,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         try:
             df = self.table_dict[table_name]
             pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc_min = log2fc_min, log2fc_max=log2fc_max,  title_name=title_name,  width=width, height=height)
-            home_path = QDir.homePath()
-            metax_path = os.path.join(home_path, 'MetaX')
-            if not os.path.exists(metax_path):
-                os.makedirs(metax_path)
-            save_path = os.path.join(metax_path, 'volcano_plot.html')
-            pic.render(save_path)
-            web = webDialog.MyDialog(save_path)
-            self.web_list.append(web)
-            web.show()
+            self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
+
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
