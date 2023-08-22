@@ -474,6 +474,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             QMessageBox.warning(self.MainWindow, "Warning", "No log file found.")
             
     def run_restore_taxafunc_obj(self):
+        self.show_message("Loading taxafunc object from last time...", "Loading...")
         self.set_multi_table(restore_taxafunc = True)
         self.restore_settings_after_load_taxafunc_obj()
         self.logger.write_log(f"Restore taxafunc object from last time.")
