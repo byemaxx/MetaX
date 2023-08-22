@@ -87,7 +87,19 @@ def save_result(df, output_path):
     dir_path = os.path.dirname(output_path)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-        
+        print(f'Output directory did not exist, created: {dir_path}')
+    
+    if os.path.exists(output_path):
+        counter = 1
+        base_name = os.path.splitext(os.path.basename(output_path))[0]  # get base name without extension
+        ext = os.path.splitext(output_path)[-1]
+        new_output_path = os.path.join(dir_path, f'{base_name}_{counter}{ext}')
+        while os.path.exists(new_output_path):
+            counter += 1
+            new_output_path = os.path.join(dir_path, f'{base_name}_{counter}{ext}')
+        output_path = new_output_path
+        print(f'Output file already exists, saved as: {output_path}')
+    
     df.to_csv(output_path, sep='\t', index=False)
     print(f'Output file: {output_path}')
     print(f'Output shape: {df.shape}')
