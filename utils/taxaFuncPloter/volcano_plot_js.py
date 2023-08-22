@@ -49,19 +49,18 @@ class VolcanoPlot():
                 return "#663d74"
             elif type_value == 'ultra-down':
                 return "#206864"
-            else:
+            else: # normal
                 return "#9aa7b1"
 
-        # 创建一个新的列'itemStyle'，其值是一个 ItemStyleOpts 对象
-        df['itemStyle'] = df['type'].apply(lambda x: opts.ItemStyleOpts(color=color_mapping(x)))
-
-        Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
-        scatter_ultra_up = df[df['type'] == 'ultra-up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
-        Scatter_down = df[df['type'] == 'down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
-        scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
-        Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']], 'itemStyle': p['itemStyle']}, axis=1)
+        # create a list of dict for each type
+        Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
+        scatter_ultra_up = df[df['type'] == 'ultra-up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
+        Scatter_down = df[df['type'] == 'down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
+        scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
+        Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
 
         title = f'Volcano plot of {title_name} (padj < {padj},  {log2fc_min} < log2FoldChange < {log2fc_max})'
+        
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(df['log2FoldChange'].tolist())
@@ -69,6 +68,7 @@ class VolcanoPlot():
                 f"Normal ({count_dict['normal']})",
                 Scatter_normal.tolist(),
                 label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts = opts.ItemStyleOpts(color=color_mapping('normal'))
             )
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='log2FoldChange'),
@@ -84,23 +84,28 @@ class VolcanoPlot():
                 f"Up ({count_dict['up']})",
                 Scatter_up.tolist(),
                 label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('up'))
             )
         if count_dict['ultra-up'] > 0:
             scatter.add_yaxis(
                 f"Ultra-up ({count_dict['ultra-up']})",
                 scatter_ultra_up.tolist(),
-                label_opts=opts.LabelOpts(is_show=False) )
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('ultra-up'))
+                )
         if count_dict['down'] > 0:
             scatter.add_yaxis(
                 f"Down ({count_dict['down']})",
                 Scatter_down.tolist(),
-                label_opts=opts.LabelOpts(is_show=False) )
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('down'))
+                )
         if count_dict['ultra-down'] > 0:
             scatter.add_yaxis(
                 f"Ultra-down ({count_dict['ultra-down']})",
                 scatter_ultra_down.tolist(),
-                label_opts=opts.LabelOpts(is_show=False) )
-        
-        
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('ultra-down'))
+                )
             
         return scatter
