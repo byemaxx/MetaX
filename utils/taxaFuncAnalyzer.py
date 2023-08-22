@@ -891,12 +891,15 @@ class TaxaFuncAnalyzer:
         
         counts_df = df.T
         # make sure the max value is not larger than int32
-        if counts_df.max().max() > 2147483647:
-            times = counts_df.max().max() / 2147483647
+        max_value = 2147483647
+        if counts_df.max().max() > max_value:
+            times = counts_df.max().max() / max_value
             divide = int(times) + 1
             counts_df = counts_df / divide
             print(f'Warning: the max value is [{counts_df.max().max()}], [{times}] times larger than int32, all values are divided by [{divide}]')
-                
+        else:
+            print(f'The max value is [{counts_df.max().max()}], not larger than int32, no need to divide')
+              
         counts_df = counts_df.astype(int)
         counts_df = counts_df.sort_index()
 

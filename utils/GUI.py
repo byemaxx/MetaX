@@ -678,8 +678,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         test_data_dir = os.path.join(parent_path, 'data/example_data')
         example_taxafunc_path = os.path.join(test_data_dir, 'Example_TaxaFunc.tsv').replace('\\', '/')
         example_meta_path = os.path.join(test_data_dir, 'Example_Meta.tsv').replace('\\', '/')
-        self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
-        self.lineEdit_meta_path.setText(example_meta_path)
+        if os.path.exists(example_taxafunc_path):
+            self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Example TaxaFunc table not found.')
+        if os.path.exists(example_meta_path):
+            self.lineEdit_meta_path.setText(example_meta_path)
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Example Meta table not found.')
+
 
     def run_db_builder(self):
         save_path = f'''{self.lineEdit_db_save_path.text()}'''
@@ -977,32 +984,37 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         taxafunc_path = self.lineEdit_taxafunc_path.text()
         meta_path = self.lineEdit_meta_path.text()
 
-        if taxafunc_path == '':
+        if not taxafunc_path:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxaFunc table!')
-        elif meta_path == '':
+            return
+        elif not meta_path:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
-        else:
+            return
+        # check if files exist
+        if not os.path.exists(taxafunc_path):
+            QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
+            return
+        elif not os.path.exists(meta_path):
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
+            return
+        
+        try:
             self.show_message('taxaFuncAnalyzer is running, please wait...')
-            # Deprecated function
-            # if self.check_tables_for_taxaFuncAnalyzer(taxafunc_path, meta_path) == False:
-            #     return None
-            # Deprecated function
-            try:
-                self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
-                self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
-                self.update_after_tfobj()
-                self.show_taxaFuncAnalyzer_init()
+            self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
+            self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
+            self.update_after_tfobj()
+            self.show_taxaFuncAnalyzer_init()
 
-            except:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
-                if "The TaxaFunc data must have Taxon_prop column!" in error_message:
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
-                elif "The meta data does not match the TaxaFunc data, Please check!" in error_message:
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'The meta data does not match the TaxaFunc data, Please check!')
-                else:
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
-    
+        except:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
+            if "The TaxaFunc data must have Taxon_prop column!" in error_message:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
+            elif "The meta data does not match the TaxaFunc data, Please check!" in error_message:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'The meta data does not match the TaxaFunc data, Please check!')
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
+
             
     def update_after_tfobj(self):
         try:
