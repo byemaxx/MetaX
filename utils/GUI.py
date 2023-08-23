@@ -1271,8 +1271,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         # show message
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
+        
         if outlier_detect_method != 'None':
-            nan_stats_str = f'\nNumber of peptides for downstream analysis: [{self.tf.peptide_df.shape[0]}] ({self.tf.peptide_df.shape[0]/self.tf.original_df.shape[0]*100:.2f}%)'
+            nan_stats_str = '\n\nLeft row after outlier handling:\n'
+            for i, j in self.tf.outlier_status.items():
+                if j:
+                    nan_stats_str += f'{i}: [{j}]\n'
+                    
         else:    
             nan_stats_str = ''
             
@@ -1716,7 +1721,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         if aim_list == 'trends':
             self.update_trends_list(str_list=text_list)
         elif aim_list == 'co_expr':
-            self.update_co_expr_lsit(str_list=text_list)
+            self.update_co_expr_list(str_list=text_list)
         elif aim_list == 'basic_heatmap':
             self.update_basic_heatmap_list(str_list=text_list)
         elif aim_list == 'tfnet':
@@ -1760,7 +1765,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
      
     def add_co_expr_to_list(self):
         str_selected = self.comboBox_co_expr_select_list.currentText().strip()
-        self.update_co_expr_lsit(str_selected=str_selected)
+        self.update_co_expr_list(str_selected=str_selected)
     
     def clean_co_expr_list(self):
         self.co_expr_focus_list = []
@@ -1775,7 +1780,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.co_expr_focus_list.remove(item.text())
    
 
-    def update_co_expr_lsit(self, str_selected=None, str_list=None):
+    def update_co_expr_list(self, str_selected=None, str_list=None):
         if str_list is None and str_selected is not None:
             df_type = self.comboBox_co_expr_table.currentText()
             list_dict = {'Taxa': self.taxa_list, 'Func': self.func_list, 'Taxa-Func': self.taxa_func_list, 'Peptide': self.peptide_list}
@@ -1816,7 +1821,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         df_type = self.comboBox_co_expr_table.currentText()
 
         index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
-        self.update_co_expr_lsit(str_list=index_list)
+        self.update_co_expr_list(str_list=index_list)
 
         
 

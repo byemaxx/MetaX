@@ -38,7 +38,7 @@ class TaxaFuncAnalyzer:
         self.group_list = None
         self.group_dict = None
 
-        self.func_list = None
+        self.func_list = None # all the func in the taxaFunc table which has _prop
         self.func_name = None
 
         self.clean_df = None
@@ -47,6 +47,7 @@ class TaxaFuncAnalyzer:
         self.func_df = None
         self.taxa_func_df = None
         self.func_taxa_df = None
+        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
@@ -625,8 +626,10 @@ class TaxaFuncAnalyzer:
     def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
                          transform_method: str = None, batch_list: list = None, 
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         outlier_handle_by_group: bool = True, processing_order:list=None) -> pd.DataFrame:
+                         outlier_handle_by_group: bool = True, processing_order:list=None,
+                         df_name:str=None) -> pd.DataFrame:
         df = df.copy()
+        original_row_num = len(df)
         if processing_order is None:
             processing_order = ['outlier' ,'batch', 'transform', 'normalize']
         else:
@@ -644,6 +647,11 @@ class TaxaFuncAnalyzer:
             else:
                 raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
         print(f'\n{self._get_current_time()} -----Data preprocessing finished.-----\n')
+
+        if df_name in {'peptide', 'taxa', 'func', 'taxa_func'}:
+            left_row_num = len(df)
+            self.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
+
         return df
     
 
@@ -1028,7 +1036,7 @@ class TaxaFuncAnalyzer:
         df = self.original_df.copy()
         # perform data pre-processing
         if not processing_after_sum:
-            df = self._data_preprocess(df=df, **args_data_preprocess)
+            df = self._data_preprocess(df=df,df_name = 'peptide', **args_data_preprocess)
             # save the processed df
             self.preprocessed_df = df
         
@@ -1044,7 +1052,7 @@ class TaxaFuncAnalyzer:
         df_func = df_func.groupby(func_name).sum(numeric_only=True)[sample_list]
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Function table...-----")
-            df_func = self._data_preprocess(df=df_func, **args_data_preprocess)
+            df_func = self._data_preprocess(df=df_func,df_name = 'func', **args_data_preprocess)
         print(f"Function number: {df_func.shape[0]}")
 
         print("Starting to set Taxa table...")
@@ -1086,7 +1094,7 @@ class TaxaFuncAnalyzer:
         df_taxa = dfc.groupby('Taxon').sum(numeric_only=True)[sample_list]
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
-            df_taxa = self._data_preprocess(df=df_taxa, **args_data_preprocess)
+            df_taxa = self._data_preprocess(df=df_taxa,df_name = 'taxa', **args_data_preprocess)
         print(f"Taxa number: {df_taxa.shape[0]}")
 
         # Filter the dataframe
@@ -1102,7 +1110,7 @@ class TaxaFuncAnalyzer:
         # create clean peptide table
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for dfc...-----")
-            dfc_processed = self._data_preprocess(df=dfc, **args_data_preprocess)
+            dfc_processed = self._data_preprocess(df=dfc, df_name = 'peptide',**args_data_preprocess)
             self.preprocessed_df = dfc_processed
             dfc_with_peptides = dfc_processed[['Sequence', 'Taxon', func_name] + sample_list]
         else:  
@@ -1120,7 +1128,7 @@ class TaxaFuncAnalyzer:
         df_taxa_func = dfc.groupby(['Taxon', func_name], as_index=True).sum(numeric_only=True)
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa-Function table...-----")
-            df_taxa_func = self._data_preprocess(df=df_taxa_func, **args_data_preprocess)
+            df_taxa_func = self._data_preprocess(df=df_taxa_func,df_name = 'taxa_func', **args_data_preprocess)
 
         # df_func_taxa = dfc.groupby([func_name, 'Taxon'], as_index=True).sum(numeric_only=True)
         df_func_taxa = df_taxa_func.swaplevel().sort_index()
