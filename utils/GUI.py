@@ -1096,6 +1096,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
+            
+            # Data Preprocessing
+            processing_after_sum = self.radioButton_data_preprocessing_after_sum.isChecked()
+
             # outlier detect and handle
             outlier_detect_method = self.comboBox_outlier_detection.currentText()
             outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
@@ -1183,14 +1187,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                                         normalize_method = normalize_method, transform_method = transform_method, 
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                         outlier_handle_by_group = outlier_handle_by_group,
-                                        batch_list = batch_list, processing_order = processing_order)
+                                        batch_list = batch_list, processing_order = processing_order,
+                                        processing_after_sum = processing_after_sum)
                 # save taxafunc obj as pickle file
                 self.save_taxafunc_obj(no_message=True)
 
-            except ValueError as e:
-                self.logger.write_log(f'set_multi_table: {str(e)}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', str(e))
-                return None
+
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'set_multi_table: {str(error_message)}', 'e')
@@ -1270,10 +1272,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         # show message
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
         if outlier_detect_method != 'None':
-            nan_stats_str = f'\n[{self.tf.outlier_stats["num_nan"]}] outliers were detected in [{self.tf.outlier_stats["num_row_with_outlier"]}] rows and [{self.tf.outlier_stats["num_col_with_outlier"]}] columns.\
-                \nLeft rows after Outliers Handling: [{self.tf.outlier_stats["final_row_num"]}] ({self.tf.outlier_stats["final_row_num"]/self.tf.original_df.shape[0]*100:.2f}%)'
+            nan_stats_str = f'\nNumber of peptides for downstream analysis: [{self.tf.peptide_df.shape[0]}] ({self.tf.peptide_df.shape[0]/self.tf.original_df.shape[0]*100:.2f}%)'
         else:    
             nan_stats_str = ''
+            
         msg = f'TaxaFunc data is ready! \
         \n{nan_stats_str}\
         \n\nFunction: [{self.tf.func_name}]\

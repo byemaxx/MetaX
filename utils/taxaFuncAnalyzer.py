@@ -48,8 +48,6 @@ class TaxaFuncAnalyzer:
         self.taxa_func_df = None
         self.func_taxa_df = None
 
-        self.outlier_stats = {"num_row_with_outlier": None, "num_col_with_outlier": None, "num_nan": None, "final_row_num": None}
-
         self._set_original_df(df_path)
         self._set_meta(meta_path)
         self._remove_all_zero_row()
@@ -287,7 +285,13 @@ class TaxaFuncAnalyzer:
             return df
         else:
             df_mat = df[self.sample_list]
-
+            # check if there are negative values
+            if (df_mat < 0).any().any():
+                print('Warning: Negative values exist before data transformation.')
+            # check if there are na
+            if df_mat.isnull().any().any():
+                print('Warning: NaN values exist before data transformation.')
+                
             transform_operations = {
                 'None': lambda x: x,
                 'cube': np.cbrt,
@@ -302,7 +306,7 @@ class TaxaFuncAnalyzer:
                     print(f'Data transformed by [{transform_method}]')
                 else:
                     raise ValueError('transform_method must be in [None, log2, log10, sqrt, cube]')
-
+                
             df[self.sample_list] = df_mat
             return df
     
@@ -469,7 +473,6 @@ class TaxaFuncAnalyzer:
         num_row_with_outlier = df_mat.isnull().any(axis=1).sum()
         num_col_with_outlier = df_mat.isnull().any(axis=0).sum()
         num_nan = df_mat.isnull().sum().sum()
-        self.outlier_stats = {'num_row_with_outlier': num_row_with_outlier, 'num_col_with_outlier': num_col_with_outlier, 'num_nan': num_nan}
         print(f'\n[{num_nan}] values are set to NaN. in [{num_row_with_outlier}] rows and [{num_col_with_outlier}] columns.')
         
         print('\nRemove rows only contain NaN or 0 after outlier detection...')
@@ -488,12 +491,13 @@ class TaxaFuncAnalyzer:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:bool = True) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:bool = True,df_original: pd.DataFrame = None) -> pd.DataFrame:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
         df = df.copy()
         
+    
         print(f'\n{self._get_current_time()} Start to handle missing value...\n')
 
         df_mat = df[self.sample_list]
@@ -522,7 +526,8 @@ class TaxaFuncAnalyzer:
             if method == 'knn':
                 imputer = KNNImputer(n_neighbors=5)
             elif method in {'regression', 'multiple'}:
-                imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
+                # make the results don't have negative values by setting min_value=0
+                imputer = IterativeImputer(random_state=0 if method == 'multiple' else None, min_value=0)
             df_group.loc[:, cols] = imputer.fit_transform(df_group)
             return df_group
 
@@ -566,7 +571,7 @@ class TaxaFuncAnalyzer:
             
             elif method == 'original':
                 print(f'Fill NA by {method}, keep the original data...')
-                df = self.original_df[self.original_df.iloc[:, 0].isin(df.iloc[:, 0])]
+                df = df_original[df_original.iloc[:, 0].isin(df.iloc[:, 0])]
 
             elif method == 'drop':
                 print('NO HANDLING FOR MISSING VALUE, DROP ROWS WITH MISSING VALUE')
@@ -610,11 +615,10 @@ class TaxaFuncAnalyzer:
         if self.group_list is None:
             raise ValueError('You must set set group before handling outlier')
 
-        df = self._outlier_detection(df, method=detect_method)
-        df = self._handle_missing_value(df, method=handle_method, by_group=by_group)
-        if detect_method not in ['none', 'None']:
-            self.outlier_stats['final_row_num'] = len(df)
-        return df
+        df_t = self._outlier_detection(df, method=detect_method)
+        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=by_group, df_original=df)
+
+        return df_t
 
            
 
@@ -639,6 +643,7 @@ class TaxaFuncAnalyzer:
                 df = self._data_normalization(df, normalize_method)
             else:
                 raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
+        print(f'\n{self._get_current_time()} -----Data preprocessing finished.-----\n')
         return df
     
 
@@ -1007,18 +1012,25 @@ class TaxaFuncAnalyzer:
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                           normalize_method: str = None, transform_method: str = None,
                           outlier_detect_method: str = None, outlier_handle_method: str = None,
-                          outlier_handle_by_group: bool = True, batch_list: list = None, processing_order:list=None):
+                          outlier_handle_by_group: bool = True, batch_list: list = None, 
+                          processing_order:list=None, processing_after_sum: bool = False):
         
+        args_data_preprocess = {
+            'normalize_method': normalize_method,
+            'transform_method': transform_method,
+            'batch_list': batch_list,
+            'outlier_detect_method': outlier_detect_method,
+            'outlier_handle_method': outlier_handle_method,
+            'outlier_handle_by_group': outlier_handle_by_group,
+            'processing_order': processing_order
+        }
 
-        
         df = self.original_df.copy()
         # perform data pre-processing
-        df = self._data_preprocess(df=df, normalize_method=normalize_method, transform_method = transform_method,
-                                   batch_list= batch_list, outlier_detect_method= outlier_detect_method, 
-                                   outlier_handle_method = outlier_handle_method, outlier_handle_by_group = outlier_handle_by_group,
-                                   processing_order=processing_order)
-        # save the processed df
-        self.preprocessed_df = df
+        if not processing_after_sum:
+            df = self._data_preprocess(df=df, **args_data_preprocess)
+            # save the processed df
+            self.preprocessed_df = df
         
         func_name = self.func_name
         sample_list = self.sample_list
@@ -1029,9 +1041,10 @@ class TaxaFuncAnalyzer:
         df_func = df[(df[f'{func_name}_prop'] >= func_threshold) & (df[func_name].notnull()) &
                      (df[func_name] != 'unknown') & (df[func_name] != '-') & (df[func_name] != 'NaN')].copy()
         
-
-
         df_func = df_func.groupby(func_name).sum(numeric_only=True)[sample_list]
+        if processing_after_sum:
+            print("\n-----Starting to perform data pre-processing for Function table...-----")
+            df_func = self._data_preprocess(df=df_func, **args_data_preprocess)
         print(f"Function number: {df_func.shape[0]}")
 
         print("Starting to set Taxa table...")
@@ -1039,33 +1052,31 @@ class TaxaFuncAnalyzer:
         def strip_taxa(x, level):
             level_dict = {'s': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
             return "|".join(x.split('|')[:level_dict[level]])
-        
-        if level == 's':
-            dfc = df[df['LCA_level'] == 'species']
 
-        elif level == 'g':
-            df_t = df[(df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
+        level_mapping = {
+            's': ['species'],
+            'g': ['genus', 'species'],
+            'f': ['family', 'genus', 'species'],
+            'o': ['order', 'family', 'genus', 'species'],
+            'c': ['class', 'order', 'family', 'genus', 'species'],
+            'p': ['phylum', 'class', 'order', 'family', 'genus', 'species'],
+            'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
+            'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        }
 
-        elif level == 'f':
-            df_t = df[(df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
- 
-        elif level == 'o':
-            df_t = df[(df['LCA_level'] == 'order') | (df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
-
-        elif level == 'c':
-            df_t = df[(df['LCA_level'] == 'class') | (df['LCA_level'] == 'order') | (df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
-
-        elif level == 'p':
-            df_t = df[(df['LCA_level'] == 'phylum') | (df['LCA_level'] == 'class') | (df['LCA_level'] == 'order') | (df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
-
-        elif level == 'd':
-            df_t = df[(df['LCA_level'] == 'domain') | (df['LCA_level'] == 'phylum') | (df['LCA_level'] == 'class') | (df['LCA_level'] == 'order') | (df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
-
-        elif level == 'l':
-            df_t = df[(df['LCA_level'] == 'life') | (df['LCA_level'] == 'domain') | (df['LCA_level'] == 'phylum') | (df['LCA_level'] == 'class') | (df['LCA_level'] == 'order') | (df['LCA_level'] == 'family') | (df['LCA_level'] == 'genus') | (df['LCA_level'] == 'species')]
-        else:    
+        if level in level_mapping:
+            df_t = df[df['LCA_level'].isin(level_mapping[level])]
+            if level != 's':
+                df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
+            dfc = df_t
+        else:
             raise ValueError("Please input the correct taxa level (s, g, f, o, c, p, d, l)")
         
+        
+        if level != 's':
+            df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
+            dfc = df_t
+
         if level != 's':
             df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
             dfc = df_t
@@ -1073,13 +1084,30 @@ class TaxaFuncAnalyzer:
 
         # extract 'taxa' and sample intensity
         df_taxa = dfc.groupby('Taxon').sum(numeric_only=True)[sample_list]
+        if processing_after_sum:
+            print("\n-----Starting to perform data pre-processing for Taxa table...-----")
+            df_taxa = self._data_preprocess(df=df_taxa, **args_data_preprocess)
         print(f"Taxa number: {df_taxa.shape[0]}")
 
-        dfc = dfc[(dfc['Taxon'] != 'unknown')]
-        dfc = dfc[(dfc[f'{func_name}_prop'] >= func_threshold) & (dfc[func_name].notnull()) & (dfc[func_name] != 'unknown') &  (dfc[func_name] != '-')].copy()
-
-        dfc_with_peptides = dfc[['Sequence', 'Taxon', func_name] + sample_list]
+        # Filter the dataframe
+        filter_conditions = (
+            (dfc['Taxon'] != 'unknown') &
+            (dfc[f'{func_name}_prop'] >= func_threshold) &
+            dfc[func_name].notnull() &
+            (dfc[func_name] != 'unknown') &
+            (dfc[func_name] != '-')
+        )
+        dfc = dfc[filter_conditions]
         
+        # create clean peptide table
+        if processing_after_sum:
+            print("\n-----Starting to perform data pre-processing for dfc...-----")
+            dfc_processed = self._data_preprocess(df=dfc, **args_data_preprocess)
+            self.preprocessed_df = dfc_processed
+            dfc_with_peptides = dfc_processed[['Sequence', 'Taxon', func_name] + sample_list]
+        else:  
+            dfc_with_peptides = dfc[['Sequence', 'Taxon', func_name] + sample_list]
+            
         df_peptide = dfc_with_peptides.copy()
         df_peptide.index = df_peptide['Sequence']
         df_peptide = df_peptide.drop(['Sequence', 'Taxon', func_name], axis=1)
@@ -1090,8 +1118,13 @@ class TaxaFuncAnalyzer:
 
         # create taxa-func central table
         df_taxa_func = dfc.groupby(['Taxon', func_name], as_index=True).sum(numeric_only=True)
+        if processing_after_sum:
+            print("\n-----Starting to perform data pre-processing for Taxa-Function table...-----")
+            df_taxa_func = self._data_preprocess(df=df_taxa_func, **args_data_preprocess)
 
-        df_func_taxa = dfc.groupby([func_name, 'Taxon'], as_index=True).sum(numeric_only=True)
+        # df_func_taxa = dfc.groupby([func_name, 'Taxon'], as_index=True).sum(numeric_only=True)
+        df_func_taxa = df_taxa_func.swaplevel().sort_index()
+
 
         print(f"Taxa-Function number: {df_taxa_func.shape[0]}")
 

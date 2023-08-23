@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>340</width>
-                 <height>49</height>
+                 <width>491</width>
+                 <height>463</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -791,6 +791,23 @@
                   <string>All Samples</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QRadioButton" name="radioButton_data_preprocessing_before_sum">
+                <property name="text">
+                 <string>Before Summing  Peptides</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QRadioButton" name="radioButton_data_preprocessing_after_sum">
+                <property name="text">
+                 <string>After Summing Peptides</string>
+                </property>
                </widget>
               </item>
              </layout>
