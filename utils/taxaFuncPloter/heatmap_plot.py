@@ -81,9 +81,9 @@ class HeatmapPlot:
             fig.ax_heatmap.set_xlabel('Function')
             fig.ax_heatmap.set_ylabel('Taxa')
 
-            fig.ax_heatmap.set_title(f"Significant differences between groups in Taxa-Function heatmap of {plot_type} (top {top_number})")
+            fig.ax_col_dendrogram.set_title(f"Significant differences between groups in Taxa-Function heatmap of {plot_type} (top {top_number})")
 
-            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95)
+            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
             plt.show()
             return fig
         except ValueError as e:
