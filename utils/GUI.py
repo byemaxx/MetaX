@@ -892,9 +892,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     def show_pushButton_preprocessing_help(self):
         msg_box = QMessageBox()
         msg_box.setWindowTitle('Preprocessing Help')
-        msg_box.setStyleSheet('QLabel{min-width: 800px;}')
+        msg_box.setStyleSheet('QLabel{min-width: 900px;}')
         msg_box.setWindowFlags(msg_box.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        help_text ='''Outliers Detection:\
+        help_text ='''Data Preprocessing before summing peptides:\
+            \nPerform data preprocessing first, then sum the peptides to calculate the intensity of each taxa, function and taxa-function pair.\
+            \n\nData Preprocessing after summing peptides:\
+            \nSum the peptides to calculate the intensity of each taxa, function and taxa-function pair first, then perform data preprocessing for each table.\
+            \n\n\nOutliers Detection:\
             \nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
             \n\nZero-Dominant: This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.\
