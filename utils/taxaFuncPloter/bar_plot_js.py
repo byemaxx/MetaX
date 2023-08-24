@@ -106,8 +106,9 @@ class BarPlot_js:
         BLACK = (0, 0, 0)
 
         # generated colors will be as distinct as possible from these colors
-        input_colors = [WHITE, BLACK]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.8,colorblind_type="Deuteranomaly")
+        input_colors = [WHITE]
+        # colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.8,colorblind_type="Deuteranomaly")
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.7)
         converted_colors = []
         converted_colors.extend(
             f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors

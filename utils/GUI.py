@@ -406,6 +406,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.settings.setValue("version", __version__)
 
     def save_taxafunc_obj(self, path=None, no_message = False):
+        save_obj_dict = {}
         if self.tf.taxa_df is None:
             QMessageBox.warning(self.MainWindow, "Warning", "Please set TaxaFunc first.")
             return
@@ -420,8 +421,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             raise ValueError(f"Invalid path: {path}")
         
+        save_obj_dict['taxa_func_obj'] = self.tf
+        
         with open(path, 'wb') as f:
-            pickle.dump(self.tf, f)
+            pickle.dump(save_obj_dict, f)
             
         # save tab_set_taxa_func
         for widget in self.tab_set_taxa_func.findChildren(QtWidgets.QWidget):
@@ -443,6 +446,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                     items.append(widget.item(index).text())
                 # print(f"Saving items for {widget.objectName()}: {items}") 
                 self.settings.setValue(f"{settings_key}/items", items)
+            #radioButton
+            elif isinstance(widget, QtWidgets.QRadioButton):
+                self.settings.setValue(f"{settings_key}/isChecked", widget.isChecked())
         
         self.logger.write_log(f"Save taxafunc object to {path}.")
         print(f"Save taxafunc object to {path}.")
@@ -499,6 +505,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 items = self.settings.value(f"{settings_key}/items", [], type=list)
                 widget.clear()
                 widget.addItems(items) 
+            elif isinstance(widget, QtWidgets.QRadioButton):
+                checked = self.settings.value(f"{settings_key}/isChecked", False, type=bool)
+                widget.setChecked(checked)
+                
         self.pushButton_set_multi_table.setEnabled(True)      
 
     def closeEvent(self, event):
@@ -1204,7 +1214,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 return None
         
         else: # restore_taxafunc is True
-            self.tf = self.load_taxafunc_obj_from_file()
+            self.tf = self.load_taxafunc_obj_from_file()['taxa_func_obj']
             if self.tf == None:
                 return None
             else:

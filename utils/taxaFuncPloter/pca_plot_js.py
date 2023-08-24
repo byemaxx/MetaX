@@ -85,7 +85,7 @@ class PcaPlot_js:
         # generated colours will be as distinct as possible from these colours
         input_colors = [ WHITE, BLACK]
         existing_colors = [(0, 0, 0), (1, 1, 1)]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.7)
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
         converted_colors = []
         converted_colors.extend(
             f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
