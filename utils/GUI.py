@@ -141,10 +141,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # set network plot width and height
         self.screen = QDesktopWidget().screenGeometry()
-        self.spinBox_network_width.setValue(self.screen.width())
-        self.spinBox_network_height.setValue(self.screen.height())
-        self.spinBox_co_expr_width.setValue(self.screen.width())
-        self.spinBox_co_expr_height.setValue(self.screen.height())
+        self.spinBox_network_width.setValue(int(self.screen.width()/1.2))
+        self.spinBox_network_height.setValue(int(self.screen.height()/1.2))
+        self.spinBox_co_expr_width.setValue(int(self.screen.width()/1.2))
+        self.spinBox_co_expr_height.setValue(int(self.screen.height()/1.2))
 
         # set Drag EditLine for input file
         self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path)
