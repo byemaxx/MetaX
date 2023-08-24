@@ -283,7 +283,6 @@ class TaxaFuncAnalyzer:
     def _data_transform(self, df: pd.DataFrame, transform_method: str = None) -> pd.DataFrame:
         if transform_method is None:
             print('transform_method is not set, data transform did not perform.')
-            return df
         else:
             df_mat = df[self.sample_list]
             # check if there are negative values
@@ -292,7 +291,7 @@ class TaxaFuncAnalyzer:
             # check if there are na
             if df_mat.isnull().any().any():
                 print('Warning: NaN values exist before data transformation.')
-                
+
             transform_operations = {
                 'None': lambda x: x,
                 'cube': np.cbrt,
@@ -301,20 +300,19 @@ class TaxaFuncAnalyzer:
                 'sqrt': np.sqrt
             }
 
-            if transform_method is not None:
-                if transform_method in transform_operations:
-                    df_mat = transform_operations[transform_method](df_mat)
-                    print(f'Data transformed by [{transform_method}]')
-                else:
-                    raise ValueError('transform_method must be in [None, log2, log10, sqrt, cube]')
-                
+            if transform_method in transform_operations:
+                df_mat = transform_operations[transform_method](df_mat)
+                print(f'Data transformed by [{transform_method}]')
+            else:
+                raise ValueError('transform_method must be in [None, log2, log10, sqrt, cube]')
+
             df[self.sample_list] = df_mat
-            return df
+
+        return df
     
     def _data_normalization(self, df: pd.DataFrame, normalize_method: str = None) -> pd.DataFrame:
         if normalize_method is None:
             print('normalize_method is not set, data normalization did not perform.')
-            return df
         else:
             df = df.copy()
             df_mat = df[self.sample_list]
@@ -334,12 +332,13 @@ class TaxaFuncAnalyzer:
                 print(f'Data normalized by {normalize_method}')
             else:
                 raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore]')
-            
+
             # shift values by their absolute minimum to ensure all values are non-negative
             df_mat = df_mat - df_mat.min()
 
             df[self.sample_list] = df_mat
-            return df
+
+        return df
 
     
     # set outlier to nan
@@ -350,20 +349,20 @@ class TaxaFuncAnalyzer:
         from statsmodels.discrete.count_model import ZeroInflatedPoisson
         from statsmodels.discrete.discrete_model import NegativeBinomial
         from statsmodels.tools.tools import add_constant
-        
+
         df = df.copy()
 
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
-        
+
         if method is None or method == 'None':
             print('outlier_method is not set, outlier detection did not perform.')
             return df
-        
+
         df_mat = df[self.sample_list]
         groups_dict = self.group_dict
         print(f'\nRow number before outlier detection: [{len(df_mat)}]')
-        
+
         if method == 'half-zero':
             print('Outlier detection by [half-zero] (if half samples are 0 or half samples are not 0, set to nan)...')
 
@@ -386,7 +385,7 @@ class TaxaFuncAnalyzer:
                     f'(Non-zero > 0.5: [{abnormal_rows_gt_half.sum()}], '
                     f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], '
                     f'Equal: [{equal_rows.sum()}]) Total Abnormal Ratio: [{((abnormal_rows_gt_half | abnormal_rows_lt_half | equal_rows).sum())/len(df_mat)*100:.2f}%]')
-        
+
         elif method == 'zero-dominant':
             print('Outlier detection by [zero-dominant] (if half or more half samples are 0, set to nan)...')
 
@@ -403,8 +402,8 @@ class TaxaFuncAnalyzer:
                 print(f'Group: [{key}], Samples: [{total_count}], Normal: [{normal_rows.sum()}], Abnormal: [{abnormal_rows_lt_half.sum()}], '
                     f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], Total Abnormal Ratio: [{abnormal_rows_lt_half.sum()/len(df_mat)*100:.2f}%]')
 
-            
-            
+
+
         elif method == "iqr":
             print('Outlier detection by [IQR] (if sample is out of 1.5*IQR, set to nan)...') 
             # calculate the IQR of each group
@@ -422,8 +421,8 @@ class TaxaFuncAnalyzer:
                 z = np.abs(zscore(df_mat[cols]))
                 df_mat.loc[(z > 2.5).any(axis=1), cols] = np.nan
                 print(f'Group: [{group}], Samples: [{len(cols)}], Outlier: [{(z > 3).any(axis=1).sum()} in {len(df_mat)} ({(z > 3).any(axis=1).sum()/len(df_mat)*100:.2f}%)]')
-        
-        elif method in ['zero-inflated-poisson', 'negative-binomial']:
+
+        elif method in {'zero-inflated-poisson', 'negative-binomial'}:
             print(f'Outlier detection by [{method}] (if the predicted value is less than 0.01, set to nan)...')
             for group, cols in groups_dict.items():
                 # Concatenate all columns in the group into a single column
@@ -432,10 +431,10 @@ class TaxaFuncAnalyzer:
                 model = ZeroInflatedPoisson(endog=data, exog=data_const).fit() if method == 'zero-inflated-poisson' else NegativeBinomial(endog=data, exog=data_const).fit()
                 # calculate the predicted value
                 pred_prob = model.predict(data_const)
-                
+
                 # reshape pred_prob to match the original data shape
                 pred_prob = pred_prob.reshape(-1, len(cols))
-                
+
                 # mark the outlier as nan
                 for i, col in enumerate(cols):
                     df_mat.loc[pred_prob[:, i] < 0.01, col] = np.nan
@@ -447,7 +446,7 @@ class TaxaFuncAnalyzer:
             for group, cols in groups_dict.items():
                 # Get the data for this group
                 data = df_mat[cols]
-                
+
                 # Compute the mean and covariance matrix
                 mean = data.mean()
                 cov = data.cov()
@@ -464,18 +463,18 @@ class TaxaFuncAnalyzer:
                 df_mat.loc[outliers, cols] = np.nan
 
                 print(f'Group: [{group}], Outlier: [{outliers.sum()} in {len(df_mat)} ({outliers.sum()/len(df_mat)*100:.2f}%)]')            
-            
-        
+
+
         else:
             raise ValueError(f'Invalid outlier method: {method}')
-        
+
         df[self.sample_list] = df_mat
         # statistics the number
         num_row_with_outlier = df_mat.isnull().any(axis=1).sum()
         num_col_with_outlier = df_mat.isnull().any(axis=0).sum()
         num_nan = df_mat.isnull().sum().sum()
         print(f'\n[{num_nan}] values are set to NaN. in [{num_row_with_outlier}] rows and [{num_col_with_outlier}] columns.')
-        
+
         print('\nRemove rows only contain NaN or 0 after outlier detection...')
         row_num_before = len(df)
         # remove rows in  df[self.sample_list] with all nan and all 0
@@ -486,7 +485,7 @@ class TaxaFuncAnalyzer:
         # print the number of row with nan
         if num_row_with_outlier_after > 0:
             print(f'The Number of rows still with nan: [{num_row_with_outlier_after}] in [{row_num_after}] ({num_row_with_outlier_after/row_num_after*100:.2f}%)')
-        
+
         print(f'\n{self._get_current_time()} Outlier detection finished.\n')
         return df
 
@@ -1022,7 +1021,8 @@ class TaxaFuncAnalyzer:
                           outlier_detect_method: str = None, outlier_handle_method: str = None,
                           outlier_handle_by_group: bool = True, batch_list: list = None, 
                           processing_order:list=None, processing_after_sum: bool = False):
-        
+        # reset outlier_status
+        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
         args_data_preprocess = {
             'normalize_method': normalize_method,
             'transform_method': transform_method,

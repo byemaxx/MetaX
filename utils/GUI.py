@@ -212,6 +212,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # set multi table
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
+        self.comboBox_outlier_detection.currentIndexChanged.connect(self.update_outlier_detection)
+        self.comboBox_outlier_handling_method1.currentIndexChanged.connect(self.update_outlier_handling_method1)
 
 
 
@@ -350,7 +352,22 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.timer = QTimer(self.MainWindow)
         self.timer.timeout.connect(self.save_basic_settings)
         self.timer.start(60000)
-        
+    ###############   init function End   ###############
+    
+    def update_outlier_detection(self):
+        if self.comboBox_outlier_detection.currentText() == "None":
+            self.comboBox_outlier_handling_method1.setEnabled(False)
+            self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
+        else:
+            self.comboBox_outlier_handling_method1.setEnabled(True)
+            self.comboBox_outlier_handling_group_or_sample.setEnabled(True)
+    
+    def update_outlier_handling_method1(self):
+        if self.comboBox_outlier_handling_method1.currentText() in ["mean", "median"]:
+            self.comboBox_outlier_handling_method2.setEnabled(True)
+        else:
+            self.comboBox_outlier_handling_method2.setEnabled(False)
+            
     
     def show_hide_console(self):
         from ctypes import windll
