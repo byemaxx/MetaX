@@ -363,6 +363,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         else:
             self.comboBox_outlier_handling_method1.setEnabled(True)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(True)
+            self.update_outlier_handling_method1()
     
     def update_outlier_handling_method1(self):
         method1 = self.comboBox_outlier_handling_method1.currentText()
