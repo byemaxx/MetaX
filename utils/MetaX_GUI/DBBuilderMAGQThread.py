@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import sys
-from MetaX.utils.databaseBuilderMAG import download_and_build_database
+from MetaX.utils.DatabaseBuilderMAG import download_and_build_database
 
 
 class DBBuilderMAG(QThread):

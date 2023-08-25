@@ -7,10 +7,10 @@ import numpy as np
 
 class BasicPlot:
     def __init__(self, tfobj):
-        self.tfobj =  tfobj
+        self.tfa =  tfobj
     # input: self.get_stats_peptide_num_in_taxa()
     def plot_taxa_stats(self):
-        df = self.tfobj.get_stats_peptide_num_in_taxa()
+        df = self.tfa.get_stats_peptide_num_in_taxa()
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 
         # plt.figure(figsize=(8, 6))
@@ -29,7 +29,7 @@ class BasicPlot:
 
     # input: self.get_stats_taxa_level()
     def plot_taxa_number(self):
-        df = self.tfobj.get_stats_taxa_level()
+        df = self.tfa.get_stats_taxa_level()
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         # plt.figure(figsize=(8, 6))
         sns.set_theme(style="ticks", rc=custom_params)
@@ -46,7 +46,7 @@ class BasicPlot:
 
     # input: self.get_stats_func_prop()
     def plot_prop_stats(self, func_name = 'Description'):
-        df = self.tfobj.get_stats_func_prop(func_name)
+        df = self.tfa.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -73,7 +73,7 @@ class BasicPlot:
             new_sample_name = []
             group_list = []
             for i in sample_list:
-                group = self.tfobj.get_group_of_a_sample(i)
+                group = self.tfa.get_group_of_a_sample(i)
                 new_sample_name.append(f'{i} ({group})')
                 group_list.append(group)
                 
@@ -109,7 +109,7 @@ class BasicPlot:
         new_sample_name = []
         group_list = []
         for i in sample_list:
-            group = self.tfobj.get_group_of_a_sample(i)
+            group = self.tfa.get_group_of_a_sample(i)
             new_sample_name.append(f'{i} ({group})')
             group_list.append(group)
         
@@ -153,7 +153,7 @@ class BasicPlot:
         sample_list = dft.columns
         new_sample_name = []
         for i in sample_list:
-            group = self.tfobj.get_group_of_a_sample(i)
+            group = self.tfa.get_group_of_a_sample(i)
             new_sample_name.append(f'{i} ({group})')
         dft.columns = new_sample_name
         

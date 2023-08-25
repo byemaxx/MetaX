@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import sys
-from MetaX.utils.databaseUpdater import run_db_update
+from MetaX.utils.DatabaseUpdater import run_db_update
 
 
 class DBUpdater(QThread):

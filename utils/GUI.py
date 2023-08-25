@@ -26,19 +26,19 @@ from MetaX.utils.version import __version__
 
 
 # import core scripts of MetaX
-from MetaX.utils.taxaFuncAnalyzer import TaxaFuncAnalyzer
+from MetaX.utils.TaxaFuncAnalyzer import TaxaFuncAnalyzer
 
 # import ploter
-from MetaX.utils.taxaFuncPloter.heatmap_plot import HeatmapPlot
-from MetaX.utils.taxaFuncPloter.basic_plot import BasicPlot
-from MetaX.utils.taxaFuncPloter.volcano_plot_js import VolcanoPlot
-from MetaX.utils.taxaFuncPloter.tukey_plot import TukeyPlot
-from MetaX.utils.taxaFuncPloter.bar_plot_js import BarPlot_js
-from MetaX.utils.taxaFuncPloter.sankey_plot import SankeyPlot
-from MetaX.utils.taxaFuncPloter.network_plot import NetworkPlot
-from MetaX.utils.taxaFuncPloter.trends_plot import TrendsPlot
-from MetaX.utils.taxaFuncPloter.trends_plot_js import TrendsPlot_js
-from MetaX.utils.taxaFuncPloter.pca_plot_js import PcaPlot_js
+from MetaX.utils.TaxaFuncPloter.heatmap_plot import HeatmapPlot
+from MetaX.utils.TaxaFuncPloter.basic_plot import BasicPlot
+from MetaX.utils.TaxaFuncPloter.volcano_plot_js import VolcanoPlot
+from MetaX.utils.TaxaFuncPloter.tukey_plot import TukeyPlot
+from MetaX.utils.TaxaFuncPloter.bar_plot_js import BarPlot_js
+from MetaX.utils.TaxaFuncPloter.sankey_plot import SankeyPlot
+from MetaX.utils.TaxaFuncPloter.network_plot import NetworkPlot
+from MetaX.utils.TaxaFuncPloter.trends_plot import TrendsPlot
+from MetaX.utils.TaxaFuncPloter.trends_plot_js import TrendsPlot_js
+from MetaX.utils.TaxaFuncPloter.pca_plot_js import PcaPlot_js
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -192,7 +192,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
 
-        # taxaFuncAnalyzer
+        # TaxaFuncAnalyzer
         # Data import
         self.pushButton_load_example_for_analyzer.clicked.connect(self.load_example_for_analyzer)
         self.pushButton_get_taxafunc_path.clicked.connect(self.set_lineEdit_taxafunc_path)
@@ -358,6 +358,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         if self.comboBox_outlier_detection.currentText() == "None":
             self.comboBox_outlier_handling_method1.setEnabled(False)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
+            self.comboBox_outlier_handling_method2.setEnabled(False)
+            self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
         else:
             self.comboBox_outlier_handling_method1.setEnabled(True)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(True)

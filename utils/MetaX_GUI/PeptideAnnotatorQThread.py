@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 import sys
 
-from MetaX.utils.peptableAnnotator import peptableAnnotate
+from MetaX.utils.PeptableAnnotator import peptableAnnotate
 
 
 class PeptideAnnotator(QThread):
