@@ -108,7 +108,7 @@ class TaxaFuncAnalyzer:
             df = self.original_df.copy()
             df[meta_list]
             return True
-        except:
+        except Exception:
             return False
     
     def _remove_all_zero_row(self):
@@ -119,7 +119,6 @@ class TaxaFuncAnalyzer:
         print(f'after remove all zero row: {df.shape}')
         self.original_df = df
 
-    
 
     def set_func(self, func):
         
@@ -132,33 +131,31 @@ class TaxaFuncAnalyzer:
         else:
             self.func_name = func
    
-    # set a dict of sample group links
-    def _set_group_dict(self):
-        group_list = list(set(self.get_meta_list(self.meta_name)))
-        group_list = sorted(group_list)
-        group_dict = {
-            group: self.get_sample_list_in_a_group(group) for group in group_list
-        }
-        self.group_dict = group_dict
-        
+
     # set which group in meta_df to use
     def set_group(self, group: str):
         if group not in self.meta_df.columns:
             raise ValueError(f'group must be in {self.meta_df.columns}')
         self.group_list = self.get_meta_list(group)
         self.meta_name = group
+        self.group_dict = self._get_group_dict_from_meta(self.meta_name)
         print(f'group is set to {group}\n {set(self.group_list)}')
-        self._set_group_dict()
 
 
     # get the groups of each meta column
     def get_meta_list(self, meta: str = None) -> list:
         if meta not in self.meta_df.columns or meta is None:
-            raise ValueError(f'meta must be in {self.meta_df.columns}')
+            raise ValueError(f'meta must be in {self.meta_df.columns.drop("Sample")}')
         else:
             return self.meta_df[meta].tolist()
 
-        
+    def _get_group_dict_from_meta(self, meta: str = None) -> dict:
+        if meta not in self.meta_df.columns or meta is None:
+            raise ValueError(f'meta must be in {self.meta_df.columns}')
+        #extract the sample and group info from meta_df
+        meta_df = self.meta_df[['Sample', meta]]
+        return meta_df.groupby(meta)['Sample'].apply(list).to_dict()
+       
     # input a group name, return the sample list in this group
     def get_sample_list_in_a_group(self, group: str = None) -> list:
         if self.group_list is None:
@@ -342,7 +339,7 @@ class TaxaFuncAnalyzer:
 
     
     # set outlier to nan
-    def _outlier_detection(self, df: pd.DataFrame, method: str = 'half-zero') -> pd.DataFrame:
+    def _outlier_detection(self, df: pd.DataFrame, method: str = None, by_group:str=None) -> pd.DataFrame:
         from scipy.stats import zscore
         from scipy.spatial import distance
         from scipy.stats import chi2
@@ -351,7 +348,16 @@ class TaxaFuncAnalyzer:
         from statsmodels.tools.tools import add_constant
 
         df = df.copy()
-
+        
+        def get_group_dict(by_group:str = None):
+            if by_group is None:
+                return self.group_dict
+            elif by_group == 'All Samples':
+                return  {'All Samples': self.sample_list}
+            else:
+                return self._get_group_dict_from_meta(by_group)
+        
+        
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
@@ -360,7 +366,7 @@ class TaxaFuncAnalyzer:
             return df
 
         df_mat = df[self.sample_list]
-        groups_dict = self.group_dict
+        groups_dict = get_group_dict(by_group)
         print(f'\nRow number before outlier detection: [{len(df_mat)}]')
 
         if method == 'half-zero':
@@ -491,12 +497,19 @@ class TaxaFuncAnalyzer:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:bool = True,df_original: pd.DataFrame = None) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str = None,df_original: pd.DataFrame = None) -> pd.DataFrame:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
         df = df.copy()
         
+        def get_group_dict(by_group:str = None):
+            if by_group is None:
+                return self.group_dict
+            elif by_group == 'All Samples':
+                return  {'All Samples': self.sample_list}
+            else:
+                return self._get_group_dict_from_meta(by_group)
     
         print(f'\n{self._get_current_time()} Start to handle missing value...\n')
 
@@ -540,7 +553,7 @@ class TaxaFuncAnalyzer:
             print(f'Number of rows with NA before [{method}]: [{num_rows_with_missing_value} in {len(df_mat)} ({num_rows_with_missing_value/len(df_mat)*100:.2f}%)]')
 
             if method in {'knn', 'regression', 'multiple'}:
-                if not by_group:
+                if by_group == 'All Samples':
                     print(f'Fill NA by [{method}] on the [All Samples]...')
                     if method == 'knn':
                         imputer = KNNImputer(n_neighbors=5)
@@ -548,21 +561,23 @@ class TaxaFuncAnalyzer:
                         imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
                     df[self.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
                 else: # by_group is True
-                    print(f'Fill NA by [{method}] within [Each Group]...')
-                    results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in self.group_dict.items())
+                    group_dict = get_group_dict(by_group)
+                    print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
+                    results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in group_dict.items())
                     df_mat_filled = pd.concat(results, axis=1)
                     df_mat_filled = df_mat_filled[df_mat.columns]
                     df[self.sample_list] = df_mat_filled
 
             elif method in {'mean', 'median'}:
-                if not by_group:
+                if by_group == 'All Samples':
                     print(f'Fill NA by [{method}] on the [All Samples]...')
                     df[self.sample_list] = df_mat.apply(lambda x: x.fillna(x.mean() if method == 'mean' else x.median()), axis=1)
                 else:
-                    print(f'Fill NA by [{method}] within [Each Group]...')
+                    group_dict = get_group_dict(by_group)
+                    print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
                     results = Parallel(n_jobs=-1)(
                         delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
-                        for _, cols in self.group_dict.items()
+                        for _, cols in group_dict.items()
                     )
                     # Ensure the order of results is the same as the original column order
                     df_mat_filled = pd.concat(results, axis=1)
@@ -597,6 +612,7 @@ class TaxaFuncAnalyzer:
             if method2 == 'drop':
                 df = df.dropna(subset=self.sample_list)
             elif method1 != method2:
+                print(f'\n\nFill NA by [{method2}] to handle the remaining missing value...')
                 df = impute_method(df, method2,by_group)
         # still have missing value
         final_na_num = df[self.sample_list].isnull().any(axis=1).sum()
@@ -611,12 +627,12 @@ class TaxaFuncAnalyzer:
 
 
 
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', by_group:bool=True) -> pd.DataFrame:
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', detection_by_group:str=None, handling_by_group:str=None) -> pd.DataFrame:
         if self.group_list is None:
             raise ValueError('You must set set group before handling outlier')
 
-        df_t = self._outlier_detection(df, method=detect_method)
-        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=by_group, df_original=df)
+        df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
+        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handling_by_group, df_original=df)
 
         return df_t
 
@@ -625,7 +641,7 @@ class TaxaFuncAnalyzer:
     def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
                          transform_method: str = None, batch_list: list = None, 
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         outlier_handle_by_group: bool = True, processing_order:list=None,
+                         outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
                          df_name:str=None) -> pd.DataFrame:
         df = df.copy()
         original_row_num = len(df)
@@ -636,7 +652,7 @@ class TaxaFuncAnalyzer:
         # perform data processing in order
         for process in processing_order:
             if process == 'outlier':
-                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, by_group=outlier_handle_by_group)
+                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, detection_by_group = outlier_detect_by_group, handling_by_group=outlier_handle_by_group)
             elif process == 'batch':
                 df = self._remove_batch_effect(df, batch_list)
             elif process == 'transform':
@@ -1019,7 +1035,7 @@ class TaxaFuncAnalyzer:
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                           normalize_method: str = None, transform_method: str = None,
                           outlier_detect_method: str = None, outlier_handle_method: str = None,
-                          outlier_handle_by_group: bool = True, batch_list: list = None, 
+                          outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, batch_list: list = None, 
                           processing_order:list=None, processing_after_sum: bool = False):
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
@@ -1029,6 +1045,7 @@ class TaxaFuncAnalyzer:
             'batch_list': batch_list,
             'outlier_detect_method': outlier_detect_method,
             'outlier_handle_method': outlier_handle_method,
+            'outlier_detect_by_group': outlier_detect_by_group,
             'outlier_handle_by_group': outlier_handle_by_group,
             'processing_order': processing_order
         }

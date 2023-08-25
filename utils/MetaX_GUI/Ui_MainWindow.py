@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 491, 463))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 491, 459))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -393,8 +393,6 @@ class Ui_metaX_main(object):
         self.comboBox_outlier_handling_group_or_sample = QtWidgets.QComboBox(self.tab_set_taxa_func)
         self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
         self.comboBox_outlier_handling_group_or_sample.setObjectName("comboBox_outlier_handling_group_or_sample")
-        self.comboBox_outlier_handling_group_or_sample.addItem("")
-        self.comboBox_outlier_handling_group_or_sample.addItem("")
         self.gridLayout_15.addWidget(self.comboBox_outlier_handling_group_or_sample, 3, 3, 1, 3)
         self.radioButton_data_preprocessing_before_sum = QtWidgets.QRadioButton(self.tab_set_taxa_func)
         self.radioButton_data_preprocessing_before_sum.setChecked(True)
@@ -403,6 +401,13 @@ class Ui_metaX_main(object):
         self.radioButton_data_preprocessing_after_sum = QtWidgets.QRadioButton(self.tab_set_taxa_func)
         self.radioButton_data_preprocessing_after_sum.setObjectName("radioButton_data_preprocessing_after_sum")
         self.gridLayout_15.addWidget(self.radioButton_data_preprocessing_after_sum, 1, 3, 1, 1)
+        self.label_22 = QtWidgets.QLabel(self.tab_set_taxa_func)
+        self.label_22.setObjectName("label_22")
+        self.gridLayout_15.addWidget(self.label_22, 3, 0, 1, 1)
+        self.comboBox_outlier_detection_group_or_sample = QtWidgets.QComboBox(self.tab_set_taxa_func)
+        self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
+        self.comboBox_outlier_detection_group_or_sample.setObjectName("comboBox_outlier_detection_group_or_sample")
+        self.gridLayout_15.addWidget(self.comboBox_outlier_detection_group_or_sample, 3, 1, 1, 1)
         self.gridLayout_25.addLayout(self.gridLayout_15, 2, 0, 1, 1)
         self.gridLayout_17 = QtWidgets.QGridLayout()
         self.gridLayout_17.setObjectName("gridLayout_17")
@@ -2627,7 +2632,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1048, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1048, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -2782,10 +2787,9 @@ class Ui_metaX_main(object):
         self.comboBox_set_data_transformation.setItemText(3, _translate("metaX_main", "Square root transformation"))
         self.comboBox_set_data_transformation.setItemText(4, _translate("metaX_main", "Cube root transformation"))
         self.label_102.setText(_translate("metaX_main", "Outliers Handling by"))
-        self.comboBox_outlier_handling_group_or_sample.setItemText(0, _translate("metaX_main", "Each Group"))
-        self.comboBox_outlier_handling_group_or_sample.setItemText(1, _translate("metaX_main", "All Samples"))
         self.radioButton_data_preprocessing_before_sum.setText(_translate("metaX_main", "Before Summing  Peptides"))
         self.radioButton_data_preprocessing_after_sum.setText(_translate("metaX_main", "After Summing Peptides"))
+        self.label_22.setText(_translate("metaX_main", "Outliers  Detection by"))
         self.label_28.setText(_translate("metaX_main", "Taxa Level"))
         self.comboBox_taxa_level_to_stast.setItemText(0, _translate("metaX_main", "Species"))
         self.comboBox_taxa_level_to_stast.setItemText(1, _translate("metaX_main", "Genus"))

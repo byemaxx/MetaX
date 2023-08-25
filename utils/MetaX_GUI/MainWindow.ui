@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>491</width>
-                 <height>463</height>
+                 <height>459</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -790,16 +790,6 @@
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
-                <item>
-                 <property name="text">
-                  <string>Each Group</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>All Samples</string>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="1" column="2">
@@ -816,6 +806,20 @@
                <widget class="QRadioButton" name="radioButton_data_preprocessing_after_sum">
                 <property name="text">
                  <string>After Summing Peptides</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_22">
+                <property name="text">
+                 <string>Outliers  Detection by</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QComboBox" name="comboBox_outlier_detection_group_or_sample">
+                <property name="enabled">
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -5119,7 +5123,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

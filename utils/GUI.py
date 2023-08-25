@@ -357,16 +357,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     def update_outlier_detection(self):
         if self.comboBox_outlier_detection.currentText() == "None":
             self.comboBox_outlier_handling_method1.setEnabled(False)
-            self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
+            self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
         else:
             self.comboBox_outlier_handling_method1.setEnabled(True)
-            self.comboBox_outlier_handling_group_or_sample.setEnabled(True)
+            self.comboBox_outlier_detection_group_or_sample.setEnabled(True)
     
     def update_outlier_handling_method1(self):
-        if self.comboBox_outlier_handling_method1.currentText() in ["mean", "median"]:
-            self.comboBox_outlier_handling_method2.setEnabled(True)
-        else:
-            self.comboBox_outlier_handling_method2.setEnabled(False)
+        method1 = self.comboBox_outlier_handling_method1.currentText()
+        method2_enabled = method1 in ["mean", "median"]
+        group_or_sample_enabled = method1 not in ["Drop", "Original"]
+
+        self.comboBox_outlier_handling_method2.setEnabled(method2_enabled)
+        self.comboBox_outlier_handling_group_or_sample.setEnabled(group_or_sample_enabled)
+
             
     
     def show_hide_console(self):
@@ -1053,14 +1056,25 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
-            # set comboBox_meta_to_stast
             meta_list = self.tf.meta_df.columns.tolist()[1:]
+            # set comboBox_meta_to_stast
             self.comboBox_meta_to_stast.clear()
+            self.comboBox_meta_to_stast.addItems(meta_list)
+            
             self.comboBox_remove_batch_effect.clear()
             self.comboBox_remove_batch_effect.addItem('None')
-            for i in range(len(meta_list)):
-                self.comboBox_meta_to_stast.addItem(meta_list[i])
-                self.comboBox_remove_batch_effect.addItem(meta_list[i])
+            self.comboBox_remove_batch_effect.addItems(meta_list)
+            
+            # set comboBox_outlier_handling_group_or_sample
+            self.comboBox_outlier_handling_group_or_sample.clear()
+            self.comboBox_outlier_handling_group_or_sample.addItems(meta_list)
+            self.comboBox_outlier_handling_group_or_sample.addItem('All Samples')
+            
+            # set comboBox_outlier_detection
+            self.comboBox_outlier_detection_group_or_sample.clear()
+            self.comboBox_outlier_detection_group_or_sample.addItems(meta_list)
+            self.comboBox_outlier_detection_group_or_sample.addItem('All Samples')
+                
             
             # set comboBox_overview_func_list
             self.comboBox_overview_func_list.clear()
@@ -1133,10 +1147,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             # outlier detect and handle
             outlier_detect_method = self.comboBox_outlier_detection.currentText()
+            outlier_detect_by_group = self.comboBox_outlier_detection_group_or_sample.currentText()
             outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
             outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
             outlier_handle_method = f'{outlier_handle_method1.lower()}+{outlier_handle_method2.lower()}'
-            outlier_handle_by_group = True if self.comboBox_outlier_handling_group_or_sample.currentText() == 'Each Group' else False
+            outlier_handle_by_group = self.comboBox_outlier_handling_group_or_sample.currentText()
             # data normalization and transformation
             normalize_method = self.comboBox_set_data_normalization.currentText()
             transform_method = self.comboBox_set_data_transformation.currentText()
@@ -1217,7 +1232,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
                                         normalize_method = normalize_method, transform_method = transform_method, 
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
-                                        outlier_handle_by_group = outlier_handle_by_group,
+                                        outlier_detect_by_group =outlier_detect_by_group,outlier_handle_by_group = outlier_handle_by_group,
                                         batch_list = batch_list, processing_order = processing_order,
                                         processing_after_sum = processing_after_sum)
                 # save taxafunc obj as pickle file
