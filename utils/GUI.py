@@ -1229,6 +1229,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             group = self.comboBox_meta_to_stast.currentText()
 
             try:
+                print("\n---------------------------------- Set Multi Table ----------------------------------\n")
                 self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_group}, processing_order: {processing_order}')
                 self.tf.set_func(function)
                 self.tf.set_group(group)
@@ -1249,6 +1250,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 return None
         
         else: # restore_taxafunc is True
+            print("\n---------------------------------- Restore Multi Table ----------------------------------\n")
             self.tf = self.load_taxafunc_obj_from_file()['taxa_func_obj']
             if self.tf == None:
                 return None
@@ -1326,7 +1328,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             for i, j in self.tf.outlier_status.items():
                 if j:
                     nan_stats_str += f'{i}: [{j}]\n'
-                    
+            print(nan_stats_str)        
         else:    
             nan_stats_str = ''
             
@@ -1341,9 +1343,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.logger.write_log(msg.replace('\n', ''))
         QMessageBox.information(self.MainWindow, 'Information', msg )
         
-        
-        # go to basic analysis tab
+        print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
+        # go to basic analysis tab and the first tab
         self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_4.setCurrentIndex(0)
+        
         
 
 
