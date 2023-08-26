@@ -99,6 +99,8 @@ class DataPreprocessing:
 
     def get_group_dict(self, by_group:str = None):
         if by_group is None:
+            if self.tfa.group_list is None:
+                raise ValueError('You must set set group before handling outlier if you do not set by_group')
             return self.tfa.group_dict
         elif by_group == 'All Samples':
             return  {'All Samples': self.tfa.sample_list}
@@ -381,8 +383,8 @@ class DataPreprocessing:
 
 
     def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', detection_by_group:str=None, handling_by_group:str=None) -> pd.DataFrame:
-        if self.tfa.group_list is None:
-            raise ValueError('You must set set group before handling outlier')
+        # if self.tfa.group_list is None:
+        #     raise ValueError('You must set set group before handling outlier')
 
         df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
         df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handling_by_group, df_original=df)

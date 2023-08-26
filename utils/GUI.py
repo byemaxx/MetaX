@@ -193,6 +193,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
         # TaxaFuncAnalyzer
+        # set change event for meta comboboxs
+        self.init_meta_combobox_list()
         # Data import
         self.pushButton_load_example_for_analyzer.clicked.connect(self.load_example_for_analyzer)
         self.pushButton_get_taxafunc_path.clicked.connect(self.set_lineEdit_taxafunc_path)
@@ -347,13 +349,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
         # Check and load settings
         self.loadSettings()
+        
+        # set default tab index as 0 for all tabWidget
+        self.set_default_tab_index()
 
         # Save settings every 1 minute
         self.timer = QTimer(self.MainWindow)
         self.timer.timeout.connect(self.save_basic_settings)
         self.timer.start(60000)
     ###############   init function End   ###############
-    
+    def set_default_tab_index(self):
+        # set default current index as 0 for all tabWidget
+        tab_widget =self.MainWindow.findChildren(QtWidgets.QTabWidget)
+        for widget in tab_widget:
+            widget.setCurrentIndex(0)
+            
     def update_outlier_detection(self):
         if self.comboBox_outlier_detection.currentText() == "None":
             self.comboBox_outlier_handling_method1.setEnabled(False)
@@ -506,6 +516,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.show_message("Loading taxafunc object from last time...", "Loading...")
         self.set_multi_table(restore_taxafunc = True)
         self.restore_settings_after_load_taxafunc_obj()
+        # set meta list for comboBox in plot and stats tab
+        self.update_meta_name_combobox_plot_part()
+        self.update_group_and_sample_combobox()
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
     def restore_settings_after_load_taxafunc_obj(self):
@@ -1052,17 +1065,57 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'The meta data does not match the TaxaFunc data, Please check!')
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
+    
+    def init_meta_combobox_list(self):
+        self.meta_combobox_list = [
+                                   self.comboBox_basic_pca_meta,
+                                   self.comboBox_basic_heatmap_meta,
+                                   self.comboBox_ttest_meta,
+                                   self.comboBox_anova_meta,
+                                   self.comboBox_trends_meta,
+                                   self.comboBox_co_expr_meta,
+                                   self.comboBox_deseq2_meta,
+                                   self.comboBox_tflink_meta,
+                                   self.comboBox_network_meta,
+                          ]
+        for combobox in self.meta_combobox_list:
+            combobox.currentIndexChanged.connect(self.change_event_meta_name_combobox_plot_part)
+        
 
-            
+    def update_meta_name_combobox_plot_part(self):
+        combobox_list = self.meta_combobox_list
+        self.tf.set_group(self.tf.meta_df.columns.tolist()[1])
+        
+        for combobox in combobox_list:
+            combobox.blockSignals(True)
+            combobox.clear()
+            combobox.addItems(self.tf.meta_df.columns.tolist()[1:])
+            combobox.blockSignals(False)
+    
+    def change_event_meta_name_combobox_plot_part(self, index):
+        sender = self.MainWindow.sender()
+        selected_meta_name = sender.currentText()
+        group_set = False
+        for combobox in self.meta_combobox_list:
+            combobox.blockSignals(True)
+            combobox.setCurrentIndex(index)
+            combobox.blockSignals(False)
+        if not group_set:
+            self.tf.set_group(selected_meta_name)
+            group_set = True
+        self.update_group_and_sample_combobox(meta_name=selected_meta_name, update_sample_list=False)
+        
+        
+                              
     def update_after_tfobj(self):
         try:
             self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
             self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
 
             meta_list = self.tf.meta_df.columns.tolist()[1:]
-            # set comboBox_meta_to_stast
-            self.comboBox_meta_to_stast.clear()
-            self.comboBox_meta_to_stast.addItems(meta_list)
+            # set meta list for comboBox in plot and stats tab
+            self.update_meta_name_combobox_plot_part()
+            self.update_group_and_sample_combobox()
             
             self.comboBox_remove_batch_effect.clear()
             self.comboBox_remove_batch_effect.addItem('None')
@@ -1226,13 +1279,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
             self.show_message('Data is Preprocessing, please wait...')
 
-            group = self.comboBox_meta_to_stast.currentText()
 
             try:
                 print("\n---------------------------------- Set Multi Table ----------------------------------\n")
                 self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_group}, processing_order: {processing_order}')
                 self.tf.set_func(function)
-                self.tf.set_group(group)
+                # update group and sample in comboBox
+                # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
+                
                 self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
                                         normalize_method = normalize_method, transform_method = transform_method, 
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
@@ -1263,10 +1317,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         num_taxa_func = self.tf.taxa_func_df.shape[0]
 
 
-        # generate basic table
-        self.get_stats_func_prop(self.tf.func_name)
-        self.get_stats_taxa_level()
-        self.get_stats_peptide_num_in_taxa()
+        # # generate basic table
+        # self.get_stats_func_prop(self.tf.func_name)
+        # self.get_stats_taxa_level()
+        # self.get_stats_peptide_num_in_taxa()
         
         # add tables to table dict
         self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
@@ -1285,8 +1339,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
         self.peptide_list = self.tf.peptide_df.index.tolist()
 
-        # update group and sample in comboBox
-        self.update_group_and_sample_combobox()
+
         # update taxa and function and group in comboBox
         self.update_func_taxa_group_to_combobox()
 
@@ -1382,7 +1435,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.comboBox_basic_heatmap_selection_list.addItem('All Peptides')
             self.comboBox_basic_heatmap_selection_list.addItems(self.peptide_list)
     
-    def update_group_and_sample_combobox(self):
+    
+    def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
+        if meta_name == None:
+            meta_name = self.tf.meta_df.columns.tolist()[1]
+        
         # set group list
         group_list = sorted(set(self.tf.group_list))
         sample_list = sorted(set(self.tf.sample_list))
@@ -1418,27 +1475,28 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         }
 
         # create the CheckableComboBox and add items
-        for layout, combobox_name in group_layout_dict.items():
-            try:
-                layout.itemAt(0).widget().deleteLater()
-            except Exception as e:
-                pass
-            new_combobox = CheckableComboBox()
-            setattr(self, combobox_name, new_combobox)  # Assign to the attribute
-            layout.addWidget(new_combobox)
-            for group in group_list:
-                new_combobox.addItem(group)
-                
-        for layout, combobox_name in sample_layout_dict.items():
-            try:
-                layout.itemAt(0).widget().deleteLater()
-            except Exception as e:
-                pass
-            new_combobox = CheckableComboBox()
-            setattr(self, combobox_name, new_combobox)  # Assign to the attribute
-            layout.addWidget(new_combobox)
-            for sample in sample_list:
-                new_combobox.addItem(sample)
+        if update_group_list:
+            for layout, combobox_name in group_layout_dict.items():
+                try:
+                    layout.itemAt(0).widget().deleteLater()
+                except Exception as e:
+                    pass
+                new_combobox = CheckableComboBox()
+                setattr(self, combobox_name, new_combobox)  # Assign to the attribute
+                layout.addWidget(new_combobox)
+                for group in group_list:
+                    new_combobox.addItem(group)
+        if update_sample_list:       
+            for layout, combobox_name in sample_layout_dict.items():
+                try:
+                    layout.itemAt(0).widget().deleteLater()
+                except Exception as e:
+                    pass
+                new_combobox = CheckableComboBox()
+                setattr(self, combobox_name, new_combobox)  # Assign to the attribute
+                layout.addWidget(new_combobox)
+                for sample in sample_list:
+                    new_combobox.addItem(sample)
         
 
     def update_func_taxa_group_to_combobox(self):
