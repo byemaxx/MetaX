@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>538</width>
-                 <height>504</height>
+                 <height>508</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1653,13 +1653,6 @@
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="0" rowspan="2" colspan="7">
-                 <widget class="Line" name="line_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
                 <item row="8" column="0">
                  <widget class="QPushButton" name="pushButton_basic_heatmap_drop_item">
                   <property name="enabled">
@@ -1730,6 +1723,13 @@
                   </property>
                   <property name="text">
                    <string>Add a list</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0" rowspan="2" colspan="5">
+                 <widget class="Line" name="line_8">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -2411,7 +2411,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="title">
@@ -5267,7 +5267,7 @@
      <x>0</x>
      <y>0</y>
      <width>1143</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

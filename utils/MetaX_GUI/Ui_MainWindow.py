@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 538, 504))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 538, 508))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -830,11 +830,6 @@ class Ui_metaX_main(object):
         self.label_67.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_67.setObjectName("label_67")
         self.gridLayout_23.addWidget(self.label_67, 3, 1, 1, 1)
-        self.line_8 = QtWidgets.QFrame(self.tab_13)
-        self.line_8.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_8.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_8.setObjectName("line_8")
-        self.gridLayout_23.addWidget(self.line_8, 4, 0, 2, 7)
         self.pushButton_basic_heatmap_drop_item = QtWidgets.QPushButton(self.tab_13)
         self.pushButton_basic_heatmap_drop_item.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -873,6 +868,11 @@ class Ui_metaX_main(object):
         self.pushButton_basic_heatmap_add_a_list.setSizePolicy(sizePolicy)
         self.pushButton_basic_heatmap_add_a_list.setObjectName("pushButton_basic_heatmap_add_a_list")
         self.gridLayout_23.addWidget(self.pushButton_basic_heatmap_add_a_list, 12, 0, 1, 1)
+        self.line_8 = QtWidgets.QFrame(self.tab_13)
+        self.line_8.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_8.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_8.setObjectName("line_8")
+        self.gridLayout_23.addWidget(self.line_8, 4, 0, 2, 5)
         self.tabWidget_4.addTab(self.tab_13, "")
         self.tab_10 = QtWidgets.QWidget()
         self.tab_10.setObjectName("tab_10")
@@ -2742,7 +2742,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1143, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1143, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -2787,11 +2787,11 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(5)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(1)
         self.tabWidget_3.setCurrentIndex(2)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
         self.tabWidget_5.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
