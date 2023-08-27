@@ -1068,15 +1068,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
     
     def init_meta_combobox_list(self):
         self.meta_combobox_list = [
-                                   self.comboBox_basic_pca_meta,
-                                   self.comboBox_basic_heatmap_meta,
-                                   self.comboBox_ttest_meta,
-                                   self.comboBox_anova_meta,
-                                   self.comboBox_trends_meta,
-                                   self.comboBox_co_expr_meta,
-                                   self.comboBox_deseq2_meta,
-                                   self.comboBox_tflink_meta,
-                                   self.comboBox_network_meta,
+                                self.comboBox_basic_pca_meta,
+                                self.comboBox_basic_heatmap_meta,
+                                self.comboBox_ttest_meta,
+                                self.comboBox_anova_meta,
+                                self.comboBox_tukey_meta,
+                                self.comboBox_trends_meta,
+                                self.comboBox_co_expr_meta,
+                                self.comboBox_deseq2_meta,
+                                self.comboBox_tflink_meta,
+                                self.comboBox_network_meta,
                           ]
         for combobox in self.meta_combobox_list:
             combobox.currentIndexChanged.connect(self.change_event_meta_name_combobox_plot_part)
@@ -1551,38 +1552,38 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             self.logger.write_log(f'show_others_linked error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
-    def update_combobox_and_label(self, current_text, df, label, comboBox):
+    def update_combobox_and_label(self, current_text, type, label, comboBox):
         if not current_text:
             return None
         try:
-            df_row = df.loc[current_text, :]
-            items = df_row.index.tolist()
+            if type=='taxa':
+                items = self.tf.taxa_func_linked_dict[current_text]
+            elif type=='func':
+                items = self.tf.func_taxa_linked_dict[current_text]
             num_items = len(items)
             label.setText(f"Linked Number: {num_items}")
             comboBox.clear()
             comboBox.addItem('')
             comboBox.addItems(items)
         except Exception as e:
-            self.show_update_link_error_message(str(e))
+            QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
 
-    def show_update_link_error_message(self, message):
-        QMessageBox.warning(self.MainWindow, 'Warning', f"No data! Please check your input.\n\n{message}")
 
     def show_others_linked_taxa(self):
         current_text = self.comboBox_others_func.currentText()
-        self.update_combobox_and_label(current_text, self.tf.func_taxa_df, self.label_others_taxa_num, self.comboBox_others_taxa)
+        self.update_combobox_and_label(current_text, 'func', self.label_others_taxa_num, self.comboBox_others_taxa)
 
     def show_others_linked_func(self):
         current_text = self.comboBox_others_taxa.currentText()
-        self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_others_func_num, self.comboBox_others_func)
+        self.update_combobox_and_label(current_text, 'taxa', self.label_others_func_num, self.comboBox_others_func)
 
     def show_tukey_linked_taxa(self):
         current_text = self.comboBox_tukey_func.currentText()
-        self.update_combobox_and_label(current_text, self.tf.func_taxa_df, self.label_tukey_taxa_num, self.comboBox_tukey_taxa)
+        self.update_combobox_and_label(current_text, 'func', self.label_tukey_taxa_num, self.comboBox_tukey_taxa)
 
     def show_tukey_linked_func(self):
         current_text = self.comboBox_tukey_taxa.currentText()
-        self.update_combobox_and_label(current_text, self.tf.taxa_func_df, self.label_tukey_func_num, self.comboBox_tukey_func)
+        self.update_combobox_and_label(current_text, 'taxa', self.label_tukey_func_num, self.comboBox_tukey_func)
 
     def disable_button_after_multiple(self):
         self.pushButton_plot_top_heatmap.setEnabled(False)
@@ -3080,6 +3081,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         method = self.comboBox_tfnet_top_by.currentText()
         index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
+        
+        # check if index_list is in the linked dict
+        index_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(index_list, df_type.lower())
+        
         self.update_tfnet_focus_list_and_widget(str_list=index_list)
 
 
@@ -3217,6 +3222,34 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
             else:
                 sample_list = selected_samples
         return sample_list
+    
+    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list = None, type:str = 'taxa'):
+        # keep taxa and func only in the taxa_func_linked_dict and remove others
+        if check_list is None:
+            print(f'check_list is {check_list}, return None')
+            return None
+
+        if type == 'taxa' or type == 'func':
+            if type == 'taxa':
+                linked_dict = self.tf.taxa_func_linked_dict
+            elif type == 'func':
+                linked_dict = self.tf.func_taxa_linked_dict
+            removed = [i for i in check_list if i not in linked_dict]
+            check_list = [i for i in check_list if i in linked_dict]
+        elif type == 'taxa-func':
+            return check_list
+        else:
+            raise ValueError('type should be taxa, func or taxa-func!')
+
+        if removed:
+            QMessageBox.warning(
+                self.MainWindow, 
+                'Warning', 
+                f'{len(removed)} {type} are removed from the list because they do not have links!\n{len(check_list)} {type} are kept!'
+            )
+
+        return check_list
+
         
     def filter_tflink(self):
         top_num = self.spinBox_tflink_top_num.value()
@@ -3228,6 +3261,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         
         taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
+        
+        
+        taxa_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(taxa_list, type='taxa')
+        func_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(func_list, type='func')
+        
         if taxa_list:
             self.comboBox_others_taxa.clear()
             self.comboBox_others_taxa.addItems(taxa_list)

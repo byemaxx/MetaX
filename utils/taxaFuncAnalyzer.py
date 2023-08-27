@@ -45,6 +45,8 @@ class TaxaFuncAnalyzer:
         self.func_df = None
         self.taxa_func_df = None
         self.func_taxa_df = None
+        self.taxa_func_linked_dict = None
+        self.func_taxa_linked_dict = None
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
 
         self._set_original_df(df_path)
@@ -85,6 +87,15 @@ class TaxaFuncAnalyzer:
         self.original_df = self.original_df.drop(drop_list, axis=1)
         self.sample_list = new_sample_list
         self._remove_all_zero_row()
+    
+    def set_taxa_func_linked_dict(self):
+        def _index_to_nested_dict(df):
+            result_dict = {}
+            for (key1, key2) in df.index:
+                result_dict.setdefault(key1, []).append(key2)
+            return result_dict
+        self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
+        self.func_taxa_linked_dict = _index_to_nested_dict(self.func_taxa_df)
     
     def get_func_list_in_df(self) -> list:
         col_names = self.original_df.columns.tolist()
@@ -397,6 +408,9 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
         self.peptide_df = df_peptide
+        
+        # set the taxa_func_linked_dict and func_taxa_linked_dict
+        self.set_taxa_func_linked_dict()
         print("Multi-tables setting finished.\n")
     
     # New function to check which attributes are set
