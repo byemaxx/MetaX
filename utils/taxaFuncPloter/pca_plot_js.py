@@ -57,7 +57,7 @@ class PcaPlot_js:
                 xaxis3d_opts=opts.Axis3DOpts(type_="value", name=x_name),
                 yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
                 zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
-                itemstyle_opts=opts.ItemStyleOpts(color=color),
+                itemstyle_opts=opts.ItemStyleOpts(color=color, border_color='black', border_width=0.2),
                 label_opts=opts.LabelOpts(is_show=show_label),
 
             )

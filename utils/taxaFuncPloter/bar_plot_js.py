@@ -74,7 +74,7 @@ class BarPlot_js:
             c.add_yaxis(name, list(df.loc[name, :]), 
                         stack="stack1", 
                         category_gap="50%",
-                        itemstyle_opts=opts.ItemStyleOpts(color=color),
+                        itemstyle_opts=opts.ItemStyleOpts(color=color, border_color="black", border_width=0.1)
                         )
 
 
