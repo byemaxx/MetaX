@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>538</width>
-                 <height>508</height>
+                 <width>340</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1007,7 +1007,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -2462,7 +2462,7 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Plot Vocano</string>
+                   <string>Plot Volcano</string>
                   </property>
                  </widget>
                 </item>
@@ -2778,7 +2778,7 @@
                    <number>99999</number>
                   </property>
                   <property name="singleStep">
-                   <number>10</number>
+                   <number>50</number>
                   </property>
                   <property name="value">
                    <number>1600</number>
@@ -3175,7 +3175,7 @@
                    <number>99999</number>
                   </property>
                   <property name="singleStep">
-                   <number>10</number>
+                   <number>50</number>
                   </property>
                   <property name="value">
                    <number>900</number>
@@ -3781,7 +3781,7 @@
                    <number>99999</number>
                   </property>
                   <property name="singleStep">
-                   <number>10</number>
+                   <number>50</number>
                   </property>
                   <property name="value">
                    <number>1600</number>
@@ -3829,6 +3829,9 @@
                   </property>
                   <property name="value">
                    <number>900</number>
+                  </property>
+                  <property name="displayIntegerBase">
+                   <number>10</number>
                   </property>
                  </widget>
                 </item>
@@ -5267,7 +5270,7 @@
      <x>0</x>
      <y>0</y>
      <width>1143</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

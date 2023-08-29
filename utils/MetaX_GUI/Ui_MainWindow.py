@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 538, 508))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 340, 49))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -1448,7 +1448,7 @@ class Ui_metaX_main(object):
         self.spinBox_co_expr_width.setSizePolicy(sizePolicy)
         self.spinBox_co_expr_width.setMinimum(100)
         self.spinBox_co_expr_width.setMaximum(99999)
-        self.spinBox_co_expr_width.setSingleStep(10)
+        self.spinBox_co_expr_width.setSingleStep(50)
         self.spinBox_co_expr_width.setProperty("value", 1600)
         self.spinBox_co_expr_width.setDisplayIntegerBase(10)
         self.spinBox_co_expr_width.setObjectName("spinBox_co_expr_width")
@@ -1642,7 +1642,7 @@ class Ui_metaX_main(object):
         self.spinBox_co_expr_height.setMinimumSize(QtCore.QSize(20, 0))
         self.spinBox_co_expr_height.setMinimum(100)
         self.spinBox_co_expr_height.setMaximum(99999)
-        self.spinBox_co_expr_height.setSingleStep(10)
+        self.spinBox_co_expr_height.setSingleStep(50)
         self.spinBox_co_expr_height.setProperty("value", 900)
         self.spinBox_co_expr_height.setObjectName("spinBox_co_expr_height")
         self.gridLayout_47.addWidget(self.spinBox_co_expr_height, 16, 7, 1, 1)
@@ -1960,7 +1960,7 @@ class Ui_metaX_main(object):
         self.spinBox_network_width.setSizePolicy(sizePolicy)
         self.spinBox_network_width.setMinimum(100)
         self.spinBox_network_width.setMaximum(99999)
-        self.spinBox_network_width.setSingleStep(10)
+        self.spinBox_network_width.setSingleStep(50)
         self.spinBox_network_width.setProperty("value", 1600)
         self.spinBox_network_width.setDisplayIntegerBase(10)
         self.spinBox_network_width.setObjectName("spinBox_network_width")
@@ -1984,6 +1984,7 @@ class Ui_metaX_main(object):
         self.spinBox_network_height.setMaximum(99999)
         self.spinBox_network_height.setSingleStep(10)
         self.spinBox_network_height.setProperty("value", 900)
+        self.spinBox_network_height.setDisplayIntegerBase(10)
         self.spinBox_network_height.setObjectName("spinBox_network_height")
         self.gridLayout_6.addWidget(self.spinBox_network_height, 10, 10, 1, 1)
         self.label_51 = QtWidgets.QLabel(self.tab_9)
@@ -2742,7 +2743,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1143, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1143, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -2787,9 +2788,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(2)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(1)
+        self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(2)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
@@ -3029,7 +3030,7 @@ class Ui_metaX_main(object):
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_4), _translate("metaX_main", "TUKEY"))
         self.tabWidget_TaxaFuncAnalyzer.setTabText(self.tabWidget_TaxaFuncAnalyzer.indexOf(self.tab_2), _translate("metaX_main", "Cross Test"))
         self.label_16.setText(_translate("metaX_main", "Width (px)"))
-        self.pushButton_deseq2_plot_vocano.setText(_translate("metaX_main", "Plot Vocano"))
+        self.pushButton_deseq2_plot_vocano.setText(_translate("metaX_main", "Plot Volcano"))
         self.label_4.setText(_translate("metaX_main", "Table for Analysis"))
         self.label_14.setText(_translate("metaX_main", "P-adjust"))
         self.label_64.setText(_translate("metaX_main", "Tables"))

@@ -139,12 +139,29 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
         self.actionCheck_Update.triggered.connect(self.check_update)
 
-        # set network plot width and height
+        # set plot width and height (1600*900)
         self.screen = QDesktopWidget().screenGeometry()
-        self.spinBox_network_width.setValue(int(self.screen.width()/1.2))
-        self.spinBox_network_height.setValue(int(self.screen.height()/1.2))
-        self.spinBox_co_expr_width.setValue(int(self.screen.width()/1.2))
-        self.spinBox_co_expr_height.setValue(int(self.screen.height()/1.2))
+        self.screen_width = self.screen.width()
+        self.screen_height = self.screen.height()
+        self.spinBox_network_width.setValue(int(self.screen_width/1.2))
+        self.spinBox_network_height.setValue(int(self.screen_height/1.2))
+        self.spinBox_co_expr_width.setValue(int(self.screen_width/1.2))
+        self.spinBox_co_expr_height.setValue(int(self.screen_height/1.2))
+        self.spinBox_fc_plot_width.setValue(int(self.screen_width/1.2))
+        self.spinBox_fc_plot_height.setValue(int(self.screen_height/1.2))
+        
+        # set other figure width and height(16 * 9)
+        self.spinBox_basic_pca_width.setValue(int(self.screen_width/120))
+        self.spinBox_basic_pca_height.setValue(int(self.screen_height/120))
+        self.spinBox_basic_heatmap_width.setValue(int(self.screen_width/120))
+        self.spinBox_basic_heatmap_height.setValue(int(self.screen_height/120))
+        self.spinBox_top_heatmap_width.setValue(int(self.screen_width/120))
+        self.spinBox_top_heatmap_length.setValue(int(self.screen_height/120))
+        self.spinBox_trends_width.setValue(int(self.screen_width/120))
+        self.spinBox_trends_height.setValue(int(self.screen_height/120))
+        self.spinBox_tflink_width.setValue(int(self.screen_width/120))
+        self.spinBox_tflink_height.setValue(int(self.screen_height/120))
+        
 
         # set Drag EditLine for input file
         self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path)
@@ -2350,15 +2367,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
 
 
     def save_and_show_js_plot(self, pic, title, width=None, height=None):
+        if not width and not height:
+            width = int(self.screen_width / 1.1)
+            height = int(self.screen_height / 1.1)
+
         home_path = QDir.homePath()
         metax_path = os.path.join(home_path, 'MetaX/html')
-        if not os.path.exists(metax_path):
-            os.makedirs(metax_path)
+        os.makedirs(metax_path, exist_ok=True)
         save_path = os.path.join(metax_path, f'{title}.html')
         pic.render(save_path)
         self.logger.write_log(f'html saved: {save_path}', 'i')
+
         web = webDialog.MyDialog(save_path)
-        if width is not None and height is not None:
+        if width and height:
             web.resize(width, height)
         self.web_list.append(web)
         web.show()
@@ -2572,7 +2593,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
                     return None
                 self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height)
-                self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}', width=width*120, height=height*120)
+                self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
