@@ -69,8 +69,10 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 
 import qtawesome as qta
-from qt_material import apply_stylesheet
+# from qt_material import apply_stylesheet
 
+from qt_material import apply_stylesheet, list_themes, QtStyleTools
+from PyQt5.QtWidgets import QAction, QMenu
 # hide console in windows
 # import ctypes
 # import platform
@@ -79,12 +81,13 @@ from qt_material import apply_stylesheet
 
 
 ###############   Class MetaXGUI Begin   ###############
-class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
+class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def __init__(self, MainWindow):
         super().__init__()
         self.setupUi(MainWindow)
         self.MainWindow = MainWindow
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+        self.init_theme_menu()
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1440, 900)
@@ -375,6 +378,71 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main):
         self.timer.timeout.connect(self.save_basic_settings)
         self.timer.start(60000)
     ###############   init function End   ###############
+    def init_theme_menu(self):
+        # Create a menu for themes
+        theme_menu = QMenu("Themes", self.MainWindow)
+        
+        # Fetch all available themes
+        themes = list_themes()
+        for theme in themes:
+            theme_action = QAction(theme, self.MainWindow)
+            theme_action.triggered.connect(lambda checked, theme=theme: self.change_theme(theme))
+            theme_menu.addAction(theme_action)
+        
+        # Add theme menu to menu bar
+        self.MainWindow.menuBar().addMenu(theme_menu)
+
+    def change_theme(self, theme):
+        self.show_message(f"Changing theme to {theme}...")
+        custom_css = '''
+    QGroupBox {{
+    text-transform: none;
+    margin: 0px;
+    padding: 20px 0px 10px 0px;
+    }}
+    QTabBar {{
+    text-transform: none;
+    }}
+    QDockWidget {{
+    text-transform: none;
+    }}
+    QHeaderView::section {{
+    text-transform: none;
+    padding: 5px;
+    }}
+    QPushButton {{
+    text-transform: none;
+    }}
+    QLabel {{
+    font-size: 14px;
+    }}
+    QComboBox {{
+    font-size: 14px;
+    }}
+    QToolBox {{
+    font-size: 16px;
+    font-weight: bold;
+    }}
+
+    
+    '''
+        current_app = QtWidgets.QApplication.instance()
+        extra = {
+            'density_scale': '1',
+        }
+        
+        # Apply the selected theme
+        if "light" in theme:
+            apply_stylesheet(current_app, theme=theme, invert_secondary=True, extra=extra)
+        else:
+            # set font color to white
+            
+            apply_stylesheet(current_app, theme=theme, extra=extra)
+        # Append your custom styles to the currently applied stylesheet
+        current_stylesheet = current_app.styleSheet()
+        current_app.setStyleSheet(current_stylesheet + custom_css)
+            
+            
     def set_default_tab_index(self):
         # set default current index as 0 for all tabWidget
         tab_widget =self.MainWindow.findChildren(QtWidgets.QTabWidget)
