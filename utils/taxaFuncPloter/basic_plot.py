@@ -83,9 +83,9 @@ class BasicPlot:
             pca = PCA(n_components=2)
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
-
+            sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1],
-                                hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.2)
+                                hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size='medium', 
                             color='black', alpha=0.6) for i in range(len(new_sample_name))]
