@@ -1,11 +1,28 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of MetaX
 
+from PyQt5.QtCore import QCoreApplication, Qt
+
+# Set the attribute before creating the QApplication
+QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
+
+# import the necessary PyQt5 modules to show the splash screen
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QSplashScreen
+from PyQt5.QtGui import QPixmap
+import os
+import sys
+
+# Show the splash screen as early as possible
+app = QtWidgets.QApplication(sys.argv)
+splash = QSplashScreen()
+icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+splash.setPixmap(QPixmap(icon_path))
+splash.show()
+app.processEvents()
 
 # import built-in python modules
-import os
 import shutil
-import sys
 import traceback
 import logging
 import pickle
@@ -63,9 +80,9 @@ import pandas as pd
 # import pyqt5 scripts
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
-from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton, QSplashScreen
+from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QCheckBox,  QComboBox
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 
 import qtawesome as qta
@@ -73,11 +90,7 @@ import qtawesome as qta
 
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
-# hide console in windows
-# import ctypes
-# import platform
-# if platform.system() == "Windows":
-#     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
 
 
 ###############   Class MetaXGUI Begin   ###############
@@ -173,15 +186,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path)
 
         # set ComboBox eanble searchable
-        self.comboBox_basic_heatmap_selection_list = self.make_combobox_searchable(self.comboBox_basic_heatmap_selection_list)
-        self.comboBox_tukey_func = self.make_combobox_searchable(self.comboBox_tukey_func)
-        self.comboBox_tukey_taxa = self.make_combobox_searchable(self.comboBox_tukey_taxa)
-        self.comboBox_others_func = self.make_combobox_searchable(self.comboBox_others_func)
-        self.comboBox_others_taxa = self.make_combobox_searchable(self.comboBox_others_taxa)
-        self.comboBox_co_expr_select_list = self.make_combobox_searchable(self.comboBox_co_expr_select_list)
-        self.comboBox_trends_selection_list = self.make_combobox_searchable(self.comboBox_trends_selection_list)
-        self.comboBox_basic_peptide_query = self.make_combobox_searchable(self.comboBox_basic_peptide_query)
-        self.comboBox_tfnet_selecte_list = self.make_combobox_searchable(self.comboBox_tfnet_selecte_list)
+        self.make_related_comboboxes_searchable()
         
         # link double click event to list widget
         self.listWidget_table_list.itemDoubleClicked.connect(self.show_table_in_list)
@@ -366,6 +371,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # Initiate QSettings
         self.init_QSettings()
+        self.init_theme()
 
         # Check and load settings
         self.loadSettings()
@@ -384,6 +390,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         # Fetch all available themes
         themes = list_themes()
+        # replace the .xml suffix
+        themes = [theme.replace('.xml', '') for theme in themes]
+        # reordering the themes , light theme first
+        light_themes = [theme for theme in themes if "light_" in theme]
+        dark_themes = [theme for theme in themes if "dark_" in theme]
+        themes = light_themes + dark_themes
+        
         for theme in themes:
             theme_action = QAction(theme, self.MainWindow)
             theme_action.triggered.connect(lambda checked, theme=theme: self.change_theme(theme))
@@ -391,58 +404,117 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         # Add theme menu to menu bar
         self.MainWindow.menuBar().addMenu(theme_menu)
-
-    def change_theme(self, theme):
-        self.show_message(f"Changing theme to {theme}...")
-        custom_css = '''
-    QGroupBox {{
-    text-transform: none;
-    margin: 0px;
-    padding: 20px 0px 10px 0px;
-    }}
-    QTabBar {{
-    text-transform: none;
-    }}
-    QDockWidget {{
-    text-transform: none;
-    }}
-    QHeaderView::section {{
-    text-transform: none;
-    padding: 5px;
-    }}
-    QPushButton {{
-    text-transform: none;
-    }}
-    QLabel {{
-    font-size: 14px;
-    }}
-    QComboBox {{
-    font-size: 14px;
-    }}
-    QToolBox {{
-    font-size: 16px;
-    font-weight: bold;
-    }}
-
     
-    '''
+    def init_theme(self):
+        if self.settings.contains("theme"):
+            theme = self.settings.value("theme", type=str)
+        else:
+            theme = "light_blue"
+        self.change_theme(theme, silent=True)
+            
+
+    def change_theme(self, theme, silent=False):
+        if not silent:
+            self.show_message(f"Changing theme to {theme}...")
+        # save the theme to settings
+        self.settings.setValue("theme", theme)
+        # recover the .xml suffix
+        theme = theme + '.xml'
+        
+        ############ avoid the window size change when change theme ############    
+        # List of combobox attributes
+        comboboxes_attributes = [
+            'comboBox_basic_heatmap_selection_list',
+            'comboBox_tukey_func',
+            'comboBox_tukey_taxa',
+            'comboBox_others_func',
+            'comboBox_others_taxa',
+            'comboBox_co_expr_select_list',
+            'comboBox_trends_selection_list',
+            'comboBox_basic_peptide_query',
+            'comboBox_tfnet_select_list'
+        ]
+
+        # clear the values of each combobox
+        for attribute_name in comboboxes_attributes:
+            combobox = getattr(self, attribute_name)
+            combobox.clear()
+        ############### avoid the window size change when change theme ###############
+        
+        
+        custom_css = '''
+                    QGroupBox {{
+                    text-transform: none;
+                    margin: 0px;
+                    padding: 20px 0px 10px 0px;
+                    }}
+                    QTabBar {{
+                    text-transform: none;
+                    }}
+                    QDockWidget {{
+                    text-transform: none;
+                    }}
+                    QHeaderView::section {{
+                    text-transform: none;
+                    padding: 5px;
+                    }}
+                    QPushButton {{
+                    text-transform: none;
+                    }}
+                    QLabel {{
+                    font-size: 14px;
+                    }}
+                    QComboBox {{
+                    font-size: 14px;
+                    }}
+                    QToolBox {{
+                    font-size: 16px;
+                    font-weight: bold;
+                    }}
+
+                    '''
         current_app = QtWidgets.QApplication.instance()
+
         extra = {
             'density_scale': '1',
         }
         
         # Apply the selected theme
         if "light" in theme:
+            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
             apply_stylesheet(current_app, theme=theme, invert_secondary=True, extra=extra)
         else:
-            # set font color to white
-            
+            self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: 12px;} QMessageBox{background-color: #333;}"
+            # set text color to white of QComboBox , QSpinBox and QDoubleSpinBox , lineEdit
+            custom_css += '''
+                        QComboBox {{
+                        color: white;
+                        }}
+                        QComboBox QAbstractItemView {{
+                        color: white;
+                        }}
+                        QSpinBox {{
+                        color: white;
+                        }}
+                        QDoubleSpinBox {{
+                        color: white;
+                        }}
+                        QLineEdit {{
+                        color: white;
+                        }}
+                        '''
             apply_stylesheet(current_app, theme=theme, extra=extra)
         # Append your custom styles to the currently applied stylesheet
         current_stylesheet = current_app.styleSheet()
-        current_app.setStyleSheet(current_stylesheet + custom_css)
-            
-            
+        current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
+        # update comboBox of basic peptide query
+        if self.tf is not None:
+            self.comboBox_basic_peptide_query.clear()
+            self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
+        
+
+#######  set theme end  #######
+
     def set_default_tab_index(self):
         # set default current index as 0 for all tabWidget
         tab_widget =self.MainWindow.findChildren(QtWidgets.QTabWidget)
@@ -642,9 +714,26 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.logger.write_log(f"############################## MetaX closed ##############################")
 
         
+    def make_related_comboboxes_searchable(self):
+        comboboxes_attributes = [
+            'comboBox_basic_heatmap_selection_list',
+            'comboBox_tukey_func',
+            'comboBox_tukey_taxa',
+            'comboBox_others_func',
+            'comboBox_others_taxa',
+            'comboBox_co_expr_select_list',
+            'comboBox_trends_selection_list',
+            'comboBox_basic_peptide_query',
+            'comboBox_tfnet_select_list'
+        ]
 
+        for attribute_name in comboboxes_attributes:
+            old_combobox = getattr(self, attribute_name)
+            new_combobox = self.make_combobox_searchable(old_combobox)
+            setattr(self, attribute_name, new_combobox)
 
     def make_combobox_searchable(self, odl_combobox):
+
         new_combobox = ExtendedComboBox(odl_combobox.parent())
         new_combobox.setEditable(True)
 
@@ -771,8 +860,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         self.msg.setWindowModality(Qt.NonModal)
         self.msg.setWindowTitle(title)
-
-        self.msg.setStyleSheet("QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}")
+        if not hasattr(self, 'msgbox_style'):
+            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
+        self.msg.setStyleSheet(self.msgbox_style)
         self.msg.setText(message)
         
         self.msg.setStandardButtons(QMessageBox.NoButton)
@@ -3093,21 +3183,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
         if df_type == 'Taxa-Func':
-            self.comboBox_tfnet_selecte_list.clear()
-            self.comboBox_tfnet_selecte_list.addItems(self.taxa_func_list)
+            self.comboBox_tfnet_select_list.clear()
+            self.comboBox_tfnet_select_list.addItems(self.taxa_func_list)
         elif df_type == 'Taxa':
-            self.comboBox_tfnet_selecte_list.clear()
-            self.comboBox_tfnet_selecte_list.addItems(self.taxa_list)
+            self.comboBox_tfnet_select_list.clear()
+            self.comboBox_tfnet_select_list.addItems(self.taxa_list)
         elif df_type == 'Func':
-            self.comboBox_tfnet_selecte_list.clear()
-            self.comboBox_tfnet_selecte_list.addItems(self.func_list)
+            self.comboBox_tfnet_select_list.clear()
+            self.comboBox_tfnet_select_list.addItems(self.func_list)
     
     def add_a_list_to_tfnet_focus_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
         self.add_a_list_to_list_window(df_type,'tfnet')
     
     def add_tfnet_selected_to_list(self):
-        selected = self.comboBox_tfnet_selecte_list.currentText().strip()
+        selected = self.comboBox_tfnet_select_list.currentText().strip()
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
@@ -3569,70 +3659,16 @@ def global_exception_handler(type, value, tb):
 def runGUI():
     sys.excepthook = global_exception_handler
 
+    app = QtWidgets.QApplication(sys.argv)
+    
+     
     class CustomMainWindow(QtWidgets.QMainWindow):
         def closeEvent(self, event):
             ui.closeEvent(event) 
             
-    app = QtWidgets.QApplication(sys.argv)
-    
-    #### splash screen start ####
-    splash = QSplashScreen()
-    icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-    splash.setPixmap(QPixmap(icon_path))
-    splash.show()
-    app.processEvents()
-    #### splash screen end ####
-     
     MainWindow = CustomMainWindow()
     ui = MetaXGUI(MainWindow)
     
-    app.setStyleSheet('QPushButton, QLabel {font-size: 12pt;}')
-
-    extra = {
-        
-        # Density Scale
-        'density_scale': '1',
-    }
-
-
-    apply_stylesheet(app,  'light_blue.xml', invert_secondary=True, extra=extra)
-    # apply_stylesheet(app,  'dark_blue.xml', extra=extra)
-
-    custom_css = '''
-    QGroupBox {{
-    text-transform: none;
-    margin: 0px;
-    padding: 20px 0px 10px 0px;
-    }}
-    QTabBar {{
-    text-transform: none;
-    }}
-    QDockWidget {{
-    text-transform: none;
-    }}
-    QHeaderView::section {{
-    text-transform: none;
-    padding: 5px;
-    }}
-    QPushButton {{
-    text-transform: none;
-    }}
-    QLabel {{
-    font-size: 14px;
-    }}
-    QComboBox {{
-    font-size: 14px;
-    }}
-    QToolBox {{
-    font-size: 16px;
-    font-weight: bold;
-    }}
-
-    
-    '''
-
-    stylesheet = app.styleSheet()
-    app.setStyleSheet(stylesheet + custom_css.format(**os.environ))
 
     MainWindow.show()
     splash.finish(MainWindow)

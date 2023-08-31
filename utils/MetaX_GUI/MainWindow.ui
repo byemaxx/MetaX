@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -236,8 +236,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>340</width>
-                 <height>49</height>
+                 <width>538</width>
+                 <height>504</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1007,7 +1007,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1561,7 +1561,7 @@
                 <item row="2" column="1" colspan="5">
                  <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -2411,7 +2411,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="title">
@@ -3751,7 +3751,7 @@
                  <layout class="QGridLayout" name="gridLayout_network_sample"/>
                 </item>
                 <item row="3" column="1" colspan="8">
-                 <widget class="QComboBox" name="comboBox_tfnet_selecte_list"/>
+                 <widget class="QComboBox" name="comboBox_tfnet_select_list"/>
                 </item>
                 <item row="0" column="9">
                  <widget class="QLabel" name="label_49">
