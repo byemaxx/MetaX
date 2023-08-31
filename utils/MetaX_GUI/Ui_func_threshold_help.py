@@ -10,7 +10,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('Function Threshold Help')
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.resize(1300, 700)
+        self.resize(1400, 600)
         if parent:
             self.setWindowIcon(parent.windowIcon())
             
