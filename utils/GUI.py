@@ -81,7 +81,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QCheckBox,  QComboBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 
@@ -97,10 +97,10 @@ from PyQt5.QtWidgets import QAction, QMenu
 class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def __init__(self, MainWindow):
         super().__init__()
+        MainWindow.closeEvent = self.closeEvent
         self.setupUi(MainWindow)
         self.MainWindow = MainWindow
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-        self.init_theme_menu()
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1440, 900)
@@ -371,6 +371,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # Initiate QSettings
         self.init_QSettings()
+        self.init_theme_menu()
         self.init_theme()
 
         # Check and load settings
@@ -379,10 +380,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set default tab index as 0 for all tabWidget
         self.set_default_tab_index()
 
-        # Save settings every 1 minute
-        self.timer = QTimer(self.MainWindow)
-        self.timer.timeout.connect(self.save_basic_settings)
-        self.timer.start(60000)
+
     ###############   init function End   ###############
     def init_theme_menu(self):
         # Create a menu for themes
@@ -408,8 +406,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def init_theme(self):
         if self.settings.contains("theme"):
             theme = self.settings.value("theme", type=str)
+            print(f"Loading theme {theme}...")
         else:
             theme = "light_blue"
+            print(f"Loading default theme {theme}...")
         self.change_theme(theme, silent=True)
             
 
@@ -582,11 +582,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
 
 
-    def save_basic_settings(self):
-        line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+    def save_basic_settings(self, line_edit_name: str=None):
+        if not line_edit_name:
+            line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+        else:
+            line_edit_names = [line_edit_name]
         for name in line_edit_names:
             widget = getattr(self, name, None)
             if widget and isinstance(widget, QtWidgets.QLineEdit):
+                # check if the path exists
+                if not os.path.exists(widget.text()):
+                    continue
                 settings_key = f"widget/{name}"
                 self.settings.setValue(f"{settings_key}/text", widget.text())
         # save self.last_path
@@ -872,7 +878,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         self.msg.setStandardButtons(QMessageBox.NoButton)
         self.msg.show()  
-        QTimer.singleShot(200, self.msg.accept) 
+        QTimer.singleShot(200, self.msg.accept)
         QApplication.processEvents()
 
     def open_output_window(self, func_class, *args, **kwargs):
@@ -3669,17 +3675,9 @@ def global_exception_handler(type, value, tb):
 def runGUI():
     sys.excepthook = global_exception_handler
 
-    app = QtWidgets.QApplication(sys.argv)
-    
-     
-    class CustomMainWindow(QtWidgets.QMainWindow):
-        def closeEvent(self, event):
-            ui.closeEvent(event) 
-            
-    MainWindow = CustomMainWindow()
+    MainWindow = QtWidgets.QMainWindow()
     ui = MetaXGUI(MainWindow)
     
-
     MainWindow.show()
     splash.finish(MainWindow)
     sys.exit(app.exec_())
