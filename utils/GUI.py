@@ -670,6 +670,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, "Warning", "No log file found.")
             
     def run_restore_taxafunc_obj(self):
+        # check if taxafunc object exists
+        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        if not os.path.exists(path):
+            QMessageBox.warning(self.MainWindow, "Warning", "No taxafunc object found. Please run TaxaFuncAnalyzer first.")
+            return
         self.show_message("Loading taxafunc object from last time...", "Loading...")
         self.set_multi_table(restore_taxafunc = True)
         self.restore_settings_after_load_taxafunc_obj()
