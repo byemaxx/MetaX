@@ -2525,22 +2525,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def save_and_show_js_plot(self, pic, title, width=None, height=None):
-        if not width and not height:
-            width = int(self.screen_width / 1.1)
-            height = int(self.screen_height / 1.1)
+        try:
+            if not width and not height:
+                width = int(self.screen_width / 1.1)
+                height = int(self.screen_height / 1.1)
 
-        home_path = QDir.homePath()
-        metax_path = os.path.join(home_path, 'MetaX/html')
-        os.makedirs(metax_path, exist_ok=True)
-        save_path = os.path.join(metax_path, f'{title}.html')
-        pic.render(save_path)
-        self.logger.write_log(f'html saved: {save_path}', 'i')
+            home_path = QDir.homePath()
+            metax_path = os.path.join(home_path, 'MetaX/html')
+            os.makedirs(metax_path, exist_ok=True)
+            save_path = os.path.join(metax_path, f'{title}.html')
+            pic.render(save_path)
+            self.logger.write_log(f'html saved: {save_path}', 'i')
 
-        web = webDialog.MyDialog(save_path)
-        if width and height:
-            web.resize(width, height)
-        self.web_list.append(web)
-        web.show()
+            web = webDialog.MyDialog(save_path)
+            if width and height:
+                web.resize(width, height)
+            self.web_list.append(web)
+            web.show()
+        except Exception as e:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'save_and_show_js_plot error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
         
         
