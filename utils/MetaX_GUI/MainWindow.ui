@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -237,7 +237,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>538</width>
-                 <height>504</height>
+                 <height>508</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1007,7 +1007,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1024,7 +1024,7 @@
                   </property>
                   <item>
                    <property name="text">
-                    <string>Function</string>
+                    <string>Peptide</string>
                    </property>
                   </item>
                   <item>
@@ -1034,12 +1034,12 @@
                   </item>
                   <item>
                    <property name="text">
-                    <string>Taxa-Function</string>
+                    <string>Function</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string>Peptide</string>
+                    <string>Taxa-Function</string>
                    </property>
                   </item>
                  </widget>
@@ -5270,7 +5270,7 @@
      <x>0</x>
      <y>0</y>
      <width>1143</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
