@@ -508,10 +508,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tf is not None:
+        if self.tf and self.tf.clean_df is not None:
             self.comboBox_basic_peptide_query.clear()
             self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
-        
+
 
 #######  set theme end  #######
 
