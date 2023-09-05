@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1143</width>
-    <height>729</height>
+    <width>1063</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -125,6 +125,9 @@
             </item>
             <item row="1" column="3">
              <widget class="QPushButton" name="pushButton_load_example_for_analyzer">
+              <property name="toolTip">
+               <string>Load the Exmapel Data (4000 peptides)</string>
+              </property>
               <property name="text">
                <string>Load Example Data</string>
               </property>
@@ -236,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>538</width>
-                 <height>508</height>
+                 <width>498</width>
+                 <height>337</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -363,6 +366,9 @@
                  <widget class="QPushButton" name="pushButton_overview_run_filter">
                   <property name="enabled">
                    <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Keep selected items only</string>
                   </property>
                   <property name="text">
                    <string>Run Filter</string>
@@ -1007,7 +1013,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1323,6 +1329,9 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add to List</string>
                   </property>
@@ -1595,6 +1604,9 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add Top to List</string>
                   </property>
@@ -1720,6 +1732,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
                   </property>
                   <property name="text">
                    <string>Add a list</string>
@@ -2043,7 +2058,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_3">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -2245,6 +2260,9 @@
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Restore both lists to their original full items</string>
+                  </property>
                   <property name="text">
                    <string>Reset Funtion &amp; Taxa List</string>
                   </property>
@@ -2411,7 +2429,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="title">
@@ -2812,6 +2830,9 @@
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add Top to List</string>
                   </property>
@@ -3007,6 +3028,9 @@
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add to Focus List</string>
                   </property>
@@ -3186,6 +3210,9 @@
                  <widget class="QPushButton" name="pushButton_co_expr_add_a_list">
                   <property name="enabled">
                    <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
                   </property>
                   <property name="text">
                    <string>Add a list</string>
@@ -3433,6 +3460,9 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add Top to List</string>
                   </property>
@@ -3529,6 +3559,9 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add to List</string>
                   </property>
@@ -3567,6 +3600,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
                   </property>
                   <property name="text">
                    <string>Add a list</string>
@@ -3711,7 +3747,7 @@
             <item row="0" column="1">
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_9">
                <attribute name="title">
@@ -3888,6 +3924,9 @@
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add Top to List</string>
                   </property>
@@ -4032,6 +4071,9 @@
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
                   <property name="text">
                    <string>Add to Focus List</string>
                   </property>
@@ -4076,6 +4118,9 @@
                  <widget class="QPushButton" name="pushButton_tfnet_add_a_list">
                   <property name="enabled">
                    <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
                   </property>
                   <property name="text">
                    <string>Add a list</string>
@@ -4177,6 +4222,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Restore both lists to their original full items</string>
                   </property>
                   <property name="text">
                    <string>Reset List</string>
@@ -4547,6 +4595,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Filter items in the two lists by condition</string>
                   </property>
                   <property name="text">
                    <string>Filter</string>
@@ -5269,7 +5320,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1143</width>
+     <width>1063</width>
      <height>21</height>
     </rect>
    </property>
