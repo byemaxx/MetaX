@@ -259,6 +259,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
+        self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
 
         
         ### Peptide Qeruy
@@ -299,6 +300,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_co_expr_clean_list.clicked.connect(self.clean_co_expr_list)
         self.pushButton_co_expr_add_top.clicked.connect(self.add_co_expr_top_list)
         self.pushButton_co_expr_add_a_list.clicked.connect(self.add_a_list_to_co_expr)
+        self.comboBox_co_expr_select_list.add_all_searched.connect(self.add_all_searched_co_expr_top_list)
         
         # ### Trends Cluster
         self.pushButton_trends_plot_trends.clicked.connect(self.plot_trends_cluster)
@@ -310,6 +312,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_trends_get_trends_table.clicked.connect(self.get_trends_cluster_table)
         self.pushButton_trends_plot_interactive_line.clicked.connect(self.plot_trends_interactive_line)
         self.pushButton_trends_add_a_list.clicked.connect(self.add_a_list_to_trends_list)
+        self.comboBox_trends_selection_list.add_all_searched.connect(self.add_all_searched_trends_top_list)
         
         
 
@@ -323,6 +326,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_tfnet_drop_item.clicked.connect(self.remove_tfnet_selected_from_list)
         self.pushButton_tfnet_clean_list.clicked.connect(self.clear_tfnet_focus_list)
         self.pushButton_tfnet_add_a_list.clicked.connect(self.add_a_list_to_tfnet_focus_list)
+        self.comboBox_tfnet_select_list.add_all_searched.connect(self.add_all_searched_tfnet_to_focus_list)
 
         # Taxa-func link
         self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_tflink_intensity_matrix)
@@ -2057,6 +2061,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
 
         self.update_basic_heatmap_list(str_list=index_list)
+        
+    def add_all_searched_basic_heatmap_to_list(self,items):
+            self.update_basic_heatmap_list(str_list=items)
+
+
     
     def add_a_list_to_co_expr(self):
         df_type = self.comboBox_co_expr_table.currentText()
@@ -2123,7 +2132,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_co_expr_list(str_list=index_list)
 
         
-
+    def add_all_searched_co_expr_top_list(self, items):
+        self.update_co_expr_list(str_list=items)
             
 
     def plot_basic_list(self, plot_type='heatmap'):
@@ -2357,6 +2367,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         df_type = self.comboBox_trends_table.currentText()
         index_list = self.get_top_index_list(df_type=df_type, method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         self.update_trends_list(str_list=index_list)
+    
+    def add_all_searched_trends_top_list(self, items):
+        self.update_trends_list(str_list=items)
         
     def plot_trends_cluster(self):
         group_list = self.comboBox_trends_group.getCheckedItems()
@@ -3283,6 +3296,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         self.update_tfnet_focus_list_and_widget(str_list=index_list)
 
+    def add_all_searched_tfnet_to_focus_list(self, item):
+        self.update_tfnet_focus_list_and_widget(str_list=item)
+
+        
 
     def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list,filtered:bool = False) -> list:
         df_type = df_type.lower()

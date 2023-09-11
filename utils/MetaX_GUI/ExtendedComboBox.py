@@ -1,7 +1,10 @@
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QTimer
-from PyQt5.QtWidgets import QCompleter, QComboBox
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QTimer, pyqtSignal
+from PyQt5.QtWidgets import QCompleter, QComboBox, QMenu, QAction
 
 class ExtendedComboBox(QComboBox):
+    # Define a custom signal for returning all searched items
+    add_all_searched = pyqtSignal(list)
+
     def __init__(self, parent=None):
         super(ExtendedComboBox, self).__init__(parent)
 
@@ -26,6 +29,10 @@ class ExtendedComboBox(QComboBox):
 
         self.completer.activated.connect(self.on_completer_activated)
         self.textToSearch = ""
+
+        # Add right-click menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
 
     # start timer when text edited
     def startTimer(self, text):
@@ -58,3 +65,28 @@ class ExtendedComboBox(QComboBox):
         self.completer.setCompletionColumn(column)
         self.pFilterModel.setFilterKeyColumn(column)
         super(ExtendedComboBox, self).setModelColumn(column)
+
+    # Show context menu
+    def showContextMenu(self, position):
+        contextMenu = QMenu(self)
+        addAllAction = QAction("Add all matched items", self)
+        contextMenu.addAction(addAllAction)
+
+        addAllAction.triggered.connect(self.addAllSearched)
+        
+        contextMenu.exec_(self.mapToGlobal(position))
+
+    # Triggered when 'add all searched' is clicked
+    def addAllSearched(self):
+        current_text = self.currentText().strip()
+        if not current_text or current_text in ["All Taxa", "All Functions", "All Taxa-Functions"]:
+            print(f'ComboBox has special value "{current_text}". No items to search.')
+            return
+
+        all_items = []
+        for i in range(self.pFilterModel.rowCount()):
+            index = self.pFilterModel.index(i, 0)
+            item_text = self.pFilterModel.data(index, Qt.DisplayRole)
+            if item_text not in ["All Taxa", "All Functions", "All Taxa-Functions"]:
+                all_items.append(item_text)
+        self.add_all_searched.emit(all_items)
