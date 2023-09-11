@@ -67,7 +67,7 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8):
         try:
-            dft= df
+            dft= df.copy()
             
             sample_list = dft.columns
             new_sample_name = []
@@ -102,7 +102,7 @@ class BasicPlot:
             raise e
 
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8):
-        dft = df
+        dft = df.copy()
         
         # create a new dataframe with new sample names and sorted by group
         sample_list = dft.columns
@@ -148,7 +148,7 @@ class BasicPlot:
         return ax
     
     def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8):
-        dft= df
+        dft= df.copy()
         
         sample_list = dft.columns
         new_sample_name = []
@@ -158,14 +158,15 @@ class BasicPlot:
         dft.columns = new_sample_name
         
         corr = dft.corr()
-        mask = np.triu(np.ones_like(corr, dtype=bool))
+        # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
             if cluster:
                 ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm', figsize=(width, height))
             if not cluster:
                 plt.figure(figsize=(width, height))
-                ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
+                # ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
+                ax = sns.heatmap(corr, linewidths=.5, cmap='coolwarm')
             plt.xticks(rotation=90)  
             #set title
             plt.title(f'Correlation of {table_name}')
@@ -175,7 +176,8 @@ class BasicPlot:
         except Exception as e:
             plt.close('all')
             raise e
-    
+        
+        
     
         
         
