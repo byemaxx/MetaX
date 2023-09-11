@@ -1989,15 +1989,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         index_list = df.index.tolist()
         return index_list
     
-    def add_a_list_to_list_window(self, df_type, aim_list):
+    def add_a_list_to_list_window(self, df_type, aim_list, str_list=None):
         def check_if_in_list(str_selected, df_type):
                     list_dict = {'Taxa':self.taxa_list, 'Func':self.func_list, 'Taxa-Func':self.taxa_func_list, 'Peptide':self.peptide_list}
                     if str_selected in list_dict[df_type]:
                         return True
                     else:
                         return False
+                    
         # open a new window allowing user to input text with comma or new line
         self.input_window = InputWindow(self.MainWindow)
+        if str_list is not None:
+            self.input_window.text_edit.setText('\n'.join(str_list))
         result = self.input_window.exec_()
         text_list = []
         if result == QDialog.Accepted:
@@ -2063,7 +2066,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_basic_heatmap_list(str_list=index_list)
         
     def add_all_searched_basic_heatmap_to_list(self,items):
-            self.update_basic_heatmap_list(str_list=items)
+            # self.update_basic_heatmap_list(str_list=items)
+            df_type = self.comboBox_basic_table.currentText()
+            self.add_a_list_to_list_window(df_type, aim_list='basic_heatmap', str_list=items)
 
 
     
@@ -2133,7 +2138,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         
     def add_all_searched_co_expr_top_list(self, items):
-        self.update_co_expr_list(str_list=items)
+        # self.update_co_expr_list(str_list=items)
+        df_type = self.comboBox_co_expr_table.currentText()
+        self.add_a_list_to_list_window(df_type, aim_list='co_expr', str_list=items)
             
 
     def plot_basic_list(self, plot_type='heatmap'):
@@ -2370,7 +2377,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_trends_list(str_list=index_list)
     
     def add_all_searched_trends_top_list(self, items):
-        self.update_trends_list(str_list=items)
+        # self.update_trends_list(str_list=items)
+        df_type = self.comboBox_trends_table.currentText()
+        self.add_a_list_to_list_window(df_type, aim_list='trends', str_list=items)
         
     def plot_trends_cluster(self):
         group_list = self.comboBox_trends_group.getCheckedItems()
@@ -3302,7 +3311,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_tfnet_focus_list_and_widget(str_list=index_list)
 
     def add_all_searched_tfnet_to_focus_list(self, item):
-        self.update_tfnet_focus_list_and_widget(str_list=item)
+        # self.update_tfnet_focus_list_and_widget(str_list=item)
+        df_type = self.comboBox_tfnet_table.currentText()
+        self.add_a_list_to_list_window(df_type,'tfnet', item)
 
         
 
