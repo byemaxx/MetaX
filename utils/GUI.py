@@ -2140,6 +2140,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         group_list = self.comboBox_basic_group.getCheckedItems()
         width = self.spinBox_basic_heatmap_width.value()
         height = self.spinBox_basic_heatmap_height.value()
+        font_size = self.spinBox_basic_heatmap_label_font_size.value()
         scale = self.comboBox_basic_hetatmap_scale.currentText()
         cmap = self.comboBox_basic_hetatmap_theme.currentText()
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
@@ -2238,7 +2239,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
-                HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)      
+                HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)   
             
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
@@ -2252,7 +2253,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     if reply == QMessageBox.No:
                         return None
                 self.show_message(f'Plotting {plot_type}...')
-                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend)
+                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend, font_size=font_size)
                 self.save_and_show_js_plot(pic, title)
                 
         except Exception as e:
@@ -2741,6 +2742,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         show_label = self.checkBox_pca_if_show_lable.isChecked()
         width = self.spinBox_basic_pca_width.value()
         height = self.spinBox_basic_pca_height.value()
+        font_size = self.spinBox_basic_pca_label_font_size.value()
         
         # get sample list
         if self.radioButton_basic_pca_group.isChecked():
@@ -2768,7 +2770,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height)
+                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2780,7 +2782,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height)
+                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height, font_size=font_size)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
             except Exception as e:
                 error_message = traceback.format_exc()
@@ -2791,7 +2793,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.show_message('Box is running, please wait...')
                 show_fliers = self.checkBox_box_if_show_fliers.isChecked()
-                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height)
+                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2800,7 +2802,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height)
+                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2811,6 +2813,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         table_name = self.comboBox_top_heatmap_table.currentText()
         width = self.spinBox_top_heatmap_width.value()
         length = self.spinBox_top_heatmap_length.value()
+        font_size = self.spinBox_top_heatmap_label_font_size.value()
         top_num = self.spinBox_top_heatmap_number.value()
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
@@ -2853,11 +2856,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             if 'taxa-func' in table_name:
                 fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                               top_number=top_num, value_type=value_type, fig_size=fig_size, pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa)
+                               top_number=top_num, value_type=value_type, fig_size=fig_size, 
+                               pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
             else:
                 fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                          scale = scale, col_cluster = True, row_cluster = True, cmap = cmap, rename_taxa=rename_taxa)
+                                                                          scale = scale, col_cluster = True, row_cluster = True, 
+                                                                          cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
         except ValueError:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
         except Exception as e:
@@ -3493,6 +3498,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         func = self.comboBox_others_func.currentText()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
+        font_size = self.spinBox_tflink_label_font_size.value()
         scale = self.comboBox_tflink_hetatmap_scale.currentText()
         cmap = self.comboBox_tflink_cmap.currentText()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
@@ -3551,7 +3557,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('Plotting heatmap, please wait...')
             hp = HeatmapPlot(self.tf)
-            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa)
+            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_others_heatmap error: {error_message}', 'e')
@@ -3565,6 +3571,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         func = self.comboBox_others_func.currentText()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
+        font_size = self.spinBox_tflink_label_font_size.value()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         show_legend = self.checkBox_tflink_bar_show_legend.isChecked()
 
@@ -3603,6 +3610,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 params['height'] = height*100
             
             params['show_legend'] = show_legend
+            params['font_size'] = font_size
             
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tf).plot_intensity_bar(**params)

@@ -65,7 +65,7 @@ class BasicPlot:
         return ax
         
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8):
+    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8, font_size = 10):
         try:
             dft= df.copy()
             
@@ -87,7 +87,7 @@ class BasicPlot:
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1],
                                 hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
-                text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size='medium', 
+                text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
                             color='black', alpha=0.6) for i in range(len(new_sample_name))]
             # text = adjust_text(text)
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
@@ -101,7 +101,7 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8):
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, font_size = 10):
         dft = df.copy()
         
         # create a new dataframe with new sample names and sorted by group
@@ -137,7 +137,7 @@ class BasicPlot:
         else:
             ax = sns.boxplot(data=dft, showfliers=False)
         # set x label
-        ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right')
+        ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Sample')
         ax.set_ylabel('Intensity')
         ax.set_title(f'Intensity Boxplot of {table_name}')
@@ -147,7 +147,7 @@ class BasicPlot:
         # plt.close()
         return ax
     
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8):
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10):
         dft= df.copy()
         
         sample_list = dft.columns
@@ -167,7 +167,8 @@ class BasicPlot:
                 plt.figure(figsize=(width, height))
                 # ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
                 ax = sns.heatmap(corr, linewidths=.5, cmap='coolwarm')
-            plt.xticks(rotation=90)  
+            plt.xticks(rotation=90, fontsize=font_size)
+            plt.yticks(rotation=0, fontsize=font_size)
             #set title
             plt.title(f'Correlation of {table_name}')
             plt.show()

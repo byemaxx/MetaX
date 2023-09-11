@@ -40,7 +40,7 @@ class BarPlot_js:
     def plot_intensity_bar(self, taxon_name:str=None, sample_list:list = None, 
                            func_name:str=None, peptide_seq=None, 
                            width:int=1200, height:int=800, df= None, 
-                           title:str=None, rename_taxa:bool=False, show_legend:bool=True):
+                           title:str=None, rename_taxa:bool=False, show_legend:bool=True, font_size:int=10):
         if df is None:
             df = self.tfobj.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
@@ -85,15 +85,18 @@ class BarPlot_js:
                 datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
                             toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
                             title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)))
+                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size))
+            )
+
         else:
             c.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
                 datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
                             toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
                             title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)))
+                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size))
+        )
 
-
+    
         return c
     
     def get_distinct_colors(self, n):  

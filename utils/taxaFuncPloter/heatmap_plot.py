@@ -25,7 +25,8 @@ class HeatmapPlot:
         return df
 
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
-                                        value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, cmap:str = None, rename_taxa:bool = True):
+                                        value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
+                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
 
         
         # if fig_size is None:
@@ -82,7 +83,9 @@ class HeatmapPlot:
             fig.ax_heatmap.set_ylabel('Taxa')
 
             fig.ax_col_dendrogram.set_title(f"Significant differences between groups in Taxa-Function heatmap of {plot_type} (top {top_number})")
-
+            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
+            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+            
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
             plt.show()
             return fig
@@ -95,7 +98,8 @@ class HeatmapPlot:
 
     def plot_basic_heatmap_of_test_res(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
-                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = True):
+                                       col_cluster:bool = True, row_cluster:bool = True,
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
 
         dft = df.copy()
 
@@ -172,8 +176,8 @@ class HeatmapPlot:
                             cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
                                 standard_scale=scale, col_colors=color_list)
 
-            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels())
-            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels())
+            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
+            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             fig.ax_col_dendrogram.set_title(f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})")
 
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
@@ -191,7 +195,7 @@ class HeatmapPlot:
                 #  title = 'The heatmap of top 100 significant differences between groups in Taxa-Function', 
                 #  fig_size=(30,30), scale=0)
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
-                    scale = None, col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = True):
+                    scale = None, col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
         if len(df) < 2:
             row_cluster = False
         if len(df.columns) < 2:
@@ -242,9 +246,10 @@ class HeatmapPlot:
                         cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
                             standard_scale=scale, col_colors=color_list)
 
-        fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels())
-        fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels())
+        fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
+        fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
         fig.ax_col_dendrogram.set_title(title)
+
 
         plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
         plt.show()
