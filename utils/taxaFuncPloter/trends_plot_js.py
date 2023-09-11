@@ -74,7 +74,7 @@ class TrendsPlot_js:
 
         # set global options
         if show_legend:
-            c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",),
+            c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",border_width=0),
                             xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
                             toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
                             datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],

@@ -162,13 +162,15 @@ class BasicPlot:
 
         try:
             if cluster:
-                ax = sns.clustermap(corr, linewidths=.5, cmap='coolwarm', figsize=(width, height))
-            if not cluster:
+                cluster_grid = sns.clustermap(corr, linewidths=.5, cmap='coolwarm', figsize=(width, height))
+                ax = cluster_grid.ax_heatmap  # 获取热图的轴
+            else:
                 plt.figure(figsize=(width, height))
-                # ax = sns.heatmap(corr, mask=mask, linewidths=.5, cmap='coolwarm')
                 ax = sns.heatmap(corr, linewidths=.5, cmap='coolwarm')
-            plt.xticks(rotation=90, fontsize=font_size)
-            plt.yticks(rotation=0, fontsize=font_size)
+                
+            ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
+            ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
+        
             #set title
             plt.title(f'Correlation of {table_name}')
             plt.show()
