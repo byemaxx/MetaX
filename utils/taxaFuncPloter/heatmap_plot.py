@@ -12,17 +12,18 @@ class HeatmapPlot:
 
     def rename_taxa(self, df):
         first_index = df.index[0]
-        if 'd__Bacteria' in first_index:
+        index_list = df.index.tolist()
+        if 'd__' in first_index:
             if '<' not in first_index:
-                index_list = [i.split('|')[-1] for i in df.index]
-                df.index = index_list
+                new_index_list = [i.split('|')[-1] for i in index_list]
             else:
                 new_index_list = [
                     f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
-                    for i in df.index
+                    for i in index_list
                 ]
-                df.index = new_index_list
+            df.index = new_index_list
         return df
+
 
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
@@ -87,6 +88,7 @@ class HeatmapPlot:
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+            plt.tight_layout()
             plt.show()
             return fig
         except ValueError as e:
@@ -181,6 +183,7 @@ class HeatmapPlot:
             fig.ax_col_dendrogram.set_title(f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})")
 
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+            plt.tight_layout()
             plt.show()
             return fig
         except Exception as e:
@@ -252,6 +255,7 @@ class HeatmapPlot:
 
 
         plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+        plt.tight_layout()
         plt.show()
         return fig
 

@@ -10,17 +10,18 @@ class BarPlot_js:
 
     def rename_taxa(self, df):
         first_index = df.index[0]
-        if 'd__Bacteria' in first_index:
+        index_list = df.index.tolist()
+        if 'd__' in first_index:
             if '<' not in first_index:
-                index_list = [i.split('|')[-1] for i in df.index]
-                df.index = index_list
+                new_index_list = [i.split('|')[-1] for i in index_list]
             else:
                 new_index_list = [
                     f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
-                    for i in df.index
+                    for i in index_list
                 ]
-                df.index = new_index_list
+            df.index = new_index_list
         return df
+
     def _add_group_name_to_sample(self, df):
         #rename columns (sample name)
         col_names = df.columns.tolist()

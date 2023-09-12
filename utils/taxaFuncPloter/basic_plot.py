@@ -94,6 +94,8 @@ class BasicPlot:
                         fontsize=15, fontweight='bold')
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
+            # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
+            plt.tight_layout()
             plt.show()
 
             return fig
@@ -143,6 +145,7 @@ class BasicPlot:
         ax.set_title(f'Intensity Boxplot of {table_name}')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)
+        plt.tight_layout()
         plt.show()
         # plt.close()
         return ax
@@ -173,6 +176,7 @@ class BasicPlot:
         
             #set title
             plt.title(f'Correlation of {table_name}')
+            plt.tight_layout()
             plt.show()
             # plt.close()
             return ax
