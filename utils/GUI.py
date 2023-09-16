@@ -2465,7 +2465,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         cluster_num = int(cluster_name.split(' ')[1]) - 1
         width = self.spinBox_trends_width.value()*100
         height = self.spinBox_trends_height.value()*100
-        table_name = self.comboBox_trends_table.currentText().capitalize()
+        table_name = self.comboBox_trends_table.currentText()
         title = f'Cluster {cluster_num+1} of {table_name} (Cluster Score)'
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
         show_legend = self.checkBox_trends_plot_interactive_show_legend.isChecked()
@@ -2537,7 +2537,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def get_trends_cluster_table(self):
         cluster_name = self.comboBox_trends_get_cluster_name.currentText()
         cluster_num = int(cluster_name.split(' ')[1]) - 1
-        table_name = self.comboBox_trends_table.currentText().capitalize()
+        table_name = self.comboBox_trends_table.currentText()
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
         save_table_name = f'cluster({table_name.lower()})'
         try:
