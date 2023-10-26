@@ -1252,8 +1252,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
             if "The TaxaFunc data must have Taxon_prop column!" in error_message:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
-            elif "The meta data does not match the TaxaFunc data, Please check!" in error_message:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'The meta data does not match the TaxaFunc data, Please check!')
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
     

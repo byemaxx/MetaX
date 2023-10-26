@@ -63,7 +63,8 @@ class TaxaFuncAnalyzer:
             ' ', '_').str.replace('Intensity_', '')
 
     def _set_meta(self, meta_path: str) -> None:
-        meta = pd.read_csv(meta_path, sep='\t')
+        # read table without fill na
+        meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False)
         # sample name must be in the first column
         # rename the first column to Sample
         meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
@@ -74,15 +75,17 @@ class TaxaFuncAnalyzer:
 
         self.sample_list = meta['Sample'].tolist()
         self.meta_df = meta
+          
         
-        if self.check_meta_match_df() is False:
-            raise ValueError("The meta data does not match the TaxaFunc data, Please check!")
+        check_result = self.check_meta_match_df()
+        if check_result[0] == False:
+            raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
     
     def update_meta(self, meta_df: str) -> None:
         self.meta_df = meta_df
         old_sample_list = self.sample_list
         new_sample_list = meta_df['Sample'].tolist()
-        # dorop the samples not in meta_df from original_df
+        # drop the samples not in meta_df from original_df
         drop_list = list(set(old_sample_list) - set(new_sample_list))
         self.original_df = self.original_df.drop(drop_list, axis=1)
         self.sample_list = new_sample_list
@@ -110,14 +113,15 @@ class TaxaFuncAnalyzer:
         self.func_list = func_list
         return func_list
     
-    def check_meta_match_df(self) -> bool:
+    def check_meta_match_df(self) -> tuple:
         meta_list = self.meta_df['Sample'].tolist()
         try:
             df = self.original_df.copy()
             df[meta_list]
-            return True
-        except Exception:
-            return False
+            return True, "Meta data matches the TaxaFunc data."
+        except Exception as e:
+            return False, str(e)
+
     
     def _remove_all_zero_row(self):
         df = self.original_df.copy()
