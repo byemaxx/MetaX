@@ -1957,6 +1957,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             table_name = method.split('_')[0] + '_test(' + df_type + ')'
             df = self.table_dict.get(table_name)
             df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
+
+            if df is None:
+                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
+                return None
+            
             if filtered:
                 print('filtered enabled')
                 self.logger.write_log('filtered enabled')
@@ -1966,10 +1971,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 print(output)
                 self.logger.write_log('filtered enabled')
 
-
-            if df is None:
-                QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
-                return None
             if method.split('_')[2] == 'p':
                 df = df.sort_values(by='P-value',ascending = True)
             elif method.split('_')[2] == 'f':
