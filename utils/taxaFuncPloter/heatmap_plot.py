@@ -24,7 +24,7 @@ class HeatmapPlot:
             df.index = new_index_list
         return df
 
-
+    # For taxa-func table
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
                                         cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
@@ -69,10 +69,9 @@ class HeatmapPlot:
 
             if rename_taxa:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
-            df_top = df_top.pivot(index='Taxon', columns=func_name, values=plot_type)
-
-            df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
+            df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
+            df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
 
             fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor="grey", 
                                 figsize=fig_size, cmap = cmap, 
@@ -80,8 +79,8 @@ class HeatmapPlot:
                             standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
 
 
-            fig.ax_heatmap.set_xlabel('Function')
-            fig.ax_heatmap.set_ylabel('Taxa')
+            fig.ax_heatmap.set_xlabel('Taxa')
+            fig.ax_heatmap.set_ylabel('Function')
 
             fig.ax_col_dendrogram.set_title(f"Significant differences between groups in Taxa-Function heatmap of {plot_type} (top {top_number})")
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
@@ -97,7 +96,7 @@ class HeatmapPlot:
             raise ValueError(f"No significant differences between groups in {func_name}")
     
 
-
+    # For taxa, func and peptides table
     def plot_basic_heatmap_of_test_res(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
@@ -260,7 +259,7 @@ class HeatmapPlot:
         return fig
 
 
-
+        # For taxa-func heatmap
     def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05):
         func_name = self.tfobj.func_name
         dft = df.copy()
@@ -294,7 +293,7 @@ class HeatmapPlot:
                 dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False], ignore_index=True)
             df_top = dft.head(top_number)
 
-            df_top = df_top.pivot(index='Taxon', columns=func_name, values=plot_type)
+            df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             mat = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             plt.figure()
             fig = sns.clustermap(mat, center=0, linewidths=.3, linecolor="grey", cmap = color,
