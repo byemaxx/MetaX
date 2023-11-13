@@ -2162,7 +2162,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_basic_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                group_list = list(set(self.tf.group_list))
+                group_list = sorted(set(self.tf.group_list))
             for group in group_list:
                 sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
@@ -2395,7 +2395,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_trends_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                group_list = list(set(self.tf.group_list))
+                group_list = sorted(set(self.tf.group_list))
             elif len(group_list) == 1:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 2 groups!')
                 return None
@@ -2488,7 +2488,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 group_list = self.comboBox_trends_group.getCheckedItems()
                 sample_list = []
                 if group_list == []:
-                    group_list = list(set(self.tf.group_list))
+                    group_list = sorted(set(self.tf.group_list))
                 for group in group_list:
                     sample_list.extend(self.tf.get_sample_list_in_a_group(group))
             else:
@@ -2760,8 +2760,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             sample_list = []
             if group_list == []:
-                group_list = list(set(self.tf.group_list))
-                group_list = sorted(group_list)
+                group_list = sorted(set(self.tf.group_list))
             for group in group_list:
                 sample_list.extend(self.tf.get_sample_list_in_a_group(group))
         else:
