@@ -130,7 +130,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
 
-        self.tf = None
+        self.tfa = None
         self.add_theme_to_combobox()
 
 
@@ -513,9 +513,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tf and self.tf.clean_df is not None:
+        if self.tfa and self.tfa.clean_df is not None:
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
+            self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df['Sequence'].tolist())
 
 
 #######  set theme end  #######
@@ -608,7 +608,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def save_taxafunc_obj(self, path=None, no_message = False):
         save_obj_dict = {}
-        if self.tf.taxa_df is None:
+        if self.tfa.taxa_df is None:
             QMessageBox.warning(self.MainWindow, "Warning", "Please set TaxaFunc first.")
             return
         
@@ -622,7 +622,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             raise ValueError(f"Invalid path: {path}")
         
-        save_obj_dict['taxa_func_obj'] = self.tf
+        save_obj_dict['taxa_func_obj'] = self.tfa
         
         with open(path, 'wb') as f:
             pickle.dump(save_obj_dict, f)
@@ -1215,9 +1215,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     #### Deprecated Function ####
      
     def show_taxaFuncAnalyzer_init(self):
-        original_row_num = self.tf.original_row_num
-        zero_removed_row_num = self.tf.original_df.shape[0]
-        sample_num = len(self.tf.sample_list)
+        original_row_num = self.tfa.original_row_num
+        zero_removed_row_num = self.tfa.original_df.shape[0]
+        sample_num = len(self.tfa.sample_list)
         out_msg = f'Original row number: [{original_row_num}]\n\nAfter removing zero rows: [{zero_removed_row_num}]\n\nSample number: [{sample_num}]'
         QMessageBox.information(self.MainWindow, 'Information', out_msg)
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
@@ -1244,7 +1244,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('taxaFuncAnalyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
-            self.tf = TaxaFuncAnalyzer(taxafunc_path, meta_path)
+            self.tfa = TaxaFuncAnalyzer(taxafunc_path, meta_path)
             self.update_after_tfobj()
             self.show_taxaFuncAnalyzer_init()
 
@@ -1275,12 +1275,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def update_meta_name_combobox_plot_part(self):
         combobox_list = self.meta_combobox_list
-        self.tf.set_group(self.tf.meta_df.columns.tolist()[1])
+        self.tfa.set_group(self.tfa.meta_df.columns.tolist()[1])
         
         for combobox in combobox_list:
             combobox.blockSignals(True)
             combobox.clear()
-            combobox.addItems(self.tf.meta_df.columns.tolist()[1:])
+            combobox.addItems(self.tfa.meta_df.columns.tolist()[1:])
             combobox.blockSignals(False)
     
     def change_event_meta_name_combobox_plot_part(self, index):
@@ -1292,7 +1292,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             combobox.setCurrentIndex(index)
             combobox.blockSignals(False)
         if not group_set:
-            self.tf.set_group(selected_meta_name)
+            self.tfa.set_group(selected_meta_name)
             group_set = True
         self.update_group_and_sample_combobox(meta_name=selected_meta_name, update_sample_list=False)
         
@@ -1300,10 +1300,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                               
     def update_after_tfobj(self):
         try:
-            self.set_pd_to_QTableWidget(self.tf.original_df.head(200), self.tableWidget_taxa_func_view)
-            self.set_pd_to_QTableWidget(self.tf.meta_df, self.tableWidget_meta_view)
+            self.set_pd_to_QTableWidget(self.tfa.original_df.head(200), self.tableWidget_taxa_func_view)
+            self.set_pd_to_QTableWidget(self.tfa.meta_df, self.tableWidget_meta_view)
 
-            meta_list = self.tf.meta_df.columns.tolist()[1:]
+            meta_list = self.tfa.meta_df.columns.tolist()[1:]
             # set meta list for comboBox in plot and stats tab
             self.update_meta_name_combobox_plot_part()
             self.update_group_and_sample_combobox()
@@ -1325,18 +1325,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             # set comboBox_overview_func_list
             self.comboBox_overview_func_list.clear()
-            self.comboBox_overview_func_list.addItems(self.tf.func_list)
+            self.comboBox_overview_func_list.addItems(self.tfa.func_list)
 
             # ser comboBox_overview_sample_filter
             self.comboBox_overview_filter_by.clear()
-            self.comboBox_overview_filter_by.addItems(self.tf.meta_df.columns.tolist())
+            self.comboBox_overview_filter_by.addItems(self.tfa.meta_df.columns.tolist())
             # update items in verticalLayout_overview_filter
             self.update_overview_filter()
 
 
             # set comboBox_function_to_stast
             self.comboBox_function_to_stast.clear()
-            self.comboBox_function_to_stast.addItems(self.tf.func_list)
+            self.comboBox_function_to_stast.addItems(self.tfa.func_list)
 
 
             ### update basic plot layout start ###
@@ -1365,8 +1365,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
         # add tables to table dict
-        # self.update_table_dict('original', self.tf.original_df)
-        # self.update_table_dict('meta', self.tf.meta_df)
+        # self.update_table_dict('original', self.tfa.original_df)
+        # self.update_table_dict('meta', self.tfa.meta_df)
     
     def enable_basic_button(self):
 
@@ -1406,7 +1406,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             batch_group =  self.comboBox_remove_batch_effect.currentText()
 
 
-            batch_list = self.tf.meta_df[batch_group].tolist() if batch_group != 'None' else None
+            batch_list = self.tfa.meta_df[batch_group].tolist() if batch_group != 'None' else None
             
             if outlier_detect_method != 'None':
                 outlier_detect_method = outlier_detect_method.lower()
@@ -1474,11 +1474,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 print("\n---------------------------------- Set Multi Table ----------------------------------\n")
                 self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_group}, processing_order: {processing_order}')
-                self.tf.set_func(function)
+                self.tfa.set_func(function)
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
                 
-                self.tf.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
+                self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
                                         normalize_method = normalize_method, transform_method = transform_method, 
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                         outlier_detect_by_group =outlier_detect_by_group,outlier_handle_by_group = outlier_handle_by_group,
@@ -1496,39 +1496,39 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         else: # restore_taxafunc is True
             print("\n---------------------------------- Restore Multi Table ----------------------------------\n")
-            self.tf = self.load_taxafunc_obj_from_file()['taxa_func_obj']
-            if self.tf == None:
+            self.tfa = self.load_taxafunc_obj_from_file()['taxa_func_obj']
+            if self.tfa == None:
                 return None
             else:
                 self.restore_settings_after_load_taxafunc_obj()
 
-        num_peptide = self.tf.peptide_df.shape[0]
-        num_func = self.tf.func_df.shape[0]
-        num_taxa = self.tf.taxa_df.shape[0]
-        num_taxa_func = self.tf.taxa_func_df.shape[0]
+        num_peptide = self.tfa.peptide_df.shape[0]
+        num_func = self.tfa.func_df.shape[0]
+        num_taxa = self.tfa.taxa_df.shape[0]
+        num_taxa_func = self.tfa.taxa_func_df.shape[0]
 
 
         # # generate basic table
-        # self.get_stats_func_prop(self.tf.func_name)
+        # self.get_stats_func_prop(self.tfa.func_name)
         # self.get_stats_taxa_level()
         # self.get_stats_peptide_num_in_taxa()
         
         # add tables to table dict
-        self.update_table_dict('preprocessed-data', self.tf.preprocessed_df)
-        # self.update_table_dict('filtered-by-threshold', self.tf.clean_df)
-        self.update_table_dict('peptide', self.tf.peptide_df)
-        self.update_table_dict('taxa', self.tf.taxa_df)
-        self.update_table_dict('function', self.tf.func_df)
-        self.update_table_dict('taxa-func', self.tf.taxa_func_df)
-        self.update_table_dict('func-taxa', self.tf.func_taxa_df)
+        self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
+        # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
+        self.update_table_dict('peptide', self.tfa.peptide_df)
+        self.update_table_dict('taxa', self.tfa.taxa_df)
+        self.update_table_dict('function', self.tfa.func_df)
+        self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
+        self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
 
         # get taxa and function list
-        self.taxa_list_linked = self.tf.taxa_func_df.index.get_level_values(0).unique().tolist()
-        self.func_list_linked = self.tf.taxa_func_df.index.get_level_values(1).unique().tolist()
-        self.taxa_list = self.tf.taxa_df.index.tolist()
-        self.func_list = self.tf.func_df.index.tolist()
-        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tf.taxa_func_df.index.to_list()]))
-        self.peptide_list = self.tf.peptide_df.index.tolist()
+        self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
+        self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
+        self.taxa_list = self.tfa.taxa_df.index.tolist()
+        self.func_list = self.tfa.func_df.index.tolist()
+        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tfa.taxa_func_df.index.to_list()]))
+        self.peptide_list = self.tfa.peptide_df.index.tolist()
 
 
         # update taxa and function and group in comboBox
@@ -1545,7 +1545,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # update comboBox of basic peptide query
         self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tf.clean_df['Sequence'].tolist())
+        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df['Sequence'].tolist())
 
         # clean comboBox of deseq2
         self.comboBox_deseq2_tables_list = []
@@ -1569,7 +1569,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         if outlier_detect_method != 'None':
             nan_stats_str = '\n\nLeft row after outlier handling:\n'
-            for i, j in self.tf.outlier_status.items():
+            for i, j in self.tfa.outlier_status.items():
                 if j:
                     nan_stats_str += f'{i}: [{j}]\n'
             print(nan_stats_str)        
@@ -1578,7 +1578,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
         msg = f'TaxaFunc data is ready! \
         \n{nan_stats_str}\
-        \n\nFunction: [{self.tf.func_name}]\
+        \n\nFunction: [{self.tfa.func_name}]\
         \nNumber of peptide: [{num_peptide}]\
         \nNumber of function: [{num_func}]\
         \nNumber of taxa: [{num_taxa}]\
@@ -1629,11 +1629,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
         if meta_name == None:
-            meta_name = self.tf.meta_df.columns.tolist()[1]
+            meta_name = self.tfa.meta_df.columns.tolist()[1]
         
         # set group list
-        group_list = sorted(set(self.tf.group_list))
-        sample_list = sorted(set(self.tf.sample_list))
+        group_list = sorted(set(self.tfa.group_list))
+        sample_list = sorted(set(self.tfa.sample_list))
 
         # update normal comboBox
         self.comboBox_ttest_group1.clear()
@@ -1729,12 +1729,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif func and taxa:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select only one of function or taxa!')
             elif not func:
-                df = self.tf.taxa_func_df.loc[taxa, :]
+                df = self.tfa.taxa_func_df.loc[taxa, :]
                 func = df.index.tolist()
                 self.comboBox_others_func.clear()
                 self.comboBox_others_func.addItems(func)
             else:
-                df = self.tf.func_taxa_df.loc[func, :]
+                df = self.tfa.func_taxa_df.loc[func, :]
                 taxa = df.index.tolist()
                 self.comboBox_others_taxa.clear()
                 self.comboBox_others_taxa.addItems(taxa)
@@ -1747,9 +1747,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         try:
             if type=='taxa':
-                items = self.tf.taxa_func_linked_dict[current_text]
+                items = self.tfa.taxa_func_linked_dict[current_text]
             elif type=='func':
-                items = self.tf.func_taxa_linked_dict[current_text]
+                items = self.tfa.func_taxa_linked_dict[current_text]
             num_items = len(items)
             label.setText(f"Linked Number: {num_items}")
             comboBox.clear()
@@ -1916,7 +1916,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
             table_name = method.split('_')[0] +'(' + df_type + ')'
             df =  self.table_dict.get(table_name)
-            df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
+            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-func' else df
             
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
@@ -1957,7 +1957,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # method = 'anova_test_p', 'anova_test_f', 't_test_p', 't_test_t'
             table_name = method.split('_')[0] + '_test(' + df_type + ')'
             df = self.table_dict.get(table_name)
-            df = self.tf.replace_if_two_index(df) if df_type == 'taxa-func' else df
+            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-func' else df
 
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
@@ -2049,14 +2049,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_basic_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 for group in group_list:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         else:
             sample_list = self.comboBox_basic_sample.getCheckedItems()
             if sample_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
     
         method = self.comboBox_basic_heatmap_top_by.currentText()
         df_type = self.comboBox_basic_table.currentText()
@@ -2123,10 +2123,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.radioButton_co_expr_bygroup.isChecked():
             sample_list = []
             if groups_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 for group in groups_list:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         elif self.radioButton_co_expr_bysample.isChecked():
             sample_list = self.comboBox_co_expr_sample.getCheckedItems()
 
@@ -2153,7 +2153,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
 
         table_name = self.comboBox_basic_table.currentText()
-        table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+        table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
 
         if cmap == 'Auto':
             cmap = None            
@@ -2163,13 +2163,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_basic_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                group_list = sorted(set(self.tf.group_list))
+                group_list = sorted(set(self.tfa.group_list))
             for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         else:
             sample_list = self.comboBox_basic_sample.getCheckedItems()
             if sample_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
     
         col_cluster = False
         row_cluster = False
@@ -2184,15 +2184,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
-                df = self.tf.peptide_df.copy()
+                df = self.tfa.peptide_df.copy()
 
             else:
                 if table_name == 'Taxa':
-                    df = self.tf.clean_df.loc[self.tf.clean_df['Taxon'].isin(self.basic_heatmap_list)]
+                    df = self.tfa.clean_df.loc[self.tfa.clean_df['Taxon'].isin(self.basic_heatmap_list)]
                     df.index = df['Sequence']
 
                 elif table_name == 'Func':
-                    df = self.tf.clean_df.loc[self.tf.clean_df[self.tf.func_name].isin(self.basic_heatmap_list)]
+                    df = self.tfa.clean_df.loc[self.tfa.clean_df[self.tfa.func_name].isin(self.basic_heatmap_list)]
                     df.index = df['Sequence']
 
                 elif table_name == 'Taxa-Func':
@@ -2200,7 +2200,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     for i in self.basic_heatmap_list:
                         taxon = i.split(' <')[0]
                         func = i.split(' <')[1][:-1]
-                        dft = self.tf.clean_df.loc[(self.tf.clean_df['Taxon'] == taxon) & (self.tf.clean_df[self.tf.func_name] == func)]
+                        dft = self.tfa.clean_df.loc[(self.tfa.clean_df['Taxon'] == taxon) & (self.tfa.clean_df[self.tfa.func_name] == func)]
                         if df_all is None:
                             df_all = dft
                         else:
@@ -2209,7 +2209,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df.index = df['Sequence']
 
                 else: # Peptide
-                    df = self.tf.peptide_df.copy()
+                    df = self.tfa.peptide_df.copy()
                     df = df.loc[self.basic_heatmap_list]
                 
                 df = df[sample_list]
@@ -2246,7 +2246,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
-                HeatmapPlot(self.tf).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)   
+                HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)   
             
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
@@ -2260,7 +2260,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     if reply == QMessageBox.No:
                         return None
                 self.show_message(f'Plotting {plot_type}...')
-                pic = BarPlot_js(self.tf).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend, font_size=font_size)
+                pic = BarPlot_js(self.tfa).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend, font_size=font_size)
                 self.save_and_show_js_plot(pic, title)
                 
         except Exception as e:
@@ -2360,16 +2360,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if selected_groups:
                 sample_list = []
                 for group in selected_groups:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
             else:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
                     
         elif self.radioButton_trends_sample.isChecked():
             selected_samples = self.comboBox_trends_sample.getCheckedItems()
             if selected_samples:
                 sample_list = selected_samples
             else:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
         
         method = self.comboBox_trends_top_by.currentText()
         df_type = self.comboBox_trends_table.currentText()
@@ -2386,7 +2386,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         width = self.spinBox_trends_width.value()
         height = self.spinBox_trends_height.value()
         table_name = self.comboBox_trends_table.currentText()
-        table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+        table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
         title = f'{table_name.capitalize()} Cluster'
         num_cluster = self.spinBox_trends_num_cluster.value()
         
@@ -2396,21 +2396,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_trends_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                group_list = set(self.tf.group_list)
+                group_list = set(self.tfa.group_list)
             elif len(group_list) == 1:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 2 groups!')
                 return None
             for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         else:
             sample_list = self.comboBox_trends_sample.getCheckedItems()
             if sample_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 # check if the sample list at least has 2 groups
                 group_check = []
                 for i in sample_list:
-                    group_check.append(self.tf.get_group_of_a_sample(i))
+                    group_check.append(self.tfa.get_group_of_a_sample(i))
                 if len(set(group_check)) == 1:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Selected samples are in the same group, please select at least 2 groups!')
                     return None
@@ -2433,7 +2433,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = df.loc[(df!=0).any(axis=1)]
             self.show_message(f'Plotting trends cluster...')
             # plot trends and get cluster table
-            fig, cluster_df = TrendsPlot(self.tf).plot_trends(df= df, num_cluster = num_cluster, width=width, height=height, title=title)
+            fig, cluster_df = TrendsPlot(self.tfa).plot_trends(df= df, num_cluster = num_cluster, width=width, height=height, title=title)
             # create a dialog to show the figure
             # plt_dialog = PltDialog(self.MainWindow, fig)
             plt_size= (width*50,height*num_cluster*50)
@@ -2481,23 +2481,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         
         if plot_samples  or get_intensity:
-            table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+            table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
             dft = table_name_dict[table_name]
             # get sample list
             if self.radioButton_trends_group.isChecked():
                 group_list = self.comboBox_trends_group.getCheckedItems()
                 sample_list = []
                 if group_list == []:
-                    group_list = sorted(set(self.tf.group_list))
+                    group_list = sorted(set(self.tfa.group_list))
                 for group in group_list:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
             else: # self.radioButton_trends_sample.isChecked()
                 sample_list = self.comboBox_trends_sample.getCheckedItems()
                 if sample_list == []:
-                    sample_list = self.tf.sample_list
-                    group_list = self.tf.group_list
+                    sample_list = self.tfa.sample_list
+                    group_list = self.tfa.group_list
                 else:
-                    group_list = list(OrderedDict.fromkeys(self.tf.get_group_of_a_sample(sample) for sample in sample_list))
+                    group_list = list(OrderedDict.fromkeys(self.tfa.get_group_of_a_sample(sample) for sample in sample_list))
             
             title = f'Cluster {cluster_num+1} of {table_name} (Intensity)'
             if get_intensity: # get intensity and plot samples
@@ -2508,7 +2508,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     extract_col = sample_list
                     df = dft.loc[extract_row, extract_col]
                 else:
-                    dft = self.tf.get_stats_mean_df_by_group(dft)
+                    dft = self.tfa.get_stats_mean_df_by_group(dft)
                     extract_row = df.index.tolist()
                     # extract_col = df.columns.tolist()
                     extract_col = group_list
@@ -2522,7 +2522,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             
         try:
-            pic = TrendsPlot_js(self.tf).plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend, add_group_name = plot_samples)
+            pic = TrendsPlot_js(self.tfa).plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend, add_group_name = plot_samples)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
         except Exception as e:
             error_message = traceback.format_exc()
@@ -2545,9 +2545,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         
         if get_intensity:
-            table_name_dict = {'Taxa':self.tf.taxa_df.copy(), 'Func': self.tf.func_df.copy(), 'Taxa-Func': self.tf.replace_if_two_index(self.tf.taxa_func_df),'Peptide': self.tf.peptide_df.copy()}
+            table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
             dft = table_name_dict[table_name]
-            dft = self.tf.get_stats_mean_df_by_group(dft)
+            dft = self.tfa.get_stats_mean_df_by_group(dft)
             extract_row = df.index.tolist()
             extract_col = df.columns.tolist()
             df = dft.loc[extract_row, extract_col]            
@@ -2587,7 +2587,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if peptide == '':
             return None
         else:
-            df = self.tf.preprocessed_df.loc[self.tf.preprocessed_df['Sequence'] == peptide]
+            df = self.tfa.preprocessed_df.loc[self.tfa.preprocessed_df['Sequence'] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None
@@ -2617,7 +2617,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         for i in reversed(range(self.verticalLayout_overview_filter.count())):
             self.verticalLayout_overview_filter.itemAt(i).widget().setParent(None)
         # add new filter and make it checkable
-        items = self.tf.meta_df[col_name].unique()
+        items = self.tfa.meta_df[col_name].unique()
         self.overview_filter_listwidget = QListWidget()
         for item in items:
             list_item = QListWidgetItem(item)
@@ -2651,10 +2651,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         # filter
         selected_name = self.comboBox_overview_filter_by.currentText()
-        new_df = self.tf.meta_df.loc[self.tf.meta_df[selected_name].isin(selected_items)]
+        new_df = self.tfa.meta_df.loc[self.tfa.meta_df[selected_name].isin(selected_items)]
 
         # update tfobj
-        self.tf.update_meta(new_df)
+        self.tfa.update_meta(new_df)
         self.show_message('Filtering...')
         self.update_after_tfobj()
         self.show_taxaFuncAnalyzer_init()
@@ -2665,48 +2665,48 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # baisc stats
     def get_stats_peptide_num_in_taxa(self):
-        if self.tf is None:
+        if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            df = self.tf.get_stats_peptide_num_in_taxa()
+            df = self.tfa.get_stats_peptide_num_in_taxa()
             # self.show_table(df)
             # self.update_table_dict('stats_peptide_num_in_taxa', df)
     
     def plot_taxa_stats(self):
-        if self.tf is None:
+        if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            # BasicPlot(self.tf).plot_taxa_stats()
-            pic = BasicPlot(self.tf).plot_taxa_stats().get_figure()
+            # BasicPlot(self.tfa).plot_taxa_stats()
+            pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()
             
             # Add the new MatplotlibWidget
             self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
-        pic = BasicPlot(self.tf).plot_taxa_stats()
+        pic = BasicPlot(self.tfa).plot_taxa_stats()
         pic.figure.show()
         
     
     def get_stats_taxa_level(self):
-        if self.tf is None:
+        if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            df = self.tf.get_stats_taxa_level()
+            df = self.tfa.get_stats_taxa_level()
             # self.show_table(df)
             # self.update_table_dict('stats_taxa_level', df)
     
     def plot_taxa_number(self):
-        if self.tf is None:
+        if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            pic = BasicPlot(self.tf).plot_taxa_number().get_figure()
+            pic = BasicPlot(self.tfa).plot_taxa_number().get_figure()
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
-        pic = BasicPlot(self.tf).plot_taxa_number()
+        pic = BasicPlot(self.tfa).plot_taxa_number()
         pic.figure.show()
 
         
@@ -2721,7 +2721,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         func_name = self.comboBox_overview_func_list.currentText()
         new_window = self.checkBox_overview_func_plot_new_window.isChecked()
-        pic = BasicPlot(self.tf).plot_prop_stats(func_name)
+        pic = BasicPlot(self.tfa).plot_prop_stats(func_name)
         if new_window:
             pic.figure.show()
         self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
@@ -2729,10 +2729,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def get_stats_func_prop(self, func_name):
-        if self.tf is None:
+        if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
-            df = self.tf.get_stats_func_prop(func_name)
+            df = self.tfa.get_stats_func_prop(func_name)
             # self.show_table(df)
             # self.update_table_dict('stats_func_prop', df)
     
@@ -2740,10 +2740,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def plot_basic_info_sns(self, method:str ='pca'):
 
-        table_dict = {'Function': self.tf.func_df, 
-                        'Taxa': self.tf.taxa_df, 
-                        'Taxa-Function': self.tf.taxa_func_df, 
-                        'Peptide': self.tf.clean_df}
+        table_dict = {'Function': self.tfa.func_df, 
+                        'Taxa': self.tfa.taxa_df, 
+                        'Taxa-Function': self.tfa.taxa_func_df, 
+                        'Peptide': self.tfa.clean_df}
         table_name = self.comboBox_table4pca.currentText()
         show_label = self.checkBox_pca_if_show_lable.isChecked()
         width = self.spinBox_basic_pca_width.value()
@@ -2758,13 +2758,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             sample_list = []
             if group_list == []:
-                group_list = sorted(set(self.tf.group_list))
+                group_list = sorted(set(self.tfa.group_list))
             for group in group_list:
-                sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         else:
             sample_list = self.comboBox_basic_pca_sample.getCheckedItems()
             if sample_list == []:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
                         
         dft = table_dict[table_name]
         df = dft[sample_list]
@@ -2775,7 +2775,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tf).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2787,7 +2787,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tf).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height, font_size=font_size)
+                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height, font_size=font_size)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
             except Exception as e:
                 error_message = traceback.format_exc()
@@ -2798,7 +2798,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.show_message('Box is running, please wait...')
                 show_fliers = self.checkBox_box_if_show_fliers.isChecked()
-                BasicPlot(self.tf).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2807,7 +2807,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tf).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height, font_size=font_size)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
@@ -2860,11 +2860,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # print(df.columns)
         try:
             if 'taxa-func' in table_name:
-                fig = HeatmapPlot(self.tf).plot_top_taxa_func_heatmap_of_test_res(df=df, 
+                fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
                                top_number=top_num, value_type=value_type, fig_size=fig_size, 
                                pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
             else:
-                fig = HeatmapPlot(self.tf).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
                                                                           scale = scale, col_cluster = True, row_cluster = True, 
                                                                           cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
@@ -2906,9 +2906,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             if 'taxa-func' in table_name:
-                df_top_cross = HeatmapPlot(self.tf).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue)
+                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue)
             else:
-                df_top_cross = HeatmapPlot(self.tf).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale)
+                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale)
         except ValueError:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results')
             return None
@@ -2941,13 +2941,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if not group_list:
                 self.show_message('ANOVA test will use all groups...\n\n It may take a long time! Please wait...')
 
-                df_anova = self.tf.get_stats_anova(df_type=df_type)
+                df_anova = self.tfa.get_stats_anova(df_type=df_type)
             elif len(group_list) < 3:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
                 return None
             else:
                 self.show_message('ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
-                df_anova = self.tf.get_stats_anova(group_list=group_list, df_type=df_type)
+                df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
             self.show_table(df_anova)
             table_name = f'anova_test({df_type})'
             self.update_table_dict(table_name, df_anova)
@@ -2988,7 +2988,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
-            tukey_test = self.tf.get_stats_tukey_test(taxon_name=taxa, func_name=func)
+            tukey_test = self.tfa.get_stats_tukey_test(taxon_name=taxa, func_name=func)
             self.show_table(tukey_test)
             self.update_table_dict('tukey_test', tukey_test)
             self.pushButton_plot_tukey.setEnabled(True)
@@ -3022,7 +3022,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                df = self.tf.get_stats_ttest(group_list=group_list, df_type=df_type)
+                df = self.tfa.get_stats_ttest(group_list=group_list, df_type=df_type)
                 table_name = f't_test({df_type})'
                 self.show_table(df)
                 self.update_table_dict(table_name, df)
@@ -3055,7 +3055,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     #DESeq2 
     def deseq2_test(self):
 
-        table_name = {'Func': self.tf.func_df, 'Taxa': self.tf.taxa_df, 'Taxa-Func': self.tf.taxa_func_df, 'Peptide': self.tf.peptide_df}
+        table_name = {'Func': self.tfa.func_df, 'Taxa': self.tfa.taxa_df, 'Taxa-Func': self.tfa.taxa_func_df, 'Peptide': self.tfa.peptide_df}
         df = table_name[self.comboBox_table_for_deseq2.currentText()]
 
         group1 = self.comboBox_deseq2_group1.currentText()
@@ -3072,7 +3072,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
                 self.pushButton_deseq2.setEnabled(False)
-                df_deseq2 = self.tf.get_stats_deseq2(df, group_list=group_list)
+                df_deseq2 = self.tfa.get_stats_deseq2(df, group_list=group_list)
                 self.show_table(df_deseq2)
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)
@@ -3145,7 +3145,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         plot_list_only = self.checkBox_co_expr_plot_list_only.isChecked()
 
 
-        sample_list = self.tf.sample_list
+        sample_list = self.tfa.sample_list
         if self.radioButton_co_expr_bysample.isChecked():
             slected_list = self.comboBox_co_expr_sample.getCheckedItems()
             if len(slected_list) == 0:
@@ -3160,10 +3160,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             else:
                 sample_list = []
                 for group in groups:
-                    sample_list += self.tf.get_sample_list_in_a_group(group)
+                    sample_list += self.tfa.get_sample_list_in_a_group(group)
         try:
             self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-            pic = NetworkPlot(self.tf).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
+            pic = NetworkPlot(self.tfa).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'co-expression network')
         except ValueError as e:
@@ -3284,16 +3284,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if slected_list:
                 sample_list = slected_list
             else:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
 
         elif self.radioButton_network_bygroup.isChecked():
             selected_groups = self.comboBox_network_group.getCheckedItems()
             if selected_groups:
                 sample_list = []
                 for group in selected_groups:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
             else:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
         else:
             raise ValueError('radioButton_network_bysample or radioButton_network_bygroup should be checked!')
 
@@ -3329,14 +3329,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                        'Deseq2-down(log2FC)': 'deseq2_down_l2fc'}
         method = method_dict[method]
                 
-        table_dict = {'taxa': self.tf.taxa_df, 
-                      'func': self.tf.func_df,
-                      'taxa-func': self.tf.taxa_func_df,
-                      'peptide': self.tf.peptide_df}
+        table_dict = {'taxa': self.tfa.taxa_df, 
+                      'func': self.tfa.func_df,
+                      'taxa-func': self.tfa.taxa_func_df,
+                      'peptide': self.tfa.peptide_df}
 
         if method in ['mean', 'freq', 'sum']:
             df = table_dict[df_type.lower()]
-            df = self.tf.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
+            df = self.tfa.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
             index_list = df.index.tolist()
             return index_list
         
@@ -3345,9 +3345,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{method} is only available for [taxa] and [func] table!')
                 return None
             elif df_type in 'taxa':
-                df = self.tf.taxa_func_df
+                df = self.tfa.taxa_func_df
             elif df_type in 'func':
-                df = self.tf.func_taxa_df
+                df = self.tfa.func_taxa_df
             df = df[sample_list]
             df = df.loc[(df!=0).any(axis=1)]
             index_list = df.index.get_level_values(0).value_counts().index.tolist()
@@ -3363,7 +3363,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def plot_network(self):
         width = self.spinBox_network_width.value()
         height = self.spinBox_network_height.value()
-        sample_list =  self.tf.sample_list
+        sample_list =  self.tfa.sample_list
         focus_list = self.tfnet_fcous_list
         plot_list_only = self.checkBox_tf_link_net_plot_list_only.isChecked()
         
@@ -3376,11 +3376,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             groups = self.comboBox_network_group.getCheckedItems()
             sample_list = []
             for group in groups:
-                sample_list += self.tf.get_sample_list_in_a_group(group)
+                sample_list += self.tfa.get_sample_list_in_a_group(group)
             # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
         try:
             self.show_message('Plotting network...')
-            pic = NetworkPlot(self.tf).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
+            pic = NetworkPlot(self.tfa).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()
@@ -3403,15 +3403,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.radioButton_tflink_group.isChecked():
             selected_groups = self.comboBox_tflink_group.getCheckedItems()
             if not selected_groups:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 sample_list = []
                 for group in selected_groups:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         elif self.radioButton_tflink_sample.isChecked():
             selected_samples = self.comboBox_tflink_sample.getCheckedItems()
             if not selected_samples:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 sample_list = selected_samples
                 
@@ -3422,7 +3422,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if func:
             params['func_name'] = func
 
-        df = self.tf.get_intensity_matrix(**params)
+        df = self.tfa.get_intensity_matrix(**params)
 
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
@@ -3435,15 +3435,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.radioButton_tflink_group.isChecked():
             selected_groups = self.comboBox_tflink_group.getCheckedItems()
             if not selected_groups:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 sample_list = []
                 for group in selected_groups:
-                    sample_list.extend(self.tf.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
         elif self.radioButton_tflink_sample.isChecked():
             selected_samples = self.comboBox_tflink_sample.getCheckedItems()
             if not selected_samples:
-                sample_list = self.tf.sample_list
+                sample_list = self.tfa.sample_list
             else:
                 sample_list = selected_samples
         return sample_list
@@ -3456,9 +3456,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         if type == 'taxa' or type == 'func':
             if type == 'taxa':
-                linked_dict = self.tf.taxa_func_linked_dict
+                linked_dict = self.tfa.taxa_func_linked_dict
             elif type == 'func':
-                linked_dict = self.tf.func_taxa_linked_dict
+                linked_dict = self.tfa.func_taxa_linked_dict
             removed = [i for i in check_list if i not in linked_dict]
             check_list = [i for i in check_list if i in linked_dict]
         elif type == 'taxa-func':
@@ -3539,7 +3539,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             title = func if not title else f"{taxa} [ {func} ]"
         
     
-        df = self.tf.get_intensity_matrix(**params)
+        df = self.tfa.get_intensity_matrix(**params)
 
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
@@ -3563,7 +3563,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             self.show_message('Plotting heatmap, please wait...')
-            hp = HeatmapPlot(self.tf)
+            hp = HeatmapPlot(self.tfa)
             hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
         except Exception as e:
             error_message = traceback.format_exc()
@@ -3594,13 +3594,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if taxa:
             params['taxon_name'] = taxa
             # checek num in taxa
-            num = len(self.tf.get_intensity_matrix(taxon_name=taxa))
+            num = len(self.tfa.get_intensity_matrix(taxon_name=taxa))
         if func:
             params['func_name'] = func
-            num = len(self.tf.get_intensity_matrix(func_name=func))
+            num = len(self.tfa.get_intensity_matrix(func_name=func))
         
         if func and taxa:
-            num = len(self.tf.get_intensity_matrix(taxon_name=taxa, func_name=func))
+            num = len(self.tfa.get_intensity_matrix(taxon_name=taxa, func_name=func))
         
         # check num if > 100
         if num > 100:
@@ -3620,7 +3620,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             params['font_size'] = font_size
             
             self.show_message('Plotting bar plot, please wait...')
-            pic = BarPlot_js(self.tf).plot_intensity_bar(**params)
+            pic = BarPlot_js(self.tfa).plot_intensity_bar(**params)
             self.save_and_show_js_plot(pic, 'Intensity Bar Plot')
 
 
