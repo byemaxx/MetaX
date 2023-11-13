@@ -26,22 +26,15 @@ class TrendsPlot:
 
         # Add the cluster labels to the DataFrame
         clustered_df = scaled_df.copy()
-        # reordering the columns
-        cols = clustered_df.columns.tolist()
-        cols = sorted(cols)
-        clustered_df = clustered_df[cols]
+        # 不再重新排序列
         # adding the cluster column
         clustered_df['Cluster'] = clusters
         
-        
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 
-        # plt.figure(figsize=(8, 6))
         sns.set_theme(style="ticks", rc=custom_params)
-        # Define a color palette and remove greay color
         palette = sns.color_palette("dark", n_clusters)
         try:    
-            # Plot the line plots for each cluster with rotated x-axis labels
             fig, axs = plt.subplots(n_clusters, 1, figsize=(width, height*n_clusters))
             if n_clusters == 1:
                 axs = [axs]
@@ -58,11 +51,7 @@ class TrendsPlot:
                 axs[i].set_xlabel('Group')
                 axs[i].set_ylabel('Standardized Value')
                 axs[i].tick_params(axis='x', rotation=90)  # Rotate x-axis labels
-            
-            # set bottom tight
-            # plt.subplots_adjust(bottom=0.05,  top=0.98, left=0.086, right=0.98, hspace=0.4)
-            # plt.tight_layout()
-            # plt.show()
+
             plt.close()
             return fig, clustered_df
         except Exception as e:

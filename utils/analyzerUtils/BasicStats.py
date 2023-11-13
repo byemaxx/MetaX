@@ -1,4 +1,5 @@
 import pandas as pd
+from collections import OrderedDict
 
 class BasicStats:
     def __init__(self, tfa):
@@ -7,6 +8,10 @@ class BasicStats:
     # get a mean df by group
     def get_stats_mean_df_by_group(self, df: pd.DataFrame = None) -> pd.DataFrame:
         data = df.copy()
+        
+        group_order = list(OrderedDict.fromkeys(self.tfa.get_group_of_a_sample(sample) for sample in data.columns))
+        print("input group order:", group_order)
+        
         group_means = pd.DataFrame()
         for group, samples in self.tfa.group_dict.items():
             # only use samples that are in the data
@@ -19,6 +24,7 @@ class BasicStats:
             group_mean = group_data.mean(axis=1)
             # add the group mean to the group_means dataframe
             group_means[group] = group_mean
+        group_means = group_means[group_order]
         return group_means
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:

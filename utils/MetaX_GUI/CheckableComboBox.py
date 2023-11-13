@@ -5,19 +5,21 @@ class CheckableComboBox(QtWidgets.QComboBox):
         super(CheckableComboBox, self).__init__(parent)
         self.view().pressed.connect(self.handleItemPressed)
         self.setModel(QtGui.QStandardItemModel(self))
+        self.checkedItemsOrder = []  # 用于存储勾选项的顺序
 
     def handleItemPressed(self, index):
         item = self.model().itemFromIndex(index)
+        item_text = item.text()
         if item.checkState() == QtCore.Qt.Checked:
             item.setCheckState(QtCore.Qt.Unchecked)
+            # 从列表中移除取消勾选的项
+            if item_text in self.checkedItemsOrder:
+                self.checkedItemsOrder.remove(item_text)
         else:
             item.setCheckState(QtCore.Qt.Checked)
-
-    def addItem(self, item):
-        super(CheckableComboBox, self).addItem(item)
-        item = self.model().item(self.count() - 1, 0)
-        item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-        item.setCheckState(QtCore.Qt.Unchecked)
+            # 添加勾选的项到列表中
+            if item_text not in self.checkedItemsOrder:
+                self.checkedItemsOrder.append(item_text)
 
     def paintEvent(self, e):
         painter = QtWidgets.QStylePainter(self)
@@ -25,16 +27,15 @@ class CheckableComboBox(QtWidgets.QComboBox):
 
         opt = QtWidgets.QStyleOptionComboBox()
         self.initStyleOption(opt)
-        opt.currentText = ", ".join(
-            [self.itemText(i) for i in range(self.count())
-             if self.itemData(i, QtCore.Qt.CheckStateRole) == QtCore.Qt.Checked])
+        # 按照勾选顺序显示
+        opt.currentText = ", ".join(self.checkedItemsOrder)
 
         painter.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, opt)
         painter.drawControl(QtWidgets.QStyle.CE_ComboBoxLabel, opt)
 
     def getCheckedItems(self):
-        return [self.itemText(i) for i in range(self.count())
-                if self.itemData(i, QtCore.Qt.CheckStateRole) == QtCore.Qt.Checked]
+        return self.checkedItemsOrder  # 返回勾选项的顺序列表
+
 
     # 添加右键菜单
     def contextMenuEvent(self, event):
@@ -48,11 +49,15 @@ class CheckableComboBox(QtWidgets.QComboBox):
         menu.exec_(self.mapToGlobal(event.pos()))
 
     def selectAll(self):
+        self.checkedItemsOrder = []  # 清空当前的勾选顺序列表
         for i in range(self.count()):
             item = self.model().item(i, 0)
             item.setCheckState(QtCore.Qt.Checked)
+            # 添加每个勾选的项到勾选顺序列表中
+            self.checkedItemsOrder.append(item.text())
 
     def unselectAll(self):
         for i in range(self.count()):
             item = self.model().item(i, 0)
             item.setCheckState(QtCore.Qt.Unchecked)
+        self.checkedItemsOrder = []  # 清空勾选顺序列表

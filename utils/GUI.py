@@ -27,6 +27,7 @@ import traceback
 import logging
 import pickle
 import datetime
+from collections import OrderedDict
 ####### add parent path to sys.path #######
 myDir = os.getcwd()
 sys.path.append(myDir)
@@ -2395,7 +2396,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_trends_group.getCheckedItems()
             sample_list = []
             if group_list == []:
-                group_list = sorted(set(self.tf.group_list))
+                group_list = set(self.tf.group_list)
             elif len(group_list) == 1:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 2 groups!')
                 return None
@@ -2414,7 +2415,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Selected samples are in the same group, please select at least 2 groups!')
                     return None
                 
-        
         # get df
         dft = table_name_dict[table_name]
         dft = dft[sample_list]
@@ -2491,16 +2491,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     group_list = sorted(set(self.tf.group_list))
                 for group in group_list:
                     sample_list.extend(self.tf.get_sample_list_in_a_group(group))
-            else:
+            else: # self.radioButton_trends_sample.isChecked()
                 sample_list = self.comboBox_trends_sample.getCheckedItems()
                 if sample_list == []:
                     sample_list = self.tf.sample_list
                     group_list = self.tf.group_list
                 else:
-                    group_list = []
-                    for i in sample_list:
-                        group_list.append(self.tf.get_group_of_a_sample(i))
-                    group_list = list(set(group_list)).sort()
+                    group_list = list(OrderedDict.fromkeys(self.tf.get_group_of_a_sample(sample) for sample in sample_list))
+            
             title = f'Cluster {cluster_num+1} of {table_name} (Intensity)'
             if get_intensity: # get intensity and plot samples
                 if plot_samples:
@@ -2755,9 +2753,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # get sample list
         if self.radioButton_basic_pca_group.isChecked():
             group_list = self.comboBox_basic_pca_group.getCheckedItems()
-            # resort group list by group name
-            group_list = sorted(group_list)
-
+            # keep the oder of  group_list by user check order
+            group_list = group_list
+            
             sample_list = []
             if group_list == []:
                 group_list = sorted(set(self.tf.group_list))
