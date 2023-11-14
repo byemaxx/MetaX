@@ -2984,11 +2984,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             taxa = None
         elif taxa != '' and func == '':
             func = None
-        
+        sum_all = True if self.comboBox_tukey_by_sum_each.currentText() == 'Sum All' else False
         self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
-            tukey_test = self.tfa.get_stats_tukey_test(taxon_name=taxa, func_name=func)
+            tukey_test = self.tfa.get_stats_tukey_test(taxon_name=taxa, func_name=func, sum_all=sum_all)
             self.show_table(tukey_test)
             self.update_table_dict('tukey_test', tukey_test)
             self.pushButton_plot_tukey.setEnabled(True)

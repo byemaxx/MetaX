@@ -254,9 +254,9 @@ class TaxaFuncAnalyzer:
         return cross_test.get_stats_deseq2(df, group_list)
 
     # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None):
+    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
         cross_test = CrossTest(self)
-        return cross_test.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name)
+        return cross_test.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name, sum_all = sum_all)
 ######### Cross Test End #########
 
 ######### Get Matrix Begin #########

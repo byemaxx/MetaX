@@ -7,12 +7,12 @@ class TukeyPlot:
     # taxon_name="d__Bacteria|p__Firmicutes_A|c__Clostridia|o__Lachnospirales|f__Lachnospiraceae|g__Acetatifactor|s__Acetatifactor sp900066565"
     # func_name="'Cold-shock' DNA-binding domain"
     # tukey_res = sw.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name)
-    def plot_tukey(self, tukey_df):
-        plt.figure(figsize=(10, 8))
-        sns.set_style("whitegrid")
-        fig = sns.pointplot(x='meandiff', y='group1', data=tukey_df, join=False,hue='significant', palette="Set2")
-        fig.set_title('The Tukey test result')
-        fig.set_xlabel('The difference of mean value')
-        fig.set_ylabel('Groups')
+    def plot_tukey(self, tukey_df):  
+        plt.figure(figsize=(12, 8))
+        fig = sns.barplot(data=tukey_df, x='group1', y='meandiff', hue='group2', capsize=.2, palette='Set3')
+        plt.xticks(rotation=45)
+        plt.title('Confidence Intervals of Mean Differences')
+        plt.legend(title='Group 2', bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.tight_layout()
         plt.show()
         return fig

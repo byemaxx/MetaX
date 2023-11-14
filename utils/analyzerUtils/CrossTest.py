@@ -207,7 +207,75 @@ class CrossTest:
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None):
+    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
+        # :param taxon_name: the taxon name
+        # :param func_name: the function name
+        # :return: the Tukey test result
+
+        if sum_all:
+            tukey_df = self.get_stats_tukey_test_sum(taxon_name=taxon_name, func_name=func_name)
+        else:
+            tukey_df = self.get_stats_tukey_test_each(taxon_name=taxon_name, func_name=func_name)
+
+        return tukey_df
+    
+    def get_stats_tukey_test_each(self, taxon_name: str = None, func_name: str = None):
+        # Copy the dataframe and reset index
+        df = self.tfa.taxa_func_df.copy()
+        df = df.reset_index()
+
+        # Filter based on taxon_name and func_name
+        if taxon_name is not None and func_name is not None:
+            # df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
+            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name)
+
+        elif taxon_name is not None:
+            df = df[df['Taxon'] == taxon_name]
+        elif func_name is not None:
+            df = df[df[self.tfa.func_name] == func_name]
+        else:
+            raise ValueError("Please input the taxon name or the function name or both of them")
+        if df.empty:
+            raise ValueError("Got empty dataframe, please check the taxon name or the function name")
+
+        # Initialize DataFrame to store Tukey test results
+        tukey_results = pd.DataFrame()
+
+        # Iterate over each row (function or taxon)
+        for _, row in df.iterrows():
+            Group = []
+            Value = []
+
+            # Extract group and value for each sample
+            for sample in self.tfa.sample_list:
+                group = self.tfa.meta_df[self.tfa.meta_df['Sample'] == sample][self.tfa.meta_name].values[0]
+                value = row[sample]
+                Group.append(group)
+                Value.append(value)
+
+            # Create a new DataFrame for the current row and perform Tukey's test
+            new_df = pd.DataFrame({'Group': Group, 'Value': Value})
+            tukey_result = pairwise_tukeyhsd(new_df["Value"], new_df["Group"])
+
+            # Convert Tukey test result to DataFrame and add to the results
+            tukey_df = pd.DataFrame(data=tukey_result._results_table.data[1:], columns=tukey_result._results_table.data[0])
+            tukey_df['significant'] = tukey_df['reject'].apply(lambda x: 'Yes' if x else 'No')
+
+            # Add column based on input parameters
+            if taxon_name and not func_name:
+                tukey_df['Function'] = row[self.tfa.func_name]
+            elif func_name and not taxon_name:
+                tukey_df['Taxa'] = row['Taxon']
+            elif taxon_name and func_name:
+                # tukey_df['seq'] = row['Seq']
+                tukey_df['Sequence'] = row.name
+
+            tukey_results = pd.concat([tukey_results, tukey_df], axis=0)
+            print(tukey_results)
+        # Return the combined Tukey test results
+        return tukey_results
+
+    def get_stats_tukey_test_sum(self, taxon_name: str=None, func_name: str=None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
@@ -218,7 +286,9 @@ class CrossTest:
 
         # Correct the logic for filtering the dataframe based on taxon_name and func_name
         if taxon_name is not None and func_name is not None:
-            df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
+            # df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
+            # get peptide abundance for each sample
+            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name)
         elif taxon_name is not None:
             df = df[df['Taxon'] == taxon_name]
         elif func_name is not None:
@@ -231,6 +301,9 @@ class CrossTest:
                 "Got empty dataframe, please check the taxon name or the function name")
 
         df = df[self.tfa.sample_list]
+        #summarize the data to one row
+        df = df.agg(['sum'])
+
         Group = []
         Value = []
 
