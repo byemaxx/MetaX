@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 340, 49))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 498, 333))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -3120,9 +3120,9 @@ class Ui_metaX_main(object):
         self.pushButton_show_linked_taxa.setText(_translate("metaX_main", "Show Linked Taxa Only"))
         self.label_55.setText(_translate("metaX_main", "Taxon"))
         self.pushButton_plot_tukey.setText(_translate("metaX_main", "Plot TUKEY"))
-        self.comboBox_tukey_by_sum_each.setItemText(0, _translate("metaX_main", "each item"))
-        self.comboBox_tukey_by_sum_each.setItemText(1, _translate("metaX_main", "sum all"))
-        self.label_111.setText(_translate("metaX_main", "Test by"))
+        self.comboBox_tukey_by_sum_each.setItemText(0, _translate("metaX_main", "Sum All"))
+        self.comboBox_tukey_by_sum_each.setItemText(1, _translate("metaX_main", "Each Item"))
+        self.label_111.setText(_translate("metaX_main", "Stats for"))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_4), _translate("metaX_main", "TUKEY"))
         self.tabWidget_TaxaFuncAnalyzer.setTabText(self.tabWidget_TaxaFuncAnalyzer.indexOf(self.tab_2), _translate("metaX_main", "Cross Test"))
         self.label_16.setText(_translate("metaX_main", "Width (px)"))
