@@ -3,3 +3,4 @@ tests/test.ipynb
 */__pycache__/*
 tests/*
 data/MetaX-human-gut-new.db
+.vscode/settings.json
