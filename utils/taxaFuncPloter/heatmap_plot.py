@@ -73,7 +73,7 @@ class HeatmapPlot:
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
 
-            fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor=(211/255, 211/255, 211/255, 0.5), 
+            fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor=(0/255, 0/255, 0/255, 0.1), 
                                 figsize=fig_size, cmap = cmap, 
                             method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
                             standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
