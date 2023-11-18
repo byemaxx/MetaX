@@ -2860,9 +2860,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # print(df.columns)
         try:
             if 'taxa-func' in table_name:
+                if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
+                    title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
+                elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
+                    title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
+                else:
+                    title = ""
                 fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
                                top_number=top_num, value_type=value_type, fig_size=fig_size, 
-                               pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
+                               pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
             else:
                 fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                           value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
@@ -2947,22 +2953,45 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
             else:
                 self.show_message('ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
-                df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
-            self.show_table(df_anova)
-            table_name = f'anova_test({df_type})'
-            self.update_table_dict(table_name, df_anova)
-            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-            if table_name not in self.comboBox_top_heatmap_table_list:
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-            else:
-                self.comboBox_top_heatmap_table_list.remove(table_name)
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-            self.comboBox_top_heatmap_table.clear()
-            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
-            self.pushButton_plot_top_heatmap.setEnabled(True)
-            self.pushButton_get_top_cross_table.setEnabled(True)
+                
+                table_names = []
+                if df_type == 'Significant Taxa-Func'.lower():
+                    p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                    df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
+
+                    table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                    self.show_table(df_tuple[0])
+                    self.update_table_dict(table_name_1, df_tuple[0])
+                    table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                    self.show_table(df_tuple[1])
+                    self.update_table_dict(table_name_2, df_tuple[1])
+                    self.pushButton_plot_top_heatmap.setEnabled(True)
+                    self.pushButton_get_top_cross_table.setEnabled(True)
+                    table_names = [table_name_1, table_name_2]
+                
+                else:  
+                    df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
+                    self.show_table(df_anova)
+                    table_name = f'anova_test({df_type})'
+                    table_names = [table_name]
+                    self.update_table_dict(table_name, df_anova)
+                    
+                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+                for table_name in table_names:
+                    if table_name not in self.comboBox_top_heatmap_table_list:
+                        self.comboBox_top_heatmap_table_list.append(table_name)
+                        self.comboBox_top_heatmap_table_list.reverse()
+                    else:
+                        self.comboBox_top_heatmap_table_list.remove(table_name)
+                        self.comboBox_top_heatmap_table_list.append(table_name)
+                        self.comboBox_top_heatmap_table_list.reverse()
+                
+                self.comboBox_top_heatmap_table.clear()
+                self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+            
+                self.pushButton_plot_top_heatmap.setEnabled(True)
+                self.pushButton_get_top_cross_table.setEnabled(True)
+                
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'anova_test error: {error_message}', 'e')
@@ -3022,20 +3051,40 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                df = self.tfa.get_stats_ttest(group_list=group_list, df_type=df_type)
-                table_name = f't_test({df_type})'
-                self.show_table(df)
-                self.update_table_dict(table_name, df)
-                self.pushButton_plot_top_heatmap.setEnabled(True)
-                self.pushButton_get_top_cross_table.setEnabled(True)
-                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-                if table_name not in self.comboBox_top_heatmap_table_list:
-                    self.comboBox_top_heatmap_table_list.append(table_name)
-                    self.comboBox_top_heatmap_table_list.reverse()
+                table_names = []
+                if df_type == 'Significant Taxa-Func'.lower():
+                    p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                    df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
+
+                    table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                    self.show_table(df_tuple[0])
+                    self.update_table_dict(table_name_1, df_tuple[0])
+                    table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                    self.show_table(df_tuple[1])
+                    self.update_table_dict(table_name_2, df_tuple[1])
+                    self.pushButton_plot_top_heatmap.setEnabled(True)
+                    self.pushButton_get_top_cross_table.setEnabled(True)
+                    table_names = [table_name_1, table_name_2]
+                
                 else:
-                    self.comboBox_top_heatmap_table_list.remove(table_name)
-                    self.comboBox_top_heatmap_table_list.append(table_name)
-                    self.comboBox_top_heatmap_table_list.reverse()
+                    df = self.tfa.get_stats_ttest(group_list=group_list, df_type=df_type)
+                    table_name = f't_test({df_type})'
+                    self.show_table(df)
+                    self.update_table_dict(table_name, df)
+                    self.pushButton_plot_top_heatmap.setEnabled(True)
+                    self.pushButton_get_top_cross_table.setEnabled(True)
+                    table_names = [table_name]
+                    
+                    
+                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+                for table_name in table_names:
+                    if table_name not in self.comboBox_top_heatmap_table_list:
+                        self.comboBox_top_heatmap_table_list.append(table_name)
+                        self.comboBox_top_heatmap_table_list.reverse()
+                    else:
+                        self.comboBox_top_heatmap_table_list.remove(table_name)
+                        self.comboBox_top_heatmap_table_list.append(table_name)
+                        self.comboBox_top_heatmap_table_list.reverse()
 
                 self.comboBox_top_heatmap_table.clear()
                 self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)

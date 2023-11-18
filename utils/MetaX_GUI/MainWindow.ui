@@ -2163,7 +2163,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_3">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -2203,6 +2203,11 @@
                   <item>
                    <property name="text">
                     <string>peptide</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Significant Taxa-Func</string>
                    </property>
                   </item>
                  </widget>
@@ -2326,6 +2331,11 @@
                   <item>
                    <property name="text">
                     <string>peptide</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Significant Taxa-Func</string>
                    </property>
                   </item>
                  </widget>

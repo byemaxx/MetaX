@@ -36,6 +36,8 @@ class CrossTest:
                 df, primary = self.tfa.func_df, self.tfa.func_name
             elif df_type == 'peptide':
                 df, primary = self.tfa.peptide_df, 'Sequence'
+            else:
+                raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
 
             print(f"ANOVA test for {primary} in {group_list}")
 
@@ -93,11 +95,13 @@ class CrossTest:
         else:
             raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
 
-        print(f"t-test for {primary} in {group_list}")
-
         res = {primary: [], "P-value": [], "t-statistic": []}
+        
         if df_type in ['taxa-func', 'func-taxa']:
+            print(f"t-test for {df_type} in {group_list}")
             res[secondary] = []
+        else:
+            print(f"t-test for {primary} in {group_list}")
 
         for row in tqdm(df.iterrows(), total=len(df)):
             primary_value = row[0]
@@ -326,3 +330,60 @@ class CrossTest:
             lambda x: 'Yes' if x else 'No')
 
         return tukey_df
+    
+    
+    # find out the items that are not significant in taxa but significant in function, and vice versa
+    def get_stats_diff_taxa_but_func(self, group_list: list = None, p_value: float = 0.05,
+                                     taxa_res_df: pd.DataFrame =None, func_res_df: pd.DataFrame=None, taxa_func_res_df: pd.DataFrame=None) -> tuple:
+        
+        # calculate the test result if not given
+        if taxa_res_df is None or func_res_df is None or taxa_func_res_df is None:
+            print("No test result given, calculating the test result first")
+            # if group_list is None, use all groups
+            if group_list is None:
+                group_list = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
+                
+            # if len(group_list) less than 2, raise error
+            if len(group_list) < 2:
+                raise ValueError("groups must be more than 1")
+            
+            if len(group_list) == 2: # if only two groups, use t-test
+                df_taxa_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa')
+                df_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='func')
+                df_taxa_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa-func')
+            else: # if more than two groups, use ANOVA
+                df_taxa_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa')
+                df_func_test_res = self.get_stats_anova(group_list=group_list, df_type='func')
+                df_taxa_func_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa-func')
+        
+        else:
+            print("Using the given test result")
+            df_taxa_test_res = taxa_res_df
+            df_func_test_res = func_res_df
+            df_taxa_func_test_res = taxa_func_res_df
+        
+        # check the p_value is between 0 and 1
+        if p_value < 0 or p_value > 1:
+            raise ValueError("p_value must be between 0 and 1")
+        # 获取p-value大于0.05的Taxon条目
+        not_significant_taxa = df_taxa_test_res[df_taxa_test_res['P-value'] >= p_value].index.get_level_values('Taxon').tolist()
+        print(f"Under P-value = {p_value}: \n \
+              Significant Taxa: [{len(df_taxa_test_res) - len(not_significant_taxa)}], Not Significant Taxa: [{len(not_significant_taxa)}]")
+        not_significant_func = df_func_test_res[df_func_test_res['P-value'] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
+        print(f"Under P-value = {p_value}: \n \
+                Significant Function: [{len(df_func_test_res) - len(not_significant_func)}], Not Significant Function: [{len(not_significant_func)}]")
+
+        # 选择这些Taxon在df_taxa_func_test_res中的行 and P-value < 0.05
+        df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa) & (df_taxa_func_test_res['P-value'] < p_value)]
+        print(f"Taxa not significant but related function significant Under P-value = {p_value}: [{len(df_filtered_taxa_not_significant)}]")
+        df_filtered_func_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func) & (df_taxa_func_test_res['P-value'] < p_value)]
+        # reset_index for df_filtered_func_not_significant
+        df_filtered_func_not_significant = df_filtered_func_not_significant.swaplevel(0, 1).sort_index()
+        print(f"Function not significant but related taxa significant Under P-value = {p_value}: [{len(df_filtered_func_not_significant)}]")
+        
+        print("Returning a tuple of two dataframesthe:\n \
+            1. the taxa not significant but related function significant\n \
+            2. the function not significant but related taxa significant")
+        
+        return (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
+

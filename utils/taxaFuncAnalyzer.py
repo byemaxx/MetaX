@@ -257,6 +257,15 @@ class TaxaFuncAnalyzer:
     def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
         cross_test = CrossTest(self)
         return cross_test.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name, sum_all = sum_all)
+    
+    # Find out the items that are not significant in taxa but significant in function, and vice versa
+    def get_stats_diff_taxa_but_func(self, group_list: list = None, p_value: float = 0.05,
+                                    taxa_res_df: pd.DataFrame =None, func_res_df: pd.DataFrame=None, taxa_func_res_df: pd.DataFrame=None):
+        # return a tuple involed 2 df: (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
+        cross_test = CrossTest(self)
+        return cross_test.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value,
+                                                       taxa_res_df=taxa_res_df, func_res_df=func_res_df, taxa_func_res_df=taxa_func_res_df)
+    
 ######### Cross Test End #########
 
 ######### Get Matrix Begin #########

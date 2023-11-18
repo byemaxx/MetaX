@@ -27,18 +27,13 @@ class HeatmapPlot:
     # For taxa-func table
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
-                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
+                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = ''):
 
         
-        # if fig_size is None:
-        #     width, length, front_title, font_size = self._fit_size(df)
-        #     fig_size = (width, length)
-        # else:
-        #     width, length, front_title, font_size = self._fit_size(df)
+
         func_name = self.tfobj.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
-        # dft = dft.iloc[:, :4]
         type_map = {'f': ('f-statistic', 'Spectral_r', 1),
                     'p': ('P-value', 'Reds_r', None),
                     't': ('t-statistic', 'hot_r', 1)}
@@ -72,7 +67,8 @@ class HeatmapPlot:
             
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
-
+            
+            # sns.set() # set the default seaborn style for plotting
             fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor=(0/255, 0/255, 0/255, 0.1), 
                                 figsize=fig_size, cmap = cmap, 
                             method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
@@ -81,8 +77,11 @@ class HeatmapPlot:
 
             fig.ax_heatmap.set_xlabel('Taxa')
             fig.ax_heatmap.set_ylabel('Function')
-
-            fig.ax_col_dendrogram.set_title(f"Significant differences between groups in Taxa-Function heatmap of {plot_type} (top {top_number})")
+            if title == '':
+                fig.ax_col_dendrogram.set_title(f"Significant Differences between groups in Taxa-Function (Sorted by {plot_type} Top {top_number})")
+            else:
+                title = f'{title} (Sorted by {plot_type} Top {top_number})'
+                fig.ax_col_dendrogram.set_title(title)
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             

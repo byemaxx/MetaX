@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -1117,6 +1117,7 @@ class Ui_metaX_main(object):
         self.comboBox_table_for_ttest.addItem("")
         self.comboBox_table_for_ttest.addItem("")
         self.comboBox_table_for_ttest.addItem("")
+        self.comboBox_table_for_ttest.addItem("")
         self.gridLayout_13.addWidget(self.comboBox_table_for_ttest, 0, 1, 1, 1)
         self.label_42 = QtWidgets.QLabel(self.tab_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -1182,6 +1183,7 @@ class Ui_metaX_main(object):
         self.gridLayout_11.addWidget(self.label_37, 0, 0, 1, 1)
         self.comboBox_table_for_anova = QtWidgets.QComboBox(self.tab_7)
         self.comboBox_table_for_anova.setObjectName("comboBox_table_for_anova")
+        self.comboBox_table_for_anova.addItem("")
         self.comboBox_table_for_anova.addItem("")
         self.comboBox_table_for_anova.addItem("")
         self.comboBox_table_for_anova.addItem("")
@@ -2875,7 +2877,7 @@ class Ui_metaX_main(object):
         self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(4)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
-        self.tabWidget_3.setCurrentIndex(2)
+        self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(1)
         self.tabWidget_5.setCurrentIndex(0)
@@ -3095,6 +3097,7 @@ class Ui_metaX_main(object):
         self.comboBox_table_for_ttest.setItemText(1, _translate("metaX_main", "Taxa"))
         self.comboBox_table_for_ttest.setItemText(2, _translate("metaX_main", "Func"))
         self.comboBox_table_for_ttest.setItemText(3, _translate("metaX_main", "peptide"))
+        self.comboBox_table_for_ttest.setItemText(4, _translate("metaX_main", "Significant Taxa-Func"))
         self.label_42.setText(_translate("metaX_main", "Group 1"))
         self.pushButton_ttest.setText(_translate("metaX_main", "Run T-Test"))
         self.label_36.setText(_translate("metaX_main", "Table for Analysis"))
@@ -3106,6 +3109,7 @@ class Ui_metaX_main(object):
         self.comboBox_table_for_anova.setItemText(1, _translate("metaX_main", "Taxa"))
         self.comboBox_table_for_anova.setItemText(2, _translate("metaX_main", "Func"))
         self.comboBox_table_for_anova.setItemText(3, _translate("metaX_main", "peptide"))
+        self.comboBox_table_for_anova.setItemText(4, _translate("metaX_main", "Significant Taxa-Func"))
         self.label_53.setText(_translate("metaX_main", "Groups (Default all)"))
         self.label_104.setText(_translate("metaX_main", "Group by"))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_7), _translate("metaX_main", "ANOVA"))
