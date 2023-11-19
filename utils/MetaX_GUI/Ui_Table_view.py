@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import  Qt, QDir
 import os
 import io
@@ -7,14 +7,16 @@ import csv
 
 class Ui_Table_view(QtWidgets.QDialog):
 
-    def __init__(self, df=None):
-        super().__init__()
+    def __init__(self, df=None, parent=None):
+        super().__init__(parent)  
         self.df = df.copy() # prevent the original df from being modified
         self.df.reset_index(inplace=True) 
         self.current_page = 0  #set the current page number to 0
         self.rows_per_page = 100  # set the number of rows per page to 100
         self.setupUi(self)
         self.desk_path = os.path.join(QDir.homePath(), 'Desktop')
+        if parent and parent.windowIcon():
+            self.setWindowIcon(parent.windowIcon())
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -72,11 +74,30 @@ class Ui_Table_view(QtWidgets.QDialog):
         table_widget.setRowCount(subset_df.shape[0])
         table_widget.setColumnCount(subset_df.shape[1])
         table_widget.setHorizontalHeaderLabels(subset_df.columns)
-
+        
         for i in range(subset_df.shape[0]):
             for j in range(subset_df.shape[1]):
                 table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(subset_df.iat[i, j])))
 
+        # 使列头可右击并添加复制功能
+        header = table_widget.horizontalHeader()
+        header.setContextMenuPolicy(Qt.CustomContextMenu)
+        header.customContextMenuRequested.connect(self.headerMenu)
+        
+        
+    def headerMenu(self, position):
+        menu = QMenu(self)
+        copy_action = menu.addAction("Copy Column Name")
+        action = menu.exec_(self.tableWidget.horizontalHeader().mapToGlobal(position))
+        if action == copy_action:
+            self.copy_column_name(position)
+
+    def copy_column_name(self, position):
+        column = self.tableWidget.horizontalHeader().logicalIndexAt(position)
+        column_name = self.tableWidget.horizontalHeader().model().headerData(column, Qt.Horizontal)
+        QtWidgets.QApplication.clipboard().setText(column_name)
+        
+        
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Table View"))

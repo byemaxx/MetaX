@@ -29,6 +29,9 @@ class MyDialog(QDialog):
         if html_path is not None:
             print(html_path)
             self.webEngineView.load(QUrl.fromLocalFile(html_path))
+        
+        if parent and parent.windowIcon():
+            self.setWindowIcon(parent.windowIcon())
 
     def zoom(self, value):
         self.webEngineView.setZoomFactor(value / 100) 

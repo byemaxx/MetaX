@@ -1064,18 +1064,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_message('Data is loading, please wait...')
             table_name = self.listWidget_table_list.currentItem().text()
             df = self.table_dict[table_name]
-            self.show_table(df)
+            self.show_table(df, title=table_name)
         except Exception as e:
             self.logger.write_log(f'show_table_in_list error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
     # show table in Ui_Table_view
-    def show_table(self, df):
-        table_dialog = Ui_Table_view(df)
+    def show_table(self, df, title='Table'):
+        table_dialog = Ui_Table_view(df, self.MainWindow)
         #show table_dialog on top
         # table_dialog.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         # # remove the top flag
         # table_dialog.setWindowFlags(table_dialog.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        table_dialog.setWindowTitle(title)
         table_dialog.show()
 
         # add to table_dialogs to show all table_dialogs
@@ -2437,7 +2438,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # create a dialog to show the figure
             # plt_dialog = PltDialog(self.MainWindow, fig)
             plt_size= (width*50,height*num_cluster*50)
-            plt_dialog = ExportablePlotDialog(None,fig, plt_size)
+            plt_dialog = ExportablePlotDialog(self.MainWindow,fig, plt_size)
+            #set title
+            plt_dialog.setWindowTitle(title)
             plt_dialog.show() # Show the dialog.
             self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
             
@@ -2551,7 +2554,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             extract_row = df.index.tolist()
             extract_col = df.columns.tolist()
             df = dft.loc[extract_row, extract_col]            
-        self.show_table(df)
+        self.show_table(df,title=f'Cluster {cluster_num+1} of {table_name}')
 
     ## Trends plot end
 
@@ -2569,7 +2572,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
-            web = webDialog.MyDialog(save_path)
+            web = webDialog.MyDialog(save_path, self.MainWindow)
+            if title:
+                web.setWindowTitle(title)
+                
             if width and height:
                 web.resize(width, height)
             self.web_list.append(web)
@@ -2892,7 +2898,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         scale = self.comboBox_top_heatmap_scale.currentText()
-
+        rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
 
         
         if sort_by == 'f-statistic (ANOVA)':
@@ -2915,9 +2921,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             if 'taxa-func' in table_name:
-                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue)
+                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa)
             else:
-                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale)
+                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale, rename_taxa=rename_taxa)
         except ValueError:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results')
             return None
@@ -2934,7 +2940,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
             else:      
                 self.update_table_dict(f'top_cross[{table_name}]', df_top_cross)
-                self.show_table(df_top_cross)
+                self.show_table(df_top_cross, title=f'top_cross[{table_name}]')
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
@@ -2964,10 +2970,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
 
                 table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-                self.show_table(df_tuple[0])
+                self.show_table(df_tuple[0], title=table_name_1)
                 self.update_table_dict(table_name_1, df_tuple[0])
                 table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-                self.show_table(df_tuple[1])
+                self.show_table(df_tuple[1], title=table_name_2)
                 self.update_table_dict(table_name_2, df_tuple[1])
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
@@ -2975,7 +2981,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             else:  
                 df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
-                self.show_table(df_anova)
+                self.show_table(df_anova, title=f'anova_test({df_type})')
                 table_name = f'anova_test({df_type})'
                 table_names = [table_name]
                 self.update_table_dict(table_name, df_anova)
@@ -3022,7 +3028,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             self.pushButton_tukey_test.setEnabled(False)
             tukey_test = self.tfa.get_stats_tukey_test(taxon_name=taxa, func_name=func, sum_all=sum_all)
-            self.show_table(tukey_test)
+            self.show_table(tukey_test, title='tukey_test')
             self.update_table_dict('tukey_test', tukey_test)
             self.pushButton_plot_tukey.setEnabled(True)
         except Exception as e:
@@ -3061,10 +3067,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
 
                     table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-                    self.show_table(df_tuple[0])
+                    self.show_table(df_tuple[0], title=table_name_1)
                     self.update_table_dict(table_name_1, df_tuple[0])
                     table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-                    self.show_table(df_tuple[1])
+                    self.show_table(df_tuple[1], title=table_name_2)
                     self.update_table_dict(table_name_2, df_tuple[1])
                     self.pushButton_plot_top_heatmap.setEnabled(True)
                     self.pushButton_get_top_cross_table.setEnabled(True)
@@ -3073,7 +3079,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 else:
                     df = self.tfa.get_stats_ttest(group_list=group_list, df_type=df_type)
                     table_name = f't_test({df_type})'
-                    self.show_table(df)
+                    self.show_table(df, title=table_name)
                     self.update_table_dict(table_name, df)
                     self.pushButton_plot_top_heatmap.setEnabled(True)
                     self.pushButton_get_top_cross_table.setEnabled(True)
@@ -3126,7 +3132,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_deseq2.setEnabled(False)
                 df_deseq2 = self.tfa.get_stats_deseq2(df, group_list=group_list)
-                self.show_table(df_deseq2)
+                self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)
                 if res_table_name not in self.comboBox_deseq2_tables_list:
@@ -3480,7 +3486,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
         else:
-            self.show_table(df)
+            self.show_table(df, title=f'{taxa} [ {func} ]')
             
             
     def get_sample_list_tflink(self):

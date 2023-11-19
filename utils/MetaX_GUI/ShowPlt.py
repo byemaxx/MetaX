@@ -36,6 +36,10 @@ class ExportablePlotDialog(QtWidgets.QDialog):
         layout.addWidget(scrollArea)
 
         self.setLayout(layout)
+                # Set window title
+        self.setWindowTitle("Plt")
+        if parent and parent.windowIcon():
+            self.setWindowIcon(parent.windowIcon())
 
 # Usage:
 if __name__ == "__main__":

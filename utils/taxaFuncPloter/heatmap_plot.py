@@ -64,7 +64,8 @@ class HeatmapPlot:
 
             if rename_taxa:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
-            
+                # df_top = self.rename_taxa(df_top)
+                
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
@@ -259,7 +260,8 @@ class HeatmapPlot:
 
 
         # For taxa-func heatmap
-    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05):
+    # get the top intensity matrix of taxa-func table
+    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, rename_taxa:bool = False):
         func_name = self.tfobj.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
@@ -291,9 +293,14 @@ class HeatmapPlot:
             elif 't-statistic' in dft.columns.tolist():
                 dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False], ignore_index=True)
             df_top = dft.head(top_number)
+            
+            if rename_taxa:
+                df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
 
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             mat = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
+                
+                
             plt.figure()
             fig = sns.clustermap(mat, center=0, cmap = color,
                             method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
@@ -325,7 +332,7 @@ class HeatmapPlot:
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
-                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str = None):
+                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = False):
         dft = df.copy()
 
         scale_map ={None: None,
@@ -382,6 +389,8 @@ class HeatmapPlot:
                 index = sorted(set(groups)).index(group)
                 result.append(colors[index])
             return result
+        
+        
         try:
             # create color list for groups & rename columns
             col_names = mat.columns.tolist()
@@ -394,7 +403,10 @@ class HeatmapPlot:
                 groups_list.append(group)
             color_list = assign_colors(groups_list)
             mat.columns = new_col_names
-
+            
+            if rename_taxa:
+                mat = self.rename_taxa(mat)
+                
             fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
                             cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
                                 standard_scale=scale, col_colors=color_list)
