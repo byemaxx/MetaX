@@ -25,6 +25,7 @@ class CrossTest:
 
         all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group)]
 
+        secondary = None # give a default value to prevent error when print
         if df_type in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']:
             if df_type == 'taxa-func':
                 df, primary, secondary = self.tfa.taxa_func_df, 'Taxon', self.tfa.func_name
@@ -38,8 +39,11 @@ class CrossTest:
                 df, primary = self.tfa.peptide_df, 'Sequence'
             else:
                 raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
-
-            print(f"ANOVA test for {primary} in {group_list}")
+            
+            if secondary is not None:
+                print(f"ANOVA test for {primary}-{secondary} in {group_list}")
+            else:
+                print(f"ANOVA test for {primary} in {group_list}")
 
             res = {primary: [], "P-value": [], "f-statistic": []}
             if df_type in ['taxa-func', 'func-taxa']:
@@ -82,6 +86,7 @@ class CrossTest:
 
         all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group)]
 
+        secondary = None # give a default value to prevent error when print
         if df_type == 'taxa-func':
             df, primary, secondary = self.tfa.taxa_func_df, 'Taxon', self.tfa.func_name
         elif df_type == 'func-taxa':

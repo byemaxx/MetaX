@@ -33,7 +33,7 @@ class TaxaFuncAnalyzer:
         self.sample_list = None
         self.meta_df = None
         self.meta_name = None
-        self.group_list = None
+        self.group_list = None # a list of group names for each sample, not unique
         self.group_dict = None
 
         self.func_list = None # all the func in the taxaFunc table which has _prop

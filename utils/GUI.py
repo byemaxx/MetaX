@@ -2836,14 +2836,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             value_type = 't'
         elif sort_by == 'p-value':
             value_type = 'p'
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported!')
+            return None
 
         # if table name is t_test, then only use p value
-        if 't_test' in table_name and value_type == 'f':
-            QMessageBox.warning(self.MainWindow, 'Warning', 't_test only has p value!')
-            return None
-        if  'anova_test' in table_name and value_type == 't':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'anova_test only has f value!')
-            return None
+        column_list = [i.lower() for i in self.table_dict[table_name].columns.tolist()]
+        
+        if  sort_by.split(' ')[0] not in column_list:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported in {table_name}!')
+            return None 
+
         
         # if width or length is not int, then use default value
         try:
@@ -2943,54 +2946,55 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_anova_test.setEnabled(False)
         df_type = self.comboBox_table_for_anova.currentText().lower()
 
-        try:
-            if not group_list:
-                self.show_message('ANOVA test will use all groups...\n\n It may take a long time! Please wait...')
-
-                df_anova = self.tfa.get_stats_anova(df_type=df_type)
-            elif len(group_list) < 3:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
-                return None
-            else:
-                self.show_message('ANOVA test will use selected groups...\n\n It may take a long time! Please wait...')
-                
-                table_names = []
-                if df_type == 'Significant Taxa-Func'.lower():
-                    p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
-                    df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
-
-                    table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-                    self.show_table(df_tuple[0])
-                    self.update_table_dict(table_name_1, df_tuple[0])
-                    table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-                    self.show_table(df_tuple[1])
-                    self.update_table_dict(table_name_2, df_tuple[1])
-                    self.pushButton_plot_top_heatmap.setEnabled(True)
-                    self.pushButton_get_top_cross_table.setEnabled(True)
-                    table_names = [table_name_1, table_name_2]
-                
-                else:  
-                    df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
-                    self.show_table(df_anova)
-                    table_name = f'anova_test({df_type})'
-                    table_names = [table_name]
-                    self.update_table_dict(table_name, df_anova)
-                    
-                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-                for table_name in table_names:
-                    if table_name not in self.comboBox_top_heatmap_table_list:
-                        self.comboBox_top_heatmap_table_list.append(table_name)
-                        self.comboBox_top_heatmap_table_list.reverse()
-                    else:
-                        self.comboBox_top_heatmap_table_list.remove(table_name)
-                        self.comboBox_top_heatmap_table_list.append(table_name)
-                        self.comboBox_top_heatmap_table_list.reverse()
-                
-                self.comboBox_top_heatmap_table.clear()
-                self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+        if group_list is None or group_list == []:
+            group_list = sorted(set(self.tfa.group_list))
             
+        elif len(group_list) < 3:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
+            return None
+
+        self.show_message(f'ANOVA test will test on {group_list}\
+                          .\n\n It may take a long time! Please wait...')
+
+        try:
+            table_names = []
+            
+            if df_type == 'Significant Taxa-Func'.lower():
+                p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
+
+                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                self.show_table(df_tuple[0])
+                self.update_table_dict(table_name_1, df_tuple[0])
+                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                self.show_table(df_tuple[1])
+                self.update_table_dict(table_name_2, df_tuple[1])
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
+                table_names = [table_name_1, table_name_2]
+            
+            else:  
+                df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
+                self.show_table(df_anova)
+                table_name = f'anova_test({df_type})'
+                table_names = [table_name]
+                self.update_table_dict(table_name, df_anova)
+                
+            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+            for table_name in table_names:
+                if table_name not in self.comboBox_top_heatmap_table_list:
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+                else:
+                    self.comboBox_top_heatmap_table_list.remove(table_name)
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+            
+            self.comboBox_top_heatmap_table.clear()
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+        
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
                 
         except Exception as e:
             error_message = traceback.format_exc()
