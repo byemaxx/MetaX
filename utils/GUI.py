@@ -78,6 +78,8 @@ from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 
 # import third-party modules
 import pandas as pd
+import matplotlib.pyplot as plt
+
 # import pyqt5 scripts
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
@@ -724,12 +726,28 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.save_basic_settings()
+
+            # 关闭 self.web_list 中的所有窗口
+            for web_window in self.web_list:
+                web_window.close()
+            # 关闭 self.table_dialogs 中的所有窗口
+            for table_dialog in self.table_dialogs:
+                table_dialog.close()
+            # 关闭 self.plt_dialogs 中的所有窗口
+            for plt_dialog in self.plt_dialogs:
+                plt_dialog.close()
+            
+            # 关闭 plt.show() 出来的窗口
+            plt.close('all')
+            
+
+            self.logger.write_log(f"############################## MetaX closed ##############################")
             event.accept()
         else:
             event.ignore()
-        self.logger.write_log(f"############################## MetaX closed ##############################")
 
-        
+
+            
     def make_related_comboboxes_searchable(self):
         comboboxes_attributes = [
             'comboBox_basic_heatmap_selection_list',
@@ -1071,11 +1089,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # show table in Ui_Table_view
     def show_table(self, df, title='Table'):
-        table_dialog = Ui_Table_view(df, self.MainWindow)
-        #show table_dialog on top
-        # table_dialog.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        # # remove the top flag
-        # table_dialog.setWindowFlags(table_dialog.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        # table_dialog = Ui_Table_view(df, self.MainWindow)
+        table_dialog = Ui_Table_view(df)
         table_dialog.setWindowTitle(title)
         table_dialog.show()
 
@@ -2572,7 +2587,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
-            web = webDialog.MyDialog(save_path, self.MainWindow)
+            web = webDialog.MyDialog(save_path, None)
             if title:
                 web.setWindowTitle(title)
                 

@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import  Qt, QDir
+from PyQt5.QtGui import QIcon
+
 import os
 import io
 import csv
@@ -17,6 +19,10 @@ class Ui_Table_view(QtWidgets.QDialog):
         self.desk_path = os.path.join(QDir.homePath(), 'Desktop')
         if parent and parent.windowIcon():
             self.setWindowIcon(parent.windowIcon())
+        else:
+            icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
+            self.setWindowIcon(QIcon(icon_path))
+
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")

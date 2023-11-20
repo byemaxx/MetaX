@@ -1,7 +1,10 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QPushButton, QFileDialog, QSizePolicy, QSlider, QHBoxLayout,QMessageBox
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl, Qt
-import sys
+from PyQt5.QtGui import QIcon
+
+import sys 
+import os
 from PyQt5.QtWidgets import QApplication
 
 class MyDialog(QDialog):
@@ -32,6 +35,9 @@ class MyDialog(QDialog):
         
         if parent and parent.windowIcon():
             self.setWindowIcon(parent.windowIcon())
+        else:
+            icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
+            self.setWindowIcon(QIcon(icon_path))
 
     def zoom(self, value):
         self.webEngineView.setZoomFactor(value / 100) 

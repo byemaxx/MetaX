@@ -301,7 +301,7 @@ class HeatmapPlot:
             mat = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
                 
                 
-            plt.figure()
+            # plt.figure()
             fig = sns.clustermap(mat, center=0, cmap = color,
                             method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
                             standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
@@ -319,13 +319,13 @@ class HeatmapPlot:
             else:
                 sorted_df = mat
             # remove fig object
-            # plt.close(fig.fig)
+            plt.close(fig.fig)
             return sorted_df
         except ValueError as e:
             print(e)
             raise ValueError(f"No significant differences between groups")
-        finally:
-            plt.close('all')
+        # finally:
+        #     plt.close('all')
 
         
 
@@ -420,11 +420,14 @@ class HeatmapPlot:
                 sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
             else:
                 sorted_df = mat
+            
+            
+            plt.close(fig.fig)
 
             return sorted_df
         except Exception as e:
             print(f'Error: {e}')
             raise ValueError("No significant differences between groups")
-        finally:
-            plt.close('all')
+        # finally:
+        #     plt.close('all')
 
