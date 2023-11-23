@@ -64,12 +64,6 @@ class VolcanoPlot():
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(df['log2FoldChange'].tolist())
-            .add_yaxis(
-                f"Normal ({count_dict['normal']})",
-                Scatter_normal.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts = opts.ItemStyleOpts(color=color_mapping('normal'))
-            )
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='log2FoldChange'),
                 yaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='-log10(padj)'),
@@ -79,33 +73,22 @@ class VolcanoPlot():
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}}),
             ) )
         
-        if count_dict['up'] > 0:
-            scatter.add_yaxis(
-                f"Up ({count_dict['up']})",
-                Scatter_up.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('up'))
-            )
-        if count_dict['ultra-up'] > 0:
-            scatter.add_yaxis(
-                f"Ultra-up ({count_dict['ultra-up']})",
-                scatter_ultra_up.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('ultra-up'))
+        type_to_data_color = {
+            'normal': (Scatter_normal, 'normal'),
+            'up': (Scatter_up, 'up'),
+            'ultra-up': (scatter_ultra_up, 'ultra-up'),
+            'down': (Scatter_down, 'down'),
+            'ultra-down': (scatter_ultra_down, 'ultra-down')
+        }
+
+        for type_name, (scatter_data, color_name) in type_to_data_color.items():
+            if count_dict[type_name] > 0:
+                scatter.add_yaxis(
+                    f"{type_name.title()} ({count_dict[type_name]})",
+                    scatter_data.tolist(),
+                    label_opts=opts.LabelOpts(is_show=False),
+                    itemstyle_opts=opts.ItemStyleOpts(color=color_mapping(color_name))
                 )
-        if count_dict['down'] > 0:
-            scatter.add_yaxis(
-                f"Down ({count_dict['down']})",
-                Scatter_down.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('down'))
-                )
-        if count_dict['ultra-down'] > 0:
-            scatter.add_yaxis(
-                f"Ultra-down ({count_dict['ultra-down']})",
-                scatter_ultra_down.tolist(),
-                label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color=color_mapping('ultra-down'))
-                )
+
             
         return scatter
