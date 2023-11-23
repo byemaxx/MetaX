@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QApplication
 
 class MyDialog(QDialog):
     def __init__(self, html_path=None, parent=None):
+        print("webDialog init")
         super(MyDialog, self).__init__(parent)
         self.setWindowTitle('HTML Viewer')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -38,6 +39,7 @@ class MyDialog(QDialog):
         else:
             icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
             self.setWindowIcon(QIcon(icon_path))
+        print("webDialog init end")
 
     def zoom(self, value):
         self.webEngineView.setZoomFactor(value / 100) 

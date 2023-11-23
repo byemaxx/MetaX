@@ -12,21 +12,16 @@ class SankeyPlot:
     #        pic.render_notebook()
     #     pic.render('sankey.html')
 
-    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc_min: float = 1,log2fc_max:float = 10) -> list:
+    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
         df = df.copy()
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max) , 'type'] = 'up'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc_max) , 'type'] = 'ultra-up'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max) , 'type'] = 'down'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc_max) , 'type'] = 'ultra-down'
-        
-        df.loc[df['type'].isnull(), 'type'] = 'normal'
+        # 首先将所有行的 'type' 列设置为 'normal'
+        df['type'] = 'normal'
+
+        # 然后根据条件覆盖 'type' 列的值
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_max), 'type'] = 'ultra-up'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_max), 'type'] = 'ultra-down'
 
         count_dict = {}
         for i in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']:

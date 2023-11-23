@@ -11,24 +11,19 @@ class VolcanoPlot():
         df = df_fc.copy()
        
         
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max) , 'type'] = 'up'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] > log2fc_max) , 'type'] = 'ultra-up'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max) , 'type'] = 'down'
-        
-        df.loc[(df['padj'] < padj) & (
-            df['log2FoldChange'] < -log2fc_max) , 'type'] = 'ultra-down'
-        
-        df.loc[df['type'].isnull(), 'type'] = 'normal'
+        # 首先将所有行的 'type' 列设置为 'normal'
+        df['type'] = 'normal'
 
-        count_dict = {}
-        for i in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']:
-            count_dict[i] = len(df[df['type'] == i])    
-        
+        # 然后根据条件覆盖 'type' 列的值
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_max), 'type'] = 'ultra-up'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_max), 'type'] = 'ultra-down'
+
+        # 统计每种类型的数量
+        count_dict = {type_name: len(df[df['type'] == type_name]) for type_name in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']}
+        print(count_dict)
+
        
         # create a new column for label
         df['label'] = df.index
