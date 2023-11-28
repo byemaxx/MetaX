@@ -6,21 +6,39 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.view().pressed.connect(self.handleItemPressed)
         self.setModel(QtGui.QStandardItemModel(self))
         self.checkedItemsOrder = []  # 用于存储勾选项的顺序
+        self._popup_open = False
+
+
+    def showPopup(self):
+        super(CheckableComboBox, self).showPopup()
+        self._popup_open = True
+
+    def hidePopup(self):
+        if self.view().underMouse():
+            # 如果鼠标在下拉列表内，保持下拉列表打开
+            return
+        super(CheckableComboBox, self).hidePopup()
+        self._popup_open = False
+
+    def mousePressEvent(self, event):
+        if self._popup_open and not self.view().rect().contains(event.pos()):
+            self.hidePopup()
+        super(CheckableComboBox, self).mousePressEvent(event)
 
     def handleItemPressed(self, index):
         item = self.model().itemFromIndex(index)
         item_text = item.text()
         if item.checkState() == QtCore.Qt.Checked:
             item.setCheckState(QtCore.Qt.Unchecked)
-            # 从列表中移除取消勾选的项
             if item_text in self.checkedItemsOrder:
                 self.checkedItemsOrder.remove(item_text)
         else:
             item.setCheckState(QtCore.Qt.Checked)
-            # 添加勾选的项到列表中
             if item_text not in self.checkedItemsOrder:
                 self.checkedItemsOrder.append(item_text)
 
+
+    
     def paintEvent(self, e):
         painter = QtWidgets.QStylePainter(self)
         painter.setPen(self.palette().color(QtGui.QPalette.Text))
