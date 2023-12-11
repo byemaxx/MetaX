@@ -1,7 +1,7 @@
 *.pyc
 tests/test.ipynb
 */__pycache__/*
-tests/*
+tests/
 data/MetaX-human-gut-new.db
 .vscode/settings.json
 data/MetaX-human-gut.db
