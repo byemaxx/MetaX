@@ -329,7 +329,7 @@ class HeatmapPlot:
 
 
     # For taxa, func and peptides table
-    def plot_heatmap_of_dunnett_test_res(self, res_df_dict,  pvalue:float = 0.05,scale:str = None,
+    def plot_heatmap_of_dunnett_test_res(self, df_pvalue, df_tstatistic, res_df_dict: dict = {},  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
         #! 只画t-statistic的heatmap, 用p-value过滤
@@ -357,10 +357,13 @@ class HeatmapPlot:
 
             return dft
 
+        if df_pvalue is None or df_tstatistic is None:
+            if res_df_dict == {}:
+                raise ValueError("res_df_dict is empty")
+            else:
+                df_pvalue = res_df_dict['p_value']
+                df_tstatistic = res_df_dict['t_statistic']
 
-        # get the t-statistic dataframe, p-value dataframe
-        df_pvalue = res_df_dict['P-value']
-        df_tstatistic = res_df_dict['t-statistic']
 
         # only extract the location of pvalue < 0.05
         dft = np.where(df_pvalue > pvalue, 0 , df_tstatistic)
@@ -399,7 +402,7 @@ class HeatmapPlot:
                 
             
             if cmap is None:
-                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=20)
+                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30)
 
             
             # 标准化颜色映射以使 0 处为白色
@@ -427,6 +430,105 @@ class HeatmapPlot:
             plt.close('all')
             raise ValueError(f"Error: {e}")
 
+
+    def get_heatmap_table_of_dunnett_res(self, df_pvalue, df_tstatistic, res_df_dict: dict = {},  pvalue:float = 0.05,scale:str = None,
+                                        col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True):
+        import pandas as pd
+        import numpy as np
+        
+        def scale_data(dft, scale):
+            if scale == 'row':
+                # 对每行单独应用双向缩放
+                for index, row in dft.iterrows():
+                    max_val = abs(row).max()
+                    if max_val != 0:
+                        dft.loc[index] = row / max_val
+            elif scale == 'col':
+                # 对每列单独应用双向缩放
+                for col in dft:
+                    max_val = abs(dft[col]).max()
+                    if max_val != 0:
+                        dft[col] = dft[col] / max_val
+            elif scale == 'all':
+                # 对整个数据框应用双向缩放
+                max_val = abs(dft.values).max()
+                if max_val != 0:
+                    dft = dft / max_val
+
+            return dft
+
+        if df_pvalue is None or df_tstatistic is None:
+            if res_df_dict == {}:
+                raise ValueError("res_df_dict is empty")
+            else:
+                df_pvalue = res_df_dict['p_value']
+                df_tstatistic = res_df_dict['t_statistic']
+
+
+        # only extract the location of pvalue < 0.05
+        dft = np.where(df_pvalue > pvalue, 0 , df_tstatistic)
+        dft = pd.DataFrame(dft, index=df_pvalue.index, columns=df_pvalue.columns)
+        # fill na with 0
+        dft = dft.fillna(0, inplace=False)
+
+        # remove all 0 rows
+        dft = dft.loc[~(dft==0).all(axis=1)]
+        
+        dft = self.tfobj.replace_if_two_index(dft)
+            
+
+        if len(dft) < 2:
+            row_cluster = False
+            print('Warning: There is only one row in the dataframe, row_cluster is set to False')
+        if len(dft.columns) < 2:
+            col_cluster = False
+            print('Warning: There is only one column in the dataframe, col_cluster is set to False')
+
+
+
+        try:
+
+            if rename_taxa:
+                dft = self.rename_taxa(dft)
+
+
+            # scale the data
+            if scale:
+                dft = scale_data(dft, scale)
+                
+            
+            from matplotlib.colors import TwoSlopeNorm
+            vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
+            norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
+
+
+            fig = sns.clustermap(dft, norm=norm, 
+                                col_cluster=col_cluster, row_cluster=row_cluster,
+                                cbar_kws = dict(label='t-statistic'),
+                                   )
+
+            # get the sorted dataframe
+            if row_cluster and not col_cluster:
+                sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
+            elif col_cluster and not row_cluster:
+                sorted_df = dft.iloc[:, fig.dendrogram_col.reordered_ind]
+            elif row_cluster and col_cluster:
+                sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+            else:
+                sorted_df = dft
+            
+            
+            plt.close(fig.fig)
+
+            return sorted_df
+        except Exception as e:
+            print(f'Error: {e}')
+            raise ValueError("Can not get the result table, please check the error message in consel.")
+        
+        
+        
+        
+        
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
@@ -478,7 +580,7 @@ class HeatmapPlot:
 
 
         if fig_size is None:
-            fig_size = (30,30)
+            fig_size = (5,5)
 
         def assign_colors(groups):
             colors = distinctipy.get_colors(len(set(groups)))
@@ -525,7 +627,7 @@ class HeatmapPlot:
             return sorted_df
         except Exception as e:
             print(f'Error: {e}')
-            raise ValueError("No significant differences between groups")
+            raise ValueError("Can not get the result table, please check the error message in consel.")
         # finally:
         #     plt.close('all')
 

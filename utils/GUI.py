@@ -223,6 +223,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # TaxaFuncAnalyzer
         # set change event for meta comboboxs
         self.init_meta_combobox_list()
+        # set change event for cross test heatmap setting comboboxs
+        self.comboBox_top_heatmap_table.currentIndexChanged.connect(self.change_event_comboBox_top_heatmap_table)
         # Data import
         self.pushButton_load_example_for_analyzer.clicked.connect(self.load_example_for_analyzer)
         self.pushButton_get_taxafunc_path.clicked.connect(self.set_lineEdit_taxafunc_path)
@@ -279,6 +281,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         ### ANOVA
         self.pushButton_anova_test.clicked.connect(self.anova_test)
 
+        ### Dunnett Test
+        self.pushButton_dunnett_test.clicked.connect(self.dunnett_test)
+        
         # ### Tukey
         self.pushButton_tukey_test.clicked.connect(self.tukey_test)
         self.pushButton_show_linked_taxa.clicked.connect(self.show_tukey_linked_taxa)
@@ -824,7 +829,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def cross_test_tab_change(self, index):
         # Check if the tab with index '2' is selected
-        if index == 2:
+        if index == 3:
             self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
         else:
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
@@ -1272,12 +1277,51 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
     
+    
+    def change_event_comboBox_top_heatmap_table(self):
+        # if comboBox_top_heatmap_table changed
+        sender = self.MainWindow.sender()
+        selected_table_name = sender.currentText()
+        
+        scale_method_list =  [self.comboBox_top_heatmap_scale.itemText(i) for i in range(self.comboBox_top_heatmap_scale.count())]
+        if selected_table_name.startswith('dunnett_test'):
+            self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
+            self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
+            self.comboBox_top_heatmap_sort_type.setEnabled(False)      
+            self.spinBox_top_heatmap_number.setEnabled(False)
+            # add 'all' to comboBox_top_heatmap_scale.
+            if 'all' not in scale_method_list:
+                self.comboBox_top_heatmap_scale.addItem('all')
+        else:
+            sorted_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
+            if 't_test' in selected_table_name:
+            # remove 'f-statistic (ANOVA)' from comboBox_top_heatmap_sort_type
+                sorted_type_list =  ["p-value", "t-statistic (T-Test)"]
+            
+            if 'anova' in selected_table_name:
+                sorted_type_list =  ["p-value", "f-statistic (ANOVA)"]
+            
+            self.comboBox_top_heatmap_sort_type.clear()
+            self.comboBox_top_heatmap_sort_type.addItems(sorted_type_list)            
+            
+            
+            self.pushButton_plot_top_heatmap.setText('Plot Top Heatmap')
+            self.pushButton_get_top_cross_table.setText('Get Top Table')
+            self.comboBox_top_heatmap_sort_type.setEnabled(True)
+            self.spinBox_top_heatmap_number.setEnabled(True)
+            # remove 'all' from comboBox_top_heatmap_scale.
+            if 'all' in scale_method_list:
+                self.comboBox_top_heatmap_scale.removeItem(scale_method_list.index('all'))
+            
+            
+    
     def init_meta_combobox_list(self):
         self.meta_combobox_list = [
                                 self.comboBox_basic_pca_meta,
                                 self.comboBox_basic_heatmap_meta,
                                 self.comboBox_ttest_meta,
                                 self.comboBox_anova_meta,
+                                self.comboBox_dunnett_meta,
                                 self.comboBox_tukey_meta,
                                 self.comboBox_trends_meta,
                                 self.comboBox_co_expr_meta,
@@ -1656,6 +1700,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_ttest_group1.addItems(group_list)
         self.comboBox_ttest_group2.clear()
         self.comboBox_ttest_group2.addItems(group_list)
+        self.comboBox_dunnett_control_group.clear()
+        self.comboBox_dunnett_control_group.addItems(group_list)
         self.comboBox_deseq2_group1.clear()
         self.comboBox_deseq2_group1.addItems(group_list)
         self.comboBox_deseq2_group2.clear()
@@ -1666,6 +1712,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_basic_pca_group: "comboBox_basic_pca_group",
             self.verticalLayout_basic_heatmap_group: "comboBox_basic_group",
             self.horizontalLayout_anova_group : "comboBox_anova_group",
+            self.horizontalLayout_dunnett_group : "comboBox_dunnett_group",
             self.gridLayout_co_expr_group : "comboBox_co_expr_group",
             self.verticalLayout_trends_group : "comboBox_trends_group",
             self.gridLayout_network_group : "comboBox_network_group",
@@ -1806,6 +1853,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
+        self.pushButton_dunnett_test,
         self.pushButton_tukey_test,
         self.pushButton_ttest,
         self.pushButton_deseq2,
@@ -2850,24 +2898,29 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if cmap == 'Auto':
             cmap = None
 
-        
-        if sort_by == 'f-statistic (ANOVA)':
-            value_type = 'f'
-        elif sort_by == 't-statistic (T-Test)':
-            value_type = 't'
-        elif sort_by == 'p-value':
-            value_type = 'p'
-        else:
-            QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported!')
-            return None
+        if table_name.startswith('dunnett_test'):
+            table_type = table_name.split('(')[1].split(')')[0]
+            df_pvalue = self.table_dict[f'dunnett_test_pvalue({table_type})']
+            df_tstatistic = self.table_dict[f'dunnett_test_statistic({table_type})']
+        else:    
+            
+            if sort_by == 'f-statistic (ANOVA)':
+                value_type = 'f'
+            elif sort_by == 't-statistic (T-Test)':
+                value_type = 't'
+            elif sort_by == 'p-value':
+                value_type = 'p'
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported!')
+                return None
+            # if table name is t_test, then only use p value
+            column_list = [i.lower() for i in self.table_dict[table_name].columns.tolist()]
+            
+            if  sort_by.split(' ')[0] not in column_list:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported in {table_name}!')
+                return None 
 
-        # if table name is t_test, then only use p value
-        column_list = [i.lower() for i in self.table_dict[table_name].columns.tolist()]
-        
-        if  sort_by.split(' ')[0] not in column_list:
-            QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported in {table_name}!')
-            return None 
-
+            df = self.table_dict[table_name]
         
         # if width or length is not int, then use default value
         try:
@@ -2878,26 +2931,31 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             length = None
 
         fig_size = None if width is None or length is None else (width, length)
-        df = self.table_dict[table_name]
         # print(type(df))
         # print(df.shape)
         # print(df.columns)
         try:
-            if 'taxa-func' in table_name:
-                if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
-                    title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
-                elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
-                    title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
-                else:
-                    title = ""
-                fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                               top_number=top_num, value_type=value_type, fig_size=fig_size, 
-                               pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
+            if table_name.startswith('dunnett_test'):
+                fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df_pvalue=df_pvalue, df_tstatistic=df_tstatistic, 
+                                                                               fig_size=fig_size, pvalue=pvalue, cmap=cmap,
+                                                                               scale = scale, col_cluster = True, row_cluster = True,
+                                                                               rename_taxa=rename_taxa, font_size=font_size)
             else:
-                fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
-                                                                          value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                          scale = scale, col_cluster = True, row_cluster = True, 
-                                                                          cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
+                if 'taxa-func' in table_name:
+                    if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
+                        title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
+                    elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
+                        title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
+                    else:
+                        title = ""
+                    fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
+                                top_number=top_num, value_type=value_type, fig_size=fig_size, 
+                                pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
+                else:
+                    fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                                                                            value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
+                                                                            scale = scale, col_cluster = True, row_cluster = True, 
+                                                                            cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
         except ValueError:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
         except Exception as e:
@@ -2915,32 +2973,39 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
 
-        
-        if sort_by == 'f-statistic (ANOVA)':
-            value_type = 'f'
-        elif sort_by == 't-statistic (T-Test)':
-            value_type = 't'
-        elif sort_by == 'p-value':
-            value_type = 'p'
+        if table_name.startswith('dunnett_test'):
+            table_type = table_name.split('(')[1].split(')')[0]
+            df_pvalue = self.table_dict[f'dunnett_test_pvalue({table_type})']
+            df_tstatistic = self.table_dict[f'dunnett_test_statistic({table_type})']
+        else:
+            if sort_by == 'f-statistic (ANOVA)':
+                value_type = 'f'
+            elif sort_by == 't-statistic (T-Test)':
+                value_type = 't'
+            elif sort_by == 'p-value':
+                value_type = 'p'
 
-        # if table name is t_test, then only use p value
-        if table_name == 't_test' and value_type == 'f':
-            QMessageBox.warning(self.MainWindow, 'Warning', 't_test only has p value!')
-            return None
-        if table_name == 'anova_test' and value_type == 't':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'anova_test only has f value!')
-            return None
+            # if table name is t_test, then only use p value
+            if table_name == 't_test' and value_type == 'f':
+                QMessageBox.warning(self.MainWindow, 'Warning', 't_test only has p value!')
+                return None
+            if table_name == 'anova_test' and value_type == 't':
+                QMessageBox.warning(self.MainWindow, 'Warning', 'anova_test only has f value!')
+                return None
 
 
-        df = self.table_dict[table_name]
+            df = self.table_dict[table_name]
 
         try:
-            if 'taxa-func' in table_name:
-                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa)
+            if table_name.startswith('dunnett_test'):
+                df_top_cross = HeatmapPlot(self.tfa).get_heatmap_table_of_dunnett_res(df_pvalue=df_pvalue, df_tstatistic=df_tstatistic,  pvalue=pvalue,scale = scale, col_cluster = True, row_cluster = True, rename_taxa=rename_taxa)
             else:
-                df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale, rename_taxa=rename_taxa)
-        except ValueError:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results')
+                if 'taxa-func' in table_name:
+                    df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa)
+                else:
+                    df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, scale = scale, rename_taxa=rename_taxa)
+        except ValueError as e:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{e}')
             return None
         except Exception as e:
             error_message = traceback.format_exc()
@@ -3026,6 +3091,53 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         finally:
             self.pushButton_anova_test.setEnabled(True)
 
+    # Dunett test
+    def dunnett_test(self):
+        control_group = self.comboBox_dunnett_control_group.currentText()
+        group_list = self.comboBox_dunnett_group.getCheckedItems()
+        df_type = self.comboBox_table_for_dunnett.currentText().lower()
+        
+        if group_list is None or group_list == []:
+            group_list = sorted(set(self.tfa.group_list))
+        
+        
+        self.show_message(f'Dunnett test will test on {group_list}\
+                            .\n\n It may take a long time! Please wait...')
+        
+        try:
+            res_dict = self.tfa.get_stats_dunnett_test(control_group=control_group, group_list=group_list, df_type=df_type)
+            
+            table_name_1 = f"dunnett_test_pvalue({df_type})"
+            self.show_table(res_dict['p_value'], title=table_name_1)
+            self.update_table_dict(table_name_1, res_dict['p_value'])
+            table_name_2 = f"dunnett_test_statistic({df_type})"
+            self.show_table(res_dict['t_statistic'], title=table_name_2)
+            self.update_table_dict(table_name_2, res_dict['t_statistic'])
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
+            
+            # update comboBox_top_heatmap_table_list
+            table_name = f'dunnett_test({df_type})'
+            if table_name not in self.comboBox_top_heatmap_table_list:
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+            else:
+                self.comboBox_top_heatmap_table_list.remove(table_name)
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+
+
+            self.comboBox_top_heatmap_table.clear()
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+        
+        except Exception as e:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'dunnett_test error: {error_message}', 'e')
+            self.logger.write_log(f'dunnett_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Erro', error_message)
+            return None
+        
+        
 
     #TUKEY
     def tukey_test(self):

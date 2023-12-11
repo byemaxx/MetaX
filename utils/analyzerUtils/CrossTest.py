@@ -170,7 +170,7 @@ class CrossTest:
         else:
             raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
 
-        res_dict = {primary_index: [], "P-value": [], "t-statistic": []}
+        res_dict = {primary_index: [], "p_value": [], "t_statistic": []}
         
         if df_type in ['taxa-func', 'func-taxa']:
             print(f"Dunnett's test for {df_type} in {group_list}")
@@ -211,8 +211,8 @@ class CrossTest:
                 
             
             dunnett_res = dunnett(*list_for_ttest, control=row[1][self.tfa.get_sample_list_in_a_group(control_group)].to_list())
-            res_dict["P-value"].append(dunnett_res.pvalue)
-            res_dict["t-statistic"].append(dunnett_res.statistic)
+            res_dict["p_value"].append(dunnett_res.pvalue)
+            res_dict["t_statistic"].append(dunnett_res.statistic)
             
 
         
@@ -225,19 +225,19 @@ class CrossTest:
             
         
         res_df_pvalue = res_df.copy()
-        res_df_pvalue.drop(columns=['t-statistic'], inplace=True)
+        res_df_pvalue.drop(columns=['t_statistic'], inplace=True)
         for index, group_name in enumerate(group_list):
-            res_df_pvalue[group_name] = res_df_pvalue['P-value'].apply(lambda x: x[index])
-        res_df_pvalue.drop(columns=['P-value'], inplace=True)
+            res_df_pvalue[group_name] = res_df_pvalue['p_value'].apply(lambda x: x[index])
+        res_df_pvalue.drop(columns=['p_value'], inplace=True)
         
         res_df_tstatistic = res_df.copy()
-        res_df_tstatistic.drop(columns=['P-value'], inplace=True)
+        res_df_tstatistic.drop(columns=['p_value'], inplace=True)
         for index, group_name in enumerate(group_list):
-            res_df_tstatistic[group_name] = res_df_tstatistic['t-statistic'].apply(lambda x: x[index])
-        res_df_tstatistic.drop(columns=['t-statistic'], inplace=True)
+            res_df_tstatistic[group_name] = res_df_tstatistic['t_statistic'].apply(lambda x: x[index])
+        res_df_tstatistic.drop(columns=['t_statistic'], inplace=True)
         
 
-        res_df_dict = {'P-value': res_df_pvalue, 't-statistic': res_df_tstatistic}
+        res_df_dict = {'p_value': res_df_pvalue, 't_statistic': res_df_tstatistic}
         return res_df_dict
             
             
