@@ -329,7 +329,7 @@ class HeatmapPlot:
 
 
     # For taxa, func and peptides table
-    def plot_heatmap_of_dunnett_test_res(self, df_pvalue, df_tstatistic, res_df_dict: dict = {},  pvalue:float = 0.05,scale:str = None,
+    def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
         #! 只画t-statistic的heatmap, 用p-value过滤
@@ -357,12 +357,10 @@ class HeatmapPlot:
 
             return dft
 
-        if df_pvalue is None or df_tstatistic is None:
-            if res_df_dict == {}:
-                raise ValueError("res_df_dict is empty")
-            else:
-                df_pvalue = res_df_dict['p_value']
-                df_tstatistic = res_df_dict['t_statistic']
+        df_pvalue = df.filter(regex='(p_value)')
+        df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
+        df_tstatistic = df.filter(regex='(t_statistic)')
+        df_tstatistic.columns = df_tstatistic.columns.str.replace(r"(t_statistic)", "")
 
 
         # only extract the location of pvalue < 0.05
@@ -431,7 +429,7 @@ class HeatmapPlot:
             raise ValueError(f"Error: {e}")
 
 
-    def get_heatmap_table_of_dunnett_res(self, df_pvalue, df_tstatistic, res_df_dict: dict = {},  pvalue:float = 0.05,scale:str = None,
+    def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                         col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True):
         import pandas as pd
         import numpy as np
@@ -456,13 +454,12 @@ class HeatmapPlot:
                     dft = dft / max_val
 
             return dft
-
-        if df_pvalue is None or df_tstatistic is None:
-            if res_df_dict == {}:
-                raise ValueError("res_df_dict is empty")
-            else:
-                df_pvalue = res_df_dict['p_value']
-                df_tstatistic = res_df_dict['t_statistic']
+        
+        
+        df_pvalue = df.filter(regex='(p_value)')
+        df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
+        df_tstatistic = df.filter(regex='(t_statistic)')
+        df_tstatistic.columns = df_tstatistic.columns.str.replace(r"(t_statistic)", "")
 
 
         # only extract the location of pvalue < 0.05

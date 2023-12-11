@@ -267,7 +267,7 @@ class TaxaFuncAnalyzer:
                                                        taxa_res_df=taxa_res_df, func_res_df=func_res_df, taxa_func_res_df=taxa_func_res_df)
 
     # compare all the groups with the control group
-    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> dict:
+    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
             """
             Calculate the p-value and t-statistic using Dunnett's test for multiple group comparisons.
 

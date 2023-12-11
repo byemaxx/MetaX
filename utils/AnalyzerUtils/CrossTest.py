@@ -136,10 +136,10 @@ class CrossTest:
         res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
         return res_all
     
-    # output: a dict of two dataframe, one is p-value, one is t-statistic
-    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> dict:
+    
+    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
-        
+        #! Output a dataframe with (p_value, t_statistic) for each group
         # check if the control_group is in group_list_all
         if control_group not in group_list_all:
             raise ValueError(f"control_group must be in {group_list_all}")
@@ -180,6 +180,9 @@ class CrossTest:
         print(f"control group: {control_group}")
         
         print(f"primary index: {primary_index}", f"secondary index: {secondary_index}", sep='\n')
+        
+        # extract head 10 rows for test
+        # df = df.head(10)
         
         # start dunnett for each row
         for row in tqdm(df.iterrows(), total=len(df)):
@@ -236,10 +239,19 @@ class CrossTest:
             res_df_tstatistic[group_name] = res_df_tstatistic['t_statistic'].apply(lambda x: x[index])
         res_df_tstatistic.drop(columns=['t_statistic'], inplace=True)
         
+        res_df_pvalue.columns = [i + '(p_value)' for i in res_df_pvalue.columns]
+        res_df_tstatistic.columns = [i + '(t_statistic)' for i in res_df_tstatistic.columns]
+        
+        # merge two dataframe
+        res_df = pd.concat([res_df_pvalue, res_df_tstatistic], axis=1)
+        # sort the columns
+        res_df = res_df.reindex(sorted(res_df.columns), axis=1)
+        
+        
 
-        res_df_dict = {'p_value': res_df_pvalue, 't_statistic': res_df_tstatistic}
-        return res_df_dict
-            
+        # res_df_dict = {'p_value': res_df_pvalue, 't_statistic': res_df_tstatistic}
+        
+        return res_df
             
             
     def get_stats_deseq2(self, df, group_list: list):

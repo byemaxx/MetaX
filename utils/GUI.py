@@ -2898,29 +2898,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if cmap == 'Auto':
             cmap = None
 
-        if table_name.startswith('dunnett_test'):
-            table_type = table_name.split('(')[1].split(')')[0]
-            df_pvalue = self.table_dict[f'dunnett_test_pvalue({table_type})']
-            df_tstatistic = self.table_dict[f'dunnett_test_statistic({table_type})']
-        else:    
-            
-            if sort_by == 'f-statistic (ANOVA)':
-                value_type = 'f'
-            elif sort_by == 't-statistic (T-Test)':
-                value_type = 't'
-            elif sort_by == 'p-value':
-                value_type = 'p'
-            else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported!')
-                return None
-            # if table name is t_test, then only use p value
-            column_list = [i.lower() for i in self.table_dict[table_name].columns.tolist()]
-            
-            if  sort_by.split(' ')[0] not in column_list:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'{sort_by} is not supported in {table_name}!')
-                return None 
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p'}
+        value_type = sort_by_dict[sort_by]
+        
 
-            df = self.table_dict[table_name]
+        df = self.table_dict[table_name]
         
         # if width or length is not int, then use default value
         try:
@@ -2936,28 +2918,26 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # print(df.columns)
         try:
             if table_name.startswith('dunnett_test'):
-                fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df_pvalue=df_pvalue, df_tstatistic=df_tstatistic, 
+                fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = True, row_cluster = True,
                                                                                rename_taxa=rename_taxa, font_size=font_size)
-            else:
-                if 'taxa-func' in table_name:
-                    if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
-                        title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
-                    elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
-                        title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
-                    else:
-                        title = ""
-                    fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
-                                top_number=top_num, value_type=value_type, fig_size=fig_size, 
-                                pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
+            elif 'taxa-func' in table_name:
+                if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
+                    title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
+                elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
+                    title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
                 else:
-                    fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
-                                                                            value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                            scale = scale, col_cluster = True, row_cluster = True, 
-                                                                            cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
-        except ValueError:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'No significant results!')
+                    title = ""
+                fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
+                            top_number=top_num, value_type=value_type, fig_size=fig_size, 
+                            pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
+            else:
+                fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                                                                        value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
+                                                                        scale = scale, col_cluster = True, row_cluster = True, 
+                                                                        cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
+
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
@@ -2973,32 +2953,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
 
-        if table_name.startswith('dunnett_test'):
-            table_type = table_name.split('(')[1].split(')')[0]
-            df_pvalue = self.table_dict[f'dunnett_test_pvalue({table_type})']
-            df_tstatistic = self.table_dict[f'dunnett_test_statistic({table_type})']
-        else:
-            if sort_by == 'f-statistic (ANOVA)':
-                value_type = 'f'
-            elif sort_by == 't-statistic (T-Test)':
-                value_type = 't'
-            elif sort_by == 'p-value':
-                value_type = 'p'
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p'}
+        value_type = sort_by_dict[sort_by]
+        
 
-            # if table name is t_test, then only use p value
-            if table_name == 't_test' and value_type == 'f':
-                QMessageBox.warning(self.MainWindow, 'Warning', 't_test only has p value!')
-                return None
-            if table_name == 'anova_test' and value_type == 't':
-                QMessageBox.warning(self.MainWindow, 'Warning', 'anova_test only has f value!')
-                return None
+        df = self.table_dict[table_name]
 
-
-            df = self.table_dict[table_name]
 
         try:
             if table_name.startswith('dunnett_test'):
-                df_top_cross = HeatmapPlot(self.tfa).get_heatmap_table_of_dunnett_res(df_pvalue=df_pvalue, df_tstatistic=df_tstatistic,  pvalue=pvalue,scale = scale, col_cluster = True, row_cluster = True, rename_taxa=rename_taxa)
+                df_top_cross = HeatmapPlot(self.tfa).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, col_cluster = True, row_cluster = True, rename_taxa=rename_taxa)
             else:
                 if 'taxa-func' in table_name:
                     df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa)
@@ -3105,19 +3069,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                             .\n\n It may take a long time! Please wait...')
         
         try:
-            res_dict = self.tfa.get_stats_dunnett_test(control_group=control_group, group_list=group_list, df_type=df_type)
+            res_df = self.tfa.get_stats_dunnett_test(control_group=control_group, group_list=group_list, df_type=df_type)
             
-            table_name_1 = f"dunnett_test_pvalue({df_type})"
-            self.show_table(res_dict['p_value'], title=table_name_1)
-            self.update_table_dict(table_name_1, res_dict['p_value'])
-            table_name_2 = f"dunnett_test_statistic({df_type})"
-            self.show_table(res_dict['t_statistic'], title=table_name_2)
-            self.update_table_dict(table_name_2, res_dict['t_statistic'])
+            #! abandon
+            # df_pvalue = res_df.filter(regex='(p_value)')
+            # df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
+            # df_tstatistic = res_df.filter(regex='(t_statistic)')
+            # df_tstatistic.columns = df_tstatistic.columns.str.replace(r"(t_statistic)", "")
+
+            # table_name_1 = f"dunnett_test({df_type})"
+            # self.update_table_dict(table_name_1, df_pvalue)
+            # table_name_2 = f"dunnett_test_statistic({df_type})"
+            # self.update_table_dict(table_name_2, df_tstatistic)
+            
+            table_name = f'dunnett_test({df_type})'
+            self.update_table_dict(table_name, res_df)
+            self.show_table(res_df, title=table_name)
+            
             self.pushButton_plot_top_heatmap.setEnabled(True)
             self.pushButton_get_top_cross_table.setEnabled(True)
             
             # update comboBox_top_heatmap_table_list
-            table_name = f'dunnett_test({df_type})'
             if table_name not in self.comboBox_top_heatmap_table_list:
                 self.comboBox_top_heatmap_table_list.append(table_name)
                 self.comboBox_top_heatmap_table_list.reverse()
