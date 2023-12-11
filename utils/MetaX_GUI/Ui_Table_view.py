@@ -6,13 +6,15 @@ from PyQt5.QtGui import QIcon
 import os
 import io
 import csv
+import sys
 
 class Ui_Table_view(QtWidgets.QDialog):
 
-    def __init__(self, df=None, parent=None):
+    def __init__(self, df=None, parent=None, title='Table View'):
         super().__init__(parent)  
         self.df = df.copy() # prevent the original df from being modified
-        self.df.reset_index(inplace=True) 
+        self.df.reset_index(inplace=True)
+        self.title = title
         self.current_page = 0  #set the current page number to 0
         self.rows_per_page = 100  # set the number of rows per page to 100
         self.setupUi(self)
@@ -22,6 +24,7 @@ class Ui_Table_view(QtWidgets.QDialog):
         else:
             icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
             self.setWindowIcon(QIcon(icon_path))
+        self.setWindowTitle(title)
 
 
     def setupUi(self, Dialog):
@@ -112,19 +115,34 @@ class Ui_Table_view(QtWidgets.QDialog):
 
     def export_tsv(self):
         try:
-            export_path, filetype = QFileDialog.getSaveFileName(self, 'Export Table', self.desk_path, 
-                                                                'Text Files (*.tsv);;CSV Files (*.csv)')
+            default_filename = os.path.join(self.desk_path, self.title + '.tsv')
+            export_path, filetype = QFileDialog.getSaveFileName(self, 'Export Table', default_filename, 
+                                                            'Text Files (*.tsv);;CSV Files (*.csv);;Excel Files (*.xlsx)')
+
             if export_path == '':
                 return
             if filetype == 'Text Files (*.tsv)':
                 self.df.to_csv(export_path, sep='\t', index=False)
             elif filetype == 'CSV Files (*.csv)':
                 self.df.to_csv(export_path, sep=',', index=False)
+            elif filetype == 'Excel Files (*.xlsx)':
+                self.df.to_excel(export_path, index=False)
             else:
                 QMessageBox.critical(self, 'Error', 'Filetype not supported.')
                 return
 
-            QMessageBox.information(self, 'Information', 'Export successfully!')
+
+            reply = QMessageBox.question(self, 'Information', 'Export successfully!\n\nDo you want to open the exported file?',
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                if sys.platform == "win32":
+                    os.startfile(export_path, 'open') # open the file with default application
+                else:
+                    # use default application to open the file
+                    opener = "open" if sys.platform == "darwin" else "xdg-open"
+                    subprocess.call([opener, export_path])
+                    
+
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 

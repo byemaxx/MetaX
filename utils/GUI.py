@@ -1095,8 +1095,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # show table in Ui_Table_view
     def show_table(self, df, title='Table'):
         # table_dialog = Ui_Table_view(df, self.MainWindow)
-        table_dialog = Ui_Table_view(df)
-        table_dialog.setWindowTitle(title)
+        table_dialog = Ui_Table_view(df, parent=None,  title=title)
+        # table_dialog.setWindowTitle(title)
         table_dialog.show()
 
         # add to table_dialogs to show all table_dialogs
