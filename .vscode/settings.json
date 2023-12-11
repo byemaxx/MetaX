@@ -1,7 +1,0 @@
-{
-    "[python]": {
-        "editor.defaultFormatter": "null"
-    },
-    "python.formatting.provider": "none",
-    "python.analysis.typeCheckingMode": "basic",
-}
