@@ -14,7 +14,7 @@ import argparse
 import os
 
 # run the function proteins_to_taxa_func
-def run_pep2taxafunc(proteins, db_path, threshold):
+def run_pep2taxafunc(proteins, db_path, threshold) -> dict:
     protein_list = str(proteins).split(';')
     #print(protein_list)
     try:
@@ -67,8 +67,11 @@ def run_2_result(df, db_path, threshold):
     df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
     df_t = pd.concat([df_t, df_t0], axis=1)
     # change the column names of 'Description'	'Description_prop' to 'eggNOG_Description'	'eggNOG_Description_prop'
-    df_t.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
-    
+    if 'Description' in df_t.columns:
+        df_t.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
+    else:
+        print('Warning: column name "Description" does not exist!, skip renaming...')
+        
     # try to add pathway name and EC name
     df_t = add_additional_columns(df_t)
     # add the columns of None and None_prop

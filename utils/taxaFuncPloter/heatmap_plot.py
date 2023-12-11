@@ -327,7 +327,105 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
 
+
+    # For taxa, func and peptides table
+    def plot_heatmap_of_dunnett_test_res(self, res_df_dict,  pvalue:float = 0.05,scale:str = None,
+                                       fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
+        #! 只画t-statistic的heatmap, 用p-value过滤
+        import pandas as pd
+        import numpy as np
         
+        def scale_data(dft, scale):
+            if scale == 'row':
+                # 对每行单独应用双向缩放
+                for index, row in dft.iterrows():
+                    max_val = abs(row).max()
+                    if max_val != 0:
+                        dft.loc[index] = row / max_val
+            elif scale == 'col':
+                # 对每列单独应用双向缩放
+                for col in dft:
+                    max_val = abs(dft[col]).max()
+                    if max_val != 0:
+                        dft[col] = dft[col] / max_val
+            elif scale == 'all':
+                # 对整个数据框应用双向缩放
+                max_val = abs(dft.values).max()
+                if max_val != 0:
+                    dft = dft / max_val
+
+            return dft
+
+
+        # get the t-statistic dataframe, p-value dataframe
+        df_pvalue = res_df_dict['P-value']
+        df_tstatistic = res_df_dict['t-statistic']
+
+        # only extract the location of pvalue < 0.05
+        dft = np.where(df_pvalue > pvalue, 0 , df_tstatistic)
+        dft = pd.DataFrame(dft, index=df_pvalue.index, columns=df_pvalue.columns)
+        # fill na with 0
+        dft = dft.fillna(0, inplace=False)
+
+        # remove all 0 rows
+        dft = dft.loc[~(dft==0).all(axis=1)]
+        
+        dft = self.tfobj.replace_if_two_index(dft)
+            
+
+        if len(dft) < 2:
+            row_cluster = False
+            print('Warning: There is only one row in the dataframe, row_cluster is set to False')
+        if len(dft.columns) < 2:
+            col_cluster = False
+            print('Warning: There is only one column in the dataframe, col_cluster is set to False')
+
+
+        if fig_size is None:
+            fig_size = (30,30)
+
+
+
+        try:
+
+            if rename_taxa:
+                dft = self.rename_taxa(dft)
+
+
+            # scale the data
+            if scale:
+                dft = scale_data(dft, scale)
+                
+            
+            if cmap is None:
+                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=20)
+
+            
+            # 标准化颜色映射以使 0 处为白色
+            from matplotlib.colors import TwoSlopeNorm
+            vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
+            norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
+
+
+            fig = sns.clustermap(dft, cmap= cmap, figsize=fig_size, norm=norm, 
+                                col_cluster=col_cluster, row_cluster=row_cluster,
+                                cbar_kws = dict(label='t-statistic'),
+                                   )
+
+
+            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
+            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+            fig.ax_col_dendrogram.set_title(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", fontsize=font_size)
+
+            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+            plt.tight_layout()
+            plt.show()
+            return fig
+        except Exception as e:
+            print(f'Error: {e}')
+            plt.close('all')
+            raise ValueError(f"Error: {e}")
 
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 

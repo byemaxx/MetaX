@@ -6,6 +6,7 @@ from scipy.stats import ttest_ind
 from tqdm.auto import tqdm
 from pydeseq2.ds import DeseqStats
 from pydeseq2.dds import DeseqDataSet
+from scipy.stats import dunnett
 
 class CrossTest:
     def __init__(self, tfa):
@@ -135,7 +136,112 @@ class CrossTest:
         res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
         return res_all
     
+    # output: a dict of two dataframe, one is p-value, one is t-statistic
+    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> dict:
+        group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
+        
+        # check if the control_group is in group_list_all
+        if control_group not in group_list_all:
+            raise ValueError(f"control_group must be in {group_list_all}")
 
+        if group_list is None:
+            group_list = group_list_all
+            group_list.remove(control_group)
+        else:
+            # check if the group_list is in group_list_all
+            if any(i not in group_list_all for i in group_list):
+                raise ValueError(f"groups must be in {group_list_all}")
+            # sort group_list incase the order is not correct for final result
+            group_list = sorted(set(group_list))
+            
+         
+   
+        secondary_index = None # give a default value to prevent error when print
+        if df_type == 'taxa-func':
+            df, primary_index, secondary_index = self.tfa.taxa_func_df, 'Taxon', self.tfa.func_name
+        elif df_type == 'func-taxa':
+            df, primary_index, secondary_index = self.tfa.func_taxa_df, self.tfa.func_name, 'Taxon'
+        elif df_type == 'taxa':
+            df, primary_index = self.tfa.taxa_df, 'Taxon'
+        elif df_type == 'func':
+            df, primary_index = self.tfa.func_df, self.tfa.func_name
+        elif df_type == 'peptide':
+            df, primary_index = self.tfa.peptide_df, 'Sequence'
+        else:
+            raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
+
+        res_dict = {primary_index: [], "P-value": [], "t-statistic": []}
+        
+        if df_type in ['taxa-func', 'func-taxa']:
+            print(f"Dunnett's test for {df_type} in {group_list}")
+            res_dict[secondary_index] = []
+        else:
+            print(f"Dunnett's test for {primary_index} in {group_list}")
+        print(f"control group: {control_group}")
+        
+        print(f"primary index: {primary_index}", f"secondary index: {secondary_index}", sep='\n')
+        
+        # start dunnett for each row
+        for row in tqdm(df.iterrows(), total=len(df)):
+            # row[0] is the index, row[1] is the row data
+            primary_value = row[0]
+            if df_type in ['taxa-func', 'func-taxa']: # if the df is taxa-func or func-taxa, the index is a tuple
+                primary_value = row[0][0]
+                secondary_value = row[0][1]
+                res_dict[secondary_index].append(secondary_value)
+            # else the index is a string, and the secondary is empty
+            
+            res_dict[primary_index].append(primary_value)
+            
+
+           
+            test_dict = {group: row[1][self.tfa.get_sample_list_in_a_group(group)].to_list() for group in group_list}
+
+            list_for_ttest = []
+            for group, values in test_dict.items():
+                # print(group, values)
+                # check if the sample size at least 2
+                if len(values) < 2:
+                    raise ValueError(f"sample size must be more than 1 for Dunnett's test, but {group} has only {len(values)} sample(s)")                
+                list_for_ttest.append(values)
+                
+            #! check if the sample size are the same is not necessary for Dunnett's test
+            # if len(set([len(i) for i in list_for_ttest])) != 1:
+            #     raise ValueError("sample size must be the same for Dunnett's test")
+                
+            
+            dunnett_res = dunnett(*list_for_ttest, control=row[1][self.tfa.get_sample_list_in_a_group(control_group)].to_list())
+            res_dict["P-value"].append(dunnett_res.pvalue)
+            res_dict["t-statistic"].append(dunnett_res.statistic)
+            
+
+        
+        res_df = pd.DataFrame(res_dict)
+        if df_type in ['taxa-func', 'func-taxa']:
+            # set multi-index
+            res_df.set_index([primary_index, secondary_index], inplace=True)
+        else:
+            res_df.set_index(primary_index, inplace=True)
+            
+        
+        res_df_pvalue = res_df.copy()
+        res_df_pvalue.drop(columns=['t-statistic'], inplace=True)
+        for index, group_name in enumerate(group_list):
+            res_df_pvalue[group_name] = res_df_pvalue['P-value'].apply(lambda x: x[index])
+        res_df_pvalue.drop(columns=['P-value'], inplace=True)
+        
+        res_df_tstatistic = res_df.copy()
+        res_df_tstatistic.drop(columns=['P-value'], inplace=True)
+        for index, group_name in enumerate(group_list):
+            res_df_tstatistic[group_name] = res_df_tstatistic['t-statistic'].apply(lambda x: x[index])
+        res_df_tstatistic.drop(columns=['t-statistic'], inplace=True)
+        
+
+        res_df_dict = {'P-value': res_df_pvalue, 't-statistic': res_df_tstatistic}
+        return res_df_dict
+            
+            
+            
     def get_stats_deseq2(self, df, group_list: list):
 
         sample_list = []

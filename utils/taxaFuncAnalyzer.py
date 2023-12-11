@@ -265,6 +265,25 @@ class TaxaFuncAnalyzer:
         cross_test = CrossTest(self)
         return cross_test.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value,
                                                        taxa_res_df=taxa_res_df, func_res_df=func_res_df, taxa_func_res_df=taxa_func_res_df)
+
+    # compare all the groups with the control group
+    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> dict:
+            """
+            Calculate the p-value and t-statistic using Dunnett's test for multiple group comparisons.
+
+            Args:
+                control_group (str, required): Name of the control group.
+                group_list (list, optional): List of group names to compare. Defaults to None means all groups.
+                df_type (str, optional): Type of dataframe to use for the test. Defaults to 'taxa-func'.
+
+            Returns:
+                dict: A dictionary containing two dataframes, one for p-values and one for t-statistics.
+            """
+            cross_test = CrossTest(self)
+            return cross_test.get_stats_dunnett_test(group_list=group_list, control_group=control_group, df_type=df_type)
+        
+        
+        
     
 ######### Cross Test End #########
 
