@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 498, 348))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 498, 344))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -2730,6 +2730,9 @@ class Ui_metaX_main(object):
         self.comboBox_db_type.addItem("")
         self.comboBox_db_type.addItem("")
         self.comboBox_db_type.addItem("")
+        self.comboBox_db_type.addItem("")
+        self.comboBox_db_type.addItem("")
+        self.comboBox_db_type.addItem("")
         self.gridLayout_31.addWidget(self.comboBox_db_type, 1, 2, 1, 2)
         self.pushButton_run_db_builder = QtWidgets.QPushButton(self.tab_11)
         self.pushButton_run_db_builder.setObjectName("pushButton_run_db_builder")
@@ -2871,7 +2874,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1063, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1063, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -3387,14 +3390,17 @@ class Ui_metaX_main(object):
         self.label_9.setText(_translate("metaX_main", "genomes-all_metadata Table (Optional)"))
         self.pushButton_get_all_meta_path.setText(_translate("metaX_main", "Open"))
         self.pushButton_get_db_save_path.setText(_translate("metaX_main", "Open"))
-        self.comboBox_db_type.setItemText(0, _translate("metaX_main", "human-gut(v2.0.1)"))
-        self.comboBox_db_type.setItemText(1, _translate("metaX_main", "human-oral(v1.0)"))
-        self.comboBox_db_type.setItemText(2, _translate("metaX_main", "chicken-gut(v1.0)"))
-        self.comboBox_db_type.setItemText(3, _translate("metaX_main", "cow-rumen(v1.0)"))
-        self.comboBox_db_type.setItemText(4, _translate("metaX_main", "pig-gut(v1.0)"))
-        self.comboBox_db_type.setItemText(5, _translate("metaX_main", "marine(v1.0)"))
-        self.comboBox_db_type.setItemText(6, _translate("metaX_main", "zebrafish-fecal(v1.0)"))
-        self.comboBox_db_type.setItemText(7, _translate("metaX_main", "non-model-fish-gut(v2.0)"))
+        self.comboBox_db_type.setItemText(0, _translate("metaX_main", "human-gut(v2.0.2)"))
+        self.comboBox_db_type.setItemText(1, _translate("metaX_main", "human-oral(v1.0.1)"))
+        self.comboBox_db_type.setItemText(2, _translate("metaX_main", "human-vaginal(1.0)"))
+        self.comboBox_db_type.setItemText(3, _translate("metaX_main", "mouse_gut(1.0)"))
+        self.comboBox_db_type.setItemText(4, _translate("metaX_main", "chicken-gut(v1.0.1)"))
+        self.comboBox_db_type.setItemText(5, _translate("metaX_main", "cow-rumen(v1.0.1)"))
+        self.comboBox_db_type.setItemText(6, _translate("metaX_main", "pig-gut(v1.0)"))
+        self.comboBox_db_type.setItemText(7, _translate("metaX_main", "marine(v1.0)"))
+        self.comboBox_db_type.setItemText(8, _translate("metaX_main", "zebrafish-fecal(v1.0)"))
+        self.comboBox_db_type.setItemText(9, _translate("metaX_main", "non-model-fish-gut(v2.0)"))
+        self.comboBox_db_type.setItemText(10, _translate("metaX_main", "honeybee-gut(1.0.1)"))
         self.pushButton_run_db_builder.setText(_translate("metaX_main", "Go"))
         self.tabWidget_5.setTabText(self.tabWidget_5.indexOf(self.tab_11), _translate("metaX_main", "From MGnify"))
         self.label_88.setText(_translate("metaX_main", "Database Save Path"))

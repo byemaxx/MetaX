@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>498</width>
-                 <height>348</height>
+                 <height>344</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5268,22 +5268,32 @@
                 <widget class="QComboBox" name="comboBox_db_type">
                  <item>
                   <property name="text">
-                   <string>human-gut(v2.0.1)</string>
+                   <string>human-gut(v2.0.2)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>human-oral(v1.0)</string>
+                   <string>human-oral(v1.0.1)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>chicken-gut(v1.0)</string>
+                   <string>human-vaginal(1.0)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>cow-rumen(v1.0)</string>
+                   <string>mouse_gut(1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>chicken-gut(v1.0.1)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>cow-rumen(v1.0.1)</string>
                   </property>
                  </item>
                  <item>
@@ -5304,6 +5314,11 @@
                  <item>
                   <property name="text">
                    <string>non-model-fish-gut(v2.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>honeybee-gut(1.0.1)</string>
                   </property>
                  </item>
                 </widget>
@@ -5567,7 +5582,7 @@
      <x>0</x>
      <y>0</y>
      <width>1063</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

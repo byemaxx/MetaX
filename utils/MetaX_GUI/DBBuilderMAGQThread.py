@@ -34,3 +34,6 @@ class EmittingStream(QObject):
 
     def write(self, text):
         self.text_written.emit(str(text))
+
+if __name__ == '__main__':
+    print('test')

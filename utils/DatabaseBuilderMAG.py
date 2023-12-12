@@ -24,14 +24,19 @@ import multiprocessing
 
 
 def download_mgyg2taxa(save_path, db_type = "human-gut"):
-    url_dict = {"human-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.1/genomes-all_metadata.tsv",
-                "chicken-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0/genomes-all_metadata.tsv",
-                "cow-rumen": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0/genomes-all_metadata.tsv",
-                "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0/genomes-all_metadata.tsv",
+    url_dict = {
+                "chicken-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0.1/genomes-all_metadata.tsv",
+                "cow-rumen": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0.1/genomes-all_metadata.tsv",
+                "honeybee-gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/honeybee-gut/v1.0.1/genomes-all_metadata.tsv",
+                "human-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2/genomes-all_metadata.tsv",
+                "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1/genomes-all_metadata.tsv",
+                "human-vaginal": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0/genomes-all_metadata.tsv",
                 "marine": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v1.0/genomes-all_metadata.tsv",
+                "mouse_gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse_gut/v1.0/genomes-all_metadata.tsv",
                 "non-model-fish-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0/genomes-all_metadata.tsv",
                 "pig-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0/genomes-all_metadata.tsv",
-                "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/genomes-all_metadata.tsv"}
+                "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/genomes-all_metadata.tsv"                
+                }
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -79,14 +84,22 @@ def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv',
 
 
 def create_download_list(mgyg_list, db_type = "human-gut"):
-    url_dict = {"human-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.1/species_catalogue",
-                "chicken-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0/species_catalogue",
-                "cow-rumen": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0/species_catalogue",
-                "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0/species_catalogue",
+    url_dict = {
+                "chicken-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0.1/species_catalogue",
+                "cow-rumen": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0.1/species_catalogue",
+                "honeybee-gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/honeybee-gut/v1.0.1/species_catalogue",
+                "human-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2/species_catalogue",
+                "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1/species_catalogue",
+                "human-vaginal": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0/species_catalogue",
                 "marine": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v1.0/species_catalogue",
+                "mouse_gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse_gut/v1.0/species_catalogue",
                 "non-model-fish-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0/species_catalogue",
                 "pig-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0/species_catalogue",
-                "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/species_catalogue"}
+                "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/species_catalogue",
+                
+                
+                
+                }
     url = url_dict[db_type]
     url_list = []
     for i in mgyg_list:
@@ -131,6 +144,8 @@ def read_file(args):
     file_path = args[0]
     return pd.read_csv(file_path, sep='\t', header=0, index_col= None)
 
+
+#! 会引发重复加载 主程序动画的问题, 有待解决
 def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
     
 
