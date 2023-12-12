@@ -2818,6 +2818,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         width = self.spinBox_basic_pca_width.value()
         height = self.spinBox_basic_pca_height.value()
         font_size = self.spinBox_basic_pca_label_font_size.value()
+        font_transparency = self.doubleSpinBox_basic_pca_label_font_transparency.value()
+        adjust_label = self.checkBox_pca_if_adjust_pca_label.isChecked()
         
         # get sample list
         if self.radioButton_basic_pca_group.isChecked():
@@ -2844,7 +2846,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, 
+                                                 width=width, height=height, font_size=font_size, 
+                                                 font_transparency=font_transparency, adjust_label=adjust_label)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')

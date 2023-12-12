@@ -65,7 +65,7 @@ class BasicPlot:
         return ax
         
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8, font_size = 10):
+    def plot_pca_sns(self, df, table_name = 'Table', show_label = True, width=10, height=8, font_size = 10, font_transparency = 0.6, adjust_label:bool = False):
         try:
             dft= df.copy()
             
@@ -88,8 +88,11 @@ class BasicPlot:
                                 hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
-                            color='black', alpha=0.6) for i in range(len(new_sample_name))]
-            # text = adjust_text(text)
+                            color='black', alpha=font_transparency) for i in range(len(new_sample_name))]
+                if adjust_label:
+                    from adjustText import adjust_text
+                    text = adjust_text(text)
+                
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
                         fontsize=15, fontweight='bold')
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')

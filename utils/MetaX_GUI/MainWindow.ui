@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>498</width>
-                 <height>344</height>
+                 <height>348</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1020,54 +1020,10 @@
                 <string>PCA, Corr and Box</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_26">
-                <item row="3" column="0">
-                 <widget class="QLabel" name="label_70">
-                  <property name="text">
-                   <string>Table</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="QComboBox" name="comboBox_table4pca">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Peptide</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Taxa</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Function</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Taxa-Function</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="8" column="0">
-                 <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
-                  <property name="text">
-                   <string>show Fliers</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="0">
+                <item row="5" column="0">
                  <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -1080,7 +1036,79 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0" colspan="5">
+                <item row="5" column="1">
+                 <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Adjust Labels</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="1" colspan="3">
+                 <widget class="QPushButton" name="pushButton_plot_box_sns">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Plot Box</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="2">
+                 <widget class="QPushButton" name="pushButton_plot_pca_sns">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot PCA</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1" colspan="3">
+                 <widget class="QPushButton" name="pushButton_plot_corr">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Plot Corr</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                  <property name="text">
+                   <string>show Fliers</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="3">
+                 <widget class="QPushButton" name="pushButton_plot_pca_js">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot 3D PCA</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="4">
                  <layout class="QGridLayout" name="gridLayout_35">
                   <item row="0" column="1">
                    <widget class="QComboBox" name="comboBox_basic_pca_meta">
@@ -1111,6 +1139,9 @@
                   <item row="0" column="2">
                    <layout class="QVBoxLayout" name="verticalLayout_basic_pca_group"/>
                   </item>
+                  <item row="1" column="1" colspan="2">
+                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
+                  </item>
                   <item row="1" column="0">
                    <widget class="QRadioButton" name="radioButton_basic_pca_sample">
                     <property name="text">
@@ -1118,72 +1149,76 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1" colspan="2">
-                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
-                  </item>
                  </layout>
                 </item>
-                <item row="7" column="1" colspan="4">
-                 <widget class="QPushButton" name="pushButton_plot_corr">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Plot Corr</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="1" colspan="4">
-                 <widget class="QPushButton" name="pushButton_plot_box_sns">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Plot Box</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0">
+                <item row="6" column="0">
                  <widget class="QCheckBox" name="checkBox_corr_cluster">
                   <property name="text">
                    <string>Cluster</string>
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="1" colspan="2">
-                 <widget class="QPushButton" name="pushButton_plot_pca_sns">
-                  <property name="enabled">
-                   <bool>false</bool>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_70">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="text">
+                   <string>Table</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QComboBox" name="comboBox_table4pca">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                  <property name="text">
-                   <string>Plot PCA</string>
-                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Peptide</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Taxa</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Function</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Taxa-Function</string>
+                   </property>
+                  </item>
                  </widget>
                 </item>
-                <item row="6" column="3" colspan="2">
-                 <widget class="QPushButton" name="pushButton_plot_pca_js">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot 3D PCA</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="1" colspan="4">
+                <item row="2" column="3">
                  <layout class="QHBoxLayout" name="horizontalLayout">
+                  <item>
+                   <widget class="QLabel" name="label_94">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QSpinBox" name="spinBox_basic_pca_width">
                     <property name="minimum">
@@ -1243,20 +1278,33 @@
                     </property>
                    </widget>
                   </item>
+                  <item>
+                   <widget class="QLabel" name="label_116">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Label Font Transparency</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="doubleSpinBox_basic_pca_label_font_transparency">
+                    <property name="maximum">
+                     <double>1.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.050000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>0.800000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
-                </item>
-                <item row="4" column="0">
-                 <widget class="QLabel" name="label_94">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Width</string>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </widget>
@@ -2163,7 +2211,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_3">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5582,7 +5630,7 @@
      <x>0</x>
      <y>0</y>
      <width>1063</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
