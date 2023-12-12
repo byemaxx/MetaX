@@ -151,10 +151,12 @@ class CrossTest:
             # check if the group_list is in group_list_all
             if any(i not in group_list_all for i in group_list):
                 raise ValueError(f"groups must be in {group_list_all}")
+            # check if the control_group is in group_list
+            if control_group in group_list:
+                group_list.remove(control_group)
             # sort group_list incase the order is not correct for final result
             group_list = sorted(set(group_list))
             
-         
    
         secondary_index = None # give a default value to prevent error when print
         if df_type == 'taxa-func':
