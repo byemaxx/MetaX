@@ -1,12 +1,13 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 class CheckableComboBox(QtWidgets.QComboBox):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, meta_df = None):
         super(CheckableComboBox, self).__init__(parent)
         self.view().pressed.connect(self.handleItemPressed)
         self.setModel(QtGui.QStandardItemModel(self))
         self.checkedItemsOrder = []  # 用于存储勾选项的顺序
         self._popup_open = False
+        self.meta_df = meta_df
 
 
     def showPopup(self):
@@ -55,17 +56,45 @@ class CheckableComboBox(QtWidgets.QComboBox):
         return self.checkedItemsOrder  # 返回勾选项的顺序列表
 
 
-    # 添加右键菜单
     def contextMenuEvent(self, event):
         menu = QtWidgets.QMenu(self)
+        
         select_all_action = QtWidgets.QAction("Select All", self)
         select_all_action.triggered.connect(self.selectAll)
+        
         unselect_all_action = QtWidgets.QAction("Unselect All", self)
         unselect_all_action.triggered.connect(self.unselectAll)
+
         menu.addAction(select_all_action)
         menu.addAction(unselect_all_action)
-        menu.exec_(self.mapToGlobal(event.pos()))
 
+        if self.meta_df is not None:
+            add_samples_action = QtWidgets.QMenu("Add samples by group", self)
+            for col in self.meta_df.columns[1:]:  # 从第二列开始
+                group_menu = QtWidgets.QMenu(col, self)
+                for group_name in self.meta_df[col].unique():
+                    group_action = QtWidgets.QAction(group_name, self)
+                    group_action.triggered.connect(lambda checked, col=col, group_name=group_name: self.addSamplesByGroup(col, group_name))
+                    group_menu.addAction(group_action)
+                add_samples_action.addMenu(group_menu)
+            menu.addMenu(add_samples_action)
+
+        menu.exec_(self.mapToGlobal(event.pos()))
+        
+        
+    def addSamplesByGroup(self, column_name, group_name):
+        if self.meta_df is not None:
+            samples_to_add = self.meta_df[self.meta_df[column_name] == group_name]['Sample']
+            for sample in samples_to_add:
+                if sample not in self.checkedItemsOrder:
+                    # self.addItem(sample)
+                    self.checkedItemsOrder.append(sample)
+                    index = self.findText(sample)
+                    if index != -1:
+                        item = self.model().item(index, 0)
+                        item.setCheckState(QtCore.Qt.Checked)
+                        
+                        
     def selectAll(self):
         self.checkedItemsOrder = []  # 清空当前的勾选顺序列表
         for i in range(self.count()):

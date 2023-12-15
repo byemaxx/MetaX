@@ -1746,7 +1746,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     layout.itemAt(0).widget().deleteLater()
                 except Exception as e:
                     pass
-                new_combobox = CheckableComboBox()
+                new_combobox = CheckableComboBox(meta_df = self.tfa.meta_df)
                 setattr(self, combobox_name, new_combobox)  # Assign to the attribute
                 layout.addWidget(new_combobox)
                 for sample in sample_list:
