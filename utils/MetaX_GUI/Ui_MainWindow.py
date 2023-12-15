@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_metaX_main(object):
     def setupUi(self, metaX_main):
         metaX_main.setObjectName("metaX_main")
-        metaX_main.resize(1063, 569)
+        metaX_main.resize(1063, 634)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 498, 348))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 340, 49))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -3423,7 +3423,7 @@ class Ui_metaX_main(object):
         self.comboBox_db_type.setItemText(0, _translate("metaX_main", "human-gut(v2.0.2)"))
         self.comboBox_db_type.setItemText(1, _translate("metaX_main", "human-oral(v1.0.1)"))
         self.comboBox_db_type.setItemText(2, _translate("metaX_main", "human-vaginal(1.0)"))
-        self.comboBox_db_type.setItemText(3, _translate("metaX_main", "mouse_gut(1.0)"))
+        self.comboBox_db_type.setItemText(3, _translate("metaX_main", "mouse-gut(1.0)"))
         self.comboBox_db_type.setItemText(4, _translate("metaX_main", "chicken-gut(v1.0.1)"))
         self.comboBox_db_type.setItemText(5, _translate("metaX_main", "cow-rumen(v1.0.1)"))
         self.comboBox_db_type.setItemText(6, _translate("metaX_main", "pig-gut(v1.0)"))

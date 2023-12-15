@@ -115,7 +115,9 @@ class Ui_Table_view(QtWidgets.QDialog):
 
     def export_tsv(self):
         try:
-            default_filename = os.path.join(self.desk_path, self.title + '.tsv')
+            # make sure the file name is valid
+            filename = self.title.replace('/', '_').replace('\\', '_').replace(':', '_').replace('*', '_').replace('?', '_').replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_')
+            default_filename = os.path.join(self.desk_path, filename + '.tsv')
             export_path, filetype = QFileDialog.getSaveFileName(self, 'Export Table', default_filename, 
                                                             'Text Files (*.tsv);;CSV Files (*.csv);;Excel Files (*.xlsx)')
 

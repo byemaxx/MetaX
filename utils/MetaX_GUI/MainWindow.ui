@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1063</width>
-    <height>569</height>
+    <height>634</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>498</width>
-                 <height>348</height>
+                 <width>340</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5331,7 +5331,7 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>mouse_gut(1.0)</string>
+                   <string>mouse-gut(1.0)</string>
                   </property>
                  </item>
                  <item>

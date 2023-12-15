@@ -45,8 +45,11 @@ class BasicStats:
     def get_stats_taxa_level(self) -> pd.DataFrame:
         df = self.tfa.original_df.copy()
         df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'unknown')]
-
         dft = df['Taxon'].str.split('|', expand=True)
+        # check if the taxa split by | is the same
+        if len(dft.columns) != 7:
+            raise ValueError(
+                f'The taxa level is not 7, please check the Taxon split by "|"')
         # dft.columns = ['d', 'p', 'c', 'o', 'f', 'g', 's']
         dft.columns = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         

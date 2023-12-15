@@ -32,7 +32,7 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
                 "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1/genomes-all_metadata.tsv",
                 "human-vaginal": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0/genomes-all_metadata.tsv",
                 "marine": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v1.0/genomes-all_metadata.tsv",
-                "mouse_gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse_gut/v1.0/genomes-all_metadata.tsv",
+                "mouse-gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/genomes-all_metadata.tsv",
                 "non-model-fish-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0/genomes-all_metadata.tsv",
                 "pig-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0/genomes-all_metadata.tsv",
                 "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/genomes-all_metadata.tsv"                
@@ -92,7 +92,7 @@ def create_download_list(mgyg_list, db_type = "human-gut"):
                 "human-oral": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1/species_catalogue",
                 "human-vaginal": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0/species_catalogue",
                 "marine": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v1.0/species_catalogue",
-                "mouse_gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse_gut/v1.0/species_catalogue",
+                "mouse-gut": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/species_catalogue",
                 "non-model-fish-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0/species_catalogue",
                 "pig-gut": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0/species_catalogue",
                 "zebrafish-fecal": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0/species_catalogue",
