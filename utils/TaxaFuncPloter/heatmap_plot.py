@@ -243,6 +243,11 @@ class HeatmapPlot:
             groups_list.append(group)
         color_list = assign_colors(groups_list)
         mat.columns = new_col_names
+        
+        # if only one column, remove col_cluster, set scale to None
+        if len(mat.columns) < 2:
+            col_cluster = False
+            scale = None
 
         fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
                         cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
