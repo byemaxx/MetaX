@@ -57,6 +57,7 @@ from MetaX.utils.TaxaFuncPloter.network_plot import NetworkPlot
 from MetaX.utils.TaxaFuncPloter.trends_plot import TrendsPlot
 from MetaX.utils.TaxaFuncPloter.trends_plot_js import TrendsPlot_js
 from MetaX.utils.TaxaFuncPloter.pca_plot_js import PcaPlot_js
+from MetaX.utils.TaxaFuncPloter.diversity_plot import DiversityPlot
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -254,6 +255,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
         self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
         self.pushButton_plot_pca_js.clicked.connect(lambda: self.plot_basic_info_sns('pca_3d'))
+        self.pushButton_plot_beta_div.clicked.connect(lambda: self.plot_basic_info_sns('beta_div'))
+        self.pushButton_plot_alpha_div.clicked.connect(lambda: self.plot_basic_info_sns('alpha_div'))
+        
+        
         ### Heatmap and Bar
         self.comboBox_basic_table.currentIndexChanged.connect(self.set_basic_heatmap_selection_list)
 
@@ -265,7 +270,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
         self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
-
         
         ### Peptide Qeruy
         self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
@@ -1850,6 +1854,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def enable_multi_button(self, state=True):
         list_button = [
         self.pushButton_plot_pca_sns,
+        self.pushButton_plot_beta_div,
+        self.pushButton_plot_alpha_div,
+        self.pushButton_plot_alpha_div,
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
@@ -2885,6 +2892,30 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        
+        elif method == 'alpha_div':
+            try:
+                self.show_message('Alpha diversity is running, please wait...')
+                metric = self.comboBox_alpha_div_method.currentText()
+                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, font_size=font_size)
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_alpha_diversity error: {error_message}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+        elif method == "beta_div":
+            try:
+                self.show_message('Beta diversity is running, please wait...')
+                metric = self.comboBox_beta_div_method.currentText()
+                DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
+                                                            font_size=font_size, font_transparency = font_transparency, 
+                                                            show_label = show_label, adjust_label = adjust_label
+                                                            )
+                                                        
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_beta_diversity error: {error_message}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            
 
     # differential analysis
     def plot_top_heatmap(self):

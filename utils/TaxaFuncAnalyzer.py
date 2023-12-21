@@ -39,6 +39,7 @@ class TaxaFuncAnalyzer:
         self.func_list = None # all the func in the taxaFunc table which has _prop
         self.func_name = None
 
+        self.taxa_level = None
         self.clean_df = None
         self.peptide_df = None
         self.taxa_df = None
@@ -369,6 +370,8 @@ class TaxaFuncAnalyzer:
             'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
             'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         }
+        # set taxa_level info
+        self.taxa_level = level_mapping[level][0]
 
         if level in level_mapping:
             df_t = df[df['LCA_level'].isin(level_mapping[level])]
