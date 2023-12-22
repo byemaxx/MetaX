@@ -65,7 +65,7 @@ class DiversityPlot(object):
             df = pd.DataFrame(data)
             # plot boxplot
             plt.figure(figsize=(width, height))
-            fig = sns.boxplot(x='Group', y='Diversity', data=df)
+            fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='Group')
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90)
             fig.set_xlabel('Group', fontsize=font_size)
             fig.set_ylabel(f'{metric} Diversity')

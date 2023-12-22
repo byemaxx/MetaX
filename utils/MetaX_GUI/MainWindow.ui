@@ -1355,6 +1355,41 @@
                     <string>jaccard</string>
                    </property>
                   </item>
+                  <item>
+                   <property name="text">
+                    <string>euclidean</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>manhattan</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>canberra</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>chebyshev</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>dice</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>hamming</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>yule</string>
+                   </property>
+                  </item>
                  </widget>
                 </item>
                 <item row="6" column="2">
