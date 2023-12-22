@@ -2897,7 +2897,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.show_message('Alpha diversity is running, please wait...')
                 metric = self.comboBox_alpha_div_method.currentText()
-                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, font_size=font_size)
+                plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
+                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, font_size=font_size, plot_all_samples=plot_all_samples)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_alpha_diversity error: {error_message}', 'e')

@@ -15,7 +15,9 @@ class DiversityPlot(object):
         
 
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
-                             width:int = 10, height:int = 8,  font_size:int = 10):
+                             width:int = 10, height:int = 8,  font_size:int = 10,
+                             plot_all_samples:bool = False
+                             ):
         
         if sample_list is None:
             sample_list = self.tfa.sample_list
@@ -40,12 +42,15 @@ class DiversityPlot(object):
         try:
             df = self.tfa.taxa_df.copy()
             df = df[sample_list]
-            df_transposed = df.T
-            
+            df_transposed = df.T                
             group_diversity = {}
             # 遍历每个样本，计算其alpha多样性，并根据所属组别进行分类
             for sample_id, row in df_transposed.iterrows():
-                group = self.tfa.get_group_of_a_sample(sample_id)
+                if not plot_all_samples:
+                    group = self.tfa.get_group_of_a_sample(sample_id)
+                else:
+                    group = sample_id
+                    
                 if group:
                     if group not in group_diversity:
                         group_diversity[group] = []
@@ -65,7 +70,7 @@ class DiversityPlot(object):
             fig.set_xlabel('Group', fontsize=font_size)
             fig.set_ylabel(f'{metric} Diversity')
             fig.set_title(f'Alpha Diversity ({metric}) of Each Group')
-
+            plt.tight_layout()
             plt.show()
             return fig
         except Exception as e:
@@ -84,11 +89,16 @@ class DiversityPlot(object):
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,
-                              adjust_label:bool = False):
+                              adjust_label:bool = False ):
 
         if sample_list is None:
             sample_list = self.tfa.sample_list
         
+        if len(sample_list) < 2:
+            raise ValueError(f'Invalid sample_list: {sample_list}. The length of sample_list must be greater than 1.')
+        
+         
+        group_list_for_hue = [self.tfa.get_group_of_a_sample(sample_id) for sample_id in sample_list]
         
 
         try:
@@ -102,8 +112,7 @@ class DiversityPlot(object):
 
             pcoa_res = pcoa(bc_dm)
             plt.figure(figsize=(width, height))
-            # TODO: FIX THE BUG OF HUE
-            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, hue=self.tfa.group_list)
+            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, hue=group_list_for_hue)
             if show_label:
                 for i, txt in enumerate(pcoa_res.samples.index):
                     if adjust_label:
@@ -115,8 +124,8 @@ class DiversityPlot(object):
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100))
             # set title
             plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)')
+            plt.tight_layout()
             plt.show()
-            
             
             return fig
         except Exception as e:
