@@ -34,7 +34,7 @@ class BasicPlot:
         # plt.figure(figsize=(8, 6))
         sns.set_theme(style="ticks", rc=custom_params)
 
-        ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False)
+        ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             ax.bar_label(i,)
         ax.set_title('Number of taxa in different taxa level')
