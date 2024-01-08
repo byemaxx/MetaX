@@ -99,7 +99,14 @@ class DiversityPlot(object):
         
          
         group_list_for_hue = [self.tfa.get_group_of_a_sample(sample_id) for sample_id in sample_list]
-        
+
+        # Determine if distinct colors are needed
+        unique_groups = set(group_list_for_hue)
+        if len(unique_groups) > 10:
+            distinct_colors = self.get_distinct_colors(len(unique_groups))
+            color_palette = dict(zip(unique_groups, distinct_colors))
+        else:
+            color_palette = None  # Let seaborn handle the color mapping
 
         try:
             df = self.tfa.taxa_df.copy()
@@ -112,7 +119,8 @@ class DiversityPlot(object):
 
             pcoa_res = pcoa(bc_dm)
             plt.figure(figsize=(width, height))
-            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, hue=group_list_for_hue)
+            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, 
+                                  hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 for i, txt in enumerate(pcoa_res.samples.index):
                     if adjust_label:
@@ -131,4 +139,20 @@ class DiversityPlot(object):
         except Exception as e:
             plt.close('all')
             raise e
+
                         
+                        
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [ BLACK]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
+
+        return colors

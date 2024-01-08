@@ -76,6 +76,15 @@ class BasicPlot:
                 group = self.tfa.get_group_of_a_sample(i)
                 new_sample_name.append(f'{i} ({group})')
                 group_list.append(group)
+
+            # Determine if distinct colors are needed
+            unique_groups = set(group_list)
+            if len(unique_groups) > 10:
+                distinct_colors = self.get_distinct_colors(len(unique_groups))
+                color_palette = dict(zip(unique_groups, distinct_colors))
+            else:
+                color_palette = None  # Let seaborn handle the color mapping     
+                
                 
             dft = dft.T
             mat = dft.values
@@ -85,7 +94,7 @@ class BasicPlot:
             total_var = pca.explained_variance_ratio_.sum() * 100
             sns.set(style='whitegrid')
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
-            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1],
+            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette,
                                 hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 text = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
@@ -189,7 +198,20 @@ class BasicPlot:
             raise e
         
         
-    
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [ BLACK]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
+
+        return colors
         
         
         
