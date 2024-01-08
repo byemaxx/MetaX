@@ -462,4 +462,25 @@ class TaxaFuncAnalyzer:
             for attr in value:
                 print(f"  {attr}")
             print()
-    
+        
+    def get_taxa_func_linked_peptide_num_df(self):
+        """
+        Get the dataframe of taxa_func_linked_peptide_num
+        Taxa | Function | PepNum
+        """
+        dft = self.clean_df[['Sequence', "Taxon", self.func_name]]
+        taxa_list = dft["Taxon"].unique().tolist()
+        temp_dict = {'Taxon': [], 'Function': [], 'PepNum': []}
+        
+        for tax in taxa_list:
+            df_taxa = dft[dft["Taxon"] == tax]
+            func_list = df_taxa[self.func_name].unique().tolist()
+            for func in func_list:
+                pep_num = len(df_taxa[df_taxa[self.func_name] == func])
+                if pep_num > 0:
+                    temp_dict['Taxon'].append(tax)
+                    temp_dict['Function'].append(func)
+                    temp_dict['PepNum'].append(pep_num)
+        df = pd.DataFrame(temp_dict)
+        df = df.sort_values(by=['PepNum', 'Taxon'], ascending=False, ignore_index=True)
+        return df

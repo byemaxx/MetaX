@@ -1585,6 +1585,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_table_dict('function', self.tfa.func_df)
         self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
         self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
+        # get the number of peptide in taxa-func
+        self.update_table_dict('taxa-func-peptide-num', self.tfa.get_taxa_func_linked_peptide_num_df())
 
         # get taxa and function list
         self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
