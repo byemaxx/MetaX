@@ -58,8 +58,7 @@ class PcaPlot_js:
                 yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
                 zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
                 itemstyle_opts=opts.ItemStyleOpts(color=color, border_color='black', border_width=0.2),
-                label_opts=opts.LabelOpts(is_show=show_label,  font_size=font_size),
-
+                label_opts=opts.LabelOpts(is_show=show_label,  font_size=font_size, color='black', position='right'),
             )
 
         scatter3d.set_global_opts(

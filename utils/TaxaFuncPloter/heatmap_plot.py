@@ -8,7 +8,8 @@ class HeatmapPlot:
         self.tfobj =  tfobj
     # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
-    
+        # reset sns style
+        sns.set()
 
     def rename_taxa(self, df):
         first_index = df.index[0]
