@@ -2824,6 +2824,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                         'Peptide': self.tfa.clean_df}
         table_name = self.comboBox_table4pca.currentText()
         show_label = self.checkBox_pca_if_show_lable.isChecked()
+        show_group_label = self.checkBox_pca_if_show_group_name_in_label.isChecked()
         width = self.spinBox_basic_pca_width.value()
         height = self.spinBox_basic_pca_height.value()
         font_size = self.spinBox_basic_pca_label_font_size.value()
@@ -2855,7 +2856,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, 
+                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, show_group_label = show_group_label,
                                                  width=width, height=height, font_size=font_size, 
                                                  font_transparency=font_transparency, adjust_label=adjust_label)
             except Exception as e:
@@ -2869,7 +2870,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, width=width, height=height, font_size=font_size)
+                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, show_group_label = show_group_label,
+                                                                 width=width, height=height, font_size=font_size)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
             except Exception as e:
                 error_message = traceback.format_exc()
@@ -2910,7 +2912,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
                 DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
-                                                            font_size=font_size, font_transparency = font_transparency, 
+                                                            font_size=font_size, font_transparency = font_transparency, show_group_label = show_group_label,
                                                             show_label = show_label, adjust_label = adjust_label
                                                             )
                                                         

@@ -88,7 +88,7 @@ class DiversityPlot(object):
 
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
-                             font_transparency:float = 0.8, show_label:bool = False,
+                             font_transparency:float = 0.8, show_label:bool = False,show_group_label:bool = False,
                               adjust_label:bool = False ):
 
         if sample_list is None:
@@ -122,11 +122,14 @@ class DiversityPlot(object):
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, 
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
-                for i, txt in enumerate(pcoa_res.samples.index):
-                    if adjust_label:
-                        fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], txt, fontsize=font_size, alpha=font_transparency, ha='center', va='center')
-                    else:
-                        fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], txt, fontsize=font_size, alpha=font_transparency)
+                if show_group_label:
+                    sample_list = [f'{sample_id} ({self.tfa.get_group_of_a_sample(sample_id)})' for sample_id in sample_list]
+                texts = [fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], s=sample_list[i], size=font_size, 
+                            color='black', alpha=font_transparency) for i in range(len(sample_list))]
+                if adjust_label:
+                    from adjustText import adjust_text
+                    texts = adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black'))
+                
                         
             fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100))
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100))
