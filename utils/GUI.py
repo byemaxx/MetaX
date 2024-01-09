@@ -1789,8 +1789,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def show_others_linked(self):
-        func = self.comboBox_others_func.currentText()
-        taxa = self.comboBox_others_taxa.currentText()
+        func = self.comboBox_others_func.currentText().strip()
+        taxa = self.comboBox_others_taxa.currentText().strip()
         self.logger.write_log(f'show_others_linked: func: {func}, taxa: {taxa}')
         try:
             if not func and not taxa:
@@ -1829,19 +1829,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def show_others_linked_taxa(self):
-        current_text = self.comboBox_others_func.currentText()
+        current_text = self.comboBox_others_func.currentText().strip()
         self.update_combobox_and_label(current_text, 'func', self.label_others_taxa_num, self.comboBox_others_taxa)
 
     def show_others_linked_func(self):
-        current_text = self.comboBox_others_taxa.currentText()
+        current_text = self.comboBox_others_taxa.currentText().strip()
         self.update_combobox_and_label(current_text, 'taxa', self.label_others_func_num, self.comboBox_others_func)
 
     def show_tukey_linked_taxa(self):
-        current_text = self.comboBox_tukey_func.currentText()
+        current_text = self.comboBox_tukey_func.currentText().strip()
         self.update_combobox_and_label(current_text, 'func', self.label_tukey_taxa_num, self.comboBox_tukey_taxa)
 
     def show_tukey_linked_func(self):
-        current_text = self.comboBox_tukey_taxa.currentText()
+        current_text = self.comboBox_tukey_taxa.currentText().strip()
         self.update_combobox_and_label(current_text, 'taxa', self.label_tukey_func_num, self.comboBox_tukey_func)
 
     def disable_button_after_multiple(self):
@@ -3699,8 +3699,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         pass
     # Plot Heatmap
     def plot_others_heatmap(self):
-        taxa = self.comboBox_others_taxa.currentText()
-        func = self.comboBox_others_func.currentText()
+        taxa = self.comboBox_others_taxa.currentText().strip()
+        func = self.comboBox_others_func.currentText().strip()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()
@@ -3772,8 +3772,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     # Plot Line
     def plot_others_bar(self):
-        taxa = self.comboBox_others_taxa.currentText()
-        func = self.comboBox_others_func.currentText()
+        taxa = self.comboBox_others_taxa.currentText().strip()
+        func = self.comboBox_others_func.currentText().strip()
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()

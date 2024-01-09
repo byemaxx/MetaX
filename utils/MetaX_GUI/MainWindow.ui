@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1075</width>
-    <height>634</height>
+    <width>1063</width>
+    <height>645</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>504</width>
-                 <height>409</height>
+                 <width>498</width>
+                 <height>424</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1020,19 +1020,16 @@
                 <string>Basic Plot</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_26">
-                <item row="1" column="0" colspan="4">
+                <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_35">
-                  <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_basic_pca_meta">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="3" column="0">
+                   <widget class="QRadioButton" name="radioButton_basic_pca_sample">
+                    <property name="text">
+                     <string>Samples</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
+                  <item row="2" column="0">
                    <widget class="QRadioButton" name="radioButton_basic_pca_group">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1048,103 +1045,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
-                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_group"/>
-                  </item>
-                  <item row="1" column="1" colspan="2">
-                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QRadioButton" name="radioButton_basic_pca_sample">
-                    <property name="text">
-                     <string>Samples</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="5" column="0" rowspan="2" colspan="4">
-                 <layout class="QGridLayout" name="gridLayout_34">
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="label_119">
-                    <property name="text">
-                     <string>Correlation</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_alpha_div_plot_all_samples">
-                    <property name="text">
-                     <string>Plot Samples</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QComboBox" name="comboBox_alpha_div_method">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>shannon</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>simpson</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>observed_otus</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>chao1</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>fisher_alpha</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>dominance</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>menhinick</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item row="2" column="3" colspan="2">
-                   <widget class="QPushButton" name="pushButton_plot_alpha_div">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Alpha Diversity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="2" colspan="3">
-                   <widget class="QPushButton" name="pushButton_plot_box_sns">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Box</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_70">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -1153,81 +1057,84 @@
                      <enum>Qt::LeftToRight</enum>
                     </property>
                     <property name="text">
-                     <string>Show Labels</string>
+                     <string>Table</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="0">
-                   <widget class="QLabel" name="label_120">
-                    <property name="text">
-                     <string>Box</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Show Group  Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="4">
-                   <widget class="QPushButton" name="pushButton_plot_pca_js">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="comboBox_table4pca">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="text">
-                     <string>Plot 3D PCA</string>
-                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Peptide</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Function</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa-Function</string>
+                     </property>
+                    </item>
                    </widget>
                   </item>
-                  <item row="4" column="1">
-                   <widget class="QCheckBox" name="checkBox_corr_cluster">
-                    <property name="text">
-                     <string>Cluster</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
-                    <property name="text">
-                     <string>show Fliers</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
+                  <item row="0" column="3">
+                   <widget class="QComboBox" name="comboBox_basic_pca_meta">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QLabel" name="label_122">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Adjust Labels</string>
+                     <string>Group By</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_117">
-                    <property name="text">
-                     <string>Alpha Diversity</string>
+                  <item row="2" column="1" colspan="3">
+                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_group"/>
+                  </item>
+                  <item row="3" column="1" colspan="3">
+                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
+                  </item>
+                  <item row="1" column="0" colspan="4">
+                   <widget class="Line" name="line_7">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="3">
+                 </layout>
+                </item>
+                <item row="2" column="0">
+                 <layout class="QGridLayout" name="gridLayout_34">
+                  <item row="6" column="2" colspan="2">
                    <widget class="QPushButton" name="pushButton_plot_pca_sns">
                     <property name="enabled">
                      <bool>false</bool>
@@ -1243,7 +1150,80 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="2" colspan="3">
+                  <item row="6" column="5" colspan="2">
+                   <widget class="QPushButton" name="pushButton_plot_pca_js">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot 3D PCA</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="5">
+                   <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                    <property name="text">
+                     <string>show Fliers</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="4">
+                   <widget class="QLabel" name="label_118">
+                    <property name="text">
+                     <string>Beta Diversity</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="3">
+                   <widget class="QPushButton" name="pushButton_plot_alpha_div">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Plot Alpha Diversity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="1">
+                   <widget class="QCheckBox" name="checkBox_corr_cluster">
+                    <property name="text">
+                     <string>Cluster</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="6">
+                   <widget class="QPushButton" name="pushButton_plot_box_sns">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Plot Box</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QLabel" name="label_117">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Alpha Diversity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="2" colspan="2">
                    <widget class="QPushButton" name="pushButton_plot_corr">
                     <property name="enabled">
                      <bool>false</bool>
@@ -1253,14 +1233,17 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_118">
+                  <item row="7" column="6">
+                   <widget class="QPushButton" name="pushButton_plot_beta_div">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="text">
-                     <string>Beta Diversity</string>
+                     <string>Plot Beta Diversity</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="2">
+                  <item row="7" column="5">
                    <widget class="QComboBox" name="comboBox_beta_div_method">
                     <property name="enabled">
                      <bool>true</bool>
@@ -1312,63 +1295,86 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="3" colspan="2">
-                   <widget class="QPushButton" name="pushButton_plot_beta_div">
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="label_121">
+                    <property name="text">
+                     <string>PCA</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="4">
+                   <widget class="QLabel" name="label_120">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Box</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="QCheckBox" name="checkBox_alpha_div_plot_all_samples">
+                    <property name="text">
+                     <string>Plot Samples</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="2">
+                   <widget class="QComboBox" name="comboBox_alpha_div_method">
                     <property name="enabled">
-                     <bool>false</bool>
+                     <bool>true</bool>
                     </property>
+                    <item>
+                     <property name="text">
+                      <string>shannon</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>simpson</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>observed_otus</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>chao1</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>fisher_alpha</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>dominance</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>menhinick</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="QLabel" name="label_119">
                     <property name="text">
-                     <string>Plot Beta Diversity</string>
+                     <string>Correlation</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_70">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_table4pca">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>Peptide</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Function</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa-Function</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item row="0" column="3" colspan="2">
+                  <item row="5" column="0" colspan="7">
                    <layout class="QHBoxLayout" name="horizontalLayout">
                     <item>
                      <widget class="QLabel" name="label_94">
@@ -1468,7 +1474,59 @@
                       </property>
                      </widget>
                     </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Adjust Labels</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>Show Labels</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Show Group  Labels</string>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
+                  </item>
+                  <item row="2" column="0" colspan="7">
+                   <widget class="Line" name="line_9">
+                    <property name="lineWidth">
+                     <number>2</number>
+                    </property>
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -5795,8 +5853,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1075</width>
-     <height>23</height>
+     <width>1063</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
