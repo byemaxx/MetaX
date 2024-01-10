@@ -28,7 +28,8 @@ class HeatmapPlot:
     # For taxa-func table
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
-                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = ''):
+                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
+                                        show_all_labels:bool = True):
 
         
 
@@ -71,10 +72,11 @@ class HeatmapPlot:
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
             # sns.set() # set the default seaborn style for plotting
-            fig = sns.clustermap(df_plot, center=0, linewidths=.3, linecolor=(0/255, 0/255, 0/255, 0.1), 
-                                figsize=fig_size, cmap = cmap, 
-                            method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
-                            standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
+            sns_params = {'center': 0, 'cmap': cmap, 'linewidths': .1, 'linecolor': (0/255, 0/255, 0/255, 0.1), 'figsize': fig_size,
+                          'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type},
+                            'standard_scale': scale, 'mask': df_top.isnull(), 'vmin': 0, 'vmax': 1,
+                                "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+            fig = sns.clustermap(df_plot, **sns_params)
 
 
             fig.ax_heatmap.set_xlabel('Taxa')
@@ -101,7 +103,8 @@ class HeatmapPlot:
     def plot_basic_heatmap_of_test_res(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+                                       show_all_labels:bool = True):
 
         dft = df.copy()
 
@@ -139,6 +142,8 @@ class HeatmapPlot:
             dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False])
             mat = dft.head(top_number)
             mat= mat.drop(['P-value', 't-statistic'], axis=1)
+        else:
+            raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
 
         if len(mat) < 2:
             row_cluster = False
@@ -173,10 +178,12 @@ class HeatmapPlot:
             mat.columns = new_col_names
             if rename_taxa:
                 mat = self.rename_taxa(mat)
+            sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
+                          'cbar_kws': {'label': 'Intensity'}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                            'standard_scale': scale, 'col_colors': color_list,
+                                "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+            fig = sns.clustermap(mat, **sns_params)
 
-            fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
-                            cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
-                                standard_scale=scale, col_colors=color_list)
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
@@ -190,15 +197,18 @@ class HeatmapPlot:
             print(f'Error: {e}')
             plt.close('all')
             raise ValueError("No significant differences")
-
-       
+ 
 
     # Plot basic heatmap of matrix with color bar
     # EXAMPLE: plot_heatmap(sw, mat=get_top_intensity_matrix_of_test_res(df=df_anova, df_type='anova', top_num=100), 
                 #  title = 'The heatmap of top 100 significant differences between groups in Taxa-Function', 
                 #  fig_size=(30,30), scale=0)
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
-                    scale = None, col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
+                    scale = None, col_cluster:bool = True, row_cluster:bool = True, 
+                    cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+                    show_all_labels:bool = True
+                    ):
+        
         if len(df) < 2:
             row_cluster = False
         if len(df.columns) < 2:
@@ -249,10 +259,16 @@ class HeatmapPlot:
         if len(mat.columns) < 2:
             col_cluster = False
             scale = None
-
-        fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
-                        cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
-                            standard_scale=scale, col_colors=color_list)
+        sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
+                      'linewidths': .1, 'linecolor': (0/255, 0/255, 0/255, 0.1), # add linecolor
+                        'cbar_kws': {'label': 'Intensity'}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                        'standard_scale': scale, 'col_colors': color_list,
+                            "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+        fig = sns.clustermap(mat, **sns_params)
+            
+        # fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
+        #                 cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
+        #                     standard_scale=scale, col_colors=color_list)
 
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
@@ -337,7 +353,7 @@ class HeatmapPlot:
     # For taxa, func and peptides table
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10):
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:bool = True):
         #! 只画t-statistic的heatmap, 用p-value过滤
         import pandas as pd
         import numpy as np
@@ -414,12 +430,10 @@ class HeatmapPlot:
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-
-            fig = sns.clustermap(dft, cmap= cmap, figsize=fig_size, norm=norm, 
-                                col_cluster=col_cluster, row_cluster=row_cluster,
-                                cbar_kws = dict(label='t-statistic'),
-                                   )
-
+            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,
+                        'cbar_kws': dict(label='t-statistic'), 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                        'xticklabels':True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+            fig = sns.clustermap(dft, **sns_params)
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
@@ -529,9 +543,7 @@ class HeatmapPlot:
             raise ValueError("Can not get the result table, please check the error message in consel.")
         
         
-        
-        
-        
+
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 

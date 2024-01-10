@@ -2224,6 +2224,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_basic_hetatmap_scale.currentText()
         cmap = self.comboBox_basic_hetatmap_theme.currentText()
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
+        show_all_labels = self.checkBox_basic_hetatmap_show_all_labels.isChecked()
 
         table_name = self.comboBox_basic_table.currentText()
         table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
@@ -2319,7 +2320,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
-                HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)   
+                HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+                                                         scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
+                                                         cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
+                                                         show_all_labels=show_all_labels)
             
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
@@ -2934,6 +2938,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
+        show_all_labels = self.checkBox_top_heatmap_show_all_labels.isChecked()
 
         if cmap == 'Auto':
             cmap = None
@@ -2957,11 +2962,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # print(df.shape)
         # print(df.columns)
         try:
+            self.show_message(f'Plotting heatmap for {table_name}...')
             if table_name.startswith('dunnett_test'):
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = True, row_cluster = True,
-                                                                               rename_taxa=rename_taxa, font_size=font_size)
+                                                                               rename_taxa=rename_taxa, font_size=font_size,
+                                                                               show_all_labels = show_all_labels)
             elif 'taxa-func' in table_name:
                 if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
                     title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
@@ -2971,12 +2978,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     title = ""
                 fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
-                            pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title)
+                            pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
+                            show_all_labels = show_all_labels)
             else:
                 fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                         value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
                                                                         scale = scale, col_cluster = True, row_cluster = True, 
-                                                                        cmap = cmap, rename_taxa=rename_taxa, font_size=font_size)
+                                                                        cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
+                                                                        show_all_labels = show_all_labels)
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -3707,6 +3716,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_tflink_hetatmap_scale.currentText()
         cmap = self.comboBox_tflink_cmap.currentText()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
+        show_all_labels = self.checkBox_tflink_bar_show_all_labels.isChecked()
+        
         if cmap == 'Auto':
             cmap = None
 
@@ -3761,8 +3772,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             self.show_message('Plotting heatmap, please wait...')
-            hp = HeatmapPlot(self.tfa)
-            hp.plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size)
+            HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+                                  scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
+                                  cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels)
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_others_heatmap error: {error_message}', 'e')
