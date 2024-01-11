@@ -29,8 +29,8 @@ class BasicStats:
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:
         df = self.tfa.original_df.copy()
-        # sort_list = ['unknown', 'l', 'd', 'p', 'c', 'o', 'f', 'g', 's']
-        sort_list = ['unknown', 'life','domain', 'phylum', 'class', 
+        # sort_list = ['not_found', 'l', 'd', 'p', 'c', 'o', 'f', 'g', 's']
+        sort_list = ['notFound', 'life','domain', 'phylum', 'class', 
                      'order', 'family', 'genus', 'species']
         
         taxa_list = df['LCA_level'].tolist()
@@ -44,7 +44,7 @@ class BasicStats:
 
     def get_stats_taxa_level(self) -> pd.DataFrame:
         df = self.tfa.original_df.copy()
-        df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'unknown')]
+        df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'not_found')]
         dft = df['Taxon'].str.split('|', expand=True)
         # check if the taxa split by | is the same
         if len(dft.columns) != 7:
@@ -69,8 +69,8 @@ class BasicStats:
             raise ValueError(f'func_name must be in {self.tfa.func_list}')
         
         df = self.tfa.original_df.copy()
-        # remove unknown
-        df = df[ (df[func_name].notnull()) & (df[func_name] != 'unknown') & (df[func_name] != '-')]
+        # remove not_found
+        df = df[ (df[func_name].notnull()) & (df[func_name] != 'not_found') & (df[func_name] != '-')]
         
         prop_name = f'{func_name}_prop'
 

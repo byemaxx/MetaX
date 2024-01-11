@@ -12,9 +12,7 @@
   - Version: 0.22
   - Change: Output format to a dictionary
 
-- Date: 2023-03-23
-  - Version: 0.23
-  - Change: Replace NULL with unknown
+
 
 ## Dependencies
 

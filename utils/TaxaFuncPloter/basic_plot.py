@@ -11,6 +11,9 @@ class BasicPlot:
     # input: self.get_stats_peptide_num_in_taxa()
     def plot_taxa_stats(self):
         df = self.tfa.get_stats_peptide_num_in_taxa()
+        # if 'not_found' is 0, then remove it
+        if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
+            df = df[df['LCA_level'] != 'notFound']
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 
         # plt.figure(figsize=(8, 6))

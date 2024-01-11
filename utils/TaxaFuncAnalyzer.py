@@ -318,7 +318,9 @@ class TaxaFuncAnalyzer:
                           normalize_method: str = None, transform_method: str = None,
                           outlier_detect_method: str = None, outlier_handle_method: str = None,
                           outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, batch_list: list = None, 
-                          processing_order:list=None, processing_after_sum: bool = False):
+                          processing_order:list=None, processing_after_sum: bool = False,
+                          peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1}):
+        
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
         args_data_preprocess = {
@@ -346,7 +348,7 @@ class TaxaFuncAnalyzer:
         print("Starting to set Function table...")
         # filter prop = 100% and func are not (NULL, -, NaN)
         df_func = df[(df[f'{func_name}_prop'] >= func_threshold) & (df[func_name].notnull()) &
-                     (df[func_name] != 'unknown') & (df[func_name] != '-') & (df[func_name] != 'NaN')].copy()
+                     (df[func_name] != 'not_found') & (df[func_name] != '-') & (df[func_name] != 'NaN')].copy()
         
         df_func = df_func.groupby(func_name).sum(numeric_only=True)[sample_list]
         if processing_after_sum:
@@ -400,10 +402,10 @@ class TaxaFuncAnalyzer:
 
         # Filter the dataframe
         filter_conditions = (
-            (dfc['Taxon'] != 'unknown') &
+            (dfc['Taxon'] != 'not_found') &
             (dfc[f'{func_name}_prop'] >= func_threshold) &
             dfc[func_name].notnull() &
-            (dfc[func_name] != 'unknown') &
+            (dfc[func_name] != 'not_found') &
             (dfc[func_name] != '-')
         )
         dfc = dfc[filter_conditions]

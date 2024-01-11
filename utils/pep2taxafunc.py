@@ -36,7 +36,10 @@
 # Date: 2023-07-14
 # Version:0.2.8
 # change the sql query: table name form mgyg2eggnog and  mgyg2taxon to id2annotation and id2taxa
-
+#
+# Date: 2024-01-11
+# Version:0.2.9
+# change the "unknown" to "not_found" because the "unknown" may be confused with the "function unknown"
 
 from collections import Counter
 import sqlite3
@@ -58,7 +61,7 @@ def query_taxon_from_db(conn, protein_list):
             taxa.append(re[0])
         else:
             #taxon_level.append('d__NULL;p__NULL;c__NULL;o__NULL;f__NULL;g__NULL;s__NULL')
-            taxa.append('unknown')
+            taxa.append('not_found')
 
     return taxa
 
@@ -80,15 +83,15 @@ def find_LCA(taxa_list: list, threshold: float =1.0):
         most = Counter(taxa_level_list).most_common(1)
         proportion = most[0][1] / len(taxa_level_list)
         tax = most[0][0]
-        if tax == 'unknown':
-            tax_re = 'unknown', tax, proportion
+        if tax == 'not_found':
+            tax_re = 'not_found', tax, proportion
 
         elif proportion >= float(threshold) and tax.split('__')[-1] != '':
             lca_level = taxa_level_dict[tax.split('|')[-1].split('__')[0]]
             tax_re = lca_level, tax, proportion
             break
         elif j == 0 and tax_re is None:
-            # when taxa level move to domain and still not found, return 'l' means 'life'
+            # when taxa level move to domain and still not_found, return 'l' means 'life'
             tax_re = 'life', tax, proportion
 
     return tax_re
@@ -119,8 +122,8 @@ def query_protein_from_db(conn, protein_list):
 
         else:
             for v in re_dict.values():
-                # if the protein is not found in the database, return 'unknown'
-                v.append('unknown')
+                # if the protein is not found in the database, return 'not_found'
+                v.append('not_found')
 
     return re_dict
 

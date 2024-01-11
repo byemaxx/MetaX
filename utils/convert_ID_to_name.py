@@ -143,10 +143,10 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
     ec_dict = get_ec_dict()
-    # Create a mask for rows where 'EC' is not "unknown"
-    mask_EC = ~df['EC'].isin(['unknown', '-'])
+    # Create a mask for rows where 'EC' is not "not_found"
+    mask_EC = ~df['EC'].isin(['not_found', '-'])
 
-    # For each row in df where 'EC' is not "unknown"
+    # For each row in df where 'EC' is not "not_found"
     for i, row in df[mask_EC].iterrows():
         # Split the 'EC' value into multiple EC numbers
         ec_nums = row['EC'].split(',')
@@ -155,7 +155,7 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
             # Lookup and join the corresponding values, and store the result in the new column
             df.at[i, column_name] = lookup_and_join(ec_nums, column_name)
 
-    # For rows where 'EC' is "unknown", set the new columns' values to "-"
+    # For rows where 'EC' is "not_found", set the new columns' values to "-"
     df.loc[~mask_EC, ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']] = '-'
 
     # Set the new '_prop' columns' values to the values in the 'EC_prop' column
@@ -171,7 +171,7 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
 def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     def query_kegg(id_str, pathway_dict):
         id_list = id_str.split(',')
-        if id_list[0] == 'unknown':
+        if id_list[0] == 'not_found':
             return '-'
         pathway_list = []
         for id in id_list:
@@ -195,7 +195,7 @@ def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # if __name__ == '__main__':
-#     df_path = "C:/Users/Qing/Desktop/1.tsv"
+#     df_path = "C:/Users/Qing/OneDrive - University of Ottawa/code/TaxaFunc/MetaX/data/example_data/Example_final_peptide2.tsv"
 #     df = pd.read_csv(df_path, sep='\t')
 #     df = add_pathway_name_to_df(df)
 #     df = add_ec_name_to_df(df)
