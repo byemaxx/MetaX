@@ -2894,8 +2894,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif method == 'corr':
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
+                show_all_labels = self.checkBox_corr_show_all_labels.isChecked()
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, 
+                                                  width=width, height=height, font_size=font_size, show_all_labels=show_all_labels)
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')

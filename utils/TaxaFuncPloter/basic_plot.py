@@ -167,7 +167,7 @@ class BasicPlot:
         # plt.close()
         return ax
     
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10):
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10, show_all_labels = False):
         dft= df.copy()
         
         sample_list = dft.columns
@@ -182,11 +182,19 @@ class BasicPlot:
 
         try:
             if cluster:
-                cluster_grid = sns.clustermap(corr, linewidths=.5, cmap='coolwarm', figsize=(width, height))
+                sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
+                                "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
+                                "figsize":(width, height), "xticklabels":True if show_all_labels else "auto", 
+                                "yticklabels":True if show_all_labels else 'auto'}
+                cluster_grid = sns.clustermap(corr, **sns_params)
+                
                 ax = cluster_grid.ax_heatmap  # 获取热图的轴
             else:
                 plt.figure(figsize=(width, height))
-                ax = sns.heatmap(corr, linewidths=.5, cmap='coolwarm')
+                sns_params = {"linewidths":.5, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
+                                "linecolor":(0/255, 0/255, 0/255, 0.01), "xticklabels":True if show_all_labels else "auto", 
+                                "yticklabels":True if show_all_labels else 'auto'}
+                ax = sns.heatmap(corr, **sns_params)
                 
             ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
             ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)

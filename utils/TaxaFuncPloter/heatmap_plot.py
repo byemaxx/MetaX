@@ -67,13 +67,13 @@ class HeatmapPlot:
             if rename_taxa:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
                 # df_top = self.rename_taxa(df_top)
-                
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
-            # sns.set() # set the default seaborn style for plotting
-            sns_params = {'center': 0, 'cmap': cmap, 'linewidths': .1, 'linecolor': (0/255, 0/255, 0/255, 0.1), 'figsize': fig_size,
-                          'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type},
+            sns.set_style("white")
+            sns_params = {'center': 0, 'cmap': cmap, 'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
+                          'figsize': fig_size,
+                          'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type, "shrink": 0.5},
                             'standard_scale': scale, 'mask': df_top.isnull(), 'vmin': 0, 'vmax': 1,
                                 "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
             fig = sns.clustermap(df_plot, **sns_params)
@@ -260,8 +260,8 @@ class HeatmapPlot:
             col_cluster = False
             scale = None
         sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
-                      'linewidths': .1, 'linecolor': (0/255, 0/255, 0/255, 0.1), # add linecolor
-                        'cbar_kws': {'label': 'Intensity'}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                      'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
+                        'cbar_kws': {'label': 'Intensity',"shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
                         'standard_scale': scale, 'col_colors': color_list,
                             "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
         fig = sns.clustermap(mat, **sns_params)
@@ -359,23 +359,27 @@ class HeatmapPlot:
         import numpy as np
         
         def scale_data(dft, scale):
-            if scale == 'row':
-                # 对每行单独应用双向缩放
-                for index, row in dft.iterrows():
-                    max_val = abs(row).max()
+            try:
+                if scale == 'row':
+                    # 对每行单独应用双向缩放
+                    for index, row in dft.iterrows():
+                        max_val = abs(row).max()
+                        if max_val != 0:
+                            dft.loc[index] = row / max_val
+                elif scale == 'col':
+                    # 对每列单独应用双向缩放
+                    for col in dft:
+                        max_val = abs(dft[col]).max()
+                        if max_val != 0:
+                            dft[col] = dft[col] / max_val
+                elif scale == 'all':
+                    # 对整个数据框应用双向缩放
+                    max_val = abs(dft.values).max()
                     if max_val != 0:
-                        dft.loc[index] = row / max_val
-            elif scale == 'col':
-                # 对每列单独应用双向缩放
-                for col in dft:
-                    max_val = abs(dft[col]).max()
-                    if max_val != 0:
-                        dft[col] = dft[col] / max_val
-            elif scale == 'all':
-                # 对整个数据框应用双向缩放
-                max_val = abs(dft.values).max()
-                if max_val != 0:
-                    dft = dft / max_val
+                        dft = dft / max_val
+                        
+            except Exception as e:
+                print(f'Error: {e}')
 
             return dft
 
@@ -430,8 +434,8 @@ class HeatmapPlot:
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,
-                        'cbar_kws': dict(label='t-statistic'), 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
+                        'cbar_kws': {"label":'t-statistic', "shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
                         'xticklabels':True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
             fig = sns.clustermap(dft, **sns_params)
 
