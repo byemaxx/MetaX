@@ -1819,7 +1819,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if not current_text:
             return None
         try:
-            current_text = re.sub(r'^\[\d+\] ', '', current_text)
             if type=='taxa':
                 items = []
                 items_tuple = self.tfa.taxa_func_linked_dict[current_text]
@@ -1847,22 +1846,30 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         except Exception as e:
             QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
 
-
+    def remove_pep_num_str_and_strip(self, text):
+        text = text.strip()
+        text = re.sub(r'^\[\d+\] ', '', text)
+        return text.strip()
+    
     def show_others_linked_taxa(self):
-        current_text = self.comboBox_others_func.currentText().strip()
+        current_text = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         self.update_combobox_and_label(current_text, 'func', self.label_others_taxa_num, self.comboBox_others_taxa)
+        self.comboBox_others_func.setCurrentText(current_text)
 
     def show_others_linked_func(self):
-        current_text = self.comboBox_others_taxa.currentText().strip()
+        current_text = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         self.update_combobox_and_label(current_text, 'taxa', self.label_others_func_num, self.comboBox_others_func)
+        self.comboBox_others_taxa.setCurrentText(current_text)
 
     def show_tukey_linked_taxa(self):
-        current_text = self.comboBox_tukey_func.currentText().strip()
+        current_text = self.remove_pep_num_str_and_strip(self.comboBox_tukey_func.currentText())
         self.update_combobox_and_label(current_text, 'func', self.label_tukey_taxa_num, self.comboBox_tukey_taxa)
+        self.comboBox_tukey_func.setCurrentText(current_text)
 
     def show_tukey_linked_func(self):
-        current_text = self.comboBox_tukey_taxa.currentText().strip()
+        current_text = self.remove_pep_num_str_and_strip(self.comboBox_tukey_taxa.currentText())
         self.update_combobox_and_label(current_text, 'taxa', self.label_tukey_func_num, self.comboBox_tukey_func)
+        self.comboBox_tukey_taxa.setCurrentText(current_text)
 
     def disable_button_after_multiple(self):
         self.pushButton_plot_top_heatmap.setEnabled(False)
@@ -3177,11 +3184,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     #TUKEY
     def tukey_test(self):
-        taxa = self.comboBox_tukey_taxa.currentText().strip()
-        taxa = re.sub(r'^\[\d+\] ', '', taxa)
+        taxa = self.remove_pep_num_str_and_strip(self.comboBox_tukey_taxa.currentText())
         
-        func = self.comboBox_tukey_func.currentText().strip()
-        func = re.sub(r'^\[\d+\] ', '', func)
+        func = self.remove_pep_num_str_and_strip(self.comboBox_tukey_func.currentText())
         
         if taxa == '' and func == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one taxa or one function!')
@@ -3616,10 +3621,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # link
     def get_tflink_intensity_matrix(self):
-        taxa = self.comboBox_others_taxa.currentText().strip()
-        taxa = re.sub(r'^\[\d+\] ', '', taxa)
-        func = self.comboBox_others_func.currentText().strip()
-        func = re.sub(r'^\[\d+\] ', '', func)
+        taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
+        func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -3729,10 +3732,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         pass
     # Plot Heatmap
     def plot_others_heatmap(self):
-        taxa = self.comboBox_others_taxa.currentText().strip()
-        taxa = re.sub(r'^\[\d+\] ', '', taxa)
-        func = self.comboBox_others_func.currentText().strip()
-        func = re.sub(r'^\[\d+\] ', '', func)
+        taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
+        func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()
@@ -3782,16 +3783,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # check if all 0 row exist
             if (df==0).all(axis=1).any():
                 df = df.loc[(df!=0).any(axis=1)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the [cluster] checkbox!')
         # same for scale
         if scale == 'row':
             if (df==0).all(axis=1).any():
                 df = df.loc[(df!=0).any(axis=1)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please change a scale method!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please change a [scale method]!')
         elif scale == 'column':
             if (df==0).all(axis=0).any():
                 df = df.loc[:, (df!=0).any(axis=0)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some columns are all 0, so they are deleted!\n\nIf you want to keep them, please change a scale method!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Some columns are all 0, so they are deleted!\n\nIf you want to keep them, please change a [scale method]!')
 
         try:
             self.show_message('Plotting heatmap, please wait...')
@@ -3807,10 +3808,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     # Plot Line
     def plot_others_bar(self):
-        taxa = self.comboBox_others_taxa.currentText().strip()
-        taxa = re.sub(r'^\[\d+\] ', '', taxa)
-        func = self.comboBox_others_func.currentText().strip()
-        func = re.sub(r'^\[\d+\] ', '', func)
+        taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
+        func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()
