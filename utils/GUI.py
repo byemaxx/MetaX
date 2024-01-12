@@ -1335,7 +1335,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
-
+        self.pushButton_run_taxaFuncAnalyzer.setEnabled(False)
+        
         taxafunc_path = self.lineEdit_taxafunc_path.text()
         meta_path = self.lineEdit_meta_path.text()
 
@@ -1367,7 +1368,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
-    
+        finally:
+            self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
     
     def change_event_comboBox_top_heatmap_table(self):
         # if comboBox_top_heatmap_table changed
@@ -1529,6 +1531,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         
     def set_multi_table(self, restore_taxafunc=False):
+        self.pushButton_set_multi_table.setEnabled(False)
         if restore_taxafunc == False:
 
             function = self.comboBox_function_to_stast.currentText()
@@ -1747,7 +1750,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # go to basic analysis tab and the first tab
         self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.tabWidget_4.setCurrentIndex(0)
-        
+        self.pushButton_set_multi_table.setEnabled(True)
         
 
 
