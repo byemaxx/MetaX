@@ -94,12 +94,31 @@ class Ui_Table_view(QtWidgets.QDialog):
         header.customContextMenuRequested.connect(self.headerMenu)
         
         
+
     def headerMenu(self, position):
         menu = QMenu(self)
         copy_action = menu.addAction("Copy Column Name")
+        sort_ascending_action = menu.addAction("Sort Ascending")
+        sort_descending_action = menu.addAction("Sort Descending")
+
         action = menu.exec_(self.tableWidget.horizontalHeader().mapToGlobal(position))
+
         if action == copy_action:
             self.copy_column_name(position)
+        elif action == sort_ascending_action:
+            self.sort_by_column(self.tableWidget.horizontalHeader().logicalIndexAt(position), ascending=True)
+        elif action == sort_descending_action:
+            self.sort_by_column(self.tableWidget.horizontalHeader().logicalIndexAt(position), ascending=False)
+
+    def sort_by_column(self, column, ascending=True):
+        """
+        Sort the table by the column.
+        """
+        self.df.sort_values(by=self.df.columns[column], ascending=ascending, inplace=True)
+        self.current_page = 0
+        self.set_pd_to_QTableWidget(self.df, self.tableWidget)
+
+        
 
     def copy_column_name(self, position):
         column = self.tableWidget.horizontalHeader().logicalIndexAt(position)
