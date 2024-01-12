@@ -1453,6 +1453,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
             
+            peptide_num_threshold = {
+                'taxa': self.spinBox_peptide_num_threshold_taxa.value(),
+                'func': self.spinBox_peptide_num_threshold_func.value(),
+                'taxa_func': self.spinBox_peptide_num_threshold_taxa_func.value()
+            }
+            
             # Data Preprocessing
             processing_after_sum = self.radioButton_data_preprocessing_after_sum.isChecked()
 
@@ -1547,7 +1553,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                         outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
                                         outlier_detect_by_group =outlier_detect_by_group,outlier_handle_by_group = outlier_handle_by_group,
                                         batch_list = batch_list, processing_order = processing_order,
-                                        processing_after_sum = processing_after_sum)
+                                        processing_after_sum = processing_after_sum, peptide_num_threshold = peptide_num_threshold)
                 # save taxafunc obj as pickle file
                 self.save_taxafunc_obj(no_message=True)
 
@@ -1584,8 +1590,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_table_dict('function', self.tfa.func_df)
         self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
         self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
-        # get the number of peptide in taxa-func
-        self.update_table_dict('taxa-func-peptide-num', self.tfa.get_taxa_func_linked_peptide_num_df())
 
         # get taxa and function list
         self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
