@@ -195,9 +195,9 @@ def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # if __name__ == '__main__':
-#     df_path = "C:/Users/Qing/OneDrive - University of Ottawa/code/TaxaFunc/MetaX/data/example_data/Example_final_peptide2.tsv"
+#     df_path = "MetaX/data/example_data/Example_final_peptide2.tsv"
 #     df = pd.read_csv(df_path, sep='\t')
 #     df = add_pathway_name_to_df(df)
 #     df = add_ec_name_to_df(df)
 #     df.head()
-#     df.to_csv("C:/Users/Qing/Desktop/2.tsv", sep='\t', index=False)
+#     df.to_csv("1.tsv", sep='\t', index=False)

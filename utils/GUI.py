@@ -114,7 +114,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.logger = LoggerManager()
 
         self.like_times = 0
-
+        #check update
+        self.update_required = False
+        self.check_update()
+        
         # self.last_path = os.path.join(QDir.homePath(), 'Desktop')
         self.last_path = QDir.homePath()
         self.table_dict = {}
@@ -158,8 +161,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
-        self.actionCheck_Update.triggered.connect(self.check_update)
-
+        self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True))
+        
         # set plot width and height (1600*900)
         self.screen = QDesktopWidget().screenGeometry()
         self.screen_width = self.screen.width()
@@ -396,7 +399,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         # set default tab index as 0 for all tabWidget
         self.set_default_tab_index()
-
+        
 
     ###############   init function End   ###############
     def init_theme_menu(self):
@@ -735,24 +738,32 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def closeEvent(self, event):
         reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
-            self.save_basic_settings()
+            try:
+                self.save_basic_settings()
 
-            # 关闭 self.web_list 中的所有窗口
-            for web_window in self.web_list:
-                web_window.close()
-            # 关闭 self.table_dialogs 中的所有窗口
-            for table_dialog in self.table_dialogs:
-                table_dialog.close()
-            # 关闭 self.plt_dialogs 中的所有窗口
-            for plt_dialog in self.plt_dialogs:
-                plt_dialog.close()
-            
-            # 关闭 plt.show() 出来的窗口
-            plt.close('all')
-            
-
-            self.logger.write_log(f"############################## MetaX closed ##############################")
-            event.accept()
+                # 关闭 self.web_list 中的所有窗口
+                for web_window in self.web_list:
+                    web_window.close()
+                # 关闭 self.table_dialogs 中的所有窗口
+                for table_dialog in self.table_dialogs:
+                    table_dialog.close()
+                # 关闭 self.plt_dialogs 中的所有窗口
+                for plt_dialog in self.plt_dialogs:
+                    plt_dialog.close()
+                
+                # 关闭 plt.show() 出来的窗口
+                plt.close('all')
+                
+                # 关闭控制台窗口
+                if self.console_visible:
+                    self.show_hide_console()
+                                
+                self.logger.write_log(f"############################## MetaX closed ##############################")
+            except Exception as e:
+                print('Error when closing MetaX: ', e)
+                self.logger.write_log(f'Error when closing MetaX: {e}')
+            finally:
+                event.accept()
         else:
             event.ignore()
 
@@ -853,9 +864,84 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_hetatmap_theme.addItems(self.cmap_list)
         self.comboBox_tflink_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
+        
+    def update_metax(self, remote_version, remote_path):
+        # ask if user want to update
+        reply = QMessageBox.question(self.MainWindow, "Update", f"MetaX {remote_version} is available. Do you want to update?", 
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.show_message("Updating MetaX...", "Updating...")
+            # set update_required flag to True
+            # this flag will stop MainWindow.show()
+            self.update_required = True
+            
+            try:
+                # replace remote MetaX folder with local MetaX folder
+                local_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                
+                # copy all files from remote to local
+                for root, dirs, files in os.walk(remote_path):
+                    for file in files:
+                        remote_file = os.path.join(root, file)
+                        local_file = remote_file.replace(remote_path, local_path)
+                        os.makedirs(os.path.dirname(local_file), exist_ok=True)
+                        with open(remote_file, "rb") as f1:
+                            with open(local_file, "wb") as f2:
+                                f2.write(f1.read())
+                                
+                QMessageBox.information(self.MainWindow, "Update", f"MetaX has been updated to {remote_version}. Please restart MetaX.")
+                # force close MetaX without triggering closeEvent
+                QtWidgets.QApplication.quit()
+                
+                
+            except Exception as e:
+                QMessageBox.warning(self, "Update", f'Update failed: {e}')
+            
+    def check_update(self, show_message=False):
+            def compare_version(version1, version2):
+                # version1 and version2 are in the format of "1.87.0"
+                # return True if version1 > version2
+                version1 = version1.split(".")
+                version2 = version2.split(".")
+                for i in range(3):
+                    if int(version1[i]) > int(version2[i]):
+                        return True
+                    elif int(version1[i]) < int(version2[i]):
+                        return False
+                return False
+            
+            
+            try:
+                remote_path = "Z:/Qing/MetaX"
+                # check if remote path exists
+                if not os.path.exists(remote_path):
+                    print("Remote path does not exist.")
+                    if show_message:
+                        QMessageBox.warning(self.MainWindow, "Update", "Remote path does not exist.")
+                    return
+                # Check remote version
+                dir_list = os.listdir(remote_path)
+                # check if there is a folder named start with "Update_Package_" 
+                update_package = [x for x in dir_list if x.startswith("Update_Package_")][0] #Update_Package_1.87.0_(2024-01-12)
+                
+                remote_path = os.path.join(remote_path, update_package, "MetaX")
+                remote_version = update_package.split("_")[2]
+                # compare remote version with current version
+                if compare_version(remote_version, __version__):
+                    print(f"Remote version {remote_version} is available.")
+                    # call update function
+                    self.update_metax(remote_version, remote_path)
+                    
+                else:
+                    print("MetaX is up to date.")
+                    if show_message:
+                        QMessageBox.information(self.MainWindow, "Update", "MetaX is up to date.")
+            except Exception as e:
+                print(f"Check update failed:\n{e}")
+                if show_message:
+                    QMessageBox.warning(self.MainWindow, "Update", f"Check update failed:\n{e}")
+                
 
-    def check_update(self):
-        QMessageBox.information(self.MainWindow, "Check for update", "This function is not available yet.")
 
     def show_about(self):
 
@@ -3945,8 +4031,11 @@ def runGUI():
     MainWindow = QtWidgets.QMainWindow()
     ui = MetaXGUI(MainWindow)
     
-    MainWindow.show()
-    splash.finish(MainWindow)
+    if not ui.update_required:
+        MainWindow.show()
+        splash.finish(MainWindow)
+
+    
     sys.exit(app.exec_())
 
 
