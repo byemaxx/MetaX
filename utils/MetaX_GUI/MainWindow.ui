@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>498</width>
-                 <height>420</height>
+                 <width>340</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -523,6 +523,9 @@
                   <property name="text">
                    <string>Taxa</string>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -540,6 +543,9 @@
                   <property name="text">
                    <string>Func</string>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -556,6 +562,9 @@
                  <widget class="QLabel" name="label_123">
                   <property name="text">
                    <string>Taxa-Func</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
                   </property>
                  </widget>
                 </item>

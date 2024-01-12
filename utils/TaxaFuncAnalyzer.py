@@ -93,11 +93,15 @@ class TaxaFuncAnalyzer:
         self._remove_all_zero_row()
     
     def set_taxa_func_linked_dict(self):
+        ### taxa is the key, func list is the value, value is a list of tuples (func, pep_num)
+        
         def _index_to_nested_dict(df):
             result_dict = {}
             for (key1, key2) in df.index:
-                result_dict.setdefault(key1, []).append(key2)
+                pep_num = df.loc[(key1, key2), 'peptide_num']
+                result_dict.setdefault(key1, []).append((key2, pep_num))
             return result_dict
+        
         self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
         self.func_taxa_linked_dict = _index_to_nested_dict(self.func_taxa_df)
     

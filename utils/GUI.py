@@ -28,6 +28,7 @@ import logging
 import pickle
 import datetime
 from collections import OrderedDict
+import re
 ####### add parent path to sys.path #######
 myDir = os.getcwd()
 sys.path.append(myDir)
@@ -1790,38 +1791,54 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     
 
-
-    def show_others_linked(self):
-        func = self.comboBox_others_func.currentText().strip()
-        taxa = self.comboBox_others_taxa.currentText().strip()
-        self.logger.write_log(f'show_others_linked: func: {func}, taxa: {taxa}')
-        try:
-            if not func and not taxa:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select function or taxa!')
-            elif func and taxa:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select only one of function or taxa!')
-            elif not func:
-                df = self.tfa.taxa_func_df.loc[taxa, :]
-                func = df.index.tolist()
-                self.comboBox_others_func.clear()
-                self.comboBox_others_func.addItems(func)
-            else:
-                df = self.tfa.func_taxa_df.loc[func, :]
-                taxa = df.index.tolist()
-                self.comboBox_others_taxa.clear()
-                self.comboBox_others_taxa.addItems(taxa)
-        except Exception as e:
-            self.logger.write_log(f'show_others_linked error: {e}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
+    #! This function seems not used
+    # def show_others_linked(self):
+    #     func = self.comboBox_others_func.currentText().strip()
+    #     taxa = self.comboBox_others_taxa.currentText().strip()
+    #     self.logger.write_log(f'show_others_linked: func: {func}, taxa: {taxa}')
+    #     try:
+    #         if not func and not taxa:
+    #             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select function or taxa!')
+    #         elif func and taxa:
+    #             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select only one of function or taxa!')
+    #         elif not func:
+    #             df = self.tfa.taxa_func_df.loc[taxa, :]
+    #             func = df.index.tolist()
+    #             self.comboBox_others_func.clear()
+    #             self.comboBox_others_func.addItems(func)
+    #         else:
+    #             df = self.tfa.func_taxa_df.loc[func, :]
+    #             taxa = df.index.tolist()
+    #             self.comboBox_others_taxa.clear()
+    #             self.comboBox_others_taxa.addItems(taxa)
+    #     except Exception as e:
+    #         self.logger.write_log(f'show_others_linked error: {e}', 'e')
+    #         QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
     def update_combobox_and_label(self, current_text, type, label, comboBox):
         if not current_text:
             return None
         try:
+            current_text = re.sub(r'^\[\d+\] ', '', current_text)
             if type=='taxa':
-                items = self.tfa.taxa_func_linked_dict[current_text]
+                items = []
+                items_tuple = self.tfa.taxa_func_linked_dict[current_text]
+                # sort by peptide number
+                items_tuple = sorted(items_tuple, key=lambda x: x[1], reverse=True)
+                for i in items_tuple:
+                    func = i[0]
+                    pep_num = i[1]
+                    items.append(f'[{pep_num}] {func}')
+
             elif type=='func':
-                items = self.tfa.func_taxa_linked_dict[current_text]
+                items = []
+                items_tuple = self.tfa.func_taxa_linked_dict[current_text]
+                items_tuple = sorted(items_tuple, key=lambda x: x[1], reverse=True)
+                for i in items_tuple:
+                    taxa = i[0]
+                    pep_num = i[1]
+                    items.append(f'[{pep_num}] {taxa}')
+                    
             num_items = len(items)
             label.setText(f"Linked Number: {num_items}")
             comboBox.clear()
@@ -3161,7 +3178,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     #TUKEY
     def tukey_test(self):
         taxa = self.comboBox_tukey_taxa.currentText().strip()
+        taxa = re.sub(r'^\[\d+\] ', '', taxa)
+        
         func = self.comboBox_tukey_func.currentText().strip()
+        func = re.sub(r'^\[\d+\] ', '', func)
+        
         if taxa == '' and func == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one taxa or one function!')
             return None
@@ -3596,7 +3617,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # link
     def get_tflink_intensity_matrix(self):
         taxa = self.comboBox_others_taxa.currentText().strip()
+        taxa = re.sub(r'^\[\d+\] ', '', taxa)
         func = self.comboBox_others_func.currentText().strip()
+        func = re.sub(r'^\[\d+\] ', '', func)
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -3707,7 +3730,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # Plot Heatmap
     def plot_others_heatmap(self):
         taxa = self.comboBox_others_taxa.currentText().strip()
+        taxa = re.sub(r'^\[\d+\] ', '', taxa)
         func = self.comboBox_others_func.currentText().strip()
+        func = re.sub(r'^\[\d+\] ', '', func)
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()
@@ -3783,7 +3808,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # Plot Line
     def plot_others_bar(self):
         taxa = self.comboBox_others_taxa.currentText().strip()
+        taxa = re.sub(r'^\[\d+\] ', '', taxa)
         func = self.comboBox_others_func.currentText().strip()
+        func = re.sub(r'^\[\d+\] ', '', func)
         width = self.spinBox_tflink_width.value()
         height = self.spinBox_tflink_height.value()
         font_size = self.spinBox_tflink_label_font_size.value()
