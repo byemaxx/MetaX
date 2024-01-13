@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QDialog, QPushButton, QSizePolicy,QGridLayout,QTextEdit
+from PyQt5.QtWidgets import QPushButton, QDialog, QPushButton, QSizePolicy,QGridLayout,QTextEdit,QDesktopWidget
 
 
 class InputWindow(QDialog):
@@ -25,4 +25,5 @@ class InputWindow(QDialog):
 
         
         self.setWindowTitle('Input List')
-        self.resize(800, 600)
+        self.screen = QDesktopWidget().screenGeometry()
+        self.resize(int(self.screen.width() / 1.8), int(self.screen.height() / 1.8))

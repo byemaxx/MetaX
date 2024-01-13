@@ -2423,10 +2423,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             if plot_type == 'heatmap':
-                if (row_cluster or col_cluster) and (df==0).all(axis=1).any():
-                    df = df.loc[(df!=0).any(axis=1)]
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the cluster checkbox!')
-                
+                if row_cluster or (scale =='row'):
+                    df = self.delete_zero_rows(df)
+                if col_cluster or (scale =='col'):
+                    df = self.delete_zero_columns(df)
+                    
                 # check if the list is too long
                 if (row_cluster or col_cluster) and len(df) > 10000: 
                     reply = QMessageBox.question(self.MainWindow, 'Warning', 
@@ -2992,6 +2993,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
                 show_all_labels = self.checkBox_corr_show_all_labels.isChecked()
+                
+                if cluster:
+                    df = self.delete_zero_columns(df)
                 self.show_message('Correlation is running, please wait...')
                 BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, 
                                                   width=width, height=height, font_size=font_size, show_all_labels=show_all_labels)
@@ -3854,22 +3858,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
             return None
-        
-        # if exist row all 0, and cluster is True, then delete this row
-        if row_cluster or col_cluster:
-            # check if all 0 row exist
-            if (df==0).all(axis=1).any():
-                df = df.loc[(df!=0).any(axis=1)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please uncheck the [cluster] checkbox!')
-        # same for scale
-        if scale == 'row':
-            if (df==0).all(axis=1).any():
-                df = df.loc[(df!=0).any(axis=1)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some rows are all 0, so they are deleted!\n\nIf you want to keep them, please change a [scale method]!')
-        elif scale == 'column':
-            if (df==0).all(axis=0).any():
-                df = df.loc[:, (df!=0).any(axis=0)]
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Some columns are all 0, so they are deleted!\n\nIf you want to keep them, please change a [scale method]!')
+
+
+        if row_cluster or (scale == 'row'):
+            df = self.delete_zero_rows(df)
+
+        if col_cluster or (scale == 'column'):
+            df = self.delete_zero_columns(df)
 
         try:
             self.show_message('Plotting heatmap, please wait...')
@@ -3882,7 +3877,40 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'plot_others_heatmap: {params}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
             
-    
+    # delete all 0 rows and show a warning message including the deleted rows
+    def delete_zero_rows(self, dataframe):
+        zero_rows = dataframe.index[(dataframe == 0).all(axis=1)]
+        if not zero_rows.empty:
+            dataframe = dataframe.drop(zero_rows)
+            row_str = '\n'.join(zero_rows.tolist())
+            if len(zero_rows) > 10:
+                # use InputWindow to show the deleted rows
+                self.input_window = InputWindow(self.MainWindow)
+                self.input_window.setWindowTitle('Warning')
+                self.input_window.text_edit.setText(f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.exec_()
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+        return dataframe
+
+    # delete all 0 columns and show a warning message including the deleted columns
+    def delete_zero_columns(self, dataframe):
+        zero_columns = dataframe.columns[(dataframe == 0).all(axis=0)]
+        if not zero_columns.empty:
+            dataframe = dataframe.drop(zero_columns, axis=1)
+            # add group name to zero_columns
+            zero_columns = [f'{i} ({self.tfa.get_group_of_a_sample(i)})' for i in zero_columns]
+            col_str = '\n'.join(zero_columns)
+            if len(zero_columns) > 10:
+                # use InputWindow to show the deleted rows
+                self.input_window = InputWindow(self.MainWindow)
+                self.input_window.setWindowTitle('Warning')
+                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: {col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.exec_()
+            else:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: {col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+        return dataframe
+
     # Plot Line
     def plot_others_bar(self):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
