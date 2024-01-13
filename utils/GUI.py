@@ -665,6 +665,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             #radioButton
             elif isinstance(widget, QtWidgets.QRadioButton):
                 self.settings.setValue(f"{settings_key}/isChecked", widget.isChecked())
+            # spinBox
+            elif isinstance(widget, QtWidgets.QSpinBox):
+                self.settings.setValue(f"{settings_key}/value", widget.value())
         
         self.logger.write_log(f"Save taxafunc object to {path}.")
         print(f"Save taxafunc object to {path}.")
@@ -732,6 +735,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif isinstance(widget, QtWidgets.QRadioButton):
                 checked = self.settings.value(f"{settings_key}/isChecked", False, type=bool)
                 widget.setChecked(checked)
+            elif isinstance(widget, QtWidgets.QSpinBox):
+                value = self.settings.value(f"{settings_key}/value", 0, type=int)
+                widget.setValue(value)
                 
         self.pushButton_set_multi_table.setEnabled(True)      
 
