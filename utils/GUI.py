@@ -2993,6 +2993,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
                 show_all_labels = self.checkBox_corr_show_all_labels.isChecked()
+                # checek if the dataframe has at least 2 rows and 2 columns
+                if df.shape[0] < 2 or df.shape[1] < 2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows or columns is less than 2, correlation cannot be plotted!')
+                    return None
                 
                 if cluster:
                     df = self.delete_zero_columns(df)
