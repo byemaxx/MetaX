@@ -1668,9 +1668,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         num_taxa_func = self.tfa.taxa_func_df.shape[0]
 
 
-        # # generate basic table
-        # self.get_stats_func_prop(self.tfa.func_name)
-        # self.get_stats_taxa_level()
         
         # add tables to table dict
         self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
@@ -2879,14 +2876,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         pic.figure.show()
         
     
-    def get_stats_taxa_level(self):
-        if self.tfa is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
-        else:
-            df = self.tfa.get_stats_taxa_level()
-            # self.show_table(df)
-            # self.update_table_dict('stats_taxa_level', df)
-    
+
     def plot_taxa_number(self):
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
@@ -2918,15 +2908,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
         self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
 
-
-    def get_stats_func_prop(self, func_name):
-        if self.tfa is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
-        else:
-            df = self.tfa.get_stats_func_prop(func_name)
-            # self.show_table(df)
-            # self.update_table_dict('stats_func_prop', df)
-    
+   
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
