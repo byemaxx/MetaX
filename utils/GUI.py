@@ -3905,10 +3905,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # use InputWindow to show the deleted rows
                 self.input_window = InputWindow(self.MainWindow)
                 self.input_window.setWindowTitle('Warning')
-                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: {col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
                 self.input_window.exec_()
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: {col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
         return dataframe
 
     # Plot Line
