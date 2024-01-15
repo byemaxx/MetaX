@@ -47,6 +47,9 @@ from MetaX.utils.version import __version__
 # import core scripts of MetaX
 from MetaX.utils.TaxaFuncAnalyzer import TaxaFuncAnalyzer
 
+# import utils scripts of MetaX
+from MetaX.utils.parse_changelog import ChangelogParser
+
 # import ploter
 from MetaX.utils.TaxaFuncPloter.heatmap_plot import HeatmapPlot
 from MetaX.utils.TaxaFuncPloter.basic_plot import BasicPlot
@@ -873,7 +876,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
     def update_metax(self, remote_version, remote_path):
         # ask if user want to update
-        reply = QMessageBox.question(self.MainWindow, "Update", f"MetaX {remote_version} is available. Do you want to update?", 
+        change_log_path = os.path.join(remote_path, "ChangeLog.md")
+        try:
+            changelog_parser = ChangelogParser(change_log_path)
+            change_log_str = changelog_parser.get_str(__version__)
+
+        except Exception as e:
+            print(f"Read change log failed: {e}")
+            change_log_str = "No change log."
+
+            
+        reply = QMessageBox.question(self.MainWindow, "Update", 
+                                     f"MetaX new version is available. Do you want to update?\
+                                     \ncurrent version: {__version__}\nremote version: {remote_version}\n\nChange log:\n{change_log_str}",
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.show_message("Updating MetaX...", "Updating...")
@@ -898,24 +913,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.information(self.MainWindow, "Update", f"MetaX has been updated to {remote_version}. Please restart MetaX.")
                 # force close MetaX without triggering closeEvent
                 QtWidgets.QApplication.quit()
+                # close the QSplashScreen
+                splash.finish(self.MainWindow)
+                sys.exit()
                 
                 
             except Exception as e:
                 QMessageBox.warning(self, "Update", f'Update failed: {e}')
             
     def check_update(self, show_message=False):
-            def compare_version(version1, version2):
-                # version1 and version2 are in the format of "1.87.0"
-                # return True if version1 > version2
-                version1 = version1.split(".")
-                version2 = version2.split(".")
-                for i in range(3):
-                    if int(version1[i]) > int(version2[i]):
-                        return True
-                    elif int(version1[i]) < int(version2[i]):
-                        return False
-                return False
-            
             
             try:
                 remote_path = "Z:/Qing/MetaX"
@@ -933,8 +939,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 remote_path = os.path.join(remote_path, update_package, "MetaX")
                 remote_version = update_package.split("_")[2]
                 # compare remote version with current version
-                if compare_version(remote_version, __version__):
-                    print(f"Remote version {remote_version} is available.")
+                if ChangelogParser.compare_version(remote_version, __version__):
+                    print(f"New version is available:\nCurrent version: {__version__}\nRemote version: {remote_version}")
                     # call update function
                     self.update_metax(remote_version, remote_path)
                     
