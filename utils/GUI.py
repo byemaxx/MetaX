@@ -48,7 +48,7 @@ from MetaX.utils.version import __version__
 from MetaX.utils.TaxaFuncAnalyzer import TaxaFuncAnalyzer
 
 # import utils scripts of MetaX
-from MetaX.utils.parse_changelog import ChangelogParser
+from MetaX.utils.metax_updater import Updater
 
 # import ploter
 from MetaX.utils.TaxaFuncPloter.heatmap_plot import HeatmapPlot
@@ -874,86 +874,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_tflink_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
         
-    def update_metax(self, remote_version, remote_path):
-        # ask if user want to update
-        change_log_path = os.path.join(remote_path, "ChangeLog.md")
-        try:
-            changelog_parser = ChangelogParser(change_log_path)
-            change_log_str = changelog_parser.get_str(__version__)
-
-        except Exception as e:
-            print(f"Read change log failed: {e}")
-            change_log_str = "No change log."
-
-            
-        reply = QMessageBox.question(self.MainWindow, "Update", 
-                                     f"MetaX new version is available. Do you want to update?\
-                                     \ncurrent version: {__version__}\nremote version: {remote_version}\n\nChange log:\n{change_log_str}",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            self.show_message("Updating MetaX...", "Updating...")
-            # set update_required flag to True
-            # this flag will stop MainWindow.show()
-            self.update_required = True
-            
-            try:
-                # replace remote MetaX folder with local MetaX folder
-                local_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                
-                # copy all files from remote to local
-                for root, dirs, files in os.walk(remote_path):
-                    for file in files:
-                        remote_file = os.path.join(root, file)
-                        local_file = remote_file.replace(remote_path, local_path)
-                        os.makedirs(os.path.dirname(local_file), exist_ok=True)
-                        with open(remote_file, "rb") as f1:
-                            with open(local_file, "wb") as f2:
-                                f2.write(f1.read())
-                                
-                QMessageBox.information(self.MainWindow, "Update", f"MetaX has been updated to {remote_version}. Please restart MetaX.")
-                # force close MetaX without triggering closeEvent
-                QtWidgets.QApplication.quit()
-                # close the QSplashScreen
-                splash.finish(self.MainWindow)
-                sys.exit()
-                
-                
-            except Exception as e:
-                QMessageBox.warning(self, "Update", f'Update failed: {e}')
             
     def check_update(self, show_message=False):
-            
-            try:
-                remote_path = "Z:/Qing/MetaX"
-                # check if remote path exists
-                if not os.path.exists(remote_path):
-                    print("Remote path does not exist.")
-                    if show_message:
-                        QMessageBox.warning(self.MainWindow, "Update", "Remote path does not exist.")
-                    return
-                # Check remote version
-                dir_list = os.listdir(remote_path)
-                # check if there is a folder named start with "Update_Package_" 
-                update_package = [x for x in dir_list if x.startswith("Update_Package_")][0] #Update_Package_1.87.0_(2024-01-12)
-                
-                remote_path = os.path.join(remote_path, update_package, "MetaX")
-                remote_version = update_package.split("_")[2]
-                # compare remote version with current version
-                if ChangelogParser.compare_version(remote_version, __version__):
-                    print(f"New version is available:\nCurrent version: {__version__}\nRemote version: {remote_version}")
-                    # call update function
-                    self.update_metax(remote_version, remote_path)
-                    
-                else:
-                    print("MetaX is up to date.")
-                    if show_message:
-                        QMessageBox.information(self.MainWindow, "Update", "MetaX is up to date.")
-            except Exception as e:
-                print(f"Check update failed:\n{e}")
-                if show_message:
-                    QMessageBox.warning(self.MainWindow, "Update", f"Check update failed:\n{e}")
-                
+        updater = Updater(self, __version__, splash)
+        updater.check_update(show_message=show_message)
 
+                
 
     def show_about(self):
 
