@@ -7,4 +7,4 @@ data/MetaX-human-gut-new.db
 data/MetaX-human-gut.db
 data/baidu.api
 .gitignore
-
+.gitattributes

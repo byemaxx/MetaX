@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>340</width>
-                 <height>49</height>
+                 <width>498</width>
+                 <height>416</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1189,69 +1189,17 @@
                 </item>
                 <item row="2" column="0">
                  <layout class="QGridLayout" name="gridLayout_34">
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_121">
-                    <property name="text">
-                     <string>PCA</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <widget class="QPushButton" name="pushButton_plot_alpha_div">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Alpha Diversity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QComboBox" name="comboBox_alpha_div_method">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>shannon</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>simpson</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>observed_otus</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>chao1</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>fisher_alpha</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>dominance</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>menhinick</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
                   <item row="1" column="1">
                    <widget class="QCheckBox" name="checkBox_corr_cluster">
                     <property name="text">
                      <string>Cluster</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="5">
+                   <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                    <property name="text">
+                     <string>show Fliers</string>
                     </property>
                    </widget>
                   </item>
@@ -1262,56 +1210,13 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_119">
-                    <property name="text">
-                     <string>Correlation</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_117">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="1" column="3">
+                   <widget class="QPushButton" name="pushButton_plot_corr">
+                    <property name="enabled">
+                     <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Alpha Diversity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="4">
-                   <widget class="QLabel" name="label_120">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Box</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="4">
-                   <widget class="QLabel" name="label_118">
-                    <property name="text">
-                     <string>Beta Diversity</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="5">
-                   <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
-                    <property name="text">
-                     <string>show Fliers</string>
+                     <string>Plot Corr</string>
                     </property>
                    </widget>
                   </item>
@@ -1367,56 +1272,66 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="1" column="6">
-                   <widget class="QPushButton" name="pushButton_plot_box_sns">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Box</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="6">
-                   <widget class="QPushButton" name="pushButton_plot_beta_div">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Beta Diversity</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="3">
-                   <widget class="QPushButton" name="pushButton_plot_corr">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Corr</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QCheckBox" name="checkBox_corr_show_all_labels">
-                    <property name="text">
-                     <string>Show All Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1" colspan="3">
-                   <widget class="QPushButton" name="pushButton_plot_pca_sns">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
+                  <item row="1" column="4">
+                   <widget class="QLabel" name="label_120">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Plot PCA</string>
+                     <string>Box</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="4">
+                   <widget class="QLabel" name="label_118">
+                    <property name="text">
+                     <string>Beta Diversity</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_119">
+                    <property name="text">
+                     <string>Correlation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_117">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Alpha Diversity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_121">
+                    <property name="text">
+                     <string>PCA</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="3">
+                   <widget class="QPushButton" name="pushButton_plot_alpha_div">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Plot Alpha Diversity</string>
                     </property>
                    </widget>
                   </item>
@@ -1436,42 +1351,113 @@
                     </property>
                    </widget>
                   </item>
-                 </layout>
-                </item>
-                <item row="1" column="0">
-                 <layout class="QGridLayout" name="gridLayout_36">
-                  <item row="0" column="3">
-                   <widget class="QLabel" name="label_101">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="2" column="6">
+                   <widget class="QPushButton" name="pushButton_plot_beta_div">
+                    <property name="enabled">
+                     <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Height</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <string>Plot Beta Diversity</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="4">
-                   <widget class="QSpinBox" name="spinBox_basic_pca_height">
+                  <item row="0" column="1" colspan="3">
+                   <widget class="QPushButton" name="pushButton_plot_pca_sns">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>8</number>
+                    <property name="text">
+                     <string>Plot PCA</string>
                     </property>
                    </widget>
                   </item>
+                  <item row="2" column="2">
+                   <widget class="QComboBox" name="comboBox_alpha_div_method">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>shannon</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>simpson</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>observed_otus</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>chao1</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>fisher_alpha</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>dominance</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>menhinick</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="1" column="6">
+                   <widget class="QPushButton" name="pushButton_plot_box_sns">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Plot Box</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="QLabel" name="label_129">
+                      <property name="text">
+                       <string>Show All Labels</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_corr_show_all_labels_x">
+                      <property name="text">
+                       <string>X</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_corr_show_all_labels_y">
+                      <property name="text">
+                       <string>Y</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item row="1" column="0">
+                 <layout class="QGridLayout" name="gridLayout_36">
                   <item row="0" column="2">
                    <widget class="QSpinBox" name="spinBox_basic_pca_width">
                     <property name="sizePolicy">
@@ -1488,22 +1474,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_94">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Width</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_122">
                     <property name="sizePolicy">
@@ -1514,64 +1484,6 @@
                     </property>
                     <property name="text">
                      <string>Plot Param</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="8">
-                   <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Show Group  Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="7">
-                   <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Adjust Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="6">
-                   <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>Show Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QLabel" name="label_107">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Label Font Size</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -1604,6 +1516,19 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="1" column="8">
+                   <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Show Group  Labels</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="1" column="4">
                    <widget class="QDoubleSpinBox" name="doubleSpinBox_basic_pca_label_font_transparency">
                     <property name="sizePolicy">
@@ -1623,6 +1548,99 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="0" column="3">
+                   <widget class="QLabel" name="label_101">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Height</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_94">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="4">
+                   <widget class="QSpinBox" name="spinBox_basic_pca_height">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>8</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="7">
+                   <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Adjust Labels</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="label_107">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Label Font Size</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="6">
+                   <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="text">
+                     <string>Show Labels</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -1632,7 +1650,226 @@
                 <string>Heatmap and Bar</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_23">
-                <item row="11" column="6">
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="comboBox_basic_heatmap_meta"/>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QSpinBox" name="spinBox_basic_heatmap_top_num">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>99999</number>
+                  </property>
+                  <property name="value">
+                   <number>10</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="5" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_basic_heatmap_width">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>200</number>
+                    </property>
+                    <property name="value">
+                     <number>16</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_basic_heatmap_height">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>200</number>
+                    </property>
+                    <property name="value">
+                     <number>9</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_basic_heatmap_label_font_size">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>999</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="0" rowspan="2" colspan="5">
+                 <widget class="Line" name="line_8">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QRadioButton" name="radioButton_basic_heatmap_group">
+                  <property name="text">
+                   <string>Group</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="6">
+                 <widget class="QComboBox" name="comboBox_basic_table">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Taxa</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Func</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Taxa-Func</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Peptide</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="0" column="2" colspan="4">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
+                </item>
+                <item row="6" column="1" rowspan="9" colspan="4">
+                 <widget class="QListWidget" name="listWidget_list_for_ploting">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QRadioButton" name="radioButton_basic_heatmap_sample">
+                  <property name="text">
+                   <string>Sample</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="0">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Clean List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="5">
+                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
+                  <property name="text">
+                   <string>Row Cluster</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="6">
+                 <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Peptides</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="6">
+                 <widget class="QPushButton" name="pushButton_basic_bar_plot">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Bar</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="6">
+                 <widget class="QLabel" name="label_80">
+                  <property name="text">
+                   <string>Table</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="5">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Plot Heatmap</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="6">
                  <widget class="QComboBox" name="comboBox_basic_hetatmap_scale">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1657,35 +1894,84 @@
                   </item>
                  </widget>
                 </item>
-                <item row="6" column="1" rowspan="8" colspan="4">
-                 <widget class="QListWidget" name="listWidget_list_for_ploting">
+                <item row="13" column="5">
+                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_taxa">
+                  <property name="text">
+                   <string>Simplify Taxa Names</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QLabel" name="label_67">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="text">
+                   <string>Selecte Top</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QRadioButton" name="radioButton_basic_heatmap_group">
+                <item row="13" column="6">
+                 <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
                   <property name="text">
-                   <string>Group</string>
+                   <string>Show Bar Legend</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="0" rowspan="2" colspan="5">
-                 <widget class="Line" name="line_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
+                <item row="6" column="5" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <item>
+                   <widget class="QLabel" name="label_35">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_33">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Height</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_108">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Label Font Size</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
-                <item row="3" column="6">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_add_top">
+                <item row="2" column="6">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -1696,10 +1982,49 @@
                    </sizepolicy>
                   </property>
                   <property name="toolTip">
-                   <string>Add conditionally filtered items to the drawing box</string>
+                   <string>Add selected item to the drawing box</string>
                   </property>
                   <property name="text">
-                   <string>Add Top to List</string>
+                   <string>Add to List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="5">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_sample"/>
+                </item>
+                <item row="3" column="5">
+                 <widget class="QCheckBox" name="checkBox_basic_heatmap_top_filtered">
+                  <property name="text">
+                   <string>filter with threshold</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="3">
+                 <widget class="QLabel" name="label_68">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Sort by</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1" colspan="5">
+                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>650</width>
+                    <height>0</height>
+                   </size>
                   </property>
                  </widget>
                 </item>
@@ -1767,143 +2092,7 @@
                   </item>
                  </widget>
                 </item>
-                <item row="11" column="0">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Clean List</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" colspan="5">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_sample"/>
-                </item>
-                <item row="3" column="2">
-                 <widget class="QSpinBox" name="spinBox_basic_heatmap_top_num">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>99999</number>
-                  </property>
-                  <property name="value">
-                   <number>10</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="6">
-                 <widget class="QComboBox" name="comboBox_basic_table">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Taxa</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Func</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Taxa-Func</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Peptide</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="comboBox_basic_heatmap_meta"/>
-                </item>
-                <item row="3" column="5">
-                 <widget class="QCheckBox" name="checkBox_basic_heatmap_top_filtered">
-                  <property name="text">
-                   <string>filter with threshold</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="5">
-                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
-                  <property name="text">
-                   <string>Col Cluster</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="5">
-                 <widget class="QLabel" name="label_13">
-                  <property name="layoutDirection">
-                   <enum>Qt::LeftToRight</enum>
-                  </property>
-                  <property name="locale">
-                   <locale language="Chinese" country="China"/>
-                  </property>
-                  <property name="text">
-                   <string>Heatmap Theme</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="QLabel" name="label_67">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Selecte Top</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="6">
-                 <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Peptides</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="13" column="0">
+                <item row="14" column="0">
                  <widget class="QPushButton" name="pushButton_basic_heatmap_add_a_list">
                   <property name="enabled">
                    <bool>false</bool>
@@ -1922,7 +2111,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="6">
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_32">
+                  <property name="text">
+                   <string>selecte for ploting</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="6">
                  <widget class="QComboBox" name="comboBox_basic_hetatmap_theme">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1932,145 +2128,17 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="0">
-                 <widget class="QLabel" name="label_34">
+                <item row="8" column="5">
+                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
                   <property name="text">
-                   <string>List for Plotting</string>
+                   <string>Col Cluster</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
                 <item row="12" column="5">
-                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_taxa">
-                  <property name="text">
-                   <string>Simplify Taxa Names</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="13" column="5">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Heatmap</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QRadioButton" name="radioButton_basic_heatmap_sample">
-                  <property name="text">
-                   <string>Sample</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="9" column="5">
-                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
-                  <property name="text">
-                   <string>Row Cluster</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="12" column="6">
-                 <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
-                  <property name="text">
-                   <string>Show Bar Legend</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="13" column="6">
-                 <widget class="QPushButton" name="pushButton_basic_bar_plot">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot Bar</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="6">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="toolTip">
-                   <string>Add selected item to the drawing box</string>
-                  </property>
-                  <property name="text">
-                   <string>Add to List</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="5" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_3">
-                  <item>
-                   <widget class="QLabel" name="label_35">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Width</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_33">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Height</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_108">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Label Font Size</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="0" column="2" colspan="4">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
-                </item>
-                <item row="11" column="5">
                  <widget class="QLabel" name="label_31">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -2083,50 +2151,49 @@
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="3">
-                 <widget class="QLabel" name="label_68">
+                <item row="3" column="6">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_add_top">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
                   <property name="text">
-                   <string>Sort by</string>
+                   <string>Add Top to List</string>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1" colspan="5">
-                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
+                <item row="11" column="5">
+                 <widget class="QLabel" name="label_13">
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
                   </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>650</width>
-                    <height>0</height>
-                   </size>
+                  <property name="locale">
+                   <locale language="Chinese" country="China"/>
                   </property>
-                 </widget>
-                </item>
-                <item row="0" column="6">
-                 <widget class="QLabel" name="label_80">
                   <property name="text">
-                   <string>Table</string>
+                   <string>Heatmap Theme</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_32">
+                <item row="6" column="0">
+                 <widget class="QLabel" name="label_34">
                   <property name="text">
-                   <string>selecte for ploting</string>
+                   <string>List for Plotting</string>
                   </property>
                  </widget>
                 </item>
-                <item row="9" column="0">
+                <item row="10" column="0">
                  <widget class="QPushButton" name="pushButton_basic_heatmap_drop_item">
                   <property name="enabled">
                    <bool>false</bool>
@@ -2142,61 +2209,30 @@
                   </property>
                  </widget>
                 </item>
-                <item row="7" column="5" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item row="10" column="6">
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
                   <item>
-                   <widget class="QSpinBox" name="spinBox_basic_heatmap_width">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>200</number>
-                    </property>
-                    <property name="value">
-                     <number>16</number>
+                   <widget class="QLabel" name="label_130">
+                    <property name="text">
+                     <string>Show All Labels</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="spinBox_basic_heatmap_height">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>200</number>
-                    </property>
-                    <property name="value">
-                     <number>9</number>
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_x">
+                    <property name="text">
+                     <string>X</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="spinBox_basic_heatmap_label_font_size">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>999</number>
-                    </property>
-                    <property name="value">
-                     <number>10</number>
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_y">
+                    <property name="text">
+                     <string>Y</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
-                </item>
-                <item row="9" column="6">
-                 <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels">
-                  <property name="text">
-                   <string>Show All Labels</string>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </widget>
@@ -2532,12 +2568,30 @@
                 </property>
                </widget>
               </item>
-              <item row="5" column="6" colspan="2">
-               <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels">
-                <property name="text">
-                 <string>Show All Labels</string>
-                </property>
-               </widget>
+              <item row="4" column="6" colspan="2">
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <item>
+                 <widget class="QLabel" name="label_131">
+                  <property name="text">
+                   <string>Show All Labels</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_x">
+                  <property name="text">
+                   <string>X</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_y">
+                  <property name="text">
+                   <string>Y</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -4903,13 +4957,6 @@
                   </property>
                  </widget>
                 </item>
-                <item row="11" column="9">
-                 <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels">
-                  <property name="text">
-                   <string>Show All Labels</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="11" column="8">
                  <widget class="QCheckBox" name="checkBox_tflink_bar_show_legend">
                   <property name="sizePolicy">
@@ -4926,7 +4973,7 @@
                   </property>
                  </widget>
                 </item>
-                <item row="12" column="8" colspan="2">
+                <item row="11" column="9">
                  <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_taxa">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -4938,6 +4985,31 @@
                    <string>Simplify Taxa Names</string>
                   </property>
                  </widget>
+                </item>
+                <item row="12" column="8" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_9">
+                  <item>
+                   <widget class="QLabel" name="label_132">
+                    <property name="text">
+                     <string>Show All Labels</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_x">
+                    <property name="text">
+                     <string>X</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_y">
+                    <property name="text">
+                     <string>Y</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -5982,7 +6054,7 @@
      <x>0</x>
      <y>0</y>
      <width>1063</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

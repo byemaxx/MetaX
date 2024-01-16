@@ -860,13 +860,30 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
 
     def hide_all_in_layout(self, layout):
-        for i in range(layout.count()):
-            layout.itemAt(i).widget().hide()
-
+        try:
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                if item.widget():  # check if the item in the layout is a widget
+                    item.widget().hide()
+                else:
+                    # if the item is not a widget, it is a layout
+                    # so we call the function again
+                    if item.layout():
+                        self.hide_all_in_layout(item.layout())
+        except Exception as e:
+            print("Error when hide all in layout: ", e)
     def show_all_in_layout(self, layout):
-        for i in range(layout.count()):
-            layout.itemAt(i).widget().show()
-    
+        try:
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                if item.widget(): 
+                    item.widget().show()
+                else:
+                    if item.layout():
+                        self.show_all_in_layout(item.layout())
+        except Exception as e:
+            print("Error when show all in layout: ", e)
+
     def add_theme_to_combobox(self):
         self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
         self.cmap_list +=  ['viridis', 'plasma', 'inferno', 'magma', 'cividis']
@@ -2275,7 +2292,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_basic_hetatmap_scale.currentText()
         cmap = self.comboBox_basic_hetatmap_theme.currentText()
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
-        show_all_labels = self.checkBox_basic_hetatmap_show_all_labels.isChecked()
+        show_all_labels = (self.checkBox_basic_hetatmap_show_all_labels_x.isChecked(), self.checkBox_basic_hetatmap_show_all_labels_y.isChecked())
+        
 
         table_name = self.comboBox_basic_table.currentText()
         table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 'Func': self.tfa.func_df.copy(), 'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),'Peptide': self.tfa.peptide_df.copy()}
@@ -2924,7 +2942,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif method == 'corr':
             try:
                 cluster = self.checkBox_corr_cluster.isChecked()
-                show_all_labels = self.checkBox_corr_show_all_labels.isChecked()
+                show_all_labels = (self.checkBox_corr_show_all_labels_x.isChecked(), self.checkBox_corr_show_all_labels_y.isChecked())
                 # checek if the dataframe has at least 2 rows and 2 columns
                 if df.shape[0] < 2 or df.shape[1] < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows or columns is less than 2, correlation cannot be plotted!')
@@ -2977,7 +2995,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
-        show_all_labels = self.checkBox_top_heatmap_show_all_labels.isChecked()
+        show_all_labels = (self.checkBox_top_heatmap_show_all_labels_x.isChecked(), self.checkBox_top_heatmap_show_all_labels_y.isChecked())
 
         if cmap == 'Auto':
             cmap = None
@@ -3757,7 +3775,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_tflink_hetatmap_scale.currentText()
         cmap = self.comboBox_tflink_cmap.currentText()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
-        show_all_labels = self.checkBox_tflink_bar_show_all_labels.isChecked()
+        show_all_labels = (self.checkBox_tflink_bar_show_all_labels_x.isChecked(), self.checkBox_tflink_bar_show_all_labels_y.isChecked())
         
         if cmap == 'Auto':
             cmap = None

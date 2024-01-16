@@ -8,3 +8,8 @@
 ## Date: 2024-01-15
 ### Changes:
 - restrucetd: move all update fucntions to a signal Class file
+
+# Version: 1.88.8
+## Date: 2024-01-15
+### Changes:
+- added: split the seeting of show all labels for heatmap to X-Aixs, Y-Aixs separately

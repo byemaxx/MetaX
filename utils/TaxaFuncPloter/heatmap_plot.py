@@ -29,7 +29,7 @@ class HeatmapPlot:
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
                                         cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
-                                        show_all_labels:bool = True):
+                                        show_all_labels:tuple = (False, False)):
 
         
 
@@ -75,7 +75,7 @@ class HeatmapPlot:
                           'figsize': fig_size,
                           'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type, "shrink": 0.5},
                             'standard_scale': scale, 'mask': df_top.isnull(), 'vmin': 0, 'vmax': 1,
-                                "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+                                "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
             fig = sns.clustermap(df_plot, **sns_params)
 
 
@@ -104,7 +104,7 @@ class HeatmapPlot:
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                                       show_all_labels:bool = True):
+                                       show_all_labels:tuple = (False, False)):
 
         dft = df.copy()
 
@@ -181,7 +181,7 @@ class HeatmapPlot:
             sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
                           'cbar_kws': {'label': 'Intensity'}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
                             'standard_scale': scale, 'col_colors': color_list,
-                                "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+                                "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
             fig = sns.clustermap(mat, **sns_params)
 
 
@@ -206,7 +206,7 @@ class HeatmapPlot:
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                    show_all_labels:bool = True
+                    show_all_labels:tuple = (False, False)
                     ):
         
         if len(df) < 2:
@@ -263,7 +263,7 @@ class HeatmapPlot:
                       'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
                         'cbar_kws': {'label': 'Intensity',"shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
                         'standard_scale': scale, 'col_colors': color_list,
-                            "xticklabels":True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+                            "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
         fig = sns.clustermap(mat, **sns_params)
             
         # fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
@@ -353,7 +353,7 @@ class HeatmapPlot:
     # For taxa, func and peptides table
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:bool = True):
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False)):
         #! 只画t-statistic的heatmap, 用p-value过滤
         import pandas as pd
         import numpy as np
@@ -436,7 +436,7 @@ class HeatmapPlot:
 
             sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
                         'cbar_kws': {"label":'t-statistic', "shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                        'xticklabels':True if show_all_labels else "auto", "yticklabels":True if show_all_labels else "auto"}
+                        'xticklabels':True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
             fig = sns.clustermap(dft, **sns_params)
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
