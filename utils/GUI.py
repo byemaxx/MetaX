@@ -859,30 +859,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
 
+
     def hide_all_in_layout(self, layout):
-        try:
-            for i in range(layout.count()):
-                item = layout.itemAt(i)
-                if item.widget():  # check if the item in the layout is a widget
-                    item.widget().hide()
-                else:
-                    # if the item is not a widget, it is a layout
-                    # so we call the function again
-                    if item.layout():
-                        self.hide_all_in_layout(item.layout())
-        except Exception as e:
-            print("Error when hide all in layout: ", e)
+        for i in range(layout.count()):
+            layout.itemAt(i).widget().hide()
+
     def show_all_in_layout(self, layout):
-        try:
-            for i in range(layout.count()):
-                item = layout.itemAt(i)
-                if item.widget(): 
-                    item.widget().show()
-                else:
-                    if item.layout():
-                        self.show_all_in_layout(item.layout())
-        except Exception as e:
-            print("Error when show all in layout: ", e)
+        for i in range(layout.count()):
+            layout.itemAt(i).widget().show()
+
 
     def add_theme_to_combobox(self):
         self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
