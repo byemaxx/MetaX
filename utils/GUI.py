@@ -1311,21 +1311,36 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             taxafunc_path = self.lineEdit_taxafunc_path.text()
             meta_path = self.lineEdit_meta_path.text()
-
+            
+            # check if taxafunc_path selected and exists
             if not taxafunc_path:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxaFunc table!')
                 return
-            elif not meta_path:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
-                return
-            # check if files exist
-            if not os.path.exists(taxafunc_path):
-                QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
-                return
-            elif not os.path.exists(meta_path):
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
-                return
-        
+            else:
+                if not os.path.exists(taxafunc_path):
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
+                    return
+
+
+            if not meta_path:
+                # check if "Intensity" in taxafunc fisrt row
+                with open(taxafunc_path, 'r') as f:
+                    first_line = f.readline()
+                    if 'Intensity' not in first_line:
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Meta table!')
+                        return
+                    
+                # ask if continue without meta table
+                reply = QMessageBox.question(self.MainWindow, 'Warning', 'Meta table is not selected, continue without meta table?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.No:
+                    return
+                else:
+                    meta_path = None
+            else:
+                if not os.path.exists(meta_path):
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
+                    return
+
             self.show_message('taxaFuncAnalyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
             self.tfa = TaxaFuncAnalyzer(taxafunc_path, meta_path)

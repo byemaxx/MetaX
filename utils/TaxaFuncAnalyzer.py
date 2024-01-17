@@ -25,7 +25,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
-    def __init__(self, df_path, meta_path):
+    def __init__(self, df_path, meta_path=None):
         self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
@@ -60,27 +60,47 @@ class TaxaFuncAnalyzer:
         self.original_df = pd.read_csv(df_path, sep='\t')
         if 'Taxon_prop' not in self.original_df.columns:
             raise ValueError("The TaxaFunc data must have Taxon_prop column!")
+        
+        ### create sample_list by Intensity_*, if meta is not provided
+        col_names = self.original_df.columns.tolist()
+        # replace space with _ 
+        col_names = [i.replace(' ', '_') for i in col_names]
+        intensity_col_names = [i for i in col_names if i.startswith('Intensity_')]
+        if len(intensity_col_names) > 0:
+            intensity_col_names = [i.replace('Intensity_', '') for i in intensity_col_names]
+            self.sample_list = intensity_col_names
+        ####        
+        
+        # replace space with _ and remove Intensity_
         self.original_df.columns = self.original_df.columns.str.replace(
             ' ', '_').str.replace('Intensity_', '')
-
-    def _set_meta(self, meta_path: str) -> None:
-        # read table without fill na
-        meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False)
-        # sample name must be in the first column
-        # rename the first column to Sample
-        meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
-        # replace space with _ and remove Intensity_
-        meta['Sample'] = meta.iloc[:, 0].str.replace(
-            ' ', '_').str.replace('Intensity_', '')
-        meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
-        self.sample_list = meta['Sample'].tolist()
-        self.meta_df = meta
-          
         
-        check_result = self.check_meta_match_df()
-        if check_result[0] == False:
-            raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
+    def _set_meta(self, meta_path=None) -> None:
+        if meta_path is None:
+            if self.sample_list is None:
+                raise ValueError("Please provide the meta data!")
+            else:
+                print('Meta data is not provided, sample_list is created by Intensity_* columns.')
+                meta = pd.DataFrame({'Sample': self.sample_list, 'sample_name': self.sample_list})
+                self.meta_df = meta
+        else:
+            # read table without fill na
+            meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False)
+            # sample name must be in the first column
+            # rename the first column to Sample
+            meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
+            # replace space with _ and remove Intensity_
+            meta['Sample'] = meta.iloc[:, 0].str.replace(
+                ' ', '_').str.replace('Intensity_', '')
+            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+            self.sample_list = meta['Sample'].tolist()
+            self.meta_df = meta
+            
+            
+            check_result = self.check_meta_match_df()
+            if check_result[0] == False:
+                raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
     
     def update_meta(self, meta_df: str) -> None:
         self.meta_df = meta_df
@@ -121,8 +141,7 @@ class TaxaFuncAnalyzer:
     def check_meta_match_df(self) -> tuple:
         meta_list = self.meta_df['Sample'].tolist()
         try:
-            df = self.original_df.copy()
-            df[meta_list]
+            self.original_df[meta_list]
             return True, "Meta data matches the TaxaFunc data."
         except Exception as e:
             return False, str(e)

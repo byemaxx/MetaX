@@ -50,3 +50,8 @@
 ### Changes:
 - Change: Use ThreadPoolExecutor to run the peptide to TaxaFunc Annotator to speed up.
 - Change: Set default file name as 'TaxaFunc.tsv' for the result of TaxaFunc Annotator in file window.
+
+# Version: 1.89.5
+## Date: 2024-01-17
+### Changes:
+- Change: When meta table is not provided, try to use sample name as group, if sample name start with "Intensity".
