@@ -68,12 +68,7 @@ from MetaX.utils.MetaX_GUI import Ui_MainWindow
 from MetaX.utils.MetaX_GUI import webDialog
 from MetaX.utils.MetaX_GUI.MatplotlibFigureCanvas import MatplotlibWidget
 from MetaX.utils.MetaX_GUI.CheckableComboBox import CheckableComboBox
-from MetaX.utils.MetaX_GUI.OutputWindow import OutputWindow
 from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
-from MetaX.utils.MetaX_GUI.DBBuilderMAGQThread import DBBuilderMAG
-from MetaX.utils.MetaX_GUI.DBBuilderOwnQThread import DBBuilderOwn
-from MetaX.utils.MetaX_GUI.DBUpdaterQThread import DBUpdater
-from MetaX.utils.MetaX_GUI.PeptideAnnotatorQThread import PeptideAnnotator
 from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
 from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 # from MetaX.utils.MetaX_GUI.ShowPltDialog import PltDialog
@@ -141,6 +136,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
         self.tfa = None
+        self.Qthread_result = None
         self.add_theme_to_combobox()
 
 
@@ -941,11 +937,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         QTimer.singleShot(200, self.msg.accept)
         QApplication.processEvents()
 
-    def open_output_window(self, func_class, *args, **kwargs):
-        self.output_window = OutputWindow(func_class, self, *args, **kwargs)
-        self.output_window.show()
-    
-
 
 
     def set_lineEdit_db_path(self):
@@ -986,6 +977,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         meta_path = f'''{self.lineEdit_db_all_meta_path.text()}'''
         mgyg_dir = f'''{self.lineEdit_db_anno_folder.text()}'''
         db_type = self.comboBox_db_type.currentText().split('(')[0].strip()
+        db_name = 'MetaX_'+ self.comboBox_db_type.currentText().replace('(', '_').replace(')', '').replace(' ', '_') + '.db'
 
         self.logger.write_log(f'run_db_builder: save_path:{save_path} meta_path:{meta_path} mgyg_dir:{mgyg_dir} db_type:{db_type}')
 
@@ -1000,11 +992,30 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         print(f'''save_path: {save_path}, \nmeta_path: {meta_path}, \nmgyg_dir: {mgyg_dir}, \ndb_type: {db_type}''')
         
         try:
-            self.open_output_window(DBBuilderMAG, save_path, db_type, meta_path, mgyg_dir)
+            # self.open_output_window(DBBuilderMAG, save_path, db_type, meta_path, mgyg_dir)
+            from MetaX.utils.DatabaseBuilderMAG import download_and_build_database
+            parm_kwargs = {'save_path': save_path, 'db_type': db_type, 'meta_path': meta_path, 'mgyg_dir': mgyg_dir, 'db_name': db_name}
+            self.run_in_new_window(download_and_build_database, **parm_kwargs)
+
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
+    def run_in_new_window(self, func, *args, **kwargs):
+        from MetaX.utils.MetaX_GUI.GenericThread import FunctionExecutor
+        def handle_finished(result, success):
+            if success and result is not None:
+                self.Qthread_result = result
+            executor.on_finished(result, success)
+                
+        executor = FunctionExecutor(func, *args, **kwargs)
+        # executor.finished.connect(lambda result, success: print(f"Function execution {'succeeded' if success else 'failed'}, Result: {result}"))
+        executor.finished.connect(handle_finished)
+        
+        executor.show()
+
+    
+    
     ## Database builder by own Table
     def show_toolButton_db_own_anno_help(self):
         QMessageBox.information(self.MainWindow, 'Help', 'Select a TSV table(separated by tab), and make sure the first column is protein name joined Genome by "_", e.g.   "Genome1_protein1"   \n\nand other columns are annotation information.')
@@ -1032,7 +1043,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             try:
                 self.logger.write_log(f'run_db_builder_own_table: anno_path:{anno_path} taxa_path:{taxa_path} save_path:{save_path}')
-                self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
+                
+                # self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
+                from MetaX.utils.DatabaseBuilderOwn import build_db
+                parm_kwargs = {'anno_path': anno_path, 'taxa_path': taxa_path, 'db_path': save_path}
+                self.run_in_new_window(build_db, **parm_kwargs)
+                
             except Exception as e:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -1069,7 +1085,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         try:
             self.logger.write_log(f'run_db_updater: update_type:{update_type} tsv_path:{tsv_path} old_db_path:{old_db_path} new_db_path:{new_db_path} built_in_db_name:{built_in_db_name}')
-            self.open_output_window(DBUpdater, update_type, tsv_path, old_db_path, new_db_path,  built_in_db_name)
+            # self.open_output_window(DBUpdater, update_type, tsv_path, old_db_path, new_db_path,  built_in_db_name)
+            from MetaX.utils.DatabaseUpdater import run_db_update
+            parm_kwargs = {
+                'update_type': update_type, 'tsv_path': tsv_path, 
+                'old_db_path': old_db_path, 'new_db_path': new_db_path, 
+                'built_in_db_name': built_in_db_name
+                }
+            
+            self.run_in_new_window(run_db_update, **parm_kwargs)
+            
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'Error when run_db_updater: {error_message}', 'e')
@@ -1094,7 +1119,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             try:
                 self.logger.write_log(f'run_peptide2taxafunc: db_path:{db_path} final_peptide_path:{final_peptide_path} peptide2taxafunc_outpath:{peptide2taxafunc_outpath} threshold:{threshold}')
-                self.open_output_window(PeptideAnnotator, final_peptide_path, peptide2taxafunc_outpath, db_path, threshold)
+                # self.open_output_window(PeptideAnnotator, final_peptide_path, peptide2taxafunc_outpath, db_path, threshold)4
+                from MetaX.utils.PeptableAnnotator import peptableAnnotate
+                parm_kwargs = {'final_peptides_path': final_peptide_path, 'output_path': peptide2taxafunc_outpath, 
+                               'db_path': db_path, 'threshold': threshold}
+                self.run_in_new_window(peptableAnnotate, **parm_kwargs)
+
             except Exception as e:
                 self.logger.write_log(f'run_peptide2taxafunc error: {e}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')

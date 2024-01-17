@@ -18,3 +18,10 @@
 ## Date: 2024-01-16
 ### Changes:
 - Fixed: rollback the function of hide and show "gridLayout_top_heatmap_plot" to make the "comboBox_top_heatmap_table" hide work
+
+# Version: 1.89.0
+## Date: 2024-01-16
+### Changes:
+- New: Create a "GenericThread" Class for runing function with another thread so and showing output
+- Remove: Removed all specific QThread Class due to no longer need.
+- Change: Changed the way to call Database Related functions.
