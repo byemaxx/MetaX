@@ -19,7 +19,7 @@ import os
 import urllib.request
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import multiprocessing
+# import multiprocessing
 
 
 
@@ -145,7 +145,6 @@ def read_file(args):
     return pd.read_csv(file_path, sep='\t', header=0, index_col= None)
 
 
-#! 会引发重复加载 主程序动画的问题, 有待解决
 def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
     
 
@@ -156,9 +155,20 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
         file_list = os.listdir(mgyg_dir)
         path = mgyg_dir
 
-    with multiprocessing.Pool() as pool:
-        df_list = list(tqdm(pool.imap(read_file, [(os.path.join(path, f),) for f in file_list]), desc='Loading annotation files', total=len(file_list)))
+    # with multiprocessing.Pool() as pool:
+    #     df_list = list(tqdm(pool.imap(read_file, [(os.path.join(path, f),) for f in file_list]), desc='Loading annotation files', total=len(file_list)))
     
+    #! 使用线程池来替代多进程, 以解决重复加载主程序动画的问题
+    with ThreadPoolExecutor() as executor:
+        df_list = []
+        futures = [executor.submit(read_file, (os.path.join(path, f),)) for f in file_list]
+        with tqdm(total=len(file_list), desc="Loading annotation files") as pbar:
+            for future in as_completed(futures):
+                result = future.result()
+                pbar.update(1)
+                pbar.set_postfix_str(result)
+                df_list.append(result)
+        
     print("Concatenating annotation files...")
     df = pd.concat(df_list, ignore_index=True)
     df = df.drop_duplicates()

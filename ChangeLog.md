@@ -25,3 +25,10 @@
 - New: Create a "GenericThread" Class for runing function with another thread so and showing output
 - Remove: Removed all specific QThread Class due to no longer need.
 - Change: Changed the way to call Database Related functions.
+
+
+# Version: 1.89.1
+## Date: 2024-01-16
+### Changes:
+- Fixed: Use "with ThreadPoolExecutor() as executor:"  replaced "with multiprocessing.Pool() as pool:" in build_id2annotation_db to avoid restart the splash logo.
+- Change: Changed the output windows deafaul size as 1/2 screen size.

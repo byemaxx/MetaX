@@ -20,9 +20,14 @@ class FunctionExecutor(QMainWindow):
         self.function_running = True  # 标志，指示函数是否正在运行
 
         self.setWindowTitle('Progress')
-        self.setFixedWidth(800)
-        self.setFixedHeight(400)
-
+        # set the size of the window as 1/3 of the screen
+        screen = QApplication.primaryScreen()
+        size = screen.size()
+        self.resize(int(size.width() // 2), int(size.height() // 2))
+        
+        # set flag as the window size can be changed
+        # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         self.thread = QThread()  # 创建一个QThread实例
         self.thread.run = self.run_function  # 将线程的run方法指向我们的函数执行方法
         self.thread.finished.connect(self.thread_finished)  # 连接线程的finished信号
