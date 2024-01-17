@@ -55,3 +55,9 @@
 ## Date: 2024-01-17
 ### Changes:
 - Change: When meta table is not provided, try to use sample name as group, if sample name start with "Intensity".
+
+
+# Version: 1.89.6
+## Date: 2024-01-17
+### Changes:
+- Change: Add a columun as group "NA" to meta table, when meta table is not provided.

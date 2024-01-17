@@ -81,7 +81,7 @@ class TaxaFuncAnalyzer:
                 raise ValueError("Please provide the meta data!")
             else:
                 print('Meta data is not provided, sample_list is created by Intensity_* columns.')
-                meta = pd.DataFrame({'Sample': self.sample_list, 'sample_name': self.sample_list})
+                meta = pd.DataFrame({'Sample': self.sample_list, 'Group_NA': 'NA', 'Sample_Name': self.sample_list})
                 self.meta_df = meta
         else:
             # read table without fill na
