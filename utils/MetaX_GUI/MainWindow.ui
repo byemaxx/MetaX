@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1063</width>
+    <width>1133</width>
     <height>641</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,7 +239,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>498</width>
+                 <width>533</width>
                  <height>420</height>
                 </rect>
                </property>
@@ -247,28 +247,73 @@
                 <string>● Taxa statistics</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_27">
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="pushButton_overview_tax_plot_new_window">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Plot taxa stats in new window</string>
-                  </property>
-                 </widget>
+                <item row="3" column="0" colspan="2">
+                 <layout class="QVBoxLayout" name="verticalLayout_overview_plot"/>
                 </item>
-                <item row="0" column="1">
+                <item row="0" column="0" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_6">
+                  <item>
+                   <widget class="QLabel" name="label_133">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Minimum peptide link (Taxa)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_overview_tax_plot_new_window_peptide_num">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>9999</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_overview_tax_plot_new_window">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot taxa stats in new window</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="1" column="0" colspan="2">
                  <widget class="QPushButton" name="pushButton_overview_peptide_plot_new_window">
                   <property name="enabled">
                    <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
                   <property name="text">
                    <string>Plot peptide stats in new window</string>
                   </property>
                  </widget>
-                </item>
-                <item row="1" column="0" colspan="2">
-                 <layout class="QVBoxLayout" name="verticalLayout_overview_plot"/>
                 </item>
                </layout>
               </widget>
@@ -277,8 +322,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>311</width>
-                 <height>49</height>
+                 <width>498</width>
+                 <height>420</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -6054,7 +6099,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1063</width>
+     <width>1133</width>
      <height>21</height>
     </rect>
    </property>

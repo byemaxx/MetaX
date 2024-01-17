@@ -42,7 +42,7 @@ class BasicStats:
             lambda row: f"{row['LCA_level']} ({row['freq']}%)", axis=1)
         return df_taxa
 
-    def get_stats_taxa_level(self) -> pd.DataFrame:
+    def get_stats_taxa_level(self, peptide_num = 1) -> pd.DataFrame:
         df = self.tfa.original_df.copy()
         df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'not_found')]
         dft = df['Taxon'].str.split('|', expand=True)
@@ -50,13 +50,15 @@ class BasicStats:
         if len(dft.columns) != 7:
             raise ValueError(
                 f'The taxa level is not 7, please check the Taxon split by "|"')
-        # dft.columns = ['d', 'p', 'c', 'o', 'f', 'g', 's']
         dft.columns = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        dft['peptide_num'] = 1
         
         dic = {}
-        # for i in ['d', 'p', 'c', 'o', 'f', 'g', 's']:
         for i in ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
-            set_i = set(dft[i].to_list())
+            dfi = dft[[i, 'peptide_num']].groupby(i).sum()
+            # only extract the taxa with more than peptide threshold
+            dfi = dfi[dfi['peptide_num'] >= peptide_num]
+            set_i = set(dfi.index)
             remove_list = [f'{i}__NULL', f'{i}__', ' ', None]
             for j in remove_list:
                 if j in set_i:

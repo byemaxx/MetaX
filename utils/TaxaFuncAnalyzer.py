@@ -232,9 +232,9 @@ class TaxaFuncAnalyzer:
         bs = BasicStats(self)
         return bs.get_stats_peptide_num_in_taxa()
 
-    def get_stats_taxa_level(self) -> pd.DataFrame:
+    def get_stats_taxa_level(self, peptide_num = 1) -> pd.DataFrame:
         bs = BasicStats(self)
-        return bs.get_stats_taxa_level()
+        return bs.get_stats_taxa_level(peptide_num)
 
     def get_stats_func_prop(self, func_name) -> pd.DataFrame:
         bs = BasicStats(self)

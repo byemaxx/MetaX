@@ -61,3 +61,8 @@
 ## Date: 2024-01-17
 ### Changes:
 - Change: Add a columun as group "NA" to meta table, when meta table is not provided.
+
+# Version: 1.89.7
+## Date: 2024-01-17
+### Changes:
+- New: Added a option to plot taxa number with a peptide threshold in data overview part.

@@ -2876,7 +2876,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
-        pic = BasicPlot(self.tfa).plot_taxa_number()
+        peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
+        pic = BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num)
         pic.figure.show()
 
         

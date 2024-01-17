@@ -31,8 +31,8 @@ class BasicPlot:
         return ax
 
     # input: self.get_stats_taxa_level()
-    def plot_taxa_number(self):
-        df = self.tfa.get_stats_taxa_level()
+    def plot_taxa_number(self, peptide_num = 1):
+        df = self.tfa.get_stats_taxa_level(peptide_num)
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         # plt.figure(figsize=(8, 6))
         sns.set_theme(style="ticks", rc=custom_params)
@@ -40,7 +40,7 @@ class BasicPlot:
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             ax.bar_label(i,)
-        ax.set_title('Number of taxa in different taxa level')
+        ax.set_title(f'Number of taxa in different taxa level. (Peptide number >= {peptide_num})')
         ax.set_xlabel('Taxa level')
         ax.set_ylabel('Number of taxa')
         # plt.show()
@@ -48,7 +48,7 @@ class BasicPlot:
         return ax
 
     # input: self.get_stats_func_prop()
-    def plot_prop_stats(self, func_name = 'Description'):
+    def plot_prop_stats(self, func_name = 'eggNOG_OGs'):
         df = self.tfa.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
