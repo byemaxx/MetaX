@@ -1305,26 +1305,26 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
-        self.pushButton_run_taxaFuncAnalyzer.setEnabled(False)
-        
-        taxafunc_path = self.lineEdit_taxafunc_path.text()
-        meta_path = self.lineEdit_meta_path.text()
-
-        if not taxafunc_path:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxaFunc table!')
-            return
-        elif not meta_path:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
-            return
-        # check if files exist
-        if not os.path.exists(taxafunc_path):
-            QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
-            return
-        elif not os.path.exists(meta_path):
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
-            return
-        
         try:
+            self.pushButton_run_taxaFuncAnalyzer.setEnabled(False)
+            
+            taxafunc_path = self.lineEdit_taxafunc_path.text()
+            meta_path = self.lineEdit_meta_path.text()
+
+            if not taxafunc_path:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxaFunc table!')
+                return
+            elif not meta_path:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select meta table!')
+                return
+            # check if files exist
+            if not os.path.exists(taxafunc_path):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
+                return
+            elif not os.path.exists(meta_path):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
+                return
+        
             self.show_message('taxaFuncAnalyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
             self.tfa = TaxaFuncAnalyzer(taxafunc_path, meta_path)
@@ -1338,6 +1338,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
+            
         finally:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
     

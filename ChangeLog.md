@@ -38,3 +38,9 @@
 ## Date: 2024-01-17
 ### Changes:
 - Change: Changed the progress_text show in one line in output window.
+
+
+# Version: 1.89.3
+## Date: 2024-01-17
+### Changes:
+- Fixed: Fixed the bug of when set TaxaFuncAnalyzer failed, the button doesn't enable again.
