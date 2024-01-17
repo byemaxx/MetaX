@@ -951,7 +951,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.lineEdit_final_peptide_path.setText(final_peptide_path)
     
     def set_lineEdit_peptide2taxafunc_outpath(self):
-        peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Peptide2TaxaFunc Table', self.last_path, 'tsv (*.tsv)')[0]
+        # set default file name as 'TaxaFunc.tsv'
+        peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Peptide2TaxaFunc Table', os.path.join(self.last_path, 'TaxaFunc.tsv'), 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(peptide2taxafunc_outpath)
         self.lineEdit_peptide2taxafunc_outpath.setText(peptide2taxafunc_outpath)
     

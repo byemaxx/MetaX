@@ -5,6 +5,7 @@
 from .pep2taxafunc import proteins_to_taxa_func
 from .convert_ID_to_name import add_pathway_name_to_df, add_ec_name_to_df
 
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import re
@@ -33,9 +34,10 @@ def stat_length(seq): # count the length of peptide sequence
 def count_protein(proteins): # count the number of proteins in a protein group
     return len(proteins.split(';'))
 
-def apply_run(row, db_path, threshold):
+def apply_run(row, db_path, threshold) -> dict:
     result = run_pep2taxafunc(row, db_path, threshold)
-    return pd.Series(result)
+    return result
+
 
 def add_additional_columns(df):
     try:
@@ -64,8 +66,16 @@ def run_2_result(df, db_path, threshold):
     # df_t['protein_count'] = df_t.loc[:, 'Proteins'].progress_apply(count_protein)
     # df_t['peptide_length'] = df_t.iloc[:,0].progress_apply(stat_length)
     print('Running proteins_to_taxa_func...')
-    df_t0 = df_t['Proteins'].progress_apply(apply_run, args=(db_path, threshold))
+    
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(apply_run, protein, db_path, threshold) for protein in df_t['Proteins']]
+        results = [future.result() for future in tqdm(futures, total=len(futures))]
+
+    # convert the results to dataframe
+    df_t0 = pd.DataFrame(results, index=df_t.index)
     df_t = pd.concat([df_t, df_t0], axis=1)
+    
+    
     # change the column names of 'Description'	'Description_prop' to 'eggNOG_Description'	'eggNOG_Description_prop'
     if 'Description' in df_t.columns:
         df_t.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
@@ -147,7 +157,7 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
 # if __name__ == '__main__':
 #     final_peptides_path = 'C:/Users/Qing/Desktop/Example_final_peptide.tsv'
 #     output_path = 'C:/Users/Qing/Desktop/1.tsv'
-#     db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut-new.db'
+#     db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
 #     threshold = 1
 #     t0 = time.time()
 #     peptableAnnotate(final_peptides_path, output_path, db_path, threshold)

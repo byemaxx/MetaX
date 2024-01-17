@@ -44,3 +44,9 @@
 ## Date: 2024-01-17
 ### Changes:
 - Fixed: Fixed the bug of when set TaxaFuncAnalyzer failed, the button doesn't enable again.
+  
+# Version: 1.89.4
+## Date: 2024-01-17
+### Changes:
+- Change: Use ThreadPoolExecutor to run the peptide to TaxaFunc Annotator to speed up.
+- Change: Set default file name as 'TaxaFunc.tsv' for the result of TaxaFunc Annotator in file window.
