@@ -32,3 +32,9 @@
 ### Changes:
 - Fixed: Use "with ThreadPoolExecutor() as executor:"  replaced "with multiprocessing.Pool() as pool:" in build_id2annotation_db to avoid restart the splash logo.
 - Change: Changed the output windows deafaul size as 1/2 screen size.
+
+
+# Version: 1.89.2
+## Date: 2024-01-17
+### Changes:
+- Change: Changed the progress_text show in one line in output window.
