@@ -1756,18 +1756,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
         self.comboBox_basic_heatmap_selection_list.clear()
-        if type_list == 'taxa':
-            self.comboBox_basic_heatmap_selection_list.addItem('All Taxa')
-            self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_list)
-        elif type_list == 'func':
-            self.comboBox_basic_heatmap_selection_list.addItem('All Functions')
-            self.comboBox_basic_heatmap_selection_list.addItems(self.func_list)
-        elif type_list == 'taxa-func':
-            self.comboBox_basic_heatmap_selection_list.addItem('All Taxa-Functions')
-            self.comboBox_basic_heatmap_selection_list.addItems(self.taxa_func_list)
-        elif type_list == 'peptide':
-            self.comboBox_basic_heatmap_selection_list.addItem('All Peptides')
-            self.comboBox_basic_heatmap_selection_list.addItems(self.peptide_list)
+        type_dict = {'taxa': ['All Taxa', self.taxa_list], 
+                    'func': ['All Functions', self.func_list], 
+                    'taxa-func': ['All Taxa-Functions', self.taxa_func_list],
+                    'peptide': ['All Peptides', self.peptide_list]}
+        
+        self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
+        self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
+        self.add_basic_heatmap_list()
+        
+
     
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
@@ -2459,18 +2457,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_trends_select_combobox(type_list=current_table)
         
     def update_trends_select_combobox(self, type_list):
-        if type_list == 'taxa':
-            self.comboBox_trends_selection_list.addItem('All Taxa')
-            self.comboBox_trends_selection_list.addItems(self.taxa_list)
-        elif type_list == 'func':
-            self.comboBox_trends_selection_list.addItem('All Functions')
-            self.comboBox_trends_selection_list.addItems(self.func_list)
-        elif type_list == 'taxa-func':
-            self.comboBox_trends_selection_list.addItem('All Taxa-Functions')
-            self.comboBox_trends_selection_list.addItems(self.taxa_func_list)
-        elif type_list == 'peptide':
-            self.comboBox_trends_selection_list.addItem('All Peptides')
-            self.comboBox_trends_selection_list.addItems(self.peptide_list)       
+        type_dict = { 'taxa': ["All Taxa", self.taxa_list],
+                      'func': ["All Functions", self.func_list],
+                      'taxa-func': ["All Taxa-Functions", self.taxa_func_list],
+                      'peptide': ["All Peptides", self.peptide_list]}
+
+        self.comboBox_trends_selection_list.addItem(type_dict[type_list][0])
+        self.comboBox_trends_selection_list.addItems(type_dict[type_list][1])
+        self.add_trends_list()     
         
         
     def add_trends_list(self):

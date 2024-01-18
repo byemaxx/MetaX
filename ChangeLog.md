@@ -66,3 +66,9 @@
 ## Date: 2024-01-17
 ### Changes:
 - New: Added a option to plot taxa number with a peptide threshold in data overview part.
+
+
+# Version: 1.89.8
+## Date: 2024-01-18
+### Changes:
+- Change: Add "All Taxa", "All Functions", etc. by default when swith table type.
