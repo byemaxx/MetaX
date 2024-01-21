@@ -3,11 +3,11 @@ from pyecharts.charts import Graph
 
 class NetworkPlot:
     def __init__(self, tfobj=None):
-        self.tfobj = tfobj
+        self.tfa = tfobj
     
 
     def create_nodes_links(self, sample_list:list = None, focus_list:list = [], plot_list_only:bool = False):
-        df = self.tfobj.taxa_func_df.copy()
+        df = self.tfa.taxa_func_df.copy()
         extra_cols = sample_list
         if extra_cols:
             print(f"Using sample list provided {extra_cols}")
@@ -90,9 +90,9 @@ class NetworkPlot:
         if focus_list is not None and focus_list:
             new_list = []
             for i in focus_list:
-                if i in self.tfobj.taxa_df.index.tolist():
+                if i in self.tfa.taxa_df.index.tolist():
                     new_list.append(i)
-                elif i in self.tfobj.func_df.index.tolist():
+                elif i in self.tfa.func_df.index.tolist():
                     new_list.append(i)
                 elif i.startswith('d__Bacteria') and ' <' in i:
                     taxon = i.split(' <')[0]
@@ -143,7 +143,12 @@ class NetworkPlot:
         if len(sample_list) < 2:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
-        df_dict = {'taxa': self.tfobj.taxa_df, 'func': self.tfobj.func_df, 'taxa-func': self.tfobj.taxa_func_df, 'peptide': self.tfobj.peptide_df}
+        df_dict = {'taxa': self.tfa.taxa_df, 
+                   'func': self.tfa.func_df, 
+                   'taxa-func': self.tfa.taxa_func_df, 
+                   'peptide': self.tfa.peptide_df,
+                   'protein': self.tfa.protein_df}
+        
         df = df_dict[df_type].copy()
         if extra_cols := sample_list:
             print(f"Using sample list provided {extra_cols}")
@@ -238,7 +243,7 @@ class NetworkPlot:
                 legend_opts=opts.LegendOpts(is_show=True),
                 title_opts=opts.TitleOpts(
                     title="Co-expression Network",
-                    subtitle=f"{sample_list}" if sample_list != self.tfobj.sample_list else "",
+                    subtitle=f"{sample_list}" if sample_list != self.tfa.sample_list else "",
                     subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ), 
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}} )

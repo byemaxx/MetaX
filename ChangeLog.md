@@ -81,3 +81,9 @@
 - 2. Add new function to sum peptide intensity to protein intensity, include method='[razor','anti-razor'], rank by proteins count or sahred, sum by all samples or by each sample.
 - Change:
 - Changed the parameters to call the _data_preprocess.
+
+# Version: 1.90.1
+## Date: 2024-01-21
+### Changes:
+- New: Add Protein table to GUI enable to stats it.
+- Fix: Fixed function get_stats_mean_df_by_group() when input df contain col does not from sample_list

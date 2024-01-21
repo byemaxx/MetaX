@@ -211,7 +211,7 @@ class TaxaFuncAnalyzer:
             print('group is not set, please set group first.')
             return None
         if sample not in self.sample_list:
-            raise ValueError(f'sample must be in {set(self.sample_list)}')
+            raise ValueError(f'sample must be in {set(self.sample_list)}, your input is [{sample}]')
         else:
             return self.meta_df[self.meta_df['Sample'] == sample][self.meta_name].tolist()[0]
     
@@ -370,6 +370,8 @@ class TaxaFuncAnalyzer:
             self.protein_df = SumProteinIntensity(self).sum_protein_intensity( **sum_protein_params)
             if processing_after_sum:
                 self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
+
+
                 
 
 

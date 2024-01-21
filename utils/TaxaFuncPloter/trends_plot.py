@@ -21,7 +21,7 @@ class TrendsPlot:
 
         # Perform KMeans clustering
         n_clusters = num_cluster
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init='auto')
         clusters = kmeans.fit_predict(scaled_df)
 
         # Add the cluster labels to the DataFrame

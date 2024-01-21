@@ -65,8 +65,16 @@ class SumProteinIntensity:
         res_df= pd.DataFrame.from_dict(self.res_intensity_dict)
         # fill na with 0
         res_df.fillna(0, inplace=True)
+        # set index name
+        res_df.index.name = self.tfa.protein_col_name
+        
         print(f'\nTotal number of proteins: {len(res_df)}\n')
+        # check i any row is all 0, if yes, remove it
+        if (res_df == 0).all(axis=1).any():
+            res_df = res_df[~(res_df == 0).all(axis=1)]
+            print(f'After removing, total number of proteins: {len(res_df)}\n')
         print("-------------Finish summing protein intensity.-------------\n")
+        
         return res_df
 
     
