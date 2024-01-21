@@ -1657,15 +1657,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             # ask if continue when create protein table
             if self.checkBox_create_protein_table.isChecked():
-                if self.checkBox_infrence_protein_by_sample.isChecked():
-                    msg_box = QMessageBox()
-                    msg_box.setWindowTitle('Warning')
-                    msg_box.setText('''You select [Create Protein Table] and [Inference Protein by Sample],\n\nIt may take a long time.\
-                        \n\nDo you want to continue?''')
-                    msg_box.addButton(QMessageBox.Yes)
-                    msg_box.addButton(QMessageBox.No)
-                    if msg_box.exec_() == QMessageBox.No:
-                        return None
+                msg_box = QMessageBox()
+                msg_box.setWindowTitle('Warning')
+                msg_box.setText('''You select [Create Protein Table].\n\nIt may take a long time.\
+                    \n\nDo you want to continue with [Create Protein Table]?''')
+                msg_box.addButton(QMessageBox.Yes)
+                msg_box.addButton(QMessageBox.No)
+                if msg_box.exec_() == QMessageBox.No:
+                    return None
             
             
             # create protein table params

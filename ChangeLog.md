@@ -87,3 +87,8 @@
 ### Changes:
 - New: Add Protein table to GUI enable to stats it.
 - Fix: Fixed function get_stats_mean_df_by_group() when input df contain col does not from sample_list
+
+# Version: 1.90.2
+## Date: 2024-01-21
+### Changes:
+- Change: Change a Message before create protein table, indicate it would be take a long time.
