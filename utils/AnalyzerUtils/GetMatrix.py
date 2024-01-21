@@ -20,7 +20,7 @@ class GetMatrix:
             if taxon_name is not None:
                 dft = self.tfa.clean_df[(self.tfa.clean_df['Taxon'] == taxon_name) & (
                     self.tfa.clean_df[self.tfa.func_name] == func_name)]
-                dft.set_index('Sequence', inplace=True)
+                dft.set_index(self.tfa.peptide_col_name, inplace=True)
 
         elif taxon_name is not None and peptide_seq is None:
             dft = self.tfa.func_taxa_df.copy()
@@ -29,8 +29,8 @@ class GetMatrix:
             dft.set_index(self.tfa.func_name, inplace=True)
 
         elif peptide_seq is not None and taxon_name is None:
-            dft = self.tfa.original_df[self.tfa.original_df['Sequence'] == peptide_seq]
-            dft.set_index('Sequence', inplace=True)
+            dft = self.tfa.original_df[self.tfa.original_df[self.tfa.peptide_col_name] == peptide_seq]
+            dft.set_index(self.tfa.peptide_col_name, inplace=True)
 
         else:
             raise ValueError(

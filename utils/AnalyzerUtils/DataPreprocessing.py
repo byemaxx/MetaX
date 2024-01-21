@@ -420,7 +420,7 @@ class DataPreprocessing:
                 raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
         print(f'\n{self._get_current_time()} -----Data preprocessing finished.-----\n')
 
-        if df_name in {'peptide', 'taxa', 'func', 'taxa_func'}:
+        if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein'}:
             left_row_num = len(df)
             self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
 

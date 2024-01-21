@@ -529,7 +529,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # update comboBox of basic peptide query
         if self.tfa and self.tfa.clean_df is not None:
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df['Sequence'].tolist())
+            self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
 
 
 #######  set theme end  #######
@@ -1624,13 +1624,22 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.tfa.set_func(function)
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
+
                 
-                self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold, 
-                                        normalize_method = normalize_method, transform_method = transform_method, 
-                                        outlier_detect_method= outlier_detect_method, outlier_handle_method = outlier_handle_method,
-                                        outlier_detect_by_group =outlier_detect_by_group,outlier_handle_by_group = outlier_handle_by_group,
-                                        batch_list = batch_list, processing_order = processing_order,
-                                        processing_after_sum = processing_after_sum, peptide_num_threshold = peptide_num_threshold)
+                data_preprocess_params = {'normalize_method': normalize_method, 
+                                          'transform_method': transform_method,
+                                            'batch_list': batch_list, 
+                                            'outlier_detect_method': outlier_detect_method,
+                                            'outlier_handle_method': outlier_handle_method,
+                                            'outlier_detect_by_group': outlier_detect_by_group,
+                                            'outlier_handle_by_group': outlier_handle_by_group,
+                                            'processing_order': processing_order}
+                
+                self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold,
+                                        data_preprocess_params = data_preprocess_params,
+                                        processing_after_sum = processing_after_sum, 
+                                        peptide_num_threshold = peptide_num_threshold)
+                
                 # save taxafunc obj as pickle file
                 self.save_taxafunc_obj(no_message=True)
 
@@ -1688,7 +1697,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # update comboBox of basic peptide query
         self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df['Sequence'].tolist())
+        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
 
         # clean comboBox of deseq2
         self.comboBox_deseq2_tables_list = []
@@ -2362,11 +2371,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             else:
                 if table_name == 'Taxa':
                     df = self.tfa.clean_df.loc[self.tfa.clean_df['Taxon'].isin(self.basic_heatmap_list)]
-                    df.index = df['Sequence']
+                    df.index = df[self.tfa.peptide_col_name]
 
                 elif table_name == 'Func':
                     df = self.tfa.clean_df.loc[self.tfa.clean_df[self.tfa.func_name].isin(self.basic_heatmap_list)]
-                    df.index = df['Sequence']
+                    df.index = df[self.tfa.peptide_col_name]
 
                 elif table_name == 'Taxa-Func':
                     df_all = None
@@ -2379,7 +2388,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                         else:
                             df_all = pd.concat([df_all, dft])
                     df = df_all
-                    df.index = df['Sequence']
+                    df.index = df[self.tfa.peptide_col_name]
 
                 else: # Peptide
                     df = self.tfa.peptide_df.copy()
@@ -2765,13 +2774,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if peptide == '':
             return None
         else:
-            df = self.tfa.preprocessed_df.loc[self.tfa.preprocessed_df['Sequence'] == peptide]
+            df = self.tfa.preprocessed_df.loc[self.tfa.preprocessed_df[self.tfa.peptide_col_name] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None
             cols = df.columns.tolist()
             
-            pre_list = ['Sequence', 'Proteins', 'LCA_level']
+            pre_list = [self.tfa.peptide_col_name, 'Proteins', 'LCA_level']
             for col in cols:
                 if '_prop' in col:
                     pre_list.append(col.split('_prop')[0])

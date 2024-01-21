@@ -37,7 +37,7 @@ class CrossTest:
             elif df_type == 'func':
                 df, primary = self.tfa.func_df, self.tfa.func_name
             elif df_type == 'peptide':
-                df, primary = self.tfa.peptide_df, 'Sequence'
+                df, primary = self.tfa.peptide_df, self.tfa.peptide_col_name
             else:
                 raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
             
@@ -97,7 +97,7 @@ class CrossTest:
         elif df_type == 'func':
             df, primary = self.tfa.func_df, self.tfa.func_name
         elif df_type == 'peptide':
-            df, primary = self.tfa.peptide_df, 'Sequence'
+            df, primary = self.tfa.peptide_df, self.tfa.peptide_col_name
         else:
             raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
 
@@ -168,7 +168,7 @@ class CrossTest:
         elif df_type == 'func':
             df, primary_index = self.tfa.func_df, self.tfa.func_name
         elif df_type == 'peptide':
-            df, primary_index = self.tfa.peptide_df, 'Sequence'
+            df, primary_index = self.tfa.peptide_df, self.tfa.peptide_col_name
         else:
             raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
 
@@ -397,7 +397,7 @@ class CrossTest:
                 tukey_df['Taxa'] = row['Taxon']
             elif taxon_name and func_name:
                 # tukey_df['seq'] = row['Seq']
-                tukey_df['Sequence'] = row.name
+                tukey_df[self.tfa.peptide_col_name] = row.name
 
             tukey_results = pd.concat([tukey_results, tukey_df], axis=0)
             print(tukey_results)

@@ -19,17 +19,20 @@ from .AnalyzerUtils.BasicStats import BasicStats
 from .AnalyzerUtils.CrossTest import CrossTest
 from .AnalyzerUtils.DataPreprocessing import DataPreprocessing
 from .AnalyzerUtils.GetMatrix import GetMatrix
+from .AnalyzerUtils.SumProteinIntensity import SumProteinIntensity
 
 
 import warnings
 warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
-    def __init__(self, df_path, meta_path=None):
+    def __init__(self, df_path, meta_path=None, peptide_col_name='Sequence', protein_col_name='Proteins'):
         self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
-
+        
+        self.peptide_col_name = peptide_col_name
+        self.protein_col_name = protein_col_name
         self.sample_list = None
         self.meta_df = None
         self.meta_name = None
@@ -48,7 +51,8 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = None
         self.taxa_func_linked_dict = None
         self.func_taxa_linked_dict = None
-        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
+        self.protein_df = None
+        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None, 'protein': None}
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
@@ -338,48 +342,49 @@ class TaxaFuncAnalyzer:
 
 
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
-                          normalize_method: str = None, transform_method: str = None,
-                          outlier_detect_method: str = None, outlier_handle_method: str = None,
-                          outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, batch_list: list = None, 
-                          processing_order:list=None, processing_after_sum: bool = False,
-                          peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1}):
+                         processing_after_sum: bool = True,
+                         data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
+                                                            'batch_list': None, 'outlier_detect_method': None,
+                                                            'outlier_handle_method': None,
+                                                            'outlier_detect_by_group': None,
+                                                            'outlier_handle_by_group': None,
+                                                            'processing_order': None},
+                          peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
+                          sum_protein:bool = False, sum_protein_params: dict = { 'method': 'razor', 'by_sample': False, 'rank_method': 'count'}
+                          ):
         
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
-        args_data_preprocess = {
-            'normalize_method': normalize_method,
-            'transform_method': transform_method,
-            'batch_list': batch_list,
-            'outlier_detect_method': outlier_detect_method,
-            'outlier_handle_method': outlier_handle_method,
-            'outlier_detect_by_group': outlier_detect_by_group,
-            'outlier_handle_by_group': outlier_handle_by_group,
-            'processing_order': processing_order
-        }
 
         df = self.original_df.copy()
         # perform data pre-processing
         if not processing_after_sum:
-            df = self.data_preprocess(df=df,df_name = 'peptide', **args_data_preprocess)
+            df = self.data_preprocess(df=df,df_name = 'peptide', **data_preprocess_params)
             # save the processed df
             self.preprocessed_df = df
-        
-        func_name = self.func_name
-        sample_list = self.sample_list
-
+            
         print(f"Original data shape: {df.shape}")
+        
+        # sum the protein intensity
+        if sum_protein:
+            self.protein_df = SumProteinIntensity(self).sum_protein_intensity( **sum_protein_params)
+            if processing_after_sum:
+                self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
+                
+
+
         print("Starting to set Function table...")
         # filter prop = 100% and func are not (NULL, -, NaN)
-        df_func = df[(df[f'{func_name}_prop'] >= func_threshold) & (df[func_name].notnull()) &
-                     (df[func_name] != 'not_found') & (df[func_name] != '-') & (df[func_name] != 'NaN')].copy()
+        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) & (df[self.func_name].notnull()) &
+                     (df[self.func_name] != 'not_found') & (df[self.func_name] != '-') & (df[self.func_name] != 'NaN')].copy()
         
-        df_func = df_func.groupby(func_name).sum(numeric_only=True)[sample_list]
+        df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Function table...-----")
-            df_func = self.data_preprocess(df=df_func,df_name = 'func', **args_data_preprocess)
+            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
             
         # add column 'peptide_num' to df_func
-        df_func['peptide_num'] = df.groupby(func_name).count()['Sequence']
+        df_func['peptide_num'] = df.groupby(self.func_name).count()[self.peptide_col_name]
         # move the column 'peptide_num' to the first column
         cols = list(df_func.columns)
         cols = [cols[-1]] + cols[:-1]
@@ -416,7 +421,7 @@ class TaxaFuncAnalyzer:
             raise ValueError("Please input the correct taxa level (s, g, f, o, c, p, d, l)")
         
         # extract 'taxa', sample intensity
-        df_taxa = dfc[['Taxon'] + sample_list].copy()
+        df_taxa = dfc[['Taxon'] + self.sample_list].copy()
         # add column 'peptide_num' to df_taxa as 1
         df_taxa['peptide_num'] = 1
         # move the column 'peptide_num' to the first column
@@ -430,27 +435,27 @@ class TaxaFuncAnalyzer:
         # Filter the dfc to create taxa-func table
         filter_conditions = (
             (dfc['Taxon'] != 'not_found') &
-            (dfc[f'{func_name}_prop'] >= func_threshold) &
-            dfc[func_name].notnull() &
-            (dfc[func_name] != 'not_found') &
-            (dfc[func_name] != '-')
+            (dfc[f'{self.func_name}_prop'] >= func_threshold) &
+            dfc[self.func_name].notnull() &
+            (dfc[self.func_name] != 'not_found') &
+            (dfc[self.func_name] != '-')
         )
         dfc = dfc[filter_conditions]
         # create clean peptide table
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for dfc...-----")
-            dfc_processed = self.data_preprocess(df=dfc, df_name = 'peptide',**args_data_preprocess)
+            dfc_processed = self.data_preprocess(df=dfc, df_name = 'peptide',**data_preprocess_params)
             self.preprocessed_df = dfc_processed
-            dfc_with_peptides = dfc_processed[['Sequence', 'Taxon', func_name] + sample_list]
+            dfc_with_peptides = dfc_processed[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
         else:  
-            dfc_with_peptides = dfc[['Sequence', 'Taxon', func_name] + sample_list]
+            dfc_with_peptides = dfc[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
             
         df_peptide = dfc_with_peptides.copy()
-        df_peptide.index = df_peptide['Sequence']
-        df_peptide = df_peptide.drop(['Sequence', 'Taxon', func_name], axis=1)
+        df_peptide.index = df_peptide[self.peptide_col_name]
+        df_peptide = df_peptide.drop([self.peptide_col_name, 'Taxon', self.func_name], axis=1)
         
         # extract 'taxa' and 'func' and sample intensity
-        extract_list = ['Sequence','Taxon', func_name] + sample_list
+        extract_list = [self.peptide_col_name,'Taxon', self.func_name] + self.sample_list
         dfc = dfc[extract_list]
         
 
@@ -459,7 +464,7 @@ class TaxaFuncAnalyzer:
                 
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
-            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **args_data_preprocess)
+            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             
 
         # filter the df_taxa by peptide_num_threshold
@@ -469,13 +474,13 @@ class TaxaFuncAnalyzer:
 
 
         # create taxa-func central table
-        df_taxa_func = dfc.groupby(['Taxon', func_name], as_index=True).sum(numeric_only=True)
+        df_taxa_func = dfc.groupby(['Taxon', self.func_name], as_index=True).sum(numeric_only=True)
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa-Function table...-----")
-            df_taxa_func = self.data_preprocess(df=df_taxa_func,df_name = 'taxa_func', **args_data_preprocess)
+            df_taxa_func = self.data_preprocess(df=df_taxa_func,df_name = 'taxa_func', **data_preprocess_params)
         
         # add column 'peptide_num' to df_taxa_func
-        df_taxa_func['peptide_num'] = dfc.groupby(['Taxon', func_name]).count()['Sequence']
+        df_taxa_func['peptide_num'] = dfc.groupby(['Taxon', self.func_name]).count()[self.peptide_col_name]
         # filter the df by peptide_num_threshold
         df_taxa_func = df_taxa_func[df_taxa_func['peptide_num'] >= peptide_num_threshold['taxa_func']]
         # move the column 'peptide_num' to the first column
@@ -521,7 +526,7 @@ class TaxaFuncAnalyzer:
         Get the dataframe of taxa_func_linked_peptide_num
         Taxa | Function | PepNum
         """
-        dft = self.clean_df[['Sequence', "Taxon", self.func_name]]
+        dft = self.clean_df[[self.peptide_col_name, "Taxon", self.func_name]]
         taxa_list = dft["Taxon"].unique().tolist()
         temp_dict = {'Taxon': [], 'Function': [], 'PepNum': []}
         

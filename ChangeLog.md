@@ -72,3 +72,12 @@
 ## Date: 2024-01-18
 ### Changes:
 - Change: Add "All Taxa", "All Functions", etc. by default when swith table type.
+
+# Version: 1.90.0
+## Date: 2024-01-20
+### Changes:
+- New: 
+- 1. Add self.peptide_col_name, self.protein_col_name to class TaxaFuncAnalyzer to enable set the protein and peptide colnmun names of provided data frame.
+- 2. Add new function to sum peptide intensity to protein intensity, include method='[razor','anti-razor'], rank by proteins count or sahred, sum by all samples or by each sample.
+- Change:
+- Changed the parameters to call the _data_preprocess.
