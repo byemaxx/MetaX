@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1111,7 +1111,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Method of Protein Inference</string>
+                 <string>Protein Inference Method</string>
                 </property>
                </widget>
               </item>
@@ -1126,14 +1126,42 @@
                </widget>
               </item>
               <item row="1" column="2">
-               <widget class="QCheckBox" name="checkBox_calculate_protein_rank_by_intensity">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="text">
-                 <string>Weighting by Intensity</string>
-                </property>
-               </widget>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="QLabel" name="label_136">
+                  <property name="text">
+                   <string>Protein Ranking Method</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_protein_ranking_method">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>unique_counts</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>all_counts</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>unique_intensity</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>shared_intensity</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>

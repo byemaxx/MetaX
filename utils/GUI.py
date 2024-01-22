@@ -253,7 +253,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set change event
         self.checkBox_create_protein_table.stateChanged.connect(self.change_event_checkBox_create_protein_table)
         self.comboBox_method_of_protein_inference.currentIndexChanged.connect(self.update_method_of_protein_inference)
-        self.checkBox_infrence_protein_by_sample.stateChanged.connect(self.change_event_checkBox_infrence_protein_by_sample)
         
 
         ## Basic Stat
@@ -548,34 +547,26 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def change_event_checkBox_create_protein_table(self):
         if self.checkBox_create_protein_table.isChecked():
             self.checkBox_infrence_protein_by_sample.setEnabled(True)
-            self.checkBox_calculate_protein_rank_by_intensity.setEnabled(True)
+            self.comboBox_protein_ranking_method.setEnabled(True)
             self.comboBox_method_of_protein_inference.setEnabled(True)
         else:
             self.comboBox_method_of_protein_inference.setEnabled(False)
             self.checkBox_infrence_protein_by_sample.setEnabled(False)
-            self.checkBox_calculate_protein_rank_by_intensity.setChecked(False)
+            self.comboBox_protein_ranking_method.setEnabled(False)
 
     def update_method_of_protein_inference(self):
         if self.comboBox_method_of_protein_inference.currentText() == "anti-razor":
             # set checked 
             self.checkBox_infrence_protein_by_sample.setChecked(True)
             self.checkBox_infrence_protein_by_sample.setEnabled(False)
-            self.checkBox_calculate_protein_rank_by_intensity.setChecked(True)
-            self.checkBox_calculate_protein_rank_by_intensity.setEnabled(False)
+            self.comboBox_protein_ranking_method.setEnabled(False)
         else:
             self.checkBox_infrence_protein_by_sample.setEnabled(True)
-            self.checkBox_calculate_protein_rank_by_intensity.setEnabled(True)
-            self.checkBox_calculate_protein_rank_by_intensity.setChecked(False)
+            self.comboBox_protein_ranking_method.setEnabled(True)
             self.checkBox_infrence_protein_by_sample.setChecked(False)
     
     
-    def change_event_checkBox_infrence_protein_by_sample(self):
-        if self.checkBox_infrence_protein_by_sample.isChecked():
-            self.checkBox_calculate_protein_rank_by_intensity.setEnabled(False)
-            self.checkBox_calculate_protein_rank_by_intensity.setChecked(True)
-        else:
-            self.checkBox_calculate_protein_rank_by_intensity.setEnabled(True)
-            self.checkBox_calculate_protein_rank_by_intensity.setChecked(False)
+
     
 #######  set theme end  #######
 
@@ -1565,7 +1556,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         
     def set_multi_table(self, restore_taxafunc=False):
-        self.pushButton_set_multi_table.setEnabled(False)
+        # self.pushButton_set_multi_table.setEnabled(False)
         if restore_taxafunc == False:
 
             function = self.comboBox_function_to_stast.currentText()
@@ -1672,7 +1663,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             sum_protein_params = {
                 'method': self.comboBox_method_of_protein_inference.currentText(),
                 'by_sample': self.checkBox_infrence_protein_by_sample.isChecked(),
-                'rank_method' :'shared' if self.checkBox_calculate_protein_rank_by_intensity.isChecked() else 'count',
+                'rank_method' :self.comboBox_protein_ranking_method.currentText()
             }
                 
 

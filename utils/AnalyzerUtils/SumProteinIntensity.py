@@ -8,12 +8,11 @@
 # out = SumProteinIntensity(sw)
 # df1 = out.sum_protein_intensity(method='razor', by_sample=False, rank_method='count')
 # df2 = out.sum_protein_intensity(method='razor', by_sample=False, rank_method='shared')
-# df3 = out.sum_protein_intensity(method='razor', by_sample=True)
+# df3 = out.sum_protein_intensity(method='razor', by_sample=False, rank_method='unique')
 # df4 = out.sum_protein_intensity(method='anti-razor')
 ##############################################
 
 import pandas as pd
-
 
 class SumProteinIntensity:
     def __init__(self, taxa_func_analyzer):
@@ -26,10 +25,12 @@ class SumProteinIntensity:
         self._init_dicts()
 
             
-    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='count'):
+    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts'):
 
         if method not in ['razor', 'anti-razor']:
             raise ValueError('Method must in ["razor", "anti-razor"]')
+        if rank_method not in ['shared_intensity', 'all_counts', 'unique_counts', 'unique_intensity']:
+            raise ValueError('Rank method must in ["shared_intensity", "all_counts", "unique_counts", "unique_intensity"]')
         
         if method == 'razor':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   
@@ -38,19 +39,15 @@ class SumProteinIntensity:
                 for sample in self.tfa.sample_list:
                     # update the dict for each sample
                     print(f'Creating protein rank dict for [{sample}] by shared intensity', end='\r')
-                    self._update_protein_rank_dict(sample_name = sample, rank_method = None)
+                    self._update_protein_rank_dict(sample_name = sample, rank_method = rank_method)
                     self._sum_protein_razor(sample, by_sample)
                     
-            else: 
+            else: # without sample
                 # only need to create the dict once
                 print(f'Creating protein rank dict for all samples by [{rank_method}]', end='\r')
-                
-                if rank_method == 'count':
-                    self._update_protein_rank_dict(sample_name = None, rank_method = 'count')
-                elif rank_method == 'shared':
-                    self._update_protein_rank_dict(sample_name = None, rank_method = 'shared')
-
-                
+                # sample_name set as '_all_samples'
+                self._update_protein_rank_dict(sample_name = None, rank_method = rank_method)
+ 
                 for sample in self.tfa.sample_list:
                     self._sum_protein_razor(sample, by_sample)
                     
@@ -87,12 +84,26 @@ class SumProteinIntensity:
 
     def _update_protein_rank_dict(self, sample_name = None, rank_method = None):
         
-        def update_by_intesity(df, sample_name=sample_name):
+        def update_by_intesity(df, sample_name=sample_name, method=rank_method):
             for row in df.itertuples():
                 proteins = row[1].split(';')
                 shared_times = len(proteins)
-                shared_intensity = row[2]/shared_times
-                
+
+                if method == 'shared_intensity':
+                    shared_intensity = row[2]/shared_times
+                elif method == 'all_counts':
+                    shared_intensity = 1
+                elif method == 'unique_counts':
+                    if shared_times == 1:
+                        shared_intensity = 1
+                    else:   
+                        shared_intensity = 0
+                elif method == 'unique_intensity':
+                    if shared_times == 1:
+                        shared_intensity = row[2]
+                    else:   
+                        shared_intensity = 0
+                    
                 for protein in proteins:
                     if protein in self.rank_dict[sample_name].keys():
                         self.rank_dict[sample_name][protein] += shared_intensity
@@ -100,29 +111,19 @@ class SumProteinIntensity:
                         self.rank_dict[sample_name][protein] = shared_intensity
             
         
-        if sample_name is None and rank_method is not None:
+        if sample_name is None:
             sample_name = '_all_samples'
             df = self.df.loc[:,[ self.tfa.protein_col_name ]]
-            
-            if rank_method == 'count':
-                for row in df.itertuples():
-                    proteins = row[1].split(';')
-                    for protein in proteins:
-                        if protein in self.rank_dict[sample_name].keys():
-                            self.rank_dict[sample_name][protein] += 1
-                        else:
-                            self.rank_dict[sample_name][protein] = 1
-            
-            elif rank_method == 'shared':
-                df['peptide_count'] = 1
-                update_by_intesity(df, sample_name)
+            df['peptide_count'] = 1
+            # rank method:[shared, count, unique]
+            update_by_intesity(df, sample_name, method=rank_method)
+
                             
-        elif sample_name is not None and rank_method is None:
+        else: 
             df = self.df.loc[:,[ self.tfa.protein_col_name, sample_name ]]
-            update_by_intesity(df, sample_name)
+            update_by_intesity(df, sample_name, method=rank_method)
         
-        else:
-            raise ValueError('sample_name and rank_method cannot be both provided or both None')
+                            
 
 
     def _update_output_dict(self, protein_list: list, sample_name:str, intensity:float):
@@ -179,13 +180,3 @@ class SumProteinIntensity:
 
 
 
-# out = SumProteinIntensity(sw)
-# df1 = out.sum_protein_intensity(method='razor', by_sample=False, rank_method='count')
-# df2 = out.sum_protein_intensity(method='razor', by_sample=False, rank_method='shared')
-# df3 = out.sum_protein_intensity(method='razor', by_sample=True)
-# df4 = out.sum_protein_intensity(method='anti-razor')
-
-# display(df1)
-# display(df2)
-# display(df3)
-# display(df4)
