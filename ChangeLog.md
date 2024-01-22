@@ -93,3 +93,9 @@
 ### Changes:
 - Change: restructure SumProteinIntensity class
 - New: Add new ranking method for protein: unique_counts
+
+
+# Version: 1.90.4
+## Date: 2024-01-22
+### Changes:
+- Fix: Fixed the bug of get tables when protein table dose not exist

@@ -405,6 +405,42 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
 
     ###############   init function End   ###############
+    
+    
+    ###############   basic function start   ###############
+    def get_table_by_df_type(self, df_type:str= None, 
+                             replace_if_two_index:bool = False):
+        if df_type is None:
+            raise ValueError("Please specify the df_type.")
+        
+        df_type = df_type.lower()
+        dft = None
+        if df_type == "taxa":
+            dft =  self.tfa.taxa_df.copy()
+        elif df_type in ["func", "function"]:
+            dft =   self.tfa.func_df.copy()
+        elif df_type in ["taxa-func", "taxa-function"]:
+            dft =   self.tfa.taxa_func_df.copy()
+        elif df_type == "peptide":
+            dft =   self.tfa.peptide_df.copy()
+        elif df_type == "protein":
+            if self.tfa.protein_df is None:
+                raise ValueError("Please set protein table first.")
+            dft =   self.tfa.protein_df.copy()
+        else:
+            raise ValueError(f"Invalid df_type: {df_type}")
+        
+        if replace_if_two_index:
+            dft = self.tfa.replace_if_two_index(dft)
+        return dft
+
+    
+    
+    
+    ###############   basic function End   ###############
+    
+    
+    
     def init_theme_menu(self):
         # Create a menu for themes
         theme_menu = QMenu("Themes", self.MainWindow)
@@ -2452,13 +2488,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
 
         table_name = self.comboBox_basic_table.currentText()
-        table_name_dict = {
-            'Taxa':self.tfa.taxa_df.copy(), 
-            'Func': self.tfa.func_df.copy(),
-            'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),
-            'Peptide': self.tfa.peptide_df.copy(),
-            'Protein': self.tfa.protein_df.copy()
-            }
 
         if cmap == 'Auto':
             cmap = None            
@@ -2526,7 +2555,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         else:
             title = f'{plot_type.capitalize()} of {table_name.capitalize()}'
-            dft = table_name_dict[table_name]
+            dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
             dft = dft[sample_list]
 
             if  len(self.basic_heatmap_list) == 0:
@@ -2703,12 +2732,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         width = self.spinBox_trends_width.value()
         height = self.spinBox_trends_height.value()
         table_name = self.comboBox_trends_table.currentText()
-        table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 
-                           'Func': self.tfa.func_df.copy(), 
-                           'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),
-                           'Peptide': self.tfa.peptide_df.copy(),
-                            'Protein': self.tfa.protein_df.copy()
-                           }
+
         title = f'{table_name.capitalize()} Cluster'
         num_cluster = self.spinBox_trends_num_cluster.value()
         
@@ -2738,7 +2762,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     return None
                 
         # get df
-        dft = table_name_dict[table_name]
+        dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
         dft = dft[sample_list]
         if  len(self.trends_cluster_list) == 0:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
@@ -2815,13 +2839,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         
         if plot_samples  or get_intensity:
-            table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 
-                               'Func': self.tfa.func_df.copy(), 
-                               'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),
-                               'Peptide': self.tfa.peptide_df.copy(),
-                                'Protein': self.tfa.protein_df.copy()
-                               }
-            dft = table_name_dict[table_name]
+
+            dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
             # get sample list
             if self.radioButton_trends_group.isChecked():
                 group_list = self.comboBox_trends_group.getCheckedItems()
@@ -2886,14 +2905,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         
         if get_intensity:
-            table_name_dict = {'Taxa':self.tfa.taxa_df.copy(), 
-                            'Func': self.tfa.func_df.copy(), 
-                            'Taxa-Func': self.tfa.replace_if_two_index(self.tfa.taxa_func_df),
-                            'Peptide': self.tfa.peptide_df.copy(),
-                                'Protein': self.tfa.protein_df.copy()
-                            }
             
-            dft = table_name_dict[table_name]
+            dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
             
             if plot_samples:
                 # get sample list
@@ -3082,12 +3095,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
-
-        table_dict = {'Function': self.tfa.func_df, 
-                        'Taxa': self.tfa.taxa_df, 
-                        'Taxa-Function': self.tfa.taxa_func_df, 
-                        'Peptide': self.tfa.clean_df,
-                        'Protein': self.tfa.protein_df}
         
         table_name = self.comboBox_table4pca.currentText()
         show_label = self.checkBox_pca_if_show_lable.isChecked()
@@ -3114,7 +3121,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if sample_list == []:
                 sample_list = self.tfa.sample_list
                         
-        dft = table_dict[table_name]
+        dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
         df = dft[sample_list]
         if method == 'pca':
             try:
@@ -3313,21 +3320,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # ANOVA
     def anova_test(self):
-        group_list = self.comboBox_anova_group.getCheckedItems()
-        self.pushButton_anova_test.setEnabled(False)
-        df_type = self.comboBox_table_for_anova.currentText().lower()
-
-        if group_list is None or group_list == []:
-            group_list = sorted(set(self.tfa.group_list))
-            
-        elif len(group_list) < 3:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
-            return None
-
-        self.show_message(f'ANOVA test will test on {group_list}\
-                          .\n\n It may take a long time! Please wait...')
-
         try:
+            group_list = self.comboBox_anova_group.getCheckedItems()
+            self.pushButton_anova_test.setEnabled(False)
+            df_type = self.comboBox_table_for_anova.currentText().lower()
+
+            if group_list is None or group_list == []:
+                group_list = sorted(set(self.tfa.group_list))
+                
+            elif len(group_list) < 3:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
+                return None
+
+            self.show_message(f'ANOVA test will test on {group_list}\
+                            .\n\n It may take a long time! Please wait...')
+
             table_names = []
             
             if df_type == 'Significant Taxa-Func'.lower():
@@ -3535,15 +3542,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     #DESeq2 
     def deseq2_test(self):
-
-        table_name = {'Func': self.tfa.func_df, 
-                      'Taxa': self.tfa.taxa_df, 
-                      'Taxa-Func': self.tfa.taxa_func_df, 
-                      'Peptide': self.tfa.peptide_df,
-                      'Protein': self.tfa.protein_df
-                      }
         
-        df = table_name[self.comboBox_table_for_deseq2.currentText()]
+        df_type = self.comboBox_table_for_deseq2.currentText()
+        df = self.get_table_by_df_type(df_type=df_type)
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
@@ -3816,14 +3817,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                        'Deseq2-down(log2FC)': 'deseq2_down_l2fc'}
         method = method_dict[method]
                 
-        table_dict = {'taxa': self.tfa.taxa_df, 
-                      'func': self.tfa.func_df,
-                      'taxa-func': self.tfa.taxa_func_df,
-                      'peptide': self.tfa.peptide_df,
-                      'protein': self.tfa.protein_df}
+
 
         if method in ['mean', 'freq', 'sum']:
-            df = table_dict[df_type.lower()]
+            df = self.get_table_by_df_type(df_type=df_type)
             df = self.tfa.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
             index_list = df.index.tolist()
             return index_list
@@ -3842,7 +3839,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return index_list[:top_num] if top_num <= len(index_list) else index_list
 
         else: # p-value or f-statistic and log2FC
-            df = table_dict[df_type.lower()]
+            df = self.get_table_by_df_type(df_type=df_type)
             index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type, filtered=filtered)
             return index_list
         
