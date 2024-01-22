@@ -99,3 +99,9 @@
 ## Date: 2024-01-22
 ### Changes:
 - Fix: Fixed the bug of get tables when protein table dose not exist
+
+
+# Version: 1.91.0
+## Date: 2024-01-22
+### Changes:
+- New: Add a function to plot sunburst for taxa

@@ -62,6 +62,7 @@ from MetaX.utils.TaxaFuncPloter.trends_plot import TrendsPlot
 from MetaX.utils.TaxaFuncPloter.trends_plot_js import TrendsPlot_js
 from MetaX.utils.TaxaFuncPloter.pca_plot_js import PcaPlot_js
 from MetaX.utils.TaxaFuncPloter.diversity_plot import DiversityPlot
+from MetaX.utils.TaxaFuncPloter.sunburst_plot import SunburstPlot
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -262,9 +263,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_pca_js.clicked.connect(lambda: self.plot_basic_info_sns('pca_3d'))
         self.pushButton_plot_beta_div.clicked.connect(lambda: self.plot_basic_info_sns('beta_div'))
         self.pushButton_plot_alpha_div.clicked.connect(lambda: self.plot_basic_info_sns('alpha_div'))
+        self.pushButton_plot_sunburst.clicked.connect(lambda: self.plot_basic_info_sns('sunburst'))
         # change event for checkBox_pca_if_show_lable
         self.checkBox_pca_if_show_lable.stateChanged.connect(self.change_event_checkBox_pca_if_show_lable)
-        
+        self.comboBox_table4pca.currentIndexChanged.connect(self.change_event_checkBox_basic_plot_table)
         
         ### Heatmap and Bar
         self.comboBox_basic_table.currentIndexChanged.connect(self.set_basic_heatmap_selection_list)
@@ -434,7 +436,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             dft = self.tfa.replace_if_two_index(dft)
         return dft
 
-    
+    def change_event_checkBox_basic_plot_table(self):
+        bottun_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
+        if self.comboBox_table4pca.currentText() == 'Taxa' and self.tfa is not None:
+            for button in bottun_list:
+                button.setEnabled(True)
+        else:
+            for button in bottun_list:
+                button.setEnabled(False)
+            
+            
     
     
     ###############   basic function End   ###############
@@ -575,9 +586,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.checkBox_pca_if_show_lable.isChecked():
             self.checkBox_pca_if_adjust_pca_label.setEnabled(True)
             self.checkBox_pca_if_show_group_name_in_label.setEnabled(True)
+            self.checkBox_sunburst_show_all_lables.setEnabled(True)
         else:
             self.checkBox_pca_if_adjust_pca_label.setEnabled(False)
             self.checkBox_pca_if_show_group_name_in_label.setEnabled(False)
+            self.checkBox_sunburst_show_all_lables.setEnabled(False)
             
             
     def change_event_checkBox_create_protein_table(self):
@@ -2090,9 +2103,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def enable_multi_button(self, state=True):
         list_button = [
         self.pushButton_plot_pca_sns,
-        self.pushButton_plot_beta_div,
-        self.pushButton_plot_alpha_div,
-        self.pushButton_plot_alpha_div,
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
@@ -3197,12 +3207,32 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
                                                             font_size=font_size, font_transparency = font_transparency, show_group_label = show_group_label,
                                                             show_label = show_label, adjust_label = adjust_label
-                                                            )
-                                                        
+                                                            )                                 
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_beta_diversity error: {error_message}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            
+        elif method == 'sunburst':
+            try:
+                self.show_message('Sunburst is running, please wait...')
+                taxa_df = self.tfa.taxa_df[sample_list]
+                
+                
+                if self.checkBox_pca_if_show_lable.isChecked():
+                    show_label = 'all' if self.checkBox_sunburst_show_all_lables.isChecked() else 'last'
+                else:
+                    show_label = False
+                    
+                pic = SunburstPlot().create_sunburst_chart(taxa_df= taxa_df, width=width, height=height,
+                                                           title='Sunburst of Taxa', show_label=show_label,
+                                                           label_font_size = font_size)
+                self.save_and_show_js_plot(pic, 'Sunburst of Taxa')
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_sunburst error: {error_message}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            
             
 
     # differential analysis
