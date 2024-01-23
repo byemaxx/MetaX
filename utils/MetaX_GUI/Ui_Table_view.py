@@ -9,22 +9,23 @@ import csv
 import sys
 
 class Ui_Table_view(QtWidgets.QDialog):
+    last_path_updated = QtCore.pyqtSignal(str) # signal to update last_path in main window
 
-    def __init__(self, df=None, parent=None, title='Table View'):
+    def __init__(self, df=None, parent=None, title='Table View', last_path=None):
         super().__init__(parent)  
         self.df = df.copy() # prevent the original df from being modified
         self.df.reset_index(inplace=True)
         self.title = title
+        
         self.current_page = 0  #set the current page number to 0
         self.rows_per_page = 100  # set the number of rows per page to 100
         self.setupUi(self)
-        self.desk_path = os.path.join(QDir.homePath(), 'Desktop')
-        if parent and parent.windowIcon():
-            self.setWindowIcon(parent.windowIcon())
-        else:
-            icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
-            self.setWindowIcon(QIcon(icon_path))
+        icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
+        self.setWindowIcon(QIcon(icon_path))
         self.setWindowTitle(title)
+        
+        self.last_path = os.path.join(QDir.homePath(), 'Desktop') if last_path is None else last_path
+        
 
 
     def setupUi(self, Dialog):
@@ -136,7 +137,7 @@ class Ui_Table_view(QtWidgets.QDialog):
         try:
             # make sure the file name is valid
             filename = self.title.replace('/', '_').replace('\\', '_').replace(':', '_').replace('*', '_').replace('?', '_').replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_')
-            default_filename = os.path.join(self.desk_path, filename + '.tsv')
+            default_filename = os.path.join(self.last_path, filename + '.tsv')
             export_path, filetype = QFileDialog.getSaveFileName(self, 'Export Table', default_filename, 
                                                             'Text Files (*.tsv);;CSV Files (*.csv);;Excel Files (*.xlsx)')
 
@@ -152,6 +153,9 @@ class Ui_Table_view(QtWidgets.QDialog):
                 QMessageBox.critical(self, 'Error', 'Filetype not supported.')
                 return
 
+            # update last_path
+            self.last_path = os.path.dirname(export_path)
+            self.last_path_updated.emit(self.last_path)  # 发射信号
 
             reply = QMessageBox.question(self, 'Information', 'Export successfully!\n\nDo you want to open the exported file?',
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)

@@ -110,3 +110,8 @@
 ## Date: 2024-01-23
 ### Changes:
 - Change: 1. Change the combobox in Annotator to enable drag a folder. 2. Changed the default ordre of data preprossing.
+
+# Version: 1.91.2
+## Date: 2024-01-23
+### Changes:
+- Change: Add a signal and slot to TableView get and update self.last_path.

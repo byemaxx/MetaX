@@ -439,13 +439,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         return dft
 
     def change_event_checkBox_basic_plot_table(self):
-        bottun_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
-        if self.comboBox_table4pca.currentText() == 'Taxa' and self.tfa is not None:
-            for button in bottun_list:
-                button.setEnabled(True)
-        else:
-            for button in bottun_list:
-                button.setEnabled(False)
+        button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
+        enabled = False
+        
+        if self.comboBox_table4pca.currentText() == 'Taxa':
+            try:
+                if self.tfa is not None and self.tfa.taxa_df is not None:
+                    enabled = True
+            except:
+                pass
+        
+        for button in button_list:
+            button.setEnabled(enabled)
+
             
             
     
@@ -1243,9 +1249,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # show table in Ui_Table_view
     def show_table(self, df, title='Table'):
-        # table_dialog = Ui_Table_view(df, self.MainWindow)
-        table_dialog = Ui_Table_view(df, parent=None,  title=title)
-        # table_dialog.setWindowTitle(title)
+
+            
+        # table_dialog = Ui_Table_view(df, self.MainWindow, title=title)
+        table_dialog = Ui_Table_view(df, title=title, last_path=self.last_path)
+        table_dialog.last_path_updated.connect(lambda new_path: setattr(self, 'last_path', new_path))
+
         table_dialog.show()
 
         # add to table_dialogs to show all table_dialogs
