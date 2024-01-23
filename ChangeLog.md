@@ -105,3 +105,8 @@
 ## Date: 2024-01-22
 ### Changes:
 - New: Add a function to plot sunburst for taxa
+
+# Version: 1.91.1
+## Date: 2024-01-23
+### Changes:
+- Change: 1. Change the combobox in Annotator to enable drag a folder. 2. Changed the default ordre of data preprossing.

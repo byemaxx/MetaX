@@ -188,10 +188,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
 
         # set Drag EditLine for input file
-        self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path)
-        self.lineEdit_meta_path = self.make_line_edit_drag_drop(self.lineEdit_meta_path)
-        self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path)
-        self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path)
+        self.lineEdit_taxafunc_path = self.make_line_edit_drag_drop(self.lineEdit_taxafunc_path, 'file')
+        self.lineEdit_meta_path = self.make_line_edit_drag_drop(self.lineEdit_meta_path, 'file')
+        self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path, 'file')
+        self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path, 'file')
+        self.lineEdit_peptide2taxafunc_outpath = self.make_line_edit_drag_drop(self.lineEdit_peptide2taxafunc_outpath, 'folder', 'TaxaFunc.tsv')
+        
 
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
@@ -888,26 +890,24 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         return new_combobox
 
     
-    def make_line_edit_drag_drop(self, old_lineEdit):
-        def create_new_LineEdit(line_edit):
-            new_line_edit = FileDragDropLineEdit(line_edit.parent())
+    def make_line_edit_drag_drop(self, old_lineEdit, mode='file', default_filename=''):
+        new_line_edit = FileDragDropLineEdit(old_lineEdit.parent(), mode, default_filename)
+        new_line_edit.setText(old_lineEdit.text())
+        new_line_edit.setReadOnly(old_lineEdit.isReadOnly())
 
-            new_line_edit.setText(line_edit.text())
-            new_line_edit.setReadOnly(line_edit.isReadOnly())
+        # get the position of old_lineEdit in its layout
+        layout = old_lineEdit.parent().layout()
+        index = layout.indexOf(old_lineEdit)
+        position = layout.getItemPosition(index)
 
-            return new_line_edit
-
-        # Create a new FileDragDropLineEdit instance
-        new_lineEdit = create_new_LineEdit(old_lineEdit)
-
-        # Replace the old QLineEdit instance with the new FileDragDropLineEdit instance
-        old_lineEdit.parent().layout().replaceWidget(old_lineEdit, new_lineEdit)
-
-        # Delete the old QLineEdit instance
+        # remove old_lineEdit from its layout
         old_lineEdit.deleteLater()
 
-        # Return the new FileDragDropLineEdit instance
-        return new_lineEdit
+        # add new_line_edit to its layout
+        layout.addWidget(new_line_edit, *position[0:2])  # position is a tuple of 4 elements including (row, column, rowspan, columnspan)
+
+        return new_line_edit
+
 
     # double click listwidget item to copy to clipboard
     def copy_to_clipboard(self, item):
