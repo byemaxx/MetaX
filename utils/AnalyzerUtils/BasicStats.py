@@ -9,7 +9,11 @@ class BasicStats:
     def get_stats_mean_df_by_group(self, df: pd.DataFrame = None) -> pd.DataFrame:
         data = df.copy()
         # extract samples that are in the data only
-        data = data[self.tfa.sample_list]
+        columns_list = data.columns.tolist()
+        # remove samples that are not in self.tfa.sample_list
+        columns_list = [sample for sample in columns_list if sample in self.tfa.sample_list]
+        data = data[columns_list]
+        
         
         group_order = list(OrderedDict.fromkeys(self.tfa.get_group_of_a_sample(sample) for sample in data.columns))
         print("input group order:", group_order)
