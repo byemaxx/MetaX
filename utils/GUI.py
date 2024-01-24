@@ -297,6 +297,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_anova_test.clicked.connect(self.anova_test)
 
         ### Group Control Test
+        self.doubleSpinBox_log2fc_heatmap.hide()
+        self.label_138.hide()
+        self.hiddenTab = self.tabWidget_3.widget(3)
+        self.tabWidget_3.removeTab(3)
+
 
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
@@ -941,15 +946,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # def swith_stack_page_about(self):
     #     self.stackedWidget.setCurrentIndex(3)
     
-    def cross_test_tab_change(self, index):
-        print(index)
-        
+    def cross_test_tab_change(self, index):        
         if index == 2: #TUKEY
-            print('TUKEY')
             self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
         else:
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
-        
+            
+        if index == 3:
+            self.doubleSpinBox_log2fc_heatmap.show()
+            self.label_138.show()
+        else:
+            self.doubleSpinBox_log2fc_heatmap.hide()
+            self.label_138.hide()
+            
 
 
     def hide_all_in_layout(self, layout):
@@ -957,18 +966,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             layout_item = layout.itemAt(i)
             if layout_item.widget() is not None:
                 # 隐藏小部件
-                print(layout_item.widget())
                 layout_item.widget().hide()
             elif layout_item.layout() is not None:
                 # 递归隐藏嵌套布局中的元素
                 self.hide_all_in_layout(layout_item.layout())
 
     def show_all_in_layout(self, layout):
+        except_list = ['doubleSpinBox_log2fc_heatmap', 'label_138']
         for i in range(layout.count()):
             layout_item = layout.itemAt(i)
             if layout_item.widget() is not None:
-                print(layout_item.widget())
-                layout_item.widget().show()
+                if layout_item.widget().objectName() not in except_list:
+                    # 显示小部件
+                    layout_item.widget().show()
             elif layout_item.layout() is not None:
                 # 递归显示嵌套布局中的元素
                 self.show_all_in_layout(layout_item.layout())
@@ -1019,14 +1029,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def like_us(self):
         if self.like_times < 1:
-            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support! \n\n You have unlocked the hidden function!\n\n Now you can use the bar plot in Taxa-Func Link!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
             self.pushButton_others_plot_line.setText('Plot Bar')
             self.like_times += 1
         elif self.like_times <2:
-            QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again! \n\n You have unlocked the second hidden function!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
             self.like_times += 1
+            self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+
         else:
-            QMessageBox.information(self.MainWindow, "Thank you!", "I am just kidding! \n\nThere is no any hidden function!\n\n But you can still like us on GitHub!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "There is no more hidden function.\n\nYou can like us again next time.")
         
         
 
@@ -1495,6 +1507,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             if selected_table_name.startswith('deseq2'):
                 self.doubleSpinBox_log2fc_heatmap.setEnabled(True)
+                self.doubleSpinBox_log2fc_heatmap.show()
+                self.label_138.show()
             
         else:
             self.label_138.hide()
