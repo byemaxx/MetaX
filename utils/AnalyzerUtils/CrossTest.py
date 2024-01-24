@@ -240,11 +240,41 @@ class CrossTest:
         
         return res_df
             
+    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True) -> pd.DataFrame:
+            all_group_list = sorted(set(self.tfa.group_list))
+            if group_list is None:
+                group_list = all_group_list
             
-    def get_stats_deseq2(self, df, group_list: list):
+            # checek if control_group and group_list are in meta_list
+            if control_group not in all_group_list:
+                raise ValueError(f"control_group must be in {all_group_list}")
+            if any(i not in all_group_list for i in group_list):
+                raise ValueError(f"groups must be in {all_group_list}")
+            
+            # check if the control_group is in group_list
+            elif control_group in group_list:
+                group_list.remove(control_group)
+                
+            
+            res_dict = {}
+
+            for group2 in group_list:
+                print(f'\n-------------Start to compare [{control_group}] and [{group2}]----------------\n')
+                df_res = self.get_stats_deseq2(df, control_group, group2, concat_sample_to_result, quiet)
+                res_dict[group2] = df_res
+                print('\n-------------Done----------------\n')
+
+            print('Concatenating results...')
+            combined_df = pd.concat(res_dict, axis=1)
+
+            return combined_df
+            
+            
+            
+    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False) -> pd.DataFrame:
 
         sample_list = []
-        for i in group_list:
+        for i in [group1, group2]:
             sample = self.tfa.get_sample_list_in_a_group(i)
             sample_list += sample
 
@@ -287,7 +317,9 @@ class CrossTest:
             counts=counts_df,
             metadata=meta_df,
             design_factors=self.tfa.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
-            refit_cooks=True)
+            refit_cooks=True,
+            quiet=quiet
+            )
         dds.deseq2()
         
         try:
@@ -304,13 +336,17 @@ class CrossTest:
             raise e
 
         res = stat_res.results_df
-        res_merged = pd.merge(res, df, left_index=True, right_index=True)
+        
+        if concat_sample_to_result:
+            res_merged = pd.merge(res, df, left_index=True, right_index=True)
+        else:
+            res_merged = res
 
 
         # check order
         res_group = stat_res.LFC.columns[1]
         res_group_2 = stat_res.LFC.columns[1].split('_vs_')[1]
-        input_group_2 = group_list[1].replace('_', '-')
+        input_group_2 = group2.replace('_', '-')
         print(f'res_group_2: {res_group_2}')
         print(f'input_group_2: {input_group_2}')
         if res_group_2 == input_group_2:

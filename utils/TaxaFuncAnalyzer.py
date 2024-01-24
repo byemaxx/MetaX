@@ -277,10 +277,15 @@ class TaxaFuncAnalyzer:
         cross_test = CrossTest(self)
         return cross_test.get_stats_ttest(group_list=group_list, df_type=df_type)
     
-    def get_stats_deseq2(self, df, group_list: list):
+    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False):
         cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2(df, group_list)
+        return cross_test.get_stats_deseq2(df, group1, group2, concat_sample_to_result, quiet)
 
+    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True) -> pd.DataFrame:
+        cross_test = CrossTest(self)
+        return cross_test.get_stats_deseq2_against_control(df, control_group, group_list, concat_sample_to_result, quiet)
+    
+    
     # Get the Tukey test result of a taxon or a function
     def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
         cross_test = CrossTest(self)

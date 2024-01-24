@@ -349,6 +349,104 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
 
+    def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc:float = 1.0,
+                                       fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), return_type:str = 'fig', show_num:bool = False):
+        import pandas as pd
+        import numpy as np
+
+        df_extrcted = df.loc[:, pd.IndexSlice[:, ['padj', 'log2FoldChange']]]
+
+        res_dict = {}
+        padj = round(pvalue, 5)
+
+        for i in df_extrcted.columns.levels[0]:
+            # print(f'Extracting [{i}] with (padj <= {padj}) and (log2fc >= {log2fc})')
+            # extract i from multi-index
+            df_i = df_extrcted[i]
+            df_i = df_i.loc[(df_i['padj'] < padj) & (abs(df_i['log2FoldChange']) > log2fc)]
+            print(f"Group [{i}]: Number of significant results: [{df_i.shape[0]}]")
+            res_dict[i] = df_i
+            
+        dft = pd.concat(res_dict, axis=1)
+        print(f"Total number of significant results: [{dft.shape[0]}]")
+        # check if the dataframe is empty
+        if dft.empty:
+            raise ValueError(f"No significant results with (padj <= {padj}) and (log2fc >= {log2fc})")
+
+        # only keep padj column
+        dft = dft.loc[:, pd.IndexSlice[:, ['log2FoldChange']]]
+        # rename column name
+        dft.columns = dft.columns.droplevel(1)
+        # fillna with 0
+        dft = dft.fillna(0)
+        
+        # remove all 0 rows
+        dft = dft.loc[~(dft==0).all(axis=1)]
+        
+            
+
+        if len(dft) < 2:
+            row_cluster = False
+            print('Warning: There is only one row in the dataframe, row_cluster is set to False')
+        if len(dft.columns) < 2:
+            col_cluster = False
+            print('Warning: There is only one column in the dataframe, col_cluster is set to False')
+
+
+
+        try:
+            if rename_taxa:
+                dft = self.rename_taxa(dft)
+            # scale the data
+            if scale:
+                dft = self.scale_data(dft, scale)
+            
+            if cmap is None:
+                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30)
+            
+            # 标准化颜色映射以使 0 处为白色
+            from matplotlib.colors import TwoSlopeNorm
+            vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
+            norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
+
+            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
+                        'col_cluster': col_cluster, 'row_cluster': row_cluster,'cbar_kws': {"label":'log2FoldChange', "shrink": 0.5},'annot':show_num, 'fmt':'.2f',
+                        'xticklabels':True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
+            if return_type == 'fig':
+                fig = sns.clustermap(dft, **sns_params)
+
+                fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
+                fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2 (padj < {pvalue}, log2fc > {log2fc}, scaled by {scale})", fontsize=font_size)
+
+                plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+                plt.tight_layout()
+                plt.show()
+                return fig
+            elif return_type == 'table':
+                fig = sns.clustermap(dft, norm=norm, 
+                                    col_cluster=col_cluster, row_cluster=row_cluster,                                
+                                    )
+                
+                # get the sorted dataframe
+                if row_cluster and not col_cluster:
+                    sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
+                elif col_cluster and not row_cluster:
+                    sorted_df = dft.iloc[:, fig.dendrogram_col.reordered_ind]
+                elif row_cluster and col_cluster:
+                    sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+                else:
+                    sorted_df = dft
+                
+                plt.close(fig.fig)
+
+                return sorted_df
+                            
+        except Exception as e:
+            print(f'Error: {e}')
+            plt.close('all')
+            raise ValueError(f"Error: {e}")
 
     # For taxa, func and peptides table
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
@@ -358,30 +456,9 @@ class HeatmapPlot:
         import pandas as pd
         import numpy as np
         
-        def scale_data(dft, scale):
-            try:
-                if scale == 'row':
-                    # 对每行单独应用双向缩放
-                    for index, row in dft.iterrows():
-                        max_val = abs(row).max()
-                        if max_val != 0:
-                            dft.loc[index] = row / max_val
-                elif scale == 'col':
-                    # 对每列单独应用双向缩放
-                    for col in dft:
-                        max_val = abs(dft[col]).max()
-                        if max_val != 0:
-                            dft[col] = dft[col] / max_val
-                elif scale == 'all':
-                    # 对整个数据框应用双向缩放
-                    max_val = abs(dft.values).max()
-                    if max_val != 0:
-                        dft = dft / max_val
-                        
-            except Exception as e:
-                print(f'Error: {e}')
+        
+        pvalue = round(pvalue, 5)
 
-            return dft
 
         df_pvalue = df.filter(regex='(p_value)')
         df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
@@ -422,7 +499,7 @@ class HeatmapPlot:
 
             # scale the data
             if scale:
-                dft = scale_data(dft, scale)
+                dft = self.scale_data(dft, scale)
                 
             
             if cmap is None:
@@ -547,7 +624,30 @@ class HeatmapPlot:
             raise ValueError("Can not get the result table, please check the error message in consel.")
         
         
+    def scale_data(self, dft, scale):
+        try:
+            if scale == 'row':
+                # 对每行单独应用双向缩放
+                for index, row in dft.iterrows():
+                    max_val = abs(row).max()
+                    if max_val != 0:
+                        dft.loc[index] = row / max_val
+            elif scale == 'col':
+                # 对每列单独应用双向缩放
+                for col in dft:
+                    max_val = abs(dft[col]).max()
+                    if max_val != 0:
+                        dft[col] = dft[col] / max_val
+            elif scale == 'all':
+                # 对整个数据框应用双向缩放
+                max_val = abs(dft.values).max()
+                if max_val != 0:
+                    dft = dft / max_val
+                    
+        except Exception as e:
+            print(f'Error: {e}')
 
+        return dft
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 

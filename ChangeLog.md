@@ -115,3 +115,8 @@
 ## Date: 2024-01-23
 ### Changes:
 - Change: Add a signal and slot to TableView get and update self.last_path.
+
+# Version: 1.91.3
+## Date: 2024-01-23
+### Changes:
+- New: Add Control-Group Test

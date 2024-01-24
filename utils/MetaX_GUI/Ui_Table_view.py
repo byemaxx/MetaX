@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import  Qt, QDir
 from PyQt5.QtGui import QIcon
+import pandas as pd
 
 import os
 import io
@@ -16,7 +17,7 @@ class Ui_Table_view(QtWidgets.QDialog):
         self.df = df.copy() # prevent the original df from being modified
         self.df.reset_index(inplace=True)
         self.title = title
-        
+        self.save_index = False
         self.current_page = 0  #set the current page number to 0
         self.rows_per_page = 100  # set the number of rows per page to 100
         self.setupUi(self)
@@ -76,18 +77,32 @@ class Ui_Table_view(QtWidgets.QDialog):
             self.set_pd_to_QTableWidget(self.df, self.tableWidget)
 
     def set_pd_to_QTableWidget(self, df, table_widget):
+        # 处理多重列索引
+        if isinstance(df.columns, pd.MultiIndex):
+            self.save_index = True
+            column_labels = [' '.join(col).strip() for col in df.columns.values]
+        else:
+            column_labels = df.columns
+
+        # 处理多重行索引
+        if isinstance(df.index, pd.MultiIndex):
+            df = df.reset_index()
+        else:
+            df = df.reset_index(drop=True)
+
         start_row = self.current_page * self.rows_per_page
-        end_row = start_row + self.rows_per_page
+        end_row = min(start_row + self.rows_per_page, len(df))
         subset_df = df.iloc[start_row:end_row]
 
         # 使用subset_df来填充table_widget
         table_widget.setRowCount(subset_df.shape[0])
         table_widget.setColumnCount(subset_df.shape[1])
-        table_widget.setHorizontalHeaderLabels(subset_df.columns)
-        
+        table_widget.setHorizontalHeaderLabels(column_labels)
+
         for i in range(subset_df.shape[0]):
             for j in range(subset_df.shape[1]):
                 table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(subset_df.iat[i, j])))
+
 
         # 使列头可右击并添加复制功能
         header = table_widget.horizontalHeader()
@@ -144,11 +159,11 @@ class Ui_Table_view(QtWidgets.QDialog):
             if export_path == '':
                 return
             if filetype == 'Text Files (*.tsv)':
-                self.df.to_csv(export_path, sep='\t', index=False)
+                self.df.to_csv(export_path, sep='\t', index=self.save_index)
             elif filetype == 'CSV Files (*.csv)':
-                self.df.to_csv(export_path, sep=',', index=False)
+                self.df.to_csv(export_path, sep=',', index=self.save_index)
             elif filetype == 'Excel Files (*.xlsx)':
-                self.df.to_excel(export_path, index=False)
+                self.df.to_excel(export_path, index=self.save_index)
             else:
                 QMessageBox.critical(self, 'Error', 'Filetype not supported.')
                 return

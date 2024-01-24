@@ -66,10 +66,11 @@ class DiversityPlot(object):
             # plot boxplot
             plt.figure(figsize=(width, height))
             fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='Group')
-            fig.set_xticklabels(fig.get_xticklabels(), rotation=90)
-            fig.set_xlabel('Group', fontsize=font_size)
-            fig.set_ylabel(f'{metric} Diversity')
-            fig.set_title(f'Alpha Diversity ({metric}) of Each Group')
+            fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
+            fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
+            fig.set_xlabel('Group', fontsize=font_size+2)
+            fig.set_ylabel(f'{metric} Diversity', fontsize=font_size+2)
+            fig.set_title(f'Alpha Diversity ({metric}) of Each Group', fontsize=font_size+4)
             plt.tight_layout()
             plt.show()
             return fig
@@ -130,7 +131,6 @@ class DiversityPlot(object):
                     from adjustText import adjust_text
                     texts = adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black'))
                 
-                        
             fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100))
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100))
             # set title
