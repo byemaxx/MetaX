@@ -297,8 +297,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_anova_test.clicked.connect(self.anova_test)
 
         ### Group Control Test
-        self.doubleSpinBox_log2fc_heatmap.hide()
-        self.label_138.hide()
+        self.hide_all_in_layout(self.horizontalLayout_17)
+        
         self.hiddenTab = self.tabWidget_3.widget(3)
         self.tabWidget_3.removeTab(3)
 
@@ -953,13 +953,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
             
         if index == 3:
-            self.doubleSpinBox_log2fc_heatmap.show()
-            self.label_138.show()
+            self.hide_all_in_layout(self.horizontalLayout_17)
         else:
-            self.doubleSpinBox_log2fc_heatmap.hide()
-            self.label_138.hide()
+            self.show_all_in_layout(self.horizontalLayout_17)
             
-
 
     def hide_all_in_layout(self, layout):
         for i in range(layout.count()):
@@ -971,8 +968,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # 递归隐藏嵌套布局中的元素
                 self.hide_all_in_layout(layout_item.layout())
 
-    def show_all_in_layout(self, layout):
-        except_list = ['doubleSpinBox_log2fc_heatmap', 'label_138']
+    def show_all_in_layout(self, layout, if_except=True):
+        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
+                       'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
         for i in range(layout.count()):
             layout_item = layout.itemAt(i)
             if layout_item.widget() is not None:
@@ -981,13 +979,29 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     layout_item.widget().show()
             elif layout_item.layout() is not None:
                 # 递归显示嵌套布局中的元素
-                self.show_all_in_layout(layout_item.layout())
+                self.show_all_in_layout(layout_item.layout(), if_except=if_except)
 
 
 
     def add_theme_to_combobox(self):
-        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r']
-        self.cmap_list +=  ['viridis', 'plasma', 'inferno', 'magma', 'cividis']
+        # get all themes
+        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 
+                          'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 
+                          'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 
+                          'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 
+                          'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 
+                          'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 
+                          'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 
+                          'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 
+                          'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 
+                          'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 
+                          'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 
+                          'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 
+                          'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r', 'bright', 'bright6', 
+                          'cividis', 'colorblind', 'colorblind6', 'dark', 'dark6', 'deep', 
+                          'deep6', 'icefire', 'inferno', 'magma', 'muted', 'muted6', 'pastel', 
+                          'pastel6', 'plasma', 'viridis', 'vlag']
+        
         self.comboBox_basic_hetatmap_theme.addItems(self.cmap_list)
         self.comboBox_tflink_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
@@ -1502,17 +1516,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # add 'all' to comboBox_top_heatmap_scale.
             if 'all' not in scale_method_list:
                 self.comboBox_top_heatmap_scale.addItem('all')
-                
-            self.doubleSpinBox_log2fc_heatmap.setEnabled(False)
+
             
             if selected_table_name.startswith('deseq2'):
-                self.doubleSpinBox_log2fc_heatmap.setEnabled(True)
-                self.doubleSpinBox_log2fc_heatmap.show()
-                self.label_138.show()
+                self.show_all_in_layout(self.horizontalLayout_17, if_except=False)
             
         else:
-            self.label_138.hide()
-            self.doubleSpinBox_log2fc_heatmap.setEnabled(False)
+            self.hide_all_in_layout(self.horizontalLayout_17)
             self.label_57.setText('Sort By:')
             sorted_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
             if 't_test' in selected_table_name:
@@ -3336,7 +3346,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif 'deseq2all' in table_name:
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_deseq2all_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
-                                                                               log2fc =self.doubleSpinBox_log2fc_heatmap.value(),
+                                                                               log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
+                                                                               log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                scale = scale, col_cluster = True, row_cluster = True,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig')
@@ -3391,7 +3402,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                       rename_taxa=rename_taxa)
             elif 'deseq2all' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_deseq2all_res(df = df,  pvalue=pvalue,scale = scale, 
-                                                                                   log2fc =self.doubleSpinBox_log2fc_heatmap.value(),
+                                                                                   log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
+                                                                                   log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                    col_cluster = True, row_cluster = True, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table')
             else:

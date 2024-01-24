@@ -3042,9 +3042,9 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QDoubleSpinBox" name="doubleSpinBox_log2fc_heatmap">
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox_mini_log2fc_heatmap">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="showGroupSeparator" stdset="0">
                    <bool>false</bool>
@@ -3057,6 +3057,26 @@
                   </property>
                   <property name="value">
                    <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_139">
+                  <property name="text">
+                   <string>To</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox_max_log2fc_heatmap">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="decimals">
+                   <number>3</number>
+                  </property>
+                  <property name="value">
+                   <double>5.000000000000000</double>
                   </property>
                  </widget>
                 </item>

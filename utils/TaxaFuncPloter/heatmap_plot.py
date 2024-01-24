@@ -349,7 +349,7 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
 
-    def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc:float = 1.0,
+    def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), return_type:str = 'fig', show_num:bool = False):
         import pandas as pd
@@ -358,13 +358,14 @@ class HeatmapPlot:
         df_extrcted = df.loc[:, pd.IndexSlice[:, ['padj', 'log2FoldChange']]]
 
         res_dict = {}
-        padj = round(pvalue, 5)
+        # remove 0 in the float number last digit
+        padj = round(pvalue, 4)
 
         for i in df_extrcted.columns.levels[0]:
             # print(f'Extracting [{i}] with (padj <= {padj}) and (log2fc >= {log2fc})')
             # extract i from multi-index
             df_i = df_extrcted[i]
-            df_i = df_i.loc[(df_i['padj'] < padj) & (abs(df_i['log2FoldChange']) > log2fc)]
+            df_i = df_i.loc[(df_i['padj'] <= padj) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
             print(f"Group [{i}]: Number of significant results: [{df_i.shape[0]}]")
             res_dict[i] = df_i
             
@@ -372,7 +373,7 @@ class HeatmapPlot:
         print(f"Total number of significant results: [{dft.shape[0]}]")
         # check if the dataframe is empty
         if dft.empty:
-            raise ValueError(f"No significant results with (padj <= {padj}) and (log2fc >= {log2fc})")
+            raise ValueError(f"No significant results with (padj <= {padj}) and (log2fc >= {log2fc_min}) and (log2fc <= {log2fc_max})")
 
         # only keep padj column
         dft = dft.loc[:, pd.IndexSlice[:, ['log2FoldChange']]]
@@ -418,7 +419,7 @@ class HeatmapPlot:
 
                 fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
                 fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2 (padj < {pvalue}, log2fc > {log2fc}, scaled by {scale})", fontsize=font_size)
+                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2 (padj <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})", fontsize=font_size)
 
                 plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
                 plt.tight_layout()

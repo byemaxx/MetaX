@@ -349,7 +349,7 @@ class CrossTest:
         input_group_2 = group2.replace('_', '-')
         print(f'res_group_2: {res_group_2}')
         print(f'input_group_2: {input_group_2}')
-        if res_group_2 == input_group_2:
+        if res_group_2 != input_group_2: #reverse the log2FoldChange due to res need  group2/group1
             print(f'Res group order [{res_group}] is correct, keep original log2FoldChange values')
         else:
             res_merged["log2FoldChange"] = -res_merged["log2FoldChange"]
