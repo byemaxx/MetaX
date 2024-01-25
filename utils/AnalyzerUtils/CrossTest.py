@@ -239,8 +239,47 @@ class CrossTest:
         # res_df_dict = {'p_value': res_df_pvalue, 't_statistic': res_df_tstatistic}
         
         return res_df
+
+    # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
+    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition) -> pd.DataFrame:
+
+        meta_df = self.tfa.meta_df.copy()
+
+        # check if the condition is in meta_df
+        if condition not in meta_df.columns:
+            raise ValueError(f'Condition [{condition}] is not in meta_df, must be one of {meta_df.columns}')
+        
+        curent_group_list = meta_df[self.tfa.meta_name].unique()
+        print(f'{curent_group_list}')
+        condition_list = meta_df[condition].unique()
+        # checek if the current group is in meta_df of all conditions
+        for condition_group in condition_list:
+            sub_meta = meta_df[meta_df[condition] == condition_group]
+            sub_group_list = sub_meta[self.tfa.meta_name].unique()
+            # compare the current group list with the sub group list
+            if not set(curent_group_list).issubset(set(sub_group_list)):
+                raise ValueError(f'Current groups:\n{curent_group_list}\n\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
+
+
+        condition_list = meta_df[condition].unique()
+        print(f'------------------ Start Comparisons Deseq2 with Condition [{condition}]------------------')
+        print(f'Condition List: {condition_list}')
+
+        # only extract the row is condition in second_meta
+        res_dict = {}
+        for condition_group in condition_list:
+            print(f'Start for [{condition_group}]...')
+            dft = self.tfa.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group])
+            res_dict[condition_group] = dft
+            print(f'Done for [{condition_group}]...')
+        
+        res_df = pd.concat(res_dict.values(), keys=res_dict.keys(), axis=1)
+        print(f'\n------------------ Done for Comparisons Deseq2 with Condition [{condition}]------------------\n')
+        
+        return res_df # a dataframe with 3 level columns index
+
             
-    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True) -> pd.DataFrame:
+    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True, condition: list = None) -> pd.DataFrame:
             all_group_list = sorted(set(self.tfa.group_list))
             if group_list is None:
                 group_list = all_group_list
@@ -260,9 +299,9 @@ class CrossTest:
 
             for group2 in group_list:
                 print(f'\n-------------Start to compare [{control_group}] and [{group2}]----------------\n')
-                df_res = self.get_stats_deseq2(df, control_group, group2, concat_sample_to_result, quiet)
+                df_res = self.get_stats_deseq2(df=df, group1=control_group, group2=group2, concat_sample_to_result=concat_sample_to_result, quiet=quiet, condition=condition)
                 res_dict[group2] = df_res
-                print('\n-------------Done----------------\n')
+                print(f'\n------------- Done for [{control_group}] and [{group2}]----------------\n')
 
             print('Concatenating results...')
             combined_df = pd.concat(res_dict, axis=1)
@@ -271,12 +310,13 @@ class CrossTest:
             
             
             
-    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False) -> pd.DataFrame:
+    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None) -> pd.DataFrame:
 
         sample_list = []
         for i in [group1, group2]:
-            sample = self.tfa.get_sample_list_in_a_group(i)
+            sample = self.tfa.get_sample_list_in_a_group(i, condition=condition)
             sample_list += sample
+        
 
         # Create intensity matrix
         df = df.copy()
@@ -301,7 +341,6 @@ class CrossTest:
         # Create meta data
         meta_df = self.tfa.meta_df.copy()
         meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
-
         meta_df.set_index('Sample', inplace=True)
         
         # ! Deseq2 would make mistake if the meta name and sample contain '_'
@@ -311,24 +350,22 @@ class CrossTest:
         meta_df.columns = [i.replace('_', '-') for i in columns]
         
         meta_df = meta_df.sort_index()
-        
 
         dds = DeseqDataSet(
             counts=counts_df,
             metadata=meta_df,
             design_factors=self.tfa.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
-            refit_cooks=True,
             quiet=quiet
             )
         dds.deseq2()
         
         try:
-            stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=True, independent_filter=True)
+            stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=True, independent_filter=True, quiet=quiet)
             stat_res.summary()
         except KeyError as e:
             if 'cooks' in str(e):
                 print('cooks_filter is not available, use cooks_filter=False')
-                stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=False, independent_filter=True)
+                stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=False, independent_filter=True, quiet=quiet)
                 stat_res.summary()
             else:
                 raise e
@@ -347,13 +384,14 @@ class CrossTest:
         res_group = stat_res.LFC.columns[1]
         res_group_2 = stat_res.LFC.columns[1].split('_vs_')[1]
         input_group_2 = group2.replace('_', '-')
+        print(f'res_group order: {res_group}')
         print(f'res_group_2: {res_group_2}')
         print(f'input_group_2: {input_group_2}')
         if res_group_2 != input_group_2: #reverse the log2FoldChange due to res need  group2/group1
-            print(f'Res group order [{res_group}] is correct, keep original log2FoldChange values')
+            print(f'Keep log2FoldChange values to match the group order [{group2} / {group1}]')
         else:
             res_merged["log2FoldChange"] = -res_merged["log2FoldChange"]
-            print(f'Res group order [{res_group}] is incorrect, reverse log2FoldChange values')
+            print(f'Reverse log2FoldChange values to match the group order [{group2} / {group1}]')
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
@@ -533,3 +571,68 @@ class CrossTest:
         
         return (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
 
+
+    def extrcat_significant_fc_from_deseq2all(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj'):
+        import pandas as pd
+        p_type = 'padj' if p_type == 'padj' else 'pvalue'
+        
+        df_extrcted = df.loc[:, pd.IndexSlice[:, [p_type, 'log2FoldChange']]]
+
+        res_dict = {}
+        # remove 0 in the float number last digit
+
+        for i in df_extrcted.columns.levels[0]:
+            # print(f'Extracting [{i}] with (padj <= {padj}) and (log2fc >= {log2fc})')
+            # extract i from multi-index
+            df_i = df_extrcted[i]
+            df_i = df_i.loc[(df_i[p_type] <= p_value) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
+            print(f"Group: [{i}] | Significant results: [{df_i.shape[0]}]")
+            res_dict[i] = df_i
+            
+        dft = pd.concat(res_dict, axis=1)
+        print(f"Total number of significant results: [{dft.shape[0]}]")
+        # check if the dataframe is empty
+        if dft.empty:
+            print("ATTENTION:\nEmpty dataframe!\n")
+
+        # only keep padj column
+        dft = dft.loc[:, pd.IndexSlice[:, ['log2FoldChange']]]
+        # rename column name
+        dft.columns = dft.columns.droplevel(1)
+        return dft
+    
+    # return a dict of 3 dataframe: df_all, df_no_na, df_same_trends
+    def extrcat_significant_fc_from_deseq2all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj') -> dict:
+            def filter_rows(group):
+                # 保留所有值都为正或者都为负的行
+                return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
+            
+            res_df_dict = {}
+            
+            first_level_values = df.columns.get_level_values(0).unique()
+            res_dict = {}
+            for value in first_level_values: # iterate over first level values
+                sub_df = df[value]
+                print(f"\nExtracting significant FC from '{value}':")
+                dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+                res_dict[value] = dft
+            df = pd.concat(res_dict, axis=1)
+            df_swapped = df.swaplevel(axis=1)
+            df_swapped = df_swapped.sort_index(axis=1)
+            print(f"\nTotal number of df_all: [{df_swapped.shape[0]}]")
+            res_df_dict['all_sig'] = df_swapped
+            
+            df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
+            df_no_na = df_no_na.droplevel(1, axis=1)
+            print(f"Total number of df_no_na: [{df_no_na.shape[0]}]")
+            res_df_dict['no_na'] = df_no_na
+
+            # Only keep rows that have all values positive or all values negative
+            df_same_trends = df_no_na.groupby(level=0, axis=1).apply(filter_rows)
+            # dropna level 0 index
+            df_same_trends.columns = df_same_trends.columns.droplevel(1)
+            print(f"Total number of df_same_trends: [{df_same_trends.shape[0]}]")
+            res_df_dict['same_trends'] = df_same_trends
+            
+            
+            return res_df_dict

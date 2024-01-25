@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class HeatmapPlot:
     def __init__(self, tfobj):
-        self.tfobj =  tfobj
+        self.tfa =  tfobj
     # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
         # reset sns style
@@ -33,7 +33,7 @@ class HeatmapPlot:
 
         
 
-        func_name = self.tfobj.func_name
+        func_name = self.tfa.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
         type_map = {'f': ('f-statistic', 'Spectral_r', 1),
@@ -150,8 +150,8 @@ class HeatmapPlot:
         if len(mat.columns) < 2:
             col_cluster = False
             
-        meta_df = self.tfobj.meta_df
-        meta_name = self.tfobj.meta_name
+        meta_df = self.tfa.meta_df
+        meta_name = self.tfa.meta_name
 
 
         if fig_size is None:
@@ -221,8 +221,8 @@ class HeatmapPlot:
         scale = scale_map.get(scale)
 
         mat = df.copy()
-        meta_df = self.tfobj.meta_df
-        meta_name = self.tfobj.meta_name
+        meta_df = self.tfa.meta_df
+        meta_name = self.tfa.meta_name
 
         # if index is Taxon, rename index
         if rename_taxa:
@@ -283,8 +283,8 @@ class HeatmapPlot:
 
         # For taxa-func heatmap
     # get the top intensity matrix of taxa-func table
-    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, rename_taxa:bool = False):
-        func_name = self.tfobj.func_name
+    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True):
+        func_name = self.tfa.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
 
@@ -324,7 +324,7 @@ class HeatmapPlot:
                 
                 
             # plt.figure()
-            fig = sns.clustermap(mat, center=0, cmap = color,
+            fig = sns.clustermap(mat, center=0, cmap = color, col_cluster=col_cluster, row_cluster=row_cluster,
                             method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
                             standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
 
@@ -351,42 +351,25 @@ class HeatmapPlot:
 
     def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), return_type:str = 'fig', show_num:bool = False):
-        import pandas as pd
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), 
+                                       return_type:str = 'fig', show_num:bool = False, p_type:str = 'padj'):
         import numpy as np
-
-        df_extrcted = df.loc[:, pd.IndexSlice[:, ['padj', 'log2FoldChange']]]
-
-        res_dict = {}
-        # remove 0 in the float number last digit
-        padj = round(pvalue, 4)
-
-        for i in df_extrcted.columns.levels[0]:
-            # print(f'Extracting [{i}] with (padj <= {padj}) and (log2fc >= {log2fc})')
-            # extract i from multi-index
-            df_i = df_extrcted[i]
-            df_i = df_i.loc[(df_i['padj'] <= padj) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
-            print(f"Group [{i}]: Number of significant results: [{df_i.shape[0]}]")
-            res_dict[i] = df_i
-            
-        dft = pd.concat(res_dict, axis=1)
-        print(f"Total number of significant results: [{dft.shape[0]}]")
-        # check if the dataframe is empty
-        if dft.empty:
-            raise ValueError(f"No significant results with (padj <= {padj}) and (log2fc >= {log2fc_min}) and (log2fc <= {log2fc_max})")
-
-        # only keep padj column
-        dft = dft.loc[:, pd.IndexSlice[:, ['log2FoldChange']]]
-        # rename column name
-        dft.columns = dft.columns.droplevel(1)
-        # fillna with 0
-        dft = dft.fillna(0)
         
-        # remove all 0 rows
-        dft = dft.loc[~(dft==0).all(axis=1)]
-        
-            
+        if df.columns.nlevels == 2:
+            dft = self.tfa.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+        elif df.columns.nlevels == 3:
+            df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+            dft = df_dict['same_trends']
+            dft.columns = ['_'.join(col) for col in dft.columns]
+            col_cluster = False
 
+        if dft.empty or dft is None:
+            raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}")
+        
+        # fill na with 0
+        dft = dft.fillna(0, inplace=False)
+        
+        
         if len(dft) < 2:
             row_cluster = False
             print('Warning: There is only one row in the dataframe, row_cluster is set to False')
@@ -424,7 +407,11 @@ class HeatmapPlot:
                 plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
                 plt.tight_layout()
                 plt.show()
-                return fig
+
+                if 'df_dict' in locals():
+                    return fig, df_dict
+                else:
+                    return fig
             elif return_type == 'table':
                 fig = sns.clustermap(dft, norm=norm, 
                                     col_cluster=col_cluster, row_cluster=row_cluster,                                
@@ -476,7 +463,7 @@ class HeatmapPlot:
         # remove all 0 rows
         dft = dft.loc[~(dft==0).all(axis=1)]
         
-        dft = self.tfobj.replace_if_two_index(dft)
+        dft = self.tfa.replace_if_two_index(dft)
             
 
         if len(dft) < 2:
@@ -573,7 +560,7 @@ class HeatmapPlot:
         # remove all 0 rows
         dft = dft.loc[~(dft==0).all(axis=1)]
         
-        dft = self.tfobj.replace_if_two_index(dft)
+        dft = self.tfa.replace_if_two_index(dft)
             
 
         if len(dft) < 2:
@@ -695,8 +682,8 @@ class HeatmapPlot:
         if len(mat.columns) < 2:
             col_cluster = False
             
-        meta_df = self.tfobj.meta_df
-        meta_name = self.tfobj.meta_name
+        meta_df = self.tfa.meta_df
+        meta_name = self.tfa.meta_name
 
 
         if fig_size is None:

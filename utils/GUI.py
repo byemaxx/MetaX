@@ -302,7 +302,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.hiddenTab = self.tabWidget_3.widget(3)
         self.tabWidget_3.removeTab(3)
 
-
+        self.checkBox_comparing_group_control_in_condition.stateChanged.connect(self.change_event_checkBox_comparing_group_control_in_condition)
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
         
@@ -460,7 +460,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             button.setEnabled(enabled)
 
             
-            
+    def change_event_checkBox_comparing_group_control_in_condition(self):
+        if self.checkBox_comparing_group_control_in_condition.isChecked():
+            self.comboBox_dunnett_condition_meta.setEnabled(True)
+        else:
+            self.comboBox_dunnett_condition_meta.setEnabled(False)
     
     
     ###############   basic function End   ###############
@@ -697,6 +701,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         last_path = self.settings.value("last_path", "", type=str)
         if last_path:
             self.last_path = last_path
+        # load like_times
+        like_times = self.settings.value("like_times", 0, type=int)
+        if like_times:
+            self.like_times = like_times
+            if self.like_times >= 3:
+                self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+                print("Hidden tab added.")
+                
+            
         # load time and version
         print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
 
@@ -716,6 +729,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.settings.setValue(f"{settings_key}/text", widget.text())
         # save self.last_path
         self.settings.setValue("last_path", self.last_path)
+        self.settings.setValue("like_times", self.like_times)
         # save time and version
         self.settings.setValue("time", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.settings.setValue("version", __version__)
@@ -809,6 +823,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set meta list for comboBox in plot and stats tab
         self.update_meta_name_combobox_plot_part()
         self.update_group_and_sample_combobox()
+        # set comboBox_dunnett_condition_meta
+        self.comboBox_dunnett_condition_meta.clear()
+        self.comboBox_dunnett_condition_meta.addItems(self.tfa.meta_df.columns.tolist()[1:])
+                
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
     def restore_settings_after_load_taxafunc_obj(self):
@@ -1042,11 +1060,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         dialog.exec_()
 
     def like_us(self):
-        if self.like_times < 1:
+        if self.like_times < 2:
             QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
             self.pushButton_others_plot_line.setText('Plot Bar')
             self.like_times += 1
-        elif self.like_times <2:
+        elif self.like_times <3:
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
             self.like_times += 1
             self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
@@ -1511,15 +1529,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
             self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
-            self.comboBox_top_heatmap_sort_type.setEnabled(False)      
-            self.spinBox_top_heatmap_number.setEnabled(False)
             # add 'all' to comboBox_top_heatmap_scale.
             if 'all' not in scale_method_list:
                 self.comboBox_top_heatmap_scale.addItem('all')
+            
+            if 'dunnett_test' in selected_table_name:
+                self.comboBox_top_heatmap_sort_type.setEnabled(False)      
+                self.spinBox_top_heatmap_number.setEnabled(False)
 
             
             if selected_table_name.startswith('deseq2'):
                 self.show_all_in_layout(self.horizontalLayout_17, if_except=False)
+                self.comboBox_top_heatmap_sort_type.clear()
+                self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
         else:
             self.hide_all_in_layout(self.horizontalLayout_17)
@@ -1612,6 +1634,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_outlier_detection_group_or_sample.clear()
             self.comboBox_outlier_detection_group_or_sample.addItems(meta_list)
             self.comboBox_outlier_detection_group_or_sample.addItem('All Samples')
+            
+            # set comboBox_dunnett_condition_meta
+            self.comboBox_dunnett_condition_meta.clear()
+            self.comboBox_dunnett_condition_meta.addItems(meta_list)
                 
             
             # set comboBox_overview_func_list
@@ -3313,13 +3339,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
         show_all_labels = (self.checkBox_top_heatmap_show_all_labels_x.isChecked(), self.checkBox_top_heatmap_show_all_labels_y.isChecked())
+        col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
+        row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
 
         if cmap == 'Auto':
             cmap = None
 
-        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p'}
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p', 'padj': 'padj', 'pvalue': 'pvalue'}
         value_type = sort_by_dict[sort_by]
-        
 
         df = self.table_dict[table_name]
         
@@ -3340,17 +3367,25 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if table_name.startswith('dunnett_test'):
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
-                                                                               scale = scale, col_cluster = True, row_cluster = True,
+                                                                               scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels)
-            elif 'deseq2all' in table_name:
+            elif table_name.startswith('deseq2all'):
+                p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_deseq2all_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
-                                                                               scale = scale, col_cluster = True, row_cluster = True,
+                                                                               scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
-                                                                               show_all_labels = show_all_labels,return_type = 'fig')
+                                                                               show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type)
+                # if fig is a tuple
+                if isinstance(fig, tuple):
+                    df_dict = fig[1]
+                    for key, value in df_dict.items():
+                        key = f"{table_name.split('(')[0]}_{key}_({table_name.split('(')[1]}"
+                        print(f'Update table_dict: {key}')
+                        self.update_table_dict(key, value)
             
             elif 'taxa-func' in table_name:
                 if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
@@ -3361,12 +3396,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     title = ""
                 fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
+                            col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
                             show_all_labels = show_all_labels)
             else:
                 fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                         value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                        scale = scale, col_cluster = True, row_cluster = True, 
+                                                                        scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
                                                                         cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                                         show_all_labels = show_all_labels)
 
@@ -3387,8 +3423,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
-
-        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p'}
+        col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
+        row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
+        
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p', 'padj': 'padj', 'pvalue': 'pvalue'}
         value_type = sort_by_dict[sort_by]
         
 
@@ -3398,21 +3436,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             if table_name.startswith('dunnett_test'):
                 df_top_cross = HeatmapPlot(self.tfa).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
-                                                                                      col_cluster = True, row_cluster = True, 
+                                                                                      col_cluster = col_luster, row_cluster = row_luster, 
                                                                                       rename_taxa=rename_taxa)
             elif 'deseq2all' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_deseq2all_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
-                                                                                   col_cluster = True, row_cluster = True, 
+                                                                                   col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table')
             else:
                 if 'taxa-func' in table_name:
                     df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, 
+                                                                              col_cluster = col_luster, row_cluster = row_luster,
                                                                               value_type=value_type, pvalue=pvalue, 
                                                                               rename_taxa=rename_taxa)
                 else:
                     df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, 
+                                                                                    col_cluster = col_luster, row_cluster = row_luster,
                                                                                     value_type=value_type, pvalue=pvalue, 
                                                                                     scale = scale, rename_taxa=rename_taxa)
         except ValueError as e:
@@ -3520,10 +3560,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 res_df = self.tfa.get_stats_dunnett_test(control_group=control_group, group_list=group_list, df_type=df_type)
                 table_name = f'dunnett_test({df_type})'
             elif method == 'deseq2':
-                res_df = self.tfa.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
+                if self.checkBox_comparing_group_control_in_condition.isChecked():
+                    condition_meta = self.comboBox_dunnett_condition_meta.currentText()
+                    res_df = self.tfa.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), control_group=control_group, condition=condition_meta)
+                    table_name = f'deseq2allinCondition({df_type})'
+                else:
+                
+                    res_df = self.tfa.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
                                                                    control_group=control_group, group_list=group_list, 
                                                                    concat_sample_to_result = False, quiet = True)
-                table_name = f'deseq2all({df_type})'
+                    table_name = f'deseq2all({df_type})'
             else:
                 raise ValueError(f'No such method: {method}')
             
@@ -3547,6 +3593,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
         
         except Exception as e:
+            if 'is not in meta_df, must be one of' in str(e) or 'not a subset of the groups in condition' in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
+                return None
+            
+            
             error_message = traceback.format_exc()
             self.logger.write_log(f'dunnett_test error: {error_message}', 'e')
             self.logger.write_log(f'dunnett_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')

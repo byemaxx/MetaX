@@ -127,6 +127,12 @@
 - Change: Change the function of "LiKE".
 
 # Version: 1.91.5
-## Date: 2024-01-23
+## Date: 2024-01-24
 ### Changes:
 - Change: Reverse the order of Deseq2. use Group2/Group1
+
+# Version: 1.92.0
+## Date: 2024-01-24
+### Changes:
+- New: Add secret function.
+- Change: add option of cluster method for cross heatmap.

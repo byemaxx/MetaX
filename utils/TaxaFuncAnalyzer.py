@@ -195,16 +195,30 @@ class TaxaFuncAnalyzer:
         return meta_df.groupby(meta)['Sample'].apply(list).to_dict()
        
     # input a group name, return the sample list in this group
-    def get_sample_list_in_a_group(self, group: str = None) -> list:
+    def get_sample_list_in_a_group(self, group: str = None, condition: list = None) -> list:
         if self.group_list is None:
-            print('group is not set, please set group first.')
+            print('group does not exist, please set group first.')
             return None
         if group not in self.group_list:
             raise ValueError(f'group must be in {set(self.group_list)}')
-        sample_list =  self.meta_df[self.meta_df[self.meta_name] == group]['Sample'].tolist()
+        if condition is not None:
+            if not isinstance(condition, list) or len(condition) != 2:
+                raise ValueError('condition must be a list with 2 elements, first is the meta column name, second is the group. e.g. ["Person", "PBS"]')
+            if condition[0] not in self.meta_df.columns:
+                raise ValueError(f'{condition[0]} must be in {set(self.meta_df.columns)}')
+            # check if the condition is valid
+            if condition[1] not in self.meta_df[condition[0]].unique().tolist():
+                raise ValueError(f'{condition[1]} must be in {self.meta_df[condition[0]].unique().tolist()}')
+            # get the sample list
+            meta_df = self.meta_df[self.meta_df[condition[0]] == condition[1]]
+        else:
+            meta_df = self.meta_df
+                
+        sample_list =  meta_df[meta_df[self.meta_name] == group]['Sample'].tolist()
         sample_list = sorted(sample_list)
         return sample_list
-    
+
+
     # input a sample name, return the group name of this sample
     def get_group_of_a_sample(self, sample: str = None) -> str:
         if self.group_list is None:
@@ -277,14 +291,29 @@ class TaxaFuncAnalyzer:
         cross_test = CrossTest(self)
         return cross_test.get_stats_ttest(group_list=group_list, df_type=df_type)
     
-    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False):
+    ## DESeq2 Begin ##
+    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None):
         cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2(df, group1, group2, concat_sample_to_result, quiet)
+        return cross_test.get_stats_deseq2(df, group1, group2, concat_sample_to_result, quiet, condition)
 
-    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True) -> pd.DataFrame:
+    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True, condition: list = None) -> pd.DataFrame:
         cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2_against_control(df, control_group, group_list, concat_sample_to_result, quiet)
+        return cross_test.get_stats_deseq2_against_control(df, control_group, group_list, concat_sample_to_result, quiet, condition)
     
+    def extrcat_significant_fc_from_deseq2all(self, df: pd.DataFrame, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj'):
+        cross_test = CrossTest(self)
+        return cross_test.extrcat_significant_fc_from_deseq2all(df, p_value, log2fc_min, log2fc_max, p_type)
+    
+    def extrcat_significant_fc_from_deseq2all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj') -> dict:
+        cross_test = CrossTest(self)
+        return cross_test.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value, log2fc_min, log2fc_max, p_type)
+
+    # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
+    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition) -> pd.DataFrame:
+        cross_test = CrossTest(self)
+        return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition)
+    
+    ## DESeq2 End ##
     
     # Get the Tukey test result of a taxon or a function
     def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
