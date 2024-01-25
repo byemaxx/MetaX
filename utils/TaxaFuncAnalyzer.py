@@ -159,7 +159,21 @@ class TaxaFuncAnalyzer:
         print(f'after remove all zero row: {df.shape}')
         self.original_df = df
 
-
+    def rename_taxa(self, df):
+        first_index = df.index[0]
+        index_list = df.index.tolist()
+        if 'd__' in first_index:
+            if '<' not in first_index:
+                new_index_list = [i.split('|')[-1] for i in index_list]
+            else:
+                new_index_list = [
+                    f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
+                    for i in index_list
+                ]
+            df.index = new_index_list
+        return df
+    
+    
     def set_func(self, func):
         
         # check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs', 

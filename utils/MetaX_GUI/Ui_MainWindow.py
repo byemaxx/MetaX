@@ -1515,6 +1515,7 @@ class Ui_metaX_main(object):
         self.comboBox_cross_3_level_plot_df_type.addItem("")
         self.gridLayout_38.addWidget(self.comboBox_cross_3_level_plot_df_type, 1, 1, 1, 1)
         self.checkBox_cross_3_level_plot_show_col_colors = QtWidgets.QCheckBox(self.tab_2)
+        self.checkBox_cross_3_level_plot_show_col_colors.setChecked(True)
         self.checkBox_cross_3_level_plot_show_col_colors.setObjectName("checkBox_cross_3_level_plot_show_col_colors")
         self.gridLayout_38.addWidget(self.checkBox_cross_3_level_plot_show_col_colors, 1, 3, 1, 1)
         self.doubleSpinBox_mini_log2fc_heatmap = QtWidgets.QDoubleSpinBox(self.tab_2)

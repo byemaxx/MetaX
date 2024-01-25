@@ -4087,6 +4087,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
         else:
+            if self.checkBox_tflink_hetatmap_rename_taxa.isChecked():
+                df = self.tfa.rename_taxa(df)
             self.show_table(df, title=f'{taxa} [ {func} ]')
             
             
