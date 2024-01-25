@@ -2,6 +2,7 @@ import pandas as pd
 import skbio.diversity.alpha as alpha
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.ticker as ticker
 
 from skbio.diversity import beta_diversity
 from skbio.stats.ordination import pcoa
@@ -71,6 +72,7 @@ class DiversityPlot(object):
             fig.set_xlabel('Group', fontsize=font_size+2)
             fig.set_ylabel(f'{metric} Diversity', fontsize=font_size+2)
             fig.set_title(f'Alpha Diversity ({metric}) of Each Group', fontsize=font_size+4)
+            plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
             plt.tight_layout()
             plt.show()
             return fig

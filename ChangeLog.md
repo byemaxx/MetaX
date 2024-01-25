@@ -136,3 +136,8 @@
 ### Changes:
 - New: Add secret function.
 - Change: add option of cluster method for cross heatmap.
+
+# Version: 1.92.1
+## Date: 2024-01-24
+### Changes:
+- Fix: Fixed the bug of when plot alpha diversity, the label of y-axis is too much digits.

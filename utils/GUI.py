@@ -3384,7 +3384,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df_dict = fig[1]
                     for key, value in df_dict.items():
                         key = f"{table_name.split('(')[0]}_{key}_({table_name.split('(')[1]}"
-                        print(f'Update table_dict: {key}')
                         self.update_table_dict(key, value)
             
             elif 'taxa-func' in table_name:
