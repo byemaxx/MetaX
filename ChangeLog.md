@@ -141,3 +141,8 @@
 ## Date: 2024-01-24
 ### Changes:
 - Fix: Fixed the bug of when plot alpha diversity, the label of y-axis is too much digits.
+
+# Version: 1.92.2
+## Date: 2024-01-25
+### Changes:
+- Fix: Fixed the bug of when plot 3 level heatmap, the col cluster option is not work.

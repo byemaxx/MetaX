@@ -361,7 +361,7 @@ class HeatmapPlot:
             df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
             dft = df_dict['same_trends']
             dft.columns = ['_'.join(col) for col in dft.columns]
-            col_cluster = False
+            # col_cluster = False
 
         if dft.empty or dft is None:
             raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}")
