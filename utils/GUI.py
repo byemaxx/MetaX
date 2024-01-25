@@ -987,8 +987,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.hide_all_in_layout(layout_item.layout())
 
     def show_all_in_layout(self, layout, if_except=True):
-        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138','comboBox_cross_3_level_plot_df_type','label_141',
+        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
+                       'comboBox_cross_3_level_plot_df_type','label_141',
+                       'checkBox_cross_3_level_plot_show_col_colors',
                        'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
+        
         for i in range(layout.count()):
             layout_item = layout.itemAt(i)
             if layout_item.widget() is not None:
@@ -3380,7 +3383,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
-                                                                               three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                                                                               three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
+                                                                                show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
                                                                                )
                 # if fig is a tuple
                 if isinstance(fig, tuple):
@@ -3446,7 +3450,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
-                                                                                   three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                                                                                   three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
+                                                                                   show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
                                                                                    )
             else:
                 if 'taxa-func' in table_name:

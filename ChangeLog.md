@@ -153,3 +153,8 @@
 ### Changes:
 - Change: Changed layout position of Corss Heatmap options.
 - New: Add option to plot heatmap with 3 levels deseq2 result.
+
+# Version: 1.92.4
+## Date: 2024-01-25
+### Changes:
+- Change: Changed the col color for heatmap to avoid the color is too light.

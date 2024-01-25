@@ -619,19 +619,19 @@ class CrossTest:
             df = pd.concat(res_dict, axis=1)
             df_swapped = df.swaplevel(axis=1)
             df_swapped = df_swapped.sort_index(axis=1)
-            print(f"\nTotal number of df_all: [{df_swapped.shape[0]}]")
+            print(f"\nTotal number of all_siginificant: [{df_swapped.shape[0]}]")
             res_df_dict['all_sig'] = df_swapped
             
             df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
             df_no_na = df_no_na.droplevel(1, axis=1)
-            print(f"Total number of df_no_na: [{df_no_na.shape[0]}]")
+            print(f"Total number of no_na_in_one_group: [{df_no_na.shape[0]}]")
             res_df_dict['no_na'] = df_no_na
 
             # Only keep rows that have all values positive or all values negative
             df_same_trends = df_no_na.groupby(level=0, axis=1).apply(filter_rows)
             # dropna level 0 index
             df_same_trends.columns = df_same_trends.columns.droplevel(1)
-            print(f"Total number of df_same_trends: [{df_same_trends.shape[0]}]")
+            print(f"Total number of same_trends_in_one_group: [{df_same_trends.shape[0]}]")
             res_df_dict['same_trends'] = df_same_trends
             
             

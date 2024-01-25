@@ -223,7 +223,7 @@ class BasicPlot:
         BLACK = (0, 0, 0)
 
         # generated colours will be as distinct as possible from these colours
-        input_colors = [ BLACK]
+        input_colors = [BLACK, WHITE]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
 
         return colors

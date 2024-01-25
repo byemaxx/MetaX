@@ -157,13 +157,7 @@ class HeatmapPlot:
         if fig_size is None:
             fig_size = (30,30)
 
-        def assign_colors(groups):
-            colors = distinctipy.get_colors(len(set(groups)))
-            result = []
-            for group in groups:
-                index = sorted(set(groups)).index(group)
-                result.append(colors[index])
-            return result
+
         try:
             # create color list for groups & rename columns
             col_names = mat.columns.tolist()
@@ -174,7 +168,7 @@ class HeatmapPlot:
                 group = group[meta_name].values[0]
                 new_col_names.append(f'{i} ({group})')
                 groups_list.append(group)
-            color_list = assign_colors(groups_list)
+            color_list = self.assign_colors(groups_list)
             mat.columns = new_col_names
             if rename_taxa:
                 mat = self.rename_taxa(mat)
@@ -233,13 +227,7 @@ class HeatmapPlot:
         if fig_size is None:
             fig_size = (30,30)
 
-        def assign_colors(groups):
-            colors = distinctipy.get_colors(len(set(groups)))
-            result = []
-            for group in groups:
-                index = sorted(set(groups)).index(group)
-                result.append(colors[index])
-            return result
+
 
 
 
@@ -252,7 +240,7 @@ class HeatmapPlot:
             group = group[meta_name].values[0]
             new_col_names.append(f'{i} ({group})')
             groups_list.append(group)
-        color_list = assign_colors(groups_list)
+        color_list = self.assign_colors(groups_list)
         mat.columns = new_col_names
         
         # if only one column, remove col_cluster, set scale to None
@@ -348,21 +336,33 @@ class HeatmapPlot:
             raise ValueError(f"No significant differences between groups")
         # finally:
         #     plt.close('all')
-
+    
     def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), 
-                                       return_type:str = 'fig', show_num:bool = False, p_type:str = 'padj', three_levels_df_type: str = 'same_trends'):
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10, 
+                                       show_all_labels:tuple = (False, False), 
+                                       return_type:str = 'fig', show_num:bool = False, 
+                                       p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
+                                       show_col_colors:bool = False):
         import numpy as np
         
+        color_list = None
         if df.columns.nlevels == 2:
-            dft = self.tfa.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+            dft = self.tfa.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
+                                                                 log2fc_max=log2fc_max, p_type=p_type)
         elif df.columns.nlevels == 3:
-            df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
-            # dft = df_dict['same_trends']
+            df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, 
+                                                                              log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
             dft = df_dict[three_levels_df_type]
+            # set level 1 index as the column color
             dft.columns = ['_'.join(col) for col in dft.columns]
-            # col_cluster = False
+            sample_list = dft.columns.tolist()
+            group_list = []
+            for i in sample_list:
+                group_name = i.split('_')[0]
+                group_list.append(group_name)
+            color_list = self.assign_colors(group_list)
+                      
 
         if dft.empty or dft is None:
             raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}")
@@ -395,15 +395,22 @@ class HeatmapPlot:
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                        'col_cluster': col_cluster, 'row_cluster': row_cluster,'cbar_kws': {"label":'log2FoldChange', "shrink": 0.5},'annot':show_num, 'fmt':'.2f',
-                        'xticklabels':True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
+            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 
+                          'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
+                        'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                        'cbar_kws': {"label":'log2FoldChange', "shrink": 0.5},
+                        'annot':show_num, 'fmt':'.2f',
+                        'xticklabels':True if show_all_labels[0] else "auto",
+                        "yticklabels":True if show_all_labels[1] else "auto",
+                        "col_colors":color_list if show_col_colors else None}
+            
             if return_type == 'fig':
                 fig = sns.clustermap(dft, **sns_params)
 
                 fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
                 fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})", fontsize=font_size)
+                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2\
+                    ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})", fontsize=font_size)
 
                 plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
                 plt.tight_layout()
@@ -690,13 +697,6 @@ class HeatmapPlot:
         if fig_size is None:
             fig_size = (5,5)
 
-        def assign_colors(groups):
-            colors = distinctipy.get_colors(len(set(groups)))
-            result = []
-            for group in groups:
-                index = sorted(set(groups)).index(group)
-                result.append(colors[index])
-            return result
         
         
         try:
@@ -709,7 +709,7 @@ class HeatmapPlot:
                 group = group[meta_name].values[0]
                 new_col_names.append(f'{i} ({group})')
                 groups_list.append(group)
-            color_list = assign_colors(groups_list)
+            color_list = self.assign_colors(groups_list)
             mat.columns = new_col_names
             
             if rename_taxa:
@@ -739,3 +739,25 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
 
+    def assign_colors(self, groups):
+        colors = self.get_distinct_colors(len(set(groups)))
+        result = []
+        for group in groups:
+            index = sorted(set(groups)).index(group)
+            result.append(colors[index])
+        return result
+    
+    def get_distinct_colors(self, n):  
+        from distinctipy import distinctipy
+        # rgb colour values (floats between 0 and 1)
+        RED = (1, 0, 0)
+        GREEN = (0, 1, 0)
+        BLUE = (0, 0, 1)
+        WHITE = (1, 1, 1)
+        BLACK = (0, 0, 0)
+
+        # generated colours will be as distinct as possible from these colours
+        input_colors = [WHITE]
+        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
+
+        return colors

@@ -2920,6 +2920,46 @@
               </item>
               <item row="2" column="5" rowspan="2">
                <layout class="QGridLayout" name="gridLayout_38">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_138">
+                  <property name="text">
+                   <string>Log2FC</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_141">
+                  <property name="text">
+                   <string>Plot Type</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="comboBox_cross_3_level_plot_df_type">
+                  <item>
+                   <property name="text">
+                    <string>all_sig</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>no_na</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>same_trends</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QCheckBox" name="checkBox_cross_3_level_plot_show_col_colors">
+                  <property name="text">
+                   <string>Col Colors</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="1">
                  <widget class="QDoubleSpinBox" name="doubleSpinBox_mini_log2fc_heatmap">
                   <property name="enabled">
@@ -2957,39 +2997,6 @@
                   <property name="value">
                    <double>20.000000000000000</double>
                   </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_138">
-                  <property name="text">
-                   <string>Log2FC</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_141">
-                  <property name="text">
-                   <string>Plot Type</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1" colspan="3">
-                 <widget class="QComboBox" name="comboBox_cross_3_level_plot_df_type">
-                  <item>
-                   <property name="text">
-                    <string>all_sig</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>no_na</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>same_trends</string>
-                   </property>
-                  </item>
                  </widget>
                 </item>
                </layout>
