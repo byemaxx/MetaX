@@ -352,14 +352,15 @@ class HeatmapPlot:
     def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False), 
-                                       return_type:str = 'fig', show_num:bool = False, p_type:str = 'padj'):
+                                       return_type:str = 'fig', show_num:bool = False, p_type:str = 'padj', three_levels_df_type: str = 'same_trends'):
         import numpy as np
         
         if df.columns.nlevels == 2:
             dft = self.tfa.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
         elif df.columns.nlevels == 3:
             df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
-            dft = df_dict['same_trends']
+            # dft = df_dict['same_trends']
+            dft = df_dict[three_levels_df_type]
             dft.columns = ['_'.join(col) for col in dft.columns]
             # col_cluster = False
 

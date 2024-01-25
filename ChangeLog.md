@@ -146,3 +146,10 @@
 ## Date: 2024-01-25
 ### Changes:
 - Fix: Fixed the bug of when plot 3 level heatmap, the col cluster option is not work.
+
+
+# Version: 1.92.3
+## Date: 2024-01-25
+### Changes:
+- Change: Changed layout position of Corss Heatmap options.
+- New: Add option to plot heatmap with 3 levels deseq2 result.

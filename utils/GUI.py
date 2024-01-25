@@ -297,7 +297,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_anova_test.clicked.connect(self.anova_test)
 
         ### Group Control Test
-        self.hide_all_in_layout(self.horizontalLayout_17)
+        self.hide_all_in_layout(self.gridLayout_38)
         
         self.hiddenTab = self.tabWidget_3.widget(3)
         self.tabWidget_3.removeTab(3)
@@ -971,9 +971,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
             
         if index == 3:
-            self.hide_all_in_layout(self.horizontalLayout_17)
+            self.hide_all_in_layout(self.gridLayout_38)
         else:
-            self.show_all_in_layout(self.horizontalLayout_17)
+            self.show_all_in_layout(self.gridLayout_38)
             
 
     def hide_all_in_layout(self, layout):
@@ -987,7 +987,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.hide_all_in_layout(layout_item.layout())
 
     def show_all_in_layout(self, layout, if_except=True):
-        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
+        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138','comboBox_cross_3_level_plot_df_type','label_141',
                        'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
         for i in range(layout.count()):
             layout_item = layout.itemAt(i)
@@ -1536,15 +1536,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if 'dunnett_test' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
                 self.spinBox_top_heatmap_number.setEnabled(False)
+                self.hide_all_in_layout(self.gridLayout_38)
 
             
             if selected_table_name.startswith('deseq2'):
-                self.show_all_in_layout(self.horizontalLayout_17, if_except=False)
+                self.show_all_in_layout(self.gridLayout_38, if_except=False)
                 self.comboBox_top_heatmap_sort_type.clear()
                 self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
         else:
-            self.hide_all_in_layout(self.horizontalLayout_17)
+            self.hide_all_in_layout(self.gridLayout_38)
             self.label_57.setText('Sort By:')
             sorted_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
             if 't_test' in selected_table_name:
@@ -3378,7 +3379,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
-                                                                               show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type)
+                                                                               show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
+                                                                               three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                                                                               )
                 # if fig is a tuple
                 if isinstance(fig, tuple):
                     df_dict = fig[1]
@@ -3442,7 +3445,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
-                                                                                   rename_taxa=rename_taxa, return_type = 'table')
+                                                                                   rename_taxa=rename_taxa, return_type = 'table',
+                                                                                   three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                                                                                   )
             else:
                 if 'taxa-func' in table_name:
                     df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, 
