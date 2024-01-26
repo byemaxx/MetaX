@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1266,6 +1266,102 @@
                 <string>Basic Plot</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_26">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_35">
+                  <item row="1" column="0" colspan="4">
+                   <widget class="Line" name="line_7">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QRadioButton" name="radioButton_basic_pca_group">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Groups</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" colspan="3">
+                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_70">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="text">
+                     <string>Table</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2" colspan="2">
+                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_group"/>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QComboBox" name="comboBox_basic_pca_meta">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QRadioButton" name="radioButton_basic_pca_sample">
+                    <property name="text">
+                     <string>Samples</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="comboBox_table4pca">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Peptide</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Function</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa-Function</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
                 <item row="1" column="0">
                  <layout class="QGridLayout" name="gridLayout_36">
                   <item row="1" column="6">
@@ -1455,102 +1551,6 @@
                     <property name="text">
                      <string>Show Group  Labels</string>
                     </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_35">
-                  <item row="1" column="0" colspan="4">
-                   <widget class="Line" name="line_7">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QRadioButton" name="radioButton_basic_pca_group">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Groups</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1" colspan="3">
-                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_sample"/>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_70">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2" colspan="2">
-                   <layout class="QVBoxLayout" name="verticalLayout_basic_pca_group"/>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QComboBox" name="comboBox_basic_pca_meta">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QRadioButton" name="radioButton_basic_pca_sample">
-                    <property name="text">
-                     <string>Samples</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_table4pca">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>Peptide</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Function</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa-Function</string>
-                     </property>
-                    </item>
                    </widget>
                   </item>
                  </layout>
@@ -1812,16 +1812,6 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="2">
-                   <widget class="QPushButton" name="pushButton_plot_sunburst">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Sunburst</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="2" column="2">
                    <widget class="QPushButton" name="pushButton_plot_beta_div">
                     <property name="enabled">
@@ -1852,7 +1842,7 @@
                   <item row="3" column="0">
                    <widget class="QLabel" name="label_137">
                     <property name="text">
-                     <string>Sunburst</string>
+                     <string>Overview</string>
                     </property>
                    </widget>
                   </item>
@@ -1870,12 +1860,36 @@
                    </widget>
                   </item>
                   <item row="3" column="1">
-                   <widget class="QCheckBox" name="checkBox_sunburst_show_all_lables">
+                   <layout class="QHBoxLayout" name="horizontalLayout_20">
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_sunburst_show_all_lables">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="text">
+                       <string>Show All  Lables for Sunburst</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_plot_sunburst">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="text">
+                       <string>Plot Sunburst</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QPushButton" name="pushButton_plot_basic_sankey">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Show All  Lables for Sunburst</string>
+                     <string>Plot Sankey</string>
                     </property>
                    </widget>
                   </item>

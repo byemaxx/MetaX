@@ -159,7 +159,12 @@
 ### Changes:
 - Change: Changed the col color for heatmap to avoid the color is too light.
 
-# Version: 1.92.4
+# Version: 1.92.5
 ## Date: 2024-01-25
 ### Changes:
 - Change: Enable rename taxa for get matrix at taxa-func part.
+
+# Version: 1.93.0
+## Date: 2024-01-26
+### Changes:
+- New: Add a function to plot sankey diagram for taxa-func and taxa at basic part.

@@ -11,6 +11,9 @@ class SankeyPlot:
     #         pic = plot_fc_sankey(fc_df, width=2500, height=2000, p_value=0.05, log2fc=1)
     #        pic.render_notebook()
     #     pic.render('sankey.html')
+    
+    def __init__(self, taxa_func_analyzer):
+        self.tfa = taxa_func_analyzer
 
     def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
         df = df.copy()
@@ -70,7 +73,47 @@ class SankeyPlot:
                 # df_out_dict[key] = df_t
         return df_out_dict
 
+    def df_to_sankey_df(self, df, value_col='value'):
+        
+        # if df if multi-index, split the index into two columns
+        df = self.tfa.replace_if_two_index(df)
+        # rename index to 'index'
+        df.index.name = 'index'
+        df['index'] = df.index
+        df = df[['index', value_col]]
+        
+        if '<' in df['index'][0]:
+            index_str = df['index'].str.split("<", expand=True)
+            if '|' in index_str[0][0]:
+                taxon_index = 0
+                func_index = 1
+            else:
+                taxon_index = 1
+                func_index = 0
+            df = df[[value_col]]
 
+            df['Taxon'] = index_str[taxon_index].str.replace(">", "")
+            df['Function'] = index_str[func_index].str.replace(">", "")
+
+        else:
+            df = df[[value_col]]
+            df['Taxon'] = df.index
+            
+        
+        df_t = df['Taxon'].str.split('|', expand=True)
+        if "Function" in df.columns.tolist():
+            df_t = df_t.join(df['Function'])
+        
+        df_t = df_t.join(df[value_col])
+        names = df_t.columns.tolist()
+        names[-1] = 'value'
+        df_t.columns = names
+
+        # remove values that are 0
+        df_t = df_t[df_t['value'] != 0]
+        
+        return df_t
+        
 
     def create_nodes_links(self, df, value_col='value'):
 
@@ -102,7 +145,7 @@ class SankeyPlot:
 
 
 
-    def __plot_sankey(self,link_nodes_dict, width, height, title):
+    def __plot_sankey(self,link_nodes_dict, width, height, title, subtitle=''):
 
         # Remove duplicate nodes
         # nodes_combined = list({node['name']: node for node in nodes_up + nodes_down}.values())
@@ -129,7 +172,7 @@ class SankeyPlot:
         pic.set_global_opts(
             legend_opts=opts.LegendOpts(selected_mode='single'),
             toolbox_opts=opts.ToolboxOpts(is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataView": {}}),
-            title_opts=opts.TitleOpts(title=title, subtitle=''),
+            title_opts=opts.TitleOpts(title=title, subtitle=subtitle),
         )
 
 
@@ -147,3 +190,16 @@ class SankeyPlot:
             link_nodes_dict[key] = [nodes, links, value[1]]
         pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title)
         return pic
+    
+    
+    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle=''):
+        df = df.copy()
+        df['sum'] = df.sum(axis=1)
+        
+        df_sankey = self.df_to_sankey_df(df, value_col='sum')
+        nodes, links = self.create_nodes_links(df_sankey)
+        link_nodes_dict = {'Intensity Sum': [nodes, links, len(nodes)]}
+
+        pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title, subtitle= subtitle)
+        return pic
+    

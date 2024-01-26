@@ -266,6 +266,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_beta_div.clicked.connect(lambda: self.plot_basic_info_sns('beta_div'))
         self.pushButton_plot_alpha_div.clicked.connect(lambda: self.plot_basic_info_sns('alpha_div'))
         self.pushButton_plot_sunburst.clicked.connect(lambda: self.plot_basic_info_sns('sunburst'))
+        self.pushButton_plot_basic_sankey.clicked.connect(lambda: self.plot_basic_info_sns('sankey'))
+        
         # change event for checkBox_pca_if_show_lable
         self.checkBox_pca_if_show_lable.stateChanged.connect(self.change_event_checkBox_pca_if_show_lable)
         self.comboBox_table4pca.currentIndexChanged.connect(self.change_event_checkBox_basic_plot_table)
@@ -446,18 +448,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         return dft
 
     def change_event_checkBox_basic_plot_table(self):
-        button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
-        enabled = False
-        
-        if self.comboBox_table4pca.currentText() == 'Taxa':
-            try:
-                if self.tfa is not None and self.tfa.taxa_df is not None:
-                    enabled = True
-            except:
-                pass
-        
-        for button in button_list:
-            button.setEnabled(enabled)
+        taxa_only_button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
+        taxa_func_button_list = [self.pushButton_plot_basic_sankey]
+
+        current_text = self.comboBox_table4pca.currentText()
+        enabled_list = []
+
+        tfa_exists = getattr(self, 'tfa', None) is not None
+        taxa_df_exists = tfa_exists and getattr(self.tfa, 'taxa_df', None) is not None
+
+        if current_text == 'Taxa' and taxa_df_exists:
+            enabled_list = taxa_only_button_list + taxa_func_button_list
+        elif current_text == 'Taxa-Function' and taxa_df_exists:
+            enabled_list = taxa_func_button_list
+        else:
+            enabled_list = []
+
+        for button in taxa_only_button_list + taxa_func_button_list:
+            button.setEnabled(button in enabled_list)
+
+                
+
 
             
     def change_event_checkBox_comparing_group_control_in_condition(self):
@@ -3228,46 +3239,33 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                         
         dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
         df = dft[sample_list]
-        if method == 'pca':
-            try:
+        try:
+            self.show_message(f'Plotting {method}...')
+            if method == 'pca':
                 row_num = df.shape[0]
                 if row_num < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
                 BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, show_group_label = show_group_label,
-                                                 width=width, height=height, font_size=font_size, 
-                                                 font_transparency=font_transparency, adjust_label=adjust_label)
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-        elif method == 'pca_3d':
-            try:
+                                                width=width, height=height, font_size=font_size, 
+                                                font_transparency=font_transparency, adjust_label=adjust_label)
+
+            elif method == 'pca_3d':
                 row_num = df.shape[0]
                 if row_num < 3:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, show_group_label = show_group_label,
-                                                                 width=width, height=height, font_size=font_size)
+                                                                width=width, height=height, font_size=font_size)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-                
-        elif method == 'box':
-            try:
-                self.show_message('Box is running, please wait...')
+
+            elif method == 'box':
                 show_fliers = self.checkBox_box_if_show_fliers.isChecked()
                 BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height, font_size=font_size)
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-        elif method == 'corr':
-            try:
+
+            elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
                 show_all_labels = (self.checkBox_corr_show_all_labels_x.isChecked(), self.checkBox_corr_show_all_labels_y.isChecked())
                 # checek if the dataframe has at least 2 rows and 2 columns
@@ -3279,55 +3277,47 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df = self.delete_zero_columns(df)
                 self.show_message('Correlation is running, please wait...')
                 BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, 
-                                                  width=width, height=height, font_size=font_size, show_all_labels=show_all_labels)
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-        
-        elif method == 'alpha_div':
-            try:
+                                                width=width, height=height, font_size=font_size, show_all_labels=show_all_labels)
+
+            elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
                 metric = self.comboBox_alpha_div_method.currentText()
                 plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
                 DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, font_size=font_size, plot_all_samples=plot_all_samples)
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_alpha_diversity error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-        elif method == "beta_div":
-            try:
+
+            elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
                 DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
                                                             font_size=font_size, font_transparency = font_transparency, show_group_label = show_group_label,
                                                             show_label = show_label, adjust_label = adjust_label
                                                             )                                 
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_beta_diversity error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-            
-        elif method == 'sunburst':
-            try:
-                self.show_message('Sunburst is running, please wait...')
+
+            elif method == 'sunburst':
                 taxa_df = self.tfa.taxa_df[sample_list]
-                
-                
                 if self.checkBox_pca_if_show_lable.isChecked():
                     show_label = 'all' if self.checkBox_sunburst_show_all_lables.isChecked() else 'last'
                 else:
                     show_label = False
                     
                 pic = SunburstPlot().create_sunburst_chart(taxa_df= taxa_df, width=width, height=height,
-                                                           title='Sunburst of Taxa', show_label=show_label,
-                                                           label_font_size = font_size)
+                                                        title='Sunburst of Taxa', show_label=show_label,
+                                                        label_font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Sunburst of Taxa')
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'plot_sunburst error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+                
+            elif method == 'sankey':
+                df = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
+                df = df[sample_list]
+                title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
+                
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title=title, subtitle=sample_list)
+                self.save_and_show_js_plot(pic, title)
+                
             
+        except Exception as e:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
             
 
     # differential analysis
@@ -3867,7 +3857,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = self.table_dict[table_name]
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
 
-            pic = SankeyPlot().plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
+            pic = SankeyPlot(self.tfa).plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
             self.save_and_show_js_plot(pic, f'Sankay plot {title_name}')
             
             # subprocess.Popen(save_path, shell=True)
