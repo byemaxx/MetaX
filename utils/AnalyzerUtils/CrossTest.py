@@ -270,7 +270,7 @@ class CrossTest:
         
 
     # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
-    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition) -> pd.DataFrame:
+    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition, group_list=None) -> pd.DataFrame:
 
         meta_df = self.tfa.meta_df.copy()
 
@@ -284,7 +284,7 @@ class CrossTest:
         res_dict = {}
         for condition_group in condition_list:
             print(f'Start for [{condition_group}]...')
-            dft = self.tfa.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group])
+            dft = self.tfa.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group], group_list=group_list, concat_sample_to_result=True, quiet=True)
             res_dict[condition_group] = dft
             print(f'Done for [{condition_group}]...')
         

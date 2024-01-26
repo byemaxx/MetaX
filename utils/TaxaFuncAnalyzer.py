@@ -323,9 +323,9 @@ class TaxaFuncAnalyzer:
         return cross_test.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value, log2fc_min, log2fc_max, p_type)
 
     # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
-    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition) -> pd.DataFrame:
+    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition, group_list: list = None) -> pd.DataFrame:
         cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition)
+        return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition,  group_list)
     
     def check_if_condition_valid(self, condition_meta: str, condition_group: str = None)-> bool:
         cross_test = CrossTest(self)

@@ -3587,7 +3587,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     condition_meta = self.comboBox_dunnett_condition_meta.currentText()
                     res_df = self.tfa.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), 
-                                                                                     control_group=control_group, 
+                                                                                     control_group=control_group, group_list=group_list,
                                                                                      condition=condition_meta)
                     table_name = f'deseq2allinCondition({df_type})'
                 else:

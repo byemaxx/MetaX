@@ -178,3 +178,9 @@
 ## Date: 2024-01-26
 ### Changes:
 - New: Add a condition option for Deseq2.
+
+
+# Version: 1.93.3
+## Date: 2024-01-26
+### Changes:
+- Fix: Fixed the group list selection bug of Corss Group Condition Test.
