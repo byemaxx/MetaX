@@ -168,3 +168,8 @@
 ## Date: 2024-01-26
 ### Changes:
 - New: Add a function to plot sankey diagram for taxa-func and taxa at basic part.
+
+# Version: 1.93.1
+## Date: 2024-01-26
+### Changes:
+- Fix: Fixed the bug of when plot top heatmap for taxa-func, the col and row cluster option raise error.

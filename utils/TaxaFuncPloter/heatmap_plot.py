@@ -28,6 +28,7 @@ class HeatmapPlot:
     # For taxa-func table
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
+                                         col_cluster:bool = True, row_cluster:bool = True,
                                         cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
                                         show_all_labels:tuple = (False, False)):
 
@@ -72,7 +73,7 @@ class HeatmapPlot:
             
             sns.set_style("white")
             sns_params = {'center': 0, 'cmap': cmap, 'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                          'figsize': fig_size,
+                          'figsize': fig_size, "col_cluster": col_cluster, "row_cluster": row_cluster,
                           'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type, "shrink": 0.5},
                             'standard_scale': scale, 'mask': df_top.isnull(), 'vmin': 0, 'vmax': 1,
                                 "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
@@ -271,7 +272,8 @@ class HeatmapPlot:
 
         # For taxa-func heatmap
     # get the top intensity matrix of taxa-func table
-    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True):
+    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, 
+                             rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True):
         func_name = self.tfa.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
