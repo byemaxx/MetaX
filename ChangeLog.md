@@ -173,3 +173,8 @@
 ## Date: 2024-01-26
 ### Changes:
 - Fix: Fixed the bug of when plot top heatmap for taxa-func, the col and row cluster option raise error.
+
+# Version: 1.93.2
+## Date: 2024-01-26
+### Changes:
+- New: Add a condition option for Deseq2.

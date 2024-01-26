@@ -240,26 +240,41 @@ class CrossTest:
         
         return res_df
 
+    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None)-> bool:
+        meta_df = self.tfa.meta_df.copy()
+
+        # check if the condition is in meta_df
+        if condition_meta not in meta_df.columns.tolist():
+            raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
+        
+        curent_group_list = meta_df[self.tfa.meta_name].unique()
+        condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
+        
+        if condition_group is None:
+            for group in condition_group_list:
+                sub_meta = meta_df[meta_df[condition_meta] == group]
+                sub_group_list = sub_meta[self.tfa.meta_name].unique()
+                # compare the current group list with the sub group list
+                if not set(curent_group_list).issubset(set(sub_group_list)):
+                    raise ValueError(f'Current groups:\n{curent_group_list}\nis not a subset of the groups in condition [{condition_meta}]:\n{sub_group_list}')
+        else:
+            sub_meta = meta_df[meta_df[condition_meta] == condition_group]
+            sub_group_list = sub_meta[self.tfa.meta_name].unique()
+            # compare the current group list with the sub group list
+            if not set(curent_group_list).issubset(set(sub_group_list)):
+                raise ValueError(f'Current groups:\n{curent_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
+        
+        return True
+        
+        
+        
+
     # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
     def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition) -> pd.DataFrame:
 
         meta_df = self.tfa.meta_df.copy()
 
-        # check if the condition is in meta_df
-        if condition not in meta_df.columns:
-            raise ValueError(f'Condition [{condition}] is not in meta_df, must be one of {meta_df.columns}')
-        
-        curent_group_list = meta_df[self.tfa.meta_name].unique()
-        print(f'{curent_group_list}')
-        condition_list = meta_df[condition].unique()
-        # checek if the current group is in meta_df of all conditions
-        for condition_group in condition_list:
-            sub_meta = meta_df[meta_df[condition] == condition_group]
-            sub_group_list = sub_meta[self.tfa.meta_name].unique()
-            # compare the current group list with the sub group list
-            if not set(curent_group_list).issubset(set(sub_group_list)):
-                raise ValueError(f'Current groups:\n{curent_group_list}\n\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
-
+        self.check_if_condition_valid(condition)
 
         condition_list = meta_df[condition].unique()
         print(f'------------------ Start Comparisons Deseq2 with Condition [{condition}]------------------')
@@ -311,13 +326,15 @@ class CrossTest:
             
             
     def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None) -> pd.DataFrame:
-
+        print(f'Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]')
+        
         sample_list = []
         for i in [group1, group2]:
             sample = self.tfa.get_sample_list_in_a_group(i, condition=condition)
             sample_list += sample
         
-
+        print(f'Sample List: {sample_list}')
+        
         # Create intensity matrix
         df = df.copy()
         df = df[sample_list]

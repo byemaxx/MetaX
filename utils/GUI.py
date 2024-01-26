@@ -323,6 +323,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_deseq2.clicked.connect(self.deseq2_test)
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
+        self.checkBox_deseq2_comparing_in_condition.stateChanged.connect(self.change_event_checkBox_deseq2_comparing_in_condition)
+        self.comboBox_deseq2_condition_meta.currentIndexChanged.connect(self.change_event_comboBox_deseq2_condition_meta)
 
         # ### Co-Expression Network
         self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
@@ -476,6 +478,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_dunnett_condition_meta.setEnabled(True)
         else:
             self.comboBox_dunnett_condition_meta.setEnabled(False)
+            
+    def change_event_checkBox_deseq2_comparing_in_condition(self):
+        combobox_list = [self.comboBox_deseq2_condition_meta, self.comboBox_deseq2_condition_group]
+
+        if self.checkBox_deseq2_comparing_in_condition.isChecked():
+            enabled_actrion = True
+        else:
+            enabled_actrion = False
+        for combobox in combobox_list:
+            combobox.setEnabled(enabled_actrion)
+    
+    def change_event_comboBox_deseq2_condition_meta(self):
+        meta_name =self.comboBox_deseq2_condition_meta.currentText()
+        group_list = self.tfa.meta_df[meta_name].unique().tolist()
+        self.comboBox_deseq2_condition_group.clear()
+        self.comboBox_deseq2_condition_group.addItems(group_list)
+
     
     
     ###############   basic function End   ###############
@@ -835,9 +854,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_meta_name_combobox_plot_part()
         self.update_group_and_sample_combobox()
         # set comboBox_dunnett_condition_meta
-        self.comboBox_dunnett_condition_meta.clear()
-        self.comboBox_dunnett_condition_meta.addItems(self.tfa.meta_df.columns.tolist()[1:])
-                
+        condition_meta_combobox_list = [self.comboBox_dunnett_condition_meta, self.comboBox_deseq2_condition_meta]
+        for i in condition_meta_combobox_list:
+            i.clear()
+            i.addItems(self.tfa.meta_df.columns.tolist()[1:])
+
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
     def restore_settings_after_load_taxafunc_obj(self):
@@ -1653,6 +1674,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # set comboBox_dunnett_condition_meta
             self.comboBox_dunnett_condition_meta.clear()
             self.comboBox_dunnett_condition_meta.addItems(meta_list)
+            
+            # set comboBox_deseq2_condition_meta
+            self.comboBox_deseq2_condition_meta.clear()
+            self.comboBox_deseq2_condition_meta.addItems(meta_list)
                 
             
             # set comboBox_overview_func_list
@@ -3561,10 +3586,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif method == 'deseq2':
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     condition_meta = self.comboBox_dunnett_condition_meta.currentText()
-                    res_df = self.tfa.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), control_group=control_group, condition=condition_meta)
+                    res_df = self.tfa.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), 
+                                                                                     control_group=control_group, 
+                                                                                     condition=condition_meta)
                     table_name = f'deseq2allinCondition({df_type})'
                 else:
-                
                     res_df = self.tfa.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
                                                                    control_group=control_group, group_list=group_list, 
                                                                    concat_sample_to_result = False, quiet = True)
@@ -3714,6 +3740,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
+        if self.checkBox_deseq2_comparing_in_condition.isChecked():
+            condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.currentText()]
+            try:
+                self.check_if_condition_valid(condition[0], condition[1])
+            except Exception as e:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
+        else:
+            condition = None
+            
         if group1 is None or group2 is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two groups!')
             return None
@@ -3725,7 +3760,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
                 self.pushButton_deseq2.setEnabled(False)
-                df_deseq2 = self.tfa.get_stats_deseq2(df, group1, group2)
+                df_deseq2 = self.tfa.get_stats_deseq2(df=df, group1=group1, group2=group2, condition=condition)
                 self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)

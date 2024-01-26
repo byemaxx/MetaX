@@ -327,6 +327,11 @@ class TaxaFuncAnalyzer:
         cross_test = CrossTest(self)
         return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition)
     
+    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None)-> bool:
+        cross_test = CrossTest(self)
+        return cross_test.check_if_condition_valid(condition_meta, condition_group)
+
+    
     ## DESeq2 End ##
     
     # Get the Tukey test result of a taxon or a function
