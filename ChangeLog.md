@@ -184,3 +184,9 @@
 ## Date: 2024-01-26
 ### Changes:
 - Fix: Fixed the group list selection bug of Corss Group Condition Test.
+
+# Version: 1.93.4
+## Date: 2024-01-27
+### Changes:
+- Fix: Fixed bugs for init  group box
+- Changed: the parameters of the pca plot

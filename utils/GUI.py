@@ -492,11 +492,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def change_event_comboBox_deseq2_condition_meta(self):
         meta_name =self.comboBox_deseq2_condition_meta.currentText()
         group_list = []
-        if hasattr(self, 'tfa') and hasattr(self.tfa, 'meta_df'):
+        try:
             group_list = self.tfa.meta_df[meta_name].unique().tolist()
 
-        self.comboBox_deseq2_condition_group.clear()
-        self.comboBox_deseq2_condition_group.addItems(group_list)
+            self.comboBox_deseq2_condition_group.clear()
+            self.comboBox_deseq2_condition_group.addItems(group_list)
+        except:
+            pass
 
     
     

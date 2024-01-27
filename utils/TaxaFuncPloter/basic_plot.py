@@ -100,7 +100,7 @@ class BasicPlot:
             sns.set(style='whitegrid')
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette,
-                                hue=group_list, s = 100, alpha=0.8, edgecolor='black', linewidth=0.5)
+                                hue=group_list, s = 150, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 new_sample_name = new_sample_name if show_group_label else sample_list
                 texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
@@ -111,7 +111,7 @@ class BasicPlot:
 
 
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
-                        fontsize=15, fontweight='bold')
+                        fontsize= font_size+2, fontweight='bold')
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
             # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
@@ -162,7 +162,7 @@ class BasicPlot:
         ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Sample')
         ax.set_ylabel('Intensity')
-        ax.set_title(f'Intensity Boxplot of {table_name}')
+        ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)
         plt.tight_layout()
@@ -203,7 +203,7 @@ class BasicPlot:
             ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
         
             #set title
-            plt.title(f'Correlation of {table_name}')
+            plt.title(f'Correlation of {table_name}', fontsize=font_size+2, fontweight='bold')
             plt.tight_layout()
             plt.show()
             # plt.close()
