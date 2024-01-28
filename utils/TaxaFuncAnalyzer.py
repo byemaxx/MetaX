@@ -275,7 +275,7 @@ class TaxaFuncAnalyzer:
 
 ######### Data Preprocessing Begin #########
     def data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
-                         transform_method: str = None, batch_list: list = None, 
+                         transform_method: str = None, batch_meta: str = None, 
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
                          outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
                          df_name:str=None) -> pd.DataFrame:
@@ -290,7 +290,7 @@ class TaxaFuncAnalyzer:
         
         data_preprocessing = DataPreprocessing(self)
         return data_preprocessing._data_preprocess(df=df, normalize_method=normalize_method, 
-                                                  transform_method=transform_method, batch_list=batch_list, 
+                                                  transform_method=transform_method, batch_meta=batch_meta, 
                                                   outlier_detect_method=outlier_detect_method, outlier_handle_method=outlier_handle_method,
                                                   outlier_detect_by_group=outlier_detect_by_group, outlier_handle_by_group=outlier_handle_by_group, 
                                                   processing_order=processing_order, df_name=df_name)

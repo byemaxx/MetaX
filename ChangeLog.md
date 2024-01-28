@@ -195,3 +195,9 @@
 ## Date: 2024-01-27
 ### Changes:
 - Fix: Fixed bugs of GUI when call dese2 function in condition.
+
+
+# Version: 1.93.6
+## Date: 2024-01-27
+### Changes:
+- Change: Changed the parameters of batch effect remove function. use batch meta replace batch list.

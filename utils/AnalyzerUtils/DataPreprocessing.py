@@ -11,10 +11,11 @@ class DataPreprocessing:
         
         
     # data pre-processing for multi-tables
-    def _remove_batch_effect(self, df: pd.DataFrame= None, batch_list: list =None) -> pd.DataFrame:
+    def _remove_batch_effect(self, df: pd.DataFrame= None, batch_meta: str =None) -> pd.DataFrame:
         df = df.copy()
-        if df is not None and batch_list is not None and batch_list != 'None':
-            batch_list = batch_list
+        if df is not None and batch_meta is not None and batch_meta != 'None':
+            
+            batch_list = self.tfa.meta_df[batch_meta].tolist()
             df_samples = df[self.tfa.sample_list]
             df_samples += 1
 
@@ -30,10 +31,10 @@ class DataPreprocessing:
             df_corrected = np.where(df_corrected < 2, 0, df_corrected)
             df[self.tfa.sample_list] = df_corrected
 
-        elif batch_list is None or batch_list == 'None':
-            print('batch_list is not set, Batch effect removal did not perform.')
+        elif batch_meta is None or batch_meta == 'None':
+            print('batch_meta is not set, Batch effect removal did not perform.')
         else:
-            print('df and batch_list are not set, Batch effect removal did not perform.')
+            print('df and batch_meta are not set, Batch effect removal did not perform.')
         return df
             
     
@@ -396,14 +397,14 @@ class DataPreprocessing:
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
 
     def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
-                         transform_method: str = None, batch_list: list = None, 
+                         transform_method: str = None, batch_meta: str =None,
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
                          outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
                          df_name:str=None) -> pd.DataFrame:
         df = df.copy()
         original_row_num = len(df)
         if processing_order is None:
-            processing_order = ['outlier' ,'batch', 'transform', 'normalize']
+            processing_order = ['outlier' , 'transform', 'normalize', 'batch']
         else:
             processing_order = processing_order
         # perform data processing in order
@@ -411,7 +412,7 @@ class DataPreprocessing:
             if process == 'outlier':
                 df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, detection_by_group = outlier_detect_by_group, handling_by_group=outlier_handle_by_group)
             elif process == 'batch':
-                df = self._remove_batch_effect(df, batch_list)
+                df = self._remove_batch_effect(df, batch_meta)
             elif process == 'transform':
                 df = self._data_transform(df, transform_method)
             elif process == 'normalize':

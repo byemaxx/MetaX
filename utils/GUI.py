@@ -1772,10 +1772,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             normalize_method = self.comboBox_set_data_normalization.currentText()
             transform_method = self.comboBox_set_data_transformation.currentText()
             # batch effect
-            batch_group =  self.comboBox_remove_batch_effect.currentText()
+            batch_meta =  self.comboBox_remove_batch_effect.currentText() if self.comboBox_remove_batch_effect.currentText() != 'None' else None
 
-
-            batch_list = self.tfa.meta_df[batch_group].tolist() if batch_group != 'None' else None
             
             if outlier_detect_method != 'None':
                 outlier_detect_method = outlier_detect_method.lower()
@@ -1863,7 +1861,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             try:
                 print("\n---------------------------------- Set Multi Table ----------------------------------\n")
-                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_group}, processing_order: {processing_order}')
+                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_meta}, processing_order: {processing_order}')
                 self.tfa.set_func(function)
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
@@ -1871,7 +1869,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 data_preprocess_params = {'normalize_method': normalize_method, 
                                           'transform_method': transform_method,
-                                            'batch_list': batch_list, 
+                                            'batch_meta': batch_meta, 
                                             'outlier_detect_method': outlier_detect_method,
                                             'outlier_handle_method': outlier_handle_method,
                                             'outlier_detect_by_group': outlier_detect_by_group,
