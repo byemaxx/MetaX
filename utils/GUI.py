@@ -3749,7 +3749,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
             condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.currentText()]
             try:
-                self.tfa.check_if_condition_valid(condition_meta = condition[0], condition_group = condition[1], curent_group_list = [group1, group2])
+                self.tfa.check_if_condition_valid(condition_meta = condition[0], condition_group = condition[1], current_group_list = [group1, group2])
             except Exception as e:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
                 return None

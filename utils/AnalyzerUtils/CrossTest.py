@@ -240,15 +240,15 @@ class CrossTest:
         
         return res_df
 
-    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, curent_group_list: list = None) -> bool:
+    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, current_group_list: list = None) -> bool:
         meta_df = self.tfa.meta_df.copy()
 
         # check if the condition is in meta_df
         if condition_meta not in meta_df.columns.tolist():
             raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
         
-        if curent_group_list is None:
-            curent_group_list = meta_df[self.tfa.meta_name].unique()
+        if current_group_list is None:
+            current_group_list = meta_df[self.tfa.meta_name].unique()
         
         condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
         
@@ -257,14 +257,14 @@ class CrossTest:
                 sub_meta = meta_df[meta_df[condition_meta] == group]
                 sub_group_list = sub_meta[self.tfa.meta_name].unique()
                 # compare the current group list with the sub group list
-                if not set(curent_group_list).issubset(set(sub_group_list)):
-                    raise ValueError(f'Current groups:\n{curent_group_list}\nis not a subset of the groups in condition [{condition_meta}]:\n{sub_group_list}')
+                if not set(current_group_list).issubset(set(sub_group_list)):
+                    raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_meta}]:\n{sub_group_list}')
         else:
             sub_meta = meta_df[meta_df[condition_meta] == condition_group]
             sub_group_list = sub_meta[self.tfa.meta_name].unique()
             # compare the current group list with the sub group list
-            if not set(curent_group_list).issubset(set(sub_group_list)):
-                raise ValueError(f'Current groups:\n{curent_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
+            if not set(current_group_list).issubset(set(sub_group_list)):
+                raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
         
         return True
         
@@ -328,7 +328,7 @@ class CrossTest:
             
             
     def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None) -> pd.DataFrame:
-        print(f'Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]')
+        print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
         
         sample_list = []
         for i in [group1, group2]:

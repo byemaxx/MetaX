@@ -327,9 +327,9 @@ class TaxaFuncAnalyzer:
         cross_test = CrossTest(self)
         return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition,  group_list)
     
-    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, curent_group_list: list = None) -> bool:
+    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, current_group_list: list = None) -> bool:
         cross_test = CrossTest(self)
-        return cross_test.check_if_condition_valid(condition_meta, condition_group, curent_group_list)
+        return cross_test.check_if_condition_valid(condition_meta, condition_group, current_group_list)
 
     
     ## DESeq2 End ##
