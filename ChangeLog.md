@@ -201,3 +201,8 @@
 ## Date: 2024-01-27
 ### Changes:
 - Change: Changed the parameters of batch effect remove function. use batch meta replace batch list.
+
+# Version: 1.93.8
+## Date: 2024-01-27
+### Changes:
+- Fix: Fixed the bug of when remove batch effect after sum, while the datafram is less than 2 rows, the program will raise error. 

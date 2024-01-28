@@ -13,8 +13,12 @@ class DataPreprocessing:
     # data pre-processing for multi-tables
     def _remove_batch_effect(self, df: pd.DataFrame= None, batch_meta: str =None) -> pd.DataFrame:
         df = df.copy()
+        #check if len df is less than 2
+        if len(df) < 2:
+            print('ATTENTION: df has less than 2 rows, Batch effect removal did not perform.')
+            return df
         if df is not None and batch_meta is not None and batch_meta != 'None':
-            
+            print(f'Remove batch effect by [{batch_meta}]...')
             batch_list = self.tfa.meta_df[batch_meta].tolist()
             df_samples = df[self.tfa.sample_list]
             df_samples += 1

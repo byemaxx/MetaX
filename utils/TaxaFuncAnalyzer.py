@@ -281,7 +281,7 @@ class TaxaFuncAnalyzer:
                          df_name:str=None) -> pd.DataFrame:
         # normalize_method: 'None', 'sum', 'minmax', 'zscore', 'pareto'
         # transform_method: 'None', 'log2', 'log10', 'sqrt', 'cube'
-        # batch_list: a list of treatment names in a meta column
+        # batch_meta: a meta column name
         # outlier_detect_method: 'None', 'iqr', 'half-zero', 'zero-dominant', 'z-score', 'zero-inflated-poisson', 'negative-binomial', 'mahalanobis-distance'
         # outlier_handle_method: 'mean', 'median', 'knn', 'original', 'drop'
         # outlier_detect_by_group: a string of meta column name
@@ -395,9 +395,9 @@ class TaxaFuncAnalyzer:
 
 
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
-                         processing_after_sum: bool = True,
+                         processing_after_sum: bool = False,
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
-                                                            'batch_list': None, 'outlier_detect_method': None,
+                                                            'batch_meta': None, 'outlier_detect_method': None,
                                                             'outlier_handle_method': None,
                                                             'outlier_detect_by_group': None,
                                                             'outlier_handle_by_group': None,
