@@ -190,3 +190,8 @@
 ### Changes:
 - Fix: Fixed bugs for init  group box
 - Changed: the parameters of the pca plot
+
+# Version: 1.93.5
+## Date: 2024-01-27
+### Changes:
+- Fix: Fixed bugs of GUI when call dese2 function in condition.

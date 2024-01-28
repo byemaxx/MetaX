@@ -240,14 +240,16 @@ class CrossTest:
         
         return res_df
 
-    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None)-> bool:
+    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, curent_group_list: list = None) -> bool:
         meta_df = self.tfa.meta_df.copy()
 
         # check if the condition is in meta_df
         if condition_meta not in meta_df.columns.tolist():
             raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
         
-        curent_group_list = meta_df[self.tfa.meta_name].unique()
+        if curent_group_list is None:
+            curent_group_list = meta_df[self.tfa.meta_name].unique()
+        
         condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
         
         if condition_group is None:

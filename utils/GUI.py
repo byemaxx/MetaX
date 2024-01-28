@@ -1567,6 +1567,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         scale_method_list =  [self.comboBox_top_heatmap_scale.itemText(i) for i in range(self.comboBox_top_heatmap_scale.count())]
         
         if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
+            self.spinBox_top_heatmap_number.setEnabled(False)
             self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
             # add 'all' to comboBox_top_heatmap_scale.
@@ -1575,7 +1576,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             if 'dunnett_test' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
-                self.spinBox_top_heatmap_number.setEnabled(False)
                 self.hide_all_in_layout(self.gridLayout_38)
 
             
@@ -3580,6 +3580,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if group_list is None or group_list == []:
             group_list = sorted(set(self.tfa.group_list))
         
+        group_list.remove(control_group)
         
         self.show_message(f'Group-Control Test will test on {group_list}\
                             .\n\n It may take a long time! Please wait...')
@@ -3748,9 +3749,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
             condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.currentText()]
             try:
-                self.check_if_condition_valid(condition[0], condition[1])
+                self.tfa.check_if_condition_valid(condition_meta = condition[0], condition_group = condition[1], curent_group_list = [group1, group2])
             except Exception as e:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
+                return None
         else:
             condition = None
             
