@@ -3408,8 +3408,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 if isinstance(fig, tuple):
                     df_dict = fig[1]
                     for key, value in df_dict.items():
-                        key = f"{table_name.split('(')[0]}_{key}_({table_name.split('(')[1]}"
-                        self.update_table_dict(key, value)
+                        new_name = f"{table_name.split('(')[0]}_{key}_({table_name.split('(')[1]}"
+                        self.update_table_dict(new_name, value)
             
             elif 'taxa-func' in table_name:
                 if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
