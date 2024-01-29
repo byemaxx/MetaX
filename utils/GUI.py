@@ -281,8 +281,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
         self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
+        self.pushButton_basic_heatmap_get_table.clicked.connect(lambda: self.plot_basic_list('get_table'))
+        self.pushButton_basic_heatmap_sankey_plot.clicked.connect(lambda: self.plot_basic_list('sankey'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
         self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
+        self.comboBox_basic_table.currentIndexChanged.connect(self.change_event_comboBox_basic_heatmap_table)
         
         ### Peptide Qeruy
         self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
@@ -469,7 +472,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         for button in taxa_only_button_list + taxa_func_button_list:
             button.setEnabled(button in enabled_list)
 
-                
+
+    def change_event_comboBox_basic_heatmap_table(self):
+
+        current_text = self.comboBox_basic_table.currentText()
+
+        tfa_exists = getattr(self, 'tfa', None) is not None
+        taxa_df_exists = tfa_exists and getattr(self.tfa, 'taxa_df', None) is not None
+
+        if current_text == 'Taxa' and taxa_df_exists or current_text == 'Taxa-Func' and taxa_df_exists:
+            self.pushButton_basic_heatmap_sankey_plot.setEnabled(True)
+        else:
+            self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
 
 
             
@@ -2261,6 +2275,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_clean_list,
         self.pushButton_basic_heatmap_plot,
         self.pushButton_basic_bar_plot,
+        self.pushButton_basic_heatmap_get_table,
+        self.pushButton_basic_heatmap_sankey_plot,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
         self.comboBox_co_expr_table,
@@ -2749,6 +2765,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                         return None
                 self.show_message(f'Plotting {plot_type}...')
                 pic = BarPlot_js(self.tfa).plot_intensity_bar(df = df, width=width, height=height, title= '', rename_taxa=rename_taxa, show_legend=show_legend, font_size=font_size)
+                self.save_and_show_js_plot(pic, title)
+            
+            elif plot_type == 'get_table':
+                self.show_message('Getting table...')
+                if rename_taxa:
+                    df = self.tfa.rename_taxa(df)
+                self.show_table(df=df, title=title)
+                
+            elif plot_type == 'sankey':
+                self.show_message('Plotting Sankey...')
+                title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title=title, subtitle=sample_list)
                 self.save_and_show_js_plot(pic, title)
                 
         except Exception as e:
@@ -3578,7 +3606,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if group_list is None or group_list == []:
             group_list = sorted(set(self.tfa.group_list))
         
-        group_list.remove(control_group)
+        if control_group in group_list:
+            group_list.remove(control_group)
         
         self.show_message(f'Group-Control Test will test on {group_list}\
                             .\n\n It may take a long time! Please wait...')

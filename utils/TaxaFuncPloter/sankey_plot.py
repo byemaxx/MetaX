@@ -157,7 +157,7 @@ class SankeyPlot:
             links = value[1]
             num = value[2]
             pic.add(
-                f'{key} (Total: {num})',
+                f'{key} (Total items: {num})',
                 nodes=nodes,
                 links=links,
                 node_align='justify',
@@ -198,7 +198,8 @@ class SankeyPlot:
         
         df_sankey = self.df_to_sankey_df(df, value_col='sum')
         nodes, links = self.create_nodes_links(df_sankey)
-        link_nodes_dict = {'Intensity Sum': [nodes, links, len(nodes)]}
+        # only state the number of last nodes
+        link_nodes_dict = {'Intensity Sum': [nodes, links, len(df.index)]}
 
         pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title, subtitle= subtitle)
         return pic
