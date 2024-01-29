@@ -81,21 +81,16 @@ class BarPlot_js:
 
             c.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
 
-        if show_legend:
-            c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",border_width=0),
-                datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
-                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
-                            title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size))
-            )
-
-        else:
-            c.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
-                datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
-                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
-                            title_opts=opts.TitleOpts(title=f"{title}", pos_left="center" ),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size))
-        )
+        params = {
+            'legend_opts':opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",border_width=0) if show_legend else opts.LegendOpts(is_show=False),
+            'datazoom_opts':[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
+            'toolbox_opts':opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
+            'title_opts':opts.TitleOpts(title=f"{title}", pos_left="center" ),
+            'xaxis_opts':opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size))
+            
+        }
+        c.set_global_opts(**params)
+        
 
     
         return c

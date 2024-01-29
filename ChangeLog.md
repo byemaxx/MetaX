@@ -211,4 +211,9 @@
 ## Date: 2024-01-29
 ### Changes:
 - New: Added Conidtion Option for each part.
-- Change: improve the structure of the code.
+- Change: improved the structure of the code.
+
+# Version: 1.94.1
+## Date: 2024-01-29
+### Changes:
+- Change: improved the UI of Button in heatmap part.
