@@ -6,7 +6,7 @@ class TukeyPlot:
     # EXAMPLE:
     # taxon_name="d__Bacteria|p__Firmicutes_A|c__Clostridia|o__Lachnospirales|f__Lachnospiraceae|g__Acetatifactor|s__Acetatifactor sp900066565"
     # func_name="'Cold-shock' DNA-binding domain"
-    # tukey_res = sw.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name)
+    # tukey_res = sw.CrossTest.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name)
     def plot_tukey(self, tukey_df):
         # stats number of groups
         n_groups = len(tukey_df['group1'].unique())

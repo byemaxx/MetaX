@@ -11,7 +11,7 @@ class TrendsPlot:
     def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster'):
         
         # Load the data
-        df = self.tfobj.get_stats_mean_df_by_group(df)
+        df = self.tfobj.BasicStats.get_stats_mean_df_by_group(df)
         # Standardize the data
         scaler = StandardScaler()
         scaled_values = scaler.fit_transform(df.T).T

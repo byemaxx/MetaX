@@ -35,7 +35,7 @@ class CrossTest:
             
 
 
-    def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func') -> pd.DataFrame:
+    def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func', condition:list =None) -> pd.DataFrame:
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
 
         if group_list is None:
@@ -46,14 +46,14 @@ class CrossTest:
             raise ValueError(
                 "groups must be more than 2 for ANOVA test, please use t-test")
 
-        all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group)]
+        all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group, condition=condition)]
 
         df, primary, secondary = self._get_df_primary_secondary(df_type)
         
         if secondary is not None:
-            print(f"ANOVA test for {primary}-{secondary} in {group_list}")
+            print(f"--ANOVA test for {primary}-{secondary} in {group_list} with condition: {condition}--")
         else:
-            print(f"ANOVA test for {primary} in {group_list}")
+            print(f"--ANOVA test for {primary} in {group_list} with condition: {condition}--")
 
         res = {primary: [], "P-value": [], "f-statistic": []}
         if df_type in ['taxa-func', 'func-taxa']:
@@ -68,7 +68,7 @@ class CrossTest:
 
             res[primary].append(primary_value)
 
-            list_for_anova = [row[1][self.tfa.get_sample_list_in_a_group(group)].to_list() for group in group_list]
+            list_for_anova = [row[1][self.tfa.get_sample_list_in_a_group(group, condition=condition)].to_list() for group in group_list]
 
             f, p = f_oneway(*list_for_anova)
             res["P-value"].append(p)
@@ -83,7 +83,7 @@ class CrossTest:
         res_all = res_all[['P-value', 'f-statistic'] + all_sample_list]
         return res_all
         
-    def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
+    def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
 
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
 
@@ -94,7 +94,7 @@ class CrossTest:
         if len(group_list) != 2:
             raise ValueError("groups must be 2")
 
-        all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group)]
+        all_sample_list = [sample for group in group_list for sample in self.tfa.get_sample_list_in_a_group(group, condition=condition)]
 
         df, primary, secondary = self._get_df_primary_secondary(df_type)
 
@@ -104,7 +104,7 @@ class CrossTest:
             print(f"t-test for {df_type} in {group_list}")
             res[secondary] = []
         else:
-            print(f"t-test for {primary} in {group_list}")
+            print(f"t-test for {primary} in {group_list} with condition: {condition}")
 
         for row in tqdm(df.iterrows(), total=len(df)):
             primary_value = row[0]
@@ -115,7 +115,7 @@ class CrossTest:
 
             res[primary].append(primary_value)
 
-            list_for_ttest = [row[1][self.tfa.get_sample_list_in_a_group(group)].to_list() for group in group_list]
+            list_for_ttest = [row[1][self.tfa.get_sample_list_in_a_group(group, condition=condition)].to_list() for group in group_list]
             # check if the sample size more than 1
             if any(len(i) < 2 for i in list_for_ttest):
                 raise ValueError(f"sample size must be more than 1 for t-test")
@@ -134,7 +134,7 @@ class CrossTest:
         return res_all
     
     
-    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
+    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
         #! Output a dataframe with (p_value, t_statistic) for each group
         # check if the control_group is in group_list_all
@@ -160,7 +160,7 @@ class CrossTest:
         res_dict = {primary_index: [], "p_value": [], "t_statistic": []}
         
         if df_type in ['taxa-func', 'func-taxa']:
-            print(f"Dunnett's test for {df_type} in {group_list}")
+            print(f"Dunnett's test for {df_type} in {group_list} with condition: {condition}")
             res_dict[secondary_index] = []
         else:
             print(f"Dunnett's test for {primary_index} in {group_list}")
@@ -185,14 +185,18 @@ class CrossTest:
             
 
            
-            test_dict = {group: row[1][self.tfa.get_sample_list_in_a_group(group)].to_list() for group in group_list}
+            test_dict = {group: row[1][self.tfa.get_sample_list_in_a_group(group, condition=condition)].to_list() for group in group_list}
 
             list_for_ttest = []
             for group, values in test_dict.items():
                 # print(group, values)
                 # check if the sample size at least 2
                 if len(values) < 2:
-                    raise ValueError(f"sample size must be more than 1 for Dunnett's test, but {group} has only {len(values)} sample(s)")                
+                    output = f"Samples size must be more than 1 for Dunnett's test, but [{group}] has only {len(values)} sample"
+                    if condition is not None:
+                        output += f" with condition: {condition}"
+                    raise ValueError(output)
+                               
                 list_for_ttest.append(values)
                 
             #! check if the sample size are the same is not necessary for Dunnett's test
@@ -200,7 +204,7 @@ class CrossTest:
             #     raise ValueError("sample size must be the same for Dunnett's test")
                 
             
-            dunnett_res = dunnett(*list_for_ttest, control=row[1][self.tfa.get_sample_list_in_a_group(control_group)].to_list())
+            dunnett_res = dunnett(*list_for_ttest, control=row[1][self.tfa.get_sample_list_in_a_group(control_group, condition=condition)].to_list())
             res_dict["p_value"].append(dunnett_res.pvalue)
             res_dict["t_statistic"].append(dunnett_res.statistic)
             
@@ -240,34 +244,6 @@ class CrossTest:
         
         return res_df
 
-    def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, current_group_list: list = None) -> bool:
-        meta_df = self.tfa.meta_df.copy()
-
-        # check if the condition is in meta_df
-        if condition_meta not in meta_df.columns.tolist():
-            raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
-        
-        if current_group_list is None:
-            current_group_list = meta_df[self.tfa.meta_name].unique()
-        
-        condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
-        
-        if condition_group is None:
-            for group in condition_group_list:
-                sub_meta = meta_df[meta_df[condition_meta] == group]
-                sub_group_list = sub_meta[self.tfa.meta_name].unique()
-                # compare the current group list with the sub group list
-                if not set(current_group_list).issubset(set(sub_group_list)):
-                    raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_meta}]:\n{sub_group_list}')
-        else:
-            sub_meta = meta_df[meta_df[condition_meta] == condition_group]
-            sub_group_list = sub_meta[self.tfa.meta_name].unique()
-            # compare the current group list with the sub group list
-            if not set(current_group_list).issubset(set(sub_group_list)):
-                raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
-        
-        return True
-        
         
         
 
@@ -276,7 +252,7 @@ class CrossTest:
 
         meta_df = self.tfa.meta_df.copy()
 
-        self.check_if_condition_valid(condition)
+        self.tfa.check_if_condition_valid(condition)
 
         condition_list = meta_df[condition].unique()
         print(f'------------------ Start Comparisons Deseq2 with Condition [{condition}]------------------')
@@ -414,19 +390,19 @@ class CrossTest:
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
+    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True, condition:list =None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
 
         if sum_all:
-            tukey_df = self.get_stats_tukey_test_sum(taxon_name=taxon_name, func_name=func_name)
+            tukey_df = self.get_stats_tukey_test_sum(taxon_name=taxon_name, func_name=func_name, condition=condition)
         else:
-            tukey_df = self.get_stats_tukey_test_each(taxon_name=taxon_name, func_name=func_name)
+            tukey_df = self.get_stats_tukey_test_each(taxon_name=taxon_name, func_name=func_name, condition=condition)
 
         return tukey_df
     
-    def get_stats_tukey_test_each(self, taxon_name: str = None, func_name: str = None):
+    def get_stats_tukey_test_each(self, taxon_name: str = None, func_name: str = None, condition:list =None):
         # Copy the dataframe and reset index
         df = self.tfa.taxa_func_df.copy()
         df = df.reset_index()
@@ -434,7 +410,7 @@ class CrossTest:
         # Filter based on taxon_name and func_name
         if taxon_name is not None and func_name is not None:
             # df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
-            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name)
+            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name, condition=condition)
 
         elif taxon_name is not None:
             df = df[df['Taxon'] == taxon_name]
@@ -482,7 +458,7 @@ class CrossTest:
         # Return the combined Tukey test results
         return tukey_results
 
-    def get_stats_tukey_test_sum(self, taxon_name: str=None, func_name: str=None):
+    def get_stats_tukey_test_sum(self, taxon_name: str=None, func_name: str=None, condition:list =None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
@@ -495,7 +471,7 @@ class CrossTest:
         if taxon_name is not None and func_name is not None:
             # df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
             # get peptide abundance for each sample
-            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name)
+            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name, condition=condition)
         elif taxon_name is not None:
             df = df[df['Taxon'] == taxon_name]
         elif func_name is not None:
@@ -537,7 +513,9 @@ class CrossTest:
     
     # find out the items that are not significant in taxa but significant in function, and vice versa
     def get_stats_diff_taxa_but_func(self, group_list: list = None, p_value: float = 0.05,
-                                     taxa_res_df: pd.DataFrame =None, func_res_df: pd.DataFrame=None, taxa_func_res_df: pd.DataFrame=None) -> tuple:
+                                     taxa_res_df: pd.DataFrame =None, 
+                                     func_res_df: pd.DataFrame=None, 
+                                     taxa_func_res_df: pd.DataFrame=None, condition:list =None) -> tuple:
         
         # calculate the test result if not given
         if taxa_res_df is None or func_res_df is None or taxa_func_res_df is None:
@@ -551,13 +529,15 @@ class CrossTest:
                 raise ValueError("groups must be more than 1")
             
             if len(group_list) == 2: # if only two groups, use t-test
-                df_taxa_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa')
-                df_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='func')
-                df_taxa_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa-func')
+                print(f'--Calculating t-test for {group_list} with condition: {condition}--')
+                df_taxa_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa', condition=condition)
+                df_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='func', condition=condition)
+                df_taxa_func_test_res = self.get_stats_ttest(group_list=group_list, df_type='taxa-func', condition=condition)
             else: # if more than two groups, use ANOVA
-                df_taxa_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa')
-                df_func_test_res = self.get_stats_anova(group_list=group_list, df_type='func')
-                df_taxa_func_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa-func')
+                print(f'--Calculating ANOVA for {group_list} with condition: {condition}--')
+                df_taxa_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa', condition=condition)
+                df_func_test_res = self.get_stats_anova(group_list=group_list, df_type='func', condition=condition)
+                df_taxa_func_test_res = self.get_stats_anova(group_list=group_list, df_type='taxa-func', condition=condition)
         
         else:
             print("Using the given test result")

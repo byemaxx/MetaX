@@ -15,16 +15,17 @@ class SankeyPlot:
     def __init__(self, taxa_func_analyzer):
         self.tfa = taxa_func_analyzer
 
-    def convert_logfc_df_for_sankey(self, df, padj: float = 0.05, log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
+    def convert_logfc_df_for_sankey(self, df, pvalue: float = 0.05,p_type ='padj',
+                                    log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
         df = df.copy()
         # 首先将所有行的 'type' 列设置为 'normal'
         df['type'] = 'normal'
 
         # 然后根据条件覆盖 'type' 列的值
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_max), 'type'] = 'ultra-up'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_max), 'type'] = 'ultra-down'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
 
         count_dict = {}
         for i in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']:
@@ -180,9 +181,12 @@ class SankeyPlot:
         return pic
 
 
-    def plot_fc_sankey(self, fc_df, width=1920, height=1080, padj=0.05, log2fc_min=1, log2fc_max=10, title='Sankey Plot'):
+    def plot_fc_sankey(self, fc_df, width=1920, height=1080, pvalue=0.05, p_type='padj',
+                       log2fc_min=1, log2fc_max=10, title='Sankey Plot'):
         df_sankey = self.convert_logfc_df_for_sankey(
-            fc_df, padj=padj, log2fc_min=log2fc_min, log2fc_max=log2fc_max)
+            fc_df, pvalue=pvalue, p_type=p_type,
+            log2fc_min=log2fc_min, log2fc_max=log2fc_max)
+        
         link_nodes_dict = {}
         for key, value in df_sankey.items():
             print(f'Creating nodes and links for {key}...')

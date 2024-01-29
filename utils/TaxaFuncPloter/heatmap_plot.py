@@ -350,10 +350,10 @@ class HeatmapPlot:
         
         color_list = None
         if df.columns.nlevels == 2:
-            dft = self.tfa.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
+            dft = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
                                                                  log2fc_max=log2fc_max, p_type=p_type)
         elif df.columns.nlevels == 3:
-            df_dict = self.tfa.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, 
+            df_dict = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, 
                                                                               log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
             dft = df_dict[three_levels_df_type].copy()
             # set level 1 index as the column color
@@ -367,7 +367,7 @@ class HeatmapPlot:
                       
 
         if dft.empty or dft is None:
-            raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}")
+            raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All")
         
         # fill na with 0
         dft = dft.fillna(0, inplace=False)

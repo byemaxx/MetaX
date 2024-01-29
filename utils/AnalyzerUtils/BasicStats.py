@@ -6,31 +6,34 @@ class BasicStats:
         self.tfa = tfa
         
     # get a mean df by group
-    def get_stats_mean_df_by_group(self, df: pd.DataFrame = None) -> pd.DataFrame:
+    def get_stats_mean_df_by_group(self, df: pd.DataFrame = None, condition: list = None) -> pd.DataFrame:
         data = df.copy()
         # extract samples that are in the data only
         columns_list = data.columns.tolist()
-        # remove samples that are not in self.tfa.sample_list
+        # remove samples that are not in self.tfa.sample_list. e.g. 'pep_num'
         columns_list = [sample for sample in columns_list if sample in self.tfa.sample_list]
         data = data[columns_list]
         
         
         group_order = list(OrderedDict.fromkeys(self.tfa.get_group_of_a_sample(sample) for sample in data.columns))
         print("input group order:", group_order)
-        
+        samples_used =[]
         group_means = pd.DataFrame()
-        for group, samples in self.tfa.group_dict.items():
+        for group in group_order:
+            samples = self.tfa.get_sample_list_in_a_group(group, condition=condition)
             # only use samples that are in the data
             valid_samples = [sample for sample in samples if sample in data.columns]
             if not valid_samples:
                 print(f'Warning: none of the samples in group "{group}" are found in the data.')
                 continue
+            samples_used.extend(valid_samples)
             group_data = data[valid_samples]
             # calculate the mean of the samples in the group
             group_mean = group_data.mean(axis=1)
             # add the group mean to the group_means dataframe
             group_means[group] = group_mean
         group_means = group_means[group_order]
+        print("samples used:", samples_used)
         return group_means
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:

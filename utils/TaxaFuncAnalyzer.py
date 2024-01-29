@@ -15,11 +15,12 @@ import pandas as pd
 
 
 # import AnalyzerUtils
+from .AnalyzerUtils.DataPreprocessing import DataPreprocessing
+from .AnalyzerUtils.SumProteinIntensity import SumProteinIntensity
+
 from .AnalyzerUtils.BasicStats import BasicStats
 from .AnalyzerUtils.CrossTest import CrossTest
-from .AnalyzerUtils.DataPreprocessing import DataPreprocessing
 from .AnalyzerUtils.GetMatrix import GetMatrix
-from .AnalyzerUtils.SumProteinIntensity import SumProteinIntensity
 
 
 import warnings
@@ -53,6 +54,13 @@ class TaxaFuncAnalyzer:
         self.func_taxa_linked_dict = None
         self.protein_df = None
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None, 'protein': None}
+        
+        # load function 
+        self.BasicStats = BasicStats(self)
+        self.CrossTest = CrossTest(self)
+        self.GetMatrix = GetMatrix(self)
+        self.data_preprocess = DataPreprocessing(self)._data_preprocess
+        
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
@@ -232,6 +240,16 @@ class TaxaFuncAnalyzer:
         sample_list = sorted(sample_list)
         return sample_list
 
+    def get_sample_list_for_group_list(self, group_list: list = None, condition: list = None) -> list:
+        if group_list is None:
+            print('group_list does not provided, set all the groups in meta_df as group_list.')
+            group_list = self.meta_df[self.meta_name].unique().tolist()
+            
+        sample_list = []
+        for group in group_list:
+            sample_list += self.get_sample_list_in_a_group(group, condition)
+        
+        return sample_list
 
     # input a sample name, return the group name of this sample
     def get_group_of_a_sample(self, sample: str = None) -> str:
@@ -254,142 +272,46 @@ class TaxaFuncAnalyzer:
             df = df.drop(df.columns[:2], axis=1)
         return df
 
-######### Basic Stats Begin #########
-    # get a mean df by group
-    def get_stats_mean_df_by_group(self, df: pd.DataFrame = None) -> pd.DataFrame:
-        bs = BasicStats(self)
-        return bs.get_stats_mean_df_by_group(df)
-        
-    def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:
-        bs = BasicStats(self)
-        return bs.get_stats_peptide_num_in_taxa()
 
-    def get_stats_taxa_level(self, peptide_num = 1) -> pd.DataFrame:
-        bs = BasicStats(self)
-        return bs.get_stats_taxa_level(peptide_num)
 
-    def get_stats_func_prop(self, func_name) -> pd.DataFrame:
-        bs = BasicStats(self)
-        return bs.get_stats_func_prop(func_name)
-######### Basic Stats End #########
 
-######### Data Preprocessing Begin #########
-    def data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
-                         transform_method: str = None, batch_meta: str = None, 
-                         outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
-                         df_name:str=None) -> pd.DataFrame:
-        # normalize_method: 'None', 'sum', 'minmax', 'zscore', 'pareto'
-        # transform_method: 'None', 'log2', 'log10', 'sqrt', 'cube'
-        # batch_meta: a meta column name
-        # outlier_detect_method: 'None', 'iqr', 'half-zero', 'zero-dominant', 'z-score', 'zero-inflated-poisson', 'negative-binomial', 'mahalanobis-distance'
-        # outlier_handle_method: 'mean', 'median', 'knn', 'original', 'drop'
-        # outlier_detect_by_group: a string of meta column name
-        # outlier_handle_by_group: a string of meta column name
-        # processing_order: a list of processing order, e.g. ['outlier', 'batch', 'transform', 'normalize']
-        
-        data_preprocessing = DataPreprocessing(self)
-        return data_preprocessing._data_preprocess(df=df, normalize_method=normalize_method, 
-                                                  transform_method=transform_method, batch_meta=batch_meta, 
-                                                  outlier_detect_method=outlier_detect_method, outlier_handle_method=outlier_handle_method,
-                                                  outlier_detect_by_group=outlier_detect_by_group, outlier_handle_by_group=outlier_handle_by_group, 
-                                                  processing_order=processing_order, df_name=df_name)
 ######### Data Preprocessing End #########
 
-######### Cross Test Begin #########
-    def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func') -> pd.DataFrame:
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_anova(group_list=group_list, df_type=df_type)
-        
-    def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_ttest(group_list=group_list, df_type=df_type)
-    
-    ## DESeq2 Begin ##
-    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None):
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2(df, group1, group2, concat_sample_to_result, quiet, condition)
 
-    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = True, condition: list = None) -> pd.DataFrame:
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2_against_control(df, control_group, group_list, concat_sample_to_result, quiet, condition)
-    
-    def extrcat_significant_fc_from_deseq2all(self, df: pd.DataFrame, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj'):
-        cross_test = CrossTest(self)
-        return cross_test.extrcat_significant_fc_from_deseq2all(df, p_value, log2fc_min, log2fc_max, p_type)
-    
-    def extrcat_significant_fc_from_deseq2all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj') -> dict:
-        cross_test = CrossTest(self)
-        return cross_test.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value, log2fc_min, log2fc_max, p_type)
-
-    # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
-    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition, group_list: list = None) -> pd.DataFrame:
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_deseq2_against_control_with_conditon(df, control_group, condition,  group_list)
-    
     def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, current_group_list: list = None) -> bool:
-        cross_test = CrossTest(self)
-        return cross_test.check_if_condition_valid(condition_meta, condition_group, current_group_list)
+        meta_df = self.meta_df.copy()
 
-    
-    ## DESeq2 End ##
-    
-    # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True):
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_tukey_test(taxon_name=taxon_name, func_name=func_name, sum_all = sum_all)
-    
-    # Find out the items that are not significant in taxa but significant in function, and vice versa
-    def get_stats_diff_taxa_but_func(self, group_list: list = None, p_value: float = 0.05,
-                                    taxa_res_df: pd.DataFrame =None, func_res_df: pd.DataFrame=None, taxa_func_res_df: pd.DataFrame=None):
-        # return a tuple involed 2 df: (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
-        cross_test = CrossTest(self)
-        return cross_test.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value,
-                                                       taxa_res_df=taxa_res_df, func_res_df=func_res_df, taxa_func_res_df=taxa_func_res_df)
-
-    # compare all the groups with the control group
-    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func') -> pd.DataFrame:
-            """
-            Calculate the p-value and t-statistic using Dunnett's test for multiple group comparisons.
-
-            Args:
-                control_group (str, required): Name of the control group.
-                group_list (list, optional): List of group names to compare. Defaults to None means all groups.
-                df_type (str, optional): Type of dataframe to use for the test. Defaults to 'taxa-func'.
-
-            Returns:
-                dict: A dictionary containing two dataframes, one for p-values and one for t-statistics.
-            """
-            cross_test = CrossTest(self)
-            return cross_test.get_stats_dunnett_test(group_list=group_list, control_group=control_group, df_type=df_type)
+        # check if the condition is in meta_df
+        if condition_meta not in meta_df.columns.tolist():
+            raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
         
+        if current_group_list is None:
+            current_group_list = meta_df[self.meta_name].unique()
         
+        condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
+        
+        if condition_group is None:
+            for group in condition_group_list:
+                sub_meta = meta_df[meta_df[condition_meta] == group]
+                sub_group_list = sub_meta[self.meta_name].unique()
+                # compare the current group list with the sub group list
+                if not set(current_group_list).issubset(set(sub_group_list)):
+                    raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_meta}]:\n{sub_group_list}')
+        else:
+            sub_meta = meta_df[meta_df[condition_meta] == condition_group]
+            sub_group_list = sub_meta[self.meta_name].unique()
+            # compare the current group list with the sub group list
+            if not set(current_group_list).issubset(set(sub_group_list)):
+                raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
+        
+        return True
+
+
+    
+
         
     
 ######### Cross Test End #########
-
-######### Get Matrix Begin #########
-    def get_intensity_matrix(self, func_name: str = None, taxon_name: str = None,
-                             peptide_seq: str = None, sample_list: list = None) -> pd.DataFrame:
-    # input: a taxon with its function, a function with its taxon,
-    # and the peptides in the function or taxon
-    # output: a matrix of the intensity of the taxon or function or peptide in each sample
-        get_matrix = GetMatrix(self)
-        return get_matrix.get_intensity_matrix(func_name=func_name, taxon_name=taxon_name,
-                                               peptide_seq=peptide_seq, sample_list=sample_list)
-    
-        # df = get_top_intensity(sw.taxa_df, top_num=50, method='freq')
-    def get_top_intensity(self, df, top_num: int = 10, method: str = 'mean', sample_list: list = None):
-        get_matrix = GetMatrix(self)
-        return get_matrix.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
-    
-    # input: df, df_type, top_num, show_stats_col
-    # output: df
-    # df_type: 'anova' or 'ttest' or 'log2fc'
-    def get_top_intensity_matrix_of_test_res(self, df, df_type: str = None, top_num: int = 100, show_stats_cols: bool = False):
-        get_matrix = GetMatrix(self)
-        return get_matrix.get_top_intensity_matrix_of_test_res(df=df, df_type=df_type, top_num=top_num, show_stats_cols=show_stats_cols)
-######### Get Matrix End #########
 
 
 

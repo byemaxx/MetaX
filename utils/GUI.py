@@ -307,7 +307,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.hiddenTab = self.tabWidget_3.widget(3)
         self.tabWidget_3.removeTab(3)
 
-        self.checkBox_comparing_group_control_in_condition.stateChanged.connect(self.change_event_checkBox_comparing_group_control_in_condition)
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
         
@@ -326,8 +325,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_deseq2.clicked.connect(self.deseq2_test)
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
-        self.checkBox_deseq2_comparing_in_condition.stateChanged.connect(self.change_event_checkBox_deseq2_comparing_in_condition)
-        self.comboBox_deseq2_condition_meta.currentIndexChanged.connect(self.change_event_comboBox_deseq2_condition_meta)
+        # self.comboBox_deseq2_condition_meta.currentIndexChanged.connect(self.change_event_comboBox_deseq2_condition_meta)
 
         # ### Co-Expression Network
         self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
@@ -409,6 +407,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.toolButton_db_all_meta_help.clicked.connect(self.show_toolButton_db_all_meta_help)
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
 
+        self.set_change_event_for_all_condition_group()
 
         # Initiate QSettings
         self.init_QSettings()
@@ -486,24 +485,55 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
 
 
+    def update_all_condition_meta(self):
+        condition_meta_list = [self.comboBox_anova_condition_meta, self.comboBox_tfnetwork_condition_meta,
+                               self.comboBox_basic_heatmap_condition_meta, self.comboBox_deseq2_condition_meta, 
+                               self.comboBox_group_control_condition_meta, self.comboBox_tflink_condition_meta,
+                               self.comboBox_basic_condition_meta, self.comboBox_tukey_condition_meta, 
+                               self.comboBox_trends_condition_meta, self.comboBox_ttest_condition_meta, 
+                               self.comboBox_co_expression_condition_meta, self.comboBox_group_control_comparing_each_condition_meta]
+        try:
+            meta_list = self.tfa.meta_df.columns.tolist()[1:]
             
-    def change_event_checkBox_comparing_group_control_in_condition(self):
-        if self.checkBox_comparing_group_control_in_condition.isChecked():
-            self.comboBox_dunnett_condition_meta.setEnabled(True)
-        else:
-            self.comboBox_dunnett_condition_meta.setEnabled(False)
-            
-    def change_event_checkBox_deseq2_comparing_in_condition(self):
-        combobox_list = [self.comboBox_deseq2_condition_meta, self.comboBox_deseq2_condition_group]
+            for comboBox in condition_meta_list:
+                comboBox.clear()
+                comboBox.addItems(meta_list)
+        
+        except Exception as e:
+            print(e)
 
-        if self.checkBox_deseq2_comparing_in_condition.isChecked():
-            enabled_actrion = True
-        else:
-            enabled_actrion = False
-        for combobox in combobox_list:
-            combobox.setEnabled(enabled_actrion)
+    def set_change_event_for_all_condition_group(self):
+        condition_meta_group_dict = {self.comboBox_anova_condition_meta: 'comboBox_anova_condition_group',
+                                     self.comboBox_tfnetwork_condition_meta: 'comboBox_tfnetwork_condition_group', 
+                                     self.comboBox_basic_heatmap_condition_meta: 'comboBox_basic_heatmap_condition_group', 
+                                     self.comboBox_deseq2_condition_meta: 'comboBox_deseq2_condition_group', 
+                                     self.comboBox_group_control_condition_meta: 'comboBox_group_control_condition_group', 
+                                     self.comboBox_tflink_condition_meta: 'comboBox_tflink_condition_group', 
+                                     self.comboBox_basic_condition_meta: 'comboBox_basic_condition_group', 
+                                     self.comboBox_tukey_condition_meta: 'comboBox_tukey_condition_group', 
+                                     self.comboBox_trends_condition_meta: 'comboBox_trends_condition_group', 
+                                     self.comboBox_ttest_condition_meta: 'comboBox_ttest_condition_group', 
+                                     self.comboBox_co_expression_condition_meta: 'comboBox_co_expression_condition_group'}
+        
+        def change_event_comboBox_condition_group(comboBox, group_name):
+            try:
+                meta_name = comboBox.currentText()
+                group_list = self.tfa.meta_df[meta_name].unique().tolist()
+                getattr(self, group_name).clear()
+                getattr(self, group_name).addItems(group_list)
+            except Exception as e:
+                print(e)
+        
+        for comboBox, group_name in condition_meta_group_dict.items():
+            comboBox.currentIndexChanged.connect(
+                lambda _, cb=comboBox, gn=group_name: change_event_comboBox_condition_group(cb, gn)
+            )
+        
+
     
     def change_event_comboBox_deseq2_condition_meta(self):
+        
+        
         meta_name =self.comboBox_deseq2_condition_meta.currentText()
         group_list = []
         try:
@@ -872,12 +902,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set meta list for comboBox in plot and stats tab
         self.update_meta_name_combobox_plot_part()
         self.update_group_and_sample_combobox()
-        # set comboBox_dunnett_condition_meta
-        condition_meta_combobox_list = [self.comboBox_dunnett_condition_meta, self.comboBox_deseq2_condition_meta]
-        for i in condition_meta_combobox_list:
-            i.clear()
-            i.addItems(self.tfa.meta_df.columns.tolist()[1:])
-
+        self.update_all_condition_meta()
+        
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
     def restore_settings_after_load_taxafunc_obj(self):
@@ -1690,14 +1716,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_outlier_detection_group_or_sample.addItems(meta_list)
             self.comboBox_outlier_detection_group_or_sample.addItem('All Samples')
             
-            # set comboBox_dunnett_condition_meta
-            self.comboBox_dunnett_condition_meta.clear()
-            self.comboBox_dunnett_condition_meta.addItems(meta_list)
-            
-            # set comboBox_deseq2_condition_meta
-            self.comboBox_deseq2_condition_meta.clear()
-            self.comboBox_deseq2_condition_meta.addItems(meta_list)
-                
+            # set all condition_meta
+            self.update_all_condition_meta()
             
             # set comboBox_overview_func_list
             self.comboBox_overview_func_list.clear()
@@ -2654,12 +2674,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
         # get sample list
         if self.radioButton_basic_heatmap_group.isChecked():
+            condition = [self.comboBox_basic_heatmap_condition_meta.currentText(),
+                         self.comboBox_basic_heatmap_condition_group.currentText()]\
+                             if self.checkBox_basic_heatmap_in_condition.isChecked() else None
+                             
             group_list = self.comboBox_basic_group.getCheckedItems()
-            sample_list = []
-            if group_list == []:
-                group_list = sorted(set(self.tfa.group_list))
-            for group in group_list:
-                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            
         else:
             sample_list = self.comboBox_basic_sample.getCheckedItems()
             if sample_list == []:
@@ -2911,15 +2933,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # get sample list and check if the sample list at least has 2 groups
         if self.radioButton_trends_group.isChecked():
+            condition = [self.comboBox_trends_condition_meta.currentText(),
+                            self.comboBox_trends_condition_group.currentText()]\
+                                if self.checkBox_trends_in_condition.isChecked() else None
+                                
             group_list = self.comboBox_trends_group.getCheckedItems()
-            sample_list = []
-            if group_list == []:
-                group_list = set(self.tfa.group_list)
-            elif len(group_list) == 1:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 2 groups!')
-                return None
-            for group in group_list:
-                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            
         else:
             sample_list = self.comboBox_trends_sample.getCheckedItems()
             if sample_list == []:
@@ -3001,6 +3022,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_trends_plot_interactive_rename_taxa.isChecked()
         plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
         
+        condition = [self.comboBox_trends_condition_meta.currentText(),
+                     self.comboBox_trends_condition_group.currentText()]\
+                         if self.checkBox_trends_in_condition.isChecked() else None
+        
         save_table_name = f'cluster({table_name.lower()})'
         try:
             df = self.table_dict[save_table_name].copy()
@@ -3016,11 +3041,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # get sample list
             if self.radioButton_trends_group.isChecked():
                 group_list = self.comboBox_trends_group.getCheckedItems()
-                sample_list = []
-                if group_list == []:
-                    group_list = sorted(set(self.tfa.group_list))
-                for group in group_list:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
+                group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+                sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+                
             else: # self.radioButton_trends_sample.isChecked()
                 sample_list = self.comboBox_trends_sample.getCheckedItems()
                 if sample_list == []:
@@ -3038,7 +3061,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     extract_col = sample_list
                     df = dft.loc[extract_row, extract_col]
                 else:
-                    dft = self.tfa.get_stats_mean_df_by_group(dft)
+                    dft = self.tfa.BasicStats.get_stats_mean_df_by_group(dft, condition=condition)
                     extract_row = df.index.tolist()
                     # extract_col = df.columns.tolist()
                     extract_col = group_list
@@ -3068,6 +3091,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         get_intensity = self.checkBox_get_trends_cluster_intensity.isChecked()
         save_table_name = f'cluster({table_name.lower()})'
         plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
+        condition = [self.comboBox_trends_condition_meta.currentText(),
+                        self.comboBox_trends_condition_group.currentText()]\
+                            if self.checkBox_trends_in_condition.isChecked() else None
 
         try:
             df_cluster = self.table_dict[save_table_name].copy()
@@ -3085,7 +3111,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 group_list = df_cluster.columns.tolist()
                 sample_list = []
                 for group in group_list:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
+                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group, condition=condition))
 
                 dft = dft[sample_list]
                 extract_row = df_cluster.index.tolist()
@@ -3093,7 +3119,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 df_cluster = dft.loc[extract_row, sample_list]
                     
             else:     
-                dft = self.tfa.get_stats_mean_df_by_group(dft)
+                dft = self.tfa.BasicStats.get_stats_mean_df_by_group(dft, condition=condition)
                 extract_row = df_cluster.index.tolist()
                 extract_col = df_cluster.columns.tolist()
                 df_cluster = dft.loc[extract_row, extract_col]            
@@ -3277,18 +3303,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         font_transparency = self.doubleSpinBox_basic_pca_label_font_transparency.value()
         adjust_label = self.checkBox_pca_if_adjust_pca_label.isChecked()
         
-        # get sample list
+        
+        # get sample list when plot by group
         if self.radioButton_basic_pca_group.isChecked():
-            group_list = self.comboBox_basic_pca_group.getCheckedItems()
+            condition = [self.comboBox_basic_condition_meta.currentText(), 
+                         self.comboBox_basic_condition_group.currentText()] \
+                            if self.checkBox_basic_in_condtion.isChecked() else None
+                
+            group_list = self.comboBox_basic_pca_group.getCheckedItems() 
             # keep the oder of  group_list by user check order
-            group_list = group_list
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
             
-            sample_list = []
-            if group_list == []:
-                group_list = sorted(set(self.tfa.group_list))
-            for group in group_list:
-                sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-        else:
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            
+        else: # plot by sample
             sample_list = self.comboBox_basic_pca_sample.getCheckedItems()
             if sample_list == []:
                 sample_list = self.tfa.sample_list
@@ -3462,8 +3490,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
             self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
-            if 'No significant results' in error_message:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{e}')
+            if 'No significant' in error_message:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.')
             else:
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
     
@@ -3535,14 +3563,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # ANOVA
     def anova_test(self):
         try:
-            group_list = self.comboBox_anova_group.getCheckedItems()
             self.pushButton_anova_test.setEnabled(False)
             df_type = self.comboBox_table_for_anova.currentText().lower()
+            
+            condition = [self.comboBox_anova_condition_meta.currentText(),
+                            self.comboBox_anova_condition_group.currentText()] \
+                                if self.checkBox_anova_in_condition.isChecked() else None
 
-            if group_list is None or group_list == []:
-                group_list = sorted(set(self.tfa.group_list))
-                
-            elif len(group_list) < 3:
+            group_list = self.comboBox_anova_group.getCheckedItems()
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+
+            if len(group_list) < 3:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
                 return None
 
@@ -3553,7 +3584,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             if df_type == 'Significant Taxa-Func'.lower():
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
-                df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
+                df_tuple = self.tfa.CrossTest.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value, condition=condition)
 
                 table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
                 self.show_table(df_tuple[0], title=table_name_1)
@@ -3566,7 +3597,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 table_names = [table_name_1, table_name_2]
             
             else:  
-                df_anova = self.tfa.get_stats_anova(group_list=group_list, df_type=df_type)
+                df_anova = self.tfa.CrossTest.get_stats_anova(group_list=group_list, df_type=df_type, condition=condition)
                 self.show_table(df_anova, title=f'anova_test({df_type})')
                 table_name = f'anova_test({df_type})'
                 table_names = [table_name]
@@ -3603,8 +3634,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         group_list = self.comboBox_dunnett_group.getCheckedItems()
         df_type = self.comboBox_table_for_dunnett.currentText().lower()
         
-        if group_list is None or group_list == []:
-            group_list = sorted(set(self.tfa.group_list))
+        condition = [self.comboBox_group_control_condition_meta.currentText(),
+                        self.comboBox_group_control_condition_group.currentText()] \
+                            if self.checkBox_group_control_in_condition.isChecked() else None
+                            
+        group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
         
         if control_group in group_list:
             group_list.remove(control_group)
@@ -3614,19 +3648,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         try:
             if method == 'dunnett':
-                res_df = self.tfa.get_stats_dunnett_test(control_group=control_group, group_list=group_list, df_type=df_type)
+                res_df = self.tfa.CrossTest.get_stats_dunnett_test(control_group=control_group, 
+                                                                   group_list=group_list, df_type=df_type, condition=condition)
                 table_name = f'dunnett_test({df_type})'
             elif method == 'deseq2':
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
-                    condition_meta = self.comboBox_dunnett_condition_meta.currentText()
-                    res_df = self.tfa.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), 
+                    condition_meta = self.comboBox_group_control_comparing_each_condition_meta.currentText()
+                    res_df = self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), 
                                                                                      control_group=control_group, group_list=group_list,
                                                                                      condition=condition_meta)
                     table_name = f'deseq2allinCondition({df_type})'
                 else:
-                    res_df = self.tfa.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
+                    res_df = self.tfa.CrossTest.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
                                                                    control_group=control_group, group_list=group_list, 
-                                                                   concat_sample_to_result = False, quiet = True)
+                                                                   concat_sample_to_result = False, quiet = True, condition=condition)
                     table_name = f'deseq2all({df_type})'
             else:
                 raise ValueError(f'No such method: {method}')
@@ -3654,12 +3689,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if 'is not in meta_df, must be one of' in str(e) or 'not a subset of the groups in condition' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
                 return None
+            elif 'size must be more than 1' in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
             
-            
-            error_message = traceback.format_exc()
-            self.logger.write_log(f'dunnett_test error: {error_message}', 'e')
-            self.logger.write_log(f'dunnett_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Erro', error_message)
+            else:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'dunnett_test error: {error_message}', 'e')
+                self.logger.write_log(f'dunnett_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
         
         
@@ -3669,6 +3706,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_tukey_taxa.currentText())
         
         func = self.remove_pep_num_str_and_strip(self.comboBox_tukey_func.currentText())
+        
+        condition = [self.comboBox_tukey_condition_meta.currentText(), self.comboBox_tukey_condition_group.currentText()] \
+            if self.checkBox_tukey_in_condition.isChecked() else None
         
         if taxa == '' and func == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least one taxa or one function!')
@@ -3681,7 +3721,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
-            tukey_test = self.tfa.get_stats_tukey_test(taxon_name=taxa, func_name=func, sum_all=sum_all)
+            tukey_test = self.tfa.CrossTest.get_stats_tukey_test(taxon_name=taxa, func_name=func, sum_all=sum_all, condition=condition)
             self.show_table(tukey_test, title='tukey_test')
             self.update_table_dict('tukey_test', tukey_test)
             self.pushButton_plot_tukey.setEnabled(True)
@@ -3704,6 +3744,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         group1 = self.comboBox_ttest_group1.currentText()
         group2 = self.comboBox_ttest_group2.currentText()
         df_type = self.comboBox_table_for_ttest.currentText().lower()
+        condition = [self.comboBox_ttest_condition_meta.currentText(), self.comboBox_ttest_condition_group.currentText()] \
+            if self.checkBox_ttest_in_condition.isChecked() else None
+            
         if group1 is None or group2 is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two groups!')
             return None
@@ -3718,7 +3761,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 table_names = []
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
-                    df_tuple = self.tfa.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value)
+                    df_tuple = self.tfa.CrossTest.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value, condition=condition)
 
                     table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
                     self.show_table(df_tuple[0], title=table_name_1)
@@ -3731,7 +3774,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     table_names = [table_name_1, table_name_2]
                 
                 else:
-                    df = self.tfa.get_stats_ttest(group_list=group_list, df_type=df_type)
+                    df = self.tfa.CrossTest.get_stats_ttest(group_list=group_list, df_type=df_type , condition=condition)
                     table_name = f't_test({df_type})'
                     self.show_table(df, title=table_name)
                     self.update_table_dict(table_name, df)
@@ -3773,6 +3816,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
+        
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
             condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.currentText()]
             try:
@@ -3794,7 +3838,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
                 self.pushButton_deseq2.setEnabled(False)
-                df_deseq2 = self.tfa.get_stats_deseq2(df=df, group1=group1, group2=group2, condition=condition)
+                df_deseq2 = self.tfa.CrossTest.get_stats_deseq2(df=df, group1=group1, group2=group2, condition=condition)
                 self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
                 res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
                 self.update_table_dict(res_table_name, df_deseq2)
@@ -3816,7 +3860,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
                 self.logger.write_log(f'deseq2_test: groups: {[group1, group2]}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}\n\nPlease check your setting!')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
                 return None
             finally:
                 self.pushButton_deseq2.setEnabled(True)
@@ -3829,6 +3873,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
             log2fc_max = self.doubleSpinBox_deseq2_log2fc_max.value()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
+            p_type = self.comboBox_deseq2_p_type.currentText()
             pvalue = round(pvalue, 5)
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
@@ -3847,7 +3892,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
             df = self.table_dict[table_name]
-            pic = VolcanoPlot().plot_volcano_js(df, padj = pvalue, log2fc_min = log2fc_min, log2fc_max=log2fc_max,  title_name=title_name,  width=width, height=height)
+            pic = VolcanoPlot().plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
+                                                log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
+                                                title_name=title_name,  width=width, height=height)
             self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
 
         except Exception as e:
@@ -3876,13 +3923,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 sample_list = slected_list
                 # print(f'Plot with selected samples:{sample_list}')
         elif self.radioButton_co_expr_bygroup.isChecked():
-            groups = self.comboBox_co_expr_group.getCheckedItems()
-            if len(groups) == 0:
-                print('Did not select any group!, plot all samples')
-            else:
-                sample_list = []
-                for group in groups:
-                    sample_list += self.tfa.get_sample_list_in_a_group(group)
+            condition = [self.comboBox_co_expression_condition_meta.currentText(), 
+                         self.comboBox_co_expression_condition_group.currentText()] \
+                if self.checkBox_co_expression_in_condition.isChecked() else None
+            
+            
+            group_list = self.comboBox_co_expr_group.getCheckedItems()
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+
+
         try:
             self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
             pic = NetworkPlot(self.tfa).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
@@ -3909,6 +3959,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group2 = self.comboBox_deseq2_group2.currentText()
             pvalue = self.doubleSpinBox_deseq2_pvalue.value()
             pvalue = round(pvalue, 5)
+            p_type = self.comboBox_deseq2_p_type.currentText()
+
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
             if log2fc_min > log2fc_max:
@@ -3926,7 +3978,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = self.table_dict[table_name]
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
 
-            pic = SankeyPlot(self.tfa).plot_fc_sankey(df, width=width, height=height, padj=pvalue, log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
+            pic = SankeyPlot(self.tfa).plot_fc_sankey(df, width=width, height=height, pvalue=pvalue, p_type = p_type,
+                                                      log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
             self.save_and_show_js_plot(pic, f'Sankay plot {title_name}')
             
             # subprocess.Popen(save_path, shell=True)
@@ -4055,7 +4108,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         if method in ['mean', 'freq', 'sum']:
             df = self.get_table_by_df_type(df_type=df_type)
-            df = self.tfa.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
+            df = self.tfa.GetMatrix.get_top_intensity(df=df, top_num=top_num, method=method, sample_list=sample_list)
             index_list = df.index.tolist()
             return index_list
         
@@ -4119,20 +4172,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         params = {}
         
         # extract sample list
-        if self.radioButton_tflink_group.isChecked():
-            selected_groups = self.comboBox_tflink_group.getCheckedItems()
-            if not selected_groups:
-                sample_list = self.tfa.sample_list
-            else:
-                sample_list = []
-                for group in selected_groups:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-        elif self.radioButton_tflink_sample.isChecked():
-            selected_samples = self.comboBox_tflink_sample.getCheckedItems()
-            if not selected_samples:
-                sample_list = self.tfa.sample_list
-            else:
-                sample_list = selected_samples
+        sample_list = self.get_sample_list_tflink()
                 
         params['sample_list'] = sample_list
 
@@ -4141,7 +4181,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if func:
             params['func_name'] = func
 
-        df = self.tfa.get_intensity_matrix(**params)
+        df = self.tfa.GetMatrix.get_intensity_matrix(**params)
 
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
@@ -4154,13 +4194,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def get_sample_list_tflink(self):
         # get sample list
         if self.radioButton_tflink_group.isChecked():
-            selected_groups = self.comboBox_tflink_group.getCheckedItems()
-            if not selected_groups:
-                sample_list = self.tfa.sample_list
-            else:
-                sample_list = []
-                for group in selected_groups:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
+            condition = [self.comboBox_tflink_condition_meta.currentText(), 
+                         self.comboBox_tflink_condition_group.currentText()] \
+                if self.checkBox_tflink_in_condition.isChecked() else None
+                
+            group_list = self.comboBox_tflink_group.getCheckedItems()
+            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            
+            
         elif self.radioButton_tflink_sample.isChecked():
             selected_samples = self.comboBox_tflink_sample.getCheckedItems()
             if not selected_samples:
@@ -4262,7 +4304,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             title = func if not title else f"{taxa} [ {func} ]"
         
     
-        df = self.tfa.get_intensity_matrix(**params)
+        df = self.tfa.GetMatrix.get_intensity_matrix(**params)
 
         if df.empty:
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
@@ -4342,13 +4384,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if taxa:
             params['taxon_name'] = taxa
             # checek num in taxa
-            num = len(self.tfa.get_intensity_matrix(taxon_name=taxa))
+            num = len(self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxa))
         if func:
             params['func_name'] = func
-            num = len(self.tfa.get_intensity_matrix(func_name=func))
+            num = len(self.tfa.GetMatrix.get_intensity_matrix(func_name=func))
         
         if func and taxa:
-            num = len(self.tfa.get_intensity_matrix(taxon_name=taxa, func_name=func))
+            num = len(self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxa, func_name=func))
         
         # check num if > 100
         if num > 100:

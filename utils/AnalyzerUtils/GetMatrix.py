@@ -5,10 +5,12 @@ class GetMatrix:
         self.tfa = tfa
         
     def get_intensity_matrix(self, func_name: str = None, taxon_name: str = None,
-                             peptide_seq: str = None, sample_list: list = None) -> pd.DataFrame:
-    # input: a taxon with its function, a function with its taxon,
-    # and the peptides in the function or taxon
-    # output: a matrix of the intensity of the taxon or function or peptide in each sample
+                             peptide_seq: str = None, sample_list: list = None, condition:list = None) -> pd.DataFrame:
+        # input: a taxon with its function, a function with its taxon,
+        # and the peptides in the function or taxon
+        # output: a matrix of the intensity of the taxon or function or peptide in each sample
+        if condition is not None:
+            sample_list = self.tfa.get_sample_list_for_group_list(condition=condition)
 
         if func_name is not None:
             dft = self.tfa.func_taxa_df.copy()

@@ -10,7 +10,7 @@ class BasicPlot:
         self.tfa =  tfobj
     # input: self.get_stats_peptide_num_in_taxa()
     def plot_taxa_stats(self):
-        df = self.tfa.get_stats_peptide_num_in_taxa()
+        df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
         # if 'not_found' is 0, then remove it
         if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
             df = df[df['LCA_level'] != 'notFound']
@@ -32,7 +32,7 @@ class BasicPlot:
 
     # input: self.get_stats_taxa_level()
     def plot_taxa_number(self, peptide_num = 1):
-        df = self.tfa.get_stats_taxa_level(peptide_num)
+        df = self.tfa.BasicStats.get_stats_taxa_level(peptide_num)
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         # plt.figure(figsize=(8, 6))
         sns.set_theme(style="ticks", rc=custom_params)
@@ -49,7 +49,7 @@ class BasicPlot:
 
     # input: self.get_stats_func_prop()
     def plot_prop_stats(self, func_name = 'eggNOG_OGs'):
-        df = self.tfa.get_stats_func_prop(func_name)
+        df = self.tfa.BasicStats.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}

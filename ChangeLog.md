@@ -206,3 +206,9 @@
 ## Date: 2024-01-27
 ### Changes:
 - Fix: Fixed the bug of when remove batch effect after sum, while the datafram is less than 2 rows, the program will raise error. 
+
+# Version: 1.94.0
+## Date: 2024-01-29
+### Changes:
+- New: Added Conidtion Option for each part.
+- Change: improve the structure of the code.

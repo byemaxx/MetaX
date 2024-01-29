@@ -7,18 +7,21 @@ import numpy as np
 class VolcanoPlot():
 
 
-    def plot_volcano_js(self, df_fc, padj:float=0.05, log2fc_min:float=1, log2fc_max:float = 10, title_name:str='2 groups', width:int=1200, height:int=800):
+    def plot_volcano_js(self, df_fc, pvalue:float=0.05, p_type ='padj',
+                        log2fc_min:float=1, log2fc_max:float = 10, title_name:str='2 groups', width:int=1200, height:int=800):
         df = df_fc.copy()
        
+        if p_type not in ['pvalue', 'padj']:
+            raise ValueError(f'p_type must be "pvalue" or "padj", but got {p_type}')
         
         # 首先将所有行的 'type' 列设置为 'normal'
         df['type'] = 'normal'
 
         # 然后根据条件覆盖 'type' 列的值
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] > log2fc_max), 'type'] = 'ultra-up'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
-        df.loc[(df['padj'] < padj) & (df['log2FoldChange'] < -log2fc_max), 'type'] = 'ultra-down'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
 
         # 统计每种类型的数量
         count_dict = {type_name: len(df[df['type'] == type_name]) for type_name in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']}
@@ -28,12 +31,12 @@ class VolcanoPlot():
         # create a new column for label
         df['label'] = df.index
         # extract the columns we need
-        df = df[['log2FoldChange', 'padj', 'label', 'type']]
+        df = df[['log2FoldChange', p_type, 'label', 'type']]
         # -log10(padj)
-        df['padj'].fillna(1, inplace=True)
-        df['padj'] = df['padj'].apply(lambda x: -np.log10(x))
+        df[p_type].fillna(1, inplace=True)
+        df[p_type] = df[p_type].apply(lambda x: -np.log10(x))
         df['log2FoldChange'] = df['log2FoldChange'].apply(lambda x: round(x, 3))
-        df['padj'] = df['padj'].apply(lambda x: round(x, 3))
+        df[p_type] = df[p_type].apply(lambda x: round(x, 3))
         
         def color_mapping(type_value):
             if type_value == 'up':
@@ -48,13 +51,13 @@ class VolcanoPlot():
                 return "#9aa7b1"
 
         # create a list of dict for each type
-        Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
-        scatter_ultra_up = df[df['type'] == 'ultra-up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
-        Scatter_down = df[df['type'] == 'down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
-        scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
-        Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p['padj']]}, axis=1)
+        Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
+        scatter_ultra_up = df[df['type'] == 'ultra-up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
+        Scatter_down = df[df['type'] == 'down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
+        scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
+        Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
 
-        title = f'Volcano plot of {title_name} (padj < {padj},  {log2fc_min} < log2FoldChange < {log2fc_max})'
+        title = f'Volcano plot of {title_name} ({p_type} <= {pvalue},  {log2fc_min} <= log2FoldChange < {log2fc_max})'
         
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
