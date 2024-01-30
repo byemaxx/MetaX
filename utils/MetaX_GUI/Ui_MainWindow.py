@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_metaX_main(object):
     def setupUi(self, metaX_main):
         metaX_main.setObjectName("metaX_main")
-        metaX_main.resize(1021, 594)
+        metaX_main.resize(1021, 598)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 360, 80))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -834,6 +834,13 @@ class Ui_metaX_main(object):
         self.checkBox_pca_if_show_group_name_in_label.setSizePolicy(sizePolicy)
         self.checkBox_pca_if_show_group_name_in_label.setObjectName("checkBox_pca_if_show_group_name_in_label")
         self.gridLayout_36.addWidget(self.checkBox_pca_if_show_group_name_in_label, 1, 8, 1, 1)
+        self.label_151 = QtWidgets.QLabel(self.tab_12)
+        self.label_151.setObjectName("label_151")
+        self.gridLayout_36.addWidget(self.label_151, 0, 6, 1, 1)
+        self.comboBox_basic_theme = QtWidgets.QComboBox(self.tab_12)
+        self.comboBox_basic_theme.setEditable(True)
+        self.comboBox_basic_theme.setObjectName("comboBox_basic_theme")
+        self.gridLayout_36.addWidget(self.comboBox_basic_theme, 0, 7, 1, 1)
         self.gridLayout_26.addLayout(self.gridLayout_36, 1, 0, 1, 1)
         self.gridLayout_40 = QtWidgets.QGridLayout()
         self.gridLayout_40.setSpacing(6)
@@ -3813,7 +3820,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -3860,7 +3867,7 @@ class Ui_metaX_main(object):
         self.stackedWidget.setCurrentIndex(0)
         self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(1)
+        self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
@@ -4044,6 +4051,7 @@ class Ui_metaX_main(object):
         self.label_122.setText(_translate("metaX_main", "Plot Param"))
         self.label_107.setText(_translate("metaX_main", "Label Font Size"))
         self.checkBox_pca_if_show_group_name_in_label.setText(_translate("metaX_main", "Show Group  Labels"))
+        self.label_151.setText(_translate("metaX_main", "Theme"))
         self.pushButton_plot_corr.setText(_translate("metaX_main", "Plot Corr"))
         self.pushButton_plot_pca_sns.setText(_translate("metaX_main", "Plot PCA"))
         self.checkBox_corr_cluster.setText(_translate("metaX_main", "Cluster"))

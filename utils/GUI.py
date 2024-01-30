@@ -1100,9 +1100,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                           'deep6', 'icefire', 'inferno', 'magma', 'muted', 'muted6', 'pastel', 
                           'pastel6', 'plasma', 'viridis', 'vlag']
         
+        import matplotlib.pyplot as plt
+        mat_style_list = ['Auto'] + plt.style.available
+        
+        
         self.comboBox_basic_hetatmap_theme.addItems(self.cmap_list)
         self.comboBox_tflink_cmap.addItems(self.cmap_list)
         self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
+        
+        self.comboBox_basic_theme.addItems(mat_style_list)
         
             
     def check_update(self, show_message=False):
@@ -3302,6 +3308,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         font_size = self.spinBox_basic_pca_label_font_size.value()
         font_transparency = self.doubleSpinBox_basic_pca_label_font_transparency.value()
         adjust_label = self.checkBox_pca_if_adjust_pca_label.isChecked()
+        theme = self.comboBox_basic_theme.currentText()
         
         
         # get sample list when plot by group
@@ -3333,7 +3340,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('PCA is running, please wait...')
                 BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, show_group_label = show_group_label,
                                                 width=width, height=height, font_size=font_size, 
-                                                font_transparency=font_transparency, adjust_label=adjust_label)
+                                                font_transparency=font_transparency, adjust_label=adjust_label, theme=theme)
 
             elif method == 'pca_3d':
                 row_num = df.shape[0]
@@ -3347,7 +3354,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             elif method == 'box':
                 show_fliers = self.checkBox_box_if_show_fliers.isChecked()
-                BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers, width=width, height=height, font_size=font_size)
+                BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
+                                                 width=width, height=height, font_size=font_size, theme=theme)
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
@@ -3361,21 +3369,24 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df = self.delete_zero_columns(df)
                 self.show_message('Correlation is running, please wait...')
                 BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, 
-                                                width=width, height=height, font_size=font_size, show_all_labels=show_all_labels)
+                                                width=width, height=height, font_size=font_size, 
+                                                show_all_labels=show_all_labels, theme=theme)
 
             elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
                 metric = self.comboBox_alpha_div_method.currentText()
                 plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
-                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, font_size=font_size, plot_all_samples=plot_all_samples)
+                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
+                                                             width=width, height=height, font_size=font_size, 
+                                                             plot_all_samples=plot_all_samples, theme=theme)
 
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
                 DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
                                                             font_size=font_size, font_transparency = font_transparency, show_group_label = show_group_label,
-                                                            show_label = show_label, adjust_label = adjust_label
-                                                            )                                 
+                                                            show_label = show_label, adjust_label = adjust_label, theme=theme)
+                                                            
 
             elif method == 'sunburst':
                 taxa_df = self.tfa.taxa_df[sample_list]

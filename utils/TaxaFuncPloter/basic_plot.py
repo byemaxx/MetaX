@@ -70,7 +70,7 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
                      width=10, height=8, font_size = 10, show_group_label:bool = False,
-                     font_transparency = 0.6, adjust_label:bool = False):
+                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None):
         try:
             dft= df.copy()
             
@@ -93,11 +93,15 @@ class BasicPlot:
                 
             dft = dft.T
             mat = dft.values
+            if theme is not None and theme != 'Auto':
+                plt.style.use(theme) 
+            else:               
+                sns.set(style='whitegrid')
+                
             plt.figure(figsize=(width, height))
             pca = PCA(n_components=2)
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
-            sns.set(style='whitegrid')
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette,
                                 hue=group_list, s = 150, alpha=0.8, edgecolor='black', linewidth=0.5)
@@ -123,7 +127,7 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, font_size = 10):
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, font_size = 10, theme:str = None):
         dft = df.copy()
         
         # create a new dataframe with new sample names and sorted by group
@@ -150,8 +154,10 @@ class BasicPlot:
         
         # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-        sns.set_theme(style="ticks", rc=custom_params)
-
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme) 
+        else:               
+            sns.set_theme(style="ticks", rc=custom_params)
         # set size
         plt.figure(figsize=(width, height))
         if show_fliers:
@@ -170,7 +176,8 @@ class BasicPlot:
         # plt.close()
         return ax
     
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10, show_all_labels = (False,False) ):
+    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10, 
+                      show_all_labels = (False,False) , theme:str = None):
         dft= df.copy()
         
         sample_list = dft.columns
@@ -193,6 +200,11 @@ class BasicPlot:
                 
                 ax = cluster_grid.ax_heatmap  # 获取热图的轴
             else:
+                if theme is not None and theme != 'Auto':
+                    plt.style.use(theme) 
+                else:
+                    sns.set_theme(style="ticks")
+                    
                 plt.figure(figsize=(width, height))
                 sns_params = {"linewidths":.5, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
                                 "linecolor":(0/255, 0/255, 0/255, 0.01), "xticklabels":True if show_all_labels[0] else "auto", 

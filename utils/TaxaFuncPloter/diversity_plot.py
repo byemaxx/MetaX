@@ -12,12 +12,11 @@ class DiversityPlot(object):
         self.tfa = tfa
         # reset style
         sns.set()
-        sns.set(style='whitegrid')
         
 
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
-                             plot_all_samples:bool = False
+                             plot_all_samples:bool = False, theme:str = None
                              ):
         
         if sample_list is None:
@@ -65,6 +64,11 @@ class DiversityPlot(object):
                     data.append({'Group': group, 'Diversity': diversity})
             df = pd.DataFrame(data)
             # plot boxplot
+            if theme is not None and theme != 'Auto':
+                plt.style.use(theme) 
+            else:               
+                sns.set(style='whitegrid')
+                
             plt.figure(figsize=(width, height))
             fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='Group')
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
@@ -92,7 +96,7 @@ class DiversityPlot(object):
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,show_group_label:bool = False,
-                              adjust_label:bool = False ):
+                              adjust_label:bool = False , theme:str = None):
 
         if sample_list is None:
             sample_list = self.tfa.sample_list
@@ -121,6 +125,11 @@ class DiversityPlot(object):
 
 
             pcoa_res = pcoa(bc_dm)
+            if theme is not None and theme != 'Auto':
+                plt.style.use(theme) 
+            else:               
+                sns.set(style='whitegrid')
+                
             plt.figure(figsize=(width, height))
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, 
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)

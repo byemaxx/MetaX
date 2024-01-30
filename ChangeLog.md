@@ -217,3 +217,8 @@
 ## Date: 2024-01-29
 ### Changes:
 - Change: improved the UI of Button in heatmap part.
+
+# Version: 1.94.2
+## Date: 2024-01-29
+### Changes:
+- New: added theme option for basic plot.
