@@ -41,7 +41,9 @@ class BarPlot_js:
     def plot_intensity_bar(self, taxon_name:str=None, sample_list:list = None, 
                            func_name:str=None, peptide_seq=None, 
                            width:int=1200, height:int=800, df= None, 
-                           title:str=None, rename_taxa:bool=False, show_legend:bool=True, font_size:int=10):
+                           title:str=None, rename_taxa:bool=False, 
+                           show_legend:bool=True, font_size:int=10,
+                           rename_sample:bool=True):
         if df is None:
             df = self.tfobj.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
@@ -50,7 +52,8 @@ class BarPlot_js:
         if rename_taxa:
             df = self.rename_taxa(df)
         #rename columns (sample name)
-        df = self._add_group_name_to_sample(df)
+        if rename_sample:
+            df = self._add_group_name_to_sample(df)
         
         colors = self.get_distinct_colors(len(df))
         # create title

@@ -272,7 +272,20 @@ class TaxaFuncAnalyzer:
             df = df.drop(df.columns[:2], axis=1)
         return df
 
-
+    def add_group_name_for_sample(self, df: pd.DataFrame) -> tuple:
+        sample_list = df.columns.tolist()
+            
+        new_sample_list = []
+        new_group_list = []
+        
+        for i in sample_list:
+            group = self.get_group_of_a_sample(i)
+            new_sample_name = f'{i} ({group})'
+            new_sample_list.append(new_sample_name)
+            new_group_list.append(group)
+                  
+        df.columns = new_sample_list
+        return df, new_group_list
 
 
 ######### Data Preprocessing End #########

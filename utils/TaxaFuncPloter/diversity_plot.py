@@ -96,7 +96,7 @@ class DiversityPlot(object):
 
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
-                             font_transparency:float = 0.8, show_label:bool = False,show_group_label:bool = False,
+                             font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
                               adjust_label:bool = False , theme:str = None):
 
         if sample_list is None:
@@ -135,7 +135,7 @@ class DiversityPlot(object):
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, 
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
-                if show_group_label:
+                if rename_sample:
                     sample_list = [f'{sample_id} ({self.tfa.get_group_of_a_sample(sample_id)})' for sample_id in sample_list]
                 texts = [fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], s=sample_list[i], size=font_size, 
                             color='black', alpha=font_transparency) for i in range(len(sample_list))]

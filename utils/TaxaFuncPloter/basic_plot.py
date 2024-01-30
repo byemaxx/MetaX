@@ -74,7 +74,7 @@ class BasicPlot:
         
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
-                     width=10, height=8, font_size = 10, show_group_label:bool = False,
+                     width=10, height=8, font_size = 10, rename_sample:bool = False,
                      font_transparency = 0.6, adjust_label:bool = False, theme:str = None):
         try:
             dft= df.copy()
@@ -113,7 +113,7 @@ class BasicPlot:
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette,
                                 hue=group_list, s = 150, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
-                new_sample_name = new_sample_name if show_group_label else sample_list
+                new_sample_name = new_sample_name if rename_sample else sample_list
                 texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
                             color='black', alpha=font_transparency) for i in range(len(new_sample_name))]
                 if adjust_label:
@@ -134,28 +134,32 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, font_size = 10, theme:str = None):
+    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
+                     font_size = 10, theme:str = None, rename_sample:bool = False,):
         dft = df.copy()
         
-        # create a new dataframe with new sample names and sorted by group
-        sample_list = dft.columns
-        new_sample_name = []
-        group_list = []
-        for i in sample_list:
-            group = self.tfa.get_group_of_a_sample(i)
-            new_sample_name.append(f'{i} ({group})')
-            group_list.append(group)
-        
-            # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-            group_order = sorted(list(set(group_list)))
-            ordered_sample_list = []
-            ordered_sample_name = []
-            for group in group_order:
-                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
-                sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
-                ordered_sample_list.extend(samples_in_group)
-                ordered_sample_name.extend(sample_names_in_group)
-        dft = dft[ordered_sample_list]
+        if rename_sample:
+            # create a new dataframe with new sample names and sorted by group
+            sample_list = dft.columns
+            new_sample_name = []
+            group_list = []
+            for i in sample_list:
+                group = self.tfa.get_group_of_a_sample(i)
+                new_sample_name.append(f'{i} ({group})')
+                group_list.append(group)
+            
+                # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+                group_order = sorted(list(set(group_list)))
+                ordered_sample_list = []
+                ordered_sample_name = []
+                for group in group_order:
+                    samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
+                    sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
+                    ordered_sample_list.extend(samples_in_group)
+                    ordered_sample_name.extend(sample_names_in_group)
+            dft = dft[ordered_sample_list]
+        else:
+            new_sample_name = dft.columns
         # replace 0 with nan
         dft = dft.replace(0, np.nan)
         
@@ -184,45 +188,37 @@ class BasicPlot:
         return ax
     
     def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10, 
-                      show_all_labels = (False,False) , theme:str = None):
+                      show_all_labels = (False,False) , theme:str = None, rename_sample:bool = False):
         dft= df.copy()
+        if rename_sample:
+            dft, group_list = self.tfa.add_group_name_for_sample(dft)
+        else:
+            group_list = [self.tfa.get_group_of_a_sample(i) for i in dft.columns]
         
-        sample_list = dft.columns
-        new_sample_name = []
-        for i in sample_list:
-            group = self.tfa.get_group_of_a_sample(i)
-            new_sample_name.append(f'{i} ({group})')
-        dft.columns = new_sample_name
-        
+
+        color_list = self.assign_colors(group_list)
         corr = dft.corr()
         # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
-            if cluster:
-                sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
-                                "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
-                                "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto", 
-                                "yticklabels":True if show_all_labels[1] else 'auto'}
-                cluster_grid = sns.clustermap(corr, **sns_params)
-                
-                ax = cluster_grid.ax_heatmap  # 获取热图的轴
-            else:
-                if theme is not None and theme != 'Auto':
-                    plt.style.use(theme) 
-                else:
-                    sns.set_theme(style="ticks")
-                    
-                plt.figure(figsize=(width, height))
-                sns_params = {"linewidths":.5, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
-                                "linecolor":(0/255, 0/255, 0/255, 0.01), "xticklabels":True if show_all_labels[0] else "auto", 
-                                "yticklabels":True if show_all_labels[1] else 'auto'}
-                ax = sns.heatmap(corr, **sns_params)
-                
+            if theme is not None and theme != 'Auto':
+                plt.style.use(theme)
+            else:             
+                sns.set_theme(style="ticks")
+            sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
+                            'col_cluster':True if cluster else False,
+                            'row_cluster':True if cluster else False,
+                            "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),"col_colors":color_list,
+                            "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto", 
+                            "yticklabels":True if show_all_labels[1] else 'auto'}
+            fig = sns.clustermap(corr, **sns_params)
+            
+            fig.ax_col_dendrogram.set_title(f'Correlation of {table_name}', fontsize=font_size+2, fontweight='bold')
+            ax = fig.ax_heatmap 
             ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
             ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
         
             #set title
-            plt.title(f'Correlation of {table_name}', fontsize=font_size+2, fontweight='bold')
             plt.tight_layout()
             plt.show()
             # plt.close()
@@ -232,6 +228,15 @@ class BasicPlot:
             raise e
         
         
+        
+    def assign_colors(self, groups):
+        colors = self.get_distinct_colors(len(set(groups)))
+        result = []
+        for group in groups:
+            index = sorted(set(groups)).index(group)
+            result.append(colors[index])
+        return result
+    
     def get_distinct_colors(self, n):  
         from distinctipy import distinctipy
         # rgb colour values (floats between 0 and 1)
@@ -242,10 +247,7 @@ class BasicPlot:
         BLACK = (0, 0, 0)
 
         # generated colours will be as distinct as possible from these colours
-        input_colors = [BLACK, WHITE]
+        input_colors = [WHITE]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
 
         return colors
-        
-        
-        

@@ -105,7 +105,8 @@ class HeatmapPlot:
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                                       show_all_labels:tuple = (False, False)):
+                                       show_all_labels:tuple = (False, False), rename_sample:bool = True
+                                       ):
 
         dft = df.copy()
 
@@ -160,17 +161,13 @@ class HeatmapPlot:
 
 
         try:
-            # create color list for groups & rename columns
-            col_names = mat.columns.tolist()
-            groups_list = []
-            new_col_names = []
-            for i in col_names:
-                group = meta_df[meta_df['Sample'] == i]
-                group = group[meta_name].values[0]
-                new_col_names.append(f'{i} ({group})')
-                groups_list.append(group)
-            color_list = self.assign_colors(groups_list)
-            mat.columns = new_col_names
+            if rename_sample:
+                mat, group_list = self.tfa.add_group_name_for_sample(mat)
+            else:
+                group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns]
+        
+            color_list = self.assign_colors(group_list)
+           
             if rename_taxa:
                 mat = self.rename_taxa(mat)
             sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
@@ -201,7 +198,7 @@ class HeatmapPlot:
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                    show_all_labels:tuple = (False, False)
+                    show_all_labels:tuple = (False, False), rename_sample:bool = True
                     ):
         
         if len(df) < 2:
@@ -229,20 +226,13 @@ class HeatmapPlot:
             fig_size = (30,30)
 
 
+        if rename_sample:
+            mat, group_list = self.tfa.add_group_name_for_sample(mat)
+        else:
+            group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns]
+        
+        color_list = self.assign_colors(group_list)
 
-
-
-        # create color list for groups & rename columns
-        col_names = mat.columns.tolist()
-        groups_list = []
-        new_col_names = []
-        for i in col_names:
-            group = meta_df[meta_df['Sample'] == i]
-            group = group[meta_name].values[0]
-            new_col_names.append(f'{i} ({group})')
-            groups_list.append(group)
-        color_list = self.assign_colors(groups_list)
-        mat.columns = new_col_names
         
         # if only one column, remove col_cluster, set scale to None
         if len(mat.columns) < 2:
@@ -339,22 +329,28 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
     
-    def plot_heatmap_of_deseq2all_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
+    # plot heatmap for all condtion results of DESeq2All or DunnettAll
+    def plot_heatmap_of_all_condition_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10, 
                                        show_all_labels:tuple = (False, False), 
-                                       return_type:str = 'fig', show_num:bool = False, 
+                                       return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
                                        show_col_colors:bool = False):
         import numpy as np
         
         color_list = None
         if df.columns.nlevels == 2:
-            dft = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
-                                                                 log2fc_max=log2fc_max, p_type=p_type)
+            if res_df_type == 'deseq2':
+                dft = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
+                                                                log2fc_max=log2fc_max, p_type=p_type)
+            elif res_df_type == 'dunnet':
+                dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
+                
         elif df.columns.nlevels == 3:
-            df_dict = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all_3_levels(df, p_value=pvalue, 
-                                                                              log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+            df_dict = self.tfa.CrossTest.extrcat_significant_fc_from_all_3_levels(df, p_value=pvalue, 
+                                                                            log2fc_min=log2fc_min, log2fc_max=log2fc_max,
+                                                                            p_type=p_type, df_type = res_df_type)
             dft = df_dict[three_levels_df_type].copy()
             # set level 1 index as the column color
             dft.columns = ['_'.join(col) for col in dft.columns]
@@ -364,11 +360,15 @@ class HeatmapPlot:
                 group_name = i.split('_')[0]
                 group_list.append(group_name)
             color_list = self.assign_colors(group_list)
-                      
-
+                    
         if dft.empty or dft is None:
-            raise ValueError(f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All")
-        
+            if res_df_type == 'deseq2':
+                error_msg = f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All"
+            else:
+                error_msg = f"No significant differences Results in p-value < {pvalue} for {three_levels_df_type} in Dunnett test"
+            raise ValueError(error_msg)
+    
+            
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
         
@@ -400,8 +400,8 @@ class HeatmapPlot:
             sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 
                           'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
                         'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                        'cbar_kws': {"label":'log2FoldChange', "shrink": 0.5},
-                        'annot':show_num, 'fmt':'.2f',
+                        'cbar_kws': {"label":'log2FoldChange' if res_df_type == 'deseq2' else 't-statistic',
+                                     "shrink": 0.5},
                         'xticklabels':True if show_all_labels[0] else "auto",
                         "yticklabels":True if show_all_labels[1] else "auto",
                         "col_colors":color_list if show_col_colors else None}
@@ -411,7 +411,12 @@ class HeatmapPlot:
 
                 fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
                 fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-                fig.ax_col_dendrogram.set_title(f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})", fontsize=font_size)
+                if res_df_type == 'deseq2':
+                    title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
+                else:
+                    title = f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})"                
+                
+                fig.ax_col_dendrogram.set_title(title, fontsize=font_size)
 
                 plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
                 plt.tight_layout()
@@ -448,7 +453,9 @@ class HeatmapPlot:
     # For taxa, func and peptides table
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,show_all_labels:tuple = (False, False)):
+                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+                                       show_all_labels:tuple = (False, False)
+                                       ):
         #! 只画t-statistic的heatmap, 用p-value过滤
         import pandas as pd
         import numpy as np
@@ -457,15 +464,7 @@ class HeatmapPlot:
         pvalue = round(pvalue, 5)
 
 
-        df_pvalue = df.filter(regex='(p_value)')
-        df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
-        df_tstatistic = df.filter(regex='(t_statistic)')
-        df_tstatistic.columns = df_tstatistic.columns.str.replace(r"(t_statistic)", "")
-
-
-        # only extract the location of pvalue < 0.05
-        dft = np.where(df_pvalue > pvalue, 0 , df_tstatistic)
-        dft = pd.DataFrame(dft, index=df_pvalue.index, columns=df_pvalue.columns)
+        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
 
@@ -554,15 +553,8 @@ class HeatmapPlot:
             return dft
         
         
-        df_pvalue = df.filter(regex='(p_value)')
-        df_pvalue.columns = df_pvalue.columns.str.replace(r"(p_value)", "")
-        df_tstatistic = df.filter(regex='(t_statistic)')
-        df_tstatistic.columns = df_tstatistic.columns.str.replace(r"(t_statistic)", "")
+        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
 
-
-        # only extract the location of pvalue < 0.05
-        dft = np.where(df_pvalue > pvalue, 0 , df_tstatistic)
-        dft = pd.DataFrame(dft, index=df_pvalue.index, columns=df_pvalue.columns)
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
 
@@ -621,30 +613,6 @@ class HeatmapPlot:
             raise ValueError("Can not get the result table, please check the error message in consel.")
         
         
-    def scale_data(self, dft, scale):
-        try:
-            if scale == 'row':
-                # 对每行单独应用双向缩放
-                for index, row in dft.iterrows():
-                    max_val = abs(row).max()
-                    if max_val != 0:
-                        dft.loc[index] = row / max_val
-            elif scale == 'col':
-                # 对每列单独应用双向缩放
-                for col in dft:
-                    max_val = abs(dft[col]).max()
-                    if max_val != 0:
-                        dft[col] = dft[col] / max_val
-            elif scale == 'all':
-                # 对整个数据框应用双向缩放
-                max_val = abs(dft.values).max()
-                if max_val != 0:
-                    dft = dft / max_val
-                    
-        except Exception as e:
-            print(f'Error: {e}')
-
-        return dft
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
@@ -762,3 +730,28 @@ class HeatmapPlot:
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
 
         return colors
+
+    def scale_data(self, dft, scale):
+        try:
+            if scale == 'row':
+                # 对每行单独应用双向缩放
+                for index, row in dft.iterrows():
+                    max_val = abs(row).max()
+                    if max_val != 0:
+                        dft.loc[index] = row / max_val
+            elif scale == 'col':
+                # 对每列单独应用双向缩放
+                for col in dft:
+                    max_val = abs(dft[col]).max()
+                    if max_val != 0:
+                        dft[col] = dft[col] / max_val
+            elif scale == 'all':
+                # 对整个数据框应用双向缩放
+                max_val = abs(dft.values).max()
+                if max_val != 0:
+                    dft = dft / max_val
+                    
+        except Exception as e:
+            print(f'Error: {e}')
+
+        return dft

@@ -229,3 +229,8 @@
 - Fix: Fixed the bug of when plot TUkeyHSD for taxa-func.
 - New: Add a star in the plot of TukeyHSD.
 - Change: Reset the default theme to when create a new object.
+
+# Version: 1.94.5
+## Date: 2024-01-30
+### Changes:
+- Change: Added a option to enable user to add or remove the group name form the sample name when plot.

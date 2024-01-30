@@ -133,7 +133,24 @@ class CrossTest:
         res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
         return res_all
     
-    
+    def get_stats_dunnett_test_against_control_with_conditon(self, control_group, condition, group_list:list =None, df_type: str = 'taxa-func') -> pd.DataFrame:
+        meta_df = self.tfa.meta_df.copy()
+        self.tfa.check_if_condition_valid(condition)
+        condition_list = meta_df[condition].unique()
+        print(f'------------------ Start Comparisons Dunnett with Condition [{condition}]------------------')
+        print(f'Condition List: {condition_list}')
+        # only extract the row is condition in second_meta
+        res_dict = {}
+        for condition_group in condition_list:
+            print(f'--Start for [{condition_group}] with condition: {condition}...')
+            dft = self.get_stats_dunnett_test( control_group=control_group, condition=[condition, condition_group], group_list=group_list, df_type=df_type)
+            res_dict[condition_group] = dft
+            print(f'--Done for [{condition_group}] with condition: {condition}...')
+        res_df = pd.concat(res_dict.values(), keys=res_dict.keys(), axis=1)
+        print(f'\n------------------ Done for Comparisons Dunnett with Condition [{condition}]------------------\n')
+        return res_df # a dataframe with 3 level columns index
+            
+            
     def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
         #! Output a dataframe with (p_value, t_statistic) for each group
@@ -217,7 +234,6 @@ class CrossTest:
         else:
             res_df.set_index(primary_index, inplace=True)
             
-        
         res_df_pvalue = res_df.copy()
         res_df_pvalue.drop(columns=['t_statistic'], inplace=True)
         for index, group_name in enumerate(group_list):
@@ -229,20 +245,12 @@ class CrossTest:
         for index, group_name in enumerate(group_list):
             res_df_tstatistic[group_name] = res_df_tstatistic['t_statistic'].apply(lambda x: x[index])
         res_df_tstatistic.drop(columns=['t_statistic'], inplace=True)
-        
-        res_df_pvalue.columns = [i + '(p_value)' for i in res_df_pvalue.columns]
-        res_df_tstatistic.columns = [i + '(t_statistic)' for i in res_df_tstatistic.columns]
-        
-        # merge two dataframe
-        res_df = pd.concat([res_df_pvalue, res_df_tstatistic], axis=1)
-        # sort the columns
-        res_df = res_df.reindex(sorted(res_df.columns), axis=1)
-        
-        
 
-        # res_df_dict = {'p_value': res_df_pvalue, 't_statistic': res_df_tstatistic}
-        
-        return res_df
+        res_df = pd.concat({'pvalue': res_df_pvalue, 'statistic': res_df_tstatistic}, axis=1)
+        # swap level for columns index
+        res_df = res_df.swaplevel(axis=1).sort_index(axis=1)
+
+        return res_df # dataframe with (pvalue, statistic) for each group in two level columns index
 
         
         
@@ -569,12 +577,29 @@ class CrossTest:
             2. the function not significant but related taxa significant")
         
         return (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
+    
+    def extrcat_significant_stat_from_dunnett(self, df, p_value=0.05):
+        res_dict= {}
+        for i in df.columns.levels[0]:
+            df_i = df[i]
+            df_i = df_i[df_i['pvalue'] < p_value]
+            res_dict[i] = df_i
+            print(f'Group: {i} | Number of significant taxa: {len(df_i)}')
+        dft = pd.concat(res_dict, axis=1)
+        # dft.columns = dft.columns.droplevel(1)
+        print(f'Number of significant table: {len(dft)}')
+        # only keep the levle 1 statistic column
+        dft = dft.loc[:, (slice(None), 'statistic')]
+        dft.columns = dft.columns.droplevel(1)
+
+        return dft
 
 
     def extrcat_significant_fc_from_deseq2all(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj'):
         import pandas as pd
         p_type = 'padj' if p_type == 'padj' else 'pvalue'
         
+        # extract p_type and log2FoldChange columns only 
         df_extrcted = df.loc[:, pd.IndexSlice[:, [p_type, 'log2FoldChange']]]
 
         res_dict = {}
@@ -601,7 +626,7 @@ class CrossTest:
         return dft
     
     # return a dict of 3 dataframe: df_all, df_no_na, df_same_trends
-    def extrcat_significant_fc_from_deseq2all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj') -> dict:
+    def extrcat_significant_fc_from_all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj', df_type:str='deseq2') -> dict:
             def filter_rows(group):
                 # 保留所有值都为正或者都为负的行
                 return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
@@ -612,8 +637,14 @@ class CrossTest:
             res_dict = {}
             for value in first_level_values: # iterate over first level values
                 sub_df = df[value]
-                print(f"\nExtracting significant FC from '{value}':")
-                dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+                print(f"\nExtracting significant Stats from '{value}':")
+                if df_type == 'dunnett':
+                    dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value)
+                elif df_type == 'deseq2':
+                    dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+                else:
+                    raise ValueError("df_type must be in ['dunnett', 'deseq2']")
+                
                 res_dict[value] = dft
             df = pd.concat(res_dict, axis=1)
             df_swapped = df.swaplevel(axis=1)
