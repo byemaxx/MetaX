@@ -3515,11 +3515,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
                                                                                       rename_taxa=rename_taxa)
             elif 'deseq2all' in table_name:
+                p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_deseq2all_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
-                                                                                   rename_taxa=rename_taxa, return_type = 'table',
+                                                                                   rename_taxa=rename_taxa, return_type = 'table', p_type = p_type,
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
                                                                                    show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
                                                                                    )
