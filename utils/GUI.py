@@ -309,13 +309,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
         
+        
         # ### Tukey
         self.pushButton_tukey_test.clicked.connect(self.tukey_test)
         self.pushButton_show_linked_taxa.clicked.connect(self.show_tukey_linked_taxa)
         self.pushButton_show_linked_func.clicked.connect(self.show_tukey_linked_func)
         self.pushButton_plot_tukey.clicked.connect(self.plot_tukey)
         self.pushButton_tukey_fresh.clicked.connect(self.update_func_taxa_group_to_combobox)
-
+        self.checkBox_comparing_group_control_in_condition.stateChanged.connect(self.change_event_checkBox_comparing_group_control_in_condition)
+        
+        
         # ### T-test
         self.pushButton_ttest.clicked.connect(self.t_test)
 
@@ -482,6 +485,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(True)
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
+    
+    def change_event_checkBox_comparing_group_control_in_condition(self):
+        if self.checkBox_comparing_group_control_in_condition.isChecked():
+            self.comboBox_group_control_comparing_each_condition_meta.setEnabled(True)
+            self.checkBox_group_control_in_condition.setEnabled(False)
+            self.comboBox_group_control_condition_meta.setEnabled(False)
+            self.comboBox_group_control_condition_group.setEnabled(False)          
+            
+        else:
+            self.comboBox_group_control_comparing_each_condition_meta.setEnabled(False)
+            self.checkBox_group_control_in_condition.setEnabled(True)
+            if self.checkBox_group_control_in_condition.isChecked():
+                self.comboBox_group_control_condition_meta.setEnabled(True)
+                self.comboBox_group_control_condition_group.setEnabled(True)
+            else:
+                self.comboBox_group_control_condition_meta.setEnabled(False)
+                self.comboBox_group_control_condition_group.setEnabled(False)
 
 
     def update_all_condition_meta(self):

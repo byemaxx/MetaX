@@ -3910,7 +3910,7 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(4)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(3)
@@ -3927,7 +3927,6 @@ class Ui_metaX_main(object):
         self.checkBox_tflink_in_condition.clicked['bool'].connect(self.comboBox_tflink_condition_group.setEnabled) # type: ignore
         self.checkBox_tfnetwork_in_condition.clicked['bool'].connect(self.comboBox_tfnetwork_condition_meta.setEnabled) # type: ignore
         self.checkBox_tfnetwork_in_condition.clicked['bool'].connect(self.comboBox_tfnetwork_condition_group.setEnabled) # type: ignore
-        self.checkBox_comparing_group_control_in_condition.clicked['bool'].connect(self.comboBox_group_control_comparing_each_condition_meta.setEnabled) # type: ignore
         self.checkBox_anova_in_condition.clicked['bool'].connect(self.comboBox_anova_condition_meta.setEnabled) # type: ignore
         self.checkBox_anova_in_condition.clicked['bool'].connect(self.comboBox_anova_condition_group.setEnabled) # type: ignore
         self.checkBox_ttest_in_condition.clicked['bool'].connect(self.comboBox_ttest_condition_meta.setEnabled) # type: ignore
@@ -3942,9 +3941,6 @@ class Ui_metaX_main(object):
         self.checkBox_group_control_in_condition.clicked['bool'].connect(self.comboBox_group_control_condition_group.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_pca_if_adjust_pca_label.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_sunburst_show_all_lables.setEnabled) # type: ignore
-        self.checkBox_comparing_group_control_in_condition.clicked['bool'].connect(self.checkBox_group_control_in_condition.setDisabled) # type: ignore
-        self.checkBox_comparing_group_control_in_condition.clicked['bool'].connect(self.comboBox_group_control_condition_meta.setDisabled) # type: ignore
-        self.checkBox_comparing_group_control_in_condition.clicked['bool'].connect(self.comboBox_group_control_condition_group.setDisabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
         metaX_main.setTabOrder(self.toolButton__final_peptide_help, self.lineEdit_final_peptide_path)
         metaX_main.setTabOrder(self.lineEdit_final_peptide_path, self.pushButton_get_final_peptide_path)

@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -7476,12 +7476,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>108</y>
+     <x>589</x>
+     <y>177</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>108</y>
+     <x>753</x>
+     <y>179</y>
     </hint>
    </hints>
   </connection>
@@ -7492,12 +7492,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>108</y>
+     <x>589</x>
+     <y>177</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>108</y>
+     <x>917</x>
+     <y>179</y>
     </hint>
    </hints>
   </connection>
@@ -7594,22 +7594,6 @@
     <hint type="destinationlabel">
      <x>76</x>
      <y>105</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_comparing_group_control_in_condition</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>comboBox_group_control_comparing_each_condition_meta</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>131</x>
-     <y>323</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>386</x>
-     <y>322</y>
     </hint>
    </hints>
   </connection>
@@ -7716,12 +7700,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>108</y>
+     <x>199</x>
+     <y>191</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>108</y>
+     <x>296</x>
+     <y>193</y>
     </hint>
    </hints>
   </connection>
@@ -7732,12 +7716,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>108</y>
+     <x>199</x>
+     <y>191</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>108</y>
+     <x>392</x>
+     <y>193</y>
     </hint>
    </hints>
   </connection>
@@ -7812,12 +7796,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>114</y>
+     <x>882</x>
+     <y>315</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>114</y>
+     <x>975</x>
+     <y>315</y>
     </hint>
    </hints>
   </connection>
@@ -7828,60 +7812,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>114</y>
+     <x>882</x>
+     <y>315</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>120</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_comparing_group_control_in_condition</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>checkBox_group_control_in_condition</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>142</x>
-     <y>316</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>541</x>
-     <y>156</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_comparing_group_control_in_condition</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>comboBox_group_control_condition_meta</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>173</x>
-     <y>321</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>698</x>
-     <y>166</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_comparing_group_control_in_condition</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>comboBox_group_control_condition_group</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>187</x>
-     <y>318</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>910</x>
-     <y>154</y>
+     <x>230</x>
+     <y>524</y>
     </hint>
    </hints>
   </connection>

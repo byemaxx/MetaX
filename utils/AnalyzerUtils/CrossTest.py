@@ -315,19 +315,19 @@ class CrossTest:
     def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None) -> pd.DataFrame:
         print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
         
-        sample_list = []
-        for i in [group1, group2]:
-            sample = self.tfa.get_sample_list_in_a_group(i, condition=condition)
-            sample_list += sample
+        group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
+        group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
+        sample_list = group1_sample + group2_sample
         
-        print(f'Sample List: {sample_list}')
+        print(f'group1: [{group1}] : {group1_sample}\n')
+        print(f'group2: [{group2}] : {group2_sample}\n')
         
         # Create intensity matrix
-        df = df.copy()
-        df = df[sample_list]
-        df = self.tfa.replace_if_two_index(df)
+        dft = df.copy()
+        dft = dft[sample_list]
+        dft = self.tfa.replace_if_two_index(dft)
         
-        counts_df = df.T
+        counts_df = dft.T
         # make sure the max value is not larger than int32
         max_value = 2147483647
         if counts_df.max().max() > max_value:
@@ -340,6 +340,7 @@ class CrossTest:
               
         counts_df = counts_df.astype(int)
         counts_df = counts_df.sort_index()
+            
 
 
         # Create meta data
