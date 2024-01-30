@@ -1080,33 +1080,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_all_in_layout(layout_item.layout(), if_except=if_except)
 
 
-
     def add_theme_to_combobox(self):
         # get all themes
-        self.cmap_list = ['Auto','Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 
-                          'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 
-                          'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 
-                          'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 
-                          'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 
-                          'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 
-                          'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 
-                          'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 
-                          'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 
-                          'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 
-                          'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 
-                          'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 
-                          'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r', 'bright', 'bright6', 
-                          'cividis', 'colorblind', 'colorblind6', 'dark', 'dark6', 'deep', 
-                          'deep6', 'icefire', 'inferno', 'magma', 'muted', 'muted6', 'pastel', 
-                          'pastel6', 'plasma', 'viridis', 'vlag']
+        from matplotlib import colormaps
+        cmap_list = ['Auto'] + sorted(list(colormaps))
+
+        self.comboBox_basic_hetatmap_theme.addItems(cmap_list)
+        self.comboBox_tflink_cmap.addItems(cmap_list)
+        self.comboBox_top_heatmap_cmap.addItems(cmap_list)
+        
         
         import matplotlib.pyplot as plt
         mat_style_list = ['Auto'] + plt.style.available
-        
-        
-        self.comboBox_basic_hetatmap_theme.addItems(self.cmap_list)
-        self.comboBox_tflink_cmap.addItems(self.cmap_list)
-        self.comboBox_top_heatmap_cmap.addItems(self.cmap_list)
         
         self.comboBox_basic_theme.addItems(mat_style_list)
         

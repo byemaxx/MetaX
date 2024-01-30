@@ -222,3 +222,10 @@
 ## Date: 2024-01-29
 ### Changes:
 - New: added theme option for basic plot.
+
+# Version: 1.94.3
+## Date: 2024-01-29
+### Changes:
+- Fix: Fixed the bug of when plot TUkeyHSD for taxa-func.
+- New: Add a star in the plot of TukeyHSD.
+- Change: Reset the default theme to when create a new object.

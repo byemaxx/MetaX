@@ -8,6 +8,11 @@ import numpy as np
 class BasicPlot:
     def __init__(self, tfobj):
         self.tfa =  tfobj
+        # reset the style
+        plt.style.use('default')
+        sns.set()
+        
+        
     # input: self.get_stats_peptide_num_in_taxa()
     def plot_taxa_stats(self):
         df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
@@ -93,6 +98,8 @@ class BasicPlot:
                 
             dft = dft.T
             mat = dft.values
+            
+
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               

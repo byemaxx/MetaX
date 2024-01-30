@@ -11,7 +11,7 @@ class LinePlot:
     def plot_intensity_line(self, taxon_name:str=None, sample_list:list = None, func_name:str=None, peptide_seq=None, width:int=20, height:int=12):
         fig_size = (width, height)
 
-        df = self.tfobj.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
+        df = self.tfobj.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
         if df.empty:
             raise ValueError('No data to plot')
         # create color list for groups & rename columns

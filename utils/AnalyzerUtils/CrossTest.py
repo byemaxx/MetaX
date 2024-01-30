@@ -262,7 +262,7 @@ class CrossTest:
         res_dict = {}
         for condition_group in condition_list:
             print(f'Start for [{condition_group}]...')
-            dft = self.tfa.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group], group_list=group_list, concat_sample_to_result=True, quiet=True)
+            dft = self.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group], group_list=group_list, concat_sample_to_result=True, quiet=True)
             res_dict[condition_group] = dft
             print(f'Done for [{condition_group}]...')
         
@@ -471,7 +471,7 @@ class CrossTest:
         if taxon_name is not None and func_name is not None:
             # df = df[(df['Taxon'] == taxon_name) & (df[self.tfa.func_name] == func_name)]
             # get peptide abundance for each sample
-            df = self.tfa.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name, condition=condition)
+            df = self.tfa.GetMatrix.get_intensity_matrix( func_name=func_name, taxon_name=taxon_name, condition=condition)
         elif taxon_name is not None:
             df = df[df['Taxon'] == taxon_name]
         elif func_name is not None:

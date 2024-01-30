@@ -11,6 +11,7 @@ class DiversityPlot(object):
     def __init__(self, tfa):
         self.tfa = tfa
         # reset style
+        plt.style.use('default')
         sns.set()
         
 
