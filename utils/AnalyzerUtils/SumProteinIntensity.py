@@ -19,7 +19,7 @@ class SumProteinIntensity:
         self.tfa = taxa_func_analyzer
         self.res_intensity_dict = {} #store all sample to output
         self.rank_dict = {} #store the rank of protein intensity for each sample temporarily
-        
+        self.rank_method = None
         self.extract_col_name = [self.tfa.peptide_col_name, self.tfa.protein_col_name] + self.tfa.sample_list
         self.df = self.tfa.original_df.loc[:,self.extract_col_name]
         self._init_dicts()
@@ -31,6 +31,8 @@ class SumProteinIntensity:
             raise ValueError('Method must in ["razor", "anti-razor"]')
         if rank_method not in ['shared_intensity', 'all_counts', 'unique_counts', 'unique_intensity']:
             raise ValueError('Rank method must in ["shared_intensity", "all_counts", "unique_counts", "unique_intensity"]')
+        
+        self.rank_method = rank_method
         
         if method == 'razor':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   
@@ -114,7 +116,10 @@ class SumProteinIntensity:
         if sample_name is None:
             sample_name = '_all_samples'
             df = self.df.loc[:,[ self.tfa.protein_col_name ]]
-            df['peptide_count'] = 1
+            if 'intensity' in self.rank_method:
+                df['intensity'] = self.df[self.tfa.sample_list].sum(axis=1)
+            else: # count
+                df['peptide_count'] = 1
             # rank method:[shared, count, unique]
             update_by_intesity(df, sample_name, method=rank_method)
 
@@ -164,7 +169,7 @@ class SumProteinIntensity:
                     
                     
                 max_value = max(sub_dict.values())  
-                max_proteins = [protein for protein, value in sub_dict.items() if value == max_value]  # find the protein with the highest intensity
+                max_proteins = [protein for protein, value in sub_dict.items() if value == max_value]  # find the protein with the highest intensity                
                 self._update_output_dict(max_proteins, sample_name, intensity)
 
         
@@ -176,7 +181,6 @@ class SumProteinIntensity:
             proteins = row[1].split(';')
             intensity = row[2]
             self._update_output_dict(proteins, sample_name, intensity)
-
 
 
 

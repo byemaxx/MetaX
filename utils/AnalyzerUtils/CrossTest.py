@@ -306,6 +306,7 @@ class CrossTest:
 
             print('Concatenating results...')
             combined_df = pd.concat(res_dict, axis=1)
+            print('Done for all comparisons')
 
             return combined_df
             

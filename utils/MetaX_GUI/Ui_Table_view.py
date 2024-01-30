@@ -104,7 +104,6 @@ class Ui_Table_view(QtWidgets.QDialog):
                 table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(subset_df.iat[i, j])))
 
 
-        # 使列头可右击并添加复制功能
         header = table_widget.horizontalHeader()
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self.headerMenu)
@@ -116,6 +115,7 @@ class Ui_Table_view(QtWidgets.QDialog):
         copy_action = menu.addAction("Copy Column Name")
         sort_ascending_action = menu.addAction("Sort Ascending")
         sort_descending_action = menu.addAction("Sort Descending")
+        copy_all_action = menu.addAction("Copy Column Data")
 
         action = menu.exec_(self.tableWidget.horizontalHeader().mapToGlobal(position))
 
@@ -125,6 +125,14 @@ class Ui_Table_view(QtWidgets.QDialog):
             self.sort_by_column(self.tableWidget.horizontalHeader().logicalIndexAt(position), ascending=True)
         elif action == sort_descending_action:
             self.sort_by_column(self.tableWidget.horizontalHeader().logicalIndexAt(position), ascending=False)
+        elif action == copy_all_action:
+            self.copy_selection_column_to_clipboard(position)
+    
+    def copy_selection_column_to_clipboard(self, position):
+        column = self.tableWidget.horizontalHeader().logicalIndexAt(position)
+        column_name = self.tableWidget.horizontalHeader().model().headerData(column, Qt.Horizontal)
+        column_data = self.df[column_name]
+        column_data.to_clipboard(index=False, header=False)
 
     def sort_by_column(self, column, ascending=True):
         """

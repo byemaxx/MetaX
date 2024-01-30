@@ -7,7 +7,7 @@ class PcaPlot_js:
     def __init__(self, tfobj=None):
         self.tfobj = tfobj
 
-    def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, show_group_label = True,
+    def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, rename_sample = True,
                               width=10, height=8, font_size = 10):
         width = f'{width*100}px'
         height = f'{height*100}px'
@@ -33,7 +33,7 @@ class PcaPlot_js:
         # Create a DataFrame with the PCA results
         pca_df = pd.DataFrame(components, columns=['PC1', 'PC2', 'PC3'])
         pca_df['group'] = group_list
-        if show_group_label:
+        if rename_sample:
             pca_df['sample_name'] = new_sample_name
         else:
             pca_df['sample_name'] = sample_list

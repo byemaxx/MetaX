@@ -234,3 +234,9 @@
 ## Date: 2024-01-30
 ### Changes:
 - Change: Added a option to enable user to add or remove the group name form the sample name when plot.
+
+# Version: 1.94.6
+## Date: 2024-01-30
+### Changes:
+- Fix: Bugs fixed: plot pca 3d
+- New: Add a option to copy a column to clipboard in table view.
