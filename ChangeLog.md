@@ -240,3 +240,10 @@
 ### Changes:
 - Fix: Bugs fixed: plot pca 3d
 - New: Add a option to copy a column to clipboard in table view.
+
+
+# Version: 1.94.9
+## Date: 2024-01-31
+### Changes:
+- New: added a option to show or hide the legend and title in the basic sankey plot.
+- New: added default name for the output file of JS plot.

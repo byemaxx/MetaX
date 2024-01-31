@@ -2820,13 +2820,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif plot_type == 'sankey':
                 self.show_message('Plotting Sankey...')
                 if self.checkBox_basic_heatmap_sankey_title.isChecked():
-                    title = title
+                    title_new = title
                     subtitle = sample_list
                 else:
-                    title = ''
+                    title_new = ''
                     subtitle = ''
                 pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, 
-                                                                 title=title, subtitle=subtitle, font_size=font_size,
+                                                                 title=title_new, subtitle=subtitle, font_size=font_size,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
                 

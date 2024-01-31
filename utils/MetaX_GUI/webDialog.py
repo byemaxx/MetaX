@@ -19,6 +19,7 @@ class MyDialog(QDialog):
 
         self.exportButton = QPushButton("Export HTML", self)
         self.webEngineView = QWebEngineView(self)
+        self.html_path = html_path
 
 
         layout = QVBoxLayout(self)
@@ -48,14 +49,27 @@ class MyDialog(QDialog):
         self.slider.setValue(100) 
 
     def export_html(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Export HTML", "", "HTML Files (*.html)")
+        #getdefaultfilename
+        default_file_name = self.html_path.split("/")[-1].split(".")[0] if self.html_path else "JSPlot.html"
+        file_name, _ = QFileDialog.getSaveFileName(self, "Export HTML", default_file_name, "HTML Files (*.html)")        
         if file_name:
             self.webEngineView.page().toHtml(lambda html: open(file_name, 'w').write(html))
-            QMessageBox.information(
+            # QMessageBox.information(
+            #     self,
+            #     "HTML Exported!",
+            #     f"Successfully exported HTML file to\n\n {file_name}",
+            # )
+            # ask if user wants to open the file
+            reply = QMessageBox.question(
                 self,
                 "HTML Exported!",
-                f"Successfully exported HTML file to\n\n {file_name}",
+                f"Successfully exported HTML file to\n\n {file_name}\n\nDo you want to open the file?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
             )
+            if reply == QMessageBox.Yes:
+                os.startfile(file_name)
+
 
 
 if __name__ == '__main__':
