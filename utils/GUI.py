@@ -913,10 +913,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.show_message("Loading taxafunc object from last time...", "Loading...")
         self.set_multi_table(restore_taxafunc = True)
         self.restore_settings_after_load_taxafunc_obj()
-        # set meta list for comboBox in plot and stats tab
-        self.update_meta_name_combobox_plot_part()
-        self.update_group_and_sample_combobox()
-        self.update_all_condition_meta()
+
         
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
