@@ -14,6 +14,8 @@ class SankeyPlot:
     
     def __init__(self, taxa_func_analyzer):
         self.tfa = taxa_func_analyzer
+        
+        self.font_size = 12
 
     def convert_logfc_df_for_sankey(self, df, pvalue: float = 0.05,p_type ='padj',
                                     log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
@@ -166,7 +168,7 @@ class SankeyPlot:
                 focus_node_mode='adjacency',
                 linestyle_opt=opts.LineStyleOpts(
                     curve=0.5, opacity=0.2, color="source"),
-                label_opts=opts.LabelOpts(position='right')
+                label_opts=opts.LabelOpts(position='right', font_size=self.font_size),
             )
 
 
@@ -196,9 +198,10 @@ class SankeyPlot:
         return pic
     
     
-    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle=''):
+    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle='', font_size=12):
         df = df.copy()
         df['sum'] = df.sum(axis=1)
+        self.font_size = font_size
         
         df_sankey = self.df_to_sankey_df(df, value_col='sum')
         nodes, links = self.create_nodes_links(df_sankey)

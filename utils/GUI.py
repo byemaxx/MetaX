@@ -2820,7 +2820,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif plot_type == 'sankey':
                 self.show_message('Plotting Sankey...')
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
-                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title=title, subtitle=sample_list)
+                # pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title=title, subtitle=sample_list)
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title='', subtitle='', font_size = font_size)
                 self.save_and_show_js_plot(pic, title)
                 
         except Exception as e:
@@ -3421,7 +3422,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 df = df[sample_list]
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
                 
-                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, title=title, subtitle=sample_list)
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, font_size = font_size, title='', subtitle='')
                 self.save_and_show_js_plot(pic, title)
                 
             
