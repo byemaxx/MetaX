@@ -901,6 +901,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, "Warning", "No log file found.")
             
     def run_restore_taxafunc_obj(self):
+        # check self.tfa exists
+        if getattr(self, 'tfa', None) is not None:
+            QMessageBox.warning(self.MainWindow, "Warning", "TaxaFunc object already exists.")
+            return
         # check if taxafunc object exists
         path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
         if not os.path.exists(path):
@@ -1949,6 +1953,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if self.tfa == None:
                 return None
             else:
+                self.update_after_tfobj()
                 self.restore_settings_after_load_taxafunc_obj()
 
         num_peptide = self.tfa.peptide_df.shape[0]

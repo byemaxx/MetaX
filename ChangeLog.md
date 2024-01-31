@@ -247,3 +247,9 @@
 ### Changes:
 - New: added a option to show or hide the legend and title in the basic sankey plot.
 - New: added default name for the output file of JS plot.
+
+
+# Version: 1.94.10
+## Date: 2024-01-31
+### Changes:
+- Fix: Fixed the bug of when restore the TaxaFunc Object, the dataoverview part doesn't update the data.
