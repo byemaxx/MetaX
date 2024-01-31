@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1021</width>
-    <height>594</height>
+    <height>598</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1263,7 +1263,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1995,29 +1995,31 @@
                 </item>
                 <item row="3" column="9" rowspan="3">
                  <layout class="QGridLayout" name="gridLayout_41">
-                  <item row="0" column="0" colspan="3">
-                   <layout class="QHBoxLayout" name="horizontalLayout_30">
-                    <item>
-                     <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
-                      <property name="text">
-                       <string>Row Cluster</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
-                      <property name="text">
-                       <string>Col Cluster</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot  Peptides</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_152">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Rename</string>
+                    </property>
+                   </widget>
                   </item>
                   <item row="1" column="0" colspan="3">
                    <layout class="QHBoxLayout" name="horizontalLayout_31">
@@ -2087,19 +2089,6 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_130">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Show All Labels</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="3" column="1">
                    <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_sample_name">
                     <property name="text">
@@ -2107,26 +2096,6 @@
                     </property>
                     <property name="checked">
                      <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_y">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_152">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Rename</string>
                     </property>
                    </widget>
                   </item>
@@ -2156,20 +2125,58 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="0">
-                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
+                  <item row="0" column="0" colspan="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_30">
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
+                      <property name="text">
+                       <string>Row Cluster</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
+                      <property name="text">
+                       <string>Col Cluster</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_130">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Plot  Peptides</string>
+                     <string>Show All Labels</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1" colspan="2">
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_y">
+                    <property name="text">
+                     <string>Y</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_sankey_title">
+                    <property name="text">
+                     <string>Sankey Title</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1" colspan="2">
                    <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -7329,7 +7336,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -7444,12 +7451,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>56</x>
-     <y>105</y>
+     <x>58</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
-     <x>61</x>
-     <y>105</y>
+     <x>63</x>
+     <y>127</y>
     </hint>
    </hints>
   </connection>
@@ -7460,12 +7467,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>56</x>
-     <y>105</y>
+     <x>58</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
-     <x>66</x>
-     <y>105</y>
+     <x>68</x>
+     <y>127</y>
     </hint>
    </hints>
   </connection>
@@ -7477,11 +7484,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>589</x>
-     <y>177</y>
+     <y>179</y>
     </hint>
     <hint type="destinationlabel">
      <x>753</x>
-     <y>179</y>
+     <y>181</y>
     </hint>
    </hints>
   </connection>
@@ -7493,11 +7500,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>589</x>
-     <y>177</y>
+     <y>179</y>
     </hint>
     <hint type="destinationlabel">
      <x>917</x>
-     <y>179</y>
+     <y>181</y>
     </hint>
    </hints>
   </connection>
@@ -7508,12 +7515,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>103</y>
+     <x>54</x>
+     <y>125</y>
     </hint>
     <hint type="destinationlabel">
-     <x>58</x>
-     <y>103</y>
+     <x>60</x>
+     <y>125</y>
     </hint>
    </hints>
   </connection>
@@ -7524,12 +7531,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>103</y>
+     <x>54</x>
+     <y>125</y>
     </hint>
     <hint type="destinationlabel">
-     <x>63</x>
-     <y>103</y>
+     <x>65</x>
+     <y>125</y>
     </hint>
    </hints>
   </connection>
@@ -7541,11 +7548,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>179</x>
-     <y>174</y>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel">
      <x>254</x>
-     <y>176</y>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -7557,11 +7564,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>179</x>
-     <y>174</y>
+     <y>176</y>
     </hint>
     <hint type="destinationlabel">
      <x>329</x>
-     <y>176</y>
+     <y>178</y>
     </hint>
    </hints>
   </connection>
@@ -7572,12 +7579,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>63</x>
-     <y>105</y>
+     <x>65</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
-     <x>70</x>
-     <y>105</y>
+     <x>72</x>
+     <y>127</y>
     </hint>
    </hints>
   </connection>
@@ -7588,12 +7595,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>63</x>
-     <y>105</y>
+     <x>65</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
-     <x>76</x>
-     <y>105</y>
+     <x>78</x>
+     <y>127</y>
     </hint>
    </hints>
   </connection>
@@ -7604,12 +7611,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>86</x>
-     <y>100</y>
+     <x>99</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>103</x>
-     <y>100</y>
+     <x>116</x>
+     <y>131</y>
     </hint>
    </hints>
   </connection>
@@ -7620,12 +7627,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>86</x>
-     <y>100</y>
+     <x>99</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>120</x>
-     <y>100</y>
+     <x>133</x>
+     <y>131</y>
     </hint>
    </hints>
   </connection>
@@ -7636,12 +7643,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>96</x>
-     <y>100</y>
+     <x>109</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>108</x>
-     <y>100</y>
+     <x>121</x>
+     <y>131</y>
     </hint>
    </hints>
   </connection>
@@ -7652,12 +7659,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>96</x>
-     <y>100</y>
+     <x>109</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>120</x>
-     <y>100</y>
+     <x>133</x>
+     <y>131</y>
     </hint>
    </hints>
   </connection>
@@ -7668,12 +7675,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>149</x>
-     <y>111</y>
+     <x>217</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
-     <x>149</x>
-     <y>111</y>
+     <x>292</x>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -7684,12 +7691,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>149</x>
-     <y>111</y>
+     <x>217</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
-     <x>149</x>
-     <y>111</y>
+     <x>367</x>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -7732,12 +7739,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>71</x>
-     <y>114</y>
+     <x>84</x>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
-     <x>75</x>
-     <y>114</y>
+     <x>88</x>
+     <y>145</y>
     </hint>
    </hints>
   </connection>
@@ -7748,12 +7755,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>71</x>
-     <y>114</y>
+     <x>84</x>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
-     <x>80</x>
-     <y>114</y>
+     <x>93</x>
+     <y>145</y>
     </hint>
    </hints>
   </connection>

@@ -173,7 +173,7 @@ class SankeyPlot:
 
 
         pic.set_global_opts(
-            legend_opts=opts.LegendOpts(selected_mode='single'),
+            legend_opts=opts.LegendOpts(selected_mode='single', is_show=self.show_legend),
             toolbox_opts=opts.ToolboxOpts(is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataView": {}}),
             title_opts=opts.TitleOpts(title=title, subtitle=subtitle),
         )
@@ -198,10 +198,11 @@ class SankeyPlot:
         return pic
     
     
-    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle='', font_size=12):
+    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle='', font_size=12, show_legend=True):
         df = df.copy()
         df['sum'] = df.sum(axis=1)
         self.font_size = font_size
+        self.show_legend=show_legend
         
         df_sankey = self.df_to_sankey_df(df, value_col='sum')
         nodes, links = self.create_nodes_links(df_sankey)
