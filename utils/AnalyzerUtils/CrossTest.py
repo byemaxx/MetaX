@@ -319,14 +319,14 @@ class CrossTest:
         group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
         sample_list = group1_sample + group2_sample
         
-        print(f'group1: [{group1}] : {group1_sample}\n')
-        print(f'group2: [{group2}] : {group2_sample}\n')
+        print(f'group1 [{group1}]:\n{group1_sample}\n')
+        print(f'group2 [{group2}]:\n{group2_sample}\n')
         
         # Create intensity matrix
         dft = df.copy()
         dft = dft[sample_list]
         dft = self.tfa.replace_if_two_index(dft)
-        
+                
         counts_df = dft.T
         # make sure the max value is not larger than int32
         max_value = 2147483647
@@ -380,7 +380,7 @@ class CrossTest:
         res = stat_res.results_df
         
         if concat_sample_to_result:
-            res_merged = pd.merge(res, df, left_index=True, right_index=True)
+            res_merged = pd.merge(res, dft, left_index=True, right_index=True)
         else:
             res_merged = res
 
