@@ -16,6 +16,7 @@ class SankeyPlot:
         self.tfa = taxa_func_analyzer
         
         self.font_size = 12
+        self.show_legend = True
 
     def convert_logfc_df_for_sankey(self, df, pvalue: float = 0.05,p_type ='padj',
                                     log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:

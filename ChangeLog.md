@@ -253,3 +253,8 @@
 ## Date: 2024-01-31
 ### Changes:
 - Fix: Fixed the bug of when restore the TaxaFunc Object, the dataoverview part doesn't update the data.
+
+# Version: 1.94.11
+## Date: 2024-01-31
+### Changes:
+- Fix: Fixed the bug of when plot sankey for Deseq2, the plot raise error.
