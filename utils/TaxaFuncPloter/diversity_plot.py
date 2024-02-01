@@ -17,13 +17,23 @@ class DiversityPlot(object):
 
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
-                             plot_all_samples:bool = False, theme:str = None
+                             plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
+                             show_fliers = True
                              ):
         
         if sample_list is None:
             sample_list = self.tfa.sample_list
         
-        
+        if sub_meta != 'None' and sub_meta != self.tfa.meta_name:
+            sub_group_list = []
+            for i in sample_list:
+                sub_group_list.append(self.tfa.get_group_of_a_sample(i, sub_meta))
+        else:
+            sub_group_list = None
+            sub_meta = None
+            
+            
+                  
         metric_dict = {
             'shannon': alpha.shannon,
             'simpson': alpha.simpson,
@@ -51,32 +61,38 @@ class DiversityPlot(object):
                     group = self.tfa.get_group_of_a_sample(sample_id)
                 else:
                     group = sample_id
-                    
+
+                sub_group = self.tfa.get_group_of_a_sample(sample_id, sub_meta) if sub_meta else 'All'
+
                 if group:
-                    if group not in group_diversity:
-                        group_diversity[group] = []
+                    if (group, sub_group) not in group_diversity:
+                        group_diversity[(group, sub_group)] = []
                     diversity = metric_dict[metric](row)
 
-                    group_diversity[group].append(diversity)
+                    group_diversity[(group, sub_group)].append(diversity)
 
             data = []
-            for group, diversities in group_diversity.items():
+            for (group, sub_group), diversities in group_diversity.items():
                 for diversity in diversities:
-                    data.append({'Group': group, 'Diversity': diversity})
+                    data.append({'Group': group, 'SubGroup': sub_group, 'Diversity': diversity})
             df = pd.DataFrame(data)
-            # plot boxplot
+
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               
                 sns.set(style='whitegrid')
-                
+
             plt.figure(figsize=(width, height))
-            fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='Group')
+            fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='SubGroup' if sub_meta else 'Group',
+                              showfliers=show_fliers)
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
             fig.set_xlabel('Group', fontsize=font_size+2)
             fig.set_ylabel(f'{metric} Diversity', fontsize=font_size+2)
             fig.set_title(f'Alpha Diversity ({metric}) of Each Group', fontsize=font_size+4)
+            if sub_meta:
+                plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
             plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
             plt.tight_layout()
             plt.show()
@@ -84,6 +100,7 @@ class DiversityPlot(object):
         except Exception as e:
             plt.close('all')
             raise e
+
 
 # metric = ['shannon', 'simpson',  'pielou_e', 'chao1', 'goods_coverage', 'observed_otus', 'fisher_alpha', 'dominance', 'doubles', 'menhinick', 'mcintosh_d', 'mcintosh_e']
 # for i in metric:
@@ -97,7 +114,7 @@ class DiversityPlot(object):
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
-                              adjust_label:bool = False , theme:str = None):
+                              adjust_label:bool = False , theme:str = None, sub_meta:str = "None"):
 
         if sample_list is None:
             sample_list = self.tfa.sample_list
@@ -105,6 +122,12 @@ class DiversityPlot(object):
         if len(sample_list) < 2:
             raise ValueError(f'Invalid sample_list: {sample_list}. The length of sample_list must be greater than 1.')
         
+        if sub_meta != 'None':
+            style_list = []
+            for i in sample_list:
+                style_list.append(self.tfa.get_group_of_a_sample(i, sub_meta))
+        else:
+            style_list = None
          
         group_list_for_hue = [self.tfa.get_group_of_a_sample(sample_id) for sample_id in sample_list]
 
@@ -132,7 +155,7 @@ class DiversityPlot(object):
                 sns.set(style='whitegrid')
                 
             plt.figure(figsize=(width, height))
-            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, 
+            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, style=style_list,
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 if rename_sample:
@@ -147,6 +170,7 @@ class DiversityPlot(object):
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100))
             # set title
             plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)')
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
             plt.tight_layout()
             plt.show()
             

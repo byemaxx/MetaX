@@ -258,3 +258,9 @@
 ## Date: 2024-01-31
 ### Changes:
 - Fix: Fixed the bug of when plot sankey for Deseq2, the plot raise error.
+
+
+# Version: 1.94.12
+## Date: 2024-01-31
+### Changes:
+- New: sub_meta support to plot scatter plot and box plot.

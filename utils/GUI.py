@@ -517,6 +517,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             for comboBox in condition_meta_list:
                 comboBox.clear()
                 comboBox.addItems(meta_list)
+                
+            # update sub_meta for basic pca
+            self.comboBox_sub_meta_pca.clear()
+            self.comboBox_sub_meta_pca.addItems(['None'] + meta_list)
         
         except Exception as e:
             print(e)
@@ -3334,7 +3338,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         font_transparency = self.doubleSpinBox_basic_pca_label_font_transparency.value()
         adjust_label = self.checkBox_pca_if_adjust_pca_label.isChecked()
         theme = self.comboBox_basic_theme.currentText()
-        
+        sub_meta = self.comboBox_sub_meta_pca.currentText()
+        show_fliers = self.checkBox_box_if_show_fliers.isChecked()
+
         
         # get sample list when plot by group
         if self.radioButton_basic_pca_group.isChecked():
@@ -3364,7 +3370,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     return None
                 self.show_message('PCA is running, please wait...')
                 BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, rename_sample = rename_sample,
-                                                width=width, height=height, font_size=font_size, 
+                                                width=width, height=height, font_size=font_size, sub_meta = sub_meta,
                                                 font_transparency=font_transparency, adjust_label=adjust_label, theme=theme)
 
             elif method == 'pca_3d':
@@ -3373,14 +3379,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, rename_sample = rename_sample,
+                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, 
+                                                                 rename_sample = rename_sample,
                                                                 width=width, height=height, font_size=font_size)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
 
             elif method == 'box':
-                show_fliers = self.checkBox_box_if_show_fliers.isChecked()
                 BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
-                                                 width=width, height=height, font_size=font_size, theme=theme, rename_sample = rename_sample)
+                                                 width=width, height=height, font_size=font_size, theme=theme,
+                                                 rename_sample = rename_sample)
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
@@ -3403,14 +3410,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
                 DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
                                                              width=width, height=height, font_size=font_size, 
-                                                             plot_all_samples=plot_all_samples, theme=theme)
-
+                                                             plot_all_samples=plot_all_samples, theme=theme,
+                                                             sub_meta = sub_meta, show_fliers = show_fliers)
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
                 DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
-                                                            font_size=font_size, font_transparency = font_transparency, rename_sample = rename_sample,
-                                                            show_label = show_label, adjust_label = adjust_label, theme=theme)
+                                                            font_size=font_size, font_transparency = font_transparency,
+                                                            rename_sample = rename_sample,
+                                                            show_label = show_label, adjust_label = adjust_label, 
+                                                            theme=theme,sub_meta = sub_meta)
                                                             
 
             elif method == 'sunburst':

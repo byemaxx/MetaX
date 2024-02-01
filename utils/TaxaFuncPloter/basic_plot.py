@@ -75,11 +75,18 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
                      width=10, height=8, font_size = 10, rename_sample:bool = False,
-                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None):
+                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None, sub_meta:str = 'None'):
         try:
             dft= df.copy()
             
             sample_list = dft.columns
+            if sub_meta != 'None':
+                style_list = []
+                for i in sample_list:
+                    style_list.append(self.tfa.get_group_of_a_sample(i, sub_meta))
+            else:
+                style_list = None
+
             new_sample_name = []
             group_list = []
             for i in sample_list:
@@ -110,7 +117,7 @@ class BasicPlot:
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
-            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette,
+            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
                                 hue=group_list, s = 150, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 new_sample_name = new_sample_name if rename_sample else sample_list
@@ -126,6 +133,8 @@ class BasicPlot:
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
             # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
+            # set legend outside the plot
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
             plt.tight_layout()
             plt.show()
 
