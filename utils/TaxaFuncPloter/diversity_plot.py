@@ -91,10 +91,10 @@ class DiversityPlot(object):
             fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
             if sub_meta:
                 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
-            # add dashed line between groups
-            for i, group in enumerate(df['Group'].unique()):
-                if i != 0:
-                    fig.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
+                # add dashed line between groups
+                for i, group in enumerate(df['Group'].unique()):
+                    if i != 0:
+                        fig.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
                     
 
             plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))

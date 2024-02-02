@@ -149,29 +149,45 @@ class BasicPlot:
         # replace 0 with nan due to optimization of boxplot
         dft = df.replace(0, np.nan)
         
+        # create a new dataframe with new sample names and sorted by group
+        sample_list = dft.columns
+        new_sample_name = []
+        group_list = []
+        for i in sample_list:
+            group = self.tfa.get_group_of_a_sample(i)
+            new_sample_name.append(f'{i} ({group})')
+            group_list.append(group)
+        
+            # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+            group_order = sorted(list(set(group_list)))
+            ordered_sample_list = []
+            ordered_sample_name = []
+            for group in group_order:
+                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
+                sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
+                ordered_sample_list.extend(samples_in_group)
+                ordered_sample_name.extend(sample_names_in_group)
+        dft = dft[ordered_sample_list]
+        
         if rename_sample:
-            # create a new dataframe with new sample names and sorted by group
-            sample_list = dft.columns
-            new_sample_name = []
-            group_list = []
-            for i in sample_list:
-                group = self.tfa.get_group_of_a_sample(i)
-                new_sample_name.append(f'{i} ({group})')
-                group_list.append(group)
-            
-                # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-                group_order = sorted(list(set(group_list)))
-                ordered_sample_list = []
-                ordered_sample_name = []
-                for group in group_order:
-                    samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
-                    sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
-                    ordered_sample_list.extend(samples_in_group)
-                    ordered_sample_name.extend(sample_names_in_group)
-            dft = dft[ordered_sample_list]
+            new_sample_name = ordered_sample_name
         else:
             new_sample_name = dft.columns
 
+        # Determine if distinct colors are needed
+        unique_groups = group_order
+        if len(unique_groups) > 10:
+            distinct_colors = self.get_distinct_colors(len(unique_groups))
+            color_palette = dict(zip(unique_groups, distinct_colors))
+        else:
+            color_palette = sns.color_palette("tab10", len(unique_groups))
+            
+        group_palette = {}
+        for sample in dft.columns:
+            for group in unique_groups:
+                group_palette[sample] = color_palette[unique_groups.index(self.tfa.get_group_of_a_sample(sample))]            
+            
+        
         # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         if theme is not None and theme != 'Auto':
@@ -181,12 +197,17 @@ class BasicPlot:
             
         # set size
         plt.figure(figsize=(width, height))
-        ax = sns.boxplot(data=dft, showfliers = show_fliers )
+        ax = sns.boxplot(data=dft, showfliers = show_fliers , palette=group_palette)
         # set x label
         ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Sample', fontsize=font_size+2)
         ax.set_ylabel('Intensity', fontsize=font_size+2)
         ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
+        # set legend for group
+        handles = [plt.Rectangle((0,0),1,1, color=color_palette[unique_groups.index(group)], edgecolor='black') for group in unique_groups]
+        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left')
+        # set grid
+        ax.grid(True, axis='y')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)
         plt.tight_layout()

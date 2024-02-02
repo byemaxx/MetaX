@@ -264,3 +264,8 @@
 ## Date: 2024-01-31
 ### Changes:
 - New: sub_meta support to plot scatter plot and box plot.
+
+# Version: 1.95.1
+## Date: 2024-01-31
+### Changes:
+- New: Add color for box plot.
