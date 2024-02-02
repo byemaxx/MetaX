@@ -3465,6 +3465,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         show_all_labels = (self.checkBox_top_heatmap_show_all_labels_x.isChecked(), self.checkBox_top_heatmap_show_all_labels_y.isChecked())
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
+        remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
 
         if cmap == 'Auto':
             cmap = None
@@ -3497,7 +3498,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif table_name.startswith('deseq2all'):
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
-                show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
 
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
@@ -3506,8 +3506,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
-                                                                               three_levels_df_type = three_levels_df_type,
-                                                                                show_col_colors = show_col_colors)
+                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col
+                                                                                )
 
                 # if fig is a tuple
                 if isinstance(fig, tuple):
@@ -3518,15 +3518,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                         
             elif table_name.startswith('dunnettAllCondtion'):
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
-                show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
                 
                 fig = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df=df, res_df_type='dunnett',
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig',
-                                                                               three_levels_df_type = three_levels_df_type,
-                                                                                show_col_colors = show_col_colors)
+                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col
+                                                                               )
 
                 # if fig is a tuple
                 if isinstance(fig, tuple):
@@ -3575,7 +3574,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
-        
+        remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
+
         sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p', 'padj': 'padj', 'pvalue': 'pvalue'}
         value_type = sort_by_dict[sort_by]
         
@@ -3597,7 +3597,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table', p_type = p_type,
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                   show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
+                                                                                   remove_zero_col = remove_zero_col
                                                                                    )
             elif 'dunnettAllCondtion' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
@@ -3605,7 +3605,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                   show_col_colors = self.checkBox_cross_3_level_plot_show_col_colors.isChecked()
+                                                                                    remove_zero_col = remove_zero_col
                                                                                    )
 
             

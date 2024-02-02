@@ -336,7 +336,7 @@ class HeatmapPlot:
                                        show_all_labels:tuple = (False, False), 
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
-                                       show_col_colors:bool = False):
+                                       show_col_colors:bool = True, remove_zero_col:bool = True):
         import numpy as np
         
         color_list = None
@@ -371,6 +371,12 @@ class HeatmapPlot:
             
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
+        
+        if remove_zero_col:
+            print(f"The shape of the dataframe is {dft.shape}")
+            dft = dft.loc[:, (dft != 0).any(axis=0)]
+            print(f"Remove all zero columns, the shape of the dataframe is {dft.shape}")
+        
         
         
         if len(dft) < 2:

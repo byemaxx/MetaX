@@ -370,8 +370,13 @@ class TaxaFuncAnalyzer:
 
         print("Starting to set Function table...")
         # filter prop = 100% and func are not (NULL, -, NaN)
-        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) & (df[self.func_name].notnull()) &
-                     (df[self.func_name] != 'not_found') & (df[self.func_name] != '-') & (df[self.func_name] != 'NaN')].copy()
+        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) & 
+                     (df[self.func_name].notnull()) &
+                     (df[self.func_name] != 'not_found') & 
+                     (df[self.func_name] != '-') & 
+                     (df[self.func_name] != 'NaN') & 
+                     (df[self.func_name] != 'unknown')
+                     ].copy()
         
         df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]
         if processing_after_sum:
@@ -433,8 +438,11 @@ class TaxaFuncAnalyzer:
             (dfc[f'{self.func_name}_prop'] >= func_threshold) &
             dfc[self.func_name].notnull() &
             (dfc[self.func_name] != 'not_found') &
-            (dfc[self.func_name] != '-')
+            (dfc[self.func_name] != '-') &
+            (dfc[self.func_name] != 'unknown') &
+            (dfc[self.func_name] != 'NaN')
         )
+        
         dfc = dfc[filter_conditions]
         # create clean peptide table
         if processing_after_sum:
