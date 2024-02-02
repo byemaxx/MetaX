@@ -159,34 +159,35 @@ class BasicPlot:
             group_list.append(group)
         
             # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-            group_order = sorted(list(set(group_list)))
+            unique_groups = sorted(list(set(group_list)))
             ordered_sample_list = []
             ordered_sample_name = []
-            for group in group_order:
+            for group in unique_groups:
                 samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
                 sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
                 ordered_sample_list.extend(samples_in_group)
                 ordered_sample_name.extend(sample_names_in_group)
+
+        # reorder the columns
         dft = dft[ordered_sample_list]
         
         if rename_sample:
             new_sample_name = ordered_sample_name
         else:
-            new_sample_name = dft.columns
+            new_sample_name = ordered_sample_list
 
         # Determine if distinct colors are needed
-        unique_groups = group_order
         if len(unique_groups) > 10:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
             color_palette = dict(zip(unique_groups, distinct_colors))
         else:
-            color_palette = sns.color_palette("tab10", len(unique_groups))
+            color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
             
         group_palette = {}
         for sample in dft.columns:
-            for group in unique_groups:
-                group_palette[sample] = color_palette[unique_groups.index(self.tfa.get_group_of_a_sample(sample))]            
-            
+            group_name = self.tfa.get_group_of_a_sample(sample)
+            group_palette[sample] = color_palette[group_name]
+
         
         # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -203,9 +204,9 @@ class BasicPlot:
         ax.set_xlabel('Sample', fontsize=font_size+2)
         ax.set_ylabel('Intensity', fontsize=font_size+2)
         ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
-        # set legend for group
-        handles = [plt.Rectangle((0,0),1,1, color=color_palette[unique_groups.index(group)], edgecolor='black') for group in unique_groups]
-        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left')
+        # set legend for group, out of the box
+        handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
+        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left', bbox_to_anchor=(1, 1))
         # set grid
         ax.grid(True, axis='y')
         # move the botton up

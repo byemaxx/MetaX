@@ -266,6 +266,11 @@
 - New: sub_meta support to plot scatter plot and box plot.
 
 # Version: 1.95.1
-## Date: 2024-01-31
+## Date: 2024-02-01
 ### Changes:
 - New: Add color for box plot.
+
+# Version: 1.95.2
+## Date: 2024-02-02
+### Changes:
+- Fix: Fixed the bug of when plot box plot, when the group number is more than 10, the error will raise.
