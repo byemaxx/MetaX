@@ -2,6 +2,7 @@ from pyecharts import options as opts
 from pyecharts.charts import Scatter3D
 from sklearn.decomposition import PCA
 import pandas as pd
+import seaborn as sns
 
 class PcaPlot_js:
     def __init__(self, tfobj=None):
@@ -38,7 +39,15 @@ class PcaPlot_js:
         else:
             pca_df['sample_name'] = sample_list
         group_num = len(pca_df['group'].unique())
-        colors = self.get_distinct_colors(group_num)
+        
+        # use sns color palette if group number is less than 10
+        if group_num <= 10:
+            import seaborn as sns
+            colors = sns.color_palette('deep', group_num)
+            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
+        else:
+            colors = self.get_distinct_colors(group_num)
+        
 
         scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height))
 
@@ -61,7 +70,7 @@ class PcaPlot_js:
                 xaxis3d_opts=opts.Axis3DOpts(type_="value", name=x_name),
                 yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
                 zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
-                itemstyle_opts=opts.ItemStyleOpts(color=color, border_color='black', border_width=0.2),
+                itemstyle_opts=opts.ItemStyleOpts(color=color, border_color='black', border_width=0.2, opacity=0.8),
                 label_opts=opts.LabelOpts(is_show=show_label,  font_size=font_size, color='black', position='right'),
             )
 

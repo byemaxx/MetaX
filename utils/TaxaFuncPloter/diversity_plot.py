@@ -32,7 +32,6 @@ class DiversityPlot(object):
             sub_group_list = None
             sub_meta = None
             
-            
                   
         metric_dict = {
             'shannon': alpha.shannon,
@@ -87,11 +86,16 @@ class DiversityPlot(object):
                               showfliers=show_fliers)
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
-            fig.set_xlabel('Group', fontsize=font_size+2)
-            fig.set_ylabel(f'{metric} Diversity', fontsize=font_size+2)
-            fig.set_title(f'Alpha Diversity ({metric}) of Each Group', fontsize=font_size+4)
+            fig.set_xlabel('Group', fontsize=font_size)
+            fig.set_ylabel(f'{metric} Diversity', fontsize=font_size)
+            fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
             if sub_meta:
-                plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+                plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
+            # add dashed line between groups
+            for i, group in enumerate(df['Group'].unique()):
+                if i != 0:
+                    fig.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
+                    
 
             plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
             plt.tight_layout()
@@ -166,11 +170,11 @@ class DiversityPlot(object):
                     from adjustText import adjust_text
                     texts = adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black'))
                 
-            fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100))
-            fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100))
+            fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
+            fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
             # set title
-            plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+            plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)', fontsize=font_size+2, fontweight='bold')
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
             plt.tight_layout()
             plt.show()
             

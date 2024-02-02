@@ -130,11 +130,11 @@ class BasicPlot:
 
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
                         fontsize= font_size+2, fontweight='bold')
-            fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
-            fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
+            fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)',  fontsize=font_size)
+            fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)',  fontsize=font_size)
             # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
             # set legend outside the plot
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
             plt.tight_layout()
             plt.show()
 
@@ -142,10 +142,12 @@ class BasicPlot:
         except Exception as e:
             plt.close('all')
             raise e
-
+        
+        
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
                      font_size = 10, theme:str = None, rename_sample:bool = False,):
-        dft = df.copy()
+        # replace 0 with nan due to optimization of boxplot
+        dft = df.replace(0, np.nan)
         
         if rename_sample:
             # create a new dataframe with new sample names and sorted by group
@@ -169,25 +171,21 @@ class BasicPlot:
             dft = dft[ordered_sample_list]
         else:
             new_sample_name = dft.columns
-        # replace 0 with nan
-        dft = dft.replace(0, np.nan)
-        
+
         # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         if theme is not None and theme != 'Auto':
             plt.style.use(theme) 
         else:               
             sns.set_theme(style="ticks", rc=custom_params)
+            
         # set size
         plt.figure(figsize=(width, height))
-        if show_fliers:
-            ax = sns.boxplot(data=dft, showfliers=True)
-        else:
-            ax = sns.boxplot(data=dft, showfliers=False)
+        ax = sns.boxplot(data=dft, showfliers = show_fliers )
         # set x label
         ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
-        ax.set_xlabel('Sample')
-        ax.set_ylabel('Intensity')
+        ax.set_xlabel('Sample', fontsize=font_size+2)
+        ax.set_ylabel('Intensity', fontsize=font_size+2)
         ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)
