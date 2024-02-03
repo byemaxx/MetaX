@@ -274,3 +274,8 @@
 ## Date: 2024-02-02
 ### Changes:
 - Fix: Fixed the bug of when plot box plot, when the group number is more than 10, the error will raise.
+
+# Version: 1.96.0
+## Date: 2024-02-03
+### Changes:
+- New: Add a logWindow to show the process when run the long time function.

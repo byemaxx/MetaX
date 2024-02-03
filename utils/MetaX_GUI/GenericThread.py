@@ -35,7 +35,7 @@ class FunctionExecutor(QMainWindow):
         # set the size of the window as 1/3 of the screen
         size = QApplication.primaryScreen().size()
         
-        self.resize(int(size.width() // 3), int(size.height() // 3.5))
+        self.resize(int(size.width() // 2.5), int(size.height() // 3.5))
 
         # set flag as the window size can be changed
         # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -104,9 +104,10 @@ class FunctionExecutor(QMainWindow):
         self.text_browser.verticalScrollBar().setValue(self.text_browser.verticalScrollBar().maximum())
 
 
-
     def thread_finished(self):
-        self.function_running = False  # 更新标志，指示函数不再运行
+        self.function_running = False
+        self.close()
+        
 
     def on_finished(self, result, success):
         # if success:
@@ -120,9 +121,15 @@ class FunctionExecutor(QMainWindow):
         #     # 函数执行失败，显示错误信息
         #     QMessageBox.critical(self, 'Error', f'An error occurred: {result}')
         self.finished.emit(result, success)
-        self.close()
+        # self.close()
         
 
+    def forceCloseThread(self):
+        if self.thread.isRunning():
+            self.thread.terminate()  # 强制结束线程
+            self.thread.wait()  # 等待线程结束
+            
+            
 
     def closeEvent(self, event: QCloseEvent):
         if self.function_running:

@@ -138,6 +138,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         self.tfa = None
         self.Qthread_result = None
+        self.temp_params_dict = {}
+        self.executors = []  # save all FunctionExecutor object
         self.add_theme_to_combobox()
 
 
@@ -972,6 +974,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # 关闭控制台窗口
                 if self.console_visible:
                     self.show_hide_console()
+                    
+                # 关闭所有子进程
+                for executor in self.executors:
+                    executor.forceCloseThread()
                                 
                 self.logger.write_log(f"############################## MetaX closed ##############################")
             except Exception as e:
@@ -1081,7 +1087,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def show_all_in_layout(self, layout, if_except=True):
         except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
                        'comboBox_cross_3_level_plot_df_type','label_141',
-                       'checkBox_cross_3_level_plot_show_col_colors',
+                       'checkBox_cross_3_level_plot_remove_zero_col',
                        'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
         
         for i in range(layout.count()):
@@ -1249,38 +1255,33 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # 定义 handle_finished 方法来处理执行完成后的逻辑
         def handle_finished(result, success):
             # # 存储执行结果到类的属性中
-            self.Qthread_result = result
+            # self.Qthread_result = result
 
-            # 根据执行结果显示相应的消息框
             if success:
                 if result is not None and show_msg:
                     QMessageBox.information(self.MainWindow, 'Result', 'Task completed')
                 elif show_msg:
                     QMessageBox.information(self.MainWindow, 'Done', 'Task completed.')
+                
+                # if callback exists, continue to run the callback function
+                if callback:
+                    # callback(result, success)
+                    callback(result)
             else:
                 if show_msg:
                     QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred: {result}')
 
-            # 如果有提供回调函数，执行它
-            if callback:
-                callback(result, success)
-            
-            # close thread
-            executor.close()
-
-        # 从 kwargs 中提取 callback，如果没有提供，则为 None
         callback = kwargs.pop('callback', None)
 
-        # 创建 FunctionExecutor 实例，并连接完成信号到 handle_finished 方法
         executor = FunctionExecutor(func, *args, **kwargs)
-        executor.finished.connect(handle_finished)
+        executor.finished.connect(handle_finished) #connect the signal to the slot
+        self.executors.append(executor)
         executor.show()
 
            
             
-    def callback_after_set_multi_tables(self, result, success):
+    def callback_after_set_multi_tables(self, result):
             # save taxafunc obj as pickle file
-        if success:
             self.save_taxafunc_obj(no_message=True)
             self.run_after_set_multi_tables()
         
@@ -1722,11 +1723,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
             taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
-            self.callback_after_set_taxafunc(self.tfa, True)
+            self.callback_after_set_taxafunc(self.tfa)
             
             
-            # self.run_in_new_window(TaxaFuncAnalyzer, show_msg=False, callback=self.callback_after_set_taxafunc, **taxafunc_params)
-
         except:
             error_message = traceback.format_exc()
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
@@ -1739,12 +1738,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
             
             
-    def callback_after_set_taxafunc(self, result, success):
-        if success:
-            self.tfa = result
-            self.update_after_tfobj()
-            self.show_taxaFuncAnalyzer_init()
-            self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
+    def callback_after_set_taxafunc(self, result):
+        self.tfa = result
+        self.update_after_tfobj()
+        self.show_taxaFuncAnalyzer_init()
+        self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
             
             
     def change_event_comboBox_top_heatmap_table(self):
@@ -2054,7 +2052,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_top_heatmap_table.clear()
             self.comboBox_deseq2_tables_list = []
 
-            self.show_message('Data is Preprocessing, please wait...')
+            # self.show_message('Data is Preprocessing, please wait...')
 
 
             try:
@@ -2079,7 +2077,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                         'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params}
-                self.run_in_new_window(self.tfa.set_multi_tables, show_msg=False, callback=self.callback_after_set_multi_tables, **set_multi_table_params)
+                self.run_in_new_window(self.tfa.set_multi_tables, callback=self.callback_after_set_multi_tables, show_msg=False, **set_multi_table_params)
                 # self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold,
                 #                         data_preprocess_params = data_preprocess_params,
                 #                         processing_after_sum = processing_after_sum, 
@@ -3712,47 +3710,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least 3 groups for ANOVA test!')
                 return None
 
-            self.show_message(f'ANOVA test will test on {group_list}\
-                            .\n\n It may take a long time! Please wait...')
-
-            table_names = []
+            # self.show_message(f'ANOVA test will test on {group_list}\
+            #                 .\n\n It may take a long time! Please wait...')
+            if self.check_if_last_test_not_finish('df_type'):
+                return None
+            
+            self.temp_params_dict = {'df_type': df_type}
             
             if df_type == 'Significant Taxa-Func'.lower():
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
-                df_tuple = self.tfa.CrossTest.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value, condition=condition)
-
-                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-                self.show_table(df_tuple[0], title=table_name_1)
-                self.update_table_dict(table_name_1, df_tuple[0])
-                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-                self.show_table(df_tuple[1], title=table_name_2)
-                self.update_table_dict(table_name_2, df_tuple[1])
-                self.pushButton_plot_top_heatmap.setEnabled(True)
-                self.pushButton_get_top_cross_table.setEnabled(True)
-                table_names = [table_name_1, table_name_2]
+                anova_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
+                self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_anova_test, **anova_sig_tf_params)
             
             else:  
-                df_anova = self.tfa.CrossTest.get_stats_anova(group_list=group_list, df_type=df_type, condition=condition)
-                self.show_table(df_anova, title=f'anova_test({df_type})')
-                table_name = f'anova_test({df_type})'
-                table_names = [table_name]
-                self.update_table_dict(table_name, df_anova)
-                
-            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-            for table_name in table_names:
-                if table_name not in self.comboBox_top_heatmap_table_list:
-                    self.comboBox_top_heatmap_table_list.append(table_name)
-                    self.comboBox_top_heatmap_table_list.reverse()
-                else:
-                    self.comboBox_top_heatmap_table_list.remove(table_name)
-                    self.comboBox_top_heatmap_table_list.append(table_name)
-                    self.comboBox_top_heatmap_table_list.reverse()
-            
-            self.comboBox_top_heatmap_table.clear()
-            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
-        
-            self.pushButton_plot_top_heatmap.setEnabled(True)
-            self.pushButton_get_top_cross_table.setEnabled(True)
+                anova_params = {'group_list': group_list, 'df_type': df_type, 'condition': condition}
+                self.run_in_new_window(self.tfa.CrossTest.get_stats_anova, callback= self.callback_after_anova_test, **anova_params)
                 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -3762,8 +3734,58 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         finally:
             self.pushButton_anova_test.setEnabled(True)
+            
+            
+            
+    def callback_after_anova_test(self, result):
+        df_type = self.temp_params_dict['df_type']
+        
+        if type(result) == pd.DataFrame:
+            df_anova = result
+            self.temp_params_dict = {}
+            
+            self.show_table(df_anova, title=f'anova_test({df_type})')
+            table_name = f'anova_test({df_type})'
+            table_names = [table_name]
+            self.update_table_dict(table_name, df_anova)
+            
+        elif type(result) == tuple:
+            df_tuple = result
+            table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+            self.show_table(df_tuple[0], title=table_name_1)
+            self.update_table_dict(table_name_1, df_tuple[0])
+            table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+            self.show_table(df_tuple[1], title=table_name_2)
+            self.update_table_dict(table_name_2, df_tuple[1])
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
+            table_names = [table_name_1, table_name_2]
+            
+            
+        # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+        for table_name in table_names:
+            if table_name not in self.comboBox_top_heatmap_table_list:
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+            else:
+                self.comboBox_top_heatmap_table_list.remove(table_name)
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+        
+        self.comboBox_top_heatmap_table.clear()
+        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+    
+        self.pushButton_plot_top_heatmap.setEnabled(True)
+        self.pushButton_get_top_cross_table.setEnabled(True)
+    
+    def check_if_last_test_not_finish(self, name):
+        if self.temp_params_dict.get(name) is not None:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please wait for the last calculation to finish!')
+            return True
+        else:
+            return False
 
-    # Dunett test
+    # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
         control_group = self.comboBox_dunnett_control_group.currentText()
         group_list = self.comboBox_dunnett_group.getCheckedItems()
@@ -3779,52 +3801,44 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if control_group in group_list:
             group_list.remove(control_group)
         
-        self.show_message(f'Group-Control Test will test on {group_list}\
-                            .\n\n It may take a long time! Please wait...')
+        # self.show_message(f'Group-Control Test will test on {group_list}\
+        #                     .\n\n It may take a long time! Please wait...')
         
+        if self.check_if_last_test_not_finish('table_name'):
+            return None
+            
         try:
             if method == 'dunnett':
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
-                    res_df = self.tfa.CrossTest.get_stats_dunnett_test_against_control_with_conditon(control_group=control_group, 
-                                                                   group_list=group_list, df_type=df_type, condition=all_condition_meta)
-                    table_name = f'dunnettAllCondtion({df_type})'
+                    self.temp_params_dict= {'table_name': f'dunnettAllCondtion({df_type})'}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_dunnett_test_against_control_with_conditon, callback= self.callback_after_group_control_test, 
+                                           control_group=control_group, group_list=group_list, df_type=df_type, condition=all_condition_meta)
+                    
+
                 else:
-                    res_df = self.tfa.CrossTest.get_stats_dunnett_test(control_group=control_group, 
-                                                                    group_list=group_list, df_type=df_type, condition=condition)
-                    table_name = f'dunnett_test({df_type})'
+                    self.temp_params_dict= {'table_name': f'dunnett_test({df_type})'}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_dunnett_test, callback= self.callback_after_group_control_test, 
+                                           control_group=control_group, group_list=group_list, df_type=df_type, condition=condition)
+                    
                     
             elif method == 'deseq2':
+                df = self.get_table_by_df_type(df_type=df_type)
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
-                    res_df = self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon(df =self.get_table_by_df_type(df_type=df_type), 
-                                                                                     control_group=control_group, group_list=group_list,
-                                                                                     condition=all_condition_meta)
-                    table_name = f'deseq2allinCondition({df_type})'
+                    self.temp_params_dict= {'table_name': f'deseq2allinCondition({df_type})'}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon, 
+                                           callback= self.callback_after_group_control_test,
+                                           df = df, control_group=control_group, group_list=group_list,
+                                           condition=all_condition_meta)
+
                 else:
-                    res_df = self.tfa.CrossTest.get_stats_deseq2_against_control(df= self.get_table_by_df_type(df_type=df_type),
-                                                                   control_group=control_group, group_list=group_list, 
-                                                                   concat_sample_to_result = False, quiet = True, condition=condition)
-                    table_name = f'deseq2all({df_type})'
+                    self.temp_params_dict= {'table_name': f'deseq2all({df_type})'}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control, 
+                                           callback= self.callback_after_group_control_test,
+                                           df = df,control_group=control_group, group_list=group_list, condition=condition)
+
             else:
                 raise ValueError(f'No such method: {method}')
             
-            self.update_table_dict(table_name, res_df)
-            self.show_table(res_df, title=table_name)
-            
-            self.pushButton_plot_top_heatmap.setEnabled(True)
-            self.pushButton_get_top_cross_table.setEnabled(True)
-            
-            # update comboBox_top_heatmap_table_list
-            if table_name not in self.comboBox_top_heatmap_table_list:
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-            else:
-                self.comboBox_top_heatmap_table_list.remove(table_name)
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-
-
-            self.comboBox_top_heatmap_table.clear()
-            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
         
         except Exception as e:
             if 'is not in meta_df, must be one of' in str(e) or 'not a subset of the groups in condition' in str(e):
@@ -3835,13 +3849,34 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             else:
                 error_message = traceback.format_exc()
-                self.logger.write_log(f'dunnett_test error: {error_message}', 'e')
-                self.logger.write_log(f'dunnett_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')
+                self.logger.write_log(f'group_control_test error: {error_message}', 'e')
+                self.logger.write_log(f'group_control_test: control_group: {control_group}, group_list: {group_list}, df_type: {df_type}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
         
-        
+    def callback_after_group_control_test(self, result):
+        table_name = self.temp_params_dict['table_name']
+        self.temp_params_dict = {}
+        res_df = result        
 
+        self.update_table_dict(table_name, res_df)
+        self.show_table(res_df, title=table_name)
+        
+        self.pushButton_plot_top_heatmap.setEnabled(True)
+        self.pushButton_get_top_cross_table.setEnabled(True)
+        
+        # update comboBox_top_heatmap_table_list
+        if table_name not in self.comboBox_top_heatmap_table_list:
+            self.comboBox_top_heatmap_table_list.append(table_name)
+            self.comboBox_top_heatmap_table_list.reverse()
+        else:
+            self.comboBox_top_heatmap_table_list.remove(table_name)
+            self.comboBox_top_heatmap_table_list.append(table_name)
+            self.comboBox_top_heatmap_table_list.reverse()
+
+
+        self.comboBox_top_heatmap_table.clear()
+        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
     #TUKEY
     def tukey_test(self):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_tukey_taxa.currentText())
@@ -3859,13 +3894,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif taxa != '' and func == '':
             func = None
         sum_all = True if self.comboBox_tukey_by_sum_each.currentText() == 'Sum All' else False
-        self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
+        # self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
-            tukey_test = self.tfa.CrossTest.get_stats_tukey_test(taxon_name=taxa, func_name=func, sum_all=sum_all, condition=condition)
-            self.show_table(tukey_test, title='tukey_test')
-            self.update_table_dict('tukey_test', tukey_test)
-            self.pushButton_plot_tukey.setEnabled(True)
+            self.run_in_new_window(self.tfa.CrossTest.get_stats_tukey_test, callback= self.callback_after_tukey_test, taxon_name=taxa, func_name=func, sum_all=sum_all, condition=condition)
+            
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'tukey_test error: {error_message}', 'e')
@@ -3874,7 +3907,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         finally:
             self.pushButton_tukey_test.setEnabled(True)
-
+            
+    def callback_after_tukey_test(self, result):
+        tukey_test = result
+        self.show_table(tukey_test, title='tukey_test')
+        self.update_table_dict('tukey_test', tukey_test)
+        self.pushButton_plot_tukey.setEnabled(True)
 
     def plot_tukey(self):
         df = self.table_dict['tukey_test']
@@ -3895,47 +3933,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two different groups!')
             return None
         else:
-            self.show_message('T-test is running...\n\n It may take a long time! Please wait...')
+            if self.check_if_last_test_not_finish('df_type'):
+                return None
+            
+            self.temp_params_dict = {'df_type': df_type}
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
                 table_names = []
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
-                    df_tuple = self.tfa.CrossTest.get_stats_diff_taxa_but_func(group_list=group_list, p_value=p_value, condition=condition)
-
-                    table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-                    self.show_table(df_tuple[0], title=table_name_1)
-                    self.update_table_dict(table_name_1, df_tuple[0])
-                    table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-                    self.show_table(df_tuple[1], title=table_name_2)
-                    self.update_table_dict(table_name_2, df_tuple[1])
-                    self.pushButton_plot_top_heatmap.setEnabled(True)
-                    self.pushButton_get_top_cross_table.setEnabled(True)
-                    table_names = [table_name_1, table_name_2]
+                    
+                    ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_ttest, **ttest_sig_tf_params)
+                    
                 
                 else:
-                    df = self.tfa.CrossTest.get_stats_ttest(group_list=group_list, df_type=df_type , condition=condition)
-                    table_name = f't_test({df_type})'
-                    self.show_table(df, title=table_name)
-                    self.update_table_dict(table_name, df)
-                    self.pushButton_plot_top_heatmap.setEnabled(True)
-                    self.pushButton_get_top_cross_table.setEnabled(True)
-                    table_names = [table_name]
+                    ttest_params = {'group_list': group_list, 'df_type': df_type, 'condition': condition}
+                    self.run_in_new_window(self.tfa.CrossTest.get_stats_ttest, callback= self.callback_after_ttest, **ttest_params)
                     
                     
-                # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-                for table_name in table_names:
-                    if table_name not in self.comboBox_top_heatmap_table_list:
-                        self.comboBox_top_heatmap_table_list.append(table_name)
-                        self.comboBox_top_heatmap_table_list.reverse()
-                    else:
-                        self.comboBox_top_heatmap_table_list.remove(table_name)
-                        self.comboBox_top_heatmap_table_list.append(table_name)
-                        self.comboBox_top_heatmap_table_list.reverse()
-
-                self.comboBox_top_heatmap_table.clear()
-                self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+                    
             except ValueError as e:
                 if str(e) == 'sample size must be more than 1 for t-test':
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The sample size of each group must be more than 1 for T-TEST!')
@@ -3948,6 +3966,51 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
             finally:
                self.pushButton_ttest.setEnabled(True) 
+               
+    def callback_after_ttest(self, result):
+        df_type = self.temp_params_dict['df_type']
+        self.temp_params_dict = {}
+        
+        if type(result) == pd.DataFrame:
+            df = result
+            table_name = f't_test({df_type})'
+            self.show_table(df, title=table_name)
+            self.update_table_dict(table_name, df)
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
+            table_names = [table_name]
+        elif type(result) == tuple:
+            df_tuple = result
+            table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+            self.show_table(df_tuple[0], title=table_name_1)
+            self.update_table_dict(table_name_1, df_tuple[0])
+            table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+            self.show_table(df_tuple[1], title=table_name_2)
+            self.update_table_dict(table_name_2, df_tuple[1])
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
+            table_names = [table_name_1, table_name_2]
+            
+            
+        # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+        for table_name in table_names:
+            if table_name not in self.comboBox_top_heatmap_table_list:
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+            else:
+                self.comboBox_top_heatmap_table_list.remove(table_name)
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+
+        self.comboBox_top_heatmap_table.clear()
+        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+        
+    
+        
+        
+        
+        
+        
 
     #DESeq2 
     def deseq2_test(self):
@@ -3976,35 +4039,43 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
 
         else:
-            self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
+            # self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
-                self.pushButton_deseq2.setEnabled(False)
-                df_deseq2 = self.tfa.CrossTest.get_stats_deseq2(df=df, group1=group1, group2=group2, condition=condition)
-                self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
-                res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
-                self.update_table_dict(res_table_name, df_deseq2)
-                if res_table_name not in self.comboBox_deseq2_tables_list:
-                    self.comboBox_deseq2_tables_list.append(res_table_name)
-                    self.comboBox_deseq2_tables_list.reverse()
-                else:
-                    self.comboBox_deseq2_tables_list.remove(res_table_name)
-                    self.comboBox_deseq2_tables_list.append(res_table_name)
-                    self.comboBox_deseq2_tables_list.reverse()
-
-                # update comboBox_deseq2_tables
-                self.comboBox_deseq2_tables.clear()
-                self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
+                if self.check_if_last_test_not_finish('deseq2'):
+                    return None
+                self.temp_params_dict ={'deseq2': 'deseq2'} # only for stop the next test
                 
-                self.pushButton_deseq2_plot_vocano.setEnabled(True)
-                self.pushButton_deseq2_plot_sankey.setEnabled(True)
+                deseq2_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition}
+                self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2, callback= self.callback_after_deseq2, **deseq2_params)
+
             except Exception as e:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
                 self.logger.write_log(f'deseq2_test: groups: {[group1, group2]}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
                 return None
-            finally:
-                self.pushButton_deseq2.setEnabled(True)
+                
+    def callback_after_deseq2(self, result):
+        self.temp_params_dict = {}
+        df_deseq2 = result
+        self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
+        res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
+        self.update_table_dict(res_table_name, df_deseq2)
+        if res_table_name not in self.comboBox_deseq2_tables_list:
+            self.comboBox_deseq2_tables_list.append(res_table_name)
+            self.comboBox_deseq2_tables_list.reverse()
+        else:
+            self.comboBox_deseq2_tables_list.remove(res_table_name)
+            self.comboBox_deseq2_tables_list.append(res_table_name)
+            self.comboBox_deseq2_tables_list.reverse()
+
+        # update comboBox_deseq2_tables
+        self.comboBox_deseq2_tables.clear()
+        self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
+        
+        self.pushButton_deseq2_plot_vocano.setEnabled(True)
+        self.pushButton_deseq2_plot_sankey.setEnabled(True)
+        
 
 
 
