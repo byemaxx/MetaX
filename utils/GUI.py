@@ -3712,7 +3712,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             # self.show_message(f'ANOVA test will test on {group_list}\
             #                 .\n\n It may take a long time! Please wait...')
-            if self.check_if_last_test_not_finish('df_type'):
+            if self.check_if_last_test_not_finish():
                 return None
             
             self.temp_params_dict = {'df_type': df_type}
@@ -3739,10 +3739,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
     def callback_after_anova_test(self, result):
         df_type = self.temp_params_dict['df_type']
+        self.temp_params_dict = {}
         
         if type(result) == pd.DataFrame:
             df_anova = result
-            self.temp_params_dict = {}
             
             self.show_table(df_anova, title=f'anova_test({df_type})')
             table_name = f'anova_test({df_type})'
@@ -3778,8 +3778,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_top_heatmap.setEnabled(True)
         self.pushButton_get_top_cross_table.setEnabled(True)
     
-    def check_if_last_test_not_finish(self, name):
-        if self.temp_params_dict.get(name) is not None:
+    def check_if_last_test_not_finish(self):
+        if self.temp_params_dict != {}:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please wait for the last calculation to finish!')
             return True
         else:
@@ -3804,7 +3804,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # self.show_message(f'Group-Control Test will test on {group_list}\
         #                     .\n\n It may take a long time! Please wait...')
         
-        if self.check_if_last_test_not_finish('table_name'):
+        if self.check_if_last_test_not_finish():
             return None
             
         try:
@@ -3933,7 +3933,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two different groups!')
             return None
         else:
-            if self.check_if_last_test_not_finish('df_type'):
+            if self.check_if_last_test_not_finish():
                 return None
             
             self.temp_params_dict = {'df_type': df_type}
@@ -4041,7 +4041,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             # self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
             try:
-                if self.check_if_last_test_not_finish('deseq2'):
+                if self.check_if_last_test_not_finish():
                     return None
                 self.temp_params_dict ={'deseq2': 'deseq2'} # only for stop the next test
                 
