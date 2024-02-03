@@ -11,10 +11,17 @@ import os
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
 
+    def __init__(self, original):
+        super().__init__()
+        self.original = original
+
     def write(self, text):
-        self.text_written.emit(str(text))
-    def flush(self):  # when called by sys.stdout.flush() or sys.stderr.flush()
-        pass
+        self.original.write(text)  # 写入原始的stdout或stderr
+        self.text_written.emit(str(text))  # 发送信号以更新UI
+
+    def flush(self):
+        self.original.flush()
+
 
 class FunctionExecutor(QMainWindow):
     finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
@@ -26,9 +33,9 @@ class FunctionExecutor(QMainWindow):
 
         self.setWindowTitle('Progress')
         # set the size of the window as 1/3 of the screen
-        screen = QApplication.primaryScreen()
-        size = screen.size()
-        self.resize(int(size.width() // 2), int(size.height() // 2))
+        size = QApplication.primaryScreen().size()
+        
+        self.resize(int(size.width() // 3), int(size.height() // 3.5))
 
         # set flag as the window size can be changed
         # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -44,8 +51,12 @@ class FunctionExecutor(QMainWindow):
         self.function = function
         self.args = args
         self.kwargs = kwargs
-        self.stream = EmittingStream()
-        self.stream.text_written.connect(self.update_progress)
+        
+        self.stream_out = EmittingStream(sys.stdout)
+        self.stream_err = EmittingStream(sys.stderr)
+        self.stream_out.text_written.connect(self.update_progress)
+        self.stream_err.text_written.connect(self.update_progress)
+        
         self.result = None # save the result of the function
         self.text_browser = QTextBrowser()
         layout = QVBoxLayout()
@@ -61,25 +72,21 @@ class FunctionExecutor(QMainWindow):
 
         self.thread.start()
 
+            
     def run_function(self):
-        sys.stdout = self.stream
-        sys.stderr = self.stream
-        success = True  # set flag is successful until an exception occurs
+        sys.stdout = self.stream_out
+        sys.stderr = self.stream_err
+        success = True
         try:
-            # 执行传入的函数，并捕获返回值
             self.result = self.function(*self.args, **self.kwargs)
         except Exception as e:
-            # 如果发生异常，设置标志为 False，并将异常保存为结果
             success = False
             self.result = e
         finally:
-            # 无论成功还是发生异常，都要确保恢复标准输出和错误流
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
-
-            self.finished.emit(self.result, success)  # 发出信号，包括结果和是否成功
-            self.thread.quit()  # 确保线程结束
-
+            self.finished.emit(self.result, success)
+            self.thread.quit()
 
     def update_progress(self, text):
         # if the text is a progress text, update the progress text
@@ -102,16 +109,17 @@ class FunctionExecutor(QMainWindow):
         self.function_running = False  # 更新标志，指示函数不再运行
 
     def on_finished(self, result, success):
-        if success:
-            # 函数执行成功
-            if result is not None:
-                # QMessageBox.information(self, 'Result', f'Task completed.\n\nResult type: { type(result)}')
-                QMessageBox.information(self, 'Result', 'Task completed.')
-            else:
-                QMessageBox.information(self, 'Done', 'Task completed.')
-        else:
-            # 函数执行失败，显示错误信息
-            QMessageBox.critical(self, 'Error', f'An error occurred: {result}')
+        # if success:
+        #     # 函数执行成功
+        #     if result is not None:
+        #         # QMessageBox.information(self, 'Result', f'Task completed.\n\nResult type: { type(result)}')
+        #         QMessageBox.information(self, 'Result', 'Task completed.')
+        #     else:
+        #         QMessageBox.information(self, 'Done', 'Task completed.')
+        # else:
+        #     # 函数执行失败，显示错误信息
+        #     QMessageBox.critical(self, 'Error', f'An error occurred: {result}')
+        self.finished.emit(result, success)
         self.close()
         
 

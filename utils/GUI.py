@@ -426,7 +426,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     ###############   init function End   ###############
     
     
-    ###############   basic function start   ###############
+    ###############   basic function start   ###############  
     def get_table_by_df_type(self, df_type:str= None, 
                              replace_if_two_index:bool = False):
         if df_type is None:
@@ -1236,24 +1236,154 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # self.open_output_window(DBBuilderMAG, save_path, db_type, meta_path, mgyg_dir)
             from MetaX.utils.DatabaseBuilderMAG import download_and_build_database
             parm_kwargs = {'save_path': save_path, 'db_type': db_type, 'meta_path': meta_path, 'mgyg_dir': mgyg_dir, 'db_name': db_name}
-            self.run_in_new_window(download_and_build_database, **parm_kwargs)
+            self.run_in_new_window(download_and_build_database, show_msg=True, **parm_kwargs)
 
         except Exception as e:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
-    def run_in_new_window(self, func, *args, **kwargs):
+
+    def run_in_new_window(self, func, *args, show_msg=False, **kwargs):
         from MetaX.utils.MetaX_GUI.GenericThread import FunctionExecutor
+
+        # 定义 handle_finished 方法来处理执行完成后的逻辑
         def handle_finished(result, success):
-            if success and result is not None:
-                self.Qthread_result = result
-            executor.on_finished(result, success)
-                
+            # # 存储执行结果到类的属性中
+            self.Qthread_result = result
+
+            # 根据执行结果显示相应的消息框
+            if success:
+                if result is not None and show_msg:
+                    QMessageBox.information(self.MainWindow, 'Result', 'Task completed')
+                elif show_msg:
+                    QMessageBox.information(self.MainWindow, 'Done', 'Task completed.')
+            else:
+                if show_msg:
+                    QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred: {result}')
+
+            # 如果有提供回调函数，执行它
+            if callback:
+                callback(result, success)
+            
+            # close thread
+            executor.close()
+
+        # 从 kwargs 中提取 callback，如果没有提供，则为 None
+        callback = kwargs.pop('callback', None)
+
+        # 创建 FunctionExecutor 实例，并连接完成信号到 handle_finished 方法
         executor = FunctionExecutor(func, *args, **kwargs)
-        # executor.finished.connect(lambda result, success: print(f"Function execution {'succeeded' if success else 'failed'}, Result: {result}"))
         executor.finished.connect(handle_finished)
-        
         executor.show()
+
+           
+            
+    def callback_after_set_multi_tables(self, result, success):
+            # save taxafunc obj as pickle file
+        if success:
+            self.save_taxafunc_obj(no_message=True)
+            self.run_after_set_multi_tables()
+        
+        
+    def run_after_set_multi_tables(self):
+        num_peptide = self.tfa.peptide_df.shape[0]
+        num_func = self.tfa.func_df.shape[0]
+        num_taxa = self.tfa.taxa_df.shape[0]
+        num_taxa_func = self.tfa.taxa_func_df.shape[0]
+        
+        num_protein = self.tfa.protein_df.shape[0] if self.tfa.protein_df is not None else 'NA'
+
+        # add "protein" to comboBoxs to plot
+        if self.tfa.protein_df is not None:
+            self.add_and_remove_protein_label(add=True)
+            # add protein to protein_list to self 
+            self.protein_list = self.tfa.protein_df.index.tolist()
+        else:
+            self.add_and_remove_protein_label(add=False)
+            self.protein_list = []
+        
+        
+        # add tables to table dict
+        self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
+        # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
+        self.update_table_dict('peptide', self.tfa.peptide_df)
+        self.update_table_dict('taxa', self.tfa.taxa_df)
+        self.update_table_dict('function', self.tfa.func_df)
+        self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
+        self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
+        self.update_table_dict('protein', self.tfa.protein_df)
+
+        # get taxa and function list
+        self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
+        self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
+        self.taxa_list = self.tfa.taxa_df.index.tolist()
+        self.func_list = self.tfa.func_df.index.tolist()
+        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tfa.taxa_func_df.index.to_list()]))
+        self.peptide_list = self.tfa.peptide_df.index.tolist()
+
+
+        # update taxa and function and group in comboBox
+        self.update_func_taxa_group_to_combobox()
+
+        # update comboBox_co_expr_select_list
+        self.update_co_expr_select_list()
+        # update comboBox_trends_selection_list
+        self.update_trends_select_list()
+
+        # clean basic heatmap selection list
+        self.clean_basic_heatmap_list()
+        self.comboBox_basic_heatmap_selection_list.clear()
+
+        # update comboBox of basic peptide query
+        self.comboBox_basic_peptide_query.clear()
+        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
+
+        # clean comboBox of deseq2
+        self.comboBox_deseq2_tables_list = []
+        self.comboBox_deseq2_tables.clear()
+        
+        # clear list of taxa-func link network
+        self.clear_tfnet_focus_list()
+        
+        # set initial value of basic heatmap selection list
+        self.set_basic_heatmap_selection_list()
+        # set initial value of taxa-func link network selection list
+        self.update_tfnet_select_list()
+        # Disable some buttons
+        self.disable_button_after_multiple()
+        # enable all buttons
+        self.enable_multi_button(True)
+        
+        
+        # show message
+        outlier_detect_method = self.comboBox_outlier_detection.currentText()
+        
+        if outlier_detect_method != 'None':
+            nan_stats_str = '\n\nLeft row after outlier handling:\n'
+            for i, j in self.tfa.outlier_status.items():
+                if j:
+                    nan_stats_str += f'{i}: [{j}]\n'
+            print(nan_stats_str)        
+        else:    
+            nan_stats_str = ''
+            
+        msg = f'TaxaFunc data is ready! \
+        \n{nan_stats_str}\
+        \n\nFunction: [{self.tfa.func_name}]\
+        \nNumber of peptide: [{num_peptide}]\
+        \nNumber of function: [{num_func}]\
+        \nNumber of taxa: [{num_taxa}]\
+        \nNumber of taxa-function: [{num_taxa_func}]\
+        \nNumber of protein: [{num_protein}]'
+        
+        self.logger.write_log(msg.replace('\n', ''))
+        QMessageBox.information(self.MainWindow, 'Information', msg )
+        
+        print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
+        # go to basic analysis tab and the first tab
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_4.setCurrentIndex(0)
+        self.pushButton_set_multi_table.setEnabled(True)
 
     
     
@@ -1288,7 +1418,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
                 from MetaX.utils.DatabaseBuilderOwn import build_db
                 parm_kwargs = {'anno_path': anno_path, 'taxa_path': taxa_path, 'db_path': save_path}
-                self.run_in_new_window(build_db, **parm_kwargs)
+                self.run_in_new_window(build_db, show_msg=True,**parm_kwargs)
                 
             except Exception as e:
                 error_message = traceback.format_exc()
@@ -1334,7 +1464,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 'built_in_db_name': built_in_db_name
                 }
             
-            self.run_in_new_window(run_db_update, **parm_kwargs)
+            self.run_in_new_window(run_db_update, show_msg=True,**parm_kwargs)
             
         except Exception as e:
             error_message = traceback.format_exc()
@@ -1364,7 +1494,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 from MetaX.utils.PeptableAnnotator import peptableAnnotate
                 parm_kwargs = {'final_peptides_path': final_peptide_path, 'output_path': peptide2taxafunc_outpath, 
                                'db_path': db_path, 'threshold': threshold}
-                self.run_in_new_window(peptableAnnotate, **parm_kwargs)
+                self.run_in_new_window(peptableAnnotate,show_msg=True, **parm_kwargs)
 
             except Exception as e:
                 self.logger.write_log(f'run_peptide2taxafunc error: {e}', 'e')
@@ -1590,9 +1720,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             self.show_message('taxaFuncAnalyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
-            self.tfa = TaxaFuncAnalyzer(taxafunc_path, meta_path)
-            self.update_after_tfobj()
-            self.show_taxaFuncAnalyzer_init()
+            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path}
+            self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
+            self.callback_after_set_taxafunc(self.tfa, True)
+            
+            
+            # self.run_in_new_window(TaxaFuncAnalyzer, show_msg=False, callback=self.callback_after_set_taxafunc, **taxafunc_params)
 
         except:
             error_message = traceback.format_exc()
@@ -1604,7 +1737,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
         finally:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
-    
+            
+            
+    def callback_after_set_taxafunc(self, result, success):
+        if success:
+            self.tfa = result
+            self.update_after_tfobj()
+            self.show_taxaFuncAnalyzer_init()
+            self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
+            
+            
     def change_event_comboBox_top_heatmap_table(self):
         # if comboBox_top_heatmap_table changed
         sender = self.MainWindow.sender()
@@ -1932,14 +2074,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                             'outlier_handle_by_group': outlier_handle_by_group,
                                             'processing_order': processing_order}
                 
-                self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold,
-                                        data_preprocess_params = data_preprocess_params,
-                                        processing_after_sum = processing_after_sum, 
-                                        peptide_num_threshold = peptide_num_threshold, 
-                                        sum_protein = sum_protein, sum_protein_params = sum_protein_params)
+                set_multi_table_params = {'level': taxa_level, f'func_threshold': func_threshold,
+                                        'data_preprocess_params': data_preprocess_params,
+                                        'processing_after_sum': processing_after_sum, 
+                                        'peptide_num_threshold': peptide_num_threshold, 
+                                        'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params}
+                self.run_in_new_window(self.tfa.set_multi_tables, show_msg=False, callback=self.callback_after_set_multi_tables, **set_multi_table_params)
+                # self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold,
+                #                         data_preprocess_params = data_preprocess_params,
+                #                         processing_after_sum = processing_after_sum, 
+                #                         peptide_num_threshold = peptide_num_threshold, 
+                #                         sum_protein = sum_protein, sum_protein_params = sum_protein_params)
                 
-                # save taxafunc obj as pickle file
-                self.save_taxafunc_obj(no_message=True)
+                # # save taxafunc obj as pickle file
+                # self.save_taxafunc_obj(no_message=True)
 
 
             except Exception as e:
@@ -1956,105 +2104,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             else:
                 self.update_after_tfobj()
                 self.restore_settings_after_load_taxafunc_obj()
-
-        num_peptide = self.tfa.peptide_df.shape[0]
-        num_func = self.tfa.func_df.shape[0]
-        num_taxa = self.tfa.taxa_df.shape[0]
-        num_taxa_func = self.tfa.taxa_func_df.shape[0]
-        
-        num_protein = self.tfa.protein_df.shape[0] if self.tfa.protein_df is not None else 'NA'
-
-        # add "protein" to comboBoxs to plot
-        if self.tfa.protein_df is not None:
-            self.add_and_remove_protein_label(add=True)
-            # add protein to protein_list to self 
-            self.protein_list = self.tfa.protein_df.index.tolist()
-        else:
-            self.add_and_remove_protein_label(add=False)
-            self.protein_list = []
-        
-        
-        # add tables to table dict
-        self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
-        # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
-        self.update_table_dict('peptide', self.tfa.peptide_df)
-        self.update_table_dict('taxa', self.tfa.taxa_df)
-        self.update_table_dict('function', self.tfa.func_df)
-        self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
-        self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
-        self.update_table_dict('protein', self.tfa.protein_df)
-
-        # get taxa and function list
-        self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
-        self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
-        self.taxa_list = self.tfa.taxa_df.index.tolist()
-        self.func_list = self.tfa.func_df.index.tolist()
-        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tfa.taxa_func_df.index.to_list()]))
-        self.peptide_list = self.tfa.peptide_df.index.tolist()
-
-
-        # update taxa and function and group in comboBox
-        self.update_func_taxa_group_to_combobox()
-
-        # update comboBox_co_expr_select_list
-        self.update_co_expr_select_list()
-        # update comboBox_trends_selection_list
-        self.update_trends_select_list()
-
-        # clean basic heatmap selection list
-        self.clean_basic_heatmap_list()
-        self.comboBox_basic_heatmap_selection_list.clear()
-
-        # update comboBox of basic peptide query
-        self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
-
-        # clean comboBox of deseq2
-        self.comboBox_deseq2_tables_list = []
-        self.comboBox_deseq2_tables.clear()
-        
-        # clear list of taxa-func link network
-        self.clear_tfnet_focus_list()
-        
-        # set initial value of basic heatmap selection list
-        self.set_basic_heatmap_selection_list()
-        # set initial value of taxa-func link network selection list
-        self.update_tfnet_select_list()
-        # Disable some buttons
-        self.disable_button_after_multiple()
-        # enable all buttons
-        self.enable_multi_button(True)
-        
-        
-        # show message
-        outlier_detect_method = self.comboBox_outlier_detection.currentText()
-        
-        if outlier_detect_method != 'None':
-            nan_stats_str = '\n\nLeft row after outlier handling:\n'
-            for i, j in self.tfa.outlier_status.items():
-                if j:
-                    nan_stats_str += f'{i}: [{j}]\n'
-            print(nan_stats_str)        
-        else:    
-            nan_stats_str = ''
             
-        msg = f'TaxaFunc data is ready! \
-        \n{nan_stats_str}\
-        \n\nFunction: [{self.tfa.func_name}]\
-        \nNumber of peptide: [{num_peptide}]\
-        \nNumber of function: [{num_func}]\
-        \nNumber of taxa: [{num_taxa}]\
-        \nNumber of taxa-function: [{num_taxa_func}]\
-        \nNumber of protein: [{num_protein}]'
-        
-        self.logger.write_log(msg.replace('\n', ''))
-        QMessageBox.information(self.MainWindow, 'Information', msg )
-        
-        print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
-        # go to basic analysis tab and the first tab
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
-        self.tabWidget_4.setCurrentIndex(0)
-        self.pushButton_set_multi_table.setEnabled(True)
+            self.run_after_set_multi_tables()
+
+
     
     def add_and_remove_protein_label(self, add=True):
         # add or remove protein label in comboBox
