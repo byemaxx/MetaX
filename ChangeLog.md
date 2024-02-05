@@ -279,3 +279,9 @@
 ## Date: 2024-02-03
 ### Changes:
 - New: Add a logWindow to show the process when run the long time function.
+
+
+# Version: 1.96.3
+## Date: 2024-02-05
+### Changes:
+- Fix: Fixed the bug of when create a new object, the plot of taxa number will show the old data in the widget.

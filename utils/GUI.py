@@ -3344,6 +3344,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
 
     def plot_taxa_number(self):
+        plt.close('all') # close all the figures to make sure the new figure is the first one
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:

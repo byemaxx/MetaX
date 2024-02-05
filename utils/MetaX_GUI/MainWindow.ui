@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>477</width>
-                 <height>373</height>
+                 <width>360</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3502,7 +3502,7 @@
                    <string>Col Cluster</string>
                   </property>
                   <property name="checked">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -3808,7 +3808,7 @@
                    <number>3</number>
                   </property>
                   <property name="value">
-                   <double>20.000000000000000</double>
+                   <double>30.000000000000000</double>
                   </property>
                  </widget>
                 </item>
