@@ -95,7 +95,7 @@ class PcaPlot_js:
         BLACK = (0, 0, 0)
 
         # generated colours will be as distinct as possible from these colours
-        input_colors = [ BLACK, WHITE]
+        input_colors = [WHITE]
         existing_colors = [(0, 0, 0), (1, 1, 1)]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
         converted_colors = []

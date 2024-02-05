@@ -98,7 +98,7 @@ class TrendsPlot_js:
         BLACK = (0, 0, 0)
 
         # generated colours will be as distinct as possible from these colours
-        input_colors = [WHITE, BLACK]
+        input_colors = [BLACK]
         existing_colors = [(0, 0, 0), (1, 1, 1)]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
         converted_colors = []

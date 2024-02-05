@@ -69,7 +69,7 @@ class DiversityPlot(object):
                     diversity = metric_dict[metric](row)
 
                     group_diversity[(group, sub_group)].append(diversity)
-
+            
             data = []
             for (group, sub_group), diversities in group_diversity.items():
                 for diversity in diversities:
@@ -81,8 +81,16 @@ class DiversityPlot(object):
             else:               
                 sns.set(style='whitegrid')
 
+            # create a color palette
+            group_num = len(df['SubGroup'].unique()) if sub_meta else len(df['Group'].unique())
+            if group_num > 10:
+                distinct_colors = self.get_distinct_colors(group_num)
+                color_palette = dict(zip(df['SubGroup'].unique() if sub_meta else df['Group'].unique(), distinct_colors))
+            else:
+                color_palette = None
+
             plt.figure(figsize=(width, height))
-            fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='SubGroup' if sub_meta else 'Group',
+            fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='SubGroup' if sub_meta else 'Group', palette=color_palette,
                               showfliers=show_fliers)
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
@@ -195,7 +203,7 @@ class DiversityPlot(object):
         BLACK = (0, 0, 0)
 
         # generated colours will be as distinct as possible from these colours
-        input_colors = [ BLACK, WHITE]
+        input_colors = [ WHITE]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
 
         return colors
