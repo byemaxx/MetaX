@@ -460,7 +460,7 @@ class HeatmapPlot:
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
                                        fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                                       show_all_labels:tuple = (False, False)
+                                       show_all_labels:tuple = (False, False),  show_col_colors:bool = False    
                                        ):
         #! 只画t-statistic的heatmap, 用p-value过滤
         import pandas as pd
@@ -507,14 +507,14 @@ class HeatmapPlot:
             if cmap is None:
                 cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30)
 
-            
+            col_colors = self.get_distinct_colors(len(dft.columns))
             # 标准化颜色映射以使 0 处为白色
             from matplotlib.colors import TwoSlopeNorm
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
             sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                        'cbar_kws': {"label":'t-statistic', "shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                        'cbar_kws': {"label":'t-statistic', "shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,"col_colors":col_colors if show_col_colors else None,
                         'xticklabels':True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
             fig = sns.clustermap(dft, **sns_params)
 

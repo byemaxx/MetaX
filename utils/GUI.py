@@ -113,6 +113,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.logger = LoggerManager()
 
         self.like_times = 0
+        self.restore_mode = False
         #check update
         self.update_required = False
         self.check_update()
@@ -570,7 +571,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             pass
 
     
-    
     ###############   basic function End   ###############
     
     
@@ -829,6 +829,39 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.settings.setValue("time", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.settings.setValue("version", __version__)
 
+
+    def save_tables_and_settings(self, path=None):
+        save_obj_dict = {}      
+        if path is None:
+            path = os.path.join(QDir.homePath(), "MetaX", "table_dict.pkl")
+        elif os.path.isdir(path):
+            path = os.path.join(path, "table_dict.pkl")
+        # if not os.path.exists(path): # if path does not exist, create it
+        elif not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        else:
+            raise ValueError(f"Invalid path: {path}")
+        
+        save_obj_dict['table_dict'] = self.table_dict
+        
+        with open(path, 'wb') as f:
+            pickle.dump(save_obj_dict, f)
+            print(f"Save table_dict to {path}.")
+        
+        combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
+        # save items for comboBox
+        for name in combox_list:
+            widget = getattr(self, name, None)
+            if widget and isinstance(widget, QtWidgets.QComboBox):
+                settings_key = f"res_table_combox/{name}"
+                items = [widget.itemText(i) for i in range(widget.count())]
+                self.settings.setValue(f"{settings_key}/items", items)
+                self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
+
+        
+
+    
+
     def save_taxafunc_obj(self, path=None, no_message = False):
         save_obj_dict = {}
         if self.tfa.taxa_df is None:
@@ -882,13 +915,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if not no_message:
             QMessageBox.information(self.MainWindow, "Save taxafunc object", f"Taxafunc object has been saved to {path}.")
             
-    def load_taxafunc_obj_from_file(self):
-        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
-        saved_date = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
+    def load_taxafunc_obj_from_file(self, type='tfa') -> dict:
+        if type == 'tfa':
+            path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        elif type == 'table_dict':
+            path = os.path.join(QDir.homePath(), "MetaX", "table_dict.pkl")
+            
         if os.path.exists(path):
+            saved_date = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
             with open(path, 'rb') as f:
                 obj = pickle.load(f)
-            print(f"Loaded taxafunc object saved at {saved_date}.")
+            name = os.path.basename(path)
+            print(f"Loaded [{name}] object saved at: [{saved_date}].")
             return obj
         else:
             QMessageBox.warning(self.MainWindow, "Warning", "No taxafunc object found. Please run TaxaFuncAnalyzer first.")
@@ -912,13 +950,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, "Warning", "TaxaFunc object already exists.")
             return
         # check if taxafunc object exists
-        path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
-        if not os.path.exists(path):
+        tfa_obj_path = os.path.join(QDir.homePath(), "MetaX", "taxafunc_obj.pkl")
+        if not os.path.exists(tfa_obj_path):
             QMessageBox.warning(self.MainWindow, "Warning", "No taxafunc object found. Please run TaxaFuncAnalyzer first.")
             return
+        
+        res_table_path = os.path.join(QDir.homePath(), "MetaX", "table_dict.pkl")
+        res_table = True if os.path.exists(res_table_path) else False            
+            
         self.show_message("Loading taxafunc object from last time...", "Loading...")
-        self.set_multi_table(restore_taxafunc = True)
-        self.restore_settings_after_load_taxafunc_obj()
+        self.set_multi_table(restore_taxafunc = True, restore_res_table = res_table)
+        
+        
 
         
         self.logger.write_log(f"Restore taxafunc object from last time.")
@@ -949,7 +992,39 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif isinstance(widget, QtWidgets.QSpinBox):
                 value = self.settings.value(f"{settings_key}/value", 0, type=int)
                 widget.setValue(value)
-                
+            
+        # update comboBox_top_heatmap_table
+            try:
+                combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
+                for name in combox_list:
+                    widget = getattr(self, name, None)
+                    settings_key = f"res_table_combox/{name}"
+                    
+                    items = self.settings.value(f"{settings_key}/items", [], type=list)
+                    print(f"Loading items for {name}: {items}")
+                    
+                    if len(items) > 0:
+                        if name == 'comboBox_top_heatmap_table':
+                            self.comboBox_top_heatmap_table_list = items
+                            self.pushButton_plot_top_heatmap.setEnabled(True)
+                            self.pushButton_get_top_cross_table.setEnabled(True)
+                        elif name == 'comboBox_deseq2_tables':
+                            self.comboBox_deseq2_tables_list = items
+                            self.pushButton_deseq2_plot_vocano.setEnabled(True)
+                            self.pushButton_deseq2_plot_sankey.setEnabled(True)
+                            
+                        widget.clear()
+                        widget.addItems(items)
+                        index = self.settings.value(f"{settings_key}/currentIndex", 0, type=int)
+                        widget.setCurrentIndex(index)
+                        
+                        if name == 'comboBox_top_heatmap_table':
+                            self.change_event_comboBox_top_heatmap_table()
+            except Exception as e:
+                print(e)
+                self.logger.write_log(f"Error when loading items for {name}: {e}")
+        
+        # enable button after multi table is set  
         self.pushButton_set_multi_table.setEnabled(True)      
 
     def closeEvent(self, event):
@@ -957,6 +1032,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if reply == QMessageBox.Yes:
             try:
                 self.save_basic_settings()
+                if self.table_dict != {}:
+                    self.show_message("Saving settings...", "Closing...")
+                    self.save_tables_and_settings()
+
 
                 # 关闭 self.web_list 中的所有窗口
                 for web_window in self.web_list:
@@ -1268,6 +1347,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     # callback(result, success)
                     callback(result)
             else:
+                self.temp_params_dict = {} # reset temp_params_dict to make sure the next run is clean
                 if show_msg:
                     QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred: {result}')
 
@@ -1305,14 +1385,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         
         # add tables to table dict
-        self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
-        # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
-        self.update_table_dict('peptide', self.tfa.peptide_df)
-        self.update_table_dict('taxa', self.tfa.taxa_df)
-        self.update_table_dict('function', self.tfa.func_df)
-        self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
-        self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
-        self.update_table_dict('protein', self.tfa.protein_df)
+        if self.table_dict == {}:
+            self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
+            # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
+            self.update_table_dict('peptide', self.tfa.peptide_df)
+            self.update_table_dict('taxa', self.tfa.taxa_df)
+            self.update_table_dict('function', self.tfa.func_df)
+            self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
+            self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
+            self.update_table_dict('protein', self.tfa.protein_df)
+        else:
+            self.listWidget_table_list.addItems( list(self.table_dict.keys()))
+            
 
         # get taxa and function list
         self.taxa_list_linked = self.tfa.taxa_func_df.index.get_level_values(0).unique().tolist()
@@ -1339,9 +1423,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_peptide_query.clear()
         self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
 
-        # clean comboBox of deseq2
-        self.comboBox_deseq2_tables_list = []
-        self.comboBox_deseq2_tables.clear()
+
         
         # clear list of taxa-func link network
         self.clear_tfnet_focus_list()
@@ -1747,8 +1829,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
     def change_event_comboBox_top_heatmap_table(self):
         # if comboBox_top_heatmap_table changed
-        sender = self.MainWindow.sender()
-        selected_table_name = sender.currentText()
+        # sender = self.MainWindow.sender()
+        # selected_table_name = sender.currentText()
+        selected_table_name = self.comboBox_top_heatmap_table.currentText()
         
         scale_method_list =  [self.comboBox_top_heatmap_scale.itemText(i) for i in range(self.comboBox_top_heatmap_scale.count())]
         
@@ -1775,9 +1858,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
                 
-                self.comboBox_top_heatmap_sort_type.setEnabled(True)
-                self.comboBox_top_heatmap_sort_type.clear()
-                self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
+                ### for keeping the order of comboBox_top_heatmap_sort_type when change table same type
+                sort_type_list =  []
+                for i in range(self.comboBox_top_heatmap_sort_type.count()):
+                    sort_type_list.append(self.comboBox_top_heatmap_sort_type.itemText(i))
+
+                if sorted(sort_type_list) != sorted(['padj', 'pvalue']):
+                    self.comboBox_top_heatmap_sort_type.setEnabled(True)
+                    self.comboBox_top_heatmap_sort_type.clear()
+                    self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
             if selected_table_name.startswith('dunnettAllCondtion'):
                 self.show_all_in_layout(self.gridLayout_38, if_except=False)
@@ -1789,16 +1878,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             self.hide_all_in_layout(self.gridLayout_38)
             self.label_57.setText('Sort By:')
-            sorted_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
+            sort_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
             if 't_test' in selected_table_name:
             # remove 'f-statistic (ANOVA)' from comboBox_top_heatmap_sort_type
-                sorted_type_list =  ["p-value", "t-statistic (T-Test)"]
+                sort_type_list =  ["p-value", "t-statistic (T-Test)"]
             
             if 'anova' in selected_table_name:
-                sorted_type_list =  ["p-value", "f-statistic (ANOVA)"]
+                sort_type_list =  ["p-value", "f-statistic (ANOVA)"]
             
             self.comboBox_top_heatmap_sort_type.clear()
-            self.comboBox_top_heatmap_sort_type.addItems(sorted_type_list)
+            self.comboBox_top_heatmap_sort_type.addItems(sort_type_list)
             
             
             self.pushButton_plot_top_heatmap.setText('Plot Top Heatmap')
@@ -1935,9 +2024,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_overview_peptide_plot_new_window.setEnabled(True)
 
         
-    def set_multi_table(self, restore_taxafunc=False):
+    def set_multi_table(self, restore_taxafunc=False, restore_res_table=False):
         # self.pushButton_set_multi_table.setEnabled(False)
-        if restore_taxafunc == False:
+        if restore_taxafunc is False:
+            self.restore_mode = False
 
             function = self.comboBox_function_to_stast.currentText()
             taxa_input = self.comboBox_taxa_level_to_stast.currentText()
@@ -2051,6 +2141,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_top_heatmap_table_list = []
             self.comboBox_top_heatmap_table.clear()
             self.comboBox_deseq2_tables_list = []
+            self.comboBox_deseq2_tables.clear()
 
             # self.show_message('Data is Preprocessing, please wait...')
 
@@ -2096,10 +2187,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         else: # restore_taxafunc is True
             print("\n---------------------------------- Restore Multi Table ----------------------------------\n")
-            self.tfa = self.load_taxafunc_obj_from_file()['taxa_func_obj']
-            if self.tfa == None:
+            self.tfa = self.load_taxafunc_obj_from_file('tfa')['taxa_func_obj']
+            self.table_dict = self.load_taxafunc_obj_from_file('table_dict')['table_dict'] if restore_res_table else {}
+            
+            if self.tfa is None:
+                print('Faild. Return None when load taxafunc obj.')
                 return None
+            
             else:
+                self.restore_mode = True
                 self.update_after_tfobj()
                 self.restore_settings_after_load_taxafunc_obj()
             
@@ -2333,11 +2429,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_tukey_taxa.setCurrentText(current_text)
 
     def disable_button_after_multiple(self):
-        self.pushButton_plot_top_heatmap.setEnabled(False)
-        self.pushButton_get_top_cross_table.setEnabled(False)
+        if self.restore_mode is False:
+            self.pushButton_plot_top_heatmap.setEnabled(False)
+            self.pushButton_get_top_cross_table.setEnabled(False)
+            self.pushButton_deseq2_plot_vocano.setEnabled(False)
+            self.pushButton_deseq2_plot_sankey.setEnabled(False)
+            
         self.pushButton_plot_tukey.setEnabled(False)
-        self.pushButton_deseq2_plot_vocano.setEnabled(False)
-        self.pushButton_deseq2_plot_sankey.setEnabled(False)
         self.pushButton_trends_get_trends_table.setEnabled(False)
         self.pushButton_trends_plot_interactive_line.setEnabled(False)
 

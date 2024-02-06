@@ -285,3 +285,9 @@
 ## Date: 2024-02-05
 ### Changes:
 - Fix: Fixed the bug of when create a new object, the plot of taxa number will show the old data in the widget.
+
+
+# Version: 1.96.4
+## Date: 2024-02-06
+### Changes:
+- Change: Add table restore function to restore the table when the object is restored.
