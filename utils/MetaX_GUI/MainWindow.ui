@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1728,6 +1728,11 @@
                       <item>
                        <property name="text">
                         <string>simpson</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>ace</string>
                        </property>
                       </item>
                       <item>

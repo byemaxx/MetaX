@@ -10,11 +10,16 @@ from skbio.stats.ordination import pcoa
 class DiversityPlot(object):
     def __init__(self, tfa):
         self.tfa = tfa
+        self.ace_threshold = None
         # reset style
         plt.style.use('default')
         sns.set()
         
-
+    def ace_with_threshold(self, row):
+        ace = alpha.ace(row, self.ace_threshold)
+        return ace
+    
+    
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
                              plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
@@ -44,6 +49,7 @@ class DiversityPlot(object):
             'menhinick': alpha.menhinick,
             'mcintosh_d': alpha.mcintosh_d,
             'mcintosh_e': alpha.mcintosh_e,
+            'ace': self.ace_with_threshold,
             
         }
         if metric not in metric_dict:
@@ -52,7 +58,24 @@ class DiversityPlot(object):
         try:
             df = self.tfa.taxa_df.copy()
             df = df[sample_list]
-            df_transposed = df.T                
+            
+            if metric == 'ace':
+                # log the df, if max value is mre than 10000, then log10
+                if df.max().max() > 100000:
+                    import numpy as np
+                    print('log10 transform for ACE to speed up the calculation')
+                    df = df.apply(lambda x: np.log10(x + 1))
+                # covert to int
+                df = df.astype(int)
+                
+                # get the threshold by 20% of the minimum value
+                df2 = df[df > 0]
+                threshold = int(df2.quantile(0.2).min())
+                
+                print(f'threshold: {threshold}')
+                self.ace_threshold = threshold
+            
+            df_transposed = df.T
             group_diversity = {}
             # 遍历每个样本，计算其alpha多样性，并根据所属组别进行分类
             for sample_id, row in df_transposed.iterrows():
@@ -66,6 +89,7 @@ class DiversityPlot(object):
                 if group:
                     if (group, sub_group) not in group_diversity:
                         group_diversity[(group, sub_group)] = []
+                        
                     diversity = metric_dict[metric](row)
 
                     group_diversity[(group, sub_group)].append(diversity)
@@ -95,7 +119,7 @@ class DiversityPlot(object):
             fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
             fig.set_xlabel('Group', fontsize=font_size)
-            fig.set_ylabel(f'{metric} Diversity', fontsize=font_size)
+            fig.set_ylabel(f'{metric} Index', fontsize=font_size)
             fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
             if sub_meta:
                 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)

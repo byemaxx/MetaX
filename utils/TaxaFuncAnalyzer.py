@@ -507,8 +507,8 @@ class TaxaFuncAnalyzer:
         
         # set the taxa_func_linked_dict and func_taxa_linked_dict
         self.set_taxa_func_linked_dict()
-        print("Multi-tables setting is done!\n Waiting for further analysis...")
-    
+        print("Multi-tables Created!\nWaiting for further analysis...")
+        
     # New function to check which attributes are set
     def check_attributes(self):
         status = {"Set": [], "Not set": []}
