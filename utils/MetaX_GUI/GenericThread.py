@@ -80,8 +80,10 @@ class FunctionExecutor(QMainWindow):
         try:
             self.result = self.function(*self.args, **self.kwargs)
         except Exception as e:
+            import traceback
+            error_message = traceback.format_exc()
             success = False
-            self.result = e
+            self.result = error_message
         finally:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
@@ -110,16 +112,11 @@ class FunctionExecutor(QMainWindow):
         
 
     def on_finished(self, result, success):
-        # if success:
-        #     # 函数执行成功
-        #     if result is not None:
-        #         # QMessageBox.information(self, 'Result', f'Task completed.\n\nResult type: { type(result)}')
-        #         QMessageBox.information(self, 'Result', 'Task completed.')
-        #     else:
-        #         QMessageBox.information(self, 'Done', 'Task completed.')
-        # else:
-        #     # 函数执行失败，显示错误信息
-        #     QMessageBox.critical(self, 'Error', f'An error occurred: {result}')
+        if success:
+            print('Function returned:', type(result))
+        else:
+            print('Function raised an exception:', result)
+        #  
         self.finished.emit(result, success)
         # self.close()
         

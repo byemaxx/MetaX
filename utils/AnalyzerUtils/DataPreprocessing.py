@@ -91,7 +91,7 @@ class DataPreprocessing:
 
             if normalize_method in normalize_operations:
                 df_mat = normalize_operations[normalize_method](df_mat)
-                print(f'Data normalized by {normalize_method}')
+                print(f'Data normalized by [{normalize_method}]')
             else:
                 raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore]')
 

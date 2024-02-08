@@ -1028,14 +1028,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_set_multi_table.setEnabled(True)      
 
     def closeEvent(self, event):
-        reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            try:
-                self.save_basic_settings()
-                if self.table_dict != {}:
-                    self.show_message("Saving settings...", "Closing...")
-                    self.save_tables_and_settings()
+        # reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
+        
+        msgBox = QMessageBox(self.MainWindow)
+        msgBox.setWindowTitle("Close MetaX")
+        msgBox.setText("Do you want to save the settings before closing?")
+        save_and_close_button = QPushButton('Save and close', msgBox)
+        direct_close_button = QPushButton('Close without saving', msgBox)
+        do_not_close_button = QPushButton('Cancel', msgBox)
+        msgBox.addButton(save_and_close_button, QMessageBox.YesRole)
+        msgBox.addButton(direct_close_button, QMessageBox.NoRole)
+        msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
+        reply = msgBox.exec()
+        
+        if reply == 0 or reply == 1:
+            try:
+                if reply == 0:
+                    self.save_basic_settings()
+                    if self.table_dict != {}:
+                        self.show_message("Saving settings...", "Closing...")
+                        self.save_tables_and_settings()
 
                 # 关闭 self.web_list 中的所有窗口
                 for web_window in self.web_list:
@@ -1342,15 +1355,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 elif show_msg:
                     QMessageBox.information(self.MainWindow, 'Done', 'Task completed.')
                 
-                # if callback exists, continue to run the callback function
-                if callback:
-                    # callback(result, success)
-                    callback(result)
             else:
-                self.temp_params_dict = {} # reset temp_params_dict to make sure the next run is clean
                 if show_msg:
                     QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred: {result}')
 
+            # if callback exists, continue to run the callback function
+            if callback:
+                print(f"Done! Running callback function: {callback.__name__}")
+                # callback(result, success)
+                callback(result, success)
+                
         callback = kwargs.pop('callback', None)
 
         executor = FunctionExecutor(func, *args, **kwargs)
@@ -1359,11 +1373,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         executor.show()
 
            
-            
-    def callback_after_set_multi_tables(self, result):
-            # save taxafunc obj as pickle file
-            self.save_taxafunc_obj(no_message=True)
-            self.run_after_set_multi_tables()
+
         
         
     def run_after_set_multi_tables(self):
@@ -1805,7 +1815,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
             taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
-            self.callback_after_set_taxafunc(self.tfa)
+            self.callback_after_set_taxafunc(self.tfa, True)
             
             
         except:
@@ -1820,12 +1830,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
             
             
-    def callback_after_set_taxafunc(self, result):
-        self.tfa = result
-        self.update_after_tfobj()
-        self.show_taxaFuncAnalyzer_init()
-        self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
-            
+    def callback_after_set_taxafunc(self, result, success):
+        if success:
+            self.tfa = result
+            self.update_after_tfobj()
+            self.show_taxaFuncAnalyzer_init()
+            self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
+
+        else:
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
+                        
             
     def change_event_comboBox_top_heatmap_table(self):
         # if comboBox_top_heatmap_table changed
@@ -2168,15 +2182,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                         'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params}
-                self.run_in_new_window(self.tfa.set_multi_tables, callback=self.callback_after_set_multi_tables, show_msg=False, **set_multi_table_params)
-                # self.tfa.set_multi_tables(level = taxa_level, func_threshold=func_threshold,
-                #                         data_preprocess_params = data_preprocess_params,
-                #                         processing_after_sum = processing_after_sum, 
-                #                         peptide_num_threshold = peptide_num_threshold, 
-                #                         sum_protein = sum_protein, sum_protein_params = sum_protein_params)
+                            
+                def callback_after_set_multi_tables(result, success):
+                    if success:
+                        # save taxafunc obj as pickle file
+                        self.save_taxafunc_obj(no_message=True)
+                        self.run_after_set_multi_tables()
+                    else:
+                        QMessageBox.warning(self.MainWindow, 'Error', str(result))
+                        
+                        
+                self.run_in_new_window(self.tfa.set_multi_tables, callback=callback_after_set_multi_tables, show_msg=False, **set_multi_table_params)
                 
-                # # save taxafunc obj as pickle file
-                # self.save_taxafunc_obj(no_message=True)
+                # self.tfa.set_multi_tables(**set_multi_table_params)
+                # callback_after_set_multi_tables()
 
 
             except Exception as e:
@@ -3836,46 +3855,51 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             
             
-    def callback_after_anova_test(self, result):
-        df_type = self.temp_params_dict['df_type']
-        self.temp_params_dict = {}
+    def callback_after_anova_test(self, result, success):
+        if success:
+            
+            df_type = self.temp_params_dict['df_type']
+            self.temp_params_dict = {}
+            
+            if type(result) == pd.DataFrame:
+                df_anova = result
+                
+                self.show_table(df_anova, title=f'anova_test({df_type})')
+                table_name = f'anova_test({df_type})'
+                table_names = [table_name]
+                self.update_table_dict(table_name, df_anova)
+                
+            elif type(result) == tuple:
+                df_tuple = result
+                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                self.show_table(df_tuple[0], title=table_name_1)
+                self.update_table_dict(table_name_1, df_tuple[0])
+                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                self.show_table(df_tuple[1], title=table_name_2)
+                self.update_table_dict(table_name_2, df_tuple[1])
+                self.pushButton_plot_top_heatmap.setEnabled(True)
+                self.pushButton_get_top_cross_table.setEnabled(True)
+                table_names = [table_name_1, table_name_2]
+                
+                
+            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+            for table_name in table_names:
+                if table_name not in self.comboBox_top_heatmap_table_list:
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+                else:
+                    self.comboBox_top_heatmap_table_list.remove(table_name)
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+            
+            self.comboBox_top_heatmap_table.clear()
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
         
-        if type(result) == pd.DataFrame:
-            df_anova = result
-            
-            self.show_table(df_anova, title=f'anova_test({df_type})')
-            table_name = f'anova_test({df_type})'
-            table_names = [table_name]
-            self.update_table_dict(table_name, df_anova)
-            
-        elif type(result) == tuple:
-            df_tuple = result
-            table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-            self.show_table(df_tuple[0], title=table_name_1)
-            self.update_table_dict(table_name_1, df_tuple[0])
-            table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-            self.show_table(df_tuple[1], title=table_name_2)
-            self.update_table_dict(table_name_2, df_tuple[1])
             self.pushButton_plot_top_heatmap.setEnabled(True)
             self.pushButton_get_top_cross_table.setEnabled(True)
-            table_names = [table_name_1, table_name_2]
-            
-            
-        # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-        for table_name in table_names:
-            if table_name not in self.comboBox_top_heatmap_table_list:
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-            else:
-                self.comboBox_top_heatmap_table_list.remove(table_name)
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-        
-        self.comboBox_top_heatmap_table.clear()
-        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
-    
-        self.pushButton_plot_top_heatmap.setEnabled(True)
-        self.pushButton_get_top_cross_table.setEnabled(True)
+
+        else:
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
     
     def check_if_last_test_not_finish(self):
         if self.temp_params_dict != {}:
@@ -3953,29 +3977,37 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
         
-    def callback_after_group_control_test(self, result):
-        table_name = self.temp_params_dict['table_name']
-        self.temp_params_dict = {}
-        res_df = result        
+    def callback_after_group_control_test(self, result, success):
+        if success:
 
-        self.update_table_dict(table_name, res_df)
-        self.show_table(res_df, title=table_name)
-        
-        self.pushButton_plot_top_heatmap.setEnabled(True)
-        self.pushButton_get_top_cross_table.setEnabled(True)
-        
-        # update comboBox_top_heatmap_table_list
-        if table_name not in self.comboBox_top_heatmap_table_list:
-            self.comboBox_top_heatmap_table_list.append(table_name)
-            self.comboBox_top_heatmap_table_list.reverse()
+            table_name = self.temp_params_dict['table_name']
+            self.temp_params_dict = {}
+            res_df = result        
+
+            self.update_table_dict(table_name, res_df)
+            self.show_table(res_df, title=table_name)
+            
+            self.pushButton_plot_top_heatmap.setEnabled(True)
+            self.pushButton_get_top_cross_table.setEnabled(True)
+            
+            # update comboBox_top_heatmap_table_list
+            if table_name not in self.comboBox_top_heatmap_table_list:
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+            else:
+                self.comboBox_top_heatmap_table_list.remove(table_name)
+                self.comboBox_top_heatmap_table_list.append(table_name)
+                self.comboBox_top_heatmap_table_list.reverse()
+
+
+            self.comboBox_top_heatmap_table.clear()
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+
         else:
-            self.comboBox_top_heatmap_table_list.remove(table_name)
-            self.comboBox_top_heatmap_table_list.append(table_name)
-            self.comboBox_top_heatmap_table_list.reverse()
-
-
-        self.comboBox_top_heatmap_table.clear()
-        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
+            
+            
+            
     #TUKEY
     def tukey_test(self):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_tukey_taxa.currentText())
@@ -4007,11 +4039,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         finally:
             self.pushButton_tukey_test.setEnabled(True)
             
-    def callback_after_tukey_test(self, result):
-        tukey_test = result
-        self.show_table(tukey_test, title='tukey_test')
-        self.update_table_dict('tukey_test', tukey_test)
-        self.pushButton_plot_tukey.setEnabled(True)
+    def callback_after_tukey_test(self, result, success):
+        if success:
+            tukey_test = result
+            self.show_table(tukey_test, title='tukey_test')
+            self.update_table_dict('tukey_test', tukey_test)
+            self.pushButton_plot_tukey.setEnabled(True)
+
+        else:
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
 
     def plot_tukey(self):
         df = self.table_dict['tukey_test']
@@ -4066,44 +4102,48 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             finally:
                self.pushButton_ttest.setEnabled(True) 
                
-    def callback_after_ttest(self, result):
-        df_type = self.temp_params_dict['df_type']
-        self.temp_params_dict = {}
-        
-        if type(result) == pd.DataFrame:
-            df = result
-            table_name = f't_test({df_type})'
-            self.show_table(df, title=table_name)
-            self.update_table_dict(table_name, df)
-            self.pushButton_plot_top_heatmap.setEnabled(True)
-            self.pushButton_get_top_cross_table.setEnabled(True)
-            table_names = [table_name]
-        elif type(result) == tuple:
-            df_tuple = result
-            table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
-            self.show_table(df_tuple[0], title=table_name_1)
-            self.update_table_dict(table_name_1, df_tuple[0])
-            table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
-            self.show_table(df_tuple[1], title=table_name_2)
-            self.update_table_dict(table_name_2, df_tuple[1])
-            self.pushButton_plot_top_heatmap.setEnabled(True)
-            self.pushButton_get_top_cross_table.setEnabled(True)
-            table_names = [table_name_1, table_name_2]
-            
-            
-        # add table name to the comboBox_top_heatmap_table_list and make it at the first place
-        for table_name in table_names:
-            if table_name not in self.comboBox_top_heatmap_table_list:
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
-            else:
-                self.comboBox_top_heatmap_table_list.remove(table_name)
-                self.comboBox_top_heatmap_table_list.append(table_name)
-                self.comboBox_top_heatmap_table_list.reverse()
+    def callback_after_ttest(self, result, success):
+        if success:
 
-        self.comboBox_top_heatmap_table.clear()
-        self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
-        
+            df_type = self.temp_params_dict['df_type']
+            self.temp_params_dict = {}
+            
+            if type(result) == pd.DataFrame:
+                df = result
+                table_name = f't_test({df_type})'
+                self.show_table(df, title=table_name)
+                self.update_table_dict(table_name, df)
+                self.pushButton_plot_top_heatmap.setEnabled(True)
+                self.pushButton_get_top_cross_table.setEnabled(True)
+                table_names = [table_name]
+            elif type(result) == tuple:
+                df_tuple = result
+                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                self.show_table(df_tuple[0], title=table_name_1)
+                self.update_table_dict(table_name_1, df_tuple[0])
+                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                self.show_table(df_tuple[1], title=table_name_2)
+                self.update_table_dict(table_name_2, df_tuple[1])
+                self.pushButton_plot_top_heatmap.setEnabled(True)
+                self.pushButton_get_top_cross_table.setEnabled(True)
+                table_names = [table_name_1, table_name_2]
+                
+                
+            # add table name to the comboBox_top_heatmap_table_list and make it at the first place
+            for table_name in table_names:
+                if table_name not in self.comboBox_top_heatmap_table_list:
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+                else:
+                    self.comboBox_top_heatmap_table_list.remove(table_name)
+                    self.comboBox_top_heatmap_table_list.append(table_name)
+                    self.comboBox_top_heatmap_table_list.reverse()
+
+            self.comboBox_top_heatmap_table.clear()
+            self.comboBox_top_heatmap_table.addItems(self.comboBox_top_heatmap_table_list)
+
+        else:
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
     
         
         
@@ -4154,27 +4194,31 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
                 return None
                 
-    def callback_after_deseq2(self, result):
-        self.temp_params_dict = {}
-        df_deseq2 = result
-        self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
-        res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
-        self.update_table_dict(res_table_name, df_deseq2)
-        if res_table_name not in self.comboBox_deseq2_tables_list:
-            self.comboBox_deseq2_tables_list.append(res_table_name)
-            self.comboBox_deseq2_tables_list.reverse()
-        else:
-            self.comboBox_deseq2_tables_list.remove(res_table_name)
-            self.comboBox_deseq2_tables_list.append(res_table_name)
-            self.comboBox_deseq2_tables_list.reverse()
+    def callback_after_deseq2(self, result, success):
+        if success:
+            
+            self.temp_params_dict = {}
+            df_deseq2 = result
+            self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
+            res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
+            self.update_table_dict(res_table_name, df_deseq2)
+            if res_table_name not in self.comboBox_deseq2_tables_list:
+                self.comboBox_deseq2_tables_list.append(res_table_name)
+                self.comboBox_deseq2_tables_list.reverse()
+            else:
+                self.comboBox_deseq2_tables_list.remove(res_table_name)
+                self.comboBox_deseq2_tables_list.append(res_table_name)
+                self.comboBox_deseq2_tables_list.reverse()
 
-        # update comboBox_deseq2_tables
-        self.comboBox_deseq2_tables.clear()
-        self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
-        
-        self.pushButton_deseq2_plot_vocano.setEnabled(True)
-        self.pushButton_deseq2_plot_sankey.setEnabled(True)
-        
+            # update comboBox_deseq2_tables
+            self.comboBox_deseq2_tables.clear()
+            self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
+            
+            self.pushButton_deseq2_plot_vocano.setEnabled(True)
+            self.pushButton_deseq2_plot_sankey.setEnabled(True)
+
+        else:
+            QMessageBox.warning(self.MainWindow, 'Error', str(result))
 
 
 

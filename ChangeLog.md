@@ -296,3 +296,9 @@
 ## Date: 2024-02-07
 ### Changes:
 - Change: Add "ACE" to alpha diversity plot.
+
+# Version: 1.96.6
+## Date: 2024-02-07
+### Changes:
+- Fix: Resolved an issue where error messages were not displayed when an error occurred in the background thread.
+- New: Add a function to detect duplicate row in the meta table.

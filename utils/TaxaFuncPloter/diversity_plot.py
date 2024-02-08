@@ -89,7 +89,9 @@ class DiversityPlot(object):
                 if group:
                     if (group, sub_group) not in group_diversity:
                         group_diversity[(group, sub_group)] = []
-                        
+                    
+                    # only keep rows with non-zero values
+                    row = row[row > 0]
                     diversity = metric_dict[metric](row)
 
                     group_diversity[(group, sub_group)].append(diversity)

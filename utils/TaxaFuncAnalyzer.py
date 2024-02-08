@@ -105,6 +105,13 @@ class TaxaFuncAnalyzer:
             meta['Sample'] = meta.iloc[:, 0].str.replace(
                 ' ', '_').str.replace('Intensity_', '')
             meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            # remove duplicate rows if exists
+            if meta.duplicated().any():
+                # print the duplicated rows
+                dup_row = (meta[meta.duplicated()])
+                print(f"[{dup_row.shape[0]}] duplicated rows are found in the meta data!\n{dup_row}\n")
+                meta = meta.drop_duplicates()
+                print(f"Duplicated rows are removed! Samples left: {meta.shape[0]}")
 
             self.sample_list = meta['Sample'].tolist()
             self.meta_df = meta
