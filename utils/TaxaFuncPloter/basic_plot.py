@@ -14,16 +14,20 @@ class BasicPlot:
         
         
     # input: self.get_stats_peptide_num_in_taxa()
-    def plot_taxa_stats(self):
+    def plot_taxa_stats(self, theme:str = 'Auto', res_type = 'pic'):
         df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
         # if 'not_found' is 0, then remove it
         if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
             df = df[df['LCA_level'] != 'notFound']
-        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+            
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme)
+        else:
+            custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 
-        # plt.figure(figsize=(8, 6))
-        sns.set_theme(style="ticks", rc=custom_params)
-
+            # plt.figure(figsize=(8, 6))
+            sns.set_theme(style="ticks", rc=custom_params)
+        plt.subplots()
         ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
         for i in ax.containers:
             ax.bar_label(i,)
@@ -31,34 +35,48 @@ class BasicPlot:
         ax.set_xlabel('Taxa level')
         ax.set_ylabel('Number of peptides')
         ax.legend(title='Taxa level (frequency)',  ncol=2)
-        # plt.show()
-        plt.close()
+        if res_type == 'show':
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.close()
         return ax
 
     # input: self.get_stats_taxa_level()
-    def plot_taxa_number(self, peptide_num = 1):
+    def plot_taxa_number(self, peptide_num = 1, theme:str = 'Auto', res_type = 'pic'):
         df = self.tfa.BasicStats.get_stats_taxa_level(peptide_num)
-        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-        # plt.figure(figsize=(8, 6))
-        sns.set_theme(style="ticks", rc=custom_params)
 
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme)
+        else:
+            custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+            sns.set_theme(style="ticks", rc=custom_params)
+        plt.subplots()
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             ax.bar_label(i,)
         ax.set_title(f'Number of taxa in different taxa level. (Peptide number >= {peptide_num})')
         ax.set_xlabel('Taxa level')
         ax.set_ylabel('Number of taxa')
-        # plt.show()
-        plt.close()
+        if res_type == 'show':
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.close()
+            
         return ax
 
     # input: self.get_stats_func_prop()
-    def plot_prop_stats(self, func_name = 'eggNOG_OGs'):
+    def plot_prop_stats(self, func_name = 'eggNOG_OGs', theme:str = 'Auto', res_type = 'pic'):
         df = self.tfa.BasicStats.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
-        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-        sns.set_theme(style="ticks", rc=custom_params)
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme)
+        else:
+            custom_params = {"axes.spines.right": False, "axes.spines.top": False} 
+            sns.set_theme(style="ticks", rc=custom_params)
+        plt.subplots()
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
             ax.bar_label(i,)
@@ -68,8 +86,12 @@ class BasicPlot:
         ax.legend(title='Proportion of function (frequency)',  ncol=2, loc = 'upper left')
         plt.xticks(rotation=45)
         plt.subplots_adjust(bottom=0.25)
-        # plt.show()
-        plt.close()
+        if res_type == 'show':
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.close()
+
         return ax
         
     # input: df_mat

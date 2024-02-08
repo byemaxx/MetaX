@@ -139,7 +139,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         self.tfa = None
         self.Qthread_result = None
-        self.temp_params_dict = {}
+        self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
         self.executors = []  # save all FunctionExecutor object
         self.add_theme_to_combobox()
 
@@ -1207,6 +1207,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         mat_style_list = ['Auto'] + plt.style.available
         
         self.comboBox_basic_theme.addItems(mat_style_list)
+        self.comboBox_data_overiew_theme.addItems(mat_style_list)
         
             
     def check_update(self, show_message=False):
@@ -1463,7 +1464,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         msg = f'TaxaFunc data is ready! \
         \n{nan_stats_str}\
         \n\nFunction: [{self.tfa.func_name}]\
-        \nNumber of peptide: [{num_peptide}]\
+        \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
         \nNumber of function: [{num_func}]\
         \nNumber of taxa: [{num_taxa}]\
         \nNumber of taxa-function: [{num_taxa_func}]\
@@ -3455,8 +3456,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
-        pic = BasicPlot(self.tfa).plot_taxa_stats()
-        pic.figure.show()
+        theme = self.comboBox_data_overiew_theme.currentText()
+
+        BasicPlot(self.tfa).plot_taxa_stats(theme=theme, res_type='show')
+
         
     
 
@@ -3471,9 +3474,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
+        theme = self.comboBox_data_overiew_theme.currentText()
         peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
-        pic = BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num)
-        pic.figure.show()
+        BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num, theme=theme, res_type='show')
+
 
         
 
@@ -3487,11 +3491,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         func_name = self.comboBox_overview_func_list.currentText()
         new_window = self.checkBox_overview_func_plot_new_window.isChecked()
-        pic = BasicPlot(self.tfa).plot_prop_stats(func_name)
+        theme = self.comboBox_data_overiew_theme.currentText()
+
         if new_window:
-            pic.figure.show()
-        self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
-        self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
+            # tight_layout() is used to adjust the layout of the plot
+            BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show')
+        else:
+            pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme)
+            
+            self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
+            self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
 
    
 

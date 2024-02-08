@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,23 +239,23 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>360</width>
-                 <height>80</height>
+                 <width>477</width>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
                 <string>● Taxa statistics</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_27">
-                <item row="3" column="0" colspan="2">
+                <item row="5" column="0" colspan="2">
                  <layout class="QVBoxLayout" name="verticalLayout_overview_plot"/>
                 </item>
-                <item row="0" column="0" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_6">
-                  <item>
+                <item row="1" column="0" colspan="2">
+                 <layout class="QGridLayout" name="gridLayout_36">
+                  <item row="0" column="0">
                    <widget class="QLabel" name="label_133">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -265,10 +265,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item>
+                  <item row="0" column="1">
                    <widget class="QSpinBox" name="spinBox_overview_tax_plot_new_window_peptide_num">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -281,7 +281,14 @@
                     </property>
                    </widget>
                   </item>
-                  <item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_154">
+                    <property name="text">
+                     <string>Theme</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
                    <widget class="QPushButton" name="pushButton_overview_tax_plot_new_window">
                     <property name="enabled">
                      <bool>false</bool>
@@ -297,23 +304,26 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="comboBox_data_overiew_theme"/>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QPushButton" name="pushButton_overview_peptide_plot_new_window">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot peptide stats in new window</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
-                </item>
-                <item row="1" column="0" colspan="2">
-                 <widget class="QPushButton" name="pushButton_overview_peptide_plot_new_window">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Plot peptide stats in new window</string>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </widget>

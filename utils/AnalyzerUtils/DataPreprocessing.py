@@ -427,7 +427,8 @@ class DataPreprocessing:
 
         if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein'}:
             left_row_num = len(df)
-            self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
+            # self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
+            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}%)'
 
         return df
     

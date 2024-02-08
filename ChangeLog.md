@@ -302,3 +302,8 @@
 ### Changes:
 - Fix: Resolved an issue where error messages were not displayed when an error occurred in the background thread.
 - New: Add a function to detect duplicate row in the meta table.
+
+# Version: 1.96.8
+## Date: 2024-02-08
+### Changes:
+- New: Add an option to plot the data overview with theme.
