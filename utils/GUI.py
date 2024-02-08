@@ -3457,7 +3457,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def plot_taxa_stats_new_window(self):
         theme = self.comboBox_data_overiew_theme.currentText()
-
+        self.show_message('Plotting taxa stats...')
         BasicPlot(self.tfa).plot_taxa_stats(theme=theme, res_type='show')
 
         
@@ -3476,6 +3476,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def plot_taxa_number_new_window(self):
         theme = self.comboBox_data_overiew_theme.currentText()
         peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
+        self.show_message('Plotting taxa number...')
         BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num, theme=theme, res_type='show')
 
 
@@ -3494,7 +3495,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         theme = self.comboBox_data_overiew_theme.currentText()
 
         if new_window:
-            # tight_layout() is used to adjust the layout of the plot
+            self.show_message('Plotting peptide number in function...')
             BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show')
         else:
             pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme)
