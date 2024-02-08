@@ -1361,7 +1361,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             # if callback exists, continue to run the callback function
             if callback:
-                print(f"Done! Running callback function: {callback.__name__}")
+                print(f"Thread finished. Running callback function: {callback.__name__}")
                 # callback(result, success)
                 callback(result, success)
                 
@@ -3856,10 +3856,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             
     def callback_after_anova_test(self, result, success):
-        if success:
-            
-            df_type = self.temp_params_dict['df_type']
-            self.temp_params_dict = {}
+        df_type = self.temp_params_dict['df_type']
+        self.temp_params_dict = {}
+        
+        if success:    
             
             if type(result) == pd.DataFrame:
                 df_anova = result
@@ -3978,10 +3978,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         
     def callback_after_group_control_test(self, result, success):
+        table_name = self.temp_params_dict['table_name']
+        self.temp_params_dict = {}
+        
         if success:
 
-            table_name = self.temp_params_dict['table_name']
-            self.temp_params_dict = {}
             res_df = result        
 
             self.update_table_dict(table_name, res_df)
@@ -4101,12 +4102,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
             finally:
                self.pushButton_ttest.setEnabled(True) 
+
                
     def callback_after_ttest(self, result, success):
-        if success:
+        df_type = self.temp_params_dict['df_type']
+        self.temp_params_dict = {}
 
-            df_type = self.temp_params_dict['df_type']
-            self.temp_params_dict = {}
+        if success:
             
             if type(result) == pd.DataFrame:
                 df = result
@@ -4145,10 +4147,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             QMessageBox.warning(self.MainWindow, 'Error', str(result))
     
-        
-        
-        
-        
+
         
 
     #DESeq2 
@@ -4195,9 +4194,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
                 
     def callback_after_deseq2(self, result, success):
-        if success:
+        self.temp_params_dict = {}
             
-            self.temp_params_dict = {}
+        if success:
             df_deseq2 = result
             self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
             res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
