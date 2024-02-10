@@ -27,7 +27,9 @@ class BasicPlot:
 
             # plt.figure(figsize=(8, 6))
             sns.set_theme(style="ticks", rc=custom_params)
-        plt.subplots()
+            
+        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        
         ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
         for i in ax.containers:
             ax.bar_label(i,)
@@ -51,7 +53,7 @@ class BasicPlot:
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
-        plt.subplots()
+        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             ax.bar_label(i,)
@@ -76,7 +78,9 @@ class BasicPlot:
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False} 
             sns.set_theme(style="ticks", rc=custom_params)
-        plt.subplots()
+            
+        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
             ax.bar_label(i,)
