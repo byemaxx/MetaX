@@ -324,6 +324,11 @@ class BasicPlot:
             # sort by group
             df = df.sort_values(by='Group')
             
+        # print the min and max value and its row to string
+        min_df = df[df["Number"] == df["Number"].min()].to_string(index=False)
+        max_df = df[df["Number"] == df["Number"].max()].to_string(index=False)
+        print(f'The min number of {table_name}:\n{min_df}')
+        print(f'The max number of {table_name}:\n{max_df}')
         
         unique_groups = df['Group'].unique()
         # Determine if distinct colors are needed
