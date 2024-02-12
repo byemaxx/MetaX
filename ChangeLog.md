@@ -307,3 +307,9 @@
 ## Date: 2024-02-08
 ### Changes:
 - New: Add an option to plot the data overview with theme.
+
+
+# Version: 1.97.0
+## Date: 2024-02-12
+### Changes:
+New: Add a new function to plot the number of taxa and functions for each sample or each group.

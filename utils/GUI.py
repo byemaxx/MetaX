@@ -270,6 +270,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_alpha_div.clicked.connect(lambda: self.plot_basic_info_sns('alpha_div'))
         self.pushButton_plot_sunburst.clicked.connect(lambda: self.plot_basic_info_sns('sunburst'))
         self.pushButton_plot_basic_sankey.clicked.connect(lambda: self.plot_basic_info_sns('sankey'))
+        self.pushButton_basic_plot_number_bar.clicked.connect(lambda: self.plot_basic_info_sns('num_bar'))
         
         # change event for checkBox_pca_if_show_lable
         self.comboBox_table4pca.currentIndexChanged.connect(self.change_event_checkBox_basic_plot_table)
@@ -451,6 +452,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             dft =   self.tfa.protein_df.copy()
         else:
             raise ValueError(f"Invalid df_type: {df_type}")
+        
+        # remove peptided-num column
+        if "peptide_num" in dft.columns:
+            dft = dft.drop(columns=["peptide_num"])
         
         if replace_if_two_index:
             dft = self.tfa.replace_if_two_index(dft)
@@ -2462,6 +2467,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def enable_multi_button(self, state=True):
         list_button = [
         self.pushButton_plot_pca_sns,
+        self.pushButton_basic_plot_number_bar,
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
@@ -3620,7 +3626,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, font_size = font_size, title='', subtitle='')
                 self.save_and_show_js_plot(pic, title)
-                
+            
+            elif method == 'num_bar':
+                plot_sample =self.checkBox_basic_plot_number_plot_sample.isChecked()
+                BasicPlot(self.tfa).plot_number_bar(df = df, table_name = table_name, font_size=font_size,
+                                                    width=width, height=height, theme=theme, plot_sample = plot_sample)
             
         except Exception as e:
             error_message = traceback.format_exc()

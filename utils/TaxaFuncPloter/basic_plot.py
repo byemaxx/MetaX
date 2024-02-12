@@ -4,13 +4,15 @@ from sklearn.decomposition import PCA
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
 
 class BasicPlot:
     def __init__(self, tfobj):
         self.tfa =  tfobj
         # reset the style
         plt.style.use('default')
-        sns.set()
+        sns.set_theme()
         
         
     # input: self.get_stats_peptide_num_in_taxa()
@@ -283,7 +285,96 @@ class BasicPlot:
             raise e
         
         
+    def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,  theme:str = 'Auto', plot_sample = False):
+        df = df.copy()
         
+        #stats number of taxa for each group
+        # get subtable for each group
+        samlpe_list = df.columns.tolist()
+        res_dict = {}
+
+        group_dict = {}
+        for sample in samlpe_list:
+            group = self.tfa.get_group_of_a_sample(sample)
+            if group not in group_dict:
+                group_dict[group] = []
+            group_dict[group].append(sample)
+            
+        if plot_sample is not True:
+            # get subtable for each group    
+            for group, samples in group_dict.items():
+                sub_df = df[samples]
+                sub_df = sub_df[sub_df.sum(axis=1) > 0]
+                res_dict[group] = sub_df.shape[0]
+            # create a long format table
+            df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
+            df.rename(columns={'index': 'Group'}, inplace=True)
+            
+                
+                
+        else:
+            for sample in samlpe_list:
+                group = self.tfa.get_group_of_a_sample(sample)
+                # num = the row num df[sample] > 0
+                num = df[sample].astype(bool).sum(axis=0)
+                res_dict[sample] = [group, num]
+                # create a long format table, sample as index, group and number as columns
+            df = pd.DataFrame(res_dict).T.reset_index()
+            df.rename(columns={'index': 'Sample', 0: 'Group', 1: 'Number'}, inplace=True)
+            # sort by group
+            df = df.sort_values(by='Group')
+            
+        
+        unique_groups = df['Group'].unique()
+        # Determine if distinct colors are needed
+        if len(unique_groups) > 10:
+            distinct_colors = self.get_distinct_colors(len(unique_groups))
+            color_palette = dict(zip(unique_groups, distinct_colors))
+        else:
+            color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
+            
+
+        
+        # set style
+        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme) 
+        else:               
+            sns.set_theme(style="ticks", rc=custom_params)
+            
+        # set size
+        plt.figure(figsize=(width, height))
+        bar_params = {'data': df, 'x': 'Sample' if plot_sample else 'Group', 'y': 'Number', 'hue': 'Group', 'palette': color_palette}
+        
+        ax = sns.barplot(**bar_params)
+        for i in ax.containers:
+            ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
+        # set x label
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, horizontalalignment='right')
+        ax.set_xlabel('Group', fontsize=font_size+2)
+        ax.set_ylabel('Number', fontsize=font_size+2)
+        # sey y limit as the min value of the number
+        treshold = int(df['Number'].min() * 0.1)
+        ax.set_ylim(df['Number'].min() - treshold, df['Number'].max() * 1.1)
+        
+        title = f'The number of {table_name} for each sample' if plot_sample else f'The number of {table_name} for each group'
+        ax.set_title(title, fontsize=font_size+2, fontweight='bold')
+        
+        if plot_sample:
+            # set legend for group, out of the box
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left', bbox_to_anchor=(1, 1))
+
+        # set grid
+        ax.grid(True, axis='y')
+        # move the botton up
+        plt.subplots_adjust(bottom=0.2)
+        plt.tight_layout()
+        plt.show()
+        # plt.close()
+        return ax
+
+
     def assign_colors(self, groups):
         colors = self.get_distinct_colors(len(set(groups)))
         result = []
