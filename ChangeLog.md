@@ -313,3 +313,8 @@
 ## Date: 2024-02-12
 ### Changes:
 New: Add a new function to plot the number of taxa and functions for each sample or each group.
+
+# Version: 1.97.1
+## Date: 2024-02-12
+### Changes:
+New: Add a new function to plot the Treemap for taxa.

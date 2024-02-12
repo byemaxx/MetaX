@@ -350,12 +350,11 @@ class BasicPlot:
         for i in ax.containers:
             ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
         # set x label
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, horizontalalignment='right')
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Group', fontsize=font_size+2)
         ax.set_ylabel('Number', fontsize=font_size+2)
-        # sey y limit as the min value of the number
-        treshold = int(df['Number'].min() * 0.1)
-        ax.set_ylim(df['Number'].min() - treshold, df['Number'].max() * 1.1)
+        # set y limit as 0.9 * min to 1.1 * max
+        ax.set_ylim(df['Number'].min() * 0.9 , df['Number'].max() * 1.1)
         
         title = f'The number of {table_name} for each sample' if plot_sample else f'The number of {table_name} for each group'
         ax.set_title(title, fontsize=font_size+2, fontweight='bold')

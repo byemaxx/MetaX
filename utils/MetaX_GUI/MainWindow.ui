@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>477</width>
-                 <height>373</height>
+                 <height>377</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1789,16 +1789,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="6" column="2">
-                   <widget class="QPushButton" name="pushButton_plot_basic_sankey">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Plot Sankey</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="4" column="0">
                    <widget class="QLabel" name="label_117">
                     <property name="sizePolicy">
@@ -2023,6 +2013,30 @@
                         <string>menhinick</string>
                        </property>
                       </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="6" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_47">
+                    <item>
+                     <widget class="QPushButton" name="pushButton_plot_basic_treemap">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="text">
+                       <string>Plot TreeMap</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_plot_basic_sankey">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="text">
+                       <string>Plot Sankey</string>
+                      </property>
                      </widget>
                     </item>
                    </layout>
@@ -7417,7 +7431,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

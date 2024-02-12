@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 377))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -921,10 +921,6 @@ class Ui_metaX_main(object):
         self.label_137 = QtWidgets.QLabel(self.tab_12)
         self.label_137.setObjectName("label_137")
         self.gridLayout_40.addWidget(self.label_137, 6, 0, 1, 1)
-        self.pushButton_plot_basic_sankey = QtWidgets.QPushButton(self.tab_12)
-        self.pushButton_plot_basic_sankey.setEnabled(False)
-        self.pushButton_plot_basic_sankey.setObjectName("pushButton_plot_basic_sankey")
-        self.gridLayout_40.addWidget(self.pushButton_plot_basic_sankey, 6, 2, 1, 1)
         self.label_117 = QtWidgets.QLabel(self.tab_12)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -1027,6 +1023,17 @@ class Ui_metaX_main(object):
         self.comboBox_alpha_div_method.addItem("")
         self.horizontalLayout_10.addWidget(self.comboBox_alpha_div_method)
         self.gridLayout_40.addLayout(self.horizontalLayout_10, 4, 1, 1, 1)
+        self.horizontalLayout_47 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_47.setObjectName("horizontalLayout_47")
+        self.pushButton_plot_basic_treemap = QtWidgets.QPushButton(self.tab_12)
+        self.pushButton_plot_basic_treemap.setEnabled(False)
+        self.pushButton_plot_basic_treemap.setObjectName("pushButton_plot_basic_treemap")
+        self.horizontalLayout_47.addWidget(self.pushButton_plot_basic_treemap)
+        self.pushButton_plot_basic_sankey = QtWidgets.QPushButton(self.tab_12)
+        self.pushButton_plot_basic_sankey.setEnabled(False)
+        self.pushButton_plot_basic_sankey.setObjectName("pushButton_plot_basic_sankey")
+        self.horizontalLayout_47.addWidget(self.pushButton_plot_basic_sankey)
+        self.gridLayout_40.addLayout(self.horizontalLayout_47, 6, 2, 1, 1)
         self.gridLayout_26.addLayout(self.gridLayout_40, 2, 0, 1, 1)
         self.tabWidget_4.addTab(self.tab_12, "")
         self.tab_13 = QtWidgets.QWidget()
@@ -3910,7 +3917,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4160,7 +4167,6 @@ class Ui_metaX_main(object):
         self.comboBox_beta_div_method.setItemText(8, _translate("metaX_main", "yule"))
         self.label_118.setText(_translate("metaX_main", "Beta Diversity"))
         self.label_137.setText(_translate("metaX_main", "Overview"))
-        self.pushButton_plot_basic_sankey.setText(_translate("metaX_main", "Plot Sankey"))
         self.label_117.setText(_translate("metaX_main", "Alpha Diversity"))
         self.checkBox_sunburst_show_all_lables.setText(_translate("metaX_main", "Show All  Lables for Sunburst"))
         self.pushButton_plot_sunburst.setText(_translate("metaX_main", "Plot Sunburst"))
@@ -4186,6 +4192,8 @@ class Ui_metaX_main(object):
         self.comboBox_alpha_div_method.setItemText(5, _translate("metaX_main", "fisher_alpha"))
         self.comboBox_alpha_div_method.setItemText(6, _translate("metaX_main", "dominance"))
         self.comboBox_alpha_div_method.setItemText(7, _translate("metaX_main", "menhinick"))
+        self.pushButton_plot_basic_treemap.setText(_translate("metaX_main", "Plot TreeMap"))
+        self.pushButton_plot_basic_sankey.setText(_translate("metaX_main", "Plot Sankey"))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_12), _translate("metaX_main", "Basic Plot"))
         self.pushButton_basic_heatmap_add.setToolTip(_translate("metaX_main", "Add selected item to the drawing box"))
         self.pushButton_basic_heatmap_add.setText(_translate("metaX_main", "Add to List"))

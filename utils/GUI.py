@@ -63,6 +63,7 @@ from MetaX.utils.TaxaFuncPloter.trends_plot_js import TrendsPlot_js
 from MetaX.utils.TaxaFuncPloter.pca_plot_js import PcaPlot_js
 from MetaX.utils.TaxaFuncPloter.diversity_plot import DiversityPlot
 from MetaX.utils.TaxaFuncPloter.sunburst_plot import SunburstPlot
+from MetaX.utils.TaxaFuncPloter.treemap_plot import TreeMapPlot
 
 # import GUI scripts
 from MetaX.utils.MetaX_GUI import Ui_MainWindow
@@ -269,6 +270,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_beta_div.clicked.connect(lambda: self.plot_basic_info_sns('beta_div'))
         self.pushButton_plot_alpha_div.clicked.connect(lambda: self.plot_basic_info_sns('alpha_div'))
         self.pushButton_plot_sunburst.clicked.connect(lambda: self.plot_basic_info_sns('sunburst'))
+        self.pushButton_plot_basic_treemap.clicked.connect(lambda: self.plot_basic_info_sns('treemap'))
         self.pushButton_plot_basic_sankey.clicked.connect(lambda: self.plot_basic_info_sns('sankey'))
         self.pushButton_basic_plot_number_bar.clicked.connect(lambda: self.plot_basic_info_sns('num_bar'))
         
@@ -462,7 +464,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         return dft
 
     def change_event_checkBox_basic_plot_table(self):
-        taxa_only_button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, self.pushButton_plot_sunburst]
+        taxa_only_button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, 
+                                 self.pushButton_plot_sunburst, self.pushButton_plot_basic_treemap]
+        
         taxa_func_button_list = [self.pushButton_plot_basic_sankey]
 
         current_text = self.comboBox_table4pca.currentText()
@@ -3618,8 +3622,24 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                         title='Sunburst of Taxa', show_label=show_label,
                                                         label_font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Sunburst of Taxa')
+            
+            elif method == 'treemap':
+                if self.tfa.taxa_level == 'life':
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The taxa level is not available for treemap!')
+                    return None
+                
+                taxa_df = self.tfa.taxa_df[sample_list]
+
+                pic = TreeMapPlot().create_treemap_chart(taxa_df= taxa_df, width=width, height=height,
+                                                        show_sub_title = self.checkBox_pca_if_show_lable.isChecked(),
+                                                        font_size = font_size)
+                self.save_and_show_js_plot(pic, 'Treemap of Taxa')
                 
             elif method == 'sankey':
+                if self.tfa.taxa_level == 'life':
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The taxa level is not available for treemap!')
+                    return None
+                
                 df = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
                 df = df[sample_list]
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
