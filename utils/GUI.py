@@ -1010,7 +1010,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     settings_key = f"res_table_combox/{name}"
                     
                     items = self.settings.value(f"{settings_key}/items", [], type=list)
-                    print(f"Loading items for {name}: {items}")
+                    # print(f"Loading items for {name}: {items}")
                     
                     if len(items) > 0:
                         if name == 'comboBox_top_heatmap_table':
@@ -3650,7 +3650,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif method == 'num_bar':
                 plot_sample =self.checkBox_basic_plot_number_plot_sample.isChecked()
                 BasicPlot(self.tfa).plot_number_bar(df = df, table_name = table_name, font_size=font_size,
-                                                    width=width, height=height, theme=theme, plot_sample = plot_sample)
+                                                    width=width, height=height, 
+                                                    theme=theme, plot_sample = plot_sample, show_label = show_label)
             
         except Exception as e:
             error_message = traceback.format_exc()

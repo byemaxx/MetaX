@@ -13,7 +13,7 @@ class DiversityPlot(object):
         self.ace_threshold = None
         # reset style
         plt.style.use('default')
-        sns.set()
+        sns.set_theme()
         
     def ace_with_threshold(self, row):
         ace = alpha.ace(row, self.ace_threshold)
@@ -105,7 +105,7 @@ class DiversityPlot(object):
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               
-                sns.set(style='whitegrid')
+                sns.set_theme(style='whitegrid')
 
             # create a color palette
             group_num = len(df['SubGroup'].unique()) if sub_meta else len(df['Group'].unique())
@@ -124,7 +124,7 @@ class DiversityPlot(object):
             fig.set_ylabel(f'{metric} Index', fontsize=font_size)
             fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
             if sub_meta:
-                plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
+                plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., fontsize=font_size+2, ncol= group_num//30 + 1)
                 # add dashed line between groups
                 for i, group in enumerate(df['Group'].unique()):
                     if i != 0:
@@ -190,7 +190,7 @@ class DiversityPlot(object):
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               
-                sns.set(style='whitegrid')
+                sns.set_theme(style='whitegrid')
                 
             plt.figure(figsize=(width, height))
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, style=style_list,
@@ -208,7 +208,8 @@ class DiversityPlot(object):
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
             # set title
             plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)', fontsize=font_size+2, fontweight='bold')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
+            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
+                       fontsize=font_size +2 , ncol= len(unique_groups)//30 + 1)
             plt.tight_layout()
             plt.show()
             

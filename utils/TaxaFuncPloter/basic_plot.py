@@ -138,7 +138,7 @@ class BasicPlot:
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               
-                sns.set(style='whitegrid')
+                sns.set_theme(style='whitegrid')
                 
             plt.figure(figsize=(width, height))
             pca = PCA(n_components=2)
@@ -161,8 +161,9 @@ class BasicPlot:
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)',  fontsize=font_size)
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)',  fontsize=font_size)
             # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
-            # set legend outside the plot
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=font_size)
+            # set legend outside the plot, set size as 100
+            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=font_size +2, borderaxespad=0.,
+                       ncol= len(unique_groups)//30 + 1)
             plt.tight_layout()
             plt.show()
 
@@ -234,7 +235,8 @@ class BasicPlot:
         ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
         # set legend for group, out of the box
         handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
-        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left', bbox_to_anchor=(1, 1))
+        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
+                  loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1)
         # set grid
         ax.grid(True, axis='y')
         # move the botton up
@@ -285,7 +287,8 @@ class BasicPlot:
             raise e
         
         
-    def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,  theme:str = 'Auto', plot_sample = False):
+    def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,  
+                        theme:str = 'Auto', plot_sample = False, show_label = True):
         df = df.copy()
         
         #stats number of taxa for each group
@@ -352,8 +355,10 @@ class BasicPlot:
         bar_params = {'data': df, 'x': 'Sample' if plot_sample else 'Group', 'y': 'Number', 'hue': 'Group', 'palette': color_palette}
         
         ax = sns.barplot(**bar_params)
-        for i in ax.containers:
-            ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
+        if show_label:
+            for i in ax.containers:
+                ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
+                
         # set x label
         ax.set_xticklabels(ax.get_xticklabels(), rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Group', fontsize=font_size+2)
@@ -367,7 +372,8 @@ class BasicPlot:
         if plot_sample:
             # set legend for group, out of the box
             handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size, loc='upper left', bbox_to_anchor=(1, 1))
+            ax.legend(handles, unique_groups, fontsize=font_size + 2, ncol= len(unique_groups)//30 + 1,
+                        loc='upper left',borderaxespad=0., bbox_to_anchor=(1.02, 1))
 
         # set grid
         ax.grid(True, axis='y')

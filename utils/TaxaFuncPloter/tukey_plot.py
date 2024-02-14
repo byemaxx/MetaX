@@ -33,7 +33,7 @@ class TukeyPlot:
         # Set plot properties
         plt.xticks(rotation=45)
         plt.title('Confidence Intervals of Mean Differences')
-        plt.legend(title='Group 2', bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.legend(title='Group 2', bbox_to_anchor=(1.02, 1), loc='upper left', ncol=n_hues//30+1)
         plt.tight_layout()
         
         # Show the plot

@@ -318,3 +318,8 @@ New: Add a new function to plot the number of taxa and functions for each sample
 ## Date: 2024-02-12
 ### Changes:
 New: Add a new function to plot the Treemap for taxa.
+
+# Version: 1.97.2
+## Date: 2024-02-14
+### Changes:
+Change: Changed the number of legned cols: (group_num//30 + 1), for basic plot.
