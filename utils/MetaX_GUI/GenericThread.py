@@ -137,6 +137,9 @@ class FunctionExecutor(QMainWindow):
 
             if reply == QMessageBox.Yes:
                 self.thread.terminate()  # 强制结束线程
+                # return success as False, result as None
+                self.finished.emit("Process terminated.", False)
+
                 event.accept()
             else:
                 event.ignore()

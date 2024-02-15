@@ -323,3 +323,9 @@ New: Add a new function to plot the Treemap for taxa.
 ## Date: 2024-02-14
 ### Changes:
 Change: Changed the number of legned cols: (group_num//30 + 1), for basic plot.
+
+
+# Version: 1.97.3
+## Date: 2024-02-15
+### Changes:
+Fix: Fixed the bug of when close the log window by user, the runing status is not reset.
