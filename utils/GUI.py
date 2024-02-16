@@ -1466,7 +1466,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             for i, j in self.tfa.outlier_status.items():
                 if j:
                     nan_stats_str += f'{i}: [{j}]\n'
-            print(nan_stats_str)        
+            # print(nan_stats_str)
         else:    
             nan_stats_str = ''
             
@@ -1479,6 +1479,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         \nNumber of taxa-function: [{num_taxa_func}]\
         \nNumber of protein: [{num_protein}]'
         
+        print(f'\n----Multi Table Result----\n{msg}\n---------------------------\n')
         self.logger.write_log(msg.replace('\n', ''))
         QMessageBox.information(self.MainWindow, 'Information', msg )
         
