@@ -382,7 +382,7 @@ class TaxaFuncAnalyzer:
                      (df[self.func_name] != 'not_found') & 
                      (df[self.func_name] != '-') & 
                      (df[self.func_name] != 'NaN') & 
-                     (df[self.func_name] != 'unknown')
+                     (df[self.func_name] != 'unknown') #! uncomment this line if needed show the peptide annotated to unknown function
                      ].copy()
         
         df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]

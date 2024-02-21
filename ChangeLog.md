@@ -329,3 +329,8 @@ Change: Changed the number of legned cols: (group_num//30 + 1), for basic plot.
 ## Date: 2024-02-15
 ### Changes:
 Fix: Fixed the bug of when close the log window by user, the runing status is not reset.
+
+# Version: 1.97.4
+## Date: 2024-02-21
+### Changes:
+Fix: Fixed the bug of when calculate the taxa number in each level with threshold, the "s__nan" was not removed.

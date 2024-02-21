@@ -68,12 +68,14 @@ class BasicStats:
             # only extract the taxa with more than peptide threshold
             dfi = dfi[dfi['peptide_num'] >= peptide_num]
             set_i = set(dfi.index)
-            remove_list = [f'{i}__NULL', f'{i}__', ' ', None]
+            remove_list = [f'{i[0]}__NULL', f'{i[0]}__', ' ', None, f'{i[0]}__nan']
             for j in remove_list:
                 if j in set_i:
                     set_i.remove(j)
+                    # print(f'remove {j} from {i} set.')
             dic[i] = len(set_i)
-        return pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
+        res_df = pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
+        return res_df
 
     def get_stats_func_prop(self, func_name) -> pd.DataFrame:
         if func_name not in self.tfa.func_list:
