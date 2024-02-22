@@ -3004,6 +3004,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_table(df=df, title=title)
                 
             elif plot_type == 'sankey':
+                if self.checkBox_basic_heatmap_plot_peptide.isChecked():
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Peptide is not supported to plot Sankey!')
+                    return None
+                 
                 self.show_message('Plotting Sankey...')
                 if self.checkBox_basic_heatmap_sankey_title.isChecked():
                     title_new = title

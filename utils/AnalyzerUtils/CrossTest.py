@@ -612,7 +612,7 @@ class CrossTest:
             # extract i from multi-index
             df_i = df_extrcted[i]
             df_i = df_i.loc[(df_i[p_type] <= p_value) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
-            print(f"Group: [{i}] | Significant results: [{df_i.shape[0]}]")
+            print(f"Group: [{i}] | Significant results: [{df_i.shape[0]}]    (up:{(df_i['log2FoldChange'] > 0).sum()} down:{(df_i['log2FoldChange'] < 0).sum()})")
             res_dict[i] = df_i
             
         dft = pd.concat(res_dict, axis=1)

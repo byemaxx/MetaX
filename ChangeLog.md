@@ -334,3 +334,8 @@ Fix: Fixed the bug of when close the log window by user, the runing status is no
 ## Date: 2024-02-21
 ### Changes:
 Fix: Fixed the bug of when calculate the taxa number in each level with threshold, the "s__nan" was not removed.
+
+# Version: 1.97.5
+## Date: 2024-02-21
+### Changes:
+Fix: Fixed the bug of when plot sankey while the combox of plot peptide is checked, the plot will raise error.
