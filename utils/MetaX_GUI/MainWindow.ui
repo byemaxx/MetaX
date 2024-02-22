@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>477</width>
-                 <height>377</height>
+                 <width>398</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1273,7 +1273,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -2272,6 +2272,13 @@
                     </property>
                     <property name="checked">
                      <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_mean">
+                    <property name="text">
+                     <string>Plot Mean</string>
                     </property>
                    </widget>
                   </item>

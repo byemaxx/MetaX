@@ -339,3 +339,8 @@ Fix: Fixed the bug of when calculate the taxa number in each level with threshol
 ## Date: 2024-02-21
 ### Changes:
 Fix: Fixed the bug of when plot sankey while the combox of plot peptide is checked, the plot will raise error.
+
+# Version: 1.97.6
+## Date: 2024-02-22
+### Changes:
+New: Add a function to plot the mean for each group in the basic heatmap plot part.

@@ -2869,7 +2869,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_basic_hetatmap_rename_taxa.isChecked()
         rename_sample = self.checkBox_basic_hetatmap_rename_sample_name.isChecked()
         show_all_labels = (self.checkBox_basic_hetatmap_show_all_labels_x.isChecked(), self.checkBox_basic_hetatmap_show_all_labels_y.isChecked())
-        
+        plot_mean = self.checkBox_basic_heatmap_plot_mean.isChecked()
 
         table_name = self.comboBox_basic_table.currentText()
 
@@ -2976,7 +2976,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
-                                                         show_all_labels=show_all_labels, rename_sample=rename_sample)
+                                                         show_all_labels=show_all_labels, rename_sample=rename_sample,
+                                                         plot_mean = plot_mean)
+                                                         
             
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
@@ -2993,14 +2995,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 pic = BarPlot_js(self.tfa).plot_intensity_bar(df = df, width=width, height=height, 
                                                               title= '', rename_taxa=rename_taxa, 
                                                               show_legend=show_legend, font_size=font_size,
-                                                              rename_sample=rename_sample)
+                                                              rename_sample=rename_sample, plot_mean = plot_mean)
                                                               
                 self.save_and_show_js_plot(pic, title)
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
-                if rename_taxa:
-                    df = self.tfa.rename_taxa(df)
+                if plot_mean:
+                    df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+                else:
+                    if rename_taxa:
+                        df = self.tfa.rename_taxa(df)
                 self.show_table(df=df, title=title)
                 
             elif plot_type == 'sankey':

@@ -4,7 +4,7 @@ from pyecharts.charts import Bar
 
 class BarPlot_js:
     def __init__(self, tfobj):
-        self.tfobj =  tfobj
+        self.tfa =  tfobj
     # plot intensity line for each sample
     # Example: plot_intensity_line(sw, func_name=func_name, taxon_name=taxon_name, fig_size=(30,20))
 
@@ -25,8 +25,8 @@ class BarPlot_js:
     def _add_group_name_to_sample(self, df):
         #rename columns (sample name)
         col_names = df.columns.tolist()
-        meta_df = self.tfobj.meta_df
-        meta_name = self.tfobj.meta_name
+        meta_df = self.tfa.meta_df
+        meta_name = self.tfa.meta_name
         groups_list = []
         new_col_names = []
         for i in col_names:
@@ -43,11 +43,16 @@ class BarPlot_js:
                            width:int=1200, height:int=800, df= None, 
                            title:str=None, rename_taxa:bool=False, 
                            show_legend:bool=True, font_size:int=10,
-                           rename_sample:bool=True):
+                           rename_sample:bool=True, plot_mean:bool=False):
         if df is None:
-            df = self.tfobj.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
+            df = self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
                 raise ValueError('No data to plot')
+        
+        if plot_mean:
+            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            rename_sample = False
+            
         # rename taxa
         if rename_taxa:
             df = self.rename_taxa(df)
@@ -55,7 +60,15 @@ class BarPlot_js:
         if rename_sample:
             df = self._add_group_name_to_sample(df)
         
-        colors = self.get_distinct_colors(len(df))
+        col_num = len(df)
+        
+        if col_num > 10:
+            colors = self.get_distinct_colors(col_num)
+        else:
+            import seaborn as sns
+            colors = sns.color_palette('deep', col_num)
+            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
+        
         # create title
         if title is None:
             if taxon_name is None:

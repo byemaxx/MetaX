@@ -198,8 +198,13 @@ class HeatmapPlot:
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
-                    show_all_labels:tuple = (False, False), rename_sample:bool = True
+                    show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False
                     ):
+        
+        if plot_mean:
+            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            rename_sample = False
+            
         
         if len(df) < 2:
             row_cluster = False
@@ -229,7 +234,7 @@ class HeatmapPlot:
         if rename_sample:
             mat, group_list = self.tfa.add_group_name_for_sample(mat)
         else:
-            group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns]
+            group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns] if not plot_mean else mat.columns.tolist()
         
         color_list = self.assign_colors(group_list)
 
@@ -241,7 +246,7 @@ class HeatmapPlot:
         sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
                       'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
                         'cbar_kws': {'label': 'Intensity',"shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                        'standard_scale': scale, 'col_colors': color_list,
+                        'standard_scale': scale, 'col_colors': color_list if not plot_mean  else None,
                             "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
         fig = sns.clustermap(mat, **sns_params)
             
