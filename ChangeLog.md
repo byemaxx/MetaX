@@ -344,3 +344,8 @@ Fix: Fixed the bug of when plot sankey while the combox of plot peptide is check
 ## Date: 2024-02-22
 ### Changes:
 New: Add a function to plot the mean for each group in the basic heatmap plot part.
+
+# Version: 1.98.0
+## Date: 2024-02-22
+### Changes:
+New: Add a function of right click menu for heatmap combo box to plot the all colormap.

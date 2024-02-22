@@ -1207,9 +1207,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         from matplotlib import colormaps
         cmap_list = ['Auto'] + sorted(list(colormaps))
 
-        self.comboBox_basic_hetatmap_theme.addItems(cmap_list)
-        self.comboBox_tflink_cmap.addItems(cmap_list)
-        self.comboBox_top_heatmap_cmap.addItems(cmap_list)
+        # add right click menu for comboBox
+        from MetaX.utils.MetaX_GUI.CmapComboBox import CmapComboBox
+        cmap_combox_list = ['comboBox_basic_hetatmap_theme', 'comboBox_tflink_cmap', 'comboBox_top_heatmap_cmap']
+        for name in cmap_combox_list:
+            old_combobox = getattr(self, name)
+            new_combobox = CmapComboBox(old_combobox.parent())
+            new_combobox.addItems(cmap_list)
+            new_combobox.setCurrentIndex(0)
+            old_combobox.parent().layout().replaceWidget(old_combobox, new_combobox)
+            old_combobox.deleteLater()
+            setattr(self, name, new_combobox)
+            
+
         
         
         import matplotlib.pyplot as plt
