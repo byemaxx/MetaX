@@ -59,7 +59,7 @@ class BasicPlot:
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             ax.bar_label(i,)
-        ax.set_title(f'Number of taxa in different taxa level. (Peptide number >= {peptide_num})')
+        ax.set_title(f'Number of taxa in different taxa level (Peptide number >= {peptide_num})')
         ax.set_xlabel('Taxa level')
         ax.set_ylabel('Number of taxa')
         if res_type == 'show':

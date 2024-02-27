@@ -1057,6 +1057,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     self.save_basic_settings()
                     if self.table_dict != {}:
                         self.show_message("Saving settings...", "Closing...")
+                        self.save_taxafunc_obj(no_message=True)
                         self.save_tables_and_settings()
 
                 # 关闭 self.web_list 中的所有窗口
