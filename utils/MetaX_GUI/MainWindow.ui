@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>398</width>
-                 <height>80</height>
+                 <width>477</width>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5775,48 +5775,81 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLabel" name="label_132">
-                    <property name="text">
-                     <string>Show All Labels</string>
-                    </property>
-                   </widget>
+                   <layout class="QHBoxLayout" name="horizontalLayout_51">
+                    <item>
+                     <widget class="QLabel" name="label_132">
+                      <property name="text">
+                       <string>Show All Labels</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_x">
+                      <property name="text">
+                       <string>X</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_y">
+                      <property name="text">
+                       <string>Y</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_x">
-                    <property name="text">
-                     <string>X</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_tflink_bar_show_all_labels_y">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_sample">
-                    <property name="text">
-                     <string>Rename Samples</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_taxa">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Rename_taxa</string>
-                    </property>
-                   </widget>
+                   <layout class="QHBoxLayout" name="horizontalLayout_52">
+                    <item>
+                     <widget class="QLabel" name="label_120">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Rename</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_sample">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string> Samples</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_tflink_hetatmap_rename_taxa">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Taxa</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </item>
@@ -5999,6 +6032,19 @@
                     </property>
                     <property name="checked">
                      <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tflink_plot_mean">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot Mean</string>
                     </property>
                    </widget>
                   </item>
@@ -7438,7 +7484,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

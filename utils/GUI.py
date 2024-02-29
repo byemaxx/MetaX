@@ -373,8 +373,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         # Taxa-func link
         self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_tflink_intensity_matrix)
-        self.pushButton_others_plot_heatmap.clicked.connect(self.plot_others_heatmap)
-        self.pushButton_others_plot_line.clicked.connect(self.plot_others_bar)
+        self.pushButton_others_plot_heatmap.clicked.connect(self.plot_tflink_heatmap)
+        self.pushButton_others_plot_line.clicked.connect(self.plot_tflink_bar)
         self.pushButton_others_show_linked_taxa.clicked.connect(self.show_others_linked_taxa)
         self.pushButton_others_show_linked_func.clicked.connect(self.show_others_linked_func)
         self.pushButton_others_fresh_taxa_func.clicked.connect(self.update_func_taxa_group_to_combobox)
@@ -4599,12 +4599,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         df = self.tfa.GetMatrix.get_intensity_matrix(**params)
 
-        if df.empty:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
-        else:
+        if not df.empty:
             if self.checkBox_tflink_hetatmap_rename_taxa.isChecked():
                 df = self.tfa.rename_taxa(df)
+            if self.checkBox_tflink_plot_mean.isChecked():
+                df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
             self.show_table(df, title=f'{taxa} [ {func} ]')
+        else:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
             
             
     def get_sample_list_tflink(self):
@@ -4679,7 +4681,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         pass
     # Plot Heatmap
-    def plot_others_heatmap(self):
+    def plot_tflink_heatmap(self):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
@@ -4689,6 +4691,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         cmap = self.comboBox_tflink_cmap.currentText()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         show_all_labels = (self.checkBox_tflink_bar_show_all_labels_x.isChecked(), self.checkBox_tflink_bar_show_all_labels_y.isChecked())
+        plot_mean = self.checkBox_tflink_plot_mean.isChecked()
         
         if cmap == 'Auto':
             cmap = None
@@ -4738,7 +4741,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
-                                  rename_sample=self.checkBox_tflink_hetatmap_rename_sample.isChecked()
+                                  rename_sample=self.checkBox_tflink_hetatmap_rename_sample.isChecked(), plot_mean=plot_mean
                                   )
         except Exception as e:
             error_message = traceback.format_exc()
@@ -4781,7 +4784,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         return dataframe
 
     # Plot Line
-    def plot_others_bar(self):
+    def plot_tflink_bar(self):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
@@ -4789,6 +4792,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         font_size = self.spinBox_tflink_label_font_size.value()
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         show_legend = self.checkBox_tflink_bar_show_legend.isChecked()
+        plot_mean = self.checkBox_tflink_plot_mean.isChecked()
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -4827,6 +4831,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             params['show_legend'] = show_legend
             params['font_size'] = font_size
+            params['plot_mean'] = plot_mean
             
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tfa).plot_intensity_bar(**params)
