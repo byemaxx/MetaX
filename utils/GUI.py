@@ -151,7 +151,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionDatabase_Builder.setIcon(qta.icon('mdi.database'))
         self.actionDatabase_Update.setIcon(qta.icon('mdi.update'))
         self.actionAbout.setIcon(qta.icon('mdi.information-outline'))
-        self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.restore'))
+        self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.history'))
+        self.actionRestore_From.setIcon(qta.icon('mdi.restore'))
+        self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
@@ -162,6 +164,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
         self.actionAbout.triggered.connect(self.show_about)
         self.actionRestore_Last_TaxaFunc.triggered.connect(self.run_restore_taxafunc_obj)
+        self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
+        self.actionSave_As.triggered.connect(self.save_taxafunc_obj_to_file)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
@@ -856,7 +860,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         with open(path, 'wb') as f:
             pickle.dump(save_obj_dict, f)
             print(f"Save table_dict to {path}.")
-        
+            
+        self.save_tables_settings()
+
+    def save_tables_settings(self):
         combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
         # save items for comboBox
         for name in combox_list:
@@ -866,8 +873,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 items = [widget.itemText(i) for i in range(widget.count())]
                 self.settings.setValue(f"{settings_key}/items", items)
                 self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
-
-        
 
     
 
@@ -971,8 +976,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.set_multi_table(restore_taxafunc = True, restore_res_table = res_table)
         
         
-
-        
         self.logger.write_log(f"Restore taxafunc object from last time.")
         
     def restore_settings_after_load_taxafunc_obj(self):
@@ -1035,6 +1038,57 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         # enable button after multi table is set  
         self.pushButton_set_multi_table.setEnabled(True)      
+        
+    def run_restore_taxafunnc_obj_from_file(self):
+        # select a file to load
+        file_path, _ = QFileDialog.getOpenFileName(self.MainWindow, "Load taxafunc object", self.last_path, "Pickle file (*.pkl)")
+        if file_path:
+            self.show_message("Loading taxafunc object from file...", "Loading...")
+            saved_obj = pickle.load(open(file_path, 'rb'))
+            
+            # restore settings.ini
+            if 'settings' in saved_obj:
+                with open(os.path.join(QDir.homePath(), "MetaX", "settings.ini"), 'w') as f:
+                    f.write(saved_obj['settings'])
+                self.logger.write_log(f"Restore settings.ini from {file_path}.")
+            # restore taxafunc object
+            restore_res_table = True if 'table_dict' in saved_obj else False
+            self.set_multi_table(restore_taxafunc = True, restore_res_table = restore_res_table, saved_obj = saved_obj)
+            self.logger.write_log(f"Restore taxafunc object from {file_path}.")
+            
+                
+            
+    
+    def save_taxafunc_obj_to_file(self):
+        if getattr(self, 'tfa', None) is None:
+            QMessageBox.warning(self.MainWindow, "Warning", "TaxaFunc object has not been created yet.")
+            return
+        
+        # save settings.ini
+        self.save_basic_settings()
+        self.save_tables_settings()
+        
+        with open(os.path.join(QDir.homePath(), "MetaX", "settings.ini"), 'r') as f:
+            settings_file_text = f.read()
+            
+        #select a file to save
+        save_dict = {
+            "tfa": self.tfa,
+            "table_dict": self.table_dict,
+            "settings": settings_file_text
+        }
+        
+        # default output path is self.last_path, default file name is taxafunc_obj.pkl
+        default_file_name = "MetaX_object.pkl"
+        file_path, _ = QFileDialog.getSaveFileName(self.MainWindow, "Save taxafunc object", os.path.join(self.last_path, default_file_name), "Pickle file (*.pkl)")
+        if file_path:
+            with open(file_path, 'wb') as f:
+                pickle.dump(save_dict, f)
+            QMessageBox.information(self.MainWindow, "Save taxafunc object", f"Taxafunc object has been saved to {file_path}")
+            # update self.last_path
+            self.last_path = os.path.dirname(file_path)
+            self.logger.write_log(f"Save taxafunc object to {file_path}.")
+        
 
     def closeEvent(self, event):
         # reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -1042,7 +1096,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         msgBox = QMessageBox(self.MainWindow)
         msgBox.setWindowTitle("Close MetaX")
-        msgBox.setText("Do you want to save the settings before closing?")
+        msgBox.setText("Do you want to save before closing?")
         save_and_close_button = QPushButton('Save and close', msgBox)
         direct_close_button = QPushButton('Close without saving', msgBox)
         do_not_close_button = QPushButton('Cancel', msgBox)
@@ -2060,7 +2114,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_overview_peptide_plot_new_window.setEnabled(True)
 
         
-    def set_multi_table(self, restore_taxafunc=False, restore_res_table=False):
+    def set_multi_table(self, restore_taxafunc=False, restore_res_table=False, saved_obj=None):
         # self.pushButton_set_multi_table.setEnabled(False)
         if restore_taxafunc is False:
             self.restore_mode = False
@@ -2228,8 +2282,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         else: # restore_taxafunc is True
             print("\n---------------------------------- Restore Multi Table ----------------------------------\n")
-            self.tfa = self.load_taxafunc_obj_from_file('tfa')['taxa_func_obj']
-            self.table_dict = self.load_taxafunc_obj_from_file('table_dict')['table_dict'] if restore_res_table else {}
+            if saved_obj is not None:
+                self.tfa = saved_obj['tfa']
+                self.table_dict = saved_obj['table_dict']
+            else:    
+                self.tfa = self.load_taxafunc_obj_from_file('tfa')['taxa_func_obj']
+                self.table_dict = self.load_taxafunc_obj_from_file('table_dict')['table_dict'] if restore_res_table else {}
             
             if self.tfa is None:
                 print('Faild. Return None when load taxafunc obj.')

@@ -349,3 +349,8 @@ New: Add a function to plot the mean for each group in the basic heatmap plot pa
 ## Date: 2024-02-22
 ### Changes:
 New: Add a function of right click menu for heatmap combo box to plot the all colormap.
+
+# Version: 1.99.0
+## Date: 2024-02-28
+### Changes:
+New: Add a function to save current MetaX object to a file, and load it from a file.
