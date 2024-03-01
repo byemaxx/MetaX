@@ -1,5 +1,4 @@
 
-# from MetaX.utils.MetaX_GUI import logo_rc
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog

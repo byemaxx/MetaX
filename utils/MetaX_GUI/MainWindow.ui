@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>477</width>
-                 <height>373</height>
+                 <height>377</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -7484,7 +7484,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

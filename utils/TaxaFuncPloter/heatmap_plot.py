@@ -30,7 +30,7 @@ class HeatmapPlot:
                                         value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
                                          col_cluster:bool = True, row_cluster:bool = True,
                                         cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
-                                        show_all_labels:tuple = (False, False)):
+                                        show_all_labels:tuple = (False, False), return_type:str = 'fig'):
 
         
 
@@ -41,17 +41,22 @@ class HeatmapPlot:
                     'p': ('P-value', 'Reds_r', None),
                     't': ('t-statistic', 'hot_r', 1)}
 
+        plot_type = type_map.get(value_type, None)[0]
+        if plot_type is None:
+            raise ValueError("type must be 'p' or 'f' or 't'")
+        
+        
+        if plot_type not in dft.columns: # inout wrong t-statistic to f-statistic, or reverse
+            old_value_type = value_type
+            value_type = 'f' if value_type == 't' else 't' if value_type == 'f' else 'p'
+            print(f"Warning: [{old_value_type}] is not in the dataframe, change to [{value_type}]")
+                
+
         if cmap is None:
             plot_type, cmap, scale = type_map.get(value_type, None)
         else:
             plot_type, _, scale = type_map.get(value_type, None)
 
-        if plot_type is None:
-            raise ValueError("type must be 'p' or 'f' or 't'")
-
-        
-        if plot_type not in df.columns:
-            plot_type = 'P-value'
 
 
         try:
@@ -72,32 +77,91 @@ class HeatmapPlot:
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
             sns.set_style("white")
-            sns_params = {'center': 0, 'cmap': cmap, 'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                          'figsize': fig_size, "col_cluster": col_cluster, "row_cluster": row_cluster,
-                          'method': 'average', 'metric': 'correlation', 'cbar_kws': {'label': plot_type, "shrink": 0.5},
-                            'standard_scale': scale, 'mask': df_top.isnull(), 'vmin': 0, 'vmax': 1,
-                                "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
-            fig = sns.clustermap(df_plot, **sns_params)
 
+            if return_type == 'fig':
+                sns_params = {
+                    "center": 0,
+                    "cmap": cmap,
+                    "linewidths": 0.01,
+                    "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                    "dendrogram_ratio": (0.1, 0.2),
+                    "figsize": fig_size,
+                    "col_cluster": col_cluster,
+                    "row_cluster": row_cluster,
+                    "method": "average",
+                    "metric": "correlation",
+                    "cbar_kws": {"label": plot_type, "shrink": 0.5},
+                    "standard_scale": scale,
+                    "mask": df_top.isnull(),
+                    "vmin": 0,
+                    "vmax": 1,
+                    "xticklabels": True if show_all_labels[0] else "auto",
+                    "yticklabels": True if show_all_labels[1] else "auto",
+                }
 
-            fig.ax_heatmap.set_xlabel('Taxa')
-            fig.ax_heatmap.set_ylabel('Function')
-            if title == '':
-                fig.ax_col_dendrogram.set_title(f"Significant Differences between groups in Taxa-Function (Sorted by {plot_type} Top {top_number})")
-            else:
-                title = f'{title} (Sorted by {plot_type} Top {top_number})'
-                fig.ax_col_dendrogram.set_title(title)
-            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
-            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+                fig = sns.clustermap(df_plot, **sns_params)
+                fig.ax_heatmap.set_xlabel("Taxa")
+                fig.ax_heatmap.set_ylabel("Function")
+                if title == "":
+                    title = f"Significant Differences between groups in Taxa-Function (Sorted by {plot_type} Top {top_number})"
+                else:
+                    title = f"{title} (Sorted by {plot_type} Top {top_number})"
+
+                plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+
+                fig.ax_heatmap.set_xticklabels(
+                    fig.ax_heatmap.get_xmajorticklabels(),
+                    fontsize=font_size,
+                    rotation=90,
+                )
+                fig.ax_heatmap.set_yticklabels(
+                    fig.ax_heatmap.get_ymajorticklabels(),
+                    fontsize=font_size,
+                    rotation=0,
+                )
+
+                plt.subplots_adjust(
+                    left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2
+                )
+
+                plt.tight_layout()
+                plt.show()
+                return fig
+
             
-            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
-            plt.tight_layout()
-            plt.show()
-            return fig
+            elif return_type == 'table':
+                sns_params = {
+                    "center": 0,
+                    "cmap": cmap,
+                    "col_cluster": col_cluster,
+                    "row_cluster": row_cluster,
+                    "method": "average",
+                    "metric": "correlation",
+                    "standard_scale": scale,
+                    "mask": df_top.isnull(),
+                }
+                fig = sns.clustermap(df_plot, **sns_params)
+                              
+                # get the sorted dataframe
+                row_num = len(df_plot)
+                col_num = len(df_plot.columns)
+                if row_num > 1 and col_num < 2:
+                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, :] if row_cluster else df_plot
+                elif row_num < 2 and col_num > 1:
+                    sorted_df = df_plot.iloc[:, fig.dendrogram_col.reordered_ind] if col_cluster else df_plot
+                elif row_num > 1 and col_num > 1:
+                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind if row_cluster else slice(None),
+                                        fig.dendrogram_col.reordered_ind if col_cluster else slice(None)]
+                else:
+                    sorted_df = df_plot
+                # remove fig object
+                plt.close(fig.figure)
+                return sorted_df                
+                
         except ValueError as e:
             print(f"Error: {e}")
             plt.close('all')
-            raise ValueError(f"No significant differences between groups in {func_name}")
+            raise ValueError("No significant differences between groups.")
     
 
     # For taxa, func and peptides table
@@ -179,8 +243,10 @@ class HeatmapPlot:
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-            fig.ax_col_dendrogram.set_title(f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})")
-
+            plt.suptitle(
+                f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})",
+                fontsize=font_size + 2, weight='bold'
+            )
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
             plt.tight_layout()
             plt.show()
@@ -256,7 +322,7 @@ class HeatmapPlot:
 
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-        fig.ax_col_dendrogram.set_title(title)
+        plt.suptitle(title, fontsize=font_size + 2, weight='bold')
 
 
         plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
@@ -269,70 +335,9 @@ class HeatmapPlot:
     # get the top intensity matrix of taxa-func table
     def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, 
                              rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True):
-        func_name = self.tfa.func_name
-        dft = df.copy()
-        dft.reset_index(inplace=True)
-
-        if value_type == 'f':
-            plot_type = 'f-statistic'
-            color = 'Spectral_r'
-            scale = 1
-        elif value_type == 'p':
-            plot_type = 'P-value'
-            color = 'Reds_r'
-            scale = None
-        elif value_type == 't':
-            plot_type = 't-statistic'
-            color = 'hot_r'
-            scale = 1
-        else:
-            raise ValueError("type must be 'p' or 'f' or 't'")
-        if plot_type not in df.columns:
-            plot_type = 'P-value'
-
-
-        try:        
-            dft = dft[dft['P-value'] < pvalue]
-            if dft.empty:
-                raise ValueError(f"No significant differences between groups")
-            if 'f-statistic' in dft.columns.tolist():
-                dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False], ignore_index=True)
-            elif 't-statistic' in dft.columns.tolist():
-                dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False], ignore_index=True)
-            df_top = dft.head(top_number)
-            
-            if rename_taxa:
-                df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
-
-            df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
-            mat = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
-                
-                
-            # plt.figure()
-            fig = sns.clustermap(mat, center=0, cmap = color, col_cluster=col_cluster, row_cluster=row_cluster,
-                            method='average',  metric='correlation',cbar_kws={'label': plot_type}, 
-                            standard_scale=scale, mask=df_top.isnull(), vmin=0, vmax=1)
-
-
-            # get the sorted dataframe
-            row_num = len(mat)
-            col_num = len(mat.columns)
-            if row_num > 1 and col_num < 2:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, :]
-            elif row_num < 2 and col_num > 1:
-                sorted_df = mat.iloc[:, fig.dendrogram_col.reordered_ind]
-            elif row_num > 1 and col_num > 1:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
-            else:
-                sorted_df = mat
-            # remove fig object
-            plt.close(fig.fig)
-            return sorted_df
-        except ValueError as e:
-            print(e)
-            raise ValueError(f"No significant differences between groups")
-        # finally:
-        #     plt.close('all')
+        res = self.plot_top_taxa_func_heatmap_of_test_res(df=df, top_number=top_number, value_type=value_type, pvalue=pvalue, 
+                                                          col_cluster=col_cluster, row_cluster=row_cluster, rename_taxa=rename_taxa, return_type='table')
+        return res
     
     # plot heatmap for all condtion results of DESeq2All or DunnettAll
     def plot_heatmap_of_all_condition_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
@@ -427,7 +432,7 @@ class HeatmapPlot:
                 else:
                     title = f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})"                
                 
-                fig.ax_col_dendrogram.set_title(title, fontsize=font_size)
+                plt.suptitle(title, fontsize=font_size + 2, weight='bold')
 
                 plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
                 plt.tight_layout()
@@ -452,7 +457,7 @@ class HeatmapPlot:
                 else:
                     sorted_df = dft
                 
-                plt.close(fig.fig)
+                plt.close(fig.figure)
 
                 return sorted_df
                             
@@ -525,8 +530,8 @@ class HeatmapPlot:
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-            fig.ax_col_dendrogram.set_title(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", fontsize=font_size)
-
+            plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
+                         fontsize=font_size + 2, weight='bold')
             plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
             plt.tight_layout()
             plt.show()

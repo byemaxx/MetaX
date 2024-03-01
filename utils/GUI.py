@@ -652,7 +652,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QGroupBox {{
                     text-transform: none;
                     margin: 0px;
-                    padding: 20px 0px 10px 0px;
+                    padding: 10px 0px 10px 0px;
                     }}
                     QTabBar {{
                     text-transform: none;
@@ -668,13 +668,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     text-transform: none;
                     }}
                     QLabel {{
-                    font-size: 14px;
+                    font-size: 13px;
                     }}
                     QComboBox {{
-                    font-size: 14px;
+                    font-size: 13px;
                     }}
                     QToolBox {{
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: bold;
                     }}
 

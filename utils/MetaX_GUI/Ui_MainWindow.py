@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 377))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -3949,7 +3949,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
