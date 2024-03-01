@@ -354,3 +354,8 @@ New: Add a function of right click menu for heatmap combo box to plot the all co
 ## Date: 2024-02-28
 ### Changes:
 New: Add a function to save current MetaX object to a file, and load it from a file.
+
+# Version: 1.99.1
+## Date: 2024-03-01
+### Changes:
+Change: Changed the figures of the help information of function treshold setting and the LCA threshold setting.
