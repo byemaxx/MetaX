@@ -359,3 +359,8 @@ New: Add a function to save current MetaX object to a file, and load it from a f
 ## Date: 2024-03-01
 ### Changes:
 Change: Changed the figures of the help information of function treshold setting and the LCA threshold setting.
+
+# Version: 1.99.2
+## Date: 2024-03-01
+### Changes:
+Change: Optimize the restore function of the object.
