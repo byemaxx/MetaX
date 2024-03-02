@@ -276,8 +276,13 @@ class BasicPlot:
             ax = fig.ax_heatmap 
             ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
             ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
-        
-            #set title
+            
+            cbar = fig.ax_heatmap.collections[0].colorbar
+            cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
+            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+
             plt.tight_layout()
             plt.show()
             # plt.close()

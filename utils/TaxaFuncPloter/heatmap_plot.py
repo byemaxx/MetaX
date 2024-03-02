@@ -119,10 +119,13 @@ class HeatmapPlot:
                     fontsize=font_size,
                     rotation=0,
                 )
+                    
+                cbar = fig.ax_heatmap.collections[0].colorbar
+                cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+                cbar.ax.yaxis.set_ticks_position('left')
+                cbar.ax.yaxis.set_label_position('left')
 
-                plt.subplots_adjust(
-                    left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2
-                )
+                plt.subplots_adjust(left=0.03, bottom=0.25, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
                 plt.tight_layout()
                 plt.show()
@@ -247,7 +250,13 @@ class HeatmapPlot:
                 f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})",
                 fontsize=font_size + 2, weight='bold'
             )
-            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+            cbar = fig.ax_heatmap.collections[0].colorbar
+            cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
+
+            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+            
             plt.tight_layout()
             plt.show()
             return fig
@@ -323,9 +332,13 @@ class HeatmapPlot:
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
         plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+        
+        cbar = fig.ax_heatmap.collections[0].colorbar
+        cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+        cbar.ax.yaxis.set_ticks_position('left')
+        cbar.ax.yaxis.set_label_position('left')
 
-
-        plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
         plt.tight_layout()
         plt.show()
         return fig
@@ -433,8 +446,14 @@ class HeatmapPlot:
                     title = f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})"                
                 
                 plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+                
+                cbar = fig.ax_heatmap.collections[0].colorbar
+                cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+                cbar.ax.yaxis.set_ticks_position('left')
+                cbar.ax.yaxis.set_label_position('left')
 
-                plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+                plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+
                 plt.tight_layout()
                 plt.show()
 
@@ -532,7 +551,14 @@ class HeatmapPlot:
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
                          fontsize=font_size + 2, weight='bold')
-            plt.subplots_adjust(left=0.05, bottom=0.4, right=0.5, top=0.95, wspace=0.2, hspace=0.2)
+
+            cbar = fig.ax_heatmap.collections[0].colorbar
+            cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
+
+            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+
             plt.tight_layout()
             plt.show()
             return fig

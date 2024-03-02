@@ -364,3 +364,8 @@ Change: Changed the figures of the help information of function treshold setting
 ## Date: 2024-03-01
 ### Changes:
 Change: Optimize the restore function of the object.
+
+# Version: 1.99.3
+## Date: 2024-03-01
+### Changes:
+Change: Optimize the color bar of the heatmap. set the label to the left of the color bar.
