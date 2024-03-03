@@ -43,7 +43,9 @@ class BarPlot_js:
                            width:int=1200, height:int=800, df= None, 
                            title:str=None, rename_taxa:bool=False, 
                            show_legend:bool=True, font_size:int=10,
-                           rename_sample:bool=True, plot_mean:bool=False):
+                           rename_sample:bool=True, plot_mean:bool=False,
+                           plot_percent:bool=False
+                           ):
         if df is None:
             df = self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
@@ -61,6 +63,10 @@ class BarPlot_js:
             df = self._add_group_name_to_sample(df)
         
         col_num = len(df)
+        
+        if plot_percent:
+            # transform to percentage of each column
+            df = df.div(df.sum(axis=0), axis=1) * 100
         
         if col_num > 10:
             colors = self.get_distinct_colors(col_num)
@@ -90,7 +96,8 @@ class BarPlot_js:
             color = colors[i]
             c.add_yaxis(name, list(df.loc[name, :]), 
                         stack="stack1", 
-                        category_gap="50%",
+                        # category_gap="50%",
+                        category_gap="5%",
                         # itemstyle_opts=opts.ItemStyleOpts(color=color, border_color="black", border_width=0.1)
                         itemstyle_opts=opts.ItemStyleOpts(color=color, border_type=None)
                         )
@@ -116,7 +123,7 @@ class BarPlot_js:
             ),
             "title_opts": opts.TitleOpts(title=f"{title}", pos_left="center"),
             "xaxis_opts": opts.AxisOpts(
-                axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size)
+                axislabel_opts=opts.LabelOpts(rotate=25, font_size=font_size)
             ),
         }
         c.set_global_opts(**params)

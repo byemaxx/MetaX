@@ -369,3 +369,9 @@ Change: Optimize the restore function of the object.
 ## Date: 2024-03-01
 ### Changes:
 Change: Optimize the color bar of the heatmap. set the label to the left of the color bar.
+
+# Version: 1.99.4
+## Date: 2024-03-02
+### Changes:
+Change: Optimize the bar plot, decrease the gap between the bars to 5% of the bar width.
+New: Add a function to plot the percentage of each column in the bar plot.

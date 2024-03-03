@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>398</width>
-                 <height>80</height>
+                 <width>477</width>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2078,32 +2078,6 @@
                 </item>
                 <item row="3" column="9" rowspan="3">
                  <layout class="QGridLayout" name="gridLayout_41">
-                  <item row="4" column="0">
-                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Plot  Peptides</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_152">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Rename</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="0" colspan="3">
                    <layout class="QHBoxLayout" name="horizontalLayout_31">
                     <item>
@@ -2172,39 +2146,49 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="3" column="1">
-                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_sample_name">
-                    <property name="text">
-                     <string>Samples</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_x">
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_peptide">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>X</string>
+                     <string>Plot  Peptides</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="2">
-                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_taxa">
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_130">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Taxa</string>
+                     <string>Show All Labels</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_mean">
+                    <property name="text">
+                     <string>Plot Mean</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_152">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Rename</string>
                     </property>
                    </widget>
                   </item>
@@ -2232,23 +2216,16 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_130">
+                  <item row="3" column="2">
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_taxa">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Show All Labels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_y">
-                    <property name="text">
-                     <string>Y</string>
+                     <string>Taxa</string>
                     </property>
                    </widget>
                   </item>
@@ -2259,8 +2236,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="1" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_x">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2268,19 +2245,53 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string> Bar Legend</string>
+                     <string>X</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_sample_name">
+                    <property name="text">
+                     <string>Samples</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_mean">
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="checkBox_basic_hetatmap_show_all_labels_y">
                     <property name="text">
-                     <string>Plot Mean</string>
+                     <string>Y</string>
                     </property>
                    </widget>
+                  </item>
+                  <item row="5" column="1" colspan="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_60">
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string> Bar Lgd</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_basic_bar_plot_percent">
+                      <property name="text">
+                       <string>Bar %</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </item>
@@ -5846,6 +5857,27 @@
                       </property>
                       <property name="text">
                        <string>Taxa</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_tflink_bar_plot_percent">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <stylestrategy>PreferDefault</stylestrategy>
+                       </font>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>Bar Percent</string>
                       </property>
                      </widget>
                     </item>

@@ -2983,6 +2983,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
+                plot_percent = self.checkBox_basic_bar_plot_percent.isChecked()
                 width = width*100
                 height = height*100
                 df = df.loc[(df!=0).any(axis=1)]
@@ -2996,7 +2997,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 pic = BarPlot_js(self.tfa).plot_intensity_bar(df = df, width=width, height=height, 
                                                               title= '', rename_taxa=rename_taxa, 
                                                               show_legend=show_legend, font_size=font_size,
-                                                              rename_sample=rename_sample, plot_mean = plot_mean)
+                                                              rename_sample=rename_sample, plot_mean = plot_mean,
+                                                              plot_percent = plot_percent)
                                                               
                 self.save_and_show_js_plot(pic, title)
             
@@ -4792,6 +4794,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         params['sample_list'] = self.get_sample_list_tflink()
         params['rename_sample'] = self.checkBox_tflink_hetatmap_rename_sample.isChecked()
+        params['plot_percent'] = self.checkBox_tflink_bar_plot_percent.isChecked()
 
 
         if taxa:
