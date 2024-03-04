@@ -312,72 +312,72 @@
 # Version: 1.97.0
 ## Date: 2024-02-12
 ### Changes:
-New: Add a new function to plot the number of taxa and functions for each sample or each group.
+- New: Add a new function to plot the number of taxa and functions for each sample or each group.
 
 # Version: 1.97.1
 ## Date: 2024-02-12
 ### Changes:
-New: Add a new function to plot the Treemap for taxa.
+- New: Add a new function to plot the Treemap for taxa.
 
 # Version: 1.97.2
 ## Date: 2024-02-14
 ### Changes:
-Change: Changed the number of legned cols: (group_num//30 + 1), for basic plot.
+- hange: Changed the number of legned cols: (group_num//30 + 1), for basic plot.
 
 
 # Version: 1.97.3
 ## Date: 2024-02-15
 ### Changes:
-Fix: Fixed the bug of when close the log window by user, the runing status is not reset.
+- Fix: Fixed the bug of when close the log window by user, the runing status is not reset.
 
 # Version: 1.97.4
 ## Date: 2024-02-21
 ### Changes:
-Fix: Fixed the bug of when calculate the taxa number in each level with threshold, the "s__nan" was not removed.
+- Fix: Fixed the bug of when calculate the taxa number in each level with threshold, the "s__nan" was not removed.
 
 # Version: 1.97.5
 ## Date: 2024-02-21
 ### Changes:
-Fix: Fixed the bug of when plot sankey while the combox of plot peptide is checked, the plot will raise error.
+- Fix: Fixed the bug of when plot sankey while the combox of plot peptide is checked, the plot will raise error.
 
 # Version: 1.97.6
 ## Date: 2024-02-22
 ### Changes:
-New: Add a function to plot the mean for each group in the basic heatmap plot part.
+- New: Add a function to plot the mean for each group in the basic heatmap plot part.
 
 # Version: 1.98.0
 ## Date: 2024-02-22
 ### Changes:
-New: Add a function of right click menu for heatmap combo box to plot the all colormap.
+- New: Add a function of right click menu for heatmap combo box to plot the all colormap.
 
 # Version: 1.99.0
 ## Date: 2024-02-28
 ### Changes:
-New: Add a function to save current MetaX object to a file, and load it from a file.
+- New: Add a function to save current MetaX object to a file, and load it from a file.
 
 # Version: 1.99.1
 ## Date: 2024-03-01
 ### Changes:
-Change: Changed the figures of the help information of function treshold setting and the LCA threshold setting.
+- Change: Changed the figures of the help information of function treshold setting and the LCA threshold setting.
 
 # Version: 1.99.2
 ## Date: 2024-03-01
 ### Changes:
-Change: Optimize the restore function of the object.
+- Change: Optimize the restore function of the object.
 
 # Version: 1.99.3
 ## Date: 2024-03-01
 ### Changes:
-Change: Optimize the color bar of the heatmap. set the label to the left of the color bar.
+- Change: Optimize the color bar of the heatmap. set the label to the left of the color bar.
 
 # Version: 1.99.4
 ## Date: 2024-03-02
 ### Changes:
-Change: Optimize the bar plot, decrease the gap between the bars to 5% of the bar width.
-New: Add a function to plot the percentage of each column in the bar plot.
+- Change: Optimize the bar plot, decrease the gap between the bars to 5% of the bar width.
+- New: Add a function to plot the percentage of each column in the bar plot.
 
 # Version: 1.99.5
 ## Date: 2024-03-04
 ### Changes:
-Change: Optimize the bar plot and trends plot: 1. set the ylim as 100 when plot percentage. 2. add a buton to scroll the legend if the legend is too long.
-Fix: Fixed the bug of when plot the trends, tight layout doesn't work.
+- Change: Optimize the bar plot and trends plot: 1. set the ylim as 100 when plot percentage. 2. add a buton to scroll the legend if the legend is too long.
+- Fix: Fixed the bug of when plot the trends, tight layout doesn't work.
