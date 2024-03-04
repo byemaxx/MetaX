@@ -375,3 +375,9 @@ Change: Optimize the color bar of the heatmap. set the label to the left of the 
 ### Changes:
 Change: Optimize the bar plot, decrease the gap between the bars to 5% of the bar width.
 New: Add a function to plot the percentage of each column in the bar plot.
+
+# Version: 1.99.5
+## Date: 2024-03-04
+### Changes:
+Change: Optimize the bar plot and trends plot: 1. set the ylim as 100 when plot percentage. 2. add a buton to scroll the legend if the legend is too long.
+Fix: Fixed the bug of when plot the trends, tight layout doesn't work.

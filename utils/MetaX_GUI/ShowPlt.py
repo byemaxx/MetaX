@@ -17,7 +17,6 @@ class ExportablePlotDialog(QtWidgets.QDialog):
 
         # Set canvas size
         self.canvas.setFixedSize(*size)
-        self.fig.tight_layout()
 
         # Create navigation toolbar for zoom, pan, save functionality
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -40,6 +39,10 @@ class ExportablePlotDialog(QtWidgets.QDialog):
         self.setWindowTitle("Plt")
         if parent and parent.windowIcon():
             self.setWindowIcon(parent.windowIcon())
+            
+    def tight_layout(self):
+        self.fig.tight_layout()
+        self.canvas.draw()
 
 # Usage:
 if __name__ == "__main__":

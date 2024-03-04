@@ -48,8 +48,16 @@ class TrendsPlot_js:
             Line(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
             .add_xaxis(list(df.columns))
         )
-        colors = self.get_distinct_colors(len(df))
-        
+
+        col_num = len(df)
+        if col_num > 10:
+            colors = self.get_distinct_colors(col_num)
+        else:
+            import seaborn as sns
+            colors = sns.color_palette('deep', col_num)
+            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
+            
+            
         for i in range(df.shape[0]):
             color = colors[i]
             c.add_yaxis(
@@ -73,19 +81,23 @@ class TrendsPlot_js:
         )
 
         # set global options
-        if show_legend:
-            c.set_global_opts(legend_opts=opts.LegendOpts(pos_left="right", orient="vertical", pos_top="5%",border_width=0),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
-                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
-                            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
-                            title_opts=opts.TitleOpts(title=title, pos_left="center"),)
-        else:
-            c.set_global_opts(legend_opts=opts.LegendOpts(is_show=False),
-                            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=45)),
-                            toolbox_opts=opts.ToolboxOpts( is_show=True, orient="vertical", pos_left="right", pos_top="bottom"),
-                            datazoom_opts=[opts.DataZoomOpts( type_="inside", range_start=0, range_end=100,)],
-                            title_opts=opts.TitleOpts(title=title, pos_left="center"),)
-
+        params = {
+            "legend_opts": opts.LegendOpts(
+                                           type_="scroll", page_icon_size = 8, 
+                                           selector=[{"type": "all", "title": "All"}, {"type": "inverse", "title": "Inverse"}],
+                                           pos_left="right", orient="vertical", 
+                                           pos_top="5%",border_width=0) if show_legend else opts.LegendOpts(is_show=False),
+            "xaxis_opts": opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=25)),
+            "toolbox_opts": opts.ToolboxOpts(
+                is_show=True, orient="vertical", pos_left="left", pos_top="bottom"
+            ),
+            "datazoom_opts": [
+                opts.DataZoomOpts(type_="inside", range_start=0, range_end=100,)
+            ],
+            "title_opts": opts.TitleOpts(title=title, pos_left="center"),
+        }
+        c.set_global_opts(**params)
+        
         return c
     
     def get_distinct_colors(self, n):  

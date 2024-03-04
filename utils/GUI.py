@@ -3217,6 +3217,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             #set title
             plt_dialog.setWindowTitle(title)
             plt_dialog.show() # Show the dialog.
+            # tight_layout
+            plt_dialog.tight_layout()
             self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
             
             # save table to dict
