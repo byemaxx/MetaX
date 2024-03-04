@@ -381,3 +381,9 @@
 ### Changes:
 - Change: Optimize the bar plot and trends plot: 1. set the ylim as 100 when plot percentage. 2. add a buton to scroll the legend if the legend is too long.
 - Fix: Fixed the bug of when plot the trends, tight layout doesn't work.
+
+# Version: 1.99.6
+## Date: 2024-03-04
+### Changes:
+- New: Add font size option for the plot of the deseq2 result.
+- Change: Integrated size of pyecharts plots and seaborn plots as screen resolution divided by 120

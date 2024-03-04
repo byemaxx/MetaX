@@ -172,18 +172,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True))
         
-        # set plot width and height (1600*900)
         self.screen = QDesktopWidget().screenGeometry()
         self.screen_width = self.screen.width()
         self.screen_height = self.screen.height()
-        self.spinBox_network_width.setValue(int(self.screen_width/1.2))
-        self.spinBox_network_height.setValue(int(self.screen_height/1.2))
-        self.spinBox_co_expr_width.setValue(int(self.screen_width/1.2))
-        self.spinBox_co_expr_height.setValue(int(self.screen_height/1.2))
-        self.spinBox_fc_plot_width.setValue(int(self.screen_width/1.2))
-        self.spinBox_fc_plot_height.setValue(int(self.screen_height/1.2))
-        
-        # set other figure width and height(16 * 9)
+        # set figure width and height(16 * 9) if the screen is larger than 1920 * 1080
+        self.spinBox_network_width.setValue(int(self.screen_width/120))
+        self.spinBox_network_height.setValue(int(self.screen_height/120))
+        self.spinBox_co_expr_width.setValue(int(self.screen_width/120))
+        self.spinBox_co_expr_height.setValue(int(self.screen_height/120))
+        self.spinBox_fc_plot_width.setValue(int(self.screen_width/120))
+        self.spinBox_fc_plot_height.setValue(int(self.screen_height/120))
         self.spinBox_basic_pca_width.setValue(int(self.screen_width/120))
         self.spinBox_basic_pca_height.setValue(int(self.screen_height/120))
         self.spinBox_basic_heatmap_width.setValue(int(self.screen_width/120))
@@ -3023,7 +3021,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 else:
                     title_new = ''
                     subtitle = ''
-                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, 
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width, height=height, 
                                                                  title=title_new, subtitle=subtitle, font_size=font_size,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
@@ -3659,7 +3657,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 df = df[sample_list]
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
                 
-                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width*100, height=height*100, font_size = font_size, title='', subtitle='')
+                pic = SankeyPlot(self.tfa).plot_intensity_sankey(df=df, width=width, height=height,
+                                                                 font_size = font_size, title='', subtitle='')
                 self.save_and_show_js_plot(pic, title)
             
             elif method == 'num_bar':
@@ -4290,6 +4289,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
+            font_size = self.spinBox_seqeq2_font_size.value()
+            
             if log2fc_min > log2fc_max:
                 QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
                 return None
@@ -4304,7 +4305,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = self.table_dict[table_name]
             pic = VolcanoPlot().plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
                                                 log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
-                                                title_name=title_name,  width=width, height=height)
+                                                title_name=title_name,  font_size = font_size,
+                                                width=width, height=height)
+            
             self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
 
         except Exception as e:
@@ -4373,6 +4376,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
+            font_size = self.spinBox_seqeq2_font_size.value()
+            
             if log2fc_min > log2fc_max:
                 QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
                 return None
@@ -4389,7 +4394,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
 
             pic = SankeyPlot(self.tfa).plot_fc_sankey(df, width=width, height=height, pvalue=pvalue, p_type = p_type,
-                                                      log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name)
+                                                      log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Sankay plot {title_name}')
             
             # subprocess.Popen(save_path, shell=True)

@@ -8,7 +8,10 @@ class VolcanoPlot():
 
 
     def plot_volcano_js(self, df_fc, pvalue:float=0.05, p_type ='padj',
-                        log2fc_min:float=1, log2fc_max:float = 10, title_name:str='2 groups', width:int=1200, height:int=800):
+                        log2fc_min:float=1, log2fc_max:float = 10, 
+                        title_name:str='2 groups',  font_size:int=12,
+                        width:int=12, height:int=8):
+        
         df = df_fc.copy()
        
         if p_type not in ['pvalue', 'padj']:
@@ -60,13 +63,13 @@ class VolcanoPlot():
         title = f'Volcano plot of {title_name} ({p_type} <= {pvalue},  {log2fc_min} <= log2FoldChange < {log2fc_max})'
         
         scatter = (
-            Scatter(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
+            Scatter(init_opts=opts.InitOpts(width=f"{width*100}px", height=f"{height*100}px"))
             .add_xaxis(df['log2FoldChange'].tolist())
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='log2FoldChange'),
                 yaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='-log10(padj)'),
-                title_opts=opts.TitleOpts(title=title, pos_left='center'),
-                legend_opts=opts.LegendOpts(pos_left='right',  orient='vertical'),
+                title_opts=opts.TitleOpts(title=title, pos_left='center', title_textstyle_opts=opts.TextStyleOpts(font_size=font_size)),
+                legend_opts=opts.LegendOpts(pos_left='right',  orient='vertical', textstyle_opts=opts.TextStyleOpts(font_size=font_size), pos_top="5%"),
                 tooltip_opts=opts.TooltipOpts(is_show=True, position='top', formatter='{b}: {c}'),
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}}),
             ) )

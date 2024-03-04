@@ -153,9 +153,9 @@ class SankeyPlot:
 
         # Remove duplicate nodes
         # nodes_combined = list({node['name']: node for node in nodes_up + nodes_down}.values())
-        width = f'{width}px'
-        height = f'{height}px'
-        pic = Sankey(init_opts=opts.InitOpts(width=width, height=height))
+        pic = Sankey(init_opts=opts.InitOpts(width=f"{width*100}px",
+                                             height=f"{height*100}px"))
+        
         for key, value in link_nodes_dict.items():
             nodes  = value[0]
             links = value[1]
@@ -184,8 +184,11 @@ class SankeyPlot:
         return pic
 
 
-    def plot_fc_sankey(self, fc_df, width=1920, height=1080, pvalue=0.05, p_type='padj',
-                       log2fc_min=1, log2fc_max=10, title='Sankey Plot'):
+    def plot_fc_sankey(self, fc_df, width=12, height=8, pvalue=0.05, p_type='padj',
+                       log2fc_min=1, log2fc_max=10, title='Sankey Plot', font_size=12):
+        
+        self.font_size = font_size # update font size
+            
         df_sankey = self.convert_logfc_df_for_sankey(
             fc_df, pvalue=pvalue, p_type=p_type,
             log2fc_min=log2fc_min, log2fc_max=log2fc_max)
@@ -199,7 +202,7 @@ class SankeyPlot:
         return pic
     
     
-    def plot_intensity_sankey(self, df,width=1920, height=1080, title='Sankey Plot', subtitle='', font_size=12, show_legend=True):
+    def plot_intensity_sankey(self, df,width=12, height=8, title='Sankey Plot', subtitle='', font_size=12, show_legend=True):
         df = df.copy()
         df['sum'] = df.sum(axis=1)
         self.font_size = font_size

@@ -26,8 +26,11 @@ class NetworkPlot:
         df = df[['taxa', 'function', 'sum']]
 
         if plot_list_only:
+            print("Plotting only the list provided in focus_list")
+            print(f"Original df shape: {df.shape}")
             df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
-
+            print(f"New df shape: {df.shape}")
+            
         taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
         function_sum = df.groupby('function')['sum'].sum().to_dict()
 
@@ -83,7 +86,7 @@ class NetworkPlot:
 
 
     
-    def plot_tflink_network(self, sample_list:list = None, width:int = 1200, height:int = 800, focus_list: list = None, plot_list_only:bool = False):
+    def plot_tflink_network(self, sample_list:list = None, width:int = 12, height:int = 8, focus_list: list = None, plot_list_only:bool = False):
         if focus_list is None:
             focus_list = []
         # preprocess focus_list
@@ -106,7 +109,8 @@ class NetworkPlot:
 
 
         c = (
-            Graph(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
+            Graph(init_opts=opts.InitOpts(width=f"{width*100}px",
+                                          height=f"{height*100}px"))
             .add(
                 "",
                 nodes,
@@ -137,7 +141,7 @@ class NetworkPlot:
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
                                    corr_threshold:float=0.5, sample_list:list = None, 
-                                   width:int = 1600, height:int = 900, focus_list:list = [], plot_list_only:bool = False):
+                                   width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False):
         from matplotlib import colormaps
         #check sample_list length
         if len(sample_list) < 2:
@@ -184,14 +188,14 @@ class NetworkPlot:
                         if node_i in focus_list or node_j in focus_list:
                             linked_nodes.add(node_i)
                             linked_nodes.add(node_j)
-
+                
         nodes = []
         for item in correlation_matrix.columns:
             if focus_list and len(focus_list) > 0:
                 if plot_list_only and item not in focus_list and item not in linked_nodes:
-                    continue
+                    continue # skip the node if it's not in the focus list and not linked to any node in the focus list
 
-                if item in focus_list:
+                if item in focus_list: # mark the focus nodes with a different color
                     node_size = 50
                     color = '#ff0000'
                     category = 0  # Focus category
@@ -227,8 +231,8 @@ class NetworkPlot:
         pic = (
             Graph(
                 init_opts=opts.InitOpts(
-                    width=f"{width}px",
-                    height=f"{height}px",
+                    width=f"{width*100}px",
+                    height=f"{height*100}px",
                     animation_opts=opts.AnimationOpts(
                         animation_threshold=100, animation_easing="cubicOut"
                     ),
