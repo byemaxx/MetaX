@@ -28,7 +28,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 - You have to build the database for **the first time** using <u>Database Builder</u>.
 
-  **Build Database By MGnify Data**
+  **(Option 1) Build Database By MGnify Data**
   
   Make sure to download the correct database type corresponding to your data
   
@@ -36,7 +36,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 <img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder" style="zoom: 50%;" />
 
-**Build Database By Own Data**
+**(Option 2) Build Database By Own Data**
 
 + (1). **Annotation Table:** a TSV table(separated by a tab), and make sure the first column is protein name joined Genome by "_", e.g.  "Genome1_protein1" and other columns are annotation information.
 
@@ -80,7 +80,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 <img src="./MetaX_Cookbook.assets/db_updater.png" alt="db_updater" style="zoom: 50%;" />
 
-+ **By built-in mode:**
++ **(Option 1) By built-in mode:**
 
   - there are some extended db we recommend, eg. 
 
@@ -88,7 +88,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
     
     
 
-- **By TSV table**
+- **(Option 2) By TSV table**
 
   - Extend the database by adding a new database to the database table. 
 
@@ -122,10 +122,10 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
     | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
     | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
-    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002152_00146;MGYG000004769_00436;MGYG000002926_00231;MGYG000001760_00948;MGYG000003937_01028;MGYG000002040_01211;MGYG000000084_01999;MGYG000000099_01235;MGYG000000927_01462;MGYG000002098_01617;MGYG000001255_01100;MGYG000004004_01564;MGYG000002224_01124;MGYG000002143_01658;MGYG000002720_00091;MGYG000002156_00758;MGYG000002965_00479;MGYG000001699_00586;MGYG000003412_02031;MGYG000004487_01548;MGYG000000258_00265;MGYG000004475_00888;MGYG000003465_01529;MGYG000000989_00159;MGYG000001365_00341 | 714650          | 0               | 0               | 0               |
-    | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244; | 0               | 0               | 0               | 0               |
+    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
+    | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
     | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
-    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269;MGYG000004232_01724;MGYG000002031_00438;MGYG000001490_01143;MGYG000002438_01173;MGYG000002528_03093;MGYG000003683_00301;MGYG000001477_01194;MGYG000002057_00708;MGYG000003420_01555;MGYG000001623_00999;MGYG000003369_00571;MGYG000002609_01341;MGYG000002033_02619;MGYG000001611_01531;MGYG000000316_00768;MGYG000000908_00506;MGYG000000202_00899;MGYG000003273_00042;MGYG000001489_02476;MGYG000001500_00461;MGYG000001508_00242;MGYG000001146_00876;MGYG000001542_04277;MGYG000003142_02836;MGYG000001479_01422;MGYG000003222_00392;MGYG000001372_00515;MGYG000001292_01825;MGYG000001065_01331;MGYG000003452_00444;MGYG000001756_01846;MGYG000000198_00852;MGYG000001560_02076;MGYG000000491_00871;MGYG000001786_00675;MGYG000001404_01158;MGYG000000924_00653;MGYG000000416_01200;MGYG000001564_00588;MGYG000003494_02034;MGYG000000245_03033;MGYG000001214_00278;MGYG000004501_00695;MGYG000002170_02213;MGYG000003529_00546;MGYG000003368_01294;MGYG000003672_00260;MGYG000001681_00786;MGYG000002485_02349;MGYG000002421_00076;MGYG000004502_00885;MGYG000002275_02268;MGYG000000164_01790;MGYG000000450_01212;MGYG000004893_01780;MGYG000001624_02209;MGYG000004722_01554;MGYG000002089_01201;MGYG000000295_00681;MGYG000004628_00528;MGYG000003145_01797;MGYG000000179_04334;MGYG000000636_00261;MGYG000004762_00173;MGYG000001954_01432;MGYG000003992_01513;MGYG000002780_00546;MGYG000002459_01079;MGYG000000914_00320;MGYG000002946_02793;MGYG000004271_02469;MGYG000000756_01431;MGYG000000392_00945;MGYG000000185_01615;MGYG000001688_04698;MGYG000000524_01322;MGYG000000490_00825;MGYG000000281_00558;MGYG000001571_03245;MGYG000003730_00903;MGYG000000133_01867;MGYG000003412_00500;MGYG000000127_04360;MGYG000000119_01155;MGYG000000953_00567;MGYG000004869_01377;MGYG000002517_00429;MGYG000000089_00233;MGYG000003576_00960;MGYG000001793_01278;MGYG000000389_01973;MGYG000002006_02345;MGYG000004776_00604 | 0               | 307519          | 0               | 0               |
+    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
     | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
 
   - **Output Save Path**: the location to save the result table
@@ -292,7 +292,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/pca.png" alt="pca" style="zoom: 50%;" />
 
-<img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" style="zoom: 46%;" />
 
 <img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation" style="zoom: 50%;" />
 
@@ -310,9 +310,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select specific Groups **with condition**
 
-    - ![group_in_condition](MetaX_Cookbook.assets/group_in_condition.png)
+    **e.g. :** Select PBS, BAS and others groups **only in** <u>Individual</u> <u>V1</u> 
 
-  - Select specific Samples to Analysis
+    - <img src="MetaX_Cookbook.assets/group_in_condition.png" alt="group_in_condition" style="zoom:80%;" />
+
+  - Select **specific Samples** to Analysis
 
     - <img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732" style="zoom:50%;" />
 
@@ -389,7 +391,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
       - **Bar Ldg**: Show the legend when plotting Bar
       - **Bar %:**  Transfer each col to percent when plotting Bar
 
-<img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" />
+        - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" />
 
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
@@ -661,7 +663,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   
   
 
-# Restore Last TaxaFunc
+# Restore Last TaxaFunc Object
 
 - Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.
 - Also, we can export the current MetaX to a file and reload it again.
