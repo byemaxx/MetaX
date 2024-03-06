@@ -15,8 +15,8 @@ class BasicPlot:
         sns.set_theme()
         
         
-    # input: self.get_stats_peptide_num_in_taxa()
-    def plot_taxa_stats(self, theme:str = 'Auto', res_type = 'pic'):
+    #! Deprecated function, use plot_taxa_stats_pie chart instead
+    def plot_taxa_stats_bar(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
         df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
         # if 'not_found' is 0, then remove it
         if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
@@ -34,34 +34,109 @@ class BasicPlot:
         
         ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
         for i in ax.containers:
-            ax.bar_label(i,)
-        ax.set_title('Number of identified peptides in different taxa level')
+            ax.bar_label(i, fontsize=font_size)
+        ax.set_title('Number of identified peptides in different taxa level', fontsize=font_size+2, fontweight='bold')
         ax.set_xlabel('Taxa level')
         ax.set_ylabel('Number of peptides')
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
         ax.legend(title='Taxa level (frequency)',  ncol=2)
         if res_type == 'show':
             plt.tight_layout()
             plt.show()
         else:
             plt.close()
-        return ax
+        return ax # use "pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()" to get the figure object in GUI script
+
+
+    def plot_taxa_stats_pie(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
+        df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
+        # if 'not_found' is 0, then remove it
+        if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
+            df = df[df['LCA_level'] != 'notFound']
+            
+        # if 'life' is 0, then remove it
+        if df[df['LCA_level'] == 'life']['count'].values[0] == 0:
+            df = df[df['LCA_level'] != 'life']
+            
+        if 'genome' in df['LCA_level'].values and df[df['LCA_level'] == 'species']['count'].values[0] == 0:
+            # rename genome to species(Genome)
+            df.loc[df['LCA_level'] == 'genome', 'LCA_level'] = 'species (genome)'
+            # remove species
+            df = df[df['LCA_level'] != 'species']
+            
+        if theme is not None and theme != 'Auto':
+            plt.style.use(theme)
+        else:
+            plt.style.use('default')
+        
+        # set figure size base on font size
+        if font_size <= 10:
+            fig_size = (8, 6)
+        elif font_size <= 12:
+            fig_size = (10, 8)
+        elif font_size <= 14:
+            fig_size = (12, 10)
+        elif font_size <= 16:
+            fig_size = (14, 12)
+        else:
+            fig_size = (16, 14)
+            
+        
+        fig = plt.figure(figsize=fig_size) if res_type == 'show' else plt.figure()
+        
+        wedges, texts, autotexts = plt.pie(df['count'], labels=df['LCA_level'], autopct='%1.1f%%', startangle=140)
+        
+        for i, t in enumerate(texts):
+            t.set_text(f'{t.get_text()} ({autotexts[i].get_text()})')
+    
+        count = df['count'].values
+        for i, a in enumerate(autotexts):
+            a.set_text(f'{count[i]}')
+
+        
+        plt.title('Number of identified peptides in different taxa level', fontsize=font_size+2, loc='center', fontweight='bold')
+        plt.setp(autotexts, size=font_size,  color="white")
+        plt.setp(texts, size=font_size)
+
+        if res_type == 'show':
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.close()
+        
+        return fig
 
     # input: self.get_stats_taxa_level()
-    def plot_taxa_number(self, peptide_num = 1, theme:str = 'Auto', res_type = 'pic'):
+    def plot_taxa_number(self, peptide_num = 1, theme:str = 'Auto', res_type = 'pic', font_size = 10):
         df = self.tfa.BasicStats.get_stats_taxa_level(peptide_num)
+        
+        # if genome in taxa_level and count of species == count of genome, then remove genome, and rename species to species (genome)
+        if 'genome' in df['taxa_level'].values and df[df['taxa_level'] == 'species']['count'].values[0] == df[df['taxa_level'] == 'genome']['count'].values[0]:
+            # rename species to species(Genome)
+            # df.loc[df['taxa_level'] == 'species', 'taxa_level'] = 'species (gen)'
+            # remove genome
+            df = df[df['taxa_level'] != 'genome']
 
         if theme is not None and theme != 'Auto':
             plt.style.use(theme)
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
-        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        plt.figure(figsize=(10, 8)) if res_type == 'show' else plt.figure()
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
-            ax.bar_label(i,)
-        ax.set_title(f'Number of taxa in different taxa level (Peptide number >= {peptide_num})')
-        ax.set_xlabel('Taxa level')
-        ax.set_ylabel('Number of taxa')
+            # set the label of the bar, and fontsize
+            ax.bar_label(i, fontsize=font_size)
+            
+        ax.set_title(f'Number of taxa in different taxa level (Peptide number >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
+        ax.set_xlabel('Taxa level', fontsize=font_size+2)
+        ax.set_ylabel('Number of taxa', fontsize=font_size+2)
+        # set font size of xtikcs and yticks
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
+        
+        
         if res_type == 'show':
             plt.tight_layout()
             plt.show()
@@ -71,7 +146,7 @@ class BasicPlot:
         return ax
 
     # input: self.get_stats_func_prop()
-    def plot_prop_stats(self, func_name = 'eggNOG_OGs', theme:str = 'Auto', res_type = 'pic'):
+    def plot_prop_stats(self, func_name = 'eggNOG_OGs', theme:str = 'Auto', res_type = 'pic', font_size = 10):
         df = self.tfa.BasicStats.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
@@ -85,11 +160,14 @@ class BasicPlot:
         
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
-            ax.bar_label(i,)
-        ax.set_title(f'Number of different proportions of peptides in {func_name}')
-        ax.set_xlabel('Proportion of function')
-        ax.set_ylabel('Number of peptides')
-        ax.legend(title='Proportion of function (frequency)',  ncol=2, loc = 'upper left')
+            ax.bar_label(i, fontsize=font_size)
+        ax.set_title(f'Number of different proportions of peptides in {func_name}', fontsize=font_size+2, fontweight='bold')
+        ax.set_xlabel('Proportion of function', fontsize=font_size+2)
+        ax.set_ylabel('Number of peptides', fontsize=font_size+2)
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
+        
+        ax.legend(title='Proportion of function (frequency)',  ncol=2, loc = 'upper left', fontsize=font_size)
         plt.xticks(rotation=45)
         plt.subplots_adjust(bottom=0.25)
         if res_type == 'show':
@@ -144,9 +222,11 @@ class BasicPlot:
             pca = PCA(n_components=2)
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
+            # set dot size based on the width and height
+            dot_size = (width * height)
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
-                                hue=group_list, s = 150, alpha=0.8, edgecolor='black', linewidth=0.5)
+                                hue=group_list, s = dot_size, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 new_sample_name = new_sample_name if rename_sample else sample_list
                 texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 

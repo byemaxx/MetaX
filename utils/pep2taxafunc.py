@@ -40,6 +40,10 @@
 # Date: 2024-01-11
 # Version:0.2.9
 # change the "unknown" to "not_found" because the "unknown" may be confused with the "function unknown"
+#
+# Date: 2024-03-05
+# Version:0.2.10
+# add an option to count the genome level in the taxonomic level
 
 from collections import Counter
 import sqlite3
@@ -51,14 +55,19 @@ def open_eggnog_db(db_path):
     return conn
 
 # return a list of taxonomic levels of each protein
-def query_taxon_from_db(conn, protein_list):
+def query_taxon_from_db(conn, protein_list, genome_mode = True):
     c = conn.cursor()
     taxa = []
     sql = 'SELECT Taxa from id2taxa where ID = ?'
     for i in protein_list:
         i = i.split('_')[0]
         if re := c.execute(sql, (i,)).fetchone():
-            taxa.append(re[0])
+            taxa_str = re[0]
+            if genome_mode:
+                taxa_genome = f'{taxa_str};m__{i}'
+                taxa.append(taxa_genome)
+            else:
+                taxa.append(taxa_str)
         else:
             #taxon_level.append('d__NULL;p__NULL;c__NULL;o__NULL;f__NULL;g__NULL;s__NULL')
             taxa.append('not_found')
@@ -68,15 +77,17 @@ def query_taxon_from_db(conn, protein_list):
 
 
 # return the last common ancestor and its percentage         
-def find_LCA(taxa_list: list, threshold: float =1.0):
+def find_LCA(taxa_list: list, threshold: float =1.0, genome_mode = True):
     # split the taxon level by semicolon for each element in the list
     taxa_list = [tax.split(';') for tax in taxa_list]
     taxa_level_dict = {'d': 'domain', 'p': 'phylum', 'c': 'class',
                        'o': 'order', 'f': 'family', 'g': 'genus', 's': 'species'}
-
+    if genome_mode:
+        taxa_level_dict['m'] = 'genome' # add genome level
     tax_re = None
     # '6543210' present the location of the taxon level in the list(s to d)
-    for j in range(6, -1, -1):
+    # for j in range(6, -1, -1):
+    for j in range(7, -1, -1)  if genome_mode else range(6, -1, -1):
         # join the taxon level by the level number
         taxa_level_list = [str.join('|', k[:int(j)+1]) for k in taxa_list]
 
@@ -146,16 +157,16 @@ def create_dict_out(function_results, taxa_results):
     return re_out
 
     
-def proteins_to_taxa_func(protein_list: list,  db_path: str, threshold = 1.0 ) -> dict:
+def proteins_to_taxa_func(protein_list: list,  db_path: str, threshold = 1.0, genome_mode =True ) -> dict:
     conn = open_eggnog_db(db_path)
 
     re_dict = query_protein_from_db(conn, protein_list)
 
-    fun_re = stats_fun(re_dict)
+    fun_re = stats_fun(re_dict = re_dict)
 
-    taxa_list = query_taxon_from_db(conn, protein_list)
+    taxa_list = query_taxon_from_db(conn = conn, protein_list = protein_list, genome_mode = genome_mode)
 
-    taxa_re = find_LCA(taxa_list, threshold)
+    taxa_re = find_LCA(taxa_list = taxa_list, threshold = threshold, genome_mode = genome_mode)
 
     return create_dict_out(fun_re, taxa_re)
 
@@ -174,18 +185,20 @@ pep10 = 'MGYG000002766_00930;MGYG000002754_01086;MGYG000004681_00317'
 pep11 = 'MGYG000002864_01541;MGYG000004383_00684;MGYG000004407_01207;MGYG000002754_01423;MGYG000002766_01563;MGYG000001140_00858;MGYG000001176_00975;MGYG000004294_01434'
 pep_null = 'MGYG000000137_01815;MGYG000001639_01406;MGYG000000236_03945'
 pep_no_species_level = "MGYG000000385;MGYG000002077;MGYG000003829"
+pep_mag_level = 'MGYG000003142_02726;MGYG000003142_02725'
 ### test data
 
 if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    db_path = 'tests/example_data/MetaX-human-gut-new.db'
+    db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
 
     print(db_path)
 
     
-    for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
+    # for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
+    for i in [pep_mag_level]:
         print(i)
         protein_list = i.split(';')
         # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/id2annotation.db')

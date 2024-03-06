@@ -17,7 +17,6 @@ import pandas as pd
 # import AnalyzerUtils
 from .AnalyzerUtils.DataPreprocessing import DataPreprocessing
 from .AnalyzerUtils.SumProteinIntensity import SumProteinIntensity
-
 from .AnalyzerUtils.BasicStats import BasicStats
 from .AnalyzerUtils.CrossTest import CrossTest
 from .AnalyzerUtils.GetMatrix import GetMatrix
@@ -31,6 +30,7 @@ class TaxaFuncAnalyzer:
         self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
+        self.genome_mode = True
         
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
@@ -72,6 +72,11 @@ class TaxaFuncAnalyzer:
         self.original_df = pd.read_csv(df_path, sep='\t')
         if 'Taxon_prop' not in self.original_df.columns:
             raise ValueError("The TaxaFunc data must have Taxon_prop column!")
+        
+        # check if the 'genome' in LCA_level, if no, set genome_mode to False
+        if 'genome' not in self.original_df['LCA_level'].unique():
+            self.genome_mode = False
+            print("The genome mode is set to False, the LCA_level does not contain 'genome'.")
         
         ### create sample_list by Intensity_*, if meta is not provided
         col_names = self.original_df.columns.tolist()
@@ -403,29 +408,31 @@ class TaxaFuncAnalyzer:
         print("Starting to set Taxa table...")
         # select taxa level and create dfc (df clean)
         def strip_taxa(x, level):
-            level_dict = {'s': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
+            level_dict = {'m': 8 , 's': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
             return "|".join(x.split('|')[:level_dict[level]])
-
+        
         level_mapping = {
-            's': ['species'],
-            'g': ['genus', 'species'],
-            'f': ['family', 'genus', 'species'],
-            'o': ['order', 'family', 'genus', 'species'],
-            'c': ['class', 'order', 'family', 'genus', 'species'],
-            'p': ['phylum', 'class', 'order', 'family', 'genus', 'species'],
-            'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
-            'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+            'm': ['genome'],
+            's': ['species', 'genome'],
+            'g': ['genus', 'species', 'genome'],
+            'f': ['family', 'genus', 'species', 'genome'],
+            'o': ['order', 'family', 'genus', 'species', 'genome'],
+            'c': ['class', 'order', 'family', 'genus', 'species', 'genome'],
+            'p': ['phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome']
         }
-        # set taxa_level info
+
         self.taxa_level = level_mapping[level][0]
 
         if level in level_mapping:
             df_t = df[df['LCA_level'].isin(level_mapping[level])]
-            if level != 's':
+            level_sign = 'm' if self.genome_mode else 's'
+            if level != level_sign:
                 df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
             dfc = df_t
         else:
-            raise ValueError("Please input the correct taxa level (s, g, f, o, c, p, d, l)")
+            raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
         
         # extract 'taxa', sample intensity
         df_taxa = dfc[['Taxon'] + self.sample_list].copy()
@@ -553,3 +560,17 @@ class TaxaFuncAnalyzer:
         df = df.sort_values(by=['PepNum', 'Taxon'], ascending=False, ignore_index=True)
         return df
     
+if __name__ == '__main__':
+    df_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/TaxaFunc_genome_mode.tsv'
+    meta_path = 'C:/Users/Qing/Desktop/MetaX_Suite/MetaX/MetaX/data/example_data/Example_Meta.tsv'
+    sw = TaxaFuncAnalyzer(df_path, meta_path)
+    sw.set_func('KEGG_Pathway_name')
+    sw.set_multi_tables(level='m', data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
+                                                            'batch_meta': None, 'outlier_detect_method': None,
+                                                            'outlier_handle_method': None,
+                                                            'outlier_detect_by_group': None,
+                                                            'outlier_handle_by_group': None,
+                                                            'processing_order': None},
+                    peptide_num_threshold = {'taxa': 3, 'func': 1, 'taxa_func': 1},)
+    
+    sw.check_attributes()

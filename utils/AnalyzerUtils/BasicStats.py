@@ -40,7 +40,9 @@ class BasicStats:
         df = self.tfa.original_df.copy()
         # sort_list = ['not_found', 'l', 'd', 'p', 'c', 'o', 'f', 'g', 's']
         sort_list = ['notFound', 'life','domain', 'phylum', 'class', 
-                     'order', 'family', 'genus', 'species']
+                     'order', 'family', 'genus', 'species', 'genome']
+        if not self.tfa.genome_mode:
+            sort_list.remove('genome')
         
         taxa_list = df['LCA_level'].tolist()
         dic = {i: taxa_list.count(i) for i in sort_list}
@@ -55,15 +57,22 @@ class BasicStats:
         df = self.tfa.original_df.copy()
         df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'not_found')]
         dft = df['Taxon'].str.split('|', expand=True)
+        #! may raise error if no any peptide annotated at species level
         # check if the taxa split by | is the same
-        if len(dft.columns) != 7:
+        check_len = 8 if self.tfa.genome_mode else 7
+        if len(dft.columns) != check_len:
             raise ValueError(
-                f'The taxa level is not 7, please check the Taxon split by "|"')
-        dft.columns = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+                f"You have {len(dft.columns)} taxa levels. It should be {check_len}. Please check the taxa split by '|'.")
+        
+        col_list = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        if self.tfa.genome_mode:
+            col_list.append('genome')
+        dft.columns = col_list
+        
         dft['peptide_num'] = 1
         
         dic = {}
-        for i in ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
+        for i in col_list:
             dfi = dft[[i, 'peptide_num']].groupby(i).sum()
             # only extract the taxa with more than peptide threshold
             dfi = dfi[dfi['peptide_num'] >= peptide_num]

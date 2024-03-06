@@ -387,3 +387,9 @@
 ### Changes:
 - New: Add font size option for the plot of the deseq2 result.
 - Change: Integrated size of pyecharts plots and seaborn plots as screen resolution divided by 120
+
+# Version: 1.100.0
+## Date: 2024-03-05
+### Changes:
+- New: 1. Add a genome level to taxa level as the last level of the taxa. 2. Add an option to set font size for the plot of the data overview.
+- Change: 1. changed bar plot to pie chart for the "Number of identified peptides in different taxa level". 2. Set the dot siize of the 2D PCA and beta diversity plot as width*height.

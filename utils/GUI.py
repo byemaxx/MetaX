@@ -2025,6 +2025,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # disable multi table button
             self.enable_multi_button(False)
             
+            # checek if the genome_mode is True, then update taxa_level_list
+            taxa_level_list = ['Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life', 'Genome']
+            if not self.tfa.genome_mode:
+                taxa_level_list.remove('Genome')
+ 
+            self.comboBox_taxa_level_to_stast.clear()
+            self.comboBox_taxa_level_to_stast.addItems(taxa_level_list)
+            
             # go to original table tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(1)
         except:
@@ -2052,7 +2060,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             function = self.comboBox_function_to_stast.currentText()
             taxa_input = self.comboBox_taxa_level_to_stast.currentText()
-            name_dict = {'Species': 's', 'Genus': 'g', 'Family': 'f', 'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
+            name_dict = {"Genome":'m', 'Species': 's', 'Genus': 'g', 'Family': 'f', 
+                         'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
             
             taxa_level = name_dict[taxa_input]
             
@@ -3472,16 +3481,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
         else:
             # BasicPlot(self.tfa).plot_taxa_stats()
-            pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()
+            pic = BasicPlot(self.tfa).plot_taxa_stats_pie()
             
             # Add the new MatplotlibWidget
             self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
+        font_size = self.spinBox_data_overiew_font_size.value()
+
         theme = self.comboBox_data_overiew_theme.currentText()
         self.show_message('Plotting taxa stats...')
-        BasicPlot(self.tfa).plot_taxa_stats(theme=theme, res_type='show')
+        BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme, res_type='show', font_size = font_size)
 
         
     
@@ -3497,10 +3508,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
+        font_size = self.spinBox_data_overiew_font_size.value()
         theme = self.comboBox_data_overiew_theme.currentText()
         peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
         self.show_message('Plotting taxa number...')
-        BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num, theme=theme, res_type='show')
+        BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num, theme=theme, res_type='show', font_size = font_size)
 
 
         
@@ -3515,11 +3527,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         func_name = self.comboBox_overview_func_list.currentText()
         new_window = self.checkBox_overview_func_plot_new_window.isChecked()
+        font_size = self.spinBox_data_overiew_font_size.value()
         theme = self.comboBox_data_overiew_theme.currentText()
 
         if new_window:
             self.show_message('Plotting peptide number in function...')
-            BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show')
+            BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show', font_size = font_size)
         else:
             pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme)
             

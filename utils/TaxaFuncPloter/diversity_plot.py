@@ -193,7 +193,8 @@ class DiversityPlot(object):
                 sns.set_theme(style='whitegrid')
                 
             plt.figure(figsize=(width, height))
-            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=100, style=style_list,
+            dot_size = (width * height)
+            fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=dot_size, style=style_list,
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.8, edgecolor='black', linewidth=0.5)
             if show_label:
                 if rename_sample:
