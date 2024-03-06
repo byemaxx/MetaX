@@ -15,14 +15,19 @@ import argparse
 import os
 
 # run the function proteins_to_taxa_func
-def run_pep2taxafunc(proteins, db_path, threshold) -> dict:
+def run_pep2taxafunc(proteins, db_path, threshold, genome_mode) -> dict:
     protein_list = str(proteins).split(';')
     #print(protein_list)
     try:
-        re =  proteins_to_taxa_func(protein_list, db_path, threshold)
+        re = proteins_to_taxa_func(
+            protein_list=protein_list,
+            db_path=db_path,
+            threshold=threshold,
+            genome_mode=genome_mode,
+        )
     except Exception as e:
-        re = ''
-        print(f'Error: {protein_list}')
+        re = ""
+        print(f"Error: {protein_list}")
         print(e)
     return re
 
@@ -34,8 +39,8 @@ def stat_length(seq): # count the length of peptide sequence
 def count_protein(proteins): # count the number of proteins in a protein group
     return len(proteins.split(';'))
 
-def apply_run(row, db_path, threshold) -> dict:
-    result = run_pep2taxafunc(row, db_path, threshold)
+def apply_run(row, db_path, threshold, genome_mode) -> dict:
+    result = run_pep2taxafunc(row, db_path, threshold, genome_mode)
     return result
 
 
@@ -59,7 +64,7 @@ def add_additional_columns(df):
     return df
         
 
-def run_2_result(df, db_path, threshold):
+def run_2_result(df, db_path, threshold, genome_mode):
     tqdm.pandas()
     df_t = df.copy()
     # print('Counting protein number and peptide length...')
@@ -68,7 +73,7 @@ def run_2_result(df, db_path, threshold):
     print('Running proteins_to_taxa_func...')
     
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(apply_run, protein, db_path, threshold) for protein in df_t['Proteins']]
+        futures = [executor.submit(apply_run, protein, db_path, threshold, genome_mode) for protein in df_t['Proteins']]
         results = [future.result() for future in tqdm(futures, total=len(futures))]
 
     # convert the results to dataframe
@@ -131,7 +136,16 @@ def remove_reversed(df):
     print(f'After removing reversed proteins: {df.shape}')
     return df
 
-def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
+def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0, genome_mode=True):
+    threshold = round(float(threshold), 4) # round to 4 decimal places to avoid float precision problem
+    print('Start running Peptide Annotator...')
+    print(f'Input file: {final_peptides_path}')
+    print(f'Database: {db_path}')
+    print(f'Threshold: {threshold}')
+    print(f'Genome mode: {genome_mode}')
+    print(f'Output file: {output_path}')
+    print('-----------------------------------')
+    
     df = pd.read_csv(final_peptides_path, sep='\t')
     # df = df[:10]
     # modify the column names
@@ -147,7 +161,7 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
     df = remove_reversed(df)
     
     # run the function proteins_to_taxa_func
-    df_res = run_2_result(df,db_path, threshold)
+    df_res = run_2_result(df,db_path, threshold, genome_mode)
     
     save_result(df_res, output_path)
     
@@ -160,7 +174,7 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0):
 #     db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
 #     threshold = 1
 #     t0 = time.time()
-#     peptableAnnotate(final_peptides_path, output_path, db_path, threshold)
+#     peptableAnnotate(final_peptides_path, output_path, db_path, threshold, genome_mode=True)
 #     print(f'Running time: {time.time() - t0} seconds')
     
 if __name__ == '__main__':
@@ -169,8 +183,9 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', help='Output file path', required=True)
     parser.add_argument('-d', '--database', help='Database path', required=True)
     parser.add_argument('-t', '--threshold', help='Threshold of the proportion of taxa in a protein group', default=1.0)
+    parser.add_argument('--genome_mode', help='Whether to use genome mode', action='store_true')
     args = parser.parse_args()
     
     t0 = time.time()
-    peptableAnnotate(args.input, args.output, args.database, args.threshold)
+    peptableAnnotate(args.input, args.output, args.database, args.threshold, args.genome_mode)
     print(f'Running time: {time.time() - t0} seconds')

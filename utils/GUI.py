@@ -1043,7 +1043,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 if reply == 0:
                     self.show_message("Saving settings...", "Closing...")
-                    self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+                    if getattr(self, 'tfa', None) is None:
+                        # save settings.ini only
+                        self.save_basic_settings()
+                    else:
+                        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
                     
                 # 关闭 self.web_list 中的所有窗口
                 for web_window in self.web_list:
@@ -2026,7 +2030,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.enable_multi_button(False)
             
             # checek if the genome_mode is True, then update taxa_level_list
-            taxa_level_list = ['Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life', 'Genome']
+            taxa_level_list = ['Genome', 'Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life']
             if not self.tfa.genome_mode:
                 taxa_level_list.remove('Genome')
  

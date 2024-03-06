@@ -112,11 +112,11 @@ class BasicPlot:
         df = self.tfa.BasicStats.get_stats_taxa_level(peptide_num)
         
         # if genome in taxa_level and count of species == count of genome, then remove genome, and rename species to species (genome)
-        if 'genome' in df['taxa_level'].values and df[df['taxa_level'] == 'species']['count'].values[0] == df[df['taxa_level'] == 'genome']['count'].values[0]:
-            # rename species to species(Genome)
-            # df.loc[df['taxa_level'] == 'species', 'taxa_level'] = 'species (gen)'
-            # remove genome
-            df = df[df['taxa_level'] != 'genome']
+        # if 'genome' in df['taxa_level'].values and df[df['taxa_level'] == 'species']['count'].values[0] == df[df['taxa_level'] == 'genome']['count'].values[0]:
+        #     # rename species to species(Genome)
+        #     # df.loc[df['taxa_level'] == 'species', 'taxa_level'] = 'species (gen)'
+        #     # remove genome
+        #     df = df[df['taxa_level'] != 'genome']
 
         if theme is not None and theme != 'Auto':
             plt.style.use(theme)

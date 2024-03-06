@@ -393,3 +393,8 @@
 ### Changes:
 - New: 1. Add a genome level to taxa level as the last level of the taxa. 2. Add an option to set font size for the plot of the data overview.
 - Change: 1. changed bar plot to pie chart for the "Number of identified peptides in different taxa level". 2. Set the dot siize of the 2D PCA and beta diversity plot as width*height.
+
+# Version: 1.100.1
+## Date: 2024-03-06
+### Changes:
+- Change: 1. changed the "Genome" as default level for the taxa level. 2. remove the hide genome bar for "plot_taxa_number" when the count is equal to species count.
