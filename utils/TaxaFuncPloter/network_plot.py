@@ -126,15 +126,13 @@ class NetworkPlot:
                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"),
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title=f"Taxa-Function Network",  subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
-                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}}),
+                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}" if sample_list else None,
+                                          subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
+                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}},
+                                               orient="vertical", pos_left="left", pos_top="bottom"),
             )  
             )
-        if sample_list:
-            c.set_global_opts(
-                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}", subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
-                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}})
-            )  
+
 
         return c
     
@@ -250,7 +248,8 @@ class NetworkPlot:
                     subtitle=f"{sample_list}" if sample_list != self.tfa.sample_list else "",
                     subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ), 
-                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}} )
+                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}},
+                                               orient="vertical", pos_left="left", pos_top="bottom")
         ))
         return pic
     

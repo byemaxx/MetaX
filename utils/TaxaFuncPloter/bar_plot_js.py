@@ -105,8 +105,16 @@ class BarPlot_js:
 
         params = {
             "legend_opts": opts.LegendOpts(
-                type_="scroll", page_icon_size = 8, selector=[{"type": "all", "title": "All"}, {"type": "inverse", "title": "Inverse"}],
-                pos_left="right", orient="vertical", pos_top="5%", border_width=0
+                type_="scroll",
+                page_icon_size=8,
+                selector=[
+                    {"type": "all", "title": "All"},
+                    {"type": "inverse", "title": "Inverse"},
+                ],
+                pos_left="right",
+                orient="vertical",
+                pos_top="5%",
+                border_width=0,
             )
             if show_legend
             else opts.LegendOpts(is_show=False),
@@ -118,15 +126,22 @@ class BarPlot_js:
                 )
             ],
             "toolbox_opts": opts.ToolboxOpts(
-                is_show=True, orient="vertical", pos_left="left", pos_top="bottom"
-            ),
+                is_show=True,
+                orient="vertical",
+                pos_left="left",
+                pos_top="bottom",
+                ),
+                
+                
             "title_opts": opts.TitleOpts(title=f"{title}", pos_left="center"),
             "xaxis_opts": opts.AxisOpts(
                 axislabel_opts=opts.LabelOpts(rotate=25, font_size=font_size)
             ),
             "yaxis_opts": opts.AxisOpts(
                 axislabel_opts=opts.LabelOpts(font_size=font_size),
-                max_=100.02 if plot_percent else None, # set max value to 100.02 rather than 100: the sum of some columns may more than 100 due to float number
+                max_=100.02
+                if plot_percent
+                else None,  # set max value to 100.02 rather than 100: the sum of some columns may more than 100 due to float number
             ),
         }
         c.set_global_opts(**params)

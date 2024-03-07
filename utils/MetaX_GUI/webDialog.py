@@ -18,6 +18,8 @@ class MyDialog(QDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
 
         self.exportButton = QPushButton("Export HTML", self)
+        # set height as minimum size, let width be Perferred
+        self.exportButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.webEngineView = QWebEngineView(self)
         self.html_path = html_path
 

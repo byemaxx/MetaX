@@ -15,4 +15,4 @@ classifiers = [
 
 [project.urls]
 "Homepage" = "https://github.com/byemaxx"
-"Bug Tracker" = "https://github.com/byemaxx/sampleproject/issues"
+"Bug Tracker" = "https://github.com/byemaxx/MetaX/issues"

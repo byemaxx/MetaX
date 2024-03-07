@@ -71,7 +71,8 @@ class VolcanoPlot():
                 title_opts=opts.TitleOpts(title=title, pos_left='center', title_textstyle_opts=opts.TextStyleOpts(font_size=font_size)),
                 legend_opts=opts.LegendOpts(pos_left='right',  orient='vertical', textstyle_opts=opts.TextStyleOpts(font_size=font_size), pos_top="5%"),
                 tooltip_opts=opts.TooltipOpts(is_show=True, position='top', formatter='{b}: {c}'),
-                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}}),
+                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}},
+                                              orient="vertical", pos_left="left", pos_top="bottom"),
             ) )
         
         type_to_data_color = {

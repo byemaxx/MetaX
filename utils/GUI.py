@@ -3371,8 +3371,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def save_and_show_js_plot(self, pic, title, width=None, height=None):
         try:
             if not width and not height:
-                width = int(self.screen_width / 1.1)
-                height = int(self.screen_height / 1.1)
+                width = int(self.screen_width / 1.15)
+                height = int(self.screen_height / 1.08)
 
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX/html')

@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>477</width>
-                 <height>373</height>
+                 <height>377</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -361,8 +361,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>477</width>
-                 <height>373</height>
+                 <width>311</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -597,8 +597,13 @@
                  <enum>Qt::LeftToRight</enum>
                 </property>
                 <property name="currentText">
-                 <string>Species</string>
+                 <string>Genome</string>
                 </property>
+                <item>
+                 <property name="text">
+                  <string>Genome</string>
+                 </property>
+                </item>
                 <item>
                  <property name="text">
                   <string>Species</string>
@@ -637,11 +642,6 @@
                 <item>
                  <property name="text">
                   <string>Life</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Genome</string>
                  </property>
                 </item>
                </widget>
@@ -2112,7 +2112,7 @@
                 <item row="3" column="0">
                  <widget class="QLabel" name="label_32">
                   <property name="text">
-                   <string>selecte for ploting</string>
+                   <string>Select for plotting</string>
                   </property>
                  </widget>
                 </item>
@@ -2195,7 +2195,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Plot  Peptides</string>
+                     <string>Plot Peptides</string>
                     </property>
                    </widget>
                   </item>
@@ -2317,7 +2317,7 @@
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string> Bar Lgd</string>
+                       <string>Bar Lgd</string>
                       </property>
                       <property name="checked">
                        <bool>true</bool>
@@ -2346,7 +2346,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Selecte Top</string>
+                     <string>Select Top</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2452,7 +2452,7 @@
                   <item>
                    <widget class="QCheckBox" name="checkBox_basic_heatmap_top_filtered">
                     <property name="text">
-                     <string>filter with threshold</string>
+                     <string>Filter with threshold</string>
                     </property>
                    </widget>
                   </item>
@@ -2915,7 +2915,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_3">
               <property name="currentIndex">
-               <number>3</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5034,7 +5034,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Selecte Top</string>
+                     <string>Select Top</string>
                     </property>
                    </widget>
                   </item>
@@ -5146,7 +5146,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>filter with threshold</string>
+                     <string>Filter with threshold</string>
                     </property>
                    </widget>
                   </item>
@@ -5415,7 +5415,7 @@
                 <item row="3" column="0">
                  <widget class="QLabel" name="label_100">
                   <property name="text">
-                   <string>selecte for ploting</string>
+                   <string>Select for plotting</string>
                   </property>
                  </widget>
                 </item>
@@ -5430,7 +5430,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Selecte Top</string>
+                     <string>Select Top</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -5536,7 +5536,7 @@
                   <item>
                    <widget class="QCheckBox" name="checkBox_trends_top_filtered">
                     <property name="text">
-                     <string>filter with threshold</string>
+                     <string>Filter with threshold</string>
                     </property>
                    </widget>
                   </item>
@@ -5734,7 +5734,7 @@
             <item row="0" column="1">
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -6324,7 +6324,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>filter with threshold</string>
+                     <string>Filter with threshold</string>
                     </property>
                    </widget>
                   </item>
@@ -6607,7 +6607,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Selecte Top</string>
+                     <string>Select Top</string>
                     </property>
                    </widget>
                   </item>
@@ -6709,7 +6709,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>filter with threshold</string>
+                     <string>Filter with threshold</string>
                     </property>
                    </widget>
                   </item>
@@ -7612,7 +7612,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

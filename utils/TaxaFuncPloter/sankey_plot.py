@@ -175,7 +175,8 @@ class SankeyPlot:
 
         pic.set_global_opts(
             legend_opts=opts.LegendOpts(selected_mode='single', is_show=self.show_legend),
-            toolbox_opts=opts.ToolboxOpts(is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataView": {}}),
+            toolbox_opts=opts.ToolboxOpts(is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataView": {}},
+                                           orient="vertical", pos_left="left", pos_top="bottom"),
             title_opts=opts.TitleOpts(title=title, subtitle=subtitle),
         )
 

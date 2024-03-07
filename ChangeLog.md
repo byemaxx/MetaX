@@ -398,3 +398,9 @@
 ## Date: 2024-03-06
 ### Changes:
 - Change: 1. changed the "Genome" as default level for the taxa level. 2. remove the hide genome bar for "plot_taxa_number" when the count is equal to species count.
+
+# Version: 1.100.3
+## Date: 2024-03-07
+### Changes:
+- Change: For HTML plot, moved all tooltips to the left bottom.
+- Fix: Fixed some wrong spellings in GUI.
