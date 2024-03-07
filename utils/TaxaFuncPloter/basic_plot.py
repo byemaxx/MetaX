@@ -15,42 +15,10 @@ class BasicPlot:
         sns.set_theme()
         
         
-    #! Deprecated function, use plot_taxa_stats_pie chart instead
-    def plot_taxa_stats_bar(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
-        df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
-        # if 'not_found' is 0, then remove it
-        if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
-            df = df[df['LCA_level'] != 'notFound']
-            
-        if theme is not None and theme != 'Auto':
-            plt.style.use(theme)
-        else:
-            custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-
-            # plt.figure(figsize=(8, 6))
-            sns.set_theme(style="ticks", rc=custom_params)
-            
-        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
-        
-        ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
-        for i in ax.containers:
-            ax.bar_label(i, fontsize=font_size)
-        ax.set_title('Number of identified peptides in different taxa level', fontsize=font_size+2, fontweight='bold')
-        ax.set_xlabel('Taxa level')
-        ax.set_ylabel('Number of peptides')
-        ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
-        ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
-        ax.legend(title='Taxa level (frequency)',  ncol=2)
-        if res_type == 'show':
-            plt.tight_layout()
-            plt.show()
-        else:
-            plt.close()
-        return ax # use "pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()" to get the figure object in GUI script
-
 
     def plot_taxa_stats_pie(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
         df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
+
         # if 'not_found' is 0, then remove it
         if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
             df = df[df['LCA_level'] != 'notFound']
@@ -69,7 +37,9 @@ class BasicPlot:
             plt.style.use(theme)
         else:
             plt.style.use('default')
-        
+            # set color palette
+            colors = sns.color_palette("deep")
+            
         # set figure size base on font size
         if font_size <= 10:
             fig_size = (8, 6)
@@ -85,7 +55,9 @@ class BasicPlot:
         
         fig = plt.figure(figsize=fig_size) if res_type == 'show' else plt.figure()
         
-        wedges, texts, autotexts = plt.pie(df['count'], labels=df['LCA_level'], autopct='%1.1f%%', startangle=140)
+        wedges, texts, autotexts = plt.pie(df['count'], labels=df['LCA_level'], 
+                                           autopct='%1.2f%%', startangle=40,
+                                           colors=colors if theme == 'Auto' else None)
         
         for i, t in enumerate(texts):
             t.set_text(f'{t.get_text()} ({autotexts[i].get_text()})')
@@ -491,4 +463,37 @@ class BasicPlot:
         input_colors = [WHITE]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
 
-        return colors
+    #! Deprecated function, use plot_taxa_stats_pie chart instead
+    # def plot_taxa_stats_bar(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
+    #     df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
+    #     # if 'not_found' is 0, then remove it
+    #     if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
+    #         df = df[df['LCA_level'] != 'notFound']
+            
+    #     if theme is not None and theme != 'Auto':
+    #         plt.style.use(theme)
+    #     else:
+    #         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+
+    #         # plt.figure(figsize=(8, 6))
+    #         sns.set_theme(style="ticks", rc=custom_params)
+            
+    #     plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        
+    #     ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
+    #     for i in ax.containers:
+    #         ax.bar_label(i, fontsize=font_size)
+    #     ax.set_title('Number of identified peptides in different taxa level', fontsize=font_size+2, fontweight='bold')
+    #     ax.set_xlabel('Taxa level')
+    #     ax.set_ylabel('Number of peptides')
+    #     ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
+    #     ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
+    #     ax.legend(title='Taxa level (frequency)',  ncol=2)
+    #     if res_type == 'show':
+    #         plt.tight_layout()
+    #         plt.show()
+    #     else:
+    #         plt.close()
+    #     return ax # use "pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()" to get the figure object in GUI script
+
+    #     return colors

@@ -38,9 +38,9 @@ class BasicStats:
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:
         df = self.tfa.original_df.copy()
-        # sort_list = ['not_found', 'l', 'd', 'p', 'c', 'o', 'f', 'g', 's']
-        sort_list = ['notFound', 'life','domain', 'phylum', 'class', 
-                     'order', 'family', 'genus', 'species', 'genome']
+        sort_list= ['genome', 'species', 'genus', 'family', 
+                    'order', 'class', 'phylum', 'domain', 
+                    'life', 'notFound']
         if not self.tfa.genome_mode:
             sort_list.remove('genome')
         
