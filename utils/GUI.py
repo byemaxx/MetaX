@@ -1456,9 +1456,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.disable_button_after_multiple()
         # enable all buttons
         self.enable_multi_button(True)
+
+        # save metax obj as pickle file
+        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
         
         
-        # show message
+        # Final message
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
         
         if outlier_detect_method != 'None':
@@ -2206,8 +2209,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 def callback_after_set_multi_tables(result, success):
                     if success:
                         self.run_after_set_multi_tables() # create tables and update GUI
-                        # save metax obj as pickle file
-                        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+
                     else:
                         QMessageBox.warning(self.MainWindow, 'Error', str(result))
                         

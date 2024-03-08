@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>477</width>
-                 <height>377</height>
+                 <width>391</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1848,6 +1848,9 @@
                       </property>
                       <property name="text">
                        <string>Show All  Lables for Sunburst</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
