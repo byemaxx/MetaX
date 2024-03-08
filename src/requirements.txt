@@ -30,7 +30,7 @@ prettytable==3.8.0
 prompt-toolkit==3.0.39
 pure-eval==0.2.2
 pydeseq2==0.4.0
-pyecharts==2.0.3
+pyecharts==2.0.5
 Pygments==2.15.1
 pyparsing==3.0.9
 PyQt5==5.15.9

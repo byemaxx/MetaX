@@ -68,6 +68,7 @@ class TrendsPlot_js:
                 linestyle_opts=opts.LineStyleOpts(opacity=0.9, width=2),
                 label_opts=opts.LabelOpts(is_show=False),
                 itemstyle_opts=opts.ItemStyleOpts(color=color),
+                emphasis_opts=opts.EmphasisOpts(focus='series'),
             )
 
         # add average line
@@ -78,6 +79,7 @@ class TrendsPlot_js:
             is_hover_animation=True,
             linestyle_opts=opts.LineStyleOpts(opacity=1, color='red', width=3, type_='dashed'),
             label_opts=opts.LabelOpts(is_show=False),
+            emphasis_opts=opts.EmphasisOpts(focus='series'),
         )
 
         # set global options

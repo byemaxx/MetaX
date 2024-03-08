@@ -404,3 +404,9 @@
 ### Changes:
 - Change: For HTML plot, moved all tooltips to the left bottom.
 - Fix: Fixed some wrong spellings in GUI.
+
+# Version: 1.100.4
+## Date: 2024-03-07
+### Changes:
+- Update_lib: Updated the [pyecharts] to [2.0.5].
+- Change: 1. Changed the Sunburst plot labels to avoid overlap. 2. Changed some settings of the plot by pyecharts to fit the new version.

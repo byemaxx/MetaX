@@ -10,6 +10,7 @@ import os
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+import subprocess
 
 class Updater:
     def __init__(self, MetaXGUI, version, splash, show_message=False):
@@ -21,6 +22,9 @@ class Updater:
         self.current_changes = []
         self.remote_path =None
         self.remote_version = None
+        self.update_libs = []
+        self.install_libs = []
+        self.uninstall_libs = []
 
 
     def parse_changelog_md(self):
@@ -140,4 +144,24 @@ class Updater:
             if show_message:
                 QMessageBox.warning(self.MainWindow, "Update", f"Check update failed:\n{e}")
 
-
+    #! Have not tested
+    def change_libs(self):
+        if len(self.update_libs) > 0:
+            for lib in self.update_libs:
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", lib])
+                except Exception as e:
+                    print(f"Update {lib} failed: {e}")
+        if len(self.install_libs) > 0:
+            for lib in self.install_libs:
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+                except Exception as e:
+                    print(f"Install {lib} failed: {e}")
+        if len(self.uninstall_libs) > 0:
+            for lib in self.uninstall_libs:
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", lib, "-y"])
+                except Exception as e:
+                    print(f"Uninstall {lib} failed: {e}")
+                    

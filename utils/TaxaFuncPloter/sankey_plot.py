@@ -164,9 +164,9 @@ class SankeyPlot:
                 f'{key} (Total items: {num})',
                 nodes=nodes,
                 links=links,
-                node_align='justify',
+                node_align='left',
                 layout_iterations=50,
-                focus_node_mode='adjacency',
+                emphasis_opts=opts.EmphasisOpts(focus='adjacency'),
                 linestyle_opt=opts.LineStyleOpts(
                     curve=0.5, opacity=0.2, color="source"),
                 label_opts=opts.LabelOpts(position='right', font_size=self.font_size),

@@ -94,6 +94,7 @@ class SunburstPlot:
                 radius=[0, "95%"],
                 sort_="desc",
                 highlight_policy="ancestor",
+                label_layout_opts=opts.SunburstLabelLayoutOpts(is_hide_overlap=True),
 
             )
             .set_global_opts(

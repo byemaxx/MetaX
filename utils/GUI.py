@@ -3372,7 +3372,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             if not width and not height:
                 width = int(self.screen_width / 1.15)
-                height = int(self.screen_height / 1.08)
+                height = int(self.screen_height / 1.1)
 
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX/html')
@@ -3389,6 +3389,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 web.resize(width, height)
             self.web_list.append(web)
             web.show()
+            
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'save_and_show_js_plot error: {error_message}', 'e')
