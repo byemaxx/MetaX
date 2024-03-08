@@ -462,7 +462,10 @@ class BasicPlot:
         # generated colours will be as distinct as possible from these colours
         input_colors = [WHITE]
         colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
-
+        return colors
+    
+    
+    
     #! Deprecated function, use plot_taxa_stats_pie chart instead
     # def plot_taxa_stats_bar(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
     #     df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
@@ -496,4 +499,3 @@ class BasicPlot:
     #         plt.close()
     #     return ax # use "pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()" to get the figure object in GUI script
 
-    #     return colors

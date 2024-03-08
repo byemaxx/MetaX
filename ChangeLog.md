@@ -410,3 +410,8 @@
 ### Changes:
 - Update_lib: Updated the [pyecharts] to [2.0.5].
 - Change: 1. Changed the Sunburst plot labels to avoid overlap. 2. Changed some settings of the plot by pyecharts to fit the new version.
+
+# Version: 1.100.5
+## Date: 2024-03-08
+### Changes:
+- Fix: Fixed the bug of get distinct color for basic plot.
