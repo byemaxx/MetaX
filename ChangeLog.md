@@ -415,3 +415,8 @@
 ## Date: 2024-03-08
 ### Changes:
 - Fix: Fixed the bug of get distinct color for basic plot.
+
+# Version: 1.100.6
+## Date: 2024-03-10
+### Changes:
+- Fix: Fixed the bug when select "Speciec" level for multi-tables, the 's__' was not removed.
