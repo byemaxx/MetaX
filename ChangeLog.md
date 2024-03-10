@@ -420,3 +420,8 @@
 ## Date: 2024-03-10
 ### Changes:
 - Fix: Fixed the bug when select "Speciec" level for multi-tables, the 's__' was not removed.
+
+# Version: 1.100.7
+## Date: 2024-03-10
+### Changes:
+- Fix: Fixed the bug when select other taxa levle except "Genome", the empty annotation was not removed.

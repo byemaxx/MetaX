@@ -433,13 +433,12 @@ class TaxaFuncAnalyzer:
                 
             # remove the cases like: "d__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__|m__MGYG000001780"
             # When seclected level is 's',the genome iws identified but the species name is empty like "s__"
-            # So remove the taxon column with endswith "|s__" 
-            if level == 's':
-                print("Remove the peptides with 's__' in Taxon column, which identified the genome but not the species...")
-                orignial_taxa_num = df_t.shape[0]
-                df_t = df_t[~df_t['Taxon'].str.endswith("|s__")]
-                new_taxa_num = df_t.shape[0]
-                print(f"[{orignial_taxa_num - new_taxa_num}] peptides are removed, left: {new_taxa_num}")
+            # So remove the taxon column with endswith "|s__" or other level
+            print(f"Remove the peptides with '{level}__'in Taxon column...")
+            orignial_taxa_num = df_t.shape[0]
+            df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
+            new_taxa_num = df_t.shape[0]
+            print(f"Rmoved: [{orignial_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
             
             dfc = df_t
         else:
