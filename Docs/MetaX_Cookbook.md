@@ -522,13 +522,24 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot" style="zoom: 50%;" />
 
+### Group-Control TEST
 
+- **Dunnett's Test**
+
+  Set a Group as **"Control"**, then compare all groups to Control
+
+  - **Comparing in Each Condition:** Select a meta such as individual, then comparing groups to control in each individual.
+
+  - ![image-20240311121010996](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\group_control_test.png)
+  - Result of Dunnett's Test:
+    - T- Statistic value show in the heatmap
+  - ![image-20240311121834429](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\image-20240311121834429.png)
 
 
 
 ## 6. Differential Analysis
 
-### FoldChange Calculation
+### Fold Change Calculation
 
 - Select two groups to calculate FoldChange by [<u>PyDESeq2</u>]: https://github.com/owkin/PyDESeq2
 

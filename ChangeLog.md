@@ -436,3 +436,8 @@
 ### Changes:
 - Fix: Fixed the bug of wrong tbale names was created by last version.
 - Change: Released the Dunnett's test for the Group-Contronl Test.
+
+# Version: 1.101.2
+## Date: 2024-03-11
+### Changes:
+- Fix: 1. Fixed the bug of wrong label of color bar in the heatmap plot. 2. Fixed the bug when table changed but GUI doesn't update.

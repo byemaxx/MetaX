@@ -121,7 +121,7 @@ class HeatmapPlot:
                 )
                     
                 cbar = fig.ax_heatmap.collections[0].colorbar
-                cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+                cbar.set_label(plot_type, rotation=90, labelpad=1, fontsize=font_size)
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
@@ -251,7 +251,7 @@ class HeatmapPlot:
                 fontsize=font_size + 2, weight='bold'
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.set_label(plot_type, rotation=90, labelpad=1, fontsize=font_size)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 
@@ -448,7 +448,8 @@ class HeatmapPlot:
                 plt.suptitle(title, fontsize=font_size + 2, weight='bold')
                 
                 cbar = fig.ax_heatmap.collections[0].colorbar
-                cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+                cbar.set_label("log2FC" if res_df_type == 'deseq2' else 't-statistic', 
+                               rotation=90, labelpad=1, fontsize=font_size)
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
@@ -553,7 +554,7 @@ class HeatmapPlot:
                          fontsize=font_size + 2, weight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.set_label('t-statistic', rotation=90, labelpad=1, fontsize=font_size)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 

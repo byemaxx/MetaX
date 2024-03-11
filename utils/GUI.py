@@ -1445,10 +1445,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # update taxa and function and group in comboBox
         self.update_func_taxa_group_to_combobox()
 
-        # update comboBox_co_expr_select_list
-        self.update_co_expr_select_list()
-        # update comboBox_trends_selection_list
-        self.update_trends_select_list()
 
         # clean basic heatmap selection list
         self.clean_basic_heatmap_list()
@@ -1458,15 +1454,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_peptide_query.clear()
         self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
 
-
         
         # clear list of taxa-func link network
         self.clear_tfnet_focus_list()
         
         # set initial value of basic heatmap selection list
         self.set_basic_heatmap_selection_list()
-        # set initial value of taxa-func link network selection list
-        self.update_tfnet_select_list()
         # Disable some buttons
         self.disable_button_after_multiple()
         # enable all buttons
@@ -1475,6 +1468,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # save metax obj as pickle file
         self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
         
+        #Second Final Step: run a change event for each table comboBox, to update the GUI
+        self.change_event_checkBox_basic_plot_table()
+        self.change_event_comboBox_basic_heatmap_table()
+        # update comboBox_co_expr_select_list
+        self.update_co_expr_select_list()
+        # update comboBox_trends_selection_list
+        self.update_trends_select_list()
+        
+        # set initial value of taxa-func link network selection list
+        self.update_tfnet_select_list()
+        self.update_tfnet_select_list()
         
         # Final message
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
@@ -2314,7 +2318,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def set_basic_heatmap_selection_list(self):
-        type_list = self.comboBox_basic_table.currentText().lower()
+        type_list = self.comboBox_basic_table.currentText().lower()            
         self.listWidget_list_for_ploting.clear()
         self.basic_heatmap_list = []
         self.update_basic_heatmap_combobox(type_list = type_list)
@@ -2598,6 +2602,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.listWidget_co_expr_focus_list.clear()
 
         current_table = self.comboBox_co_expr_table.currentText()
+        #! NOT NEED TO add 'All Items' to co_expr_list,becaused it is list for focus
         update_list = []
         if current_table == 'Taxa':
             update_list = self.taxa_list
