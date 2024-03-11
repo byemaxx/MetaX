@@ -430,3 +430,9 @@
 ## Date: 2024-03-10
 ### Changes:
 - New: Add a function to allow user to use any table to do basic stats and plot.
+
+# Version: 1.101.1
+## Date: 2024-03-11
+### Changes:
+- Fix: Fixed the bug of wrong tbale names was created by last version.
+- Change: Released the Dunnett's test for the Group-Contronl Test.

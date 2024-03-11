@@ -315,8 +315,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         ### Group Control Test
         self.hide_all_in_layout(self.gridLayout_38)
         
-        self.hiddenTab = self.tabWidget_3.widget(3)
-        self.tabWidget_3.removeTab(3)
+        # self.hiddenTab = self.tabWidget_3.widget(3)
+        # self.tabWidget_3.removeTab(3)
+        
+        # Hide button of DESeq2 in Group Control Test
+        self.pushButton_multi_deseq2.hide()
 
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
@@ -812,8 +815,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if like_times:
             self.like_times = like_times
             if self.like_times >= 3:
-                self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
-                print("Hidden tab added.")
+                # self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+                self.pushButton_multi_deseq2.show()
+                print("Hidden Button of DESeq2 in Group Control Test is shown.")
                 
             
         # load time and version
@@ -1274,7 +1278,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif self.like_times <3:
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
             self.like_times += 1
-            self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+            # self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+            self.pushButton_multi_deseq2.show()
 
         else:
             QMessageBox.information(self.MainWindow, "Thank you!", "There is no more hidden function.\n\nYou can like us again next time.")
@@ -2286,7 +2291,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_trends_table
         ]
         
-        label_list = ['Peptide', 'Taxa', 'Function', 'Taxa-Function']
+        label_list = ['Taxa', 'Func', 'Taxa-Func', 'Peptide']
         # add "protein" to comboBoxs to plot
         if self.tfa.protein_df is not None:
             label_list = label_list + ['Protein']
