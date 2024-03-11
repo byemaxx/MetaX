@@ -140,6 +140,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
         self.tfa = None
+        self.any_table_mode = False
         self.Qthread_result = None
         self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
         self.executors = []  # save all FunctionExecutor object
@@ -157,6 +158,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
+        self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         # set menu bar click event
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
@@ -170,6 +172,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
+        self.actionAny_Table_Mode.triggered.connect(self.set_any_table_mode)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True))
         
         self.screen = QDesktopWidget().screenGeometry()
@@ -454,6 +457,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if self.tfa.protein_df is None:
                 raise ValueError("Please set protein table first.")
             dft =   self.tfa.protein_df.copy()
+        elif df_type == "custom":
+            dft =   self.tfa.custom_df.copy()
         else:
             raise ValueError(f"Invalid df_type: {df_type}")
         
@@ -774,6 +779,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 windll.user32.ShowWindow(hwnd, 1)
                 self.console_visible = True
 
+    def set_any_table_mode(self):
+        if  self.any_table_mode is False:
+            self.any_table_mode = True
+            QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [enabled].\n\nYou can use any table as input.")
+        
+        else: # any_table_mode currently is True
+            self.any_table_mode = False
+            QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [disabled].\n\nYou can only use the table from TaxaFuncAnnotator as input.")
 
     def init_QSettings(self):
         settings_path =self.metax_home_path
@@ -1394,26 +1407,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         num_protein = self.tfa.protein_df.shape[0] if self.tfa.protein_df is not None else 'NA'
 
-        # add "protein" to comboBoxs to plot
-        if self.tfa.protein_df is not None:
-            self.add_and_remove_protein_label(add=True)
-            # add protein to protein_list to self 
-            self.protein_list = self.tfa.protein_df.index.tolist()
-        else:
-            self.add_and_remove_protein_label(add=False)
-            self.protein_list = []
-        
+        # add "protein" "Custom" to comboBoxs to plot
+        self.add_or_remove_protein_custom_label()
+
         
         # add tables to table dict
         if self.table_dict == {}:
-            self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
-            # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
-            self.update_table_dict('peptide', self.tfa.peptide_df)
-            self.update_table_dict('taxa', self.tfa.taxa_df)
-            self.update_table_dict('function', self.tfa.func_df)
-            self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
-            self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
-            self.update_table_dict('protein', self.tfa.protein_df)
+            if self.tfa.any_df_mode:
+                self.update_table_dict('custom', self.tfa.custom_df)
+            else:
+                self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
+                # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
+                self.update_table_dict('peptide', self.tfa.peptide_df)
+                self.update_table_dict('taxa', self.tfa.taxa_df)
+                self.update_table_dict('function', self.tfa.func_df)
+                self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
+                self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
+                self.update_table_dict('protein', self.tfa.protein_df)
         else:
             self.listWidget_table_list.addItems( list(self.table_dict.keys()))
             
@@ -1472,15 +1482,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # print(nan_stats_str)
         else:    
             nan_stats_str = ''
-            
-        msg = f'TaxaFunc data is ready! \
-        \n{nan_stats_str}\
-        \n\nFunction: [{self.tfa.func_name}]\
-        \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
-        \nNumber of function: [{num_func}]\
-        \nNumber of taxa: [{num_taxa}]\
-        \nNumber of taxa-function: [{num_taxa_func}]\
-        \nNumber of protein: [{num_protein}]'
+        
+        if self.tfa.any_df_mode:
+            num_item = self.tfa.custom_df.shape[0]
+            msg = f'Custom data is ready! \
+            \n{nan_stats_str}\
+            \n\nNumber of item: [{num_item}]'
+        else:
+            msg = f'TaxaFunc data is ready! \
+            \n{nan_stats_str}\
+            \n\nFunction: [{self.tfa.func_name}]\
+            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
+            \nNumber of function: [{num_func}]\
+            \nNumber of taxa: [{num_taxa}]\
+            \nNumber of taxa-function: [{num_taxa_func}]\
+            \nNumber of protein: [{num_protein}]'
         
         print(f'\n----Multi Table Result----\n{msg}\n---------------------------\n')
         self.logger.write_log(msg.replace('\n', ''))
@@ -1804,13 +1820,22 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 if not os.path.exists(taxafunc_path):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
                     return
-
-
+                
+            # check if in any_df_mode
+            any_df_mode = self.any_table_mode
+            if any_df_mode:
+                # ask if continue in any_df_mode
+                reply = QMessageBox.question(self.MainWindow, 'Warning', 'You are in custom mode, continue?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.No:
+                    return
+                
+                
+            # check if meta_path selected and exists
             if not meta_path:
                 # check if "Intensity" in taxafunc fisrt row
                 with open(taxafunc_path, 'r') as f:
                     first_line = f.readline()
-                    if 'Intensity' not in first_line:
+                    if 'Intensity' not in first_line and any_df_mode is False:
                         QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Meta table!')
                         return
                     
@@ -1825,9 +1850,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table file not found!')
                     return
 
+
             self.show_message('taxaFuncAnalyzer is running, please wait...')
-            self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}')
-            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path}
+            self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}, Any_df_mode: {any_df_mode}')
+            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
             self.callback_after_set_taxafunc(self.tfa, True)
             
@@ -2247,7 +2273,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     
-    def add_and_remove_protein_label(self, add=True):
+    def add_or_remove_protein_custom_label(self):
         # add or remove protein label in comboBox
         combox_list = [
             self.comboBox_table4pca,
@@ -2260,11 +2286,26 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.comboBox_trends_table
         ]
         
+        label_list = ['Peptide', 'Taxa', 'Function', 'Taxa-Function']
+        # add "protein" to comboBoxs to plot
+        if self.tfa.protein_df is not None:
+            label_list = label_list + ['Protein']
+            self.protein_list = self.tfa.protein_df.index.tolist()
+
+        else:
+            self.protein_list = []
+        
+        if self.tfa.custom_df is not None:
+            label_list = ['Custom']
+            self.custom_list = self.tfa.custom_df.index.tolist()
+        else:
+            self.custom_list = []
+            
         for combobox in combox_list:
-            if add:
-                combobox.addItem('Protein')
-            else:
-                combobox.removeItem(combobox.findText('Protein'))
+            combobox.blockSignals(True)
+            combobox.clear()
+            combobox.addItems(label_list)
+            combobox.blockSignals(False)
 
 
     def set_basic_heatmap_selection_list(self):
@@ -2289,7 +2330,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     'func': ['All Functions', self.func_list], 
                     'taxa-func': ['All Taxa-Functions', self.taxa_func_list],
                     'peptide': ['All Peptides', self.peptide_list],
-                    'protein': ['All Proteins', self.protein_list]}
+                    'protein': ['All Proteins', self.protein_list],
+                    'custom': ['All Items', self.custom_list]}
         
         self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
         self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
@@ -2562,12 +2604,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             update_list = self.peptide_list
         elif current_table == 'Protein':
             update_list = self.protein_list
+        elif current_table == 'Custom':
+            update_list = self.custom_list
             
         self.comboBox_co_expr_select_list.addItems(update_list)
 
     def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
             if str_selected is not None and str_list is None:
-                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                     if str_selected == i:
                         self.clean_basic_heatmap_list()
                         self.listWidget_list_for_ploting.addItem(i)
@@ -2582,7 +2626,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                      'Func':self.func_list, 
                                      'Taxa-Func':self.taxa_func_list, 
                                      'Peptide':self.peptide_list, 
-                                     'Protein':self.protein_list}
+                                     'Protein':self.protein_list,
+                                     'Custom':self.custom_list}
                         
                         if str_selected in list_dict[df_type]:
                             return True
@@ -2592,7 +2637,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     if not check_if_in_list(str_selected):
                         QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
                         return None
-                    for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+                    for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                         if i in self.basic_heatmap_list:
                             self.basic_heatmap_list.remove(i)
 
@@ -2601,7 +2646,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     self.listWidget_list_for_ploting.addItems(self.basic_heatmap_list)
             
             elif str_list is not None and str_selected is None:
-                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                     if i in self.basic_heatmap_list:
                         self.clean_basic_heatmap_list()
 
@@ -2707,7 +2752,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                  'Func':self.func_list, 
                                  'Taxa-Func':self.taxa_func_list, 
                                  'Peptide':self.peptide_list,
-                                 'Protein':self.protein_list}
+                                 'Protein':self.protein_list,
+                                 'Custom':self.custom_list}
                     
                     extracted_list = list_dict.get(df_type)
                     if str_selected in extracted_list:
@@ -2825,7 +2871,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                          'Func': self.func_list, 
                          'Taxa-Func': self.taxa_func_list, 
                          'Peptide': self.peptide_list,
-                         'Protein': self.protein_list}
+                         'Protein': self.protein_list,
+                         'Custom': self.custom_list}
             
             if str_selected == '':
                 return None
@@ -2962,7 +3009,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 
-                                                                                      'All Peptides', 'All Taxa-Functions', 'All Proteins']:
+                                                                                      'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items']:
                 df = dft
             else:
                 df = dft.loc[self.basic_heatmap_list]
@@ -3025,6 +3072,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_table(df=df, title=title)
                 
             elif plot_type == 'sankey':
+                if self.comboBox_basic_table.currentText() == 'Custom':
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Custom is not supported to plot Sankey!')
+                    return None
                 if self.checkBox_basic_heatmap_plot_peptide.isChecked():
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Peptide is not supported to plot Sankey!')
                     return None
@@ -3062,7 +3112,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                       'func': ["All Functions", self.func_list],
                       'taxa-func': ["All Taxa-Functions", self.taxa_func_list],
                       'peptide': ["All Peptides", self.peptide_list],
-                      'protein': ["All Proteins", self.protein_list]}
+                      'protein': ["All Proteins", self.protein_list],
+                      'custom': ['All Items', self.custom_list]}
 
         self.comboBox_trends_selection_list.addItem(type_dict[type_list][0])
         self.comboBox_trends_selection_list.addItems(type_dict[type_list][1])
@@ -3091,7 +3142,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
     def update_trends_list(self, str_selected=None, str_list=None):
         if str_list is None and str_selected is not None:
-            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                 if str_selected == i:
                     self.clean_trends_list()
                     self.listWidget_trends_list_for_ploting.addItem(i)
@@ -3105,7 +3156,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                  'Func':self.func_list, 
                                  'Taxa-Func':self.taxa_func_list, 
                                  'Peptide':self.peptide_list,
-                                 'Protein':self.protein_list
+                                 'Protein':self.protein_list,
+                                    'Custom':self.custom_list
                                  }
                     if str_selected in list_dict[df_type]:
                         return True
@@ -3114,7 +3166,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 if not check_if_in_list(str_selected):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
                     return None
-                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+                for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                     if i in self.trends_cluster_list:
                         self.trends_cluster_list.remove(i)
                 
@@ -3123,7 +3175,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.listWidget_trends_list_for_ploting.addItems(self.trends_cluster_list)
         
         elif str_list is not None and str_selected is None:
-            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins']:
+            for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                 if i in self.trends_cluster_list:
                     self.clean_trends_list()
             for str_selected in str_list:
@@ -3205,7 +3257,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                     'All Functions', 
                                                     'All Peptides', 
                                                     'All Taxa-Functions', 
-                                                    'All Proteins']:
+                                                    'All Proteins', 'All Items']:
             QMessageBox.warning(self.MainWindow, 'Warning', 'The number of items in the list is less than the number of clusters!, Please reset the number of clusters or add more items to the list!')
             return None
         elif len(self.trends_cluster_list) == 1 \
@@ -3213,7 +3265,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                 'All Functions', 
                                                 'All Peptides', 
                                                 'All Taxa-Functions', 
-                                                'All Proteins']:
+                                                'All Proteins', 'All Items']:
             df = dft
         else:
             df = dft.loc[self.trends_cluster_list]
@@ -3401,6 +3453,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
     
     def peptide_query(self):
+        if self.tfa.any_df_mode:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'This function is not supported in the Coustom Table mode!')
+            return None
+        
         peptide = self.comboBox_basic_peptide_query.currentText().strip()
         if peptide == '':
             return None

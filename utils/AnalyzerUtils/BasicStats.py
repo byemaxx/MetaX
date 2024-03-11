@@ -54,6 +54,12 @@ class BasicStats:
         return df_taxa
 
     def get_stats_taxa_level(self, peptide_num = 1) -> pd.DataFrame:
+        if self.tfa.any_df_mode:
+            # creta a dataframe with all levles of taxa as 1
+            dic = {'domain': 1, 'phylum': 1, 'class': 1, 'order': 1, 'family': 1, 'genus': 1, 'species': 1}
+            return pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
+        
+        
         df = self.tfa.original_df.copy()
         df = df[(df['Taxon'].notnull()) & (df['Taxon'] != 'not_found')]
         dft = df['Taxon'].str.split('|', expand=True)
@@ -69,7 +75,7 @@ class BasicStats:
             col_list.append('genome')
         dft.columns = col_list
         
-        dft['peptide_num'] = 1
+        dft['peptide_num'] = 1 # add a initial peptide number for each row
         
         dic = {}
         for i in col_list:

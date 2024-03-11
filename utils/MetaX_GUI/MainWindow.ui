@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -239,8 +239,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>391</width>
-                 <height>80</height>
+                 <width>477</width>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1310,7 +1310,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -7615,7 +7615,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -7648,6 +7648,7 @@
     </property>
     <addaction name="actionExport_Log_File"/>
     <addaction name="actionHide_Show_Console"/>
+    <addaction name="actionAny_Table_Mode"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuOthers"/>
@@ -7709,6 +7710,11 @@
     <string>Restore From..</string>
    </property>
   </action>
+  <action name="actionAny_Table_Mode">
+   <property name="text">
+    <string>Any Table Mode</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>toolButton__final_peptide_help</tabstop>
@@ -7726,7 +7732,6 @@
   <tabstop>lineEdit_meta_path</tabstop>
   <tabstop>pushButton_get_taxafunc_path</tabstop>
   <tabstop>toolButton_taxafunc_table_help</tabstop>
-  <tabstop>lineEdit_taxafunc_path</tabstop>
   <tabstop>listWidget_table_list</tabstop>
   <tabstop>pushButton_view_table</tabstop>
   <tabstop>toolButton_db_path_help</tabstop>

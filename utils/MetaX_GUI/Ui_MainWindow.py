@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 391, 80))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -4022,7 +4022,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4055,6 +4055,8 @@ class Ui_metaX_main(object):
         self.actionSave_As.setObjectName("actionSave_As")
         self.actionRestore_From = QtWidgets.QAction(metaX_main)
         self.actionRestore_From.setObjectName("actionRestore_From")
+        self.actionAny_Table_Mode = QtWidgets.QAction(metaX_main)
+        self.actionAny_Table_Mode.setObjectName("actionAny_Table_Mode")
         self.menuTools.addAction(self.actionTaxaFuncAnalyzer)
         self.menuTools.addAction(self.actionPeptide_to_TaxaFunc)
         self.menuTools.addAction(self.actionDatabase_Builder)
@@ -4066,6 +4068,7 @@ class Ui_metaX_main(object):
         self.menuOthers.addAction(self.actionSave_As)
         self.menuDev.addAction(self.actionExport_Log_File)
         self.menuDev.addAction(self.actionHide_Show_Console)
+        self.menuDev.addAction(self.actionAny_Table_Mode)
         self.menuBar.addAction(self.menuTools.menuAction())
         self.menuBar.addAction(self.menuOthers.menuAction())
         self.menuBar.addAction(self.menuDev.menuAction())
@@ -4073,9 +4076,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(0)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(0)
+        self.tabWidget_4.setCurrentIndex(1)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
@@ -4119,8 +4122,7 @@ class Ui_metaX_main(object):
         metaX_main.setTabOrder(self.pushButton_get_meta_path, self.lineEdit_meta_path)
         metaX_main.setTabOrder(self.lineEdit_meta_path, self.pushButton_get_taxafunc_path)
         metaX_main.setTabOrder(self.pushButton_get_taxafunc_path, self.toolButton_taxafunc_table_help)
-        metaX_main.setTabOrder(self.toolButton_taxafunc_table_help, self.lineEdit_taxafunc_path)
-        metaX_main.setTabOrder(self.lineEdit_taxafunc_path, self.listWidget_table_list)
+        metaX_main.setTabOrder(self.toolButton_taxafunc_table_help, self.listWidget_table_list)
         metaX_main.setTabOrder(self.listWidget_table_list, self.pushButton_view_table)
         metaX_main.setTabOrder(self.pushButton_view_table, self.toolButton_db_path_help)
         metaX_main.setTabOrder(self.toolButton_db_path_help, self.lineEdit_db_path)
@@ -4738,3 +4740,4 @@ class Ui_metaX_main(object):
         self.actionCheck_Update.setText(_translate("metaX_main", "Check Update"))
         self.actionSave_As.setText(_translate("metaX_main", "Save As.."))
         self.actionRestore_From.setText(_translate("metaX_main", "Restore From.."))
+        self.actionAny_Table_Mode.setText(_translate("metaX_main", "Any Table Mode"))

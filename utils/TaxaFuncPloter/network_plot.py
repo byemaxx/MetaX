@@ -149,7 +149,8 @@ class NetworkPlot:
                    'func': self.tfa.func_df, 
                    'taxa-func': self.tfa.taxa_func_df, 
                    'peptide': self.tfa.peptide_df,
-                   'protein': self.tfa.protein_df}
+                   'protein': self.tfa.protein_df,
+                   'custom': self.tfa.custom_df}
         
         df = df_dict[df_type].copy()
         if extra_cols := sample_list:

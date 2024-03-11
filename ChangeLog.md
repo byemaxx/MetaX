@@ -425,3 +425,8 @@
 ## Date: 2024-03-10
 ### Changes:
 - Fix: Fixed the bug when select other taxa levle except "Genome", the empty annotation was not removed.
+
+# Version: 1.101.0
+## Date: 2024-03-10
+### Changes:
+- New: Add a function to allow user to use any table to do basic stats and plot.

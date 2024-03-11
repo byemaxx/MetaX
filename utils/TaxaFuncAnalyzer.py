@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
-    def __init__(self, df_path, meta_path=None, peptide_col_name='Sequence', protein_col_name='Proteins'):
+    def __init__(self, df_path, meta_path=None, peptide_col_name='Sequence', protein_col_name='Proteins', any_df_mode=False, custom_col_name='Custom'):
         self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
@@ -34,6 +34,7 @@ class TaxaFuncAnalyzer:
         
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
+        self.custom_col_name = custom_col_name
         self.sample_list = None
         self.meta_df = None
         self.meta_name = None
@@ -53,7 +54,10 @@ class TaxaFuncAnalyzer:
         self.taxa_func_linked_dict = None
         self.func_taxa_linked_dict = None
         self.protein_df = None
-        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None, 'protein': None}
+        self.any_df_mode = any_df_mode  # if True, the consider the TaxaFunc df as other_df
+        self.custom_df = None # other df, any df that user want to add
+        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 
+                               'taxa_func': None, 'protein': None, 'custom': None}
         
         # load function 
         self.BasicStats = BasicStats(self)
@@ -70,13 +74,28 @@ class TaxaFuncAnalyzer:
         
     def _set_original_df(self, df_path: str) -> None:
         self.original_df = pd.read_csv(df_path, sep='\t')
-        if 'Taxon_prop' not in self.original_df.columns:
-            raise ValueError("The TaxaFunc data must have Taxon_prop column!")
         
-        # check if the 'genome' in LCA_level, if no, set genome_mode to False
-        if 'genome' not in self.original_df['LCA_level'].unique():
-            self.genome_mode = False
-            print("The genome mode is set to False, the LCA_level does not contain 'genome'.")
+        if self.any_df_mode:
+            self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
+            self.sample_list = self.original_df.columns.tolist()[1:]
+            #create a column 'LCA_level' with 'life' for other_df
+            self.original_df['LCA_level'] = 'life'
+            self.original_df['Taxon'] = 'd__Bacteria'
+            self.original_df['Taxon_prop'] = 1
+            # create a fake function column as Not_Exist
+            self.original_df['Not_Applicable'] = 'Not_Exist'
+            self.original_df['Not_Applicable_prop'] = 1
+            # create a fake peptide column
+            self.original_df['Sequence'] = 'Not_Exist'
+        else: # for normal mode
+            if 'Taxon_prop' not in self.original_df.columns:
+                raise ValueError("The TaxaFunc data must have Taxon_prop column!")
+            
+            # check if the 'genome' in LCA_level, if no, set genome_mode to False
+            if 'genome' not in self.original_df['LCA_level'].unique():
+                self.genome_mode = False
+                print("The genome mode is set to False, the LCA_level does not contain 'genome'.")
+            
         
         ### create sample_list by Intensity_*, if meta is not provided
         col_names = self.original_df.columns.tolist()
@@ -195,7 +214,10 @@ class TaxaFuncAnalyzer:
     
     
     def set_func(self, func):
-        
+        if self.any_df_mode:
+            print("ANY_DF_MODE is set, the function is not applicable.")
+            self.func_name = 'Not_Applicable'
+            return
         # check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs', 
         #               'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 
         #               'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs']
@@ -340,6 +362,47 @@ class TaxaFuncAnalyzer:
         
     
 ######### Cross Test End #########
+    def set_any_df_table(self, data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
+                                                            'batch_meta': None, 'outlier_detect_method': None,
+                                                            'outlier_handle_method': None,
+                                                            'outlier_detect_by_group': None,
+                                                            'outlier_handle_by_group': None,
+                                                            'processing_order': None}):
+        df = self.original_df.copy()
+        self.outlier_status['custom'] = None # reset outlier_status
+        df = self.data_preprocess(df=df,df_name = 'custom', **data_preprocess_params)
+        # set index as first column
+        self.preprocessed_df = df
+        self.clean_df = df
+        df = df.set_index(df.columns[0])
+        self.custom_df = df
+        # create a df with 1 row for each other table
+        # taxadf: Taxon, peptide_num, sample_list
+        # d__bacteria, 1, 1, ...
+        peptide_dict = {'Sequence': ['Not_Exist']}
+        taxa_dict = {'Taxon': ['d__Bacteria'], 'peptide_num': [1]}
+        func_dict = {self.func_name: ['Not_Exist'], 'peptide_num': [1]}
+        
+        taxa_func_dict = {'Taxon': ['d__Bacteria'], self.func_name: ['Not_Exist'], 'peptide_num': [1]}
+        func_taxa_dict = {self.func_name: ['Not_Exist'], 'Taxon': ['d__Bacteria'], 'peptide_num': [1]}
+        for i in self.sample_list:
+            peptide_dict[i] = [1]
+            taxa_dict[i] = [1]
+            func_dict[i] = [1]
+            taxa_func_dict[i] = [1]
+            func_taxa_dict[i] = [1]
+
+        self.peptide_df = pd.DataFrame(peptide_dict).set_index('Sequence')
+        self.taxa_df = pd.DataFrame(taxa_dict).set_index('Taxon')
+        self.func_df = pd.DataFrame(func_dict).set_index(self.func_name)
+        self.taxa_func_df = pd.DataFrame(taxa_func_dict).set_index(['Taxon', self.func_name])
+        self.func_taxa_df = pd.DataFrame(func_taxa_dict).set_index([self.func_name, 'Taxon'])
+
+        self.taxa_func_linked_dict= {'d__Bacteria': [(self.func_name, 1)]}
+        self.func_taxa_linked_dict= {self.func_name: [('d__Bacteria', 1)]}
+        
+        print("Custom df is set!\nWaiting for further analysis...")
+        
 
 
 
@@ -357,7 +420,12 @@ class TaxaFuncAnalyzer:
                                                                                 'by_sample': False, 
                                                                                 'rank_method': 'unique_counts'}
                           ):
+        # for any_df_mode, the df is considered as other_df
+        if self.any_df_mode:
+            self.set_any_df_table(data_preprocess_params)
+            return
         
+        #! fllowing code is for the normal mode
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
 

@@ -13,8 +13,9 @@ class CrossTest:
         self.tfa = tfa
 
     def _get_df_primary_secondary(self, df_type: str):
-        if df_type not in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide', 'protein']:
-            raise ValueError("df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide']")
+        if df_type not in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide', 'protein', 'custom']:
+            raise ValueError(f"df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide', 'custom'],\
+                             but got [{df_type}]")
         
         df, primary, secondary = None, None, None
         
@@ -30,6 +31,8 @@ class CrossTest:
             df, primary = self.tfa.peptide_df, self.tfa.peptide_col_name
         elif df_type == 'protein':
             df, primary = self.tfa.protein_df, self.tfa.protein_col_name
+        elif df_type == 'custom':
+            df, primary = self.tfa.custom_df, self.tfa.custom_col_name
             
         return df, primary, secondary
             
