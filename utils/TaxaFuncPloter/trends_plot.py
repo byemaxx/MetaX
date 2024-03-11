@@ -8,7 +8,7 @@ class TrendsPlot:
     def __init__(self, tfobj):
         self.tfobj =  tfobj
         
-    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster'):
+    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster', font_size=10):
         
         # Load the data
         df = self.tfobj.BasicStats.get_stats_mean_df_by_group(df)
@@ -47,10 +47,11 @@ class TrendsPlot:
 
                 sns.lineplot(data=avg_data, ax=axs[i], color=palette[i], linewidth=2)
 
-                axs[i].set_title(f'{title} {i+1}')
-                axs[i].set_xlabel('Group')
-                axs[i].set_ylabel('Standardized Value')
+                axs[i].set_title(f'{title} {i+1}', fontsize=font_size+2, fontweight='bold')
+                axs[i].set_xlabel('Group', fontsize=font_size-2)
+                axs[i].set_ylabel('Standardized Value', fontsize=font_size-2)
                 axs[i].tick_params(axis='x', rotation=90)  # Rotate x-axis labels
+                axs[i].tick_params(axis='both', which='major', labelsize=font_size)
 
             plt.close()
             return fig, clustered_df

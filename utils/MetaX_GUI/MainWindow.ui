@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -4147,7 +4147,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="title">
@@ -5172,88 +5172,31 @@
                 <string>Expression Trends</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_24">
-                <item row="7" column="0">
-                 <widget class="QPushButton" name="pushButton_trends_clean_list">
+                <item row="10" column="6">
+                 <widget class="QLabel" name="label_93">
+                  <property name="text">
+                   <string>Select Cluster</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="13" column="7">
+                 <widget class="QPushButton" name="pushButton_trends_get_trends_table">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Clean List</string>
+                   <string>Get ClusterTable</string>
                   </property>
                  </widget>
                 </item>
                 <item row="6" column="7">
-                 <widget class="QSpinBox" name="spinBox_trends_height">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>200</number>
-                  </property>
-                  <property name="value">
-                   <number>9</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1" colspan="5">
-                 <widget class="QComboBox" name="comboBox_trends_selection_list">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>600</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="6">
-                 <widget class="QSpinBox" name="spinBox_trends_width">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>200</number>
-                  </property>
-                  <property name="value">
-                   <number>16</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="7">
-                 <widget class="QCheckBox" name="checkBox_trends_plot_interactive_plot_samples">
-                  <property name="text">
-                   <string>Plot Samples</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="0">
-                 <widget class="QPushButton" name="pushButton_trends_drop_item">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
+                 <widget class="QLabel" name="label_92">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -5261,29 +5204,14 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Drop Item</string>
+                   <string>Height</string>
                   </property>
                  </widget>
                 </item>
-                <item row="9" column="7">
-                 <widget class="QComboBox" name="comboBox_trends_get_cluster_name"/>
-                </item>
-                <item row="2" column="1" colspan="7">
-                 <layout class="QVBoxLayout" name="verticalLayout_trends_sample"/>
-                </item>
-                <item row="8" column="6" colspan="2">
-                 <widget class="QPushButton" name="pushButton_trends_plot_trends">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                <item row="11" column="7">
+                 <widget class="QCheckBox" name="checkBox_trends_plot_interactive_plot_samples">
                   <property name="text">
-                   <string>Plot Trends</string>
+                   <string>Plot Samples</string>
                   </property>
                  </widget>
                 </item>
@@ -5303,8 +5231,8 @@
                   </property>
                  </widget>
                 </item>
-                <item row="5" column="7">
-                 <widget class="QLabel" name="label_92">
+                <item row="6" column="6">
+                 <widget class="QLabel" name="label_97">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -5312,30 +5240,187 @@
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Height</string>
+                   <string>Width</string>
                   </property>
                  </widget>
                 </item>
-                <item row="12" column="7">
-                 <widget class="QPushButton" name="pushButton_trends_get_trends_table">
+                <item row="13" column="6">
+                 <widget class="QPushButton" name="pushButton_trends_plot_interactive_line">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Get ClusterTable</string>
+                   <string>Plot Interactive Line</string>
                   </property>
                  </widget>
                 </item>
-                <item row="9" column="6">
-                 <widget class="QLabel" name="label_93">
+                <item row="7" column="0">
+                 <widget class="QPushButton" name="pushButton_trends_drop_item">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
-                   <string>Select Cluster</string>
+                   <string>Drop Item</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="6">
+                 <widget class="QCheckBox" name="checkBox_trends_plot_interactive_rename_taxa">
+                  <property name="text">
+                   <string>Simplify Taxa Names</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="6">
+                 <widget class="QCheckBox" name="checkBox_get_trends_cluster_intensity">
+                  <property name="text">
+                   <string>Get Intnsity Results</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="7">
+                 <widget class="QSpinBox" name="spinBox_trends_num_cluster">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>5</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="6" colspan="2">
+                 <widget class="QPushButton" name="pushButton_trends_add_top">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
+                  <property name="text">
+                   <string>Add Top to List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0" colspan="3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_44">
+                  <item>
+                   <widget class="QLabel" name="label_96">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="text">
+                     <string>Table</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_trends_table">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Taxa</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Func</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa-Func</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Peptide</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_148">
+                    <property name="text">
+                     <string>Meta</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_trends_meta"/>
+                  </item>
+                 </layout>
+                </item>
+                <item row="1" column="3" colspan="5">
+                 <layout class="QVBoxLayout" name="verticalLayout_trends_group"/>
+                </item>
+                <item row="3" column="1" colspan="5">
+                 <widget class="QComboBox" name="comboBox_trends_selection_list">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>600</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_100">
+                  <property name="text">
+                   <string>Select for plotting</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0">
+                 <widget class="QPushButton" name="pushButton_trends_clean_list">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Clean List</string>
                   </property>
                  </widget>
                 </item>
@@ -5358,67 +5443,121 @@
                   </property>
                  </widget>
                 </item>
-                <item row="5" column="1" rowspan="9" colspan="5">
-                 <widget class="QListWidget" name="listWidget_trends_list_for_ploting">
+                <item row="2" column="0">
+                 <widget class="QRadioButton" name="radioButton_trends_sample">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                 </widget>
-                </item>
-                <item row="7" column="7">
-                 <widget class="QSpinBox" name="spinBox_trends_num_cluster">
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="value">
-                   <number>5</number>
+                  <property name="text">
+                   <string>Sample</string>
                   </property>
                  </widget>
                 </item>
-                <item row="12" column="6">
-                 <widget class="QPushButton" name="pushButton_trends_plot_interactive_line">
+                <item row="2" column="1" colspan="7">
+                 <layout class="QVBoxLayout" name="verticalLayout_trends_sample"/>
+                </item>
+                <item row="9" column="6" colspan="2">
+                 <widget class="QPushButton" name="pushButton_trends_plot_trends">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Plot Interactive Line</string>
+                   <string>Plot Trends</string>
                   </property>
                  </widget>
                 </item>
-                <item row="11" column="6">
-                 <widget class="QCheckBox" name="checkBox_trends_plot_interactive_rename_taxa">
-                  <property name="text">
-                   <string>Simplify Taxa Names</string>
-                  </property>
-                 </widget>
+                <item row="1" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_45">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_trends_in_condition">
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="text">
+                     <string>In Condition</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_trends_condition_meta">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_trends_condition_group">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
-                <item row="11" column="7">
+                <item row="12" column="7">
                  <widget class="QCheckBox" name="checkBox_trends_plot_interactive_show_legend">
                   <property name="text">
                    <string>Show Legend</string>
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="6">
-                 <widget class="QCheckBox" name="checkBox_get_trends_cluster_intensity">
+                <item row="8" column="6">
+                 <widget class="QLabel" name="label_95">
                   <property name="text">
-                   <string>Get Intnsity Results</string>
+                   <string>Cluster Number</string>
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="label_100">
-                  <property name="text">
-                   <string>Select for plotting</string>
+                <item row="7" column="7">
+                 <widget class="QSpinBox" name="spinBox_trends_height">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>200</number>
+                  </property>
+                  <property name="value">
+                   <number>9</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="6">
+                 <widget class="QSpinBox" name="spinBox_trends_width">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>200</number>
+                  </property>
+                  <property name="value">
+                   <number>16</number>
                   </property>
                  </widget>
                 </item>
@@ -5545,33 +5684,7 @@
                   </item>
                  </layout>
                 </item>
-                <item row="4" column="6" colspan="2">
-                 <widget class="QPushButton" name="pushButton_trends_add_top">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="toolTip">
-                   <string>Add conditionally filtered items to the drawing box</string>
-                  </property>
-                  <property name="text">
-                   <string>Add Top to List</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="6">
-                 <widget class="QLabel" name="label_95">
-                  <property name="text">
-                   <string>Cluster Number</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="0">
+                <item row="9" column="0">
                  <widget class="QPushButton" name="pushButton_trends_add_a_list">
                   <property name="enabled">
                    <bool>false</bool>
@@ -5590,16 +5703,39 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QRadioButton" name="radioButton_trends_sample">
+                <item row="10" column="7">
+                 <widget class="QComboBox" name="comboBox_trends_get_cluster_name"/>
+                </item>
+                <item row="5" column="6">
+                 <widget class="QLabel" name="label_158">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Sample</string>
+                   <string>Font Size</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1" rowspan="10" colspan="5">
+                 <widget class="QListWidget" name="listWidget_trends_list_for_ploting">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="7">
+                 <widget class="QSpinBox" name="spinBox_trends_font_size">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>10</number>
                   </property>
                  </widget>
                 </item>
@@ -5609,119 +5745,6 @@
                    <string>List for Plotting</string>
                   </property>
                  </widget>
-                </item>
-                <item row="5" column="6">
-                 <widget class="QLabel" name="label_97">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Width</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="3" colspan="5">
-                 <layout class="QVBoxLayout" name="verticalLayout_trends_group"/>
-                </item>
-                <item row="1" column="1" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_45">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_trends_in_condition">
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>In Condition</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_trends_condition_meta">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_trends_condition_group">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="0" column="0" colspan="3">
-                 <layout class="QHBoxLayout" name="horizontalLayout_44">
-                  <item>
-                   <widget class="QLabel" name="label_96">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>Table</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_trends_table">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>Taxa</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Func</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa-Func</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Peptide</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_148">
-                    <property name="text">
-                     <string>Meta</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_trends_meta"/>
-                  </item>
-                 </layout>
                 </item>
                </layout>
               </widget>

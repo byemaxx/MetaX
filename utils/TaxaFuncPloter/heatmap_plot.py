@@ -82,7 +82,7 @@ class HeatmapPlot:
                 sns_params = {
                     "center": 0,
                     "cmap": cmap,
-                    "linewidths": 0.01,
+                    "linewidths": 0.05,
                     "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
                     "dendrogram_ratio": (0.1, 0.2),
                     "figsize": fig_size,
@@ -93,8 +93,8 @@ class HeatmapPlot:
                     "cbar_kws": {"label": plot_type, "shrink": 0.5},
                     "standard_scale": scale,
                     "mask": df_top.isnull(),
-                    "vmin": 0,
-                    "vmax": 1,
+                    "vmin": 0 if plot_type == 'P-value' else None,
+                    "vmax": pvalue if plot_type == 'P-value' else None,
                     "xticklabels": True if show_all_labels[0] else "auto",
                     "yticklabels": True if show_all_labels[1] else "auto",
                 }
@@ -251,7 +251,7 @@ class HeatmapPlot:
                 fontsize=font_size + 2, weight='bold'
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label(plot_type, rotation=90, labelpad=1, fontsize=font_size)
+            cbar.set_label("Intensity", rotation=90, labelpad=1, fontsize=font_size)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 

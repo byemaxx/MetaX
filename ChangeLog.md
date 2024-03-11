@@ -441,3 +441,8 @@
 ## Date: 2024-03-11
 ### Changes:
 - Fix: 1. Fixed the bug of wrong label of color bar in the heatmap plot. 2. Fixed the bug when table changed but GUI doesn't update.
+
+# Version: 1.101.3
+## Date: 2024-03-11
+### Changes:
+- New: Add an option to set font size for the trends plot.

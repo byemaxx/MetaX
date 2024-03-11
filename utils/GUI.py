@@ -3228,6 +3228,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         width = self.spinBox_trends_width.value()
         height = self.spinBox_trends_height.value()
         table_name = self.comboBox_trends_table.currentText()
+        font_size = self.spinBox_trends_font_size.value()
 
         title = f'{table_name.capitalize()} Cluster'
         num_cluster = self.spinBox_trends_num_cluster.value()
@@ -3284,7 +3285,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = df.loc[(df!=0).any(axis=1)]
             self.show_message(f'Plotting trends cluster...')
             # plot trends and get cluster table
-            fig, cluster_df = TrendsPlot(self.tfa).plot_trends(df= df, num_cluster = num_cluster, width=width, height=height, title=title)
+            fig, cluster_df = TrendsPlot(self.tfa).plot_trends(df= df, num_cluster = num_cluster, 
+                                                               width=width, height=height, title=title
+                                                               , font_size=font_size)
             # create a dialog to show the figure
             # plt_dialog = PltDialog(self.MainWindow, fig)
             plt_size= (width*50,height*num_cluster*50)
@@ -3325,6 +3328,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         show_legend = self.checkBox_trends_plot_interactive_show_legend.isChecked()
         rename_taxa = self.checkBox_trends_plot_interactive_rename_taxa.isChecked()
         plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
+        font_size = self.spinBox_trends_font_size.value()
         
         condition = [self.comboBox_trends_condition_meta.currentText(),
                      self.comboBox_trends_condition_group.currentText()]\
@@ -3379,7 +3383,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             
         try:
-            pic = TrendsPlot_js(self.tfa).plot_trends_js( df=df, width=width, height= height, title=title, rename_taxa=rename_taxa, show_legend=show_legend, add_group_name = plot_samples)
+            pic = TrendsPlot_js(self.tfa).plot_trends_js( df=df, width=width, height= height, title=title, 
+                                                         rename_taxa=rename_taxa, show_legend=show_legend, 
+                                                         add_group_name = plot_samples, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
         except Exception as e:
             error_message = traceback.format_exc()

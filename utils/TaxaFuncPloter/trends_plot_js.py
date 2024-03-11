@@ -34,7 +34,9 @@ class TrendsPlot_js:
         df.columns = new_col_names
         return df
         
-    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, rename_taxa:bool=False, show_legend:bool=False, add_group_name:bool=False):
+    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, 
+                       rename_taxa:bool=False, show_legend:bool=False, 
+                       add_group_name:bool=False, font_size:int=10):
         # rename taxa
         if rename_taxa:
             df = self.rename_taxa(df)
@@ -89,14 +91,15 @@ class TrendsPlot_js:
                                            selector=[{"type": "all", "title": "All"}, {"type": "inverse", "title": "Inverse"}],
                                            pos_left="right", orient="vertical", 
                                            pos_top="5%",border_width=0) if show_legend else opts.LegendOpts(is_show=False),
-            "xaxis_opts": opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=25)),
+            "xaxis_opts": opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=25, font_size=font_size)),
             "toolbox_opts": opts.ToolboxOpts(
                 is_show=True, orient="vertical", pos_left="left", pos_top="bottom"
             ),
+            'yaxis_opts': opts.AxisOpts(axislabel_opts=opts.LabelOpts(font_size=font_size)),
             "datazoom_opts": [
                 opts.DataZoomOpts(type_="inside", range_start=0, range_end=100,)
             ],
-            "title_opts": opts.TitleOpts(title=title, pos_left="center"),
+            "title_opts": opts.TitleOpts(title=title, pos_left="center", title_textstyle_opts=opts.TextStyleOpts(font_size=font_size+2, font_weight='bold')),
         }
         c.set_global_opts(**params)
         
