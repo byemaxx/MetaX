@@ -450,13 +450,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         dft = None
         if df_type == "taxa":
             dft =  self.tfa.taxa_df.copy()
-        elif df_type in ["func", "function"]:
+        elif df_type in ["func", "function", 'functions']: #? I am not sure I changed all names to functions, so I keep all of them
             dft =   self.tfa.func_df.copy()
-        elif df_type in ["taxa-func", "taxa-function"]:
+        elif df_type in ["taxa-func", "taxa-function", 'taxa-functions']:
             dft =   self.tfa.taxa_func_df.copy()
-        elif df_type == "peptide":
+        elif df_type in ["peptide", "peptides"]:
             dft =   self.tfa.peptide_df.copy()
-        elif df_type == "protein":
+        elif df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
                 raise ValueError("Please set protein table first.")
             dft =   self.tfa.protein_df.copy()
@@ -472,7 +472,25 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if replace_if_two_index:
             dft = self.tfa.replace_if_two_index(dft)
         return dft
-
+    
+    def get_list_by_df_type(self, df_type:str= None) -> list:
+        '''
+        return the list of df_type, ignore capital case
+        df_type: str, one of ['taxa', 'functions', 'taxa-functions', 'peptides', 'proteins', 'custom']
+        return: list
+        '''
+        df_type = df_type.lower()
+        list_dict = {'taxa':self.taxa_list,
+                        'functions':self.func_list, 
+                        'taxa-functions':self.taxa_func_list, 
+                        'peptides':self.peptide_list,
+                        'proteins':self.protein_list,
+                        'custom':self.custom_list}
+        res_list = list_dict.get(df_type, None)
+        if res_list is None:
+            raise ValueError(f"Invalid df_type: {df_type}")
+        return res_list
+            
     def change_event_checkBox_basic_plot_table(self):
         taxa_only_button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, 
                                  self.pushButton_plot_sunburst, self.pushButton_plot_basic_treemap]
@@ -487,7 +505,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         if current_text == 'Taxa' and taxa_df_exists:
             enabled_list = taxa_only_button_list + taxa_func_button_list
-        elif current_text == 'Taxa-Function' and taxa_df_exists:
+        elif current_text == 'Taxa-Functions' and taxa_df_exists:
             enabled_list = taxa_func_button_list
         else:
             enabled_list = []
@@ -503,7 +521,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         tfa_exists = getattr(self, 'tfa', None) is not None
         taxa_df_exists = tfa_exists and getattr(self.tfa, 'taxa_df', None) is not None
 
-        if current_text == 'Taxa' and taxa_df_exists or current_text == 'Taxa-Func' and taxa_df_exists:
+        if current_text == 'Taxa' and taxa_df_exists or current_text == 'Taxa-Functions' and taxa_df_exists:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(True)
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
@@ -1423,12 +1441,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             else:
                 self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
                 # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
-                self.update_table_dict('peptide', self.tfa.peptide_df)
+                self.update_table_dict('peptides', self.tfa.peptide_df)
                 self.update_table_dict('taxa', self.tfa.taxa_df)
-                self.update_table_dict('function', self.tfa.func_df)
-                self.update_table_dict('taxa-func', self.tfa.taxa_func_df)
-                self.update_table_dict('func-taxa', self.tfa.func_taxa_df)
-                self.update_table_dict('protein', self.tfa.protein_df)
+                self.update_table_dict('functions', self.tfa.func_df)
+                self.update_table_dict('taxa-functions', self.tfa.taxa_func_df)
+                self.update_table_dict('functions-taxa', self.tfa.func_taxa_df)
+                self.update_table_dict('proteins', self.tfa.protein_df)
         else:
             self.listWidget_table_list.addItems( list(self.table_dict.keys()))
             
@@ -2284,41 +2302,54 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def add_or_remove_protein_custom_label(self):
         # add or remove protein label in comboBox
-        combox_list = [
+        normal_label_list = ['Taxa', 'Functions', 'Taxa-Functions', 'Peptides']
+        t_and_anova_label_list = normal_label_list + ['Significant Taxa-Func']
+
+        normal_combox_list = [
             self.comboBox_table4pca,
             self.comboBox_basic_table,
-            self.comboBox_table_for_ttest,
-            self.comboBox_table_for_anova,
             self.comboBox_table_for_dunnett,
             self.comboBox_table_for_deseq2,
             self.comboBox_co_expr_table,
             self.comboBox_trends_table
         ]
+        ## for "comboBox_tfnet_table", no need to change the label
+
+        t_and_anova_combobox_list = [self.comboBox_table_for_ttest, self.comboBox_table_for_anova]
         
-        label_list = ['Taxa', 'Func', 'Taxa-Func', 'Peptide']
-        # add "protein" to comboBoxs to plot
+                    
+            
+            
+        # add "protein" to normal_combox_list
         if self.tfa.protein_df is not None:
-            label_list = label_list + ['Protein']
+            normal_label_list = normal_label_list + ['Proteins']
+            t_and_anova_label_list = t_and_anova_label_list + ['Proteins']
+            
             self.protein_list = self.tfa.protein_df.index.tolist()
 
         else:
             self.protein_list = []
-        
-        if self.tfa.custom_df is not None:
-            label_list = ['Custom']
+            
+        # if any_df_mode is True, then add "Custom" to normal_combox_list
+        if self.tfa.any_df_mode is True:
             self.custom_list = self.tfa.custom_df.index.tolist()
+            normal_label_list = ['Custom']
+            t_and_anova_label_list = ['Custom']
+            
         else:
             self.custom_list = []
             
-        for combobox in combox_list:
-            combobox.blockSignals(True)
-            combobox.clear()
-            combobox.addItems(label_list)
-            combobox.blockSignals(False)
+        for combobox_list in [normal_combox_list, t_and_anova_combobox_list]:
+            for combobox in combobox_list:
+                combobox.blockSignals(True)
+                combobox.clear()
+                combobox.addItems(normal_label_list if combobox in normal_combox_list else t_and_anova_label_list)
+                combobox.blockSignals(False)
+
 
 
     def set_basic_heatmap_selection_list(self):
-        type_list = self.comboBox_basic_table.currentText().lower()            
+        type_list = self.comboBox_basic_table.currentText()           
         self.listWidget_list_for_ploting.clear()
         self.basic_heatmap_list = []
         self.update_basic_heatmap_combobox(type_list = type_list)
@@ -2335,12 +2366,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
         self.comboBox_basic_heatmap_selection_list.clear()
-        type_dict = {'taxa': ['All Taxa', self.taxa_list], 
-                    'func': ['All Functions', self.func_list], 
-                    'taxa-func': ['All Taxa-Functions', self.taxa_func_list],
-                    'peptide': ['All Peptides', self.peptide_list],
-                    'protein': ['All Proteins', self.protein_list],
-                    'custom': ['All Items', self.custom_list]}
+        type_dict = {'Taxa': ['All Taxa', self.taxa_list], 
+                    'Functions': ['All Functions', self.func_list], 
+                    'Taxa-Functions': ['All Taxa-Functions', self.taxa_func_list],
+                    'Peptides': ['All Peptides', self.peptide_list],
+                    'Proteins': ['All Proteins', self.protein_list],
+                    'Custom': ['All Items', self.custom_list]}
         
         self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
         self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
@@ -2606,13 +2637,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         update_list = []
         if current_table == 'Taxa':
             update_list = self.taxa_list
-        elif current_table == 'Func':
+        elif current_table == 'Functions':
             update_list = self.func_list
-        elif current_table == 'Taxa-Func':
+        elif current_table == 'Taxa-Functions':
             update_list = self.taxa_func_list
-        elif current_table == 'Peptide':
+        elif current_table == 'Peptides':
             update_list = self.peptide_list
-        elif current_table == 'Protein':
+        elif current_table == 'Proteins':
             update_list = self.protein_list
         elif current_table == 'Custom':
             update_list = self.custom_list
@@ -2633,10 +2664,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     def check_if_in_list(str_selected):
                         df_type = self.comboBox_basic_table.currentText()
                         list_dict = {'Taxa':self.taxa_list, 
-                                     'Func':self.func_list, 
-                                     'Taxa-Func':self.taxa_func_list, 
-                                     'Peptide':self.peptide_list, 
-                                     'Protein':self.protein_list,
+                                     'Functions':self.func_list, 
+                                     'Taxa-Functions':self.taxa_func_list, 
+                                     'Peptides':self.peptide_list, 
+                                     'Proteins':self.protein_list,
                                      'Custom':self.custom_list}
                         
                         if str_selected in list_dict[df_type]:
@@ -2683,12 +2714,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # method = 'deseq2_up_p', 'deseq2_down_p', 'deseq2_up_l2fc', 'deseq2_down_l2fc'
             table_name = method.split('_')[0] +'(' + df_type + ')'
             df =  self.table_dict.get(table_name)
-            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-func' else df
-            
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]} of {df_type} first!")
                 self.logger.write_log(f'extract_top_from_test_result: {method.split("_")[0]} of {df_type} is None')
                 return None
+            
+            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-functions' else df
+            
             
             if filtered:
                 print('filtered enabled')
@@ -2724,11 +2756,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # method = 'anova_test_p', 'anova_test_f', 't_test_p', 't_test_t'
             table_name = method.split('_')[0] + '_test(' + df_type + ')'
             df = self.table_dict.get(table_name)
-            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-func' else df
-
             if df is None:
                 QMessageBox.warning(self.MainWindow, 'Warning', f"Please run {method.split('_')[0]}_test of {df_type} first!")
                 return None
+            
+            df = self.tfa.replace_if_two_index(df) if df_type == 'taxa-functions' else df
+
             
             if filtered:
                 print('filtered enabled')
@@ -2758,18 +2791,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def add_a_list_to_list_window(self, df_type, aim_list, str_list=None):
         def check_if_in_list(str_selected, df_type):
-                    list_dict = {'Taxa':self.taxa_list,
-                                 'Func':self.func_list, 
-                                 'Taxa-Func':self.taxa_func_list, 
-                                 'Peptide':self.peptide_list,
-                                 'Protein':self.protein_list,
-                                 'Custom':self.custom_list}
-                    
-                    extracted_list = list_dict.get(df_type)
-                    if str_selected in extracted_list:
-                        return True
-                    else:
-                        return False
+            df_type = df_type.lower()
+            
+            extracted_list = self.get_list_by_df_type(df_type)
+            if str_selected in extracted_list:
+                return True
+            else:
+                return False
                     
         # open a new window allowing user to input text with comma or new line
         self.input_window = InputWindow(self.MainWindow)
@@ -2877,16 +2905,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def update_co_expr_list(self, str_selected=None, str_list=None):
         if str_list is None and str_selected is not None:
             df_type = self.comboBox_co_expr_table.currentText()
-            list_dict = {'Taxa': self.taxa_list, 
-                         'Func': self.func_list, 
-                         'Taxa-Func': self.taxa_func_list, 
-                         'Peptide': self.peptide_list,
-                         'Protein': self.protein_list,
-                         'Custom': self.custom_list}
             
             if str_selected == '':
                 return None
-            elif str_selected not in list_dict[df_type]:
+            elif str_selected not in self.get_list_by_df_type(df_type):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'Please select a valid item!')
             elif str_selected not in self.co_expr_focus_list:
                 self.co_expr_focus_list.append(str_selected)
@@ -2982,11 +3004,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df = self.tfa.clean_df.loc[self.tfa.clean_df['Taxon'].isin(self.basic_heatmap_list)]
                     df.index = df[self.tfa.peptide_col_name]
 
-                elif table_name == 'Func':
+                elif table_name == 'Functions':
                     df = self.tfa.clean_df.loc[self.tfa.clean_df[self.tfa.func_name].isin(self.basic_heatmap_list)]
                     df.index = df[self.tfa.peptide_col_name]
 
-                elif table_name == 'Taxa-Func':
+                elif table_name == 'Taxa-Functions':
                     df_all = None
                     for i in self.basic_heatmap_list:
                         taxon = i.split(' <')[0]
@@ -2999,11 +3021,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df = df_all
                     df.index = df[self.tfa.peptide_col_name]
                 
-                elif table_name == 'Protein':
+                elif table_name == 'Proteins':
                     QMessageBox.warning(self.MainWindow, 'Warning',
                                         'Protein is not supported to plot the related peptide due to the applied razor algorithm!')
                     return
-
+                elif table_name == 'Custom':
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Custom is not supported to plot the related peptide!')
+                    return
+                
                 else: # Peptide
                     df = self.tfa.peptide_df.copy()
                     df = df.loc[self.basic_heatmap_list]
@@ -3119,10 +3144,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
     def update_trends_select_combobox(self, type_list):
         type_dict = { 'taxa': ["All Taxa", self.taxa_list],
-                      'func': ["All Functions", self.func_list],
-                      'taxa-func': ["All Taxa-Functions", self.taxa_func_list],
-                      'peptide': ["All Peptides", self.peptide_list],
-                      'protein': ["All Proteins", self.protein_list],
+                      'functions': ["All Functions", self.func_list],
+                      'taxa-functions': ["All Taxa-Functions", self.taxa_func_list],
+                      'peptides': ["All Peptides", self.peptide_list],
+                      'proteins': ["All Proteins", self.protein_list],
                       'custom': ['All Items', self.custom_list]}
 
         self.comboBox_trends_selection_list.addItem(type_dict[type_list][0])
@@ -3162,14 +3187,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if str_selected != '' and str_selected not in self.trends_cluster_list:
                 def check_if_in_list(str_selected):
                     df_type = self.comboBox_trends_table.currentText()
-                    list_dict = {'Taxa':self.taxa_list, 
-                                 'Func':self.func_list, 
-                                 'Taxa-Func':self.taxa_func_list, 
-                                 'Peptide':self.peptide_list,
-                                 'Protein':self.protein_list,
-                                    'Custom':self.custom_list
-                                 }
-                    if str_selected in list_dict[df_type]:
+                    
+                    if str_selected in self.get_list_by_df_type(df_type):
                         return True
                     else:
                         return False
@@ -3852,10 +3871,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 
             
-            elif 'taxa-func' in table_name:
-                if 'NonSigTaxa_SigFuncs(taxa-func)' in table_name:
+            elif 'taxa-functions' in table_name:
+                # index level 0 is taxa, index level 1 is function
+                num_taxa = len(set(df.index.get_level_values(0)))
+                num_func = len(set(df.index.get_level_values(1)))
+                if col_luster and num_taxa < 3:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of taxa is less than 3, cannot do column cluster!')
+                    return None
+                if row_luster and num_func < 3:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of functions is less than 3, cannot do row cluster!')
+                    return None
+                if 'NonSigTaxa_SigFuncs(taxa-functions)' in table_name:
                     title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
-                elif 'SigTaxa_NonSigFuncs(taxa-func)' in table_name:
+                elif 'SigTaxa_NonSigFuncs(taxa-functions)' in table_name:
                     title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
                 else:
                     title = ""
@@ -3926,7 +3954,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
             
             else:
-                if 'taxa-func' in table_name:
+                if 'taxa-functions' in table_name:
                     df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, 
                                                                               col_cluster = col_luster, row_cluster = row_luster,
                                                                               value_type=value_type, pvalue=pvalue, 
@@ -4018,10 +4046,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             elif type(result) == tuple:
                 df_tuple = result
-                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-functions)'
                 self.show_table(df_tuple[0], title=table_name_1)
                 self.update_table_dict(table_name_1, df_tuple[0])
-                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-functions)'
                 self.show_table(df_tuple[1], title=table_name_2)
                 self.update_table_dict(table_name_2, df_tuple[1])
                 self.pushButton_plot_top_heatmap.setEnabled(True)
@@ -4267,10 +4295,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 table_names = [table_name]
             elif type(result) == tuple:
                 df_tuple = result
-                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-func)'
+                table_name_1 = 'NonSigTaxa_SigFuncs(taxa-functions)'
                 self.show_table(df_tuple[0], title=table_name_1)
                 self.update_table_dict(table_name_1, df_tuple[0])
-                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-func)'
+                table_name_2 = 'SigTaxa_NonSigFuncs(taxa-functions)'
                 self.show_table(df_tuple[1], title=table_name_2)
                 self.update_table_dict(table_name_2, df_tuple[1])
                 self.pushButton_plot_top_heatmap.setEnabled(True)
@@ -4478,7 +4506,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
-        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-func)']:
+        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-functions)']:
             QMessageBox.warning(self.MainWindow, 'Error', f'{table_name} table is not supported for Sankey plot!')
             return None
         try:
@@ -4504,13 +4532,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     # network
     def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
-        if df_type == 'Taxa-Func':
+        if df_type == 'Taxa-Functions':
             self.comboBox_tfnet_select_list.clear()
             self.comboBox_tfnet_select_list.addItems(self.taxa_func_list)
         elif df_type == 'Taxa':
             self.comboBox_tfnet_select_list.clear()
             self.comboBox_tfnet_select_list.addItems(self.taxa_list)
-        elif df_type == 'Func':
+        elif df_type == 'Functions':
             self.comboBox_tfnet_select_list.clear()
             self.comboBox_tfnet_select_list.addItems(self.func_list)
     
@@ -4620,12 +4648,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return index_list
         
         elif method == 'links':
-            if df_type not in ['taxa', 'func']:
+            if df_type not in ['taxa', 'functions']:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{method} is only available for [taxa] and [func] table!')
                 return None
             elif df_type in 'taxa':
                 df = self.tfa.taxa_func_df
-            elif df_type in 'func':
+            elif df_type in 'functions':
                 df = self.tfa.func_taxa_df
             df = df[sample_list]
             df = df.loc[(df!=0).any(axis=1)]
@@ -4726,17 +4754,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             print(f'check_list is {check_list}, return None')
             return None
 
-        if type == 'taxa' or type == 'func':
+        if type == 'taxa' or type == 'functions':
             if type == 'taxa':
                 linked_dict = self.tfa.taxa_func_linked_dict
-            elif type == 'func':
+            elif type == 'functions':
                 linked_dict = self.tfa.func_taxa_linked_dict
             removed = [i for i in check_list if i not in linked_dict]
             check_list = [i for i in check_list if i in linked_dict]
-        elif type == 'taxa-func':
+        elif type == 'taxa-functions':
             return check_list
         else:
-            raise ValueError('type should be taxa, func or taxa-func!')
+            raise ValueError('type should be taxa, functions or taxa-functions!')
 
         if removed:
             QMessageBox.warning(
@@ -4757,11 +4785,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         sample_list = self.get_sample_list_tflink()
         
         taxa_list = self.get_top_index_list(df_type='taxa', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
-        func_list = self.get_top_index_list(df_type='func', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
+        func_list = self.get_top_index_list(df_type='functions', method=method, top_num=top_num, sample_list=sample_list, filtered=filtered)
         
         
         taxa_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(taxa_list, type='taxa')
-        func_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(func_list, type='func')
+        func_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(func_list, type='functions')
         
         if taxa_list:
             self.comboBox_others_taxa.clear()

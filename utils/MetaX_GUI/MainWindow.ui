@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1310,7 +1310,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1350,22 +1350,22 @@
                       </property>
                       <item>
                        <property name="text">
-                        <string>Peptide</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
                         <string>Taxa</string>
                        </property>
                       </item>
                       <item>
                        <property name="text">
-                        <string>Function</string>
+                        <string>Functions</string>
                        </property>
                       </item>
                       <item>
                        <property name="text">
-                        <string>Taxa-Function</string>
+                        <string>Taxa-Functions</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>Peptides</string>
                        </property>
                       </item>
                      </widget>
@@ -2802,17 +2802,17 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Peptide</string>
+                      <string>Peptides</string>
                      </property>
                     </item>
                    </widget>
@@ -3006,7 +3006,7 @@
                    <widget class="QComboBox" name="comboBox_table_for_ttest">
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
@@ -3016,12 +3016,12 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>peptide</string>
+                      <string>peptides</string>
                      </property>
                     </item>
                     <item>
@@ -3150,7 +3150,7 @@
                    <widget class="QComboBox" name="comboBox_table_for_anova">
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
@@ -3160,12 +3160,12 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>peptide</string>
+                      <string>peptides</string>
                      </property>
                     </item>
                     <item>
@@ -3480,7 +3480,7 @@
                    <widget class="QComboBox" name="comboBox_table_for_dunnett">
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
@@ -3490,12 +3490,12 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>peptide</string>
+                      <string>peptides</string>
                      </property>
                     </item>
                    </widget>
@@ -4147,7 +4147,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="title">
@@ -4539,7 +4539,7 @@
                     </property>
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
@@ -4549,12 +4549,12 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Peptide</string>
+                      <string>Peptides</string>
                      </property>
                     </item>
                    </widget>
@@ -4708,17 +4708,17 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Peptide</string>
+                      <string>Peptides</string>
                      </property>
                     </item>
                    </widget>
@@ -5352,17 +5352,17 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Peptide</string>
+                      <string>Peptides</string>
                      </property>
                     </item>
                    </widget>
@@ -5760,7 +5760,7 @@
             <item row="0" column="1">
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -6957,12 +6957,12 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Func</string>
+                      <string>Functions</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Taxa-Func</string>
+                      <string>Taxa-Functions</string>
                      </property>
                     </item>
                    </widget>

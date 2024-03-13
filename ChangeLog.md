@@ -446,3 +446,10 @@
 ## Date: 2024-03-11
 ### Changes:
 - New: Add an option to set font size for the trends plot.
+
+
+# Version: 1.101.4
+## Date: 2024-03-12
+### Changes:
+- Change: Changed the table names: taxa-func -> taxa-functions, and other names to Plural form.
+- Fix: Fixed the bug of update the table name in T-test and ANOVA part.

@@ -11,6 +11,26 @@ from scipy.stats import dunnett
 class CrossTest:
     def __init__(self, tfa):
         self.tfa = tfa
+        
+    def convert_df_name_to_simple_name(self, name: str) -> str:
+        name = name.lower()
+        if name in ['taxa', 'taxon']:
+            return 'taxa'
+        elif name in ['func', 'function', 'functions']:
+            return 'func'
+        elif name in ['peptide', 'peptides']:
+            return 'peptide'
+        elif name in ['protein', 'proteins']:
+            return 'protein'
+        elif name in ['custom']:
+            return 'custom'
+        elif name in ['taxa-func', 'taxa-function', 'taxa-functions']:
+            return 'taxa-func'
+        elif name in ['func-taxa', 'function-taxa', 'functions-taxa']:
+            return 'func-taxa'
+        else:
+            raise ValueError(f"df_type must be in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide', 'custom'],\
+                             but got [{name}]")
 
     def _get_df_primary_secondary(self, df_type: str):
         if df_type not in ['taxa-func', 'func-taxa', 'taxa', 'func', 'peptide', 'protein', 'custom']:
@@ -39,6 +59,8 @@ class CrossTest:
 
 
     def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+        df_type = self.convert_df_name_to_simple_name(df_type)
+        
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
 
         if group_list is None:
@@ -87,6 +109,7 @@ class CrossTest:
         return res_all
         
     def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+        df_type = self.convert_df_name_to_simple_name(df_type)
 
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
 
@@ -137,6 +160,8 @@ class CrossTest:
         return res_all
     
     def get_stats_dunnett_test_against_control_with_conditon(self, control_group, condition, group_list:list =None, df_type: str = 'taxa-func') -> pd.DataFrame:
+        df_type = self.convert_df_name_to_simple_name(df_type)
+        
         meta_df = self.tfa.meta_df.copy()
         self.tfa.check_if_condition_valid(condition)
         condition_list = meta_df[condition].unique()
@@ -155,6 +180,8 @@ class CrossTest:
             
             
     def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+        df_type = self.convert_df_name_to_simple_name(df_type)
+        
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
         #! Output a dataframe with (p_value, t_statistic) for each group
         # check if the control_group is in group_list_all

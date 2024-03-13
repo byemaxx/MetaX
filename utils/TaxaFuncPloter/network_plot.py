@@ -146,10 +146,10 @@ class NetworkPlot:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
         df_dict = {'taxa': self.tfa.taxa_df, 
-                   'func': self.tfa.func_df, 
-                   'taxa-func': self.tfa.taxa_func_df, 
-                   'peptide': self.tfa.peptide_df,
-                   'protein': self.tfa.protein_df,
+                   'functions': self.tfa.func_df, 
+                   'taxa-functions': self.tfa.taxa_func_df, 
+                   'peptides': self.tfa.peptide_df,
+                   'proteins': self.tfa.protein_df,
                    'custom': self.tfa.custom_df}
         
         df = df_dict[df_type].copy()
