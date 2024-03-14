@@ -82,8 +82,8 @@ class HeatmapPlot:
                 sns_params = {
                     "center": 0,
                     "cmap": cmap,
-                    "linewidths": 0.05,
-                    "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                    "linewidths": 0.2,
+                    "linecolor": (0, 0, 0, 0.1), # last value is alpha value, 0 is transparent, 1 is opaque
                     "dendrogram_ratio": (0.1, 0.2),
                     "figsize": fig_size,
                     "col_cluster": col_cluster,
@@ -184,8 +184,8 @@ class HeatmapPlot:
         scale = scale_map.get(scale)
 
         type_map = {'f': ('f-statistic', 'Spectral_r'),
-                    'p': ('P-value', 'Reds_r'),
-                    't': ('t-statistic', 'hot_r')}
+                    'p': ('P-value', 'RdGy_r'), # Reds, hot_r were used before
+                    't': ('t-statistic', 'RdGy_r')}
 
         if cmap is None:
             plot_type, cmap = type_map.get(value_type)
@@ -238,7 +238,8 @@ class HeatmapPlot:
             if rename_taxa:
                 mat = self.rename_taxa(mat)
             sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
-                          'cbar_kws': {'label': 'Intensity'}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
+                          'cbar_kws': {'label': 'Intensity',"shrink": 0.5},
+                          'col_cluster': col_cluster, 'row_cluster': row_cluster,
                             'standard_scale': scale, 'col_colors': color_list,
                                 "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
             fig = sns.clustermap(mat, **sns_params)

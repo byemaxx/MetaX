@@ -126,7 +126,7 @@ class NetworkPlot:
                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"),
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title=f"Taxa-Function Network", subtitle=f"{sample_list}" if sample_list else None,
+                title_opts=opts.TitleOpts(title=f"Taxa-Functions Network", subtitle=f"{sample_list}" if sample_list else None,
                                           subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}},
                                                orient="vertical", pos_left="left", pos_top="bottom"),
@@ -246,8 +246,8 @@ class NetworkPlot:
                 legend_opts=opts.LegendOpts(is_show=True),
                 title_opts=opts.TitleOpts(
                     title="Co-expression Network",
-                    subtitle=f"{sample_list}" if sample_list != self.tfa.sample_list else "",
-                    subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
+                    # subtitle=f"{sample_list}" if sample_list != self.tfa.sample_list else "",
+                    # subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ), 
                 toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}},
                                                orient="vertical", pos_left="left", pos_top="bottom")

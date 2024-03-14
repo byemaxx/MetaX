@@ -137,9 +137,9 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 
 
-# TaxaFunc Analyzer
+# OTF Analyzer
 
-When we get the **TaxaFunction Table** after using <u>**Peptide Annotator**</u>, we can use **<u>TaxaFunc Analyzer</u>** to do downstream analysis.
+When we get the **Operational Taxa-Functions (OTF) Table** after using <u>**Peptide Annotator**</u>, we can use **<u>OTF Analyzer</u>** to do downstream analysis.
 
 ## 1. Data Preparing
 

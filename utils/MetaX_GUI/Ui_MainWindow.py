@@ -1154,6 +1154,7 @@ class Ui_metaX_main(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox_basic_hetatmap_rename_taxa.sizePolicy().hasHeightForWidth())
         self.checkBox_basic_hetatmap_rename_taxa.setSizePolicy(sizePolicy)
+        self.checkBox_basic_hetatmap_rename_taxa.setChecked(True)
         self.checkBox_basic_hetatmap_rename_taxa.setObjectName("checkBox_basic_hetatmap_rename_taxa")
         self.gridLayout_41.addWidget(self.checkBox_basic_hetatmap_rename_taxa, 3, 2, 1, 1)
         self.checkBox_basic_heatmap_sankey_title = QtWidgets.QCheckBox(self.tab_13)
@@ -2073,6 +2074,7 @@ class Ui_metaX_main(object):
         sizePolicy.setHeightForWidth(self.checkBox_top_heatmap_rename_taxa.sizePolicy().hasHeightForWidth())
         self.checkBox_top_heatmap_rename_taxa.setSizePolicy(sizePolicy)
         self.checkBox_top_heatmap_rename_taxa.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.checkBox_top_heatmap_rename_taxa.setChecked(True)
         self.checkBox_top_heatmap_rename_taxa.setObjectName("checkBox_top_heatmap_rename_taxa")
         self.horizontalLayout_17.addWidget(self.checkBox_top_heatmap_rename_taxa)
         self.checkBox_top_heatmap_rename_sample = QtWidgets.QCheckBox(self.tab_2)
@@ -3153,6 +3155,7 @@ class Ui_metaX_main(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox_tflink_hetatmap_rename_taxa.sizePolicy().hasHeightForWidth())
         self.checkBox_tflink_hetatmap_rename_taxa.setSizePolicy(sizePolicy)
+        self.checkBox_tflink_hetatmap_rename_taxa.setChecked(True)
         self.checkBox_tflink_hetatmap_rename_taxa.setObjectName("checkBox_tflink_hetatmap_rename_taxa")
         self.horizontalLayout_52.addWidget(self.checkBox_tflink_hetatmap_rename_taxa)
         self.checkBox_tflink_bar_plot_percent = QtWidgets.QCheckBox(self.tab_8)
@@ -4094,7 +4097,7 @@ class Ui_metaX_main(object):
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(1)
+        self.tabWidget_2.setCurrentIndex(0)
         self.tabWidget_5.setCurrentIndex(0)
         self.checkBox_co_expression_in_condition.clicked['bool'].connect(self.comboBox_co_expression_condition_meta.setEnabled) # type: ignore
         self.checkBox_co_expression_in_condition.clicked['bool'].connect(self.comboBox_co_expression_condition_group.setEnabled) # type: ignore
