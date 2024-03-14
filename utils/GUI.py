@@ -202,7 +202,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.lineEdit_meta_path = self.make_line_edit_drag_drop(self.lineEdit_meta_path, 'file')
         self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path, 'file')
         self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path, 'file')
-        self.lineEdit_peptide2taxafunc_outpath = self.make_line_edit_drag_drop(self.lineEdit_peptide2taxafunc_outpath, 'folder', 'TaxaFunc.tsv')
+        self.lineEdit_peptide2taxafunc_outpath = self.make_line_edit_drag_drop(self.lineEdit_peptide2taxafunc_outpath, 'folder', 'OTF.tsv')
         
 
         # set ComboBox eanble searchable
@@ -429,6 +429,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.init_QSettings()
         self.init_theme_menu()
         self.init_theme()
+        
+        # set font size for title label
+        title_labes = [self.label_46, self.label_47, self.label_48, self.label_83]
+        for label in title_labes:
+            label.setStyleSheet("font-size: 20px;")
 
         # Check and load settings
         self.loadSettings()
@@ -802,12 +807,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def set_any_table_mode(self):
         if  self.any_table_mode is False:
+            self.label_12.setText('Custom Table')
             self.any_table_mode = True
             QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [enabled].\n\nYou can use any table as input.")
         
         else: # any_table_mode currently is True
+            self.label_12.setText('OTF Table')
             self.any_table_mode = False
-            QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [disabled].\n\nYou can only use the table from TaxaFuncAnnotator as input.")
+            QMessageBox.information(self.MainWindow, "OTF Table Mode", "Any Table Mode is [disabled].\n\nYou can only use the table from Peptide Annotator as input.")
 
     def init_QSettings(self):
         settings_path =self.metax_home_path
@@ -982,14 +989,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def run_restore_taxafunnc_obj_from_file(self, last=False):
         if last is False:
             # select a file to load
-            file_path, _ = QFileDialog.getOpenFileName(self.MainWindow, "Load taxafunc object", self.last_path, "Pickle file (*.pkl)")
+            file_path, _ = QFileDialog.getOpenFileName(self.MainWindow, "Load MetaX object", self.last_path, "Pickle file (*.pkl)")
         else:
             file_path = os.path.join(self.metax_home_path, "MetaX_object.pkl")
         
         if file_path:
             saved_date = datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
-            self.show_message(f"Loading taxafunc object from file saved at [{saved_date}]...", "Loading...")
-            print(f"Loading taxafunc object from {file_path} at [{saved_date}]...")
+            self.show_message(f"Loading MetaX object from file saved at [{saved_date}]...", "Loading...")
+            print(f"Loading MetaX object from {file_path} at [{saved_date}]...")
             
             saved_obj = pickle.load(open(file_path, 'rb'))
             
@@ -1000,14 +1007,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.logger.write_log(f"Restore settings.ini from {file_path}.")
             # restore taxafunc object
             self.set_multi_table(restore_taxafunc = True, saved_obj = saved_obj)
-            self.logger.write_log(f"Restore taxafunc object from {file_path}.")
+            self.logger.write_log(f"Restore MetaX object from {file_path}.")
             
                 
             
     
     def save_metax_obj_to_file(self, save_path=None,no_message=False):
         if getattr(self, 'tfa', None) is None:
-            QMessageBox.warning(self.MainWindow, "Warning", "TaxaFunc object has not been created yet.")
+            QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
             return
         
         # save settings.ini
@@ -1038,7 +1045,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             file_path, _ = QFileDialog.getSaveFileName(
                 self.MainWindow,
-                "Save taxafunc object",
+                "Save MetaX object",
                 os.path.join(self.last_path, default_file_name),
                 "Pickle file (*.pkl)",
             )
@@ -1271,7 +1278,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MetaX_GUI\\resources\\logo.png")
 
         about_html =f'''<h1>Meta-X</h1><h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4><img src='{logo_path}' width='200' height='200' align='right' />
-        <p>Meta-X is a tool for linking the peptide to the taxonomy and function in metaproteomics.</p>
+        <p>MetaX is an integrated framework for linking taxon with functions and comprehensive analysis in metaproteomics.</p>
         <p>For more information, please visit:</p>
         <p>GitHub: <a href='https://github.com/byemaxx/MetaX'>The MetaX Project</a></p>
         <p>iMeta: <a href='https://wiki.imetalab.ca/'>iMetaWiki Page</a></p>
@@ -1330,13 +1337,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     
     def set_lineEdit_final_peptide_path(self):
-        final_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Final Peptide Table', self.last_path, 'tsv (*.tsv)')[0]
+        final_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Final Peptide Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
         self.last_path = os.path.dirname(final_peptide_path)
         self.lineEdit_final_peptide_path.setText(final_peptide_path)
     
     def set_lineEdit_peptide2taxafunc_outpath(self):
-        # set default file name as 'TaxaFunc.tsv'
-        peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Peptide2TaxaFunc Table', os.path.join(self.last_path, 'TaxaFunc.tsv'), 'tsv (*.tsv)')[0]
+        # set default file name as 'OTF.tsv'
+        peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Operational Taxa-Functions (OTF) Table', os.path.join(self.last_path, 'OTF.tsv'), 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(peptide2taxafunc_outpath)
         self.lineEdit_peptide2taxafunc_outpath.setText(peptide2taxafunc_outpath)
     
@@ -1345,12 +1352,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         current_path = os.path.dirname(os.path.abspath(__file__))
         parent_path = os.path.dirname(current_path)
         test_data_dir = os.path.join(parent_path, 'data/example_data')
-        example_taxafunc_path = os.path.join(test_data_dir, 'Example_TaxaFunc.tsv').replace('\\', '/')
+        example_taxafunc_path = os.path.join(test_data_dir, 'Example_OTF.tsv').replace('\\', '/')
         example_meta_path = os.path.join(test_data_dir, 'Example_Meta.tsv').replace('\\', '/')
         if os.path.exists(example_taxafunc_path):
             self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
         else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Example TaxaFunc table not found.')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Example OTF table not found.')
         if os.path.exists(example_meta_path):
             self.lineEdit_meta_path.setText(example_meta_path)
         else:
@@ -1516,7 +1523,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             \n{nan_stats_str}\
             \n\nNumber of item: [{num_item}]'
         else:
-            msg = f'TaxaFunc data is ready! \
+            msg = f'Operational Taxa-Functions (OTF) data is ready! \
             \n{nan_stats_str}\
             \n\nFunction: [{self.tfa.func_name}]\
             \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
@@ -1636,7 +1643,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif final_peptide_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select final peptide table!')
         elif peptide2taxafunc_outpath == '':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select peptide2taxafunc outpath!')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select output path!')
         else:
             try:
                 self.logger.write_log(f'run_peptide2taxafunc: db_path:{db_path} final_peptide_path:{final_peptide_path} peptide2taxafunc_outpath:{peptide2taxafunc_outpath} threshold:{threshold}')
@@ -1703,7 +1710,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 tableWidget.setItem(i, j, QTableWidgetItem(item))
 
     def set_lineEdit_taxafunc_path(self):
-        taxafunc_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select TaxaFunc Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
+        taxafunc_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select OTF Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
         self.last_path = os.path.dirname(taxafunc_path)
         self.lineEdit_taxafunc_path.setText(taxafunc_path)
     
@@ -1717,10 +1724,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     #### Help info function ####
     # taxatfunc analyzer help
     def show_taxafunc_table_help(self):
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle('TaxaFunc Table Help')
-        msg_box.setText('TaxaFunc can be created by [Peptide to TaxaFunc]')
-        switch_button = msg_box.addButton('Switch to [Peptide to TaxaFunc]', QMessageBox.YesRole)
+        msg_box = QMessageBox(parent=self.MainWindow)
+        msg_box.setWindowTitle('Operational Taxa-Functions (OTF) Table Help')
+        msg_box.setText('OTF Table can be created by [Peptide Annotator]')        
+        switch_button = msg_box.addButton('Switch to [Peptide Annotator]', QMessageBox.YesRole)
         msg_box.addButton(QMessageBox.Cancel)
         switch_button.clicked.connect(self.swith_stack_page_pep2taxafunc)
         msg_box.exec_()
@@ -1730,7 +1737,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     # peptide to taxaFunc help
     def show_toolButton_db_path_help(self):
-        msg_box = QMessageBox()
+        msg_box = QMessageBox(parent=self.MainWindow)
         msg_box.setWindowTitle('Database Path Help')
         msg_box.setText('Database can be created by [Database Builder]')
         switch_button = msg_box.addButton('Switch to [Database Builder]', QMessageBox.YesRole)
@@ -1738,7 +1745,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         switch_button.clicked.connect(self.swith_stack_page_dbuilder)
         msg_box.exec_()
     def show_pushButton_preprocessing_help(self):
-        msg_box = QMessageBox()
+        msg_box = QMessageBox(parent=self.MainWindow)
         msg_box.setWindowTitle('Preprocessing Help')
         msg_box.setStyleSheet('QLabel{min-width: 900px;}')
         msg_box.setWindowFlags(msg_box.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -1829,7 +1836,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         zero_removed_row_num = self.tfa.original_df.shape[0]
         sample_num = len(self.tfa.sample_list)
         out_msg = f'Original row number: [{original_row_num}]\n\nAfter removing zero rows: [{zero_removed_row_num}]\n\nSample number: [{sample_num}]'
-        QMessageBox.information(self.MainWindow, 'Information', out_msg)
+        QMessageBox.information(self.MainWindow, 'OTF Summary', out_msg)
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
@@ -1841,11 +1848,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             # check if taxafunc_path selected and exists
             if not taxafunc_path:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxaFunc table!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select OTF table!')
                 return
             else:
                 if not os.path.exists(taxafunc_path):
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table file not found!')
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'OTF table file not found!')
                     return
                 
             # check if in any_df_mode
@@ -1878,7 +1885,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     return
 
 
-            self.show_message('taxaFuncAnalyzer is running, please wait...')
+            self.show_message('Operational Taxa-Functions (OTF) Analyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}, Any_df_mode: {any_df_mode}')
             taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
@@ -1888,8 +1895,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         except:
             error_message = traceback.format_exc()
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
-            if "The TaxaFunc data must have Taxon_prop column!" in error_message:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Your taxaFunc table looks like not correct, please check!')
+            if "The OTF data must have Taxon_prop column!" in error_message:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Your OTF table looks like not correct, please check!')
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
             
@@ -2288,7 +2295,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.table_dict = saved_obj['table_dict']
             
             if self.tfa is None:
-                print('Faild. Return None when load taxafunc obj.')
+                print('Faild. Return None when load MetaX obj.')
                 return None
             
             else:
@@ -3031,7 +3038,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.checkBox_basic_heatmap_plot_peptide.isChecked():
             title = f'{plot_type.capitalize()} of Peptide'
             if len(self.basic_heatmap_list) == 0:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
                 df = self.tfa.peptide_df.copy()
@@ -3078,7 +3085,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             dft = dft[sample_list]
 
             if  len(self.basic_heatmap_list) == 0:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 
                                                                                       'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items']:
@@ -3613,7 +3620,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def plot_taxa_stats(self):
         if self.tfa is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
             # BasicPlot(self.tfa).plot_taxa_stats()
             pic = BasicPlot(self.tfa).plot_taxa_stats_pie()
@@ -3635,7 +3642,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def plot_taxa_number(self):
         plt.close('all') # close all the figures to make sure the new figure is the first one
         if self.tfa is None:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run taxaFuncAnalyzer first!')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
             pic = BasicPlot(self.tfa).plot_taxa_number().get_figure()
 
@@ -4563,7 +4570,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'deseq2_plot_sankey error: {error_message}', 'e')
             self.logger.write_log(f'deseq2_plot_sankey: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, group1: {group1}, group2: {group2}, pvalue: {pvalue}, width: {width}, height: {height}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your selection! \n\nAttenion: Sankey plot can only generate from Taxa-Func table!\n\n Try to run DESeq2 for Taxa-Func table again!!')
+            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your selection! \n\nAttenion: Sankey plot can only generate from Taxa and Taxa-Functions table!\n\n Try to run DESeq2 again!')
 
 
 

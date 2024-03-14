@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 377))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -4035,7 +4035,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4089,7 +4089,7 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(0)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(0)
@@ -4149,13 +4149,13 @@ class Ui_metaX_main(object):
         self.toolButton_taxafunc_table_help.setText(_translate("metaX_main", "?"))
         self.pushButton_get_taxafunc_path.setText(_translate("metaX_main", "Open"))
         self.toolButton_meta_table_help.setText(_translate("metaX_main", "?"))
-        self.label_12.setText(_translate("metaX_main", "TaxaFunc Table"))
+        self.label_12.setText(_translate("metaX_main", "OTF Table"))
         self.label_15.setText(_translate("metaX_main", "Meta Table"))
         self.pushButton_load_example_for_analyzer.setToolTip(_translate("metaX_main", "Load the Exmapel Data (4000 peptides)"))
         self.pushButton_load_example_for_analyzer.setText(_translate("metaX_main", "Load Example Data"))
-        self.label_46.setText(_translate("metaX_main", "TaxaFuncAnalyzer"))
+        self.label_46.setText(_translate("metaX_main", "Operational Taxa-Functions (OTF) Analyzer"))
         self.tabWidget_TaxaFuncAnalyzer.setTabText(self.tabWidget_TaxaFuncAnalyzer.indexOf(self.tab), _translate("metaX_main", "Data Import"))
-        self.label_26.setText(_translate("metaX_main", "TaxaFunc Table (head 200)"))
+        self.label_26.setText(_translate("metaX_main", "Operational Taxa-Functions (OTF) Table (head 200)"))
         self.label_25.setText(_translate("metaX_main", "Meta Table"))
         self.pushButton_overview_tax_plot_new_window.setText(_translate("metaX_main", "Plot taxa stats in new window"))
         self.pushButton_overview_peptide_plot_new_window.setText(_translate("metaX_main", "Plot peptide stats in new window"))
@@ -4743,12 +4743,12 @@ class Ui_metaX_main(object):
         self.menuHelp.setTitle(_translate("metaX_main", "Help"))
         self.menuOthers.setTitle(_translate("metaX_main", "Restore"))
         self.menuDev.setTitle(_translate("metaX_main", "Dev"))
-        self.actionTaxaFuncAnalyzer.setText(_translate("metaX_main", "TaxaFunc Analyzer"))
+        self.actionTaxaFuncAnalyzer.setText(_translate("metaX_main", "OTF Analyzer"))
         self.actionPeptide_to_TaxaFunc.setText(_translate("metaX_main", "Peptide Annotator"))
         self.actionDatabase_Builder.setText(_translate("metaX_main", "Database Builder"))
         self.actionAbout.setText(_translate("metaX_main", "About and More"))
         self.actionDatabase_Update.setText(_translate("metaX_main", "Databas Updater"))
-        self.actionRestore_Last_TaxaFunc.setText(_translate("metaX_main", "Restore Last TaxaFunc"))
+        self.actionRestore_Last_TaxaFunc.setText(_translate("metaX_main", "Restore Last MetaX Object"))
         self.actionExport_Log_File.setText(_translate("metaX_main", "Export Log File"))
         self.actionHide_Show_Console.setText(_translate("metaX_main", "Show/Hide Console"))
         self.actionCheck_Update.setText(_translate("metaX_main", "Check Update"))
