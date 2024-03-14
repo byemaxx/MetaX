@@ -25,7 +25,10 @@ class DiversityPlot(object):
                              plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
                              show_fliers = True
                              ):
-        
+        '''
+        Calculate alpha diversity and plot boxplot\n
+        return: (fig, aplha_diversity_df)
+        '''
         if sample_list is None:
             sample_list = self.tfa.sample_list
         
@@ -134,7 +137,7 @@ class DiversityPlot(object):
             plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
             plt.tight_layout()
             plt.show()
-            return fig
+            return fig, df
         except Exception as e:
             plt.close('all')
             raise e
@@ -153,7 +156,10 @@ class DiversityPlot(object):
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
                               adjust_label:bool = False , theme:str = None, sub_meta:str = "None"):
-
+        '''
+        Calculate beta diversity and plot PCoA plot
+        Return:(fig, distance_matrix)
+        '''
         if sample_list is None:
             sample_list = self.tfa.sample_list
         
@@ -184,7 +190,7 @@ class DiversityPlot(object):
             
             # bc_dm = beta_diversity("braycurtis", df, df.index)
             bc_dm = beta_diversity(metric, df, df.index)
-
+            distance_matrix = bc_dm.to_data_frame()
 
             pcoa_res = pcoa(bc_dm)
             if theme is not None and theme != 'Auto':
@@ -214,7 +220,7 @@ class DiversityPlot(object):
             plt.tight_layout()
             plt.show()
             
-            return fig
+            return fig, distance_matrix
         except Exception as e:
             plt.close('all')
             raise e

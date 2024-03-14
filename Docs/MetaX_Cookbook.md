@@ -132,7 +132,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
   - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%)
 
-    <img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop"  />
+    <img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop" style="zoom:50%;" />
 
 
 
@@ -172,7 +172,7 @@ Then, click **Go** to start the analysis.
 
 Data Overview includes some basic information about your data, such as the number of taxa, functions and proportions.
 
-We can set the threshold of linked peptides and the different them to plot the figure.
+We can set the threshold of linked peptides and the differences between them to plot the figure.
 
 <img src="./MetaX_Cookbook.assets/data_overview.png" alt="data_overview" style="zoom: 50%;" />
 

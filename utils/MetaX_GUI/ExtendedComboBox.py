@@ -83,7 +83,7 @@ class ExtendedComboBox(QComboBox):
         self.updateFilter()
 
         current_text = self.currentText().strip()
-        if not current_text or current_text in ["All Taxa", "All Functions", "All Taxa-Functions", "All Peptides"]:
+        if not current_text or current_text in ["All Taxa", "All Functions", "All Taxa-Functions", "All Peptides, All Proteins, All Items"]:
             print(f'ComboBox has special value "{current_text}". No items to search.')
             return
 
@@ -91,6 +91,6 @@ class ExtendedComboBox(QComboBox):
         for i in range(self.pFilterModel.rowCount()):
             index = self.pFilterModel.index(i, 0)
             item_text = self.pFilterModel.data(index, Qt.DisplayRole)
-            if item_text not in ["All Taxa", "All Functions", "All Taxa-Functions", "All Peptides"]:
+            if item_text not in ["All Taxa", "All Functions", "All Taxa-Functions", "All Peptides", "All Proteins", "All Items"]:
                 all_items.append(item_text)
         self.add_all_searched.emit(all_items)

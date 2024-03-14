@@ -2800,12 +2800,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return False
                     
         # open a new window allowing user to input text with comma or new line
-        self.input_window = InputWindow(self.MainWindow)
+        self.input_window = InputWindow(self.MainWindow, input_mode=True)
         if str_list is not None:
             self.input_window.text_edit.setText('\n'.join(str_list))
         result = self.input_window.exec_()
         text_list = []
         if result == QDialog.Accepted:
+            selected_mode = self.input_window.get_selected_mode()
             text = self.input_window.text_edit.toPlainText()
             # print(text)
             if text is None or text == '':
@@ -2820,11 +2821,47 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # check if the text_list is valid
         drop_list = []
         valid_text_list = []
-        for i in text_list:
-            if not check_if_in_list(i, df_type):
-                drop_list.append(i)
+        if selected_mode == "exact":
+            for i in text_list:
+                if not check_if_in_list(i, df_type):
+                    drop_list.append(i)
+                else:
+                    valid_text_list.append(i)
+        else:  # selected_mode == "search"
+            list_data = self.get_list_by_df_type(df_type)
+            search_results = []
+            for i in text_list:
+                # Search for matches where i is part of any item in list_data
+                matches = [item for item in list_data if i.lower() in item.lower()]
+                # Add all matches to search_results
+                search_results.extend(matches)
+            # Remove duplicates from search_results in case there are overlapping matches
+            search_results = list(set(search_results))
+
+            # show the search results in a new window, allowing user to select the valid items
+            if search_results:
+                self.input_window = InputWindow(self.MainWindow, input_mode=False)
+                self.input_window.text_edit.setText('\n'.join(search_results))
+                result = self.input_window.exec_()
+                if result == QDialog.Accepted:
+                    text = self.input_window.text_edit.toPlainText()
+                    if text:
+                        text_list = [i.strip() for i in text.split('\n') if i.strip() != '']
+                        text_list = list(set(text_list))  # Remove duplicates
+                    else:
+                        return None
+                else:
+                    return None
             else:
-                valid_text_list.append(i)
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No valid item was found!')
+                return None
+            
+            valid_text_list = []
+            for i in text_list:
+                if check_if_in_list(i, df_type):
+                    valid_text_list.append(i)
+                else:
+                    drop_list.append(i)
 
         text_list = valid_text_list
                 
@@ -3721,18 +3758,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('Alpha diversity is running, please wait...')
                 metric = self.comboBox_alpha_div_method.currentText()
                 plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
-                DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
+                _ , aplha_diversity_df = DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
                                                              width=width, height=height, font_size=font_size, 
                                                              plot_all_samples=plot_all_samples, theme=theme,
                                                              sub_meta = sub_meta, show_fliers = show_fliers)
+                self.update_table_dict('alpha_diversity', aplha_diversity_df)
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
-                DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
+                _ , beta_diversity_distance_matrix = DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
                                                             font_size=font_size, font_transparency = font_transparency,
                                                             rename_sample = rename_sample,
                                                             show_label = show_label, adjust_label = adjust_label, 
                                                             theme=theme,sub_meta = sub_meta)
+                self.update_table_dict('beta_diversity_distance_matrix', beta_diversity_distance_matrix)
                                                             
 
             elif method == 'sunburst':

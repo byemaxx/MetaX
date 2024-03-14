@@ -453,3 +453,9 @@
 ### Changes:
 - Change: Changed the table names: taxa-func -> taxa-functions, and other names to Plural form.
 - Fix: Fixed the bug of update the table name in T-test and ANOVA part.
+
+# Version: 1.101.5
+## Date: 2024-03-13
+### Changes:
+- Change: 1. Updated the Example data. 2. Updated the cookbook.
+- New: 1.Added a result table after runnning the Alpha Diversity and Beta Diversity. 2. Added a function to search items when add a list to plot.

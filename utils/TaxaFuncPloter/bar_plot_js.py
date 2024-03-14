@@ -116,6 +116,7 @@ class BarPlot_js:
                 orient="vertical",
                 pos_top="5%",
                 border_width=0,
+                textstyle_opts=opts.TextStyleOpts(font_size=font_size),
             )
             if show_legend
             else opts.LegendOpts(is_show=False),
