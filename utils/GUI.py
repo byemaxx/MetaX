@@ -2175,7 +2175,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     if msg_box.exec_() == QMessageBox.No:
                         return None
             if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'Drop':
-                msg_box = QMessageBox()
+                msg_box = QMessageBox(parent=self.MainWindow)
                 msg_box.setWindowTitle('Warning')
                 msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method and handled by [{outlier_handle_method1}] method.\
                     \nHowever,you did not select the second outlier handling method.\
@@ -2188,7 +2188,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             if outlier_handle_method1 != 'Drop' or outlier_handle_method2 != 'Drop':
                 # messagebox to confirm and warning
-                msg_box = QMessageBox()
+                msg_box = QMessageBox(parent=self.MainWindow)
                 msg_box.setWindowTitle('Warning')
                 msg_box.setText(f'''Outlier will be handled by [{outlier_handle_method}] method,\n\nIt may take a long time.\
                     \n\nDo you want to continue?''')
@@ -2217,7 +2217,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             # ask if continue when create protein table
             if self.checkBox_create_protein_table.isChecked():
-                msg_box = QMessageBox()
+                msg_box = QMessageBox(parent=self.MainWindow)
                 msg_box.setWindowTitle('Warning')
                 msg_box.setText('''You select [Create Protein Table].\n\nIt may take a long time.\
                     \n\nDo you want to continue with [Create Protein Table]?''')
@@ -4162,6 +4162,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
             
         try:
+            # lock group setting combobox to avoid change group setting during test running
+            for combobox in self.meta_combobox_list:
+                combobox.setEnabled(False)
+
+                
             if method == 'dunnett':
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     self.temp_params_dict= {'table_name': f'dunnettAllCondtion({df_type})'}
@@ -4211,7 +4216,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def callback_after_group_control_test(self, result, success):
         table_name = self.temp_params_dict['table_name']
         self.temp_params_dict = {}
-        
+        # release group setting combobox
+        for combobox in self.meta_combobox_list:
+            combobox.setEnabled(True)
+                    
         if success:
 
             res_df = result        

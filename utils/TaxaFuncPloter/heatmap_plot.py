@@ -125,7 +125,7 @@ class HeatmapPlot:
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
-                plt.subplots_adjust(left=0.03, bottom=0.25, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+                plt.subplots_adjust(left=0.6, bottom=0.35, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
                 plt.tight_layout()
                 plt.show()
@@ -256,7 +256,7 @@ class HeatmapPlot:
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 
-            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+            plt.subplots_adjust(left=0.05, bottom=0.11, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
             
             plt.tight_layout()
             plt.show()
@@ -339,7 +339,7 @@ class HeatmapPlot:
         cbar.ax.yaxis.set_ticks_position('left')
         cbar.ax.yaxis.set_label_position('left')
 
-        plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+        plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
         plt.tight_layout()
         plt.show()
         return fig
@@ -362,7 +362,8 @@ class HeatmapPlot:
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
                                        show_col_colors:bool = True, remove_zero_col:bool = True):
         import numpy as np
-        
+        # keep 4 decimal places
+        pvalue = round(pvalue, 4)
         color_list = None
         if df.columns.nlevels == 2:
             if res_df_type == 'deseq2':
@@ -454,7 +455,7 @@ class HeatmapPlot:
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
-                plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+                plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
                 plt.tight_layout()
                 plt.show()
@@ -559,7 +560,7 @@ class HeatmapPlot:
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 
-            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+            plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
             plt.tight_layout()
             plt.show()

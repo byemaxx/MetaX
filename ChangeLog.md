@@ -466,3 +466,9 @@
 - Change: 1. Optimize the dot size for the 2D PCA and beta diversity plot and volcano plot. 2. Changed the default size of the web plot.
 - New: Add an option to plot box by group or by sample.
 - Fix: Fixed the bug when restore the object, the table nanem was added to GUI while the object doesn't have the table.
+
+# Version: 1.101.7
+## Date: 2024-03-15
+### Changes:
+- Fix: Fixed the bug of when the group-control test is running, the user changed the meta, the program will raise error.
+- Change: Optimized the tight layout of the heatmap plot.
