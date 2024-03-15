@@ -7,6 +7,22 @@ class NetworkPlot:
     
 
     def create_nodes_links(self, sample_list:list = None, focus_list:list = [], plot_list_only:bool = False):
+        """
+        Prepares data for network visualization of taxa and functions.
+
+        This method calculates the sum of values for each taxa and function from the provided DataFrame,
+        normalizes these sums for visualization, and creates nodes and links for a network graph.
+
+        Parameters:
+        - sample_list (list, optional): Specifies which samples to include. If None, all samples are used.
+        - focus_list (list, optional): List of taxa and functions to highlight in the network.
+        - plot_list_only (bool, optional): If True, only items in focus_list are plotted.
+
+        Returns:
+        - nodes (list): Information about each node for the graph, including name and size.
+        - links (list): Information about links between nodes.
+        - categories (list): Categories for nodes, used for coloring in the graph.
+        """
         df = self.tfa.taxa_func_df.copy()
         extra_cols = sample_list
         if extra_cols:
@@ -87,6 +103,21 @@ class NetworkPlot:
 
     
     def plot_tflink_network(self, sample_list:list = None, width:int = 12, height:int = 8, focus_list: list = None, plot_list_only:bool = False):
+        """
+        Creates a network graph of taxa and functions using Pyecharts.
+
+        This method uses data prepared by `create_nodes_links` to generate a graph visualizing the relationships between taxa and functions. The graph's appearance and behavior are customizable through parameters.
+
+        Parameters:
+        - sample_list (list, optional): Specifies which samples to include in the graph.
+        - width (int, optional): Width of the graph in pixels.
+        - height (int, optional): Height of the graph in pixels.
+        - focus_list (list, optional): List of taxa and functions to highlight.
+        - plot_list_only (bool, optional): If True, only plots items in focus_list.
+
+        Returns:
+        - A Pyecharts Graph object that can be displayed in Jupyter notebooks or web pages.
+        """
         if focus_list is None:
             focus_list = []
         # preprocess focus_list

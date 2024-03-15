@@ -194,8 +194,8 @@ class BasicPlot:
             pca = PCA(n_components=2)
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
-            # set dot size based on the width and height
-            dot_size = (width * height)
+            # set dot size based on the width and height, and font size
+            dot_size = (width * height)*font_size/10
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
                                 hue=group_list, s = dot_size, alpha=0.8, edgecolor='black', linewidth=0.5)
@@ -226,36 +226,56 @@ class BasicPlot:
         
         
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
-                     font_size = 10, theme:str = None, rename_sample:bool = False,):
+                     font_size = 10, theme:str = None, rename_sample:bool = False, plot_samples:bool = False):
         # replace 0 with nan due to optimization of boxplot
         dft = df.replace(0, np.nan)
-        
-        # create a new dataframe with new sample names and sorted by group
-        sample_list = dft.columns
-        new_sample_name = []
-        group_list = []
-        for i in sample_list:
-            group = self.tfa.get_group_of_a_sample(i)
-            new_sample_name.append(f'{i} ({group})')
-            group_list.append(group)
-        
-            # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-            unique_groups = sorted(list(set(group_list)))
-            ordered_sample_list = []
-            ordered_sample_name = []
-            for group in unique_groups:
-                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
-                sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
-                ordered_sample_list.extend(samples_in_group)
-                ordered_sample_name.extend(sample_names_in_group)
+        if not plot_samples:
+            # create a new dataframe with all samples in the same group
+            sample_list = dft.columns
+            temp_dict = {}
+            for col in sample_list:
+                group = self.tfa.get_group_of_a_sample(col)
+                if group not in temp_dict:
+                    temp_dict[group] = []
+                # combine all samples in the same group
+                temp_dict[group].extend(dft[col].tolist())
+            
+            # fill nan to the same length
+            max_length = max(len(lst) for lst in temp_dict.values())
+            for group in temp_dict:
+                temp_dict[group].extend([np.nan] * (max_length - len(temp_dict[group])))
 
-        # reorder the columns
-        dft = dft[ordered_sample_list]
+            dft = pd.DataFrame(temp_dict)
+            unique_groups = dft.columns
+            new_sample_name = unique_groups
         
-        if rename_sample:
-            new_sample_name = ordered_sample_name
-        else:
-            new_sample_name = ordered_sample_list
+        else: # plot_samples is True
+            # create a new dataframe with new sample names and sorted by group
+            sample_list = dft.columns
+            new_sample_name = []
+            group_list = []
+            for i in sample_list:
+                group = self.tfa.get_group_of_a_sample(i)
+                new_sample_name.append(f'{i} ({group})')
+                group_list.append(group)
+            
+                # Order the SAMPLE_LIST and GROUP_LIST according to the group order
+                unique_groups = sorted(list(set(group_list)))
+                ordered_sample_list = []
+                ordered_sample_name = []
+                for group in unique_groups:
+                    samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
+                    sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
+                    ordered_sample_list.extend(samples_in_group)
+                    ordered_sample_name.extend(sample_names_in_group)
+
+            # reorder the columns
+            dft = dft[ordered_sample_list]
+            
+            if rename_sample:
+                new_sample_name = ordered_sample_name
+            else:
+                new_sample_name = ordered_sample_list
 
         # Determine if distinct colors are needed
         if len(unique_groups) > 10:
@@ -263,12 +283,14 @@ class BasicPlot:
             color_palette = dict(zip(unique_groups, distinct_colors))
         else:
             color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
-            
-        group_palette = {}
-        for sample in dft.columns:
-            group_name = self.tfa.get_group_of_a_sample(sample)
-            group_palette[sample] = color_palette[group_name]
-
+        
+        if plot_samples:
+            group_palette = {}
+            for sample in dft.columns:
+                group_name = self.tfa.get_group_of_a_sample(sample)
+                group_palette[sample] = color_palette[group_name]
+        else:
+            group_palette = color_palette
         
         # set style
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
@@ -282,14 +304,18 @@ class BasicPlot:
         ax = sns.boxplot(data=dft, showfliers = show_fliers , palette=group_palette)
         # set x label
         ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
-        ax.set_xlabel('Sample', fontsize=font_size+2)
+        ax.set_xlabel('Sample' if plot_samples else 'Group',
+                      fontsize=font_size+2)
+        
         ax.set_ylabel('Intensity', fontsize=font_size+2)
-        ax.set_title(f'Intensity Boxplot of {table_name}', fontsize=font_size+2, fontweight='bold')
-        # set legend for group, out of the box
-        handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
-        ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
-                  loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1)
-        # set grid
+        ax.set_title(f'Boxplot of Intensity of {table_name}',
+                     fontsize=font_size+2, fontweight='bold')
+        if plot_samples:
+            # set legend for group, out of the box
+            handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
+            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
+                    loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1)
+        # set grid line for y axis is visible
         ax.grid(True, axis='y')
         # move the botton up
         plt.subplots_adjust(bottom=0.2)

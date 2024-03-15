@@ -459,3 +459,10 @@
 ### Changes:
 - Change: 1. Updated the Example data. 2. Updated the cookbook.
 - New: 1.Added a result table after runnning the Alpha Diversity and Beta Diversity. 2. Added a function to search items when add a list to plot.
+
+# Version: 1.101.6
+## Date: 2024-03-15
+### Changes:
+- Change: 1. Optimize the dot size for the 2D PCA and beta diversity plot and volcano plot. 2. Changed the default size of the web plot.
+- New: Add an option to plot box by group or by sample.
+- Fix: Fixed the bug when restore the object, the table nanem was added to GUI while the object doesn't have the table.

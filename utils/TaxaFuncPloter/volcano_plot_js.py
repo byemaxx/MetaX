@@ -89,7 +89,8 @@ class VolcanoPlot():
                     f"{type_name.title()} ({count_dict[type_name]})",
                     scatter_data.tolist(),
                     label_opts=opts.LabelOpts(is_show=False),
-                    itemstyle_opts=opts.ItemStyleOpts(color=color_mapping(color_name))
+                    itemstyle_opts=opts.ItemStyleOpts(color=color_mapping(color_name)),
+                    symbol_size=font_size,
                 )
 
             

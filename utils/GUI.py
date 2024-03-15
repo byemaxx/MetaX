@@ -961,6 +961,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     
                     items = self.settings.value(f"{settings_key}/items", [], type=list)
                     # print(f"Loading items for {name}: {items}")
+                    # check if the table exists
+                    for item in items:
+                        if self.table_dict.get(item, None) is None:
+                            items.remove(item)
                     
                     if len(items) > 0:
                         if name == 'comboBox_top_heatmap_table':
@@ -3508,8 +3512,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         '''
         try:
             if not width and not height:
-                width = int(self.screen_width / 1.45)
-                height = int(self.screen_height / 1.4)
+                width = int(self.screen_width * 0.68)
+                height = int(self.screen_height * 0.75)
                 # width = int(self.screen_width / 1.15)
                 # height = int(self.screen_height / 1.1)
 
@@ -3747,9 +3751,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
 
             elif method == 'box':
+                plot_samples = self.checkBox_box_plot_samples.isChecked()
                 BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
                                                  width=width, height=height, font_size=font_size, theme=theme,
-                                                 rename_sample = rename_sample)
+                                                 rename_sample = rename_sample, plot_samples = plot_samples)
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()

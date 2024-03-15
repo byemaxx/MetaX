@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -1899,8 +1899,27 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_7">
                     <item>
                      <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
                       <property name="text">
                        <string>show Fliers</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_box_plot_samples">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Plot Samples</string>
                       </property>
                      </widget>
                     </item>
@@ -2393,11 +2412,6 @@
                   </item>
                   <item>
                    <widget class="QComboBox" name="comboBox_basic_heatmap_top_by">
-                    <item>
-                     <property name="text">
-                      <string>Average Intensity</string>
-                     </property>
-                    </item>
                     <item>
                      <property name="text">
                       <string>Total Intensity</string>
@@ -5086,11 +5100,6 @@
                    <widget class="QComboBox" name="comboBox_co_expr_top_by">
                     <item>
                      <property name="text">
-                      <string>Average Intensity</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
                       <string>Total Intensity</string>
                      </property>
                     </item>
@@ -5619,11 +5628,6 @@
                   </item>
                   <item>
                    <widget class="QComboBox" name="comboBox_trends_top_by">
-                    <item>
-                     <property name="text">
-                      <string>Average Intensity</string>
-                     </property>
-                    </item>
                     <item>
                      <property name="text">
                       <string>Total Intensity</string>
@@ -6290,11 +6294,6 @@
                    <widget class="QComboBox" name="comboBox_tflink_top_by">
                     <item>
                      <property name="text">
-                      <string>Average Intensity</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
                       <string>Total Intensity</string>
                      </property>
                     </item>
@@ -6685,11 +6684,6 @@
                    <widget class="QComboBox" name="comboBox_tfnet_top_by">
                     <item>
                      <property name="text">
-                      <string>Average Intensity</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
                       <string>Total Intensity</string>
                      </property>
                     </item>
@@ -6725,12 +6719,22 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>Deseq2(p-value)</string>
+                      <string>Deseq2-up(p-value)</string>
                      </property>
                     </item>
                     <item>
                      <property name="text">
-                      <string>Deseq2(log2FC)</string>
+                      <string>Deseq2-down(p-value)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-up(log2FC)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-down(log2FC)</string>
                      </property>
                     </item>
                    </widget>
