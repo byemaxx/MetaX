@@ -472,3 +472,8 @@
 ### Changes:
 - Fix: Fixed the bug of when the group-control test is running, the user changed the meta, the program will raise error.
 - Change: Optimized the tight layout of the heatmap plot.
+
+# Version: 1.101.8
+## Date: 2024-03-15
+### Changes:
+- Fix: Fixed the bug of save and restore MetaX object, the combobox of the table was not updated.

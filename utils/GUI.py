@@ -436,7 +436,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             label.setStyleSheet("font-size: 20px;")
 
         # Check and load settings
-        self.loadSettings()
+        self.load_basic_Settings()
         
         # set default tab index as 0 for all tabWidget
         self.set_default_tab_index()
@@ -824,7 +824,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
 
 
-    def loadSettings(self):
+    def load_basic_Settings(self):
+        """
+        Loads basic settings for the GUI.
+
+        This method loads the values of certain line edit widgets from the settings file
+        `settings.ini` in the MetaX home directory. \n
+        Load widgets:`lineEdit_taxafunc_path`, `lineEdit_meta_path`, `lineEdit_db_path` \n
+        Load Parameters: `last_path`, `like_times` \n
+
+        """
         line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
         for name in line_edit_names:
             widget = getattr(self, name, None)
@@ -850,6 +859,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def save_basic_settings(self, line_edit_name: str=None):
+        '''
+        Save basic settings for the GUI.
+        This method saves the values of certain line edit widgets to the settings file
+        `settings.ini` in the MetaX home directory. \n
+        Save widgets:`lineEdit_taxafunc_path`, `lineEdit_meta_path`, `lineEdit_db_path` \n
+        Save Parameters: `last_path`, `like_times`, `time`, `version` \n
+        
+        '''
         if not line_edit_name:
             line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
         else:
@@ -871,27 +888,27 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
 
-    def save_tables_settings(self):
-        combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
-        # save items for comboBox
-        for name in combox_list:
-            widget = getattr(self, name, None)
-            if widget and isinstance(widget, QtWidgets.QComboBox):
-                settings_key = f"res_table_combox/{name}"
-                items = [widget.itemText(i) for i in range(widget.count())]
-                self.settings.setValue(f"{settings_key}/items", items)
-                self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
 
     def save_set_multi_table_settings(self):
-        # save tab_set_taxa_func
+        """
+        Save the settings for the multi-table in the GUI.
+
+        This method iterates through all the widgets in the `tab_set_taxa_func` tab and saves their settings
+        using the `QSettings` object. The settings are saved based on the widget type.
+
+        Supported widget types:
+        - QComboBox: Saves the items and current index.
+        - QDoubleSpinBox: Saves the value.
+        - QListWidget: Saves the items.
+        - QRadioButton: Saves the checked state.
+        - QSpinBox: Saves the value.
+        """
         for widget in self.tab_set_taxa_func.findChildren(QtWidgets.QWidget):
             settings_key = f"tab_set_taxa_func/{widget.objectName()}"
             if isinstance(widget, QtWidgets.QComboBox):
-                #save items
+                # Save items
                 items = [widget.itemText(i) for i in range(widget.count())]
                 self.settings.setValue(f"{settings_key}/items", items)
-                self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
-                
                 self.settings.setValue(f"{settings_key}/currentIndex", widget.currentIndex())
 
             elif isinstance(widget, QtWidgets.QDoubleSpinBox):
@@ -901,12 +918,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 items = []
                 for index in range(widget.count()):
                     items.append(widget.item(index).text())
-                # print(f"Saving items for {widget.objectName()}: {items}") 
                 self.settings.setValue(f"{settings_key}/items", items)
-            #radioButton
+
             elif isinstance(widget, QtWidgets.QRadioButton):
                 self.settings.setValue(f"{settings_key}/isChecked", widget.isChecked())
-            # spinBox
+
             elif isinstance(widget, QtWidgets.QSpinBox):
                 self.settings.setValue(f"{settings_key}/value", widget.value())
         
@@ -924,7 +940,42 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         else:
             QMessageBox.warning(self.MainWindow, "Warning", "No log file found.")
             
-        
+    def restore_table_names_to_combox_after_load_taxafunc_obj(self):
+            current_table_name_list = []
+            for name in self.table_dict.keys():
+                current_table_name_list.append(name)
+                
+            # combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
+            comboBox_top_heatmap_table_list = []
+            top_heatmap_match_list = ['t_test(', 'anova_test(', 'dunnettAllCondtion(', 
+                                        'dunnett_test(', 'deseq2allinCondition(', 'deseq2all(',
+                                        'NonSigTaxa_SigFuncs(taxa-functions)', 'SigTaxa_NonSigFuncs(taxa-functions)']
+            comboBox_deseq2_tables_list = []
+            
+            # checek if name is a part of current_table_name
+            for name in current_table_name_list:
+                if any([match in name for match in top_heatmap_match_list]):
+                    comboBox_top_heatmap_table_list.append(name)
+                elif 'deseq2(' in name:
+                    comboBox_deseq2_tables_list.append(name)
+                    
+                    
+            if len(comboBox_top_heatmap_table_list) > 0:
+                self.comboBox_top_heatmap_table.clear()
+                self.comboBox_top_heatmap_table.addItems(comboBox_top_heatmap_table_list)
+                self.comboBox_top_heatmap_table.setEnabled(True)
+                self.pushButton_plot_top_heatmap.setEnabled(True)
+                self.pushButton_get_top_cross_table.setEnabled(True)
+                self.comboBox_top_heatmap_table_list = comboBox_top_heatmap_table_list
+                self.change_event_comboBox_top_heatmap_table()
+            if len(comboBox_deseq2_tables_list) > 0:
+                self.comboBox_deseq2_tables.clear()
+                self.comboBox_deseq2_tables.addItems(comboBox_deseq2_tables_list)
+                self.comboBox_deseq2_tables.setEnabled(True)
+                self.pushButton_deseq2_plot_vocano.setEnabled(True)
+                self.pushButton_deseq2_plot_sankey.setEnabled(True)
+                self.comboBox_deseq2_tables_list = comboBox_deseq2_tables_list
+    
     def restore_settings_after_load_taxafunc_obj(self):
         # update tab_set_taxa_func
         for widget in self.tab_set_taxa_func.findChildren(QtWidgets.QWidget):
@@ -952,40 +1003,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 value = self.settings.value(f"{settings_key}/value", 0, type=int)
                 widget.setValue(value)
             
-        # update comboBox_top_heatmap_table
-            try:
-                combox_list = ['comboBox_top_heatmap_table', 'comboBox_deseq2_tables']
-                for name in combox_list:
-                    widget = getattr(self, name, None)
-                    settings_key = f"res_table_combox/{name}"
-                    
-                    items = self.settings.value(f"{settings_key}/items", [], type=list)
-                    # print(f"Loading items for {name}: {items}")
-                    # check if the table exists
-                    for item in items:
-                        if self.table_dict.get(item, None) is None:
-                            items.remove(item)
-                    
-                    if len(items) > 0:
-                        if name == 'comboBox_top_heatmap_table':
-                            self.comboBox_top_heatmap_table_list = items
-                            self.pushButton_plot_top_heatmap.setEnabled(True)
-                            self.pushButton_get_top_cross_table.setEnabled(True)
-                        elif name == 'comboBox_deseq2_tables':
-                            self.comboBox_deseq2_tables_list = items
-                            self.pushButton_deseq2_plot_vocano.setEnabled(True)
-                            self.pushButton_deseq2_plot_sankey.setEnabled(True)
-                            
-                        widget.clear()
-                        widget.addItems(items)
-                        index = self.settings.value(f"{settings_key}/currentIndex", 0, type=int)
-                        widget.setCurrentIndex(index)
-                        
-                        if name == 'comboBox_top_heatmap_table':
-                            self.change_event_comboBox_top_heatmap_table()
-            except Exception as e:
-                print(e)
-                self.logger.write_log(f"Error when loading items for {name}: {e}")
         
         # enable button after multi table is set  
         self.pushButton_set_multi_table.setEnabled(True)      
@@ -1009,6 +1026,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 with open(os.path.join(self.metax_home_path, "settings.ini"), 'w') as f:
                     f.write(saved_obj['settings'])
                 self.logger.write_log(f"Restore settings.ini from {file_path}.")
+                self.load_basic_Settings()
             # restore taxafunc object
             self.set_multi_table(restore_taxafunc = True, saved_obj = saved_obj)
             self.logger.write_log(f"Restore MetaX object from {file_path}.")
@@ -1021,10 +1039,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
             return
         
-        # save settings.ini
+        # save settings to QSettings object
         self.save_basic_settings()
         self.save_set_multi_table_settings()
-        self.save_tables_settings()
         
         with open(os.path.join(self.metax_home_path, "settings.ini"), 'r') as f:
             settings_file_text = f.read()
@@ -1508,6 +1525,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set initial value of taxa-func link network selection list
         self.update_tfnet_select_list()
         self.update_tfnet_select_list()
+        
+        # restore table names to comboBox after load taxafunc obj
+        self.restore_table_names_to_combox_after_load_taxafunc_obj()
+        
         
         # Final message
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
