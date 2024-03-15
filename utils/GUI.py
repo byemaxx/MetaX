@@ -179,22 +179,22 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.screen_width = self.screen.width()
         self.screen_height = self.screen.height()
         # set figure width and height(16 * 9) if the screen is larger than 1920 * 1080
-        self.spinBox_network_width.setValue(int(self.screen_width/120))
-        self.spinBox_network_height.setValue(int(self.screen_height/120))
-        self.spinBox_co_expr_width.setValue(int(self.screen_width/120))
-        self.spinBox_co_expr_height.setValue(int(self.screen_height/120))
-        self.spinBox_fc_plot_width.setValue(int(self.screen_width/120))
-        self.spinBox_fc_plot_height.setValue(int(self.screen_height/120))
-        self.spinBox_basic_pca_width.setValue(int(self.screen_width/120))
-        self.spinBox_basic_pca_height.setValue(int(self.screen_height/120))
-        self.spinBox_basic_heatmap_width.setValue(int(self.screen_width/120))
-        self.spinBox_basic_heatmap_height.setValue(int(self.screen_height/120))
-        self.spinBox_top_heatmap_width.setValue(int(self.screen_width/120))
-        self.spinBox_top_heatmap_length.setValue(int(self.screen_height/120))
-        self.spinBox_trends_width.setValue(int(self.screen_width/120))
-        self.spinBox_trends_height.setValue(int(self.screen_height/120))
-        self.spinBox_tflink_width.setValue(int(self.screen_width/120))
-        self.spinBox_tflink_height.setValue(int(self.screen_height/120))
+        spinBox_pairs = [
+            (self.spinBox_network_width, self.spinBox_network_height),
+            (self.spinBox_co_expr_width, self.spinBox_co_expr_height),
+            (self.spinBox_fc_plot_width, self.spinBox_fc_plot_height),
+            (self.spinBox_basic_pca_width, self.spinBox_basic_pca_height),
+            (self.spinBox_basic_heatmap_width, self.spinBox_basic_heatmap_height),
+            (self.spinBox_top_heatmap_width, self.spinBox_top_heatmap_length),  
+            (self.spinBox_trends_width, self.spinBox_trends_height),
+            (self.spinBox_tflink_width, self.spinBox_tflink_height),
+        ]
+
+        for width_spinBox, height_spinBox in spinBox_pairs:
+            width_spinBox.setValue(int(self.screen_width / 150)) # 120 was used before
+            height_spinBox.setValue(int(self.screen_height / 150)) # 120 was used before
+
+
         
 
         # set Drag EditLine for input file
@@ -2161,7 +2161,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if outlier_detect_method != 'None':
                 outlier_detect_method = outlier_detect_method.lower()
                 if outlier_handle_method1 == 'Drop':
-                    msg_box = QMessageBox()
+                    msg_box = QMessageBox(parent=self.MainWindow)
                     msg_box.setWindowTitle('Warning')
                     msg_box.setText(f'''Outlier will be detected by [{outlier_detect_method}] method. However, outlier will not be handled.\
                         \n\nAll rows with outlier will be dropped, it may cause some problems in the following analysis.\
@@ -3502,10 +3502,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def save_and_show_js_plot(self, pic, title, width=None, height=None):
+        '''
+        save the pyecharts plot to html and show it in a new window
+        width and height unit is pixel, default is 62.5% of the screen size
+        '''
         try:
             if not width and not height:
-                width = int(self.screen_width / 1.15)
-                height = int(self.screen_height / 1.1)
+                width = int(self.screen_width / 1.45)
+                height = int(self.screen_height / 1.4)
+                # width = int(self.screen_width / 1.15)
+                # height = int(self.screen_height / 1.1)
 
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX/html')
@@ -3518,8 +3524,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if title:
                 web.setWindowTitle(title)
                 
-            if width and height:
-                web.resize(width, height)
+            web.resize(width, height)
             self.web_list.append(web)
             web.show()
             
