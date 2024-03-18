@@ -12,6 +12,11 @@ def download_file(url, save_dir):
     file_name = url.split('/')[-1]
     print(f'{get_time()} Start downloading {file_name}...')
     save_path = os.path.join(save_dir, file_name)
+    # remove the old file if exists
+    if os.path.exists(save_path):
+        os.remove(save_path)
+        print(f'{get_time()} Old file removed: {save_path}')
+    # download the file
     with open(save_path, "wb") as file:
         response = requests.get(url)
         file.write(response.content)
@@ -129,6 +134,7 @@ def get_built_in_df(built_in_db_name) -> pd.DataFrame:
         download_file(url, save_dir)
         # extract the file
         file_path = os.path.join(save_dir, 'dbCAN_overview.tar.gz')
+        # remove the old file if exists
         return merge_dbcan(file_path)
     elif built_in_db_name == 'CAZy':
         print(f'{get_time()} CAZy is not supported yet!')
@@ -149,9 +155,14 @@ def run_db_update(update_type, tsv_path, old_db_path, new_db_path,  built_in_db_
         
         if check_table_match(old_db_path, new_anno_df):
             create_new_database(old_db_path, new_db_path, new_anno_df)
+            return True
+        else:
+            raise ValueError('The old database does not match the annotation file!')
+        
     except Exception as e:
         print(f'{get_time()} Error: {e}')
         print(f'{get_time()} Failed!')
+        raise e
         
 
 
@@ -159,12 +170,16 @@ if __name__ == '__main__':
     print(f'{get_time()} Start...')
     
     update_type = 'built-in'
-    update_type = 'custom'
-    tsv_path = "overview.txt"
-    old_db_path = "MetaX_HUGG.db"
-    new_db_path = "MetaX_HUGG_new.db"
+    # update_type = 'custom'
+    # tsv_path = "overview.txt"
+    old_db_path = "MetaX-human-gut-new.db"
+    new_db_path = "1.0.db"
     built_in_db_name = 'dbCAN (HUMAN GUT)'
     
-    run_db_update(update_type, tsv_path, old_db_path, new_db_path, built_in_db_name)
+    run_db_update(update_type = update_type,
+                  tsv_path=None,
+                  old_db_path = old_db_path, 
+                  new_db_path = new_db_path, 
+                  built_in_db_name = built_in_db_name)
     
     

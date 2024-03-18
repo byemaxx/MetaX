@@ -1431,7 +1431,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             else:
                 if show_msg:
-                    QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred: {result}')
+                    print(f"\n\n-------------Thread finished with error:-------------\n\n{result}")
+                    # simplify the error message
+                    if 'ValueError' in result:
+                        result = result.split('ValueError: ')[1]
+                        
+                    QMessageBox.critical(self.MainWindow, 'Error', f'An error occurred:\n\n{result}')
 
             # if callback exists, continue to run the callback function
             if callback:

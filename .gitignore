@@ -5,6 +5,6 @@ tests/
 data/MetaX-human-gut-new.db
 .vscode/settings.json
 data/MetaX-human-gut.db
-data/baidu.api
 .gitignore
 .gitattributes
+todo.md
