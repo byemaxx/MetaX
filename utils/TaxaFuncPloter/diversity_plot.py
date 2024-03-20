@@ -215,9 +215,11 @@ class DiversityPlot(object):
             fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
             # set title
+            num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
+
             plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)', fontsize=font_size+2, fontweight='bold')
             plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
-                       fontsize=font_size +2 , ncol= len(unique_groups)//30 + 1)
+                       fontsize=font_size +2 , ncol= num_legend//30 + 1)
             plt.tight_layout()
             plt.show()
             

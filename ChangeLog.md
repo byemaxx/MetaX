@@ -477,3 +477,8 @@
 ## Date: 2024-03-15
 ### Changes:
 - Fix: Fixed the bug of save and restore MetaX object, the combobox of the table was not updated.
+
+# Version: 1.101.9
+## Date: 2024-03-20
+### Changes:
+- Fix: Fixed the bug of calculate the number of legend cols for the PCA plot and beta diversity plot when using sub meta.

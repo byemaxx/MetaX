@@ -213,9 +213,11 @@ class BasicPlot:
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)',  fontsize=font_size)
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)',  fontsize=font_size)
             # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
+            num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
+            
             # set legend outside the plot, set size as 100
             plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=font_size +2, borderaxespad=0.,
-                       ncol= len(unique_groups)//30 + 1)
+                       ncol= num_legend//30 + 1)
             plt.tight_layout()
             plt.show()
 
