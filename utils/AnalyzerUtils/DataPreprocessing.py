@@ -6,6 +6,18 @@ from joblib import Parallel, delayed
 
 
 class DataPreprocessing:
+    """
+    A class for preprocessing data including batch effect removal, data transformation, normalization, and outlier handling.
+
+    `Attributes`:
+        - tfa (object): An object containing metadata and sample list information.
+
+    `Methods`:
+       -  _data_preprocess(df, normalize_method=None, transform_method=None, batch_meta=None, outlier_detect_method=None, outlier_handle_method=None, outlier_detect_by_group=None, outlier_handle_by_group=None, processing_order=None, df_name=None)
+
+    """
+
+
     def __init__(self, tfa):
         self.tfa = tfa
         
@@ -405,6 +417,86 @@ class DataPreprocessing:
                          outlier_detect_method: str = None, outlier_handle_method: str = None,
                          outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
                          df_name:str=None) -> pd.DataFrame:
+        """
+        ## `_data_preprocess` Method
+
+        Processes the given DataFrame by applying normalization, transformation, batch effect removal, and outlier handling in a specified order.
+
+        ### Parameters:
+
+        - `df` (`pd.DataFrame`):  
+        The DataFrame to be processed.
+
+        - `normalize_method` (`str`, optional):  
+        Method used for data normalization. Options include:
+            - `None`: No normalization.
+            - `mean`: Mean normalization.
+            - `sum`: Sum normalization.
+            - `minmax`: Min-max normalization.
+            - `zscore`: Z-score normalization.
+            - `pareto`: Pareto scaling.
+
+        - `transform_method` (`str`, optional):  
+        Method used for data transformation. Options include:
+            - `None`: No transformation.
+            - `log10`: Log10 transformation.
+            - `log2`: Log2 transformation.
+            - `sqrt`: Square root transformation.
+            - `cube`: Cube root transformation.
+
+        - `batch_meta` (`str`, optional):  
+        Column name for batch metadata, used for batch effect removal.
+
+        - `outlier_detect_method` (`str`, optional):  
+        Method for outlier detection. Options include:
+            - `None`: No outlier detection.
+            - `half-zero`: Detect outliers based on half-zero criteria.
+            - `zero-dominant`: Detect outliers based on zero-dominance.
+            - `iqr`: Interquartile range method.
+            - `z-score`: Z-score method.
+            - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
+            - `negative-binomial`: Negative binomial distribution method.
+            - `mahalanobis-distance`: Mahalanobis distance method.
+
+        - `outlier_handle_method` (`str`, optional):  
+        Method for handling outliers, specified as methods separated by +. Options include:
+            - `drop`: Drop rows with outliers.
+            - `mean`: Fill with mean.
+            - `median`: Fill with median.
+            - `knn`: K-nearest neighbors imputation.
+            - `regression`: Regression imputation.
+            - `multiple`: Multiple imputation.
+            - `original`: Keep original data unchanged.
+
+        - `outlier_detect_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier detection.
+
+        - `outlier_handle_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier handling.
+
+        - `processing_order` (`list of following str`, optional):  
+        Order of processing steps to apply. Options include:
+            - `outlier`: Outlier handling.
+            - `batch`: Batch effect removal.
+            - `transform`: Data transformation.
+            - `normalize`: Data normalization.
+
+        - `df_name` (`str`, optional):  
+        Name of the DataFrame for status tracking. Options include:
+            - `peptide`
+            - `taxa`
+            - `func`
+            - `taxa_func`
+            - `protein`
+            - `custom`
+
+        ### Returns:
+
+        - `pd.DataFrame`:  
+        The processed DataFrame after applying the specified preprocessing steps.
+        """
+        
+        
         df = df.copy()
         original_row_num = len(df)
         if processing_order is None:

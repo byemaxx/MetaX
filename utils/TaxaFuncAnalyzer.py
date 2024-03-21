@@ -599,7 +599,7 @@ class TaxaFuncAnalyzer:
         
         # set the taxa_func_linked_dict and func_taxa_linked_dict
         self.set_taxa_func_linked_dict()
-        print("Multi-tables Created!\nWaiting for further analysis...")
+        print("\n\nMulti-tables Created!\nWaiting for further analysis...")
         
     # New function to check which attributes are set
     def check_attributes(self):
@@ -638,6 +638,38 @@ class TaxaFuncAnalyzer:
         df = df.sort_values(by=['PepNum', 'Taxon'], ascending=False, ignore_index=True)
         return df
     
+    def get_df(self, table_name):
+        """
+        Get the dataframe without peptide_num column
+
+        ### Parameters:
+        - table_name (str): The name of the table to retrieve. Valid options are:
+            - `peptide`: Returns the peptide_df table.
+            - `taxa`: Returns the taxa_df table.
+            - `func`: Returns the func_df table.
+            - `taxa_func`: Returns the taxa_func_df table.
+            - `func_taxa`: Returns the func_taxa_df table.
+            - `custom`: Returns the custom_df table.
+
+        Returns:
+        - `pandas.DataFrame`
+
+        """
+        name_dict = {
+            "peptide": "peptide_df",
+            "taxa": "taxa_df",
+            "func": "func_df",
+            "taxa_func": "taxa_func_df",
+            "func_taxa": "func_taxa_df",
+            "custom": "custom_df",
+        }
+        dft = getattr(self, name_dict[table_name])
+        # remove peptide_num column if exists
+        if "peptide_num" in dft.columns:
+            dft = dft.drop(columns="peptide_num")
+        return dft
+
+
 if __name__ == '__main__':
     df_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/TaxaFunc_genome_mode.tsv'
     meta_path = 'C:/Users/Qing/Desktop/MetaX_Suite/MetaX/MetaX/data/example_data/Example_Meta.tsv'
