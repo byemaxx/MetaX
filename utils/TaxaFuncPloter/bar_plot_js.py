@@ -132,6 +132,21 @@ class BarPlot_js:
                 orient="vertical",
                 pos_left="left",
                 pos_top="bottom",
+                feature=opts.ToolBoxFeatureOpts( 
+                                                save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
+                                                                                                 background_color="white", 
+                                                                                                 pixel_ratio=2, 
+                                                                                                 title="Save as PNG"),
+                                                restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                                                data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
+                                                                                           back_title="Back"),
+                                                data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                                                magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
+                                                                                             bar_title="Bar", 
+                                                                                                stack_title="Stack",
+                                                                                                tiled_title="Tiled"),
+                                                
+                                                ),
                 ),
                 
                 

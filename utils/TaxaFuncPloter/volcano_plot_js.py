@@ -71,8 +71,29 @@ class VolcanoPlot():
                 title_opts=opts.TitleOpts(title=title, pos_left='center', title_textstyle_opts=opts.TextStyleOpts(font_size=font_size)),
                 legend_opts=opts.LegendOpts(pos_left='right',  orient='vertical', textstyle_opts=opts.TextStyleOpts(font_size=font_size), pos_top="5%"),
                 tooltip_opts=opts.TooltipOpts(is_show=True, position='top', formatter='{b}: {c}'),
-                toolbox_opts=opts.ToolboxOpts( is_show=True, feature={"saveAsImage": {}, "restore": {}, "dataZoom": {}},
-                                              orient="vertical", pos_left="left", pos_top="bottom"),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    orient="vertical",
+                    pos_left="left",
+                    pos_top="bottom",
+                    feature=opts.ToolBoxFeatureOpts( 
+                                                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
+                                                                                                    background_color="white", 
+                                                                                                    pixel_ratio=2, 
+                                                                                                    title="Save as PNG"),
+                                                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                                                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                                                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
+                                                                                              is_show=True,
+                                                                                            back_title="Back"),
+                                                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
+                                                                                                bar_title="Bar",
+                                                                                                is_show=False, 
+                                                                                                stack_title="Stack",
+                                                                                                tiled_title="Tiled"),
+                                                    
+                                                    ),
+                    ),
             ) )
         
         type_to_data_color = {

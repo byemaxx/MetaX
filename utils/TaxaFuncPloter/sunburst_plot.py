@@ -98,9 +98,35 @@ class SunburstPlot:
 
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title=title, subtitle=str(self.sameple_list), subtitle_textstyle_opts=opts.TextStyleOpts(font_size=7)),
+                title_opts=opts.TitleOpts(title=title, 
+                                        #   subtitle=str(self.sameple_list), 
+                                          subtitle=None,
+                                          subtitle_textstyle_opts=opts.TextStyleOpts(font_size=7)),
                 tooltip_opts=opts.TooltipOpts(trigger_on="mousemove"),
                 legend_opts=opts.LegendOpts(is_show=False),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    orient="vertical",
+                    pos_left="left",
+                    pos_top="bottom",
+                    feature=opts.ToolBoxFeatureOpts( 
+                                                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
+                                                                                                    background_color="white", 
+                                                                                                    pixel_ratio=2, 
+                                                                                                    title="Save as PNG"),
+                                                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                                                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                                                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
+                                                                                              is_show=False,
+                                                                                            back_title="Back"),
+                                                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
+                                                                                                bar_title="Bar",
+                                                                                                is_show=False, 
+                                                                                                stack_title="Stack",
+                                                                                                tiled_title="Tiled"),
+                                                    
+                                                    ),
+                    ),
                 
             )
             .set_series_opts(itemstyle_opts=opts.ItemStyleOpts(border_width=0.1, border_color='black', 

@@ -482,3 +482,8 @@
 ## Date: 2024-03-20
 ### Changes:
 - Fix: Fixed the bug of calculate the number of legend cols for the PCA plot and beta diversity plot when using sub meta.
+
+# Version: 1.101.10
+## Date: 2024-03-22
+### Changes:
+- Fix: 1. Fixed the toolbox for echarts plot was show title as Chinese. 2. Fixed the bug of when save the plot in HTML, the background color was black.

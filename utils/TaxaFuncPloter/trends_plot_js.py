@@ -34,7 +34,7 @@ class TrendsPlot_js:
         df.columns = new_col_names
         return df
         
-    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str=None, 
+    def plot_trends_js(self, df, width:int=15000, height:int=500, title:str|None = None, 
                        rename_taxa:bool=False, show_legend:bool=False, 
                        add_group_name:bool=False, font_size:int=10):
         # rename taxa
@@ -93,8 +93,29 @@ class TrendsPlot_js:
                                            pos_top="5%",border_width=0) if show_legend else opts.LegendOpts(is_show=False),
             "xaxis_opts": opts.AxisOpts(axislabel_opts=opts.LabelOpts(rotate=25, font_size=font_size)),
             "toolbox_opts": opts.ToolboxOpts(
-                is_show=True, orient="vertical", pos_left="left", pos_top="bottom"
-            ),
+                    is_show=True,
+                    orient="vertical",
+                    pos_left="left",
+                    pos_top="bottom",
+                    feature=opts.ToolBoxFeatureOpts( 
+                                                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
+                                                                                                    background_color="white", 
+                                                                                                    pixel_ratio=2, 
+                                                                                                    title="Save as PNG"),
+                                                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                                                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                                                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
+                                                                                              is_show=True,
+                                                                                            back_title="Back"),
+                                                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
+                                                                                                bar_title="Bar",
+                                                                                                is_show=True, 
+                                                                                                stack_title="Stack",
+                                                                                                tiled_title="Tiled"),
+                                                    
+                                                    ),
+                    ),
+            
             'yaxis_opts': opts.AxisOpts(axislabel_opts=opts.LabelOpts(font_size=font_size)),
             "datazoom_opts": [
                 opts.DataZoomOpts(type_="inside", range_start=0, range_end=100,)
