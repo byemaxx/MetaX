@@ -139,7 +139,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
 
-        self.tfa = None
+        self.tfa: TaxaFuncAnalyzer = None
         self.any_table_mode = False
         self.Qthread_result = None
         self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
@@ -446,7 +446,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     
     ###############   basic function start   ###############  
-    def get_table_by_df_type(self, df_type:str= None, 
+    def get_table_by_df_type(self, df_type:str | None = None, 
                              replace_if_two_index:bool = False):
         if df_type is None:
             raise ValueError("Please specify the df_type.")
@@ -478,7 +478,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             dft = self.tfa.replace_if_two_index(dft)
         return dft
     
-    def get_list_by_df_type(self, df_type:str= None) -> list:
+    def get_list_by_df_type(self, df_type:str) -> list:
         '''
         return the list of df_type, ignore capital case
         df_type: str, one of ['taxa', 'functions', 'taxa-functions', 'peptides', 'proteins', 'custom']
@@ -858,7 +858,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
 
 
-    def save_basic_settings(self, line_edit_name: str=None):
+    def save_basic_settings(self, line_edit_name: str | None = None):
         '''
         Save basic settings for the GUI.
         This method saves the values of certain line edit widgets to the settings file
@@ -867,7 +867,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         Save Parameters: `last_path`, `like_times`, `time`, `version` \n
         
         '''
-        if not line_edit_name:
+        if line_edit_name is None:
             line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
         else:
             line_edit_names = [line_edit_name]
@@ -2687,7 +2687,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
         self.comboBox_co_expr_select_list.addItems(update_list)
 
-    def update_basic_heatmap_list(self, str_list:list = None, str_selected:str = None):
+    def update_basic_heatmap_list(self, str_list:list | None = None, str_selected:str | None = None):
             if str_selected is not None and str_list is None:
                 for i in ['All Taxa', 'All Functions', 'All Taxa-Functions', 'All Peptides', 'All Proteins', 'All Items']:
                     if str_selected == i:
@@ -2744,7 +2744,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.basic_heatmap_list = []
         self.listWidget_list_for_ploting.clear()
     
-    def extract_top_from_test_result(self, method, top_num, df_type, filtered):
+    def extract_top_from_test_result(self, method, top_num, df_type, filtered) -> list[str] | None:
         self.logger.write_log(f'extract_top_from_test_result: method={method}, top_num={top_num}, df_type={df_type}, filtered={filtered}')
         
         if method.split('_')[0] == 'deseq2':
@@ -2826,7 +2826,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         index_list = df.index.tolist()
         return index_list
     
-    def add_a_list_to_list_window(self, df_type, aim_list, str_list=None):
+    def add_a_list_to_list_window(self, df_type, aim_list, str_list=None, input_mode = True):
         def check_if_in_list(str_selected, df_type):
             df_type = df_type.lower()
             
@@ -2837,7 +2837,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return False
                     
         # open a new window allowing user to input text with comma or new line
-        self.input_window = InputWindow(self.MainWindow, input_mode=True)
+        self.input_window = InputWindow(self.MainWindow, input_mode=input_mode)
         if str_list is not None:
             self.input_window.text_edit.setText('\n'.join(str_list))
         result = self.input_window.exec_()
@@ -2951,7 +2951,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def add_all_searched_basic_heatmap_to_list(self,items):
             # self.update_basic_heatmap_list(str_list=items)
             df_type = self.comboBox_basic_table.currentText()
-            self.add_a_list_to_list_window(df_type, aim_list='basic_heatmap', str_list=items)
+            self.add_a_list_to_list_window(df_type, aim_list='basic_heatmap', str_list=items, input_mode = False)
 
 
     
@@ -3023,7 +3023,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def add_all_searched_co_expr_top_list(self, items):
         # self.update_co_expr_list(str_list=items)
         df_type = self.comboBox_co_expr_table.currentText()
-        self.add_a_list_to_list_window(df_type, aim_list='co_expr', str_list=items)
+        self.add_a_list_to_list_window(df_type, aim_list='co_expr', str_list=items, input_mode = False)
             
 
     def plot_basic_list(self, plot_type='heatmap'):
@@ -3083,18 +3083,20 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     df.index = df[self.tfa.peptide_col_name]
 
                 elif table_name == 'Taxa-Functions':
-                    df_all = None
+                    df_list = [] 
                     for i in self.basic_heatmap_list:
-                        taxon = i.split(' <')[0]
-                        func = i.split(' <')[1][:-1]
+                        taxon, func = i.split(' <')
+                        func = func[:-1] 
                         dft = self.tfa.clean_df.loc[(self.tfa.clean_df['Taxon'] == taxon) & (self.tfa.clean_df[self.tfa.func_name] == func)]
-                        if df_all is None:
-                            df_all = dft
-                        else:
-                            df_all = pd.concat([df_all, dft])
-                    df = df_all
-                    df.index = df[self.tfa.peptide_col_name]
-                
+                        df_list.append(dft)
+
+                    if df_list:  
+                        df_all = pd.concat(df_list)
+                        df_all.index = df_all[self.tfa.peptide_col_name] 
+                        df = df_all
+                    else:
+                        raise ValueError('No valid taxa-function belongs to the selected taxa-function!')
+
                 elif table_name == 'Proteins':
                     QMessageBox.warning(self.MainWindow, 'Warning',
                                         'Protein is not supported to plot the related peptide due to the applied razor algorithm!')
@@ -3314,7 +3316,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def add_all_searched_trends_top_list(self, items):
         # self.update_trends_list(str_list=items)
         df_type = self.comboBox_trends_table.currentText()
-        self.add_a_list_to_list_window(df_type, aim_list='trends', str_list=items)
+        self.add_a_list_to_list_window(df_type, aim_list='trends', str_list=items, input_mode = False)
         
     def plot_trends_cluster(self):
         group_list = self.comboBox_trends_group.getCheckedItems()
@@ -4641,7 +4643,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
-    def update_tfnet_focus_list_and_widget(self, str_selected: str = '', str_list: list = None):
+    def update_tfnet_focus_list_and_widget(self, str_selected: str = '', str_list: list | None = None):
         if str_selected == '' and str_list is None:
             return None
         elif str_selected != '' and str_list is None:
@@ -4709,11 +4711,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def add_all_searched_tfnet_to_focus_list(self, item):
         # self.update_tfnet_focus_list_and_widget(str_list=item)
         df_type = self.comboBox_tfnet_table.currentText()
-        self.add_a_list_to_list_window(df_type,'tfnet', item)
+        self.add_a_list_to_list_window(df_type,'tfnet', item, input_mode = False)
 
         
 
-    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list,filtered:bool = False) -> list:
+    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list,filtered:bool = False) -> list[str] | None:
         df_type = df_type.lower()
         method_dict = {'Average Intensity': 'mean', 
                        'Frequency in Samples': 'freq', 
@@ -4838,7 +4840,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 sample_list = selected_samples
         return sample_list
     
-    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list = None, type:str = 'taxa'):
+    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list | None = None, type:str = 'taxa'):
         # keep taxa and func only in the taxa_func_linked_dict and remove others
         if check_list is None:
             print(f'check_list is {check_list}, return None')

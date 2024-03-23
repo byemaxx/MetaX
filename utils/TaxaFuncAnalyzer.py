@@ -145,7 +145,7 @@ class TaxaFuncAnalyzer:
             if check_result[0] == False:
                 raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
     
-    def update_meta(self, meta_df: str) -> None:
+    def update_meta(self, meta_df: pd.DataFrame) -> None:
         self.meta_df = meta_df
         old_sample_list = self.sample_list
         new_sample_list = meta_df['Sample'].tolist()
@@ -420,6 +420,16 @@ class TaxaFuncAnalyzer:
                                                                                 'by_sample': False, 
                                                                                 'rank_method': 'unique_counts'}
                           ):
+        """
+        Example Usage:
+        sw.set_multi_tables(level='s', data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
+                                                            'batch_meta': "Individual", 'outlier_detect_method': 'zero-dominant',
+                                                            'outlier_handle_method': 'original',
+                                                            'outlier_detect_by_group': 'Individual',
+                                                            'outlier_handle_by_group': None,
+                                                            'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
+                    peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3})
+        """
         # for any_df_mode, the df is considered as other_df
         if self.any_df_mode:
             self.set_any_df_table(data_preprocess_params)

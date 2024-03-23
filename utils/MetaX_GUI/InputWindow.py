@@ -1,6 +1,24 @@
 from PyQt5.QtWidgets import QPushButton, QDialog, QSizePolicy, QGridLayout, QTextEdit, QDesktopWidget, QRadioButton, QButtonGroup
 
 class InputWindow(QDialog):
+    """
+    A dialog window for inputting text.
+
+    Args:
+        `parent (QWidget)`: The parent widget of the dialog.
+        `input_mode (bool)`: Flag indicating whether to show the match mode radio buttons.
+        - `True`: Show the radio buttons for selecting the match mode.
+        - `False`: Only show the text editor and the OK/Cancel buttons.
+
+    Attributes:
+        text_edit (QTextEdit): The text editor widget.
+        exact_match_radio (QRadioButton): The radio button for exact match mode.
+        search_match_radio (QRadioButton): The radio button for search match mode.
+        match_mode_group (QButtonGroup): The button group for the match mode radio buttons.
+        ok_button (QPushButton): The OK button.
+        cancel_button (QPushButton): The Cancel button.
+    """
+
     def __init__(self, parent=None, input_mode=False):
         super(InputWindow, self).__init__(parent)
         self.text_edit = QTextEdit(self)
@@ -43,12 +61,18 @@ class InputWindow(QDialog):
         self.resize(int(self.screen.width() / 1.8), int(self.screen.height() / 1.8))
 
     def get_selected_mode(self):
+        """
+        Get the selected match mode.
+
+        Returns:
+            str: The selected match mode. Possible values are "exact", "search", or None.
+        """
         if self.exact_match_radio.isChecked():
             return "exact"
         elif self.search_match_radio.isChecked():
             return "search"
         else:
-            return None  
+            return None
 
 if __name__ == '__main__':
     import sys
