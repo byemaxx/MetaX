@@ -390,13 +390,12 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     - **<u>For Bar</u>**
       - **Bar Ldg**: Show the legend when plotting Bar
       - **Bar %:**  Transfer each col to percent when plotting Bar
-
-        - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" />
-
+      - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" />
+    
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
     - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" style="zoom: 50%;" />
-
+  
 - **Plot:**
 
   <img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original" style="zoom:50%;" />
@@ -530,10 +529,10 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - **Comparing in Each Condition:** Select a meta such as individual, then comparing groups to control in each individual.
 
-  - ![image-20240311121010996](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\group_control_test.png)
+  - ![image-20240311121010996](./MetaX_Cookbook.assets\group_control_test.png)
   - Result of Dunnett's Test:
     - T- Statistic value show in the heatmap
-  - ![image-20240311121834429](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\image-20240311121834429.png)
+  - ![image-20240311121834429](./MetaX_Cookbook.assets\image-20240311121834429.png)
 
 
 
@@ -686,10 +685,22 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 # Developer Tools
 
 - **Export Log**
+
   - You can export the log file for debugging or reporting the issue.
   - ![image-20230816114901459](MetaX_Cookbook.assets/expot_log.png)
+
 - **Show or Hide the Console**
+
   - <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console" style="zoom: 50%;" />
+
+- **Any Table Mode**
+
+  - <u>Any Table Mode</u> enables us to use **any matrix** for basic statistical analysis in MetaX.
+
+  - ![](MetaX_Cookbook.assets/any_table_mode.png)
+
+    
+
 
 # Enjoy MetaX
 
