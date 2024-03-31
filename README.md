@@ -3,4 +3,4 @@
 
 ![abstract](./Docs/MetaX_Cookbook.assets/abstract.png)
 
-- For more information, please refer to the [MetaX Cookbook](./docs/MetaX_Cookbook.md).
+- For more information, please refer to the [MetaX Cookbook](./Docs/MetaX_Cookbook.md).
