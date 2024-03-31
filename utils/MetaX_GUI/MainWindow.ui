@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>477</width>
-                 <height>377</height>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1634,6 +1634,23 @@
                      <widget class="QComboBox" name="comboBox_basic_theme">
                       <property name="editable">
                        <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_159">
+                      <property name="text">
+                       <string>Legend Cols</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_basic_legend_col_num">
+                      <property name="minimum">
+                       <number>0</number>
+                      </property>
+                      <property name="value">
+                       <number>1</number>
                       </property>
                      </widget>
                     </item>
@@ -7651,7 +7668,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

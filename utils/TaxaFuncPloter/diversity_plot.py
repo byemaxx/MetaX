@@ -23,7 +23,7 @@ class DiversityPlot(object):
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
                              plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
-                             show_fliers = True
+                             show_fliers = True, legend_col_num: int | None = None
                              ):
         '''
         Calculate alpha diversity and plot boxplot\n
@@ -127,7 +127,12 @@ class DiversityPlot(object):
             fig.set_ylabel(f'{metric} Index', fontsize=font_size)
             fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
             if sub_meta:
-                plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., fontsize=font_size+2, ncol= group_num//30 + 1)
+                if legend_col_num != 0:
+                    plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., 
+                               fontsize=font_size+2, ncol= (group_num//30 + 1 ) if legend_col_num is None else legend_col_num)
+                else:
+                    plt.legend([],[], frameon=False)
+                    
                 # add dashed line between groups
                 for i, group in enumerate(df['Group'].unique()):
                     if i != 0:
@@ -155,7 +160,7 @@ class DiversityPlot(object):
     def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
-                              adjust_label:bool = False , theme:str = None, sub_meta:str = "None"):
+                              adjust_label:bool = False , theme:str = None, sub_meta:str = "None", legend_col_num: int | None = None):
         '''
         Calculate beta diversity and plot PCoA plot
         Return:(fig, distance_matrix)
@@ -218,8 +223,12 @@ class DiversityPlot(object):
             num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
 
             plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)', fontsize=font_size+2, fontweight='bold')
-            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
-                       fontsize=font_size +2 , ncol= num_legend//30 + 1)
+            if legend_col_num != 0:
+                plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
+                        fontsize=font_size +2 , ncol= (num_legend//30 + 1) if legend_col_num is None else legend_col_num)
+            else:
+                plt.legend([],[], frameon=False)
+                
             plt.tight_layout()
             plt.show()
             

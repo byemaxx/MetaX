@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 377))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -852,6 +852,14 @@ class Ui_metaX_main(object):
         self.comboBox_basic_theme.setEditable(False)
         self.comboBox_basic_theme.setObjectName("comboBox_basic_theme")
         self.horizontalLayout_25.addWidget(self.comboBox_basic_theme)
+        self.label_159 = QtWidgets.QLabel(self.tab_12)
+        self.label_159.setObjectName("label_159")
+        self.horizontalLayout_25.addWidget(self.label_159)
+        self.spinBox_basic_legend_col_num = QtWidgets.QSpinBox(self.tab_12)
+        self.spinBox_basic_legend_col_num.setMinimum(0)
+        self.spinBox_basic_legend_col_num.setProperty("value", 1)
+        self.spinBox_basic_legend_col_num.setObjectName("spinBox_basic_legend_col_num")
+        self.horizontalLayout_25.addWidget(self.spinBox_basic_legend_col_num)
         self.gridLayout_34.addLayout(self.horizontalLayout_25, 0, 2, 1, 1)
         self.horizontalLayout_33 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_33.setObjectName("horizontalLayout_33")
@@ -4048,7 +4056,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4293,6 +4301,7 @@ class Ui_metaX_main(object):
         self.label_142.setText(_translate("metaX_main", "Sub Meta "))
         self.comboBox_sub_meta_pca.setItemText(0, _translate("metaX_main", "None"))
         self.label_151.setText(_translate("metaX_main", "Theme"))
+        self.label_159.setText(_translate("metaX_main", "Legend Cols"))
         self.label_107.setText(_translate("metaX_main", "Font Size"))
         self.label_116.setText(_translate("metaX_main", "Transparency"))
         self.pushButton_plot_pca_sns.setText(_translate("metaX_main", "Plot PCA"))

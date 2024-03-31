@@ -487,3 +487,9 @@
 ## Date: 2024-03-22
 ### Changes:
 - Fix: 1. Fixed the toolbox for echarts plot was show title as Chinese. 2. Fixed the bug of when save the plot in HTML, the background color was black.
+
+# Version: 1.102.0
+## Date: 2024-03-31
+### Changes:
+- New: Add a option to set the number of legend cols for the basic plot.
+- Fix: Fixed the bug of when plot the bar of number, the rename sample name was not work.

@@ -153,7 +153,7 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
                      width=10, height=8, font_size = 10, rename_sample:bool = False,
-                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None, sub_meta:str = 'None'):
+                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None, sub_meta:str = 'None', legend_col_num: int | None = None):
         try:
             dft= df.copy()
             
@@ -212,12 +212,16 @@ class BasicPlot:
                         fontsize= font_size+2, fontweight='bold')
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)',  fontsize=font_size)
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)',  fontsize=font_size)
-            # tight_layout automatically adjusts subplot params so that the subplot(s) fits in to the figure area.
-            num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
             
             # set legend outside the plot, set size as 100
-            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=font_size +2, borderaxespad=0.,
-                       ncol= num_legend//30 + 1)
+            if legend_col_num != 0:
+                num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
+                plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=font_size +2, borderaxespad=0.,
+                        ncol= num_legend//30 + 1 if legend_col_num is None else legend_col_num)
+            else:
+                #hide the legend
+                plt.legend([],[], frameon=False)
+                
             plt.tight_layout()
             plt.show()
 
@@ -228,7 +232,7 @@ class BasicPlot:
         
         
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
-                     font_size = 10, theme:str = None, rename_sample:bool = False, plot_samples:bool = False):
+                     font_size = 10, theme:str = None, rename_sample:bool = False, plot_samples:bool = False, legend_col_num: int | None = None):
         # replace 0 with nan due to optimization of boxplot
         dft = df.replace(0, np.nan)
         if not plot_samples:
@@ -313,10 +317,14 @@ class BasicPlot:
         ax.set_title(f'Boxplot of Intensity of {table_name}',
                      fontsize=font_size+2, fontweight='bold')
         if plot_samples:
-            # set legend for group, out of the box
-            handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
-            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
-                    loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1)
+            if legend_col_num != 0:
+                # set legend for group, out of the box
+                handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
+                ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
+                        loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1 if legend_col_num is None else legend_col_num)
+            else:
+                #hide the legend
+                ax.legend([],[], frameon=False)
         # set grid line for y axis is visible
         ax.grid(True, axis='y')
         # move the botton up
@@ -373,7 +381,8 @@ class BasicPlot:
         
         
     def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,  
-                        theme:str = 'Auto', plot_sample = False, show_label = True):
+                        theme:str = 'Auto', plot_sample = False, show_label = True, 
+                        rename_sample:bool = False, legend_col_num: int | None = None):
         df = df.copy()
         
         #stats number of taxa for each group
@@ -445,7 +454,14 @@ class BasicPlot:
                 ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
                 
         # set x label
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, horizontalalignment='right', fontsize=font_size)
+        x_labels = ax.get_xticklabels()
+        if rename_sample and plot_sample:
+            for label in x_labels:
+                text = label.get_text()
+                group = self.tfa.get_group_of_a_sample(text)
+                label.set_text(f'{text} ({group})')
+        
+        ax.set_xticklabels( x_labels, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Group', fontsize=font_size+2)
         ax.set_ylabel('Number', fontsize=font_size+2)
         # set y limit as 0.9 * min to 1.1 * max
@@ -455,11 +471,14 @@ class BasicPlot:
         ax.set_title(title, fontsize=font_size+2, fontweight='bold')
         
         if plot_sample:
-            # set legend for group, out of the box
-            handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles, unique_groups, fontsize=font_size + 2, ncol= len(unique_groups)//30 + 1,
-                        loc='upper left',borderaxespad=0., bbox_to_anchor=(1.02, 1))
-
+            if legend_col_num != 0:
+                # set legend for group, out of the box
+                handles, labels = ax.get_legend_handles_labels()
+                ax.legend(handles, unique_groups, fontsize=font_size + 2, ncol= (len(unique_groups)//30 + 1) if legend_col_num is None else legend_col_num,
+                            loc='upper left',borderaxespad=0., bbox_to_anchor=(1.02, 1))
+            else:
+                #hide the legend
+                ax.legend([],[], frameon=False)
         # set grid
         ax.grid(True, axis='y')
         # move the botton up

@@ -3734,6 +3734,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         theme = self.comboBox_basic_theme.currentText()
         sub_meta = self.comboBox_sub_meta_pca.currentText()
         show_fliers = self.checkBox_box_if_show_fliers.isChecked()
+        legend_col_num = self.spinBox_basic_legend_col_num.value()
 
         
         # get sample list when plot by group
@@ -3765,7 +3766,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('PCA is running, please wait...')
                 BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, rename_sample = rename_sample,
                                                 width=width, height=height, font_size=font_size, sub_meta = sub_meta,
-                                                font_transparency=font_transparency, adjust_label=adjust_label, theme=theme)
+                                                font_transparency=font_transparency, 
+                                                adjust_label=adjust_label, 
+                                                theme=theme, 
+                                                legend_col_num=legend_col_num)
 
             elif method == 'pca_3d':
                 row_num = df.shape[0]
@@ -3775,14 +3779,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, 
                                                                  rename_sample = rename_sample,
-                                                                width=width, height=height, font_size=font_size)
+                                                                width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
 
             elif method == 'box':
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
                 BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
                                                  width=width, height=height, font_size=font_size, theme=theme,
-                                                 rename_sample = rename_sample, plot_samples = plot_samples)
+                                                 rename_sample = rename_sample, plot_samples = plot_samples, legend_col_num=legend_col_num)
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
@@ -3806,7 +3810,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 _ , aplha_diversity_df = DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
                                                              width=width, height=height, font_size=font_size, 
                                                              plot_all_samples=plot_all_samples, theme=theme,
-                                                             sub_meta = sub_meta, show_fliers = show_fliers)
+                                                             sub_meta = sub_meta, show_fliers = show_fliers,
+                                                             legend_col_num=legend_col_num)
                 self.update_table_dict('alpha_diversity', aplha_diversity_df)
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
@@ -3815,7 +3820,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                             font_size=font_size, font_transparency = font_transparency,
                                                             rename_sample = rename_sample,
                                                             show_label = show_label, adjust_label = adjust_label, 
-                                                            theme=theme,sub_meta = sub_meta)
+                                                            theme=theme,sub_meta = sub_meta, legend_col_num=legend_col_num)
                 self.update_table_dict('beta_diversity_distance_matrix', beta_diversity_distance_matrix)
                                                             
 
@@ -3860,7 +3865,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 plot_sample =self.checkBox_basic_plot_number_plot_sample.isChecked()
                 BasicPlot(self.tfa).plot_number_bar(df = df, table_name = table_name, font_size=font_size,
                                                     width=width, height=height, 
-                                                    theme=theme, plot_sample = plot_sample, show_label = show_label)
+                                                    theme=theme, plot_sample = plot_sample, 
+                                                    show_label = show_label, rename_sample = rename_sample, legend_col_num=legend_col_num)
             
         except Exception as e:
             error_message = traceback.format_exc()

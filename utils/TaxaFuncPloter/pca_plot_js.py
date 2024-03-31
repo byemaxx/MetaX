@@ -9,7 +9,7 @@ class PcaPlot_js:
         self.tfobj = tfobj
 
     def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, rename_sample = True,
-                              width=10, height=8, font_size = 10):
+                              width=10, height=8, font_size = 10, legend_col_num: int | None = None):
         width = f'{width*100}px'
         height = f'{height*100}px'
 
@@ -76,8 +76,20 @@ class PcaPlot_js:
 
         scatter3d.set_global_opts(
             title_opts=opts.TitleOpts(title=f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)'),
-            legend_opts=opts.LegendOpts(orient="vertical",  pos_right="2%"),
-
+            legend_opts=opts.LegendOpts(
+                is_show=True if (legend_col_num != 0) else False,
+                type_="scroll",
+                page_icon_size=8,
+                selector=[
+                    {"type": "all", "title": "All"},
+                    {"type": "inverse", "title": "Inverse"},
+                ],
+                pos_left="right",
+                orient="vertical",
+                pos_top="2%",
+                border_width=0,
+                textstyle_opts=opts.TextStyleOpts(font_size=font_size),
+            ),
 
         )
 
