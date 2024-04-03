@@ -8,6 +8,7 @@ import os
 import io
 import csv
 import sys
+import subprocess
 
 class Ui_Table_view(QtWidgets.QDialog):
     last_path_updated = QtCore.pyqtSignal(str) # signal to update last_path in main window

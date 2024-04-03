@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This script is used to build the database for the MetaX tool 
 # database from: Unified Human Gastrointestinal Genome (UHGG) v2.0.1
 # database ftp: http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.1/
