@@ -26,10 +26,10 @@ class HeatmapPlot:
         return df
 
     # For taxa-func table
-    def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:str = 100, 
-                                        value_type:str = 'p', fig_size:tuple = None, pvalue:float = 0.05, 
+    def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:int|str= 100, 
+                                        value_type:str = 'p', fig_size:tuple|None = None, pvalue:float = 0.05, 
                                          col_cluster:bool = True, row_cluster:bool = True,
-                                        cmap:str = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
+                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
                                         show_all_labels:tuple = (False, False), return_type:str = 'fig'):
 
         
@@ -169,9 +169,9 @@ class HeatmapPlot:
 
     # For taxa, func and peptides table
     def plot_basic_heatmap_of_test_res(self, df, top_number:int = 100, value_type:str = 'p', 
-                                       fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
+                                       fig_size:tuple|None = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+                                       cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True
                                        ):
 
@@ -271,9 +271,9 @@ class HeatmapPlot:
     # EXAMPLE: plot_heatmap(sw, mat=get_top_intensity_matrix_of_test_res(df=df_anova, df_type='anova', top_num=100), 
                 #  title = 'The heatmap of top 100 significant differences between groups in Taxa-Function', 
                 #  fig_size=(30,30), scale=0)
-    def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple = None, 
+    def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple|None = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
-                    cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+                    cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False
                     ):
         
@@ -347,16 +347,16 @@ class HeatmapPlot:
 
         # For taxa-func heatmap
     # get the top intensity matrix of taxa-func table
-    def get_top_across_table(self, df, top_number:str = 100, value_type:str = 'p', pvalue:float = 0.05, 
+    def get_top_across_table(self, df, top_number:str|int = 100, value_type:str = 'p', pvalue:float = 0.05, 
                              rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True):
         res = self.plot_top_taxa_func_heatmap_of_test_res(df=df, top_number=top_number, value_type=value_type, pvalue=pvalue, 
                                                           col_cluster=col_cluster, row_cluster=row_cluster, rename_taxa=rename_taxa, return_type='table')
         return res
     
     # plot heatmap for all condtion results of DESeq2All or DunnettAll
-    def plot_heatmap_of_all_condition_res(self, df,  pvalue:float = 0.05,scale:str = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
+    def plot_heatmap_of_all_condition_res(self, df,  pvalue:float = 0.05,scale:str|None = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10, 
+                                       cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10, 
                                        show_all_labels:tuple = (False, False), 
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
@@ -489,9 +489,9 @@ class HeatmapPlot:
             raise ValueError(f"Error: {e}")
 
     # For taxa, func and peptides table
-    def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str = None,
-                                       fig_size:tuple = None, col_cluster:bool = True, row_cluster:bool = True,
-                                       cmap:str = None, rename_taxa:bool = True, font_size:int = 10,
+    def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
+                                       fig_size:tuple|None = None, col_cluster:bool = True, row_cluster:bool = True,
+                                       cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False),  show_col_colors:bool = False    
                                        ):
         #! 只画t-statistic的heatmap, 用p-value过滤
@@ -571,7 +571,7 @@ class HeatmapPlot:
             raise ValueError(f"Error: {e}")
 
 
-    def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str = None,
+    def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
                                         col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True):
         import pandas as pd
         import numpy as np
@@ -660,8 +660,8 @@ class HeatmapPlot:
         
 
     def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
-                                       fig_size:tuple = None, pvalue:float = 0.05, scale = None, 
-                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str = None, rename_taxa:bool = False):
+                                       fig_size:tuple|None = None, pvalue:float = 0.05, scale = None, 
+                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str|None = None, rename_taxa:bool = False):
         dft = df.copy()
 
         scale_map ={None: None,
