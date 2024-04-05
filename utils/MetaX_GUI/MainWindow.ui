@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>477</width>
-                 <height>373</height>
+                 <height>377</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1486,8 +1486,14 @@
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="toolTip">
+                       <string>Add group name to Sample names</string>
+                      </property>
+                      <property name="statusTip">
+                       <string/>
+                      </property>
                       <property name="text">
-                       <string>Add Group Name to Samples</string>
+                       <string>Rename Samples</string>
                       </property>
                       <property name="checked">
                        <bool>true</bool>
@@ -1501,6 +1507,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="toolTip">
+                       <string>Show label text in diagram</string>
                       </property>
                       <property name="layoutDirection">
                        <enum>Qt::LeftToRight</enum>
@@ -1520,6 +1529,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="toolTip">
+                       <string>Adjust label text to reduce overlap</string>
                       </property>
                       <property name="text">
                        <string>Adjust Labels</string>
@@ -1594,6 +1606,29 @@
                       </property>
                      </widget>
                     </item>
+                    <item>
+                     <widget class="QLabel" name="label_159">
+                      <property name="toolTip">
+                       <string>The number of columns in the legend, set 0 to hide</string>
+                      </property>
+                      <property name="text">
+                       <string>Legend Cols</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_basic_legend_col_num">
+                      <property name="minimum">
+                       <number>0</number>
+                      </property>
+                      <property name="value">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </item>
                   <item row="0" column="2">
@@ -1637,23 +1672,6 @@
                       </property>
                      </widget>
                     </item>
-                    <item>
-                     <widget class="QLabel" name="label_159">
-                      <property name="text">
-                       <string>Legend Cols</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QSpinBox" name="spinBox_basic_legend_col_num">
-                      <property name="minimum">
-                       <number>0</number>
-                      </property>
-                      <property name="value">
-                       <number>1</number>
-                      </property>
-                     </widget>
-                    </item>
                    </layout>
                   </item>
                   <item row="1" column="1">
@@ -1665,6 +1683,9 @@
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="toolTip">
+                       <string/>
                       </property>
                       <property name="text">
                        <string>Font Size</string>
@@ -1695,6 +1716,9 @@
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="toolTip">
+                       <string>Transparency of labes</string>
+                      </property>
                       <property name="text">
                        <string>Transparency</string>
                       </property>
@@ -1718,7 +1742,36 @@
                        <double>0.050000000000000</double>
                       </property>
                       <property name="value">
-                       <double>0.800000000000000</double>
+                       <double>0.600000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_160">
+                      <property name="toolTip">
+                       <string>Dots size for PCA and Beta Diversity</string>
+                      </property>
+                      <property name="text">
+                       <string>Dot Size</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_basic_dot_size">
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>999</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>10</number>
+                      </property>
+                      <property name="value">
+                       <number>100</number>
                       </property>
                      </widget>
                     </item>
@@ -1751,6 +1804,12 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_6">
                     <item>
                      <widget class="QCheckBox" name="checkBox_basic_plot_number_plot_sample">
+                      <property name="acceptDrops">
+                       <bool>false</bool>
+                      </property>
+                      <property name="toolTip">
+                       <string/>
+                      </property>
                       <property name="text">
                        <string>Plot Samples</string>
                       </property>
@@ -7668,7 +7727,7 @@
      <x>0</x>
      <y>0</y>
      <width>1021</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -7800,12 +7859,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>58</x>
-     <y>127</y>
+     <x>56</x>
+     <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>63</x>
-     <y>127</y>
+     <x>61</x>
+     <y>105</y>
     </hint>
    </hints>
   </connection>
@@ -7816,12 +7875,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>58</x>
-     <y>127</y>
+     <x>56</x>
+     <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>68</x>
-     <y>127</y>
+     <x>66</x>
+     <y>105</y>
     </hint>
    </hints>
   </connection>
@@ -7832,12 +7891,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>589</x>
-     <y>179</y>
+     <x>647</x>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
-     <x>753</x>
-     <y>181</y>
+     <x>811</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -7848,12 +7907,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>589</x>
-     <y>179</y>
+     <x>647</x>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
-     <x>917</x>
-     <y>181</y>
+     <x>975</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -7864,12 +7923,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>54</x>
-     <y>125</y>
+     <x>52</x>
+     <y>103</y>
     </hint>
     <hint type="destinationlabel">
-     <x>60</x>
-     <y>125</y>
+     <x>58</x>
+     <y>103</y>
     </hint>
    </hints>
   </connection>
@@ -7880,12 +7939,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>54</x>
-     <y>125</y>
+     <x>52</x>
+     <y>103</y>
     </hint>
     <hint type="destinationlabel">
-     <x>65</x>
-     <y>125</y>
+     <x>63</x>
+     <y>103</y>
     </hint>
    </hints>
   </connection>
@@ -7897,11 +7956,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>179</x>
-     <y>176</y>
+     <y>175</y>
     </hint>
     <hint type="destinationlabel">
      <x>254</x>
-     <y>178</y>
+     <y>177</y>
     </hint>
    </hints>
   </connection>
@@ -7913,11 +7972,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>179</x>
-     <y>176</y>
+     <y>175</y>
     </hint>
     <hint type="destinationlabel">
      <x>329</x>
-     <y>178</y>
+     <y>177</y>
     </hint>
    </hints>
   </connection>
@@ -7928,12 +7987,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>65</x>
-     <y>127</y>
+     <x>63</x>
+     <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>72</x>
-     <y>127</y>
+     <x>70</x>
+     <y>105</y>
     </hint>
    </hints>
   </connection>
@@ -7944,12 +8003,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>65</x>
-     <y>127</y>
+     <x>63</x>
+     <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>78</x>
-     <y>127</y>
+     <x>76</x>
+     <y>105</y>
     </hint>
    </hints>
   </connection>
@@ -7960,12 +8019,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>99</x>
-     <y>131</y>
+     <x>86</x>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
-     <x>116</x>
-     <y>131</y>
+     <x>103</x>
+     <y>100</y>
     </hint>
    </hints>
   </connection>
@@ -7976,12 +8035,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>99</x>
-     <y>131</y>
+     <x>86</x>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
-     <x>133</x>
-     <y>131</y>
+     <x>120</x>
+     <y>100</y>
     </hint>
    </hints>
   </connection>
@@ -7992,12 +8051,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>109</x>
-     <y>131</y>
+     <x>537</x>
+     <y>240</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>131</y>
+     <x>724</x>
+     <y>241</y>
     </hint>
    </hints>
   </connection>
@@ -8008,12 +8067,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>109</x>
-     <y>131</y>
+     <x>537</x>
+     <y>240</y>
     </hint>
     <hint type="destinationlabel">
-     <x>133</x>
-     <y>131</y>
+     <x>912</x>
+     <y>241</y>
     </hint>
    </hints>
   </connection>
@@ -8024,12 +8083,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>149</y>
+     <x>52</x>
+     <y>104</y>
     </hint>
     <hint type="destinationlabel">
-     <x>292</x>
-     <y>151</y>
+     <x>56</x>
+     <y>104</y>
     </hint>
    </hints>
   </connection>
@@ -8040,12 +8099,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>149</y>
+     <x>52</x>
+     <y>104</y>
     </hint>
     <hint type="destinationlabel">
-     <x>367</x>
-     <y>151</y>
+     <x>60</x>
+     <y>104</y>
     </hint>
    </hints>
   </connection>
@@ -8088,12 +8147,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>84</x>
-     <y>145</y>
+     <x>71</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>88</x>
-     <y>145</y>
+     <x>75</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8104,12 +8163,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>84</x>
-     <y>145</y>
+     <x>71</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>93</x>
-     <y>145</y>
+     <x>80</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8120,12 +8179,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>586</x>
-     <y>159</y>
+     <x>96</x>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
-     <x>677</x>
-     <y>159</y>
+     <x>108</x>
+     <y>100</y>
     </hint>
    </hints>
   </connection>
@@ -8136,12 +8195,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>566</x>
-     <y>154</y>
+     <x>96</x>
+     <y>100</y>
     </hint>
     <hint type="destinationlabel">
-     <x>858</x>
-     <y>152</y>
+     <x>120</x>
+     <y>100</y>
     </hint>
    </hints>
   </connection>
@@ -8152,12 +8211,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>882</x>
-     <y>315</y>
+     <x>837</x>
+     <y>324</y>
     </hint>
     <hint type="destinationlabel">
-     <x>975</x>
-     <y>315</y>
+     <x>974</x>
+     <y>324</y>
     </hint>
    </hints>
   </connection>
@@ -8168,8 +8227,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>882</x>
-     <y>315</y>
+     <x>837</x>
+     <y>324</y>
     </hint>
     <hint type="destinationlabel">
      <x>230</x>

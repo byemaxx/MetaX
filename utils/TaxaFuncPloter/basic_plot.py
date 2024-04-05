@@ -156,7 +156,8 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
                      width=10, height=8, font_size = 10, rename_sample:bool = False,
-                     font_transparency = 0.6, adjust_label:bool = False, theme:str|None = None, sub_meta:str = 'None', legend_col_num: int | None = None):
+                     font_transparency = 0.6, adjust_label:bool = False, theme:str|None = None,
+                     sub_meta:str = 'None', legend_col_num: int | None = None, dot_size: float|None = None):
         try:
             dft= df.copy()
             
@@ -199,7 +200,7 @@ class BasicPlot:
             components = pca.fit_transform(mat)
             total_var = pca.explained_variance_ratio_.sum() * 100
             # set dot size based on the width and height, and font size
-            dot_size = (width * height)*font_size/10
+            dot_size = (width * height)*font_size/10 if dot_size is None else dot_size
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
                                 hue=group_list, s = dot_size, 

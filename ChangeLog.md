@@ -505,3 +505,8 @@
 ## Date: 2024-04-05
 ### Changes:
 - Change: Changed the alpha value of the color for the PCA plot and beta diversity plot to 0.9 to make the color more clear.
+
+# Version: 1.102.3
+## Date: 2024-04-05
+### Changes:
+- New: add an option to set the dot size for the 2D PCA plot and beta diversity plot.

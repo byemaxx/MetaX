@@ -167,10 +167,11 @@ class DiversityPlot(object):
 # # DiversityPlot(sw).plot_alpha_diversity(metric= "mcintosh_d", sample_list=None, width=10, height=8,  font_size=10)
 
 
-    def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list=None, 
+    def plot_beta_diversity(self, metric:str='braycurtis', sample_list:list|None=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
-                              adjust_label:bool = False , theme:str = None, sub_meta:str = "None", legend_col_num: int | None = None):
+                              adjust_label:bool = False , theme:str|None = None, sub_meta:str = "None", 
+                              legend_col_num: int | None = None, dot_size: float|None = None):
         '''
         Calculate beta diversity and plot PCoA plot
         Return:(fig, distance_matrix)
@@ -215,7 +216,7 @@ class DiversityPlot(object):
                 
             plt.figure(figsize=(width, height))
             # set dot size based on the width and height and font size
-            dot_size = (width * height)*font_size/10
+            dot_size = (width * height)*font_size/10 if dot_size is None else dot_size
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=dot_size, style=style_list,
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.9,
                                   edgecolor='black', linewidth=0.5)
