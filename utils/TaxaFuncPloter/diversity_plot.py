@@ -220,14 +220,6 @@ class DiversityPlot(object):
             fig = sns.scatterplot(x=pcoa_res.samples.PC1, y=pcoa_res.samples.PC2, s=dot_size, style=style_list,
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.9,
                                   edgecolor='black', linewidth=0.5)
-            if show_label:
-                if rename_sample:
-                    sample_list = [f'{sample_id} ({self.tfa.get_group_of_a_sample(sample_id)})' for sample_id in sample_list]
-                texts = [fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], s=sample_list[i], size=font_size, 
-                            color='black', alpha=font_transparency) for i in range(len(sample_list))]
-                if adjust_label:
-                    from adjustText import adjust_text
-                    texts = adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black'))
                 
             fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
@@ -241,6 +233,23 @@ class DiversityPlot(object):
             else:
                 plt.legend([],[], frameon=False)
                 
+            if show_label:
+                if rename_sample:
+                    sample_list = [f'{sample_id} ({self.tfa.get_group_of_a_sample(sample_id)})' for sample_id in sample_list]
+                texts = [fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], s=sample_list[i], size=font_size, 
+                            color='black', alpha=font_transparency) for i in range(len(sample_list))]
+                if adjust_label:
+                    from adjustText import adjust_text
+
+                    texts = adjust_text(
+                        texts,
+                        avoid_self = False,
+                        force_text =( 0.1, 0.3),
+                        arrowprops=dict(
+                            arrowstyle="-", color="black", alpha=font_transparency
+                        ),
+                    )
+
             plt.tight_layout()
             plt.show()
             

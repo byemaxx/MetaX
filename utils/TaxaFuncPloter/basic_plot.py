@@ -205,13 +205,6 @@ class BasicPlot:
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
                                 hue=group_list, s = dot_size, 
                                 alpha=0.9, edgecolor='black', linewidth=0.5)
-            if show_label:
-                new_sample_name = new_sample_name if rename_sample else sample_list
-                texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
-                            color='black', alpha=font_transparency) for i in range(len(new_sample_name))]
-                if adjust_label:
-                    from adjustText import adjust_text
-                    texts = adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black'))
 
 
             fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)', 
@@ -228,6 +221,22 @@ class BasicPlot:
                 #hide the legend
                 plt.legend([],[], frameon=False)
                 
+            if show_label:
+                new_sample_name = new_sample_name if rename_sample else sample_list
+                texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 
+                            color='black', alpha=font_transparency) for i in range(len(new_sample_name))]
+                if adjust_label:
+                    from adjustText import adjust_text
+
+                    texts = adjust_text(
+                        texts,
+                        avoid_self = False,
+                        force_text =( 0.1, 0.3),
+                        arrowprops=dict(
+                            arrowstyle="-", color="black", alpha=font_transparency
+                        ),
+                    )
+
             plt.tight_layout()
             plt.show()
 

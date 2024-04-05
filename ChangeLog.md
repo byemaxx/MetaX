@@ -510,3 +510,9 @@
 ## Date: 2024-04-05
 ### Changes:
 - New: add an option to set the dot size for the 2D PCA plot and beta diversity plot.
+
+# Version: 1.102.4
+## Date: 2024-04-05
+### Changes:
+- Fix: Fixed the bug of when plot the 2D PCA plot and beta diversity plot, the transparency was not work for adjusted lines.
+- Change: Changed the default parameters for adjust labels in the 2D PCA plot and beta diversity plot.
