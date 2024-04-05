@@ -202,7 +202,8 @@ class BasicPlot:
             dot_size = (width * height)*font_size/10
             # sns.set_theme(style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False})
             fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
-                                hue=group_list, s = dot_size, alpha=0.8, edgecolor='black', linewidth=0.5)
+                                hue=group_list, s = dot_size, 
+                                alpha=0.9, edgecolor='black', linewidth=0.5)
             if show_label:
                 new_sample_name = new_sample_name if rename_sample else sample_list
                 texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size, 

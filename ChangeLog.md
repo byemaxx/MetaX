@@ -500,3 +500,8 @@
 - Fix: Fixed the bug of when plot the samples in basic plot part, the order was not correct.
 - Fix: Fixed the bug of when plot samples of alpha diversity, the rename sample name was not work.
 - New: re-strucutre the code of the generate the distince color and set a random seed to make the color stable.
+
+# Version: 1.102.2
+## Date: 2024-04-05
+### Changes:
+- Change: Changed the alpha value of the color for the PCA plot and beta diversity plot to 0.9 to make the color more clear.
