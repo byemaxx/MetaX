@@ -891,6 +891,7 @@ class Ui_metaX_main(object):
         self.label_116.setObjectName("label_116")
         self.horizontalLayout_33.addWidget(self.label_116)
         self.doubleSpinBox_basic_pca_label_font_transparency = QtWidgets.QDoubleSpinBox(self.tab_12)
+        self.doubleSpinBox_basic_pca_label_font_transparency.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -907,9 +908,9 @@ class Ui_metaX_main(object):
         self.horizontalLayout_33.addWidget(self.label_160)
         self.spinBox_basic_dot_size = QtWidgets.QSpinBox(self.tab_12)
         self.spinBox_basic_dot_size.setMinimum(1)
-        self.spinBox_basic_dot_size.setMaximum(999)
+        self.spinBox_basic_dot_size.setMaximum(1000)
         self.spinBox_basic_dot_size.setSingleStep(10)
-        self.spinBox_basic_dot_size.setProperty("value", 100)
+        self.spinBox_basic_dot_size.setProperty("value", 150)
         self.spinBox_basic_dot_size.setObjectName("spinBox_basic_dot_size")
         self.horizontalLayout_33.addWidget(self.spinBox_basic_dot_size)
         self.gridLayout_34.addLayout(self.horizontalLayout_33, 1, 1, 1, 1)
@@ -4157,6 +4158,7 @@ class Ui_metaX_main(object):
         self.checkBox_group_control_in_condition.clicked['bool'].connect(self.comboBox_group_control_condition_group.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_pca_if_adjust_pca_label.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_sunburst_show_all_lables.setEnabled) # type: ignore
+        self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.doubleSpinBox_basic_pca_label_font_transparency.setEnabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
         metaX_main.setTabOrder(self.toolButton__final_peptide_help, self.lineEdit_final_peptide_path)
         metaX_main.setTabOrder(self.lineEdit_final_peptide_path, self.pushButton_get_final_peptide_path)
@@ -4384,9 +4386,11 @@ class Ui_metaX_main(object):
         self.label_152.setText(_translate("metaX_main", "Rename"))
         self.checkBox_basic_hetatmap_row_cluster.setText(_translate("metaX_main", "Row Cluster"))
         self.checkBox_basic_hetatmap_col_cluster.setText(_translate("metaX_main", "Col Cluster"))
+        self.checkBox_basic_hetatmap_rename_taxa.setToolTip(_translate("metaX_main", "Only show the last level of name"))
         self.checkBox_basic_hetatmap_rename_taxa.setText(_translate("metaX_main", "Taxa"))
         self.checkBox_basic_heatmap_sankey_title.setText(_translate("metaX_main", "Sankey Title"))
         self.checkBox_basic_hetatmap_show_all_labels_x.setText(_translate("metaX_main", "X"))
+        self.checkBox_basic_hetatmap_rename_sample_name.setToolTip(_translate("metaX_main", "Add group name to Sample names"))
         self.checkBox_basic_hetatmap_rename_sample_name.setText(_translate("metaX_main", "Samples"))
         self.checkBox_basic_hetatmap_show_all_labels_y.setText(_translate("metaX_main", "Y"))
         self.checkBox_basic_bar_show_legend.setText(_translate("metaX_main", "Bar Lgd"))

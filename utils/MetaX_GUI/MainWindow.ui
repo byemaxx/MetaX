@@ -1729,6 +1729,9 @@
                     </item>
                     <item>
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_basic_pca_label_font_transparency">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -1765,13 +1768,13 @@
                        <number>1</number>
                       </property>
                       <property name="maximum">
-                       <number>999</number>
+                       <number>1000</number>
                       </property>
                       <property name="singleStep">
                        <number>10</number>
                       </property>
                       <property name="value">
-                       <number>100</number>
+                       <number>150</number>
                       </property>
                      </widget>
                     </item>
@@ -2362,6 +2365,9 @@
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="toolTip">
+                     <string>Only show the last level of name</string>
+                    </property>
                     <property name="text">
                      <string>Taxa</string>
                     </property>
@@ -2392,6 +2398,9 @@
                   </item>
                   <item row="3" column="1">
                    <widget class="QCheckBox" name="checkBox_basic_hetatmap_rename_sample_name">
+                    <property name="toolTip">
+                     <string>Add group name to Sample names</string>
+                    </property>
                     <property name="text">
                      <string>Samples</string>
                     </property>
@@ -8083,12 +8092,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>104</y>
+     <x>136</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>56</x>
-     <y>104</y>
+     <x>223</x>
+     <y>130</y>
     </hint>
    </hints>
   </connection>
@@ -8099,12 +8108,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>104</y>
+     <x>136</x>
+     <y>131</y>
     </hint>
     <hint type="destinationlabel">
-     <x>60</x>
-     <y>104</y>
+     <x>298</x>
+     <y>130</y>
     </hint>
    </hints>
   </connection>
@@ -8211,7 +8220,7 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>837</x>
+     <x>819</x>
      <y>324</y>
     </hint>
     <hint type="destinationlabel">
@@ -8227,12 +8236,28 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>837</x>
+     <x>819</x>
      <y>324</y>
     </hint>
     <hint type="destinationlabel">
      <x>230</x>
      <y>524</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_pca_if_show_lable</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>doubleSpinBox_basic_pca_label_font_transparency</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>743</x>
+     <y>315</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>359</x>
+     <y>314</y>
     </hint>
    </hints>
   </connection>
