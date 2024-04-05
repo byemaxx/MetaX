@@ -6,10 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from .get_distinct_colors import GetDistinctColors
 
 class BasicPlot:
     def __init__(self, tfobj):
         self.tfa =  tfobj
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        self.assign_colors = GetDistinctColors().assign_colors
         # reset the style
         plt.style.use('default')
         sns.set_theme()
@@ -153,7 +156,7 @@ class BasicPlot:
     # input: df_mat
     def plot_pca_sns(self, df, table_name = 'Table', show_label = True, 
                      width=10, height=8, font_size = 10, rename_sample:bool = False,
-                     font_transparency = 0.6, adjust_label:bool = False, theme:str = None, sub_meta:str = 'None', legend_col_num: int | None = None):
+                     font_transparency = 0.6, adjust_label:bool = False, theme:str|None = None, sub_meta:str = 'None', legend_col_num: int | None = None):
         try:
             dft= df.copy()
             
@@ -173,7 +176,8 @@ class BasicPlot:
                 group_list.append(group)
 
             # Determine if distinct colors are needed
-            unique_groups = set(group_list)
+            # use enumerate to keep the order of the group
+            unique_groups = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
             if len(unique_groups) > 10:
                 distinct_colors = self.get_distinct_colors(len(unique_groups))
                 color_palette = dict(zip(unique_groups, distinct_colors))
@@ -232,7 +236,7 @@ class BasicPlot:
         
         
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
-                     font_size = 10, theme:str = None, rename_sample:bool = False, plot_samples:bool = False, legend_col_num: int | None = None):
+                     font_size = 10, theme:str|None = None, rename_sample:bool = False, plot_samples:bool = False, legend_col_num: int | None = None):
         # replace 0 with nan due to optimization of boxplot
         dft = df.replace(0, np.nan)
         if not plot_samples:
@@ -253,35 +257,25 @@ class BasicPlot:
 
             dft = pd.DataFrame(temp_dict)
             unique_groups = dft.columns
-            new_sample_name = unique_groups
         
         else: # plot_samples is True
             # create a new dataframe with new sample names and sorted by group
             sample_list = dft.columns
-            new_sample_name = []
             group_list = []
             for i in sample_list:
                 group = self.tfa.get_group_of_a_sample(i)
-                new_sample_name.append(f'{i} ({group})')
                 group_list.append(group)
             
-                # Order the SAMPLE_LIST and GROUP_LIST according to the group order
-                unique_groups = sorted(list(set(group_list)))
-                ordered_sample_list = []
-                ordered_sample_name = []
-                for group in unique_groups:
-                    samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
-                    sample_names_in_group = [sample_name for sample_name, group_sample in zip(new_sample_name, group_list) if group_sample == group]
-                    ordered_sample_list.extend(samples_in_group)
-                    ordered_sample_name.extend(sample_names_in_group)
+            # remove duplicate groups, and keep the order
+            unique_groups = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
+            ordered_sample_list = []
+            for group in unique_groups:
+                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
+                ordered_sample_list.extend(samples_in_group)
 
             # reorder the columns
             dft = dft[ordered_sample_list]
-            
-            if rename_sample:
-                new_sample_name = ordered_sample_name
-            else:
-                new_sample_name = ordered_sample_list
+
 
         # Determine if distinct colors are needed
         if len(unique_groups) > 10:
@@ -309,7 +303,14 @@ class BasicPlot:
         plt.figure(figsize=(width, height))
         ax = sns.boxplot(data=dft, showfliers = show_fliers , palette=group_palette)
         # set x label
-        ax.set_xticklabels(new_sample_name, rotation=90, horizontalalignment='right', fontsize=font_size)
+        x_labels = ax.get_xticklabels()
+        if rename_sample and plot_samples:
+            for label in x_labels:
+                text = label.get_text()
+                group = self.tfa.get_group_of_a_sample(text)
+                label.set_text(f'{text} ({group})')
+                
+        ax.set_xticklabels(x_labels, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Sample' if plot_samples else 'Group',
                       fontsize=font_size+2)
         
@@ -397,7 +398,7 @@ class BasicPlot:
                 group_dict[group] = []
             group_dict[group].append(sample)
             
-        if plot_sample is not True:
+        if not plot_sample:
             # get subtable for each group    
             for group, samples in group_dict.items():
                 sub_df = df[samples]
@@ -406,9 +407,6 @@ class BasicPlot:
             # create a long format table
             df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
             df.rename(columns={'index': 'Group'}, inplace=True)
-            
-                
-                
         else:
             for sample in samlpe_list:
                 group = self.tfa.get_group_of_a_sample(sample)
@@ -418,8 +416,7 @@ class BasicPlot:
                 # create a long format table, sample as index, group and number as columns
             df = pd.DataFrame(res_dict).T.reset_index()
             df.rename(columns={'index': 'Sample', 0: 'Group', 1: 'Number'}, inplace=True)
-            # sort by group
-            df = df.sort_values(by='Group')
+
             
         # print the min and max value and its row to string
         min_df = df[df["Number"] == df["Number"].min()].to_string(index=False)
@@ -489,28 +486,6 @@ class BasicPlot:
         return ax
 
 
-    def assign_colors(self, groups):
-        colors = self.get_distinct_colors(len(set(groups)))
-        result = []
-        for group in groups:
-            index = sorted(set(groups)).index(group)
-            result.append(colors[index])
-        return result
-    
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
-
-        # generated colours will be as distinct as possible from these colours
-        input_colors = [WHITE]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
-        return colors
-    
     
     
     #! Deprecated function, use plot_taxa_stats_pie chart instead

@@ -3,11 +3,14 @@ from pyecharts.charts import Scatter3D
 from sklearn.decomposition import PCA
 import pandas as pd
 import seaborn as sns
+from .get_distinct_colors import GetDistinctColors
 
 class PcaPlot_js:
     def __init__(self, tfobj=None):
         self.tfobj = tfobj
-
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        
+        
     def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, rename_sample = True,
                               width=10, height=8, font_size = 10, legend_col_num: int | None = None):
         width = f'{width*100}px'
@@ -46,12 +49,12 @@ class PcaPlot_js:
             colors = sns.color_palette('deep', group_num)
             colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
         else:
-            colors = self.get_distinct_colors(group_num)
+            colors = self.get_distinct_colors(group_num, convert=True)
         
 
         scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height))
-
-        for i, group in enumerate(pca_df['group'].unique()):
+        unique_group = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
+        for i, group in enumerate(unique_group):
             color = colors[i]
             group_df = pca_df[pca_df['group'] == group]
             # Create a list of tuples, each tuple is a pair of (x, y, z)
@@ -97,26 +100,6 @@ class PcaPlot_js:
 
         return scatter3d
     
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
-
-        # generated colours will be as distinct as possible from these colours
-        input_colors = [WHITE]
-        existing_colors = [(0, 0, 0), (1, 1, 1)]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
-        converted_colors = []
-        converted_colors.extend(
-            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
-        )
-        return converted_colors
-
-
 
 
 

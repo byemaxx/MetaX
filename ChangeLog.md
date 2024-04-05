@@ -493,3 +493,10 @@
 ### Changes:
 - New: Add a option to set the number of legend cols for the basic plot.
 - Fix: Fixed the bug of when plot the bar of number, the rename sample name was not work.
+
+# Version: 1.102.1
+## Date: 2024-04-04
+### Changes:
+- Fix: Fixed the bug of when plot the samples in basic plot part, the order was not correct.
+- Fix: Fixed the bug of when plot samples of alpha diversity, the rename sample name was not work.
+- New: re-strucutre the code of the generate the distince color and set a random seed to make the color stable.

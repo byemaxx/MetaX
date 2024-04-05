@@ -3548,7 +3548,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             home_path = QDir.homePath()
             metax_path = os.path.join(home_path, 'MetaX/html')
             os.makedirs(metax_path, exist_ok=True)
-            save_path = os.path.join(metax_path, f'{title}.html')
+            save_path = os.path.join(metax_path, f'{title.replace(" ", "_")}.html')
+            
             pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
@@ -3811,7 +3812,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                              width=width, height=height, font_size=font_size, 
                                                              plot_all_samples=plot_all_samples, theme=theme,
                                                              sub_meta = sub_meta, show_fliers = show_fliers,
-                                                             legend_col_num=legend_col_num)
+                                                             legend_col_num=legend_col_num, rename_sample = rename_sample)
                 self.update_table_dict('alpha_diversity', aplha_diversity_df)
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')

@@ -2,11 +2,15 @@
 from distinctipy import distinctipy
 import seaborn as sns
 import matplotlib.pyplot as plt
+from .get_distinct_colors import GetDistinctColors
 
 class HeatmapPlot:
     def __init__(self, tfobj):
         self.tfa =  tfobj
-    # input: df, func_name, top_number, value_type, fig_size
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        self.assign_colors = GetDistinctColors().assign_colors
+        
+        # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
         # reset sns style
         sns.set_theme()
@@ -753,28 +757,6 @@ class HeatmapPlot:
         # finally:
         #     plt.close('all')
 
-    def assign_colors(self, groups):
-        colors = self.get_distinct_colors(len(set(groups)))
-        result = []
-        for group in groups:
-            index = sorted(set(groups)).index(group)
-            result.append(colors[index])
-        return result
-    
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
-
-        # generated colours will be as distinct as possible from these colours
-        input_colors = [WHITE]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
-
-        return colors
 
     def scale_data(self, dft, scale):
         try:

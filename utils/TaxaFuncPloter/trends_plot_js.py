@@ -1,9 +1,11 @@
 from pyecharts.charts import Line
 from pyecharts import options as opts
+from .get_distinct_colors import GetDistinctColors
 
 class TrendsPlot_js:
     def __init__(self, tfobj):
         self.tfobj =  tfobj
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         
     def rename_taxa(self, df):
         first_index = df.index[0]
@@ -53,7 +55,7 @@ class TrendsPlot_js:
 
         col_num = len(df)
         if col_num > 10:
-            colors = self.get_distinct_colors(col_num)
+            colors = self.get_distinct_colors(col_num, convert=True)
         else:
             import seaborn as sns
             colors = sns.color_palette('deep', col_num)
@@ -126,21 +128,4 @@ class TrendsPlot_js:
         
         return c
     
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
 
-        # generated colours will be as distinct as possible from these colours
-        input_colors = [BLACK]
-        existing_colors = [(0, 0, 0), (1, 1, 1)]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.6)
-        converted_colors = []
-        converted_colors.extend(
-            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
-        )
-        return converted_colors

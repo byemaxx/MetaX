@@ -1,10 +1,13 @@
 from pyecharts import options as opts
 from pyecharts.charts import Bar
+from .get_distinct_colors import GetDistinctColors
 
 
 class BarPlot_js:
     def __init__(self, tfobj):
         self.tfa =  tfobj
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+
     # plot intensity line for each sample
     # Example: plot_intensity_line(sw, func_name=func_name, taxon_name=taxon_name, fig_size=(30,20))
 
@@ -69,7 +72,7 @@ class BarPlot_js:
             df = df.div(df.sum(axis=0), axis=1) * 100
         
         if col_num > 10:
-            colors = self.get_distinct_colors(col_num)
+            colors = self.get_distinct_colors(col_num, convert=True)
         else:
             import seaborn as sns
             colors = sns.color_palette('deep', col_num)
@@ -167,22 +170,4 @@ class BarPlot_js:
     
         return c
     
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
-
-        # generated colors will be as distinct as possible from these colors
-        input_colors = [WHITE]
-        # colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.8,colorblind_type="Deuteranomaly")
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.7)
-        converted_colors = []
-        converted_colors.extend(
-            f'rgb({i[0] * 255},{i[1] * 255},{i[2] * 255})' for i in colors
-        )
-        return converted_colors
 

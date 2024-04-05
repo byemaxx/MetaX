@@ -7,10 +7,14 @@ import matplotlib.ticker as ticker
 from skbio.diversity import beta_diversity
 from skbio.stats.ordination import pcoa
 
+
+from .get_distinct_colors import GetDistinctColors
+
 class DiversityPlot(object):
     def __init__(self, tfa):
         self.tfa = tfa
         self.ace_threshold = None
+        self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         # reset style
         plt.style.use('default')
         sns.set_theme()
@@ -23,7 +27,7 @@ class DiversityPlot(object):
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
                              plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
-                             show_fliers = True, legend_col_num: int | None = None
+                             show_fliers = True, legend_col_num: int | None = None, rename_sample:bool = False
                              ):
         '''
         Calculate alpha diversity and plot boxplot\n
@@ -121,7 +125,13 @@ class DiversityPlot(object):
             plt.figure(figsize=(width, height))
             fig = sns.boxplot(x='Group', y='Diversity', data=df, hue='SubGroup' if sub_meta else 'Group', palette=color_palette,
                               showfliers=show_fliers)
-            fig.set_xticklabels(fig.get_xticklabels(), rotation=90, fontsize=font_size)
+            
+            x_labels = fig.get_xticklabels()
+            if plot_all_samples and rename_sample:
+                for label in x_labels:
+                    label.set_text(f'{label.get_text()} ({self.tfa.get_group_of_a_sample(label.get_text())})')
+                
+            fig.set_xticklabels(x_labels, rotation=90, fontsize=font_size)
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
             fig.set_xlabel('Group', fontsize=font_size)
             fig.set_ylabel(f'{metric} Index', fontsize=font_size)
@@ -181,7 +191,7 @@ class DiversityPlot(object):
         group_list_for_hue = [self.tfa.get_group_of_a_sample(sample_id) for sample_id in sample_list]
 
         # Determine if distinct colors are needed
-        unique_groups = set(group_list_for_hue)
+        unique_groups = [x for i, x in enumerate(group_list_for_hue) if i == group_list_for_hue.index(x)]
         if len(unique_groups) > 10:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
             color_palette = dict(zip(unique_groups, distinct_colors))
@@ -238,18 +248,3 @@ class DiversityPlot(object):
             raise e
 
                         
-                        
-    def get_distinct_colors(self, n):  
-        from distinctipy import distinctipy
-        # rgb colour values (floats between 0 and 1)
-        RED = (1, 0, 0)
-        GREEN = (0, 1, 0)
-        BLUE = (0, 0, 1)
-        WHITE = (1, 1, 1)
-        BLACK = (0, 0, 0)
-
-        # generated colours will be as distinct as possible from these colours
-        input_colors = [ WHITE]
-        colors = distinctipy.get_colors(n, exclude_colors= input_colors, pastel_factor=0.5)
-
-        return colors
