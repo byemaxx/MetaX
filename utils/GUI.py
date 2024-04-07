@@ -2804,6 +2804,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 print('filtered enabled')
                 self.logger.write_log('filtered enabled')
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                p_value = round(p_value, 4)
                 df = df[df['P-value'] < p_value]
                 output = f'p_value: {p_value}, df.shape: {df.shape}'
                 print(output)
@@ -3887,6 +3888,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         top_num = self.spinBox_top_heatmap_number.value()
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
+        pvalue = round(pvalue, 4)
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
@@ -4008,6 +4010,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         top_num = self.spinBox_top_heatmap_number.value()
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
+        pvalue = round(pvalue, 4)
         scale = self.comboBox_top_heatmap_scale.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
@@ -4106,6 +4109,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             if df_type == 'Significant Taxa-Func'.lower():
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                p_value = round(p_value, 4)
                 anova_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
                 self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_anova_test, **anova_sig_tf_params)
             
@@ -4356,6 +4360,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 table_names = []
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                    p_value = round(p_value, 4)
                     
                     ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
                     self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_ttest, **ttest_sig_tf_params)

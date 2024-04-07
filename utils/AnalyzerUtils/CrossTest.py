@@ -598,11 +598,11 @@ class CrossTest:
 
         # 选择这些Taxon在df_taxa_func_test_res中的行 and P-value < 0.05
         df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa) & (df_taxa_func_test_res['P-value'] < p_value)]
-        print(f"Taxa not significant but related function significant Under P-value = {p_value}: [{len(df_filtered_taxa_not_significant)}]")
+        print(f"Taxa not significant but related function significant with P-value <= {p_value}: [{len(df_filtered_taxa_not_significant)}]")
         df_filtered_func_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func) & (df_taxa_func_test_res['P-value'] < p_value)]
         # reset_index for df_filtered_func_not_significant
         df_filtered_func_not_significant = df_filtered_func_not_significant.swaplevel(0, 1).sort_index()
-        print(f"Function not significant but related taxa significant Under P-value = {p_value}: [{len(df_filtered_func_not_significant)}]")
+        print(f"Function not significant but related taxa significant with P-value <= {p_value}: [{len(df_filtered_func_not_significant)}]")
         
         print("Returning a tuple of two dataframesthe:\n \
             1. the taxa not significant but related function significant\n \
