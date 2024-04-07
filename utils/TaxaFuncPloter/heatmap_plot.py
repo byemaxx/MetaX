@@ -65,7 +65,7 @@ class HeatmapPlot:
 
         try:
             dft = dft[dft['P-value'] < pvalue]
-            print(f"Number of significant differences between groups in {func_name}-Function: {dft.shape[0]}")
+            print(f"\nRESULT:\nNumber of significant rows: {len(dft)}")
             if dft.empty:
                 raise ValueError(f"No significant differences between groups in {func_name}-Function")
             if 'f-statistic' in dft.columns.tolist():
@@ -78,6 +78,7 @@ class HeatmapPlot:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
                 # df_top = self.rename_taxa(df_top)
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
+            print(f"Top [{top_number}] significant: Taxa ({df_top.shape[1]}), Functions ({df_top.shape[0]})")
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
             sns.set_style("white")
