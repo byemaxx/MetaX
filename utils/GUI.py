@@ -3978,9 +3978,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of functions is less than 3, cannot do row cluster!')
                     return None
                 if 'NonSigTaxa_SigFuncs(taxa-functions)' in table_name:
-                    title = "Taxa Non-Significant Across Groups, Related Functions Significantly Differ"
+                    title = "Taxa Non-Significant; Related Functions Significantly Different Across Groups"
                 elif 'SigTaxa_NonSigFuncs(taxa-functions)' in table_name:
-                    title = "Functions Non-Significant Across Groups, Related Taxa Significantly Differ"
+                    title = "Functions Non-Significant; Related Taxa Significantly Different Across Groups"
                 else:
                     title = ""
                 fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 

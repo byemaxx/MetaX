@@ -105,7 +105,7 @@ class HeatmapPlot:
 
                 fig = sns.clustermap(df_plot, **sns_params)
                 fig.ax_heatmap.set_xlabel("Taxa")
-                fig.ax_heatmap.set_ylabel("Function")
+                fig.ax_heatmap.set_ylabel("Functions")
                 if title == "":
                     title = f"Significant Differences between groups in Taxa-Function (Sorted by {plot_type} Top {top_number})"
                 else:
