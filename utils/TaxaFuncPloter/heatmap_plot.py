@@ -129,7 +129,7 @@ class HeatmapPlot:
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
-                plt.subplots_adjust(left=0.6, bottom=0.35, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+                plt.subplots_adjust(left=0.06, bottom=0.35, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
                 plt.tight_layout()
                 plt.show()
@@ -168,7 +168,7 @@ class HeatmapPlot:
         except ValueError as e:
             print(f"Error: {e}")
             plt.close('all')
-            raise ValueError("No significant differences between groups.")
+            raise ValueError(f"Error: {e}")
     
 
     # For taxa, func and peptides table

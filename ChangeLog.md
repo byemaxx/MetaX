@@ -516,3 +516,9 @@
 ### Changes:
 - Fix: Fixed the bug of when plot the 2D PCA plot and beta diversity plot, the transparency was not work for adjusted lines.
 - Change: Changed the default parameters for adjust labels in the 2D PCA plot and beta diversity plot.
+
+
+# Version: 1.102.5
+## Date: 2024-04-06
+### Changes:
+- Fix: Fixed the bug of when plot the cross heatmap, the tight layout raise error.
