@@ -522,3 +522,8 @@
 ## Date: 2024-04-06
 ### Changes:
 - Fix: Fixed the bug of when plot the cross heatmap, the tight layout raise error.
+
+# Version: 1.102.6
+## Date: 2024-04-09
+### Changes:
+- Fix: Fixed the bug of when get table in basic plot part, the rename sample name was not work.

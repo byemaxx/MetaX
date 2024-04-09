@@ -212,6 +212,10 @@ class TaxaFuncAnalyzer:
             df.index = new_index_list
         return df
     
+    def rename_sample(self, df):
+        df.columns = [f'{i} ({self.get_group_of_a_sample(i)})' for i in df.columns]
+        return df
+    
     
     def set_func(self, func):
         if self.any_df_mode:

@@ -3181,6 +3181,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 else:
                     if rename_taxa:
                         df = self.tfa.rename_taxa(df)
+                    if rename_sample:
+                        df = self.tfa.rename_sample(df)
+                        
                 self.show_table(df=df, title=title)
                 
             elif plot_type == 'sankey':
