@@ -76,6 +76,7 @@ from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 # from MetaX.utils.MetaX_GUI.ShowPltDialog import PltDialog
 from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
 from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
+from MetaX.utils.MetaX_GUI.UserAgreementDialog import UserAgreementDialog
 
 
 # import third-party modules
@@ -820,9 +821,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         settings_path =self.metax_home_path
         if not os.path.exists(settings_path):
             os.makedirs(settings_path)
+            
+        if not os.path.exists(os.path.join(settings_path, "settings.ini")):
+            self.show_user_agreement()
+            
         self.settings = QSettings(os.path.join(settings_path, "settings.ini"), QSettings.IniFormat)
-    
-
+        
+    def show_user_agreement(self):
+        self.dialog = UserAgreementDialog(self.MainWindow)
+        result = self.dialog.exec_()
+        if result == QDialog.Accepted:
+            print("User agreement accepted.")
+        else:
+            print("User agreement rejected.")
+            # Show the Message Box 
+            QMessageBox.warning(self.MainWindow, "Warning", "You must accept the user agreement to use MetaX.")
+            sys.exit(0)
+        
 
     def load_basic_Settings(self):
         """
@@ -1298,8 +1313,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         Text_browser.setOpenExternalLinks(True) # allow links to open in external browser
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MetaX_GUI\\resources\\logo.png")
 
-        about_html =f'''<h1>Meta-X</h1><h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4><img src='{logo_path}' width='200' height='200' align='right' />
-        <p>MetaX is an integrated framework for linking taxon with functions and comprehensive analysis in metaproteomics.</p>
+        about_html =f'''<h1>MetaX</h1>
+        <h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4>
+        <img src='{logo_path}' width='200' height='200' align='right' />
+        <p>MetaX is an integrated framework designed to link taxa with functions, enabling the creation of Operational Taxa-Functions (OTFs) and facilitating comprehensive analysis in metaproteomics.</p>
+        <br>
+
+        <h3>Citation</h3>
+        <p>Please cite the following paper if you use MetaX in your research:</p>
+        <p><b>MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)</b></p>
+        
+        <br>
+        <h3>Aditional Information</h3>
         <p>For more information, please visit:</p>
         <p>GitHub: <a href='https://github.com/byemaxx/MetaX'>The MetaX Project</a></p>
         <p>iMeta: <a href='https://wiki.imetalab.ca/'>iMetaWiki Page</a></p>

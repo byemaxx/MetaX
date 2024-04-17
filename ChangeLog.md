@@ -527,3 +527,8 @@
 ## Date: 2024-04-09
 ### Changes:
 - Fix: Fixed the bug of when get table in basic plot part, the rename sample name was not work.
+
+# Version: 1.102.7
+## Date: 2024-04-16
+### Changes:
+- New: Add a user agreement when open the software at the first time.
