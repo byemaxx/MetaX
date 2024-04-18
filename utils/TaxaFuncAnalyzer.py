@@ -26,12 +26,20 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class TaxaFuncAnalyzer:
-    def __init__(self, df_path, meta_path=None, peptide_col_name='Sequence', protein_col_name='Proteins', any_df_mode=False, custom_col_name='Custom'):
+    def __init__(
+        self,
+        df_path,
+        meta_path=None,
+        peptide_col_name="Sequence",
+        protein_col_name="Proteins",
+        any_df_mode=False,
+        custom_col_name="Custom",
+    ):
         self.original_row_num = 0
         self.original_df = None
         self.preprocessed_df = None
         self.genome_mode = True
-        
+
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
         self.custom_col_name = custom_col_name
@@ -56,25 +64,25 @@ class TaxaFuncAnalyzer:
         self.protein_df = None
         self.any_df_mode = any_df_mode  # if True, the consider the TaxaFunc df as other_df
         self.custom_df = None # other df, any df that user want to add
-        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 
+        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None,
                                'taxa_func': None, 'protein': None, 'custom': None}
-        
-        # load function 
+
+        # load function
         self.BasicStats = BasicStats(self)
         self.CrossTest = CrossTest(self)
         self.GetMatrix = GetMatrix(self)
         self.data_preprocess = DataPreprocessing(self)._data_preprocess
-        
+
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
         self._remove_all_zero_row()
         self.get_func_list_in_df()
         # self.set_func('eggNOG_Description')
-        
+
     def _set_original_df(self, df_path: str) -> None:
         self.original_df = pd.read_csv(df_path, sep='\t')
-        
+
         if self.any_df_mode:
             self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
             self.sample_list = self.original_df.columns.tolist()[1:]
@@ -90,27 +98,27 @@ class TaxaFuncAnalyzer:
         else: # for normal mode
             if 'Taxon_prop' not in self.original_df.columns:
                 raise ValueError("The TaxaFunc data must have Taxon_prop column!")
-            
+
             # check if the 'genome' in LCA_level, if no, set genome_mode to False
             if 'genome' not in self.original_df['LCA_level'].unique():
                 self.genome_mode = False
                 print("The genome mode is set to False, the LCA_level does not contain 'genome'.")
-            
-        
+
+
         ### create sample_list by Intensity_*, if meta is not provided
         col_names = self.original_df.columns.tolist()
-        # replace space with _ 
+        # replace space with _
         col_names = [i.replace(' ', '_') for i in col_names]
         intensity_col_names = [i for i in col_names if i.startswith('Intensity_')]
         if len(intensity_col_names) > 0:
             intensity_col_names = [i.replace('Intensity_', '') for i in intensity_col_names]
             self.sample_list = intensity_col_names
-        ####        
-        
+        ####
+
         # replace space with _ and remove Intensity_
         self.original_df.columns = self.original_df.columns.str.replace(
             ' ', '_').str.replace('Intensity_', '')
-        
+
     def _set_meta(self, meta_path=None) -> None:
         if meta_path is None:
             if self.sample_list is None:
@@ -139,12 +147,12 @@ class TaxaFuncAnalyzer:
 
             self.sample_list = meta['Sample'].tolist()
             self.meta_df = meta
-            
-            
+
+
             check_result = self.check_meta_match_df()
             if check_result[0] == False:
                 raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
-    
+
     def update_meta(self, meta_df: pd.DataFrame) -> None:
         self.meta_df = meta_df
         old_sample_list = self.sample_list
@@ -154,20 +162,20 @@ class TaxaFuncAnalyzer:
         self.original_df = self.original_df.drop(drop_list, axis=1)
         self.sample_list = new_sample_list
         self._remove_all_zero_row()
-    
+
     def set_taxa_func_linked_dict(self):
         ### taxa is the key, func list is the value, value is a list of tuples (func, pep_num)
-        
+
         def _index_to_nested_dict(df):
             result_dict = {}
             for (key1, key2) in df.index:
                 pep_num = df.loc[(key1, key2), 'peptide_num']
                 result_dict.setdefault(key1, []).append((key2, pep_num))
             return result_dict
-        
+
         self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
         self.func_taxa_linked_dict = _index_to_nested_dict(self.func_taxa_df)
-    
+
     def get_func_list_in_df(self) -> list:
         col_names = self.original_df.columns.tolist()
         func_list = []
@@ -180,7 +188,7 @@ class TaxaFuncAnalyzer:
                     func_list.append(i)
         self.func_list = func_list
         return func_list
-    
+
     def check_meta_match_df(self) -> tuple:
         meta_list = self.meta_df['Sample'].tolist()
         try:
@@ -189,7 +197,7 @@ class TaxaFuncAnalyzer:
         except Exception as e:
             return False, str(e)
 
-    
+
     def _remove_all_zero_row(self):
         df = self.original_df.copy()
         print(f'original df shape: {df.shape}')
@@ -211,19 +219,19 @@ class TaxaFuncAnalyzer:
                 ]
             df.index = new_index_list
         return df
-    
+
     def rename_sample(self, df):
         df.columns = [f'{i} ({self.get_group_of_a_sample(i)})' for i in df.columns]
         return df
-    
-    
+
+
     def set_func(self, func):
         if self.any_df_mode:
             print("ANY_DF_MODE is set, the function is not applicable.")
             self.func_name = 'Not_Applicable'
             return
-        # check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs', 
-        #               'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE', 
+        # check_list = ['eggNOG_OGs', 'max_annot_lvl', 'COG_category', 'Description', 'Preferred_name', 'GOs',
+        #               'EC', 'KEGG_ko', 'KEGG_Pathway', 'KEGG_Module', 'KEGG_Reaction', 'KEGG_rclass', 'BRITE',
         #               'KEGG_TC', 'CAZy', 'BiGG_Reaction', 'PFAMs']
         check_list = self.func_list
         if func not in check_list:
@@ -253,7 +261,7 @@ class TaxaFuncAnalyzer:
         #extract the sample and group info from meta_df
         meta_df = self.meta_df[['Sample', meta]]
         return meta_df.groupby(meta)['Sample'].apply(list).to_dict()
-       
+
     # input a group name, return the sample list in this group
     def get_sample_list_in_a_group(self, group: str = None, condition: list = None) -> list:
         if self.group_list is None:
@@ -273,7 +281,7 @@ class TaxaFuncAnalyzer:
             meta_df = self.meta_df[self.meta_df[condition[0]] == condition[1]]
         else:
             meta_df = self.meta_df
-                
+
         sample_list =  meta_df[meta_df[self.meta_name] == group]['Sample'].tolist()
         sample_list = sorted(sample_list)
         return sample_list
@@ -282,11 +290,11 @@ class TaxaFuncAnalyzer:
         if group_list is None:
             print('group_list does not provided, set all the groups in meta_df as group_list.')
             group_list = self.meta_df[self.meta_name].unique().tolist()
-            
+
         sample_list = []
         for group in group_list:
             sample_list += self.get_sample_list_in_a_group(group, condition)
-        
+
         return sample_list
 
     # input a sample name, return the group name of this sample
@@ -315,7 +323,7 @@ class TaxaFuncAnalyzer:
                     return self.meta_df[self.meta_df['Sample'] == sample][meta_name].tolist()[0]
                 else:
                     return self.meta_df[self.meta_df['Sample'] == sample][self.meta_name].tolist()[0]
-    
+
     def replace_if_two_index(self, df):
         if isinstance(df.index, pd.MultiIndex):
             df = df.copy()
@@ -329,22 +337,21 @@ class TaxaFuncAnalyzer:
 
     def add_group_name_for_sample(self, df: pd.DataFrame) -> tuple:
         sample_list = df.columns.tolist()
-            
+
         new_sample_list = []
         new_group_list = []
-        
+
         for i in sample_list:
             group = self.get_group_of_a_sample(i)
             new_sample_name = f'{i} ({group})'
             new_sample_list.append(new_sample_name)
             new_group_list.append(group)
-                  
+
         df.columns = new_sample_list
         return df, new_group_list
 
 
 ######### Data Preprocessing End #########
-
 
     def check_if_condition_valid(self, condition_meta: str, condition_group: str = None, current_group_list: list = None) -> bool:
         meta_df = self.meta_df.copy()
@@ -352,12 +359,12 @@ class TaxaFuncAnalyzer:
         # check if the condition is in meta_df
         if condition_meta not in meta_df.columns.tolist():
             raise ValueError(f'Condition [{condition_meta}] is not in meta_df, must be one of {meta_df.columns}')
-        
+
         if current_group_list is None:
             current_group_list = meta_df[self.meta_name].unique()
-        
+
         condition_group_list = meta_df[condition_meta].unique() # all groups in condition_meta
-        
+
         if condition_group is None:
             for group in condition_group_list:
                 sub_meta = meta_df[meta_df[condition_meta] == group]
@@ -371,14 +378,10 @@ class TaxaFuncAnalyzer:
             # compare the current group list with the sub group list
             if not set(current_group_list).issubset(set(sub_group_list)):
                 raise ValueError(f'Current groups:\n{current_group_list}\nis not a subset of the groups in condition [{condition_group}]:\n{sub_group_list}')
-        
+
         return True
 
 
-    
-
-        
-    
 ######### Cross Test End #########
     def set_any_df_table(self, data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'outlier_detect_method': None,
@@ -400,7 +403,7 @@ class TaxaFuncAnalyzer:
         peptide_dict = {'Sequence': ['Not_Exist']}
         taxa_dict = {'Taxon': ['d__Bacteria'], 'peptide_num': [1]}
         func_dict = {self.func_name: ['Not_Exist'], 'peptide_num': [1]}
-        
+
         taxa_func_dict = {'Taxon': ['d__Bacteria'], self.func_name: ['Not_Exist'], 'peptide_num': [1]}
         func_taxa_dict = {self.func_name: ['Not_Exist'], 'Taxon': ['d__Bacteria'], 'peptide_num': [1]}
         for i in self.sample_list:
@@ -418,11 +421,8 @@ class TaxaFuncAnalyzer:
 
         self.taxa_func_linked_dict= {'d__Bacteria': [(self.func_name, 1)]}
         self.func_taxa_linked_dict= {self.func_name: [('d__Bacteria', 1)]}
-        
+
         print("Custom df is set!\nWaiting for further analysis...")
-        
-
-
 
 
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
@@ -434,8 +434,8 @@ class TaxaFuncAnalyzer:
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': None},
                           peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
-                          sum_protein:bool = False, sum_protein_params: dict = { 'method': 'razor', 
-                                                                                'by_sample': False, 
+                          sum_protein:bool = False, sum_protein_params: dict = { 'method': 'razor',
+                                                                                'by_sample': False,
                                                                                 'rank_method': 'unique_counts'}
                           ):
         """
@@ -452,7 +452,7 @@ class TaxaFuncAnalyzer:
         if self.any_df_mode:
             self.set_any_df_table(data_preprocess_params)
             return
-        
+
         #! fllowing code is for the normal mode
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
@@ -463,9 +463,9 @@ class TaxaFuncAnalyzer:
             df = self.data_preprocess(df=df,df_name = 'peptide', **data_preprocess_params)
             # save the processed df
             self.preprocessed_df = df
-            
+
         print(f"Original data shape: {df.shape}")
-        
+
         # sum the protein intensity
         if sum_protein:
             self.protein_df = SumProteinIntensity(self).sum_protein_intensity( **sum_protein_params)
@@ -473,24 +473,24 @@ class TaxaFuncAnalyzer:
                 self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
 
 
-                
+
 
 
         print("Starting to set Function table...")
         # filter prop = 100% and func are not (NULL, -, NaN)
-        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) & 
+        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) &
                      (df[self.func_name].notnull()) &
-                     (df[self.func_name] != 'not_found') & 
-                     (df[self.func_name] != '-') & 
-                     (df[self.func_name] != 'NaN') & 
+                     (df[self.func_name] != 'not_found') &
+                     (df[self.func_name] != '-') &
+                     (df[self.func_name] != 'NaN') &
                      (df[self.func_name] != 'unknown') #! uncomment this line if needed show the peptide annotated to unknown function
                      ].copy()
-        
+
         df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Function table...-----")
             df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
-            
+
         # add column 'peptide_num' to df_func
         df_func['peptide_num'] = df.groupby(self.func_name).count()[self.peptide_col_name]
         # move the column 'peptide_num' to the first column
@@ -506,7 +506,7 @@ class TaxaFuncAnalyzer:
         def strip_taxa(x, level):
             level_dict = {'m': 8 , 's': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
             return "|".join(x.split('|')[:level_dict[level]])
-        
+
         level_mapping = {
             'm': ['genome'],
             's': ['species', 'genome'],
@@ -526,7 +526,7 @@ class TaxaFuncAnalyzer:
             level_sign = 'm' if self.genome_mode else 's'
             if level != level_sign:
                 df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
-                
+
             # remove the cases like: "d__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__|m__MGYG000001780"
             # When seclected level is 's',the genome iws identified but the species name is empty like "s__"
             # So remove the taxon column with endswith "|s__" or other level
@@ -535,11 +535,11 @@ class TaxaFuncAnalyzer:
             df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
             new_taxa_num = df_t.shape[0]
             print(f"Rmoved: [{orignial_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
-            
+
             dfc = df_t
         else:
             raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
-        
+
         # extract 'taxa', sample intensity
         df_taxa = dfc[['Taxon'] + self.sample_list].copy()
         # add column 'peptide_num' to df_taxa as 1
@@ -548,7 +548,7 @@ class TaxaFuncAnalyzer:
         cols = list(df_taxa.columns)
         cols = [cols[-1]] + cols[:-1]
         df_taxa = df_taxa[cols]
-        
+
         # groupby 'Taxon' and sum the sample intensity
         df_taxa = df_taxa.groupby('Taxon').sum(numeric_only=True)
 
@@ -562,7 +562,7 @@ class TaxaFuncAnalyzer:
             (dfc[self.func_name] != 'unknown') &
             (dfc[self.func_name] != 'NaN')
         )
-        
+
         dfc = dfc[filter_conditions]
         # create clean peptide table
         if processing_after_sum:
@@ -570,25 +570,25 @@ class TaxaFuncAnalyzer:
             dfc_processed = self.data_preprocess(df=dfc, df_name = 'peptide',**data_preprocess_params)
             self.preprocessed_df = dfc_processed
             dfc_with_peptides = dfc_processed[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
-        else:  
+        else:
             dfc_with_peptides = dfc[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
-            
+
         df_peptide = dfc_with_peptides.copy()
         df_peptide.index = df_peptide[self.peptide_col_name]
         df_peptide = df_peptide.drop([self.peptide_col_name, 'Taxon', self.func_name], axis=1)
-        
+
         # extract 'taxa' and 'func' and sample intensity
         extract_list = [self.peptide_col_name,'Taxon', self.func_name] + self.sample_list
         dfc = dfc[extract_list]
-        
 
-        
-        
-                
+
+
+
+
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
             df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
-            
+
 
         # filter the df_taxa by peptide_num_threshold
         df_taxa = df_taxa[df_taxa['peptide_num'] >= peptide_num_threshold['taxa']]
@@ -601,7 +601,7 @@ class TaxaFuncAnalyzer:
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for Taxa-Function table...-----")
             df_taxa_func = self.data_preprocess(df=df_taxa_func,df_name = 'taxa_func', **data_preprocess_params)
-        
+
         # add column 'peptide_num' to df_taxa_func
         df_taxa_func['peptide_num'] = dfc.groupby(['Taxon', self.func_name]).count()[self.peptide_col_name]
         # filter the df by peptide_num_threshold
@@ -613,7 +613,7 @@ class TaxaFuncAnalyzer:
 
         # exchange the multi-index, sort the index
         df_func_taxa = df_taxa_func.swaplevel().sort_index()
-        
+
 
         print(f"Taxa-Function number with peptide_num >= [{peptide_num_threshold['taxa_func']}]: {df_taxa_func.shape[0]}")
 
@@ -624,11 +624,11 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
         self.peptide_df = df_peptide
-        
+
         # set the taxa_func_linked_dict and func_taxa_linked_dict
         self.set_taxa_func_linked_dict()
         print("\n\nMulti-tables Created!\nWaiting for further analysis...")
-        
+
     # New function to check which attributes are set
     def check_attributes(self):
         status = {"Set": [], "Not set": []}
@@ -643,7 +643,7 @@ class TaxaFuncAnalyzer:
             for attr in value:
                 print(f"  {attr}")
             print()
-        
+
     def get_taxa_func_linked_peptide_num_df(self):
         """
         Get the dataframe of taxa_func_linked_peptide_num
@@ -652,7 +652,7 @@ class TaxaFuncAnalyzer:
         dft = self.clean_df[[self.peptide_col_name, "Taxon", self.func_name]]
         taxa_list = dft["Taxon"].unique().tolist()
         temp_dict = {'Taxon': [], 'Function': [], 'PepNum': []}
-        
+
         for tax in taxa_list:
             df_taxa = dft[dft["Taxon"] == tax]
             func_list = df_taxa[self.func_name].unique().tolist()
@@ -665,8 +665,8 @@ class TaxaFuncAnalyzer:
         df = pd.DataFrame(temp_dict)
         df = df.sort_values(by=['PepNum', 'Taxon'], ascending=False, ignore_index=True)
         return df
-    
-    def get_df(self, table_name):
+
+    def get_df(self, table_name:str = 'taxa'):
         """
         Get the dataframe without peptide_num column
 
@@ -699,8 +699,8 @@ class TaxaFuncAnalyzer:
 
 
 if __name__ == '__main__':
-    df_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/TaxaFunc_genome_mode.tsv'
-    meta_path = 'C:/Users/Qing/Desktop/MetaX_Suite/MetaX/MetaX/data/example_data/Example_Meta.tsv'
+    df_path = '../data/example_data/Example_OTF.tsv'
+    meta_path = '../data/example_data/Example_Meta.tsv'
     sw = TaxaFuncAnalyzer(df_path, meta_path)
     sw.set_func('KEGG_Pathway_name')
     sw.set_multi_tables(level='m', data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
@@ -710,5 +710,5 @@ if __name__ == '__main__':
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': None},
                     peptide_num_threshold = {'taxa': 3, 'func': 1, 'taxa_func': 1},)
-    
+
     sw.check_attributes()
