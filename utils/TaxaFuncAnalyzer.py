@@ -291,16 +291,30 @@ class TaxaFuncAnalyzer:
 
     # input a sample name, return the group name of this sample
     def get_group_of_a_sample(self, sample: str, meta_name:str='') -> str:
-        if self.group_list is None:
-            print('group is not set, please set group first.')
-            return None
-        if sample not in self.sample_list:
-            raise ValueError(f'sample must be in {set(self.sample_list)}, your input is [{sample}]')
-        else:
-            if meta_name != '':
-                return self.meta_df[self.meta_df['Sample'] == sample][meta_name].tolist()[0]
+            """
+            Returns the group of a given sample.
+
+            Args:
+                `sample (str)`: The name of the sample.
+                `meta_name (str, optional)`: The name of the metadata column to retrieve. Defaults to ''.
+
+            Returns:
+                str: The group of the sample.
+
+            Raises:
+                ValueError: If the sample is not in the list of samples.
+
+            """
+            if self.group_list is None:
+                print('group is not set, please set group first.')
+                return None
+            if sample not in self.sample_list:
+                raise ValueError(f'sample must be in {set(self.sample_list)}, your input is [{sample}]')
             else:
-                return self.meta_df[self.meta_df['Sample'] == sample][self.meta_name].tolist()[0]
+                if meta_name != '':
+                    return self.meta_df[self.meta_df['Sample'] == sample][meta_name].tolist()[0]
+                else:
+                    return self.meta_df[self.meta_df['Sample'] == sample][self.meta_name].tolist()[0]
     
     def replace_if_two_index(self, df):
         if isinstance(df.index, pd.MultiIndex):

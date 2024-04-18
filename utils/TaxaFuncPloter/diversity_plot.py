@@ -149,7 +149,7 @@ class DiversityPlot(object):
                         fig.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
                     
 
-            plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+            plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f')) # only keep 2 decimal places for y-axis
             plt.tight_layout()
             plt.show()
             return fig, df

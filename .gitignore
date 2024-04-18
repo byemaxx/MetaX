@@ -8,3 +8,8 @@ data/MetaX-human-gut.db
 .gitignore
 .gitattributes
 todo.md
+.idea/MetaX.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml

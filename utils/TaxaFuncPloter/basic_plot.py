@@ -247,7 +247,8 @@ class BasicPlot:
         
         
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8, 
-                     font_size = 10, theme:str|None = None, rename_sample:bool = False, plot_samples:bool = False, legend_col_num: int | None = None):
+                     font_size = 10, theme:str|None = None, rename_sample:bool = False, 
+                     plot_samples:bool = False, legend_col_num: int | None = None):
         # replace 0 with nan due to optimization of boxplot
         dft = df.replace(0, np.nan)
         if not plot_samples:
@@ -394,32 +395,15 @@ class BasicPlot:
         
     def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,  
                         theme:str = 'Auto', plot_sample = False, show_label = True, 
-                        rename_sample:bool = False, legend_col_num: int | None = None):
-        df = df.copy()
+                        rename_sample:bool = False, legend_col_num: int | None = None,
+                        sub_meta:str|None = 'None'):
         
-        #stats number of taxa for each group
-        # get subtable for each group
-        samlpe_list = df.columns.tolist()
-        res_dict = {}
-
-        group_dict = {}
-        for sample in samlpe_list:
-            group = self.tfa.get_group_of_a_sample(sample)
-            if group not in group_dict:
-                group_dict[group] = []
-            group_dict[group].append(sample)
-            
-        if not plot_sample:
-            # get subtable for each group    
-            for group, samples in group_dict.items():
-                sub_df = df[samples]
-                sub_df = sub_df[sub_df.sum(axis=1) > 0]
-                res_dict[group] = sub_df.shape[0]
-            # create a long format table
-            df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
-            df.rename(columns={'index': 'Group'}, inplace=True)
-        else:
-            for sample in samlpe_list:
+        def create_sample_df(df, sample_list, sub_meta = None):
+            '''
+            Create a long format table for samples, group, sub_group and number
+            '''
+            res_dict = {}
+            for sample in sample_list:
                 group = self.tfa.get_group_of_a_sample(sample)
                 # num = the row num df[sample] > 0
                 num = df[sample].astype(bool).sum(axis=0)
@@ -427,15 +411,59 @@ class BasicPlot:
                 # create a long format table, sample as index, group and number as columns
             df = pd.DataFrame(res_dict).T.reset_index()
             df.rename(columns={'index': 'Sample', 0: 'Group', 1: 'Number'}, inplace=True)
+            
+            if sub_meta is not None and sub_meta != 'None':
+                df['SubGroup'] = df['Sample'].apply(lambda x: self.tfa.get_group_of_a_sample(x, sub_meta))
+            
+            return df
+            
+        
+        df = df.copy()
+        
+        #stats number of taxa for each group
+        # get subtable for each group
+        sample_list = df.columns.tolist()            
+        
 
+        if not plot_sample:
+            if sub_meta is not None and sub_meta != 'None':
+                df = create_sample_df(df, sample_list, sub_meta)
+                
+            else:
+                group_dict = {}
+                for sample in sample_list:
+                    group = self.tfa.get_group_of_a_sample(sample)
+                    if group not in group_dict:
+                        group_dict[group] = []
+                    group_dict[group].append(sample)
+                    
+                    
+                res_dict = {}
+                # get subtable for each group    
+                for group, samples in group_dict.items():
+                    sub_df = df[samples]
+                    sub_df = sub_df[sub_df.sum(axis=1) > 0]
+                    res_dict[group] = sub_df.shape[0]
+                # create a long format table
+                df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
+                df.rename(columns={'index': 'Group'}, inplace=True)
+            
+                
+        else: # plot all samples
+            df = create_sample_df(df, sample_list, sub_meta)
             
         # print the min and max value and its row to string
         min_df = df[df["Number"] == df["Number"].min()].to_string(index=False)
         max_df = df[df["Number"] == df["Number"].max()].to_string(index=False)
         print(f'The min number of {table_name}:\n{min_df}')
         print(f'The max number of {table_name}:\n{max_df}')
-        
-        unique_groups = df['Group'].unique()
+
+        unique_groups = (
+            df["Group"].unique()
+            if sub_meta in ["None", None] or plot_sample
+            else df["SubGroup"].unique()
+        )
+
         # Determine if distinct colors are needed
         if len(unique_groups) > 10:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
@@ -454,13 +482,18 @@ class BasicPlot:
             
         # set size
         plt.figure(figsize=(width, height))
-        bar_params = {'data': df, 'x': 'Sample' if plot_sample else 'Group', 'y': 'Number', 'hue': 'Group', 'palette': color_palette}
-        
+        bar_params = {
+            "data": df,
+            "x": "Sample" if plot_sample else "Group",
+            "y": "Number",
+            "hue": "Group" if sub_meta in ['None', None] or plot_sample else "SubGroup",
+            "palette": color_palette,
+            "err_kws": {"alpha": 0.5},
+        }
+
         ax = sns.barplot(**bar_params)
-        if show_label:
-            for i in ax.containers:
-                ax.bar_label(i, fontsize=font_size, rotation=90 if plot_sample else 0, padding=3)
-                
+        
+
         # set x label
         x_labels = ax.get_xticklabels()
         if rename_sample and plot_sample:
@@ -470,7 +503,8 @@ class BasicPlot:
                 label.set_text(f'{text} ({group})')
         
         ax.set_xticklabels( x_labels, rotation=90, horizontalalignment='right', fontsize=font_size)
-        ax.set_xlabel('Group', fontsize=font_size+2)
+        ax.set_xlabel("Sample" if plot_sample else "Group",
+                      fontsize=font_size+2)
         ax.set_ylabel('Number', fontsize=font_size+2)
         # set y limit as 0.9 * min to 1.1 * max
         ax.set_ylim(df['Number'].min() * 0.9 , df['Number'].max() * 1.1)
@@ -478,8 +512,17 @@ class BasicPlot:
         title = f'The number of {table_name} for each sample' if plot_sample else f'The number of {table_name} for each group'
         ax.set_title(title, fontsize=font_size+2, fontweight='bold')
         
-        if plot_sample:
-            if legend_col_num != 0:
+        # set legend
+        if plot_sample or (not plot_sample and sub_meta not in ["None", None]):
+            show_legend = True
+            if not plot_sample:
+                if sub_meta == self.tfa.meta_name:
+                    show_legend = False
+                    
+            elif legend_col_num == 0:
+                show_legend = False    
+                    
+            if show_legend:
                 # set legend for group, out of the box
                 handles, labels = ax.get_legend_handles_labels()
                 ax.legend(handles, unique_groups, fontsize=font_size + 2, ncol= (len(unique_groups)//30 + 1) if legend_col_num is None else legend_col_num,
@@ -487,6 +530,23 @@ class BasicPlot:
             else:
                 #hide the legend
                 ax.legend([],[], frameon=False)
+                
+                
+        if sub_meta not in ['None', None] and not plot_sample:
+            # add a line to separate the groups
+            for i, group in enumerate(df['Group'].unique()):
+                if i != 0:
+                    ax.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
+                
+        if show_label:
+            for i in ax.containers:
+                ax.bar_label(
+                    i,
+                    fontsize=font_size,
+                    rotation=90 if plot_sample or (sub_meta not in ["None", None] and not plot_sample) else 0,
+                    padding=3,
+                )
+                
         # set grid
         ax.grid(True, axis='y')
         # move the botton up

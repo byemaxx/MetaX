@@ -3899,7 +3899,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 BasicPlot(self.tfa).plot_number_bar(df = df, table_name = table_name, font_size=font_size,
                                                     width=width, height=height, 
                                                     theme=theme, plot_sample = plot_sample, 
-                                                    show_label = show_label, rename_sample = rename_sample, legend_col_num=legend_col_num)
+                                                    show_label = show_label, rename_sample = rename_sample, 
+                                                    legend_col_num=legend_col_num, sub_meta = sub_meta)
             
         except Exception as e:
             error_message = traceback.format_exc()

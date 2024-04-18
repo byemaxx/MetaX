@@ -5,11 +5,14 @@ sys.path.append(myDir)
 
 from pathlib import Path
 path = Path(myDir)
-a=str(path.parent.absolute())
 
-sys.path.append(a)
+metax_path=str(path.parent.absolute())
+print(metax_path)
+
+sys.path.append(metax_path)
 
 from MetaX.utils.GUI import runGUI
 
-runGUI()
+if __name__ == "__main__":
+    runGUI()
 
