@@ -397,11 +397,12 @@ class BasicPlot:
                         rename_sample:bool = False, legend_col_num: int | None = None,
                         sub_meta:str|None = 'None'):
 
-        def create_sample_df(df, sample_list, sub_meta = None):
+        def create_df_plot_samples(df):
             '''
             Create a long format table for samples, group, sub_group and number
             '''
             res_dict = {}
+            sample_list = df.columns.tolist()
             for sample in sample_list:
                 group = self.tfa.get_group_of_a_sample(sample)
                 # num = the row num df[sample] > 0
@@ -411,32 +412,37 @@ class BasicPlot:
             df = pd.DataFrame(res_dict).T.reset_index()
             df.rename(columns={'index': 'Sample', 0: 'Group', 1: 'Number'}, inplace=True)
 
-            if sub_meta is not None and sub_meta != 'None':
-                df['SubGroup'] = df['Sample'].apply(lambda x: self.tfa.get_group_of_a_sample(x, sub_meta))
-
             return df
 
-
-        df = df.copy()
-
-        #stats number of taxa for each group
-        # get subtable for each group
-        sample_list = df.columns.tolist()
-
-
-        if not plot_sample:
-            if sub_meta is not None and sub_meta != 'None':
-                df = create_sample_df(df, sample_list, sub_meta)
-
+        def create_df_plot_group(df, sub_meta):
+            sample_list = df.columns.tolist()
+            group_dict = {}
+            
+            for sample in sample_list:
+                group = self.tfa.get_group_of_a_sample(sample)            
+                if group not in group_dict:
+                    group_dict[group] = []
+                group_dict[group].append(sample)
+            
+            if sub_meta not in ['None', None]:
+                res_dict = {}
+                for group in group_dict: # main group
+                    sub_dict = {} # a dict to store sub group and its samples
+                    for sample in group_dict[group]:
+                        sub_group = self.tfa.get_group_of_a_sample(sample, sub_meta)
+                        if sub_group not in sub_dict:
+                            sub_dict[sub_group] = []
+                        sub_dict[sub_group].append(sample)
+                    
+                    for sub_group in sub_dict:
+                        sub_df = df[sub_dict[sub_group]]
+                        sub_df = sub_df[sub_df.sum(axis=1) > 0]
+                        res_dict[(group, sub_group)] = sub_df.shape[0]
+                # create a long format table
+                df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
+                df.rename(columns={'level_0': 'Group', 'level_1': 'SubGroup'}, inplace=True)
+                    
             else:
-                group_dict = {}
-                for sample in sample_list:
-                    group = self.tfa.get_group_of_a_sample(sample)
-                    if group not in group_dict:
-                        group_dict[group] = []
-                    group_dict[group].append(sample)
-
-
                 res_dict = {}
                 # get subtable for each group
                 for group, samples in group_dict.items():
@@ -446,10 +452,18 @@ class BasicPlot:
                 # create a long format table
                 df = pd.DataFrame(res_dict, index=['Number']).T.reset_index()
                 df.rename(columns={'index': 'Group'}, inplace=True)
+            
+            return df
 
+        df = df.copy()
+
+
+        #stats number of taxa for each group
+        if not plot_sample:
+            df = create_df_plot_group(df, sub_meta)
 
         else: # plot all samples
-            df = create_sample_df(df, sample_list, sub_meta)
+            df = create_df_plot_samples(df)
 
         # print the min and max value and its row to string
         min_df = df[df["Number"] == df["Number"].min()].to_string(index=False)

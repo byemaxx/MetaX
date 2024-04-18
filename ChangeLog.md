@@ -532,3 +532,13 @@
 ## Date: 2024-04-16
 ### Changes:
 - New: Add a user agreement when open the software at the first time.
+
+# Version: 1.102.8
+## Date: 2024-04-18
+### Changes:
+- Fix: Fixed the bug of when plot the bar plot of number, the sub meta was not work.
+
+# Version: 1.102.9
+## Date: 2024-04-18
+### Changes:
+- Fix: Fixed the bug of when plot the bar plot of number, the sub meta was not correct.

@@ -298,7 +298,7 @@ class TaxaFuncAnalyzer:
         return sample_list
 
     # input a sample name, return the group name of this sample
-    def get_group_of_a_sample(self, sample: str, meta_name:str='') -> str:
+    def get_group_of_a_sample(self, sample: str, meta_name:str|None='') -> str:
             """
             Returns the group of a given sample.
 
