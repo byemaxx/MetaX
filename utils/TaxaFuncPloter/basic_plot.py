@@ -532,9 +532,8 @@ class BasicPlot:
         # set legend
         if legend_col_num != 0:
             # set legend for group, out of the box
-            handles, labels = ax.get_legend_handles_labels()
-            ax.legend(handles, unique_groups, fontsize=font_size + 2, ncol= (len(unique_groups)//30 + 1) if legend_col_num is None else legend_col_num,
-                        loc='upper left',borderaxespad=0., bbox_to_anchor=(1.02, 1))
+            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., fontsize=font_size+2,
+                        ncol= (len(unique_groups)//30 + 1) if legend_col_num is None else legend_col_num)
         else:
             #hide the legend
             ax.legend([],[], frameon=False)
