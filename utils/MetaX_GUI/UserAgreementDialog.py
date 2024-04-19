@@ -31,7 +31,7 @@ class UserAgreementDialog(QDialog):
                 <h3>Restrictions</h3>
                 <p>You agree not to, and you will not permit others to:</p>
                 <ul>
-                    <li>Use the software for any commercial purposes.</li>
+                    <li>Use the software for any commercial purposes without obtaining a separate commercial license from Northomics Lab.</li>
                     <li>Sell, lease, loan, or rent the software or use the software for commercial time-sharing or service bureau use.</li>
                     <li>Modify, make derivative works of, disassemble, reverse compile, or reverse engineer any part of the software, except to the extent the foregoing restrictions are expressly prohibited by applicable law.</li>
                     <li>Remove any proprietary notices or labels on the software.</li>
