@@ -558,7 +558,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     - The last nodes level is the functions linked to each Taxon (When plot Taxa-Func)
 
-    <img src="C:\Users\Qing\AppData\Roaming\Typora\typora-user-images\image-20230728140335297.png" alt="image-20230728140335297" style="zoom:50%;" />
+    <img src="MetaX_Cookbook.assets/image-20230728140335297.png" alt="image-20230728140335297" style="zoom:50%;" />
 
 ### Co-Expression Networks
 
