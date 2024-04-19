@@ -288,8 +288,8 @@ class BasicPlot:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
             color_palette = dict(zip(unique_groups, distinct_colors))
         else:
-            color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
-
+            # color_palette = dict(zip(unique_groups, sns.color_palette("deep", len(unique_groups))))
+            color_palette = None
 
         # set style
         if theme is not None and theme != 'Auto':
@@ -300,8 +300,15 @@ class BasicPlot:
 
         # set size
         plt.figure(figsize=(width, height))
-        ax = sns.boxplot(data=df, x='Sample' if plot_samples else 'Group', y='Intensity', hue='Group' if sub_meta in ['None', None] or plot_samples else 'SubGroup',
-                        palette=color_palette, showfliers=show_fliers)
+        ax = sns.boxplot(
+            data=df,
+            x="Sample" if plot_samples else "Group",
+            y="Intensity",
+            hue="Group" if sub_meta in ["None", None] or plot_samples else "SubGroup",
+            palette=color_palette,
+            showfliers=show_fliers,
+            legend=True,
+        )
         # set x label
         x_labels = ax.get_xticklabels()
         if rename_sample and plot_samples:
@@ -320,9 +327,9 @@ class BasicPlot:
         
         if legend_col_num != 0:
             # set legend for group, out of the box
-            handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
-            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
-                    loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1 if legend_col_num is None else legend_col_num)
+            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., 
+                               fontsize=font_size+2, ncol= (unique_groups//30 + 1 ) if legend_col_num is None else legend_col_num)
+            
         else:
             #hide the legend
             ax.legend([],[], frameon=False)
@@ -478,8 +485,8 @@ class BasicPlot:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
             color_palette = dict(zip(unique_groups, distinct_colors))
         else:
-            color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
-
+            # color_palette = dict(zip(unique_groups, sns.color_palette("deep", len(unique_groups))))
+            color_palette = None
 
 
         # set style

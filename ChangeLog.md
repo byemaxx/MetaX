@@ -543,3 +543,8 @@
 ### Changes:
 - Fix: Fixed the bug of when plot the bar plot of number, the sub meta was not correct.
 - Fix: Fixed the bug of when plot the box plot, the sub meta didn't work.
+
+# Version: 1.102.10
+## Date: 2024-04-18
+### Changes:
+- Change: Changed the default color in basic plot part, make the color follow the theme.
