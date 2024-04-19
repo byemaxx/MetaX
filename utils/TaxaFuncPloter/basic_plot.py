@@ -247,46 +247,41 @@ class BasicPlot:
 
     def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8,
                      font_size = 10, theme:str|None = None, rename_sample:bool = False,
-                     plot_samples:bool = False, legend_col_num: int | None = None):
-        # replace 0 with nan due to optimization of boxplot
-        dft = df.replace(0, np.nan)
-        if not plot_samples:
-            # create a new dataframe with all samples in the same group
-            sample_list = dft.columns
-            temp_dict = {}
-            for col in sample_list:
-                group = self.tfa.get_group_of_a_sample(col)
-                if group not in temp_dict:
-                    temp_dict[group] = []
-                # combine all samples in the same group
-                temp_dict[group].extend(dft[col].tolist())
-
-            # fill nan to the same length
-            max_length = max(len(lst) for lst in temp_dict.values())
-            for group in temp_dict:
-                temp_dict[group].extend([np.nan] * (max_length - len(temp_dict[group])))
-
-            dft = pd.DataFrame(temp_dict)
-            unique_groups = dft.columns
-
-        else: # plot_samples is True
-            # create a new dataframe with new sample names and sorted by group
-            sample_list = dft.columns
-            group_list = []
-            for i in sample_list:
-                group = self.tfa.get_group_of_a_sample(i)
-                group_list.append(group)
-
-            # remove duplicate groups, and keep the order
-            unique_groups = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
-            ordered_sample_list = []
-            for group in unique_groups:
-                samples_in_group = [sample for sample, group_sample in zip(sample_list, group_list) if group_sample == group]
-                ordered_sample_list.extend(samples_in_group)
-
-            # reorder the columns
-            dft = dft[ordered_sample_list]
-
+                     plot_samples:bool = False, legend_col_num: int | None = None, sub_meta:str|None = 'None'):
+        
+        def create_df(self, df, sub_meta:str|None = 'None', plot_samples:bool = False):
+            df = df.copy()
+            # replace 0 with nan due to optimization of boxplot
+            df = df.replace(0, np.nan)
+            
+            sample_list = df.columns
+            
+            group_list = [self.tfa.get_group_of_a_sample(sample) for sample in sample_list]
+            # get unique groups, and keep the order
+            group_order = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
+            
+            group_map = {sample: self.tfa.get_group_of_a_sample(sample) for sample in sample_list}
+            
+            df = df.melt(var_name='Sample', value_name='Intensity')
+            df['Group'] = df['Sample'].map(group_map)
+            
+            if plot_samples:
+                # resort the by sample_list
+                df = df.sort_values(by='Sample', key=lambda x: x.map({v: i for i, v in enumerate(sample_list)}))
+            else:
+                if sub_meta not in ['None', None]:
+                    sub_group_map = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in sample_list}
+                    df['SubGroup'] = df['Sample'].map(sub_group_map)
+                else:
+                    df['SubGroup'] = df['Group'] # copy the group to sub group, avoid error
+                # resort the by group
+                df = df.sort_values(by='Group', key=lambda x: x.map({v: i for i, v in enumerate(group_order)}))
+            
+            return df
+        
+        
+        df = create_df(self, df, sub_meta, plot_samples)
+        unique_groups = df['Group'].unique() if plot_samples else df['SubGroup'].unique()
 
         # Determine if distinct colors are needed
         if len(unique_groups) > 10:
@@ -295,24 +290,18 @@ class BasicPlot:
         else:
             color_palette = dict(zip(unique_groups, sns.color_palette("tab10", len(unique_groups))))
 
-        if plot_samples:
-            group_palette = {}
-            for sample in dft.columns:
-                group_name = self.tfa.get_group_of_a_sample(sample)
-                group_palette[sample] = color_palette[group_name]
-        else:
-            group_palette = color_palette
 
         # set style
-        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         if theme is not None and theme != 'Auto':
             plt.style.use(theme)
         else:
+            custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
 
         # set size
         plt.figure(figsize=(width, height))
-        ax = sns.boxplot(data=dft, showfliers = show_fliers , palette=group_palette)
+        ax = sns.boxplot(data=df, x='Sample' if plot_samples else 'Group', y='Intensity', hue='Group' if sub_meta in ['None', None] or plot_samples else 'SubGroup',
+                        palette=color_palette, showfliers=show_fliers)
         # set x label
         x_labels = ax.get_xticklabels()
         if rename_sample and plot_samples:
@@ -328,15 +317,22 @@ class BasicPlot:
         ax.set_ylabel('Intensity', fontsize=font_size+2)
         ax.set_title(f'Boxplot of Intensity of {table_name}',
                      fontsize=font_size+2, fontweight='bold')
-        if plot_samples:
-            if legend_col_num != 0:
-                # set legend for group, out of the box
-                handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
-                ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
-                        loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1 if legend_col_num is None else legend_col_num)
-            else:
-                #hide the legend
-                ax.legend([],[], frameon=False)
+        
+        if legend_col_num != 0:
+            # set legend for group, out of the box
+            handles = [plt.Rectangle((0,0),1,1, color=color_palette[group], edgecolor='black') for group in unique_groups]
+            ax.legend(handles, unique_groups, title='Group', title_fontsize=font_size, fontsize=font_size +2,borderaxespad=0.,
+                    loc='upper left', bbox_to_anchor=(1.02, 1), ncol= len(unique_groups)//30 + 1 if legend_col_num is None else legend_col_num)
+        else:
+            #hide the legend
+            ax.legend([],[], frameon=False)
+        
+        # set line if sub_meta is not None
+        if sub_meta not in ['None', None] and not plot_samples:
+            for i, group in enumerate(df['Group'].unique()):
+                if i != 0:
+                    ax.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
+        
         # set grid line for y axis is visible
         ax.grid(True, axis='y')
         # move the botton up

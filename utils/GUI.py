@@ -3818,7 +3818,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
                 BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
                                                  width=width, height=height, font_size=font_size, theme=theme,
-                                                 rename_sample = rename_sample, plot_samples = plot_samples, legend_col_num=legend_col_num)
+                                                 rename_sample = rename_sample, plot_samples = plot_samples, 
+                                                 legend_col_num=legend_col_num, sub_meta = sub_meta)
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()

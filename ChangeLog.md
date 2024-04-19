@@ -542,3 +542,4 @@
 ## Date: 2024-04-18
 ### Changes:
 - Fix: Fixed the bug of when plot the bar plot of number, the sub meta was not correct.
+- Fix: Fixed the bug of when plot the box plot, the sub meta didn't work.

@@ -264,38 +264,66 @@ class TaxaFuncAnalyzer:
 
     # input a group name, return the sample list in this group
     def get_sample_list_in_a_group(self, group: str = None, condition: list = None) -> list:
-        if self.group_list is None:
-            print('group does not exist, please set group first.')
-            return None
-        if group not in self.group_list:
-            raise ValueError(f'group must be in {set(self.group_list)}')
-        if condition is not None:
-            if not isinstance(condition, list) or len(condition) != 2:
-                raise ValueError('condition must be a list with 2 elements, first is the meta column name, second is the group. e.g. ["Person", "PBS"]')
-            if condition[0] not in self.meta_df.columns:
-                raise ValueError(f'{condition[0]} must be in {set(self.meta_df.columns)}')
-            # check if the condition is valid
-            if condition[1] not in self.meta_df[condition[0]].unique().tolist():
-                raise ValueError(f'{condition[1]} must be in {self.meta_df[condition[0]].unique().tolist()}')
-            # get the sample list
-            meta_df = self.meta_df[self.meta_df[condition[0]] == condition[1]]
-        else:
-            meta_df = self.meta_df
+            """
+            Get a list of samples in a specific group.
 
-        sample_list =  meta_df[meta_df[self.meta_name] == group]['Sample'].tolist()
-        sample_list = sorted(sample_list)
-        return sample_list
+            Args:
+                `group (str)`: The name of the group. Defaults to None.
+                `condition (list)`: A list with 2 elements, where the first element is the meta column name and the second element is the group. 
+                                  For example, ["Individual", "PBS"]. Defaults to None.
+
+            Returns:
+                list: A sorted list of sample names in the specified group.
+
+            Raises:
+                ValueError: If the group is not in the group list.
+                ValueError: If the condition is not a list with 2 elements.
+                ValueError: If the meta column name in the condition is not in the meta dataframe columns.
+                ValueError: If the group in the condition is not in the unique values of the specified meta column.
+
+            """
+            if self.group_list is None:
+                print('group does not exist, please set group first.')
+                return None
+            if group not in self.group_list:
+                raise ValueError(f'group must be in {set(self.group_list)}')
+            if condition is not None:
+                if not isinstance(condition, list) or len(condition) != 2:
+                    raise ValueError('condition must be a list with 2 elements, first is the meta column name, second is the group. e.g. ["Person", "PBS"]')
+                if condition[0] not in self.meta_df.columns:
+                    raise ValueError(f'{condition[0]} must be in {set(self.meta_df.columns)}')
+                # check if the condition is valid
+                if condition[1] not in self.meta_df[condition[0]].unique().tolist():
+                    raise ValueError(f'{condition[1]} must be in {self.meta_df[condition[0]].unique().tolist()}')
+                # get the sample list
+                meta_df = self.meta_df[self.meta_df[condition[0]] == condition[1]]
+            else:
+                meta_df = self.meta_df
+
+            sample_list =  meta_df[meta_df[self.meta_name] == group]['Sample'].tolist()
+            sample_list = sorted(sample_list)
+            return sample_list
 
     def get_sample_list_for_group_list(self, group_list: list = None, condition: list = None) -> list:
-        if group_list is None:
-            print('group_list does not provided, set all the groups in meta_df as group_list.')
-            group_list = self.meta_df[self.meta_name].unique().tolist()
+            """
+            Returns a list of sample names for the given group list and condition.
 
-        sample_list = []
-        for group in group_list:
-            sample_list += self.get_sample_list_in_a_group(group, condition)
+            Args:
+                `group_list (list, optional)`: List of group names. If not provided, all groups in meta_df will be used.
+                `condition (list, optional)`: e.g. ["Individual", "PBS"], where the first element is the meta column name and the second element is the group. Defaults to None.
 
-        return sample_list
+            Returns:
+                list: List of sample names.
+            """
+            if group_list is None:
+                print('group_list does not provided, set all the groups in meta_df as group_list.')
+                group_list = self.meta_df[self.meta_name].unique().tolist()
+
+            sample_list = []
+            for group in group_list:
+                sample_list += self.get_sample_list_in_a_group(group, condition)
+
+            return sample_list
 
     # input a sample name, return the group name of this sample
     def get_group_of_a_sample(self, sample: str, meta_name:str|None='') -> str:
