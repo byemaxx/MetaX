@@ -328,7 +328,7 @@ class BasicPlot:
         if legend_col_num != 0:
             # set legend for group, out of the box
             plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., 
-                               fontsize=font_size+2, ncol= (unique_groups//30 + 1 ) if legend_col_num is None else legend_col_num)
+                               fontsize=font_size+2, ncol= (len(unique_groups)//30 + 1 ) if legend_col_num is None else legend_col_num)
             
         else:
             #hide the legend

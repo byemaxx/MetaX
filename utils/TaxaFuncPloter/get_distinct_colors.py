@@ -36,7 +36,7 @@ class GetDistinctColors:
 
         # generated colours will be as distinct as possible from these colours
         input_colors = [WHITE]
-        colors = distinctipy.get_colors(num, exclude_colors= input_colors, pastel_factor=0.5, rng=123)
+        colors = distinctipy.get_colors(num, exclude_colors= input_colors, pastel_factor=0.65, rng=123)
         if convert: # convert to rgb values
             converted_colors = []
             converted_colors.extend(

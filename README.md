@@ -4,23 +4,23 @@
 ![abstract](./Docs/MetaX_Cookbook.assets/abstract.png)
 
 ## Download
-- GUI version(Recommended):
+- `GUI version(Recommended)`:
   - Please download the latest version of MetaX from the  [download Page](https://shiny2.imetalab.ca/shiny/rstudio/metax_download/).
 
 
 
 <br>
 
-- Command-line version:
+- `Command-line version`:
   - Please clone the repository to your local machine and install the required dependencies.
 
 
 ## Getting Started
-- GUI version:
+- `GUI version`:
   - Please refer to the [MetaX Cookbook](./Docs/MetaX_Cookbook.md) for detailed instructions on how to use MetaX.
   <br>
-- Command-line version:
-  - Please read the documentation in the [Docs](./Docs) folder for detailed instructions on how to use MetaX.
+- `Command-line version`:
+  - Please read the example documentation in the [Notebook](./Docs/example.ipynb) for detailed instructions on how to use MetaX.
 
 
 ## Citation

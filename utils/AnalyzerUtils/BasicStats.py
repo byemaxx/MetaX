@@ -92,7 +92,7 @@ class BasicStats:
         res_df = pd.DataFrame(dic.items(), columns=['taxa_level', 'count'])
         return res_df
 
-    def get_stats_func_prop(self, func_name) -> pd.DataFrame:
+    def get_stats_func_prop(self, func_name:str) -> pd.DataFrame:
         if func_name not in self.tfa.func_list:
             raise ValueError(f'func_name must be in {self.tfa.func_list}')
         
