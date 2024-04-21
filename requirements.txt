@@ -20,3 +20,6 @@ tqdm>=4.65.0
 scikit-bio==0.6.0
 adjustText>=1.1.1
 openpyxl
+pyproject-toml>=0.0.10
+statsmodels
+seaborn>=0.13.2
