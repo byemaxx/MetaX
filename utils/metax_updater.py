@@ -11,6 +11,8 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 import subprocess
+import urllib.request
+import pathlib
 
 class Updater:
     def __init__(self, MetaXGUI, version, splash, show_message=False):
@@ -22,16 +24,24 @@ class Updater:
         self.current_changes = []
         self.remote_path =None
         self.remote_version = None
+        self.remote_api = None
         self.update_libs = []
         self.install_libs = []
         self.uninstall_libs = []
 
 
     def parse_changelog_md(self):
-        change_log_path = os.path.join(self.remote_path, "ChangeLog.md")
-        print(f"Change log path: {change_log_path}")
-        with open(change_log_path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+        # change_log_path = os.path.join(self.remote_path, "ChangeLog.md")
+        remote__change_log_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/ChangeLog.md"
+        change_log_re = urllib.request.urlopen(remote__change_log_path)
+        
+        if change_log_re.status != 200:
+            raise Exception(f"Read change log failed: {change_log_re.status}")
+        
+        change_log = change_log_re.read().decode("utf-8")
+        lines = change_log.split("\n")
+        # with open(change_log_path, 'r', encoding='utf-8') as file:
+        #     lines = file.readlines()
         self.changelog_dict = {}
         current__scaned_version = None
         for line in lines:
@@ -112,37 +122,73 @@ class Updater:
 
 
     def check_update(self, show_message=False):
+        # remote_path = "Z:/Qing/MetaX"
+        remote_version_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/utils/version.py"
+        remote__change_log_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/ChangeLog.md"
+        remote_project_download_path = "https://github.com/byemaxx/MetaX/archive/refs/heads/main.zip"
+        # check if remote path available
         try:
-            remote_path = "Z:/Qing/MetaX"
-            # check if remote path exists
-            if not os.path.exists(remote_path):
-                print("Remote path does not exist.")
-                if show_message:
-                    QMessageBox.warning(self.MainWindow, "Update", "Remote path does not exist.")
+            # check if remote path available
+            # __version__ = '1.102.10'
+            # API = 1
+            remote_version_re= urllib.request.urlopen(remote_version_path)
+            if remote_version_re.status != 200:
+                print(f"Check update failed: {remote_version_re.status}")
                 return
-            # Check remote version
-            dir_list = os.listdir(remote_path)
-            # check if there is a folder named start with "Update_Package_" 
-            update_package = [x for x in dir_list if x.startswith("Update_Package_")][0] #Update_Package_1.87.0_(2024-01-12)
-            
-            remote_path = os.path.join(remote_path, update_package, "MetaX")
-            self.remote_path = remote_path
-            
-            remote_version = update_package.split("_")[2]
-            self.remote_version = remote_version
-            # compare remote version with current version
-
-            if Updater.compare_version(remote_version, self.current_version):
-                print(f"New version is available:\nCurrent version: {self.current_version}\nRemote version: {remote_version}")
-                self.update_metax(remote_version, remote_path)
             else:
-                print("MetaX is up to date.")
-                if show_message:
-                    QMessageBox.information(self.MainWindow, "Update", "MetaX is up to date.")
+                remote_version = remote_version_re.read().decode("utf-8").split("'")[1]
+                self.remote_version = remote_version
+                print(f'Remote Version: {remote_version}')
+                try:
+                    remote_version_api = remote_version_re.read().decode("utf-8").split("=")[1]
+                    print(f'Remote API: {remote_version_api}')
+                except Exception as e:
+                    print(f"Check API failed: {e}")
+                    # set API to 0 if failed
+                    remote_version_api = 0
+                    return
+            
+            # 
+
+                
+                
+            
+            
+            
+            
+            
+            
+            
         except Exception as e:
             print(f"Check update failed:\n{e}")
             if show_message:
-                QMessageBox.warning(self.MainWindow, "Update", f"Check update failed:\n{e}")
+                QMessageBox.warning(self.MainWindow, "Update", f"Github is not available for now. Please try again later.")
+            return
+            
+                
+        #     # Check remote version
+        #     dir_list = os.listdir(remote_path)
+        #     # check if there is a folder named start with "Update_Package_" 
+        #     update_package = [x for x in dir_list if x.startswith("Update_Package_")][0] #Update_Package_1.87.0_(2024-01-12)
+            
+        #     remote_path = os.path.join(remote_path, update_package, "MetaX")
+        #     self.remote_path = remote_path
+            
+        #     remote_version = update_package.split("_")[2]
+        #     self.remote_version = remote_version
+        #     # compare remote version with current version
+
+        #     if Updater.compare_version(remote_version, self.current_version):
+        #         print(f"New version is available:\nCurrent version: {self.current_version}\nRemote version: {remote_version}")
+        #         self.update_metax(remote_version, remote_path)
+        #     else:
+        #         print("MetaX is up to date.")
+        #         if show_message:
+        #             QMessageBox.information(self.MainWindow, "Update", "MetaX is up to date.")
+        # except Exception as e:
+        #     print(f"Check update failed:\n{e}")
+        #     if show_message:
+        #         QMessageBox.warning(self.MainWindow, "Update", f"Check update failed:\n{e}")
 
     #! Have not tested
     def change_libs(self):
