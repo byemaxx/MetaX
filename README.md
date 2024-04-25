@@ -25,5 +25,5 @@
 
 ## Citation
 - If you use MetaX in your research, please cite the following publication:
-  - **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI: [N/A](https://xxx).
+  - **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI: [10.1101/2024.04.19.590315](https://doi.org/10.1101/2024.04.19.590315).
 
