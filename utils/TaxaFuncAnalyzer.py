@@ -134,8 +134,7 @@ class TaxaFuncAnalyzer:
             # rename the first column to Sample
             meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
             # replace space with _ and remove Intensity_
-            meta['Sample'] = meta.iloc[:, 0].str.replace(
-                ' ', '_').str.replace('Intensity_', '')
+            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_').replace('Intensity_', ''))
             meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
             # remove duplicate rows if exists
             if meta.duplicated().any():

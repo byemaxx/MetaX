@@ -2770,6 +2770,25 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.listWidget_list_for_ploting.clear()
     
     def extract_top_from_test_result(self, method, top_num, df_type, filtered) -> list[str] | None:
+        """
+        Extracts the top rows from a test result DataFrame based on the specified method and parameters.
+
+        Args:
+            method (str): The method used for the test. Possible values are 'deseq2_up_p', 'deseq2_down_p',
+                          'deseq2_up_l2fc', 'deseq2_down_l2fc', 'anova_test_p', 'anova_test_f', 't_test_p',
+                          't_test_t'.
+            top_num (int): The number of top rows to extract.
+            df_type (str): The type of DataFrame. Possible values are 'taxa-functions' and 'other'.
+            filtered (bool): Whether to apply additional filtering to the DataFrame(e.g., p-value < 0.05, log2fc > 1.0, etc.)
+
+        Returns:
+            list[str] | None: A list of index values from the top rows of the DataFrame, or None if the DataFrame
+                              is not available or the number of rows is less than the specified top_num.
+
+        Raises:
+            None
+
+        """
         self.logger.write_log(f'extract_top_from_test_result: method={method}, top_num={top_num}, df_type={df_type}, filtered={filtered}')
         
         if method.split('_')[0] == 'deseq2':
@@ -2948,21 +2967,34 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def add_a_list_to_heatmap(self):
         df_type = self.comboBox_basic_table.currentText()
         self.add_a_list_to_list_window(df_type, 'basic_heatmap')
+        
+    def get_sample_list_for_group_list_in_condition(self, group_list:list, condition: list[str] | None = None) -> list[str] | None:
+        sample_list = []
+        if group_list == []:
+            sample_list = self.tfa.sample_list if condition is None else self.tfa.get_sample_list_for_group_list(None, condition=condition)
+        else:
+            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            
+        if sample_list == [] and condition is not None:
+            QMessageBox.warning(self.MainWindow, 'Warning', f'No sample in the group: {group_list} with condition: {condition}')
+            return None
+        
+        return sample_list
            
     def add_basic_heatmap_top_list(self):
         
         top_num = self.spinBox_basic_heatmap_top_num.value()
         filtered = self.checkBox_basic_heatmap_top_filtered.isChecked()
+        in_condition = (
+            [self.comboBox_basic_heatmap_condition_meta.currentText(), self.comboBox_basic_heatmap_condition_group.currentText()]
+            if self.checkBox_basic_heatmap_in_condition.isChecked() else None
+        )    
         # get sample list
-        if self.radioButton_basic_heatmap_group.isChecked():
+        if self.radioButton_basic_heatmap_group.isChecked(): # select by group
             group_list = self.comboBox_basic_group.getCheckedItems()
-            sample_list = []
-            if group_list == []:
-                sample_list = self.tfa.sample_list
-            else:
-                for group in group_list:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-        else:
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
+                
+        else: # select by sample
             sample_list = self.comboBox_basic_sample.getCheckedItems()
             if sample_list == []:
                 sample_list = self.tfa.sample_list
@@ -3026,17 +3058,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     def add_co_expr_top_list(self):
         top_num = self.spinBox_co_expr_top_num.value()
-        groups_list = self.comboBox_co_expr_group.getCheckedItems()
         filtered = self.checkBox_co_expr_top_filtered.isChecked()
         # get sample list
-        if self.radioButton_co_expr_bygroup.isChecked():
-            sample_list = []
-            if groups_list == []:
-                sample_list = self.tfa.sample_list
-            else:
-                for group in groups_list:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-        elif self.radioButton_co_expr_bysample.isChecked():
+        if self.radioButton_co_expr_bygroup.isChecked(): # select by group
+            group_list = self.comboBox_co_expr_group.getCheckedItems()
+            in_condition = (
+                [self.comboBox_co_expression_condition_meta.currentText(), self.comboBox_co_expression_condition_group.currentText()]
+                if self.checkBox_co_expression_in_condition.isChecked() else None
+            )
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
+        
+        else: # select by sample
             sample_list = self.comboBox_co_expr_sample.getCheckedItems()
 
         method = self.comboBox_co_expr_top_by.currentText()
@@ -3077,7 +3109,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                              
             group_list = self.comboBox_basic_group.getCheckedItems()
             group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
-            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
+            if sample_list is None:
+                return None
             
         else:
             sample_list = self.comboBox_basic_sample.getCheckedItems()
@@ -3319,18 +3353,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
     def add_trends_top_list(self):
         top_num = self.spinBox_trends_top_num.value()
-        selected_groups = self.comboBox_trends_group.getCheckedItems()
+        group_list = self.comboBox_trends_group.getCheckedItems()
         filtered = self.checkBox_trends_top_filtered.isChecked()
+        in_condition = (
+            [self.comboBox_trends_condition_meta.currentText(), self.comboBox_trends_condition_group.currentText()]
+            if self.checkBox_trends_in_condition.isChecked() else None
+        )
+        
         # get sample list
-        if self.radioButton_trends_group.isChecked():
-            if selected_groups:
-                sample_list = []
-                for group in selected_groups:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-            else:
-                sample_list = self.tfa.sample_list
-                    
-        elif self.radioButton_trends_sample.isChecked():
+        if self.radioButton_trends_group.isChecked(): # select by group
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
+            
+        elif self.radioButton_trends_sample.isChecked(): # select by sample
             selected_samples = self.comboBox_trends_sample.getCheckedItems()
             if selected_samples:
                 sample_list = selected_samples
@@ -3366,7 +3400,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                 
             group_list = self.comboBox_trends_group.getCheckedItems()
             group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
-            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
+            if sample_list is None:
+                return None
             
         else:
             sample_list = self.comboBox_trends_sample.getCheckedItems()
@@ -3474,7 +3510,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             if self.radioButton_trends_group.isChecked():
                 group_list = self.comboBox_trends_group.getCheckedItems()
                 group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
-                sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+                sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
+                if sample_list is None:
+                    return None
                 
             else: # self.radioButton_trends_sample.isChecked()
                 sample_list = self.comboBox_trends_sample.getCheckedItems()
@@ -3778,7 +3816,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # keep the oder of  group_list by user check order
             group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
             
-            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
+            if sample_list is None:
+                return None
             
         else: # plot by sample
             sample_list = self.comboBox_basic_pca_sample.getCheckedItems()
@@ -4600,7 +4640,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             group_list = self.comboBox_co_expr_group.getCheckedItems()
             group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
-            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
+            if sample_list is None:
+                return None
 
 
         try:
@@ -4724,25 +4766,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         top_num = self.spinBox_tfnet_top_num.value()
         df_type = self.comboBox_tfnet_table.currentText()
         filtered = self.checkBox_tfnet_top_filtered.isChecked()
-
         
-        if self.radioButton_network_bysample.isChecked():
+        if self.radioButton_network_bysample.isChecked(): # by sample
             slected_list = self.comboBox_network_sample.getCheckedItems()
             if slected_list:
                 sample_list = slected_list
             else:
                 sample_list = self.tfa.sample_list
 
-        elif self.radioButton_network_bygroup.isChecked():
-            selected_groups = self.comboBox_network_group.getCheckedItems()
-            if selected_groups:
-                sample_list = []
-                for group in selected_groups:
-                    sample_list.extend(self.tfa.get_sample_list_in_a_group(group))
-            else:
-                sample_list = self.tfa.sample_list
-        else:
-            raise ValueError('radioButton_network_bysample or radioButton_network_bygroup should be checked!')
+        else: # by group
+            in_condition = (
+                [self.comboBox_tfnetwork_condition_meta.currentText(), self.comboBox_tfnetwork_condition_group.currentText()]
+                if self.checkBox_tfnetwork_in_condition.isChecked() else None
+            )
+            group_list = self.comboBox_network_group.getCheckedItems()
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
 
         
         method = self.comboBox_tfnet_top_by.currentText()
@@ -4760,7 +4798,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         
 
-    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list,filtered:bool = False) -> list[str] | None:
+    def get_top_index_list(self, df_type:str, method: str, top_num: int, sample_list: list|None, filtered:bool = False) -> list[str] | None:
+        if sample_list is None:
+            return None
+    
+        print(f'get_top_list:\ndf_type:{df_type}, method:{method}, top_num:{top_num}, filtered:{filtered}\nsample_list:{sample_list}\n')
         df_type = df_type.lower()
         method_dict = {'Average Intensity': 'mean', 
                        'Frequency in Samples': 'freq', 
@@ -4867,17 +4909,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
     def get_sample_list_tflink(self):
         # get sample list
-        if self.radioButton_tflink_group.isChecked():
-            condition = [self.comboBox_tflink_condition_meta.currentText(), 
-                         self.comboBox_tflink_condition_group.currentText()] \
+        if self.radioButton_tflink_group.isChecked(): # by group
+            in_condition = (
+                [self.comboBox_tflink_condition_meta.currentText(), self.comboBox_tflink_condition_group.currentText()]
                 if self.checkBox_tflink_in_condition.isChecked() else None
-                
+            )
             group_list = self.comboBox_tflink_group.getCheckedItems()
-            group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
-            sample_list = self.tfa.get_sample_list_for_group_list(group_list, condition=condition)
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
             
-            
-        elif self.radioButton_tflink_sample.isChecked():
+        elif self.radioButton_tflink_sample.isChecked(): # by sample
             selected_samples = self.comboBox_tflink_sample.getCheckedItems()
             if not selected_samples:
                 sample_list = self.tfa.sample_list

@@ -548,3 +548,8 @@
 ## Date: 2024-04-18
 ### Changes:
 - Change: Changed the default color in basic plot part, make the color follow the theme.
+
+# Version: 1.102.11
+## Date: 2024-04-26
+### Changes:
+- Fix: Fixed the bug of when select in condition, the add top and plot function was not filtered.
