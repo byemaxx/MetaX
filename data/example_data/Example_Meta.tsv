@@ -1,3 +1,191 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8241332898d3add205bf6fe50329d835d0227d65024b3b849f2b0a16e0385112
-size 9144
+Sample	Individual	Sugar_name	Sugar_source	Sugar_type	full_name
+V1_01	V1	PBS	PBS	PBS	PBS
+V1_02	V1	ISO	sugar alcohols	CHO	Isomalt
+V1_03	V1	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V1_04	V1	ERY	sugar alcohols	CHO	Erythritol (meso-Erythritol)
+V1_05	V1	HSH	sugar alcohols	CHO	Hydrogenated starch hydrolysates
+V1_06	V1	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V1_07	V1	SAC2	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V1_08	V1	SAA	synthetic	NAS	Salt of Aspartame-Acesulfame
+V1_09	V1	SAC05	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V1_10	V1	NEO2	synthetic	NAS	Neotame
+V1_11	V1	FOS	oligosaccharide 	CHO	Fructooligosaccharide
+V1_12	V1	MFE	natural extracted	NAS	Monk fruit extract
+V1_13	V1	KES	oligosaccharide 	CHO	1-Kestose
+V1_14	V1	ACE005	synthetic	NAS	Acesulfame K
+V1_15	V1	SUC	synthetic	NAS	Sucralose
+V1_16	V1	GLU	dietary sugar	CHO	Glucose (D-Glucose)
+V1_17	V1	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
+V1_18	V1	BAS	BAS	BAS	BAS
+V1_19	V1	THA2	synthetic	NAS	Thaumatin
+V1_20	V1	THA03	synthetic	NAS	Thaumatin
+V1_21	V1	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
+V1_22	V1	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V1_23	V1	BAS	BAS	BAS	BAS
+V1_24	V1	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V1_25	V1	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
+V1_26	V1	PBS	PBS	PBS	PBS
+V1_27	V1	ADV	synthetic	NAS	Advantame
+V1_28	V1	BAS	BAS	BAS	BAS
+V1_29	V1	XYL	sugar alcohols	CHO	Xylitol
+V1_30	V1	STE	natural extracted	NAS	Stevia extract (Stevioside)
+V1_31	V1	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
+V1_32	V1	MAL	sugar alcohols	CHO	Maltitol
+V1_33	V1	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V1_34	V1	ACE2	synthetic	NAS	Acesulfame K
+V1_35	V1	ASP	synthetic	NAS	Aspartame
+V1_36	V1	NEO006	synthetic	NAS	Neotame
+V1_37	V1	PBS	PBS	PBS	PBS
+V1_38	V1	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V2_01	V2	PBS	PBS	PBS	PBS
+V2_02	V2	ISO	sugar alcohols	CHO	Isomalt
+V2_03	V2	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V2_04	V2	ERY	sugar alcohols	CHO	Erythritol (meso-Erythritol)
+V2_05	V2	HSH	sugar alcohols	CHO	Hydrogenated starch hydrolysates
+V2_06	V2	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V2_07	V2	SAC2	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V2_08	V2	SAA	synthetic	NAS	Salt of Aspartame-Acesulfame
+V2_09	V2	SAC05	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V2_10	V2	NEO2	synthetic	NAS	Neotame
+V2_11	V2	FOS	oligosaccharide 	CHO	Fructooligosaccharide
+V2_12	V2	MFE	natural extracted	NAS	Monk fruit extract
+V2_13	V2	KES	oligosaccharide 	CHO	1-Kestose
+V2_14	V2	ACE005	synthetic	NAS	Acesulfame K
+V2_15	V2	SUC	synthetic	NAS	Sucralose
+V2_16	V2	GLU	dietary sugar	CHO	Glucose (D-Glucose)
+V2_17	V2	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
+V2_18	V2	BAS	BAS	BAS	BAS
+V2_19	V2	THA2	synthetic	NAS	Thaumatin
+V2_20	V2	THA03	synthetic	NAS	Thaumatin
+V2_21	V2	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
+V2_22	V2	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V2_23	V2	BAS	BAS	BAS	BAS
+V2_24	V2	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V2_25	V2	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
+V2_26	V2	PBS	PBS	PBS	PBS
+V2_27	V2	ADV	synthetic	NAS	Advantame
+V2_28	V2	BAS	BAS	BAS	BAS
+V2_29	V2	XYL	sugar alcohols	CHO	Xylitol
+V2_30	V2	STE	natural extracted	NAS	Stevia extract (Stevioside)
+V2_31	V2	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
+V2_32	V2	MAL	sugar alcohols	CHO	Maltitol
+V2_33	V2	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V2_34	V2	ACE2	synthetic	NAS	Acesulfame K
+V2_35	V2	ASP	synthetic	NAS	Aspartame
+V2_36	V2	NEO006	synthetic	NAS	Neotame
+V2_37	V2	PBS	PBS	PBS	PBS
+V2_38	V2	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V3_01	V3	PBS	PBS	PBS	PBS
+V3_02	V3	ISO	sugar alcohols	CHO	Isomalt
+V3_03	V3	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V3_04	V3	ERY	sugar alcohols	CHO	Erythritol (meso-Erythritol)
+V3_05	V3	HSH	sugar alcohols	CHO	Hydrogenated starch hydrolysates
+V3_06	V3	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V3_07	V3	SAC2	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V3_08	V3	SAA	synthetic	NAS	Salt of Aspartame-Acesulfame
+V3_09	V3	SAC05	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V3_10	V3	NEO2	synthetic	NAS	Neotame
+V3_11	V3	FOS	oligosaccharide 	CHO	Fructooligosaccharide
+V3_12	V3	MFE	natural extracted	NAS	Monk fruit extract
+V3_13	V3	KES	oligosaccharide 	CHO	1-Kestose
+V3_14	V3	ACE005	synthetic	NAS	Acesulfame K
+V3_15	V3	SUC	synthetic	NAS	Sucralose
+V3_16	V3	GLU	dietary sugar	CHO	Glucose (D-Glucose)
+V3_17	V3	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
+V3_18	V3	BAS	BAS	BAS	BAS
+V3_19	V3	THA2	synthetic	NAS	Thaumatin
+V3_20	V3	THA03	synthetic	NAS	Thaumatin
+V3_21	V3	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
+V3_22	V3	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V3_23	V3	BAS	BAS	BAS	BAS
+V3_24	V3	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V3_25	V3	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
+V3_26	V3	PBS	PBS	PBS	PBS
+V3_27	V3	ADV	synthetic	NAS	Advantame
+V3_28	V3	BAS	BAS	BAS	BAS
+V3_29	V3	XYL	sugar alcohols	CHO	Xylitol
+V3_30	V3	STE	natural extracted	NAS	Stevia extract (Stevioside)
+V3_31	V3	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
+V3_32	V3	MAL	sugar alcohols	CHO	Maltitol
+V3_33	V3	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V3_34	V3	ACE2	synthetic	NAS	Acesulfame K
+V3_35	V3	ASP	synthetic	NAS	Aspartame
+V3_36	V3	NEO006	synthetic	NAS	Neotame
+V3_37	V3	PBS	PBS	PBS	PBS
+V3_38	V3	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V4_01	V4	PBS	PBS	PBS	PBS
+V4_02	V4	ISO	sugar alcohols	CHO	Isomalt
+V4_03	V4	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V4_04	V4	ERY	sugar alcohols	CHO	Erythritol (meso-Erythritol)
+V4_05	V4	HSH	sugar alcohols	CHO	Hydrogenated starch hydrolysates
+V4_06	V4	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V4_07	V4	SAC2	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V4_08	V4	SAA	synthetic	NAS	Salt of Aspartame-Acesulfame
+V4_09	V4	SAC05	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V4_10	V4	NEO2	synthetic	NAS	Neotame
+V4_11	V4	FOS	oligosaccharide 	CHO	Fructooligosaccharide
+V4_12	V4	MFE	natural extracted	NAS	Monk fruit extract
+V4_13	V4	KES	oligosaccharide 	CHO	1-Kestose
+V4_14	V4	ACE005	synthetic	NAS	Acesulfame K
+V4_15	V4	SUC	synthetic	NAS	Sucralose
+V4_16	V4	GLU	dietary sugar	CHO	Glucose (D-Glucose)
+V4_17	V4	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
+V4_18	V4	BAS	BAS	BAS	BAS
+V4_19	V4	THA2	synthetic	NAS	Thaumatin
+V4_20	V4	THA03	synthetic	NAS	Thaumatin
+V4_21	V4	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
+V4_22	V4	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V4_23	V4	BAS	BAS	BAS	BAS
+V4_24	V4	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V4_25	V4	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
+V4_26	V4	PBS	PBS	PBS	PBS
+V4_27	V4	ADV	synthetic	NAS	Advantame
+V4_28	V4	BAS	BAS	BAS	BAS
+V4_29	V4	XYL	sugar alcohols	CHO	Xylitol
+V4_30	V4	STE	natural extracted	NAS	Stevia extract (Stevioside)
+V4_31	V4	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
+V4_32	V4	MAL	sugar alcohols	CHO	Maltitol
+V4_33	V4	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V4_34	V4	ACE2	synthetic	NAS	Acesulfame K
+V4_35	V4	ASP	synthetic	NAS	Aspartame
+V4_36	V4	NEO006	synthetic	NAS	Neotame
+V4_37	V4	PBS	PBS	PBS	PBS
+V4_38	V4	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V5_01	V5	PBS	PBS	PBS	PBS
+V5_02	V5	ISO	sugar alcohols	CHO	Isomalt
+V5_03	V5	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V5_04	V5	ERY	sugar alcohols	CHO	Erythritol (meso-Erythritol)
+V5_05	V5	HSH	sugar alcohols	CHO	Hydrogenated starch hydrolysates
+V5_06	V5	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V5_07	V5	SAC2	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V5_08	V5	SAA	synthetic	NAS	Salt of Aspartame-Acesulfame
+V5_09	V5	SAC05	synthetic	NAS	Saccharin (Sodium saccharin dihydrate)
+V5_10	V5	NEO2	synthetic	NAS	Neotame
+V5_11	V5	FOS	oligosaccharide 	CHO	Fructooligosaccharide
+V5_12	V5	MFE	natural extracted	NAS	Monk fruit extract
+V5_13	V5	KES	oligosaccharide 	CHO	1-Kestose
+V5_14	V5	ACE005	synthetic	NAS	Acesulfame K
+V5_15	V5	SUC	synthetic	NAS	Sucralose
+V5_16	V5	GLU	dietary sugar	CHO	Glucose (D-Glucose)
+V5_17	V5	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
+V5_18	V5	BAS	BAS	BAS	BAS
+V5_19	V5	THA2	synthetic	NAS	Thaumatin
+V5_20	V5	THA03	synthetic	NAS	Thaumatin
+V5_21	V5	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
+V5_22	V5	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V5_23	V5	BAS	BAS	BAS	BAS
+V5_24	V5	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
+V5_25	V5	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
+V5_26	V5	PBS	PBS	PBS	PBS
+V5_27	V5	ADV	synthetic	NAS	Advantame
+V5_28	V5	BAS	BAS	BAS	BAS
+V5_29	V5	XYL	sugar alcohols	CHO	Xylitol
+V5_30	V5	STE	natural extracted	NAS	Stevia extract (Stevioside)
+V5_31	V5	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
+V5_32	V5	MAL	sugar alcohols	CHO	Maltitol
+V5_33	V5	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
+V5_34	V5	ACE2	synthetic	NAS	Acesulfame K
+V5_35	V5	ASP	synthetic	NAS	Aspartame
+V5_36	V5	NEO006	synthetic	NAS	Neotame
+V5_37	V5	PBS	PBS	PBS	PBS
+V5_38	V5	SOR	sugar alcohols	CHO	Sorbitol (D-Sorbitol)
