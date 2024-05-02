@@ -5,7 +5,7 @@
 
 ## Download
 - `GUI version(Recommended)`:
-  - Please download the latest version of MetaX from the  [download Page](https://shiny2.imetalab.ca/shiny/rstudio/metax_download/).
+  - Please download the latest version of MetaX from the  [Download Page](https://shiny2.imetalab.ca/shiny/rstudio/metax_download/).
 
 
 
