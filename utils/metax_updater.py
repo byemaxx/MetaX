@@ -138,8 +138,13 @@ class Updater:
             # Unzip the project zip file
             with zipfile.ZipFile(project_zip_path, 'r') as zip_ref:
                 zip_ref.extractall(metaX_update_path)
+                
+            # delete data folder
+            shutil.rmtree(os.path.join(metaX_update_path, 'MetaX-main/data'))
             # Optionally, delete the project zip file after extraction
-            # os.remove(project_zip_path)
+            os.remove(project_zip_path)
+            
+            
             return True
 
         except urllib.error.HTTPError as e:
@@ -160,15 +165,15 @@ class Updater:
             metax_folder_path = os.path.dirname(current_script_path)
             print(f"MetaX folder path: {metax_folder_path}")
             
-            #remove all files in the metax folder, except the __pycache__ folder
+            #remove all files in the metax folder, except the __pycache__ folder and data folder and tsv files
             for root, dirs, files in os.walk(metax_folder_path):
                 for file in files:
-                    if file != '__init__.py' and file != '__pycache__':
+                    if file != '__init__.py' and file != '__pycache__' and not file.endswith('.tsv'):
                         os.remove(os.path.join(root, file))
                 for dir in dirs:
-                    if dir != '__pycache__':
+                    if dir not in ['__pycache__', 'data', 'example_data']:
                         shutil.rmtree(os.path.join(root, dir))
-            
+
             # move the new MetaX folder to the old MetaX folder
             home_path = pathlib.Path.home()
             metaX_update_path = os.path.join(home_path, 'MetaX/update')
