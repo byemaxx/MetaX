@@ -168,10 +168,12 @@ class Updater:
             #remove all files in the metax folder, except the __pycache__ folder and data folder and tsv files
             for root, dirs, files in os.walk(metax_folder_path):
                 for file in files:
-                    if file != '__init__.py' and file != '__pycache__' and not file.endswith('.tsv'):
+                    # if file != '__init__.py' and file != '__pycache__' and not file.endswith('.tsv'):
+                    if file != '__init__.py' and file != '__pycache__' and not file.endswith('.pyc'):
                         os.remove(os.path.join(root, file))
                 for dir in dirs:
-                    if dir not in ['__pycache__', 'data', 'example_data']:
+                    # if dir not in ['__pycache__', 'data', 'example_data']:
+                    if dir not in ['__pycache__']:
                         shutil.rmtree(os.path.join(root, dir))
 
             # move the new MetaX folder to the old MetaX folder

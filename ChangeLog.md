@@ -1,3 +1,8 @@
+# Version: 1.103.2
+## Date: 2024-05-02
+### Changes:
+- Change: Changed the update method to replace the example data.
+
 # Version: 1.103.1
 ## Date: 2024-05-01
 ### Changes:
