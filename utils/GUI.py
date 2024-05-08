@@ -2895,8 +2895,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
             text_list = text.split('\n')
             text_list = [i.strip() for i in text_list if i.strip() != '']
-            # remove duplicate
-            text_list = list(set(text_list))
+            # remove duplicate, and keep the order
+            text_list = [x for i, x in enumerate(text_list) if i == text_list.index(x)]
         else:
             return None
                 
@@ -2918,7 +2918,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # Add all matches to search_results
                 search_results.extend(matches)
             # Remove duplicates from search_results in case there are overlapping matches
-            search_results = list(set(search_results))
+            search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
 
             # show the search results in a new window, allowing user to select the valid items
             if search_results:
@@ -2929,7 +2929,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     text = self.input_window.text_edit.toPlainText()
                     if text:
                         text_list = [i.strip() for i in text.split('\n') if i.strip() != '']
-                        text_list = list(set(text_list))  # Remove duplicates
+                        # remove duplicate, and keep the order
+                        text_list = [x for i, x in enumerate(text_list) if i == text_list.index(x)]
                     else:
                         return None
                 else:

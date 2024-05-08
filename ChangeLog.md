@@ -1,3 +1,9 @@
+# Version: 1.103.3
+## Date: 2024-05-08
+### Changes:
+- Fix: Fixed the bug of when add a list to plot, the order will be changed by set().
+
+
 # Version: 1.103.2
 ## Date: 2024-05-02
 ### Changes:
