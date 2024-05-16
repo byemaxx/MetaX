@@ -57,9 +57,9 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
 # Create id2taxa database and return a list of MGYG IDs
 def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv', meta_path = None):
     if meta_path is None:
-        df = pd.read_csv(os.path.join(save_path, file_name), sep='\t', header=0, index_col=0)
+        df = pd.read_csv(os.path.join(save_path, file_name), sep='\t', header=0)
     else:
-        df = pd.read_csv(meta_path, sep='\t', header=0, index_col=0)
+        df = pd.read_csv(meta_path, sep='\t', header=0)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     df = df[['Species_rep', 'Lineage']]

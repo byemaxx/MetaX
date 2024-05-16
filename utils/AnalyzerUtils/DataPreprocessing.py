@@ -140,7 +140,7 @@ class DataPreprocessing:
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
-        if method is None or method == 'None':
+        if method is None or method in['None', 'missing-value', 'none']:
             print('outlier_method is not set, outlier detection did not perform.')
             return df
 
@@ -251,7 +251,7 @@ class DataPreprocessing:
 
 
         else:
-            raise ValueError(f'Invalid outlier method: {method}')
+            raise ValueError(f'Invalid outlier method: {method}\nMust be in [none, missing-value, half-zero, zero-dominant, iqr, z-score, zero-inflated-poisson, negative-binomial, mahalanobis-distance]')
 
         df[self.tfa.sample_list] = df_mat
         # statistics the number
@@ -449,7 +449,8 @@ class DataPreprocessing:
 
         - `outlier_detect_method` (`str`, optional):  
         Method for outlier detection. Options include:
-            - `None`: No outlier detection.
+            - `none`: No outlier detection.
+            - `missing-value`: Detect missing values.
             - `half-zero`: Detect outliers based on half-zero criteria.
             - `zero-dominant`: Detect outliers based on zero-dominance.
             - `iqr`: Interquartile range method.

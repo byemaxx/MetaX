@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -998,6 +998,11 @@
                 </item>
                 <item>
                  <property name="text">
+                  <string>Missing-Value</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
                   <string>IQR</string>
                  </property>
                 </item>
@@ -1310,7 +1315,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">

@@ -37,6 +37,7 @@ class TaxaFuncAnalyzer:
     ):
         self.original_row_num = 0
         self.original_df = None
+        self.has_na_in_original_df = False
         self.preprocessed_df = None
         self.genome_mode = True
 
@@ -151,6 +152,13 @@ class TaxaFuncAnalyzer:
             check_result = self.check_meta_match_df()
             if check_result[0] == False:
                 raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
+        
+        # check if there is NA in the original_df[self.sample_list]
+        if self.original_df[self.sample_list].isnull().values.any():
+            self.has_na_in_original_df = True
+            print("[NaN] exists in the original_df!")
+        else:
+            self.has_na_in_original_df = False
 
     def update_meta(self, meta_df: pd.DataFrame) -> None:
         self.meta_df = meta_df

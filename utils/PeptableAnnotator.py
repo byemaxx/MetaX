@@ -78,20 +78,20 @@ def run_2_result(df, db_path, threshold, genome_mode):
 
     # convert the results to dataframe
     df_t0 = pd.DataFrame(results, index=df_t.index)
-    df_t = pd.concat([df_t, df_t0], axis=1)
+    # try to add pathway name and EC name
+    df_t0 = add_additional_columns(df_t0)
+    # add the columns of None and None_prop
+    df_t0['None'] = 'none'
+    df_t0['None_prop'] = '1.0'
     
     
     # change the column names of 'Description'	'Description_prop' to 'eggNOG_Description'	'eggNOG_Description_prop'
-    if 'Description' in df_t.columns:
-        df_t.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
+    if 'Description' in df_t0.columns:
+        df_t0.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
     else:
         print('Warning: column name "Description" does not exist!, skip renaming...')
         
-    # try to add pathway name and EC name
-    df_t = add_additional_columns(df_t)
-    # add the columns of None and None_prop
-    df_t['None'] = 'none'
-    df_t['None_prop'] = '1.0'
+    df_t = pd.concat([df_t, df_t0], axis=1) # concatenate the annotation results to the original dataframe
     # reorder the columns
     cols = df_t.columns.tolist()
     sample_cols = [col for col in cols if col.startswith('Intensity_')]
@@ -147,7 +147,7 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0, g
     print('-----------------------------------')
     
     df = pd.read_csv(final_peptides_path, sep='\t')
-    # df = df[:10]
+    # df = df[:10] #! for testing
     # modify the column names
     df.columns = [col.replace(' ','_') for col in df.columns]
     

@@ -1809,7 +1809,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             \n\nData Preprocessing after summing peptides:\
             \nSum the peptides to calculate the intensity of each taxa, function and taxa-function pair first, then perform data preprocessing for each table.\
             \n\n\nOutliers Detection:\
-            \nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
+            \nMissing-Value: Detect nan values in the data. If a value is nan, it will be marked as an outlier (NaN).\
+            \n\nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
             \n\nZero-Dominant: This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.\
             \n\nZero-Inflated Poisson: This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).\
@@ -2212,7 +2213,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # batch effect
             batch_meta =  self.comboBox_remove_batch_effect.currentText() if self.comboBox_remove_batch_effect.currentText() != 'None' else None
 
-            
+            if self.tfa.has_na_in_original_df and outlier_detect_method == 'None':
+                # ask user if they want to continue
+                reply = QMessageBox.question(self.MainWindow, 'Warning', 'There are NaN(Missing Value) values in the original data. If you do not handle them, the row containing NaN will be removed.\
+                \n\nIf you want to handle them, please set the outlier detection method to [Missing-Value] and select a method to handle them.\
+                \n\nDo you want to continue without handling NaN values?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if reply == QMessageBox.No:
+                    return
+                
+                
             if outlier_detect_method != 'None':
                 outlier_detect_method = outlier_detect_method.lower()
                 if outlier_handle_method1 == 'Drop':

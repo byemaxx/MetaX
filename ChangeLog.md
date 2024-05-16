@@ -1,3 +1,10 @@
+# Version: 1.104.0
+## Date: 2024-05-15
+### Changes:
+- Fix: Fixed the bug of when NaN in the table, the data preprossing will remove all the rows with NaN, and the NaN will be replaced by "-" after Peptide Annotator.
+- New: Add a method [Missing-Value] to detect the missing value as outlier.
+
+
 # Version: 1.103.3
 ## Date: 2024-05-08
 ### Changes:
