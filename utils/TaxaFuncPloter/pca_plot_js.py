@@ -11,7 +11,7 @@ class PcaPlot_js:
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         
         
-    def plot_pca_pyecharts_3d(self, df, table_name='Table',  show_label = True, rename_sample = True,
+    def plot_pca_pyecharts_3d(self, df, title_name='Table',  show_label = True, rename_sample = True,
                               width=10, height=8, font_size = 10, legend_col_num: int | None = None):
         width = f'{width*100}px'
         height = f'{height*100}px'
@@ -78,7 +78,7 @@ class PcaPlot_js:
             )
 
         scatter3d.set_global_opts(
-            title_opts=opts.TitleOpts(title=f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)'),
+            title_opts=opts.TitleOpts(title=f'PCA of {str(title_name)} (total variance explained: {total_var:.2f}%)'),
             legend_opts=opts.LegendOpts(
                 is_show=True if (legend_col_num != 0) else False,
                 type_="scroll",

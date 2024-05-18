@@ -155,7 +155,7 @@ class BasicPlot:
         return ax
 
     # input: df_mat
-    def plot_pca_sns(self, df, table_name = 'Table', show_label = True,
+    def plot_pca_sns(self, df, title_name = 'Table', show_label = True,
                      width=10, height=8, font_size = 10, rename_sample:bool = False,
                      font_transparency = 0.6, adjust_label:bool = False, theme:str|None = None,
                      sub_meta:str = 'None', legend_col_num: int | None = None, dot_size: float|None = None):
@@ -208,7 +208,7 @@ class BasicPlot:
                                 alpha=0.9, edgecolor='black', linewidth=0.5)
 
 
-            fig.set_title(f'PCA of {str(table_name)} (total variance explained: {total_var:.2f}%)',
+            fig.set_title(f'PCA of {str(title_name)} (total variance explained: {total_var:.2f}%)',
                         fontsize= font_size+2, fontweight='bold')
             fig.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)',  fontsize=font_size)
             fig.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)',  fontsize=font_size)
@@ -245,7 +245,7 @@ class BasicPlot:
             raise e
 
 
-    def plot_box_sns(self, df, table_name = 'Table', show_fliers = False, width=10, height=8,
+    def plot_box_sns(self, df, title_name = 'Table', show_fliers = False, width=10, height=8,
                      font_size = 10, theme:str|None = None, rename_sample:bool = False,
                      plot_samples:bool = False, legend_col_num: int | None = None, sub_meta:str|None = 'None'):
         
@@ -322,7 +322,7 @@ class BasicPlot:
                       fontsize=font_size+2)
 
         ax.set_ylabel('Intensity', fontsize=font_size+2)
-        ax.set_title(f'Boxplot of Intensity of {table_name}',
+        ax.set_title(f'Boxplot of Intensity of {title_name}',
                      fontsize=font_size+2, fontweight='bold')
         
         if legend_col_num != 0:
@@ -349,7 +349,7 @@ class BasicPlot:
         # plt.close()
         return ax
 
-    def plot_corr_sns(self, df, table_name = 'Table', cluster = False, width=10, height=8, font_size = 10,
+    def plot_corr_sns(self, df, title_name = 'Table', cluster = False, width=10, height=8, font_size = 10,
                       show_all_labels = (False,False) , theme:str = None, rename_sample:bool = False):
         dft= df.copy()
         if rename_sample:
@@ -375,7 +375,7 @@ class BasicPlot:
                             "yticklabels":True if show_all_labels[1] else 'auto'}
             fig = sns.clustermap(corr, **sns_params)
 
-            fig.ax_col_dendrogram.set_title(f'Correlation of {table_name}', fontsize=font_size+2, fontweight='bold')
+            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
             ax = fig.ax_heatmap
             ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
             ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
@@ -395,7 +395,7 @@ class BasicPlot:
             raise e
 
 
-    def plot_number_bar(self, df, table_name = 'Table', width=10, height=8, font_size = 10,
+    def plot_number_bar(self, df, title_name = 'Table', width=10, height=8, font_size = 10,
                         theme:str = 'Auto', plot_sample = False, show_label = True,
                         rename_sample:bool = False, legend_col_num: int | None = None,
                         sub_meta:str|None = 'None'):
@@ -471,8 +471,8 @@ class BasicPlot:
         # print the min and max value and its row to string
         min_df = df[df["Number"] == df["Number"].min()].to_string(index=False)
         max_df = df[df["Number"] == df["Number"].max()].to_string(index=False)
-        print(f'The min number of {table_name}:\n{min_df}')
-        print(f'The max number of {table_name}:\n{max_df}')
+        print(f'The min number of {title_name}:\n{min_df}')
+        print(f'The max number of {title_name}:\n{max_df}')
 
         unique_groups = (
             df["Group"].unique()
@@ -526,7 +526,7 @@ class BasicPlot:
         # set y limit as 0.9 * min to 1.1 * max
         ax.set_ylim(df['Number'].min() * 0.9 , df['Number'].max() * 1.1)
 
-        title = f'The number of {table_name} for each sample' if plot_sample else f'The number of {table_name} for each group'
+        title = f'The number of {title_name} for each sample' if plot_sample else f'The number of {title_name} for each group'
         ax.set_title(title, fontsize=font_size+2, fontweight='bold')
 
         # set legend

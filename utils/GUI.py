@@ -3800,6 +3800,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
+        def get_title_by_table_name(self, table_name):
+            taxa = (self.tfa.taxa_level or 'Taxa').capitalize()
+            func = self.tfa.func_name or 'Functions'
+            titles = {
+                'Taxa-Functions': f'{taxa}-{func}',
+                'Functions': func,
+                'Taxa': taxa,
+                'Custom': 'Custom Table',
+                'Peptides': 'Peptides',
+            }
+            return titles.get(table_name, table_name)
+
         
         table_name = self.comboBox_table4pca.currentText()
         show_label = self.checkBox_pca_if_show_lable.isChecked()
@@ -3815,6 +3827,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         legend_col_num = self.spinBox_basic_legend_col_num.value()
         dot_size = self.spinBox_basic_dot_size.value()
 
+        title_name = get_title_by_table_name(self, table_name)
         
         # get sample list when plot by group
         if self.radioButton_basic_pca_group.isChecked():
@@ -3845,7 +3858,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tfa).plot_pca_sns(df=df, table_name=table_name, show_label=show_label, rename_sample = rename_sample,
+                BasicPlot(self.tfa).plot_pca_sns(df=df, title_name=title_name, show_label=show_label, rename_sample = rename_sample,
                                                 width=width, height=height, font_size=font_size, sub_meta = sub_meta,
                                                 font_transparency=font_transparency, 
                                                 adjust_label=adjust_label, 
@@ -3859,14 +3872,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
                 self.show_message('PCA is running, please wait...')
-                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, table_name=table_name, show_label = show_label, 
+                pic = PcaPlot_js(self.tfa).plot_pca_pyecharts_3d(df=df, title_name=title_name, show_label = show_label, 
                                                                  rename_sample = rename_sample,
                                                                 width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
-                self.save_and_show_js_plot(pic, f'PCA 3D of {table_name}')
+                self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
 
             elif method == 'box':
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
-                BasicPlot(self.tfa).plot_box_sns(df=df, table_name=table_name, show_fliers=show_fliers,
+                BasicPlot(self.tfa).plot_box_sns(df=df, title_name=title_name, show_fliers=show_fliers,
                                                  width=width, height=height, font_size=font_size, theme=theme,
                                                  rename_sample = rename_sample, plot_samples = plot_samples, 
                                                  legend_col_num=legend_col_num, sub_meta = sub_meta)
@@ -3882,7 +3895,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 if cluster:
                     df = self.delete_zero_columns(df)
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tfa).plot_corr_sns(df=df, table_name=table_name, cluster= cluster, 
+                BasicPlot(self.tfa).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
                                                 width=width, height=height, font_size=font_size, 
                                                 show_all_labels=show_all_labels, theme=theme,rename_sample = rename_sample)
 
@@ -3947,7 +3960,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             elif method == 'num_bar':
                 plot_sample =self.checkBox_basic_plot_number_plot_sample.isChecked()
-                BasicPlot(self.tfa).plot_number_bar(df = df, table_name = table_name, font_size=font_size,
+                BasicPlot(self.tfa).plot_number_bar(df = df, title_name = title_name, font_size=font_size,
                                                     width=width, height=height, 
                                                     theme=theme, plot_sample = plot_sample, 
                                                     show_label = show_label, rename_sample = rename_sample, 

@@ -1,3 +1,9 @@
+# Version: 1.104.1
+## Date: 2024-05-18
+### Changes:
+- Change: Changed the figure title to specific taxa level or function name for the basic plot part.
+
+
 # Version: 1.104.0
 ## Date: 2024-05-15
 ### Changes:
