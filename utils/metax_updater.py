@@ -45,7 +45,7 @@ class Updater:
 
     def set_init_path(self):
         self.remote_version_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/utils/version.py"
-        self.remote_change_log_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/ChangeLog.md"
+        self.remote_change_log_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/Docs/ChangeLog.md"
         self.remote_project_zip_download_path = "https://github.com/byemaxx/MetaX/archive/refs/heads/main.zip"
 
     def set_current_version_and_api(self):
