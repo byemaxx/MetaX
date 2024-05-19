@@ -1,3 +1,9 @@
+# Version: 1.104.2
+## Date: 2024-05-19
+### Changes:
+- Fix: Fixed the issue of example data loss after update.
+
+
 # Version: 1.104.1
 ## Date: 2024-05-18
 ### Changes:

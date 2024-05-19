@@ -139,8 +139,6 @@ class Updater:
             with zipfile.ZipFile(project_zip_path, 'r') as zip_ref:
                 zip_ref.extractall(metaX_update_path)
                 
-            # delete data folder
-            shutil.rmtree(os.path.join(metaX_update_path, 'MetaX-main/data'))
             # Optionally, delete the project zip file after extraction
             os.remove(project_zip_path)
             
