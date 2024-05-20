@@ -1,3 +1,9 @@
+# Version: 1.104.3
+## Date: 2024-05-19
+### Changes:
+- Change: Changed the "Preferred_name" to "Gene" in the OTF annotation table and updated the example data.
+
+
 # Version: 1.104.2
 ## Date: 2024-05-19
 ### Changes:

@@ -5225,16 +5225,17 @@ class LoggerManager:
 ###############   Class LoggerManager End   ###############
     
 def global_exception_handler(type, value, tb):
+    # Format the traceback information
     error_msg = "".join(traceback.format_exception(type, value, tb))
     print("Uncaught exception:", error_msg)
     LoggerManager().write_log(error_msg, 'c')  # Using an instance to call write_log
 
-    # Display the error message in a GUI dialog
+    # Display a general error message in a GUI dialog without the traceback
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
     msg_box.setWindowTitle("Error")
-    msg_box.setText("An unexpected error occurred:")
-    msg_box.setInformativeText(error_msg)
+    msg_box.setText("An unexpected error occurred.")
+    msg_box.setInformativeText(str(value))  # Display the exception message without traceback
     msg_box.setStandardButtons(QMessageBox.Ok)
     msg_box.exec_()
 

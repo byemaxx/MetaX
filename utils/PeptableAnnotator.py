@@ -88,6 +88,8 @@ def run_2_result(df, db_path, threshold, genome_mode):
     # change the column names of 'Description'	'Description_prop' to 'eggNOG_Description'	'eggNOG_Description_prop'
     if 'Description' in df_t0.columns:
         df_t0.rename(columns={'Description':'eggNOG_Description', 'Description_prop':'eggNOG_Description_prop'}, inplace=True)
+    if 'Preferred_name' in df_t0.columns:
+        df_t0.rename(columns={'Preferred_name':'Gene', 'Preferred_name_prop':'Gene_prop'}, inplace=True)
     else:
         print('Warning: column name "Description" does not exist!, skip renaming...')
         
@@ -145,6 +147,12 @@ def peptableAnnotate(final_peptides_path, output_path, db_path, threshold=1.0, g
     print(f'Genome mode: {genome_mode}')
     print(f'Output file: {output_path}')
     print('-----------------------------------')
+    
+    # check if the input file exists
+    if not os.path.exists(final_peptides_path):
+        raise FileNotFoundError(f'Input file not found: {final_peptides_path}')
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(f'Database file not found: {db_path}')
     
     df = pd.read_csv(final_peptides_path, sep='\t')
     # df = df[:10] #! for testing
