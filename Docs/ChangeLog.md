@@ -1,3 +1,9 @@
+# Version: 1.104.4
+## Date: 2024-05-21
+### Changes:
+- Change: Removed the font_size option for the heatmap plot to avoid the font size is too small when the heatmap size is large.
+
+
 # Version: 1.104.3
 ## Date: 2024-05-19
 ### Changes:

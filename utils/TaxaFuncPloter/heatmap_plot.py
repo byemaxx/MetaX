@@ -112,7 +112,7 @@ class HeatmapPlot:
                 else:
                     title = f"{title} (Sorted by {plot_type} Top {top_number})"
 
-                plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+                plt.suptitle(title, weight='bold')
 
                 fig.ax_heatmap.set_xticklabels(
                     fig.ax_heatmap.get_xmajorticklabels(),
@@ -126,7 +126,7 @@ class HeatmapPlot:
                 )
                     
                 cbar = fig.ax_heatmap.collections[0].colorbar
-                cbar.set_label(plot_type, rotation=90, labelpad=1, fontsize=font_size)
+                cbar.set_label(plot_type, rotation=90, labelpad=1)
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
@@ -254,10 +254,10 @@ class HeatmapPlot:
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             plt.suptitle(
                 f"The Heatmap of intensity sorted by {plot_type} of Significant differences between groups (top {top_number})",
-                fontsize=font_size + 2, weight='bold'
+                weight='bold'
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label("Intensity", rotation=90, labelpad=1, fontsize=font_size)
+            cbar.set_label("Intensity", rotation=90, labelpad=1)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 
@@ -337,10 +337,10 @@ class HeatmapPlot:
 
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-        plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+        plt.suptitle(title, weight='bold')
         
         cbar = fig.ax_heatmap.collections[0].colorbar
-        cbar.set_label('Intensity', rotation=90, labelpad=1, fontsize=font_size)
+        cbar.set_label('Intensity', rotation=90, labelpad=1)
         cbar.ax.yaxis.set_ticks_position('left')
         cbar.ax.yaxis.set_label_position('left')
 
@@ -366,6 +366,38 @@ class HeatmapPlot:
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
                                        show_col_colors:bool = True, remove_zero_col:bool = True):
+        """
+        Plot a heatmap of all condition results.
+
+        Parameters:
+            - df (DataFrame): The input DataFrame containing the condition results.
+            - pvalue (float): The p-value threshold for significance. Default is 0.05.
+            - scale (str | None): The scaling method for the data. Default is None.
+            - log2fc_min (float): The minimum log2 fold change value. Default is 1.0.
+            - log2fc_max (float): The maximum log2 fold change value. Default is 30.0.
+            - fig_size (tuple): The size of the figure. Default is (10, 10).
+            - col_cluster (bool): Whether to cluster the columns. Default is True.
+            - row_cluster (bool): Whether to cluster the rows. Default is True.
+            - cmap (str | None): The color map for the heatmap. Default is None.
+            - rename_taxa (bool): Whether to rename the taxa. Default is True.
+            - font_size (int): The font size for the plot. Default is 10.
+            - show_all_labels (tuple): Whether to show all labels for x-axis and y-axis. Default is (False, False).
+            - return_type (str): The type of the return value. Default is 'fig'. options: 'fig', 'table'
+            - res_df_type (str): The type of the result DataFrame. Default is 'deseq2'.
+            - p_type (str): The type of p-value. Default is 'padj'. options: 'pvalue', 'padj'
+            - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'same_trends'
+            - show_col_colors (bool): Whether to show column colors. Default is True.
+            - remove_zero_col (bool): Whether to remove zero columns. Default is True.
+
+        Returns:
+            - retrun_type == 'fig': The heatmap figure. or (fig, df_dict) dict_df: {'all_sig': df1, 'no_na': df2, 'same_trends': df3}
+            - retrun_type == 'table': The sorted dataframe.
+
+        Raises:
+            - ValueError: If there are no significant differences in the results.
+            - ValueError: If an error occurs during plotting.
+
+        """
         import numpy as np
         # keep 4 decimal places
         pvalue = round(pvalue, 4)
@@ -452,11 +484,11 @@ class HeatmapPlot:
                 else:
                     title = f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})"                
                 
-                plt.suptitle(title, fontsize=font_size + 2, weight='bold')
+                plt.suptitle(title, weight='bold')
                 
                 cbar = fig.ax_heatmap.collections[0].colorbar
                 cbar.set_label("log2FC" if res_df_type == 'deseq2' else 't-statistic', 
-                               rotation=90, labelpad=1, fontsize=font_size)
+                               rotation=90, labelpad=1)
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')
 
@@ -465,7 +497,7 @@ class HeatmapPlot:
                 plt.tight_layout()
                 plt.show()
 
-                if 'df_dict' in locals():
+                if 'df_dict' in locals(): # df_dict:{'all_sig': df1, 'no_na': df2, 'same_trends': df3}
                     return fig, df_dict
                 else:
                     return fig
@@ -558,10 +590,10 @@ class HeatmapPlot:
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
             plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
-                         fontsize=font_size + 2, weight='bold')
+                         weight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label('t-statistic', rotation=90, labelpad=1, fontsize=font_size)
+            cbar.set_label('t-statistic', rotation=90, labelpad=1)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 

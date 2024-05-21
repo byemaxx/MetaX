@@ -287,6 +287,19 @@ class CrossTest:
 
     # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
     def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition, group_list=None, quiet=False) -> pd.DataFrame:
+        """
+        Perform statistical analysis using the DESeq2 method to compare groups against a control group with a specific condition.
+
+        Args:
+            df (pd.DataFrame): The input dataframe containing the data for analysis.
+            control_group (str): The name of the control group. e.g. 'PBS'.
+            condition (str): The name of the condition to compare against. e.g. 'Individual'.
+            group_list (list, optional): A list of groups to include in the analysis. Defaults to None. If None, all groups will be included.
+            quiet (bool, optional): Whether to suppress printing progress messages. Defaults to False.
+
+        Returns:
+            pd.DataFrame: A dataframe with 3-level column index containing the results of the DESeq2 analysis.
+        """
 
         meta_df = self.tfa.meta_df.copy()
 
