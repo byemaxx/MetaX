@@ -1,3 +1,8 @@
+# Version: 1.104.5
+## Date: 2024-05-23
+### Changes:
+- Change: Optimized the color assignment to improve the aesthetics of the figures.
+
 # Version: 1.104.4
 ## Date: 2024-05-21
 ### Changes:

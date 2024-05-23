@@ -43,14 +43,7 @@ class PcaPlot_js:
             pca_df['sample_name'] = sample_list
         group_num = len(pca_df['group'].unique())
         
-        # use sns color palette if group number is less than 10
-        if group_num <= 10:
-            import seaborn as sns
-            colors = sns.color_palette('deep', group_num)
-            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
-        else:
-            colors = self.get_distinct_colors(group_num, convert=True)
-        
+        colors = self.get_distinct_colors(group_num, convert=True)
 
         scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height))
         unique_group = [x for i, x in enumerate(group_list) if i == group_list.index(x)]

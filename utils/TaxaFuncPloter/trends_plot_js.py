@@ -54,13 +54,7 @@ class TrendsPlot_js:
         )
 
         col_num = len(df)
-        if col_num > 10:
-            colors = self.get_distinct_colors(col_num, convert=True)
-        else:
-            import seaborn as sns
-            colors = sns.color_palette('deep', col_num)
-            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
-            
+        colors = self.get_distinct_colors(col_num, convert=True)
             
         for i in range(df.shape[0]):
             color = colors[i]

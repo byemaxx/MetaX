@@ -71,12 +71,7 @@ class BarPlot_js:
             # transform to percentage of each column
             df = df.div(df.sum(axis=0), axis=1) * 100
         
-        if col_num > 10:
-            colors = self.get_distinct_colors(col_num, convert=True)
-        else:
-            import seaborn as sns
-            colors = sns.color_palette('deep', col_num)
-            colors = [f'rgb({int(i[0]*255)},{int(i[1]*255)},{int(i[2]*255)})' for i in colors]
+        colors = self.get_distinct_colors(col_num, convert=True)
                
         # create title
         if title is None:
