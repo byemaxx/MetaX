@@ -50,7 +50,21 @@ class GetMatrix:
     
         # df = get_top_intensity(sw.taxa_df, top_num=50, method='freq')
     def get_top_intensity(self, df, top_num: int = 10, method: str = 'mean', sample_list: list = None):
+        """
+        Returns the top intensity values from a DataFrame based on a specified method.
 
+        Args:
+            `df` (pandas.DataFrame): The input DataFrame.
+            `top_num` (int, optional): The number of top intensity values to return. Defaults to 10.
+            `method` (str, optional): The method used to calculate intensity values. 
+                Options: ['freq', 'mean', 'sum']. Defaults to 'mean'.
+            `sample_list` (list, optional): A list of column names to consider for intensity calculation. 
+                If None, all columns in the DataFrame will be used. Defaults to None.
+
+        Returns:
+            pandas.DataFrame: The DataFrame containing the top intensity values.
+
+        """
         df = df[sample_list].copy() if sample_list else df.copy()
         df = self.tfa.replace_if_two_index(df)
 

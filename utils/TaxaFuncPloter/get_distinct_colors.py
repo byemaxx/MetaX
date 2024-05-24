@@ -4,7 +4,6 @@ from distinctipy import distinctipy
 
 import matplotlib.pyplot as plt
 import colorsys
-import seaborn as sns
 
 
 class GetDistinctColors:

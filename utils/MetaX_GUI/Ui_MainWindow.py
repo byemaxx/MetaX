@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 477, 377))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -1359,7 +1359,10 @@ class Ui_metaX_main(object):
         sizePolicy.setHeightForWidth(self.pushButton_basic_bar_plot.sizePolicy().hasHeightForWidth())
         self.pushButton_basic_bar_plot.setSizePolicy(sizePolicy)
         self.pushButton_basic_bar_plot.setObjectName("pushButton_basic_bar_plot")
-        self.gridLayout_39.addWidget(self.pushButton_basic_bar_plot, 0, 1, 2, 1)
+        self.gridLayout_39.addWidget(self.pushButton_basic_bar_plot, 1, 1, 1, 1)
+        self.comboBox_3dbar_sub_meta = QtWidgets.QComboBox(self.tab_13)
+        self.comboBox_3dbar_sub_meta.setObjectName("comboBox_3dbar_sub_meta")
+        self.gridLayout_39.addWidget(self.comboBox_3dbar_sub_meta, 0, 1, 1, 1)
         self.gridLayout_23.addLayout(self.gridLayout_39, 6, 9, 1, 1)
         self.line_8 = QtWidgets.QFrame(self.tab_13)
         self.line_8.setFrameShape(QtWidgets.QFrame.VLine)
@@ -4079,7 +4082,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1021, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4133,9 +4136,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(2)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(0)
+        self.tabWidget_4.setCurrentIndex(1)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
@@ -4426,6 +4429,7 @@ class Ui_metaX_main(object):
         self.pushButton_basic_heatmap_sankey_plot.setText(_translate("metaX_main", "Plot  Sankey"))
         self.pushButton_basic_heatmap_plot.setText(_translate("metaX_main", "Plot Heatmap"))
         self.pushButton_basic_bar_plot.setText(_translate("metaX_main", "Plot Bar"))
+        self.comboBox_3dbar_sub_meta.setToolTip(_translate("metaX_main", "Sub Meta for Bar Plot"))
         self.pushButton_basic_heatmap_drop_item.setText(_translate("metaX_main", "Drop Item"))
         self.pushButton_basic_heatmap_clean_list.setText(_translate("metaX_main", "Clean List"))
         self.pushButton_basic_heatmap_add_a_list.setToolTip(_translate("metaX_main", "Add a list to the drawing box, make sure there is one item per line."))

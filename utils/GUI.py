@@ -567,6 +567,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # update sub_meta for basic pca
             self.comboBox_sub_meta_pca.clear()
             self.comboBox_sub_meta_pca.addItems(['None'] + meta_list)
+            self.comboBox_3dbar_sub_meta.clear()
+            self.comboBox_3dbar_sub_meta.addItems(['None'] + meta_list)
         
         except Exception as e:
             print(e)
@@ -3225,6 +3227,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
                 plot_percent = self.checkBox_basic_bar_plot_percent.isChecked()
+                sub_meta = self.comboBox_3dbar_sub_meta.currentText()
+                
                 width = width*100
                 height = height*100
                 df = df.loc[(df!=0).any(axis=1)]
@@ -3239,7 +3243,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                               title= '', rename_taxa=rename_taxa, 
                                                               show_legend=show_legend, font_size=font_size,
                                                               rename_sample=rename_sample, plot_mean = plot_mean,
-                                                              plot_percent = plot_percent)
+                                                              plot_percent = plot_percent, sub_meta = sub_meta,
+                                                              show_all_labels = show_all_labels)
                                                               
                 self.save_and_show_js_plot(pic, title)
             
@@ -5112,6 +5117,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         show_legend = self.checkBox_tflink_bar_show_legend.isChecked()
         plot_mean = self.checkBox_tflink_plot_mean.isChecked()
+        show_all_labels = (self.checkBox_tflink_bar_show_all_labels_x.isChecked(), self.checkBox_tflink_bar_show_all_labels_y.isChecked())
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -5152,6 +5158,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             params['show_legend'] = show_legend
             params['font_size'] = font_size
             params['plot_mean'] = plot_mean
+            params['show_all_labels'] = show_all_labels
             
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tfa).plot_intensity_bar(**params)

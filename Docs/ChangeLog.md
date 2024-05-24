@@ -1,3 +1,9 @@
+# Version: 1.105.0
+## Date: 2024-05-24
+### Changes:
+- New: Added a sub_meta option for the basic plot for 3D bar plot.
+- Fix: Fixed the bug of when plot bar, the option of show all labels was not work.
+
 # Version: 1.104.5
 ## Date: 2024-05-23
 ### Changes:
