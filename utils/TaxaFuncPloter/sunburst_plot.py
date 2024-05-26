@@ -1,13 +1,45 @@
 from pyecharts.charts import Sunburst
 from pyecharts import options as opts
 import random
+import colorsys
 
 class SunburstPlot:
     def __init__(self):
         self.sameple_list = None
         self.level_num = None
 
+    def adjust_color(self, rgb_color, saturation_factor=0.7, lightness_factor=1.3):
+        """
+        Adjusts the saturation and lightness of an RGB color.
 
+        Parameters:
+        - rgb_color (tuple): The RGB color as a tuple (r, g, b).
+        - saturation_factor (float): The factor by which to adjust the saturation. Default is 0.7.
+        - lightness_factor (float): The factor by which to adjust the lightness. Default is 1.3.
+
+        Returns:
+        - str: The adjusted color in the format 'rgb(r, g, b)'.
+        """
+        r, g, b = rgb_color
+        r, g, b = r / 255.0, g / 255.0, b / 255.0
+        h, l, s = colorsys.rgb_to_hls(r, g, b)
+        l = max(0, min(1, lightness_factor * l))
+        s = max(0, min(1, saturation_factor * s))
+        # Ensure the color doesn't become too light
+        if l > 0.9:
+            l = 0.9
+        r, g, b = colorsys.hls_to_rgb(h, l, s)
+        return f'rgb({int(r * 255)},{int(g * 255)},{int(b * 255)})'
+    
+    def get_random_color(self):
+        while True:
+            r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+            # Avoid generating pure white color
+            if not (r == 255 and g == 255 and b == 255):
+                color = self.adjust_color((r, g, b))
+                return color
+    
+    
     def _build_sunburst_data(self, df, show_label, label_font_size=8):
         if 'd__' not in df.index.tolist()[0]:
            raise ValueError('The taxa_df must be a taxa table with d__ in the index')
@@ -35,8 +67,12 @@ class SunburstPlot:
 
             for level in levels:
                 if level not in color_map: 
-                    color_map[level] = f'#{random.randint(0, 0xffffff):06x}'
-
+                    # random_color = f'#{random.randint(0, 0xffffff):06x}'
+                    # random a rgb color
+                    # random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+                    # color_map[level] = self.adjust_color(random_color)
+                    color_map[level] = self.get_random_color()
+                    
                 # 检查当前层级是否已经存在
                 found = False
                 for child in node.get("children", []):

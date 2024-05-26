@@ -1,6 +1,8 @@
 import pandas as pd
 from pyecharts.charts import Sankey
 from pyecharts import options as opts
+from .get_distinct_colors import GetDistinctColors
+
 
 class SankeyPlot:
 
@@ -155,6 +157,7 @@ class SankeyPlot:
         # nodes_combined = list({node['name']: node for node in nodes_up + nodes_down}.values())
         pic = Sankey(init_opts=opts.InitOpts(width=f"{width*100}px",
                                              height=f"{height*100}px"))
+        pic.set_colors(GetDistinctColors().get_distinct_colors(20, convert=True))
         
         for key, value in link_nodes_dict.items():
             nodes  = value[0]

@@ -116,13 +116,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         self.like_times = 0
         self.restore_mode = False
+        
+        self.metax_home_path = os.path.join(QDir.homePath(), 'MetaX')
+        self.last_path = QDir.homePath() # init last path as home path
+        
         #check update
         self.update_required = False
         self.check_update()
         
-        # self.last_path = os.path.join(QDir.homePath(), 'Desktop')
-        self.metax_home_path = os.path.join(QDir.homePath(), 'MetaX')
-        self.last_path = QDir.homePath() # init last path as home path
         self.table_dict = {}
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_list = []
@@ -1300,9 +1301,17 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
             
     def check_update(self, show_message=False):
-        updater = Updater(self, __version__, splash)
+        settings_path = os.path.join(self.metax_home_path, "settings.ini")
+        update_branch = 'main'
+        
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r') as f:
+                settings = f.read()
+            if 'update_branch=dev' in settings:
+                update_branch = 'dev'
+        
+        updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=update_branch)
         updater.check_update(show_message=show_message)
-
                 
 
     def show_about(self):

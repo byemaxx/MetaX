@@ -21,7 +21,7 @@ import urllib.error
 
 
 class Updater:
-    def __init__(self, MetaXGUI, version, splash, show_message=False):
+    def __init__(self, MetaXGUI, version, splash, show_message=False, branch='main'):
         self.MainWindow = MetaXGUI.MainWindow
         self.metaXGUI = MetaXGUI
         self.splash = splash
@@ -36,6 +36,7 @@ class Updater:
         self.update_libs = []
         self.install_libs = []
         self.uninstall_libs = []
+        self.branch = branch
         
         self.remote_change_log_path = ""
         self.remote_version_path = ""
@@ -44,9 +45,9 @@ class Updater:
 
 
     def set_init_path(self):
-        self.remote_version_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/utils/version.py"
-        self.remote_change_log_path = "https://raw.githubusercontent.com/byemaxx/MetaX/main/Docs/ChangeLog.md"
-        self.remote_project_zip_download_path = "https://github.com/byemaxx/MetaX/archive/refs/heads/main.zip"
+        self.remote_version_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/utils/version.py"
+        self.remote_change_log_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/Docs/ChangeLog.md"
+        self.remote_project_zip_download_path = f"https://github.com/byemaxx/MetaX/archive/refs/heads/{self.branch}.zip"
 
     def set_current_version_and_api(self):
         # MetaX folder path is this file's parent and the parent's parent
@@ -177,7 +178,7 @@ class Updater:
             # move the new MetaX folder to the old MetaX folder
             home_path = pathlib.Path.home()
             metaX_update_path = os.path.join(home_path, 'MetaX/update')
-            project_folder_path = os.path.join(metaX_update_path, 'MetaX-main') # /home/user/MetaX/update/MetaX-main
+            project_folder_path = os.path.join(metaX_update_path, f'MetaX-{self.branch}') # /home/user/MetaX/update/MetaX-main or /home/user/MetaX/update/MetaX-dev
             for root, dirs, files in os.walk(project_folder_path):
                 for file in files:
                     shutil.move(os.path.join(root, file), os.path.join(metax_folder_path, file))
@@ -241,7 +242,7 @@ class Updater:
 
 
     def check_update(self, show_message=False):
-
+        print(f"Checking update from {self.branch} branch...")
         # check if remote path available
         try:
             # check if remote path available
@@ -252,11 +253,12 @@ class Updater:
                 print(f"Check update failed: {remote_version_re.status}")
                 return
             else:
-                remote_version = remote_version_re.read().decode("utf-8").split("'")[1]
-                self.remote_version = remote_version
-                print(f'Remote Version: {remote_version}')
+                print(f"Local version: {self.current_version}")
+                remote_version_str = remote_version_re.read().decode("utf-8")
+                self.remote_version = remote_version_str.split("__version__ = '")[1].split("'")[0]
+                print(f'Remote Version: {self.remote_version}')
                 try:
-                    remote_version_api = remote_version_re.read().decode("utf-8").split("=")[1]
+                    remote_version_api = remote_version_str.split("API_version = '")[1].split("'")[0]
                     print(f'Remote API: {remote_version_api}')
                 except Exception as e:
                     print(f"Check API failed: {e}")
@@ -265,8 +267,8 @@ class Updater:
 
                 self.remote_api = remote_version_api    
                 
-                if self.compare_version(remote_version, self.current_version): # return True if remote_version > current_version
-                    print(f"New version is available:\nCurrent version: {self.current_version}\nRemote version: {remote_version}")
+                if self.compare_version(self.remote_version, self.current_version): # return True if remote_version > current_version
+                    print(f"New version is available:\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}")
                     self.update_metax()
                 else:
                     print("MetaX is up to date.")
@@ -318,7 +320,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)  #
     mock_gui = MockMetaXGUI()
     
-    updater = Updater(mock_gui, '1.101.5', None, show_message=True)
+    updater = Updater(mock_gui, '1.101.5', None, show_message=True, branch='dev')
     updater.check_update(show_message=True)
     
 

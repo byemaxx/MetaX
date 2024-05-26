@@ -1,3 +1,8 @@
+# Version: 1.105.1
+## Date: 2024-05-25
+### Changes:
+- Change: Optimized the color assignment for Sankey, and Sunburst plot to improve the aesthetics of the figures.
+
 # Version: 1.105.0
 ## Date: 2024-05-24
 ### Changes:

@@ -22,11 +22,10 @@ class GetDistinctColors:
             result.append(colors[index])
         return result
     
-    def adjust_color(self, color, sat_factor=0.2, light_factor=0.2):
+    def adjust_color(self, color, sat_factor=0.7, light_factor=1.2):
         """
-        Adjusts the given color's saturation and lightness.
+        Adjusts the given color's saturation and lightness. each factor should be between 0 and 2.
         Args:
-            color: Tuple of RGB values (each between 0 and 1).
             sat_factor: Factor to adjust saturation
             light_factor: Factor to adjust lightness
         Returns:
@@ -50,7 +49,7 @@ class GetDistinctColors:
             # distinct_colors = sns.color_palette('tab10', num)
             # use tab10 colors from matplotlib
             distinct_colors = plt.cm.tab10.colors
-            colors = [self.adjust_color(i, 0.75, 0.98) for i in distinct_colors]
+            colors = [self.adjust_color(i, 0.75, 1.1) for i in distinct_colors]
             
         elif num <= 20:
             # use tab20 colors from matplotlib
