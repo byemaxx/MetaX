@@ -121,6 +121,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.last_path = QDir.homePath() # init last path as home path
         
         #check update
+        self.update_branch = 'main'
         self.update_required = False
         self.check_update()
         
@@ -903,6 +904,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # save time and version
         self.settings.setValue("time", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.settings.setValue("version", __version__)
+        # save update_branch setting
+        self.settings.setValue("update_branch", self.update_branch)
 
 
 
@@ -1302,15 +1305,16 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
     def check_update(self, show_message=False):
         settings_path = os.path.join(self.metax_home_path, "settings.ini")
-        update_branch = 'main'
         
         if os.path.exists(settings_path):
             with open(settings_path, 'r') as f:
                 settings = f.read()
             if 'update_branch=dev' in settings:
-                update_branch = 'dev'
+                self.update_branch = 'dev'
+            else:
+                self.update_branch = 'main'
         
-        updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=update_branch)
+        updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=self.update_branch)
         updater.check_update(show_message=show_message)
                 
 
