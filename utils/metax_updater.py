@@ -273,7 +273,7 @@ class Updater:
                 else:
                     print("MetaX is up to date.")
                     if show_message:
-                        QMessageBox.information(self.MainWindow, "Update", "MetaX is up to date.")
+                        QMessageBox.information(self.MainWindow, "Update", f"MetaX is up to date.\n\nCheck version: {self.branch}\n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}")
 
         except Exception as e:
             print(f"Check update failed:\n{e}")

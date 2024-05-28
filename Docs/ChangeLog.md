@@ -1,3 +1,9 @@
+# Version: 1.105.2
+## Date: 2024-05-28
+### Changes:
+- New: Added a setting window to enable user to update to Beta version of MetaX.
+- Change: updated the cookbook.
+
 # Version: 1.105.1
 ## Date: 2024-05-25
 ### Changes:

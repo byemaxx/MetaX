@@ -77,7 +77,7 @@ from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
 from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
 from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
 from MetaX.utils.MetaX_GUI.UserAgreementDialog import UserAgreementDialog
-
+from MetaX.utils.MetaX_GUI.Settings import SettingsWidget
 
 # import third-party modules
 import pandas as pd
@@ -111,7 +111,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1440, 900)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
-
+        
         self.logger = LoggerManager()
 
         self.like_times = 0
@@ -120,10 +120,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.metax_home_path = os.path.join(QDir.homePath(), 'MetaX')
         self.last_path = QDir.homePath() # init last path as home path
         
-        #check update
+        # init the check update status
         self.update_branch = 'main'
+        self.auto_check_update = True
+        
+        # Initiate QSettings
+        self.init_QSettings()
+        # Check and load settings
+        self.load_basic_Settings()
+        
+        #check update
         self.update_required = False
-        self.check_update()
+        self.check_update(manual_check_trigger=False)
         
         self.table_dict = {}
         self.comboBox_top_heatmap_table_list = []
@@ -163,6 +171,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
+        self.actionSettings.setIcon(qta.icon('mdi.cog'))
         # set menu bar click event
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
         self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
@@ -176,7 +185,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
         self.actionAny_Table_Mode.triggered.connect(self.set_any_table_mode)
-        self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True))
+        self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
+        self.actionSettings.triggered.connect(self.show_settings_window)
         
         self.screen = QDesktopWidget().screenGeometry()
         self.screen_width = self.screen.width()
@@ -428,8 +438,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         self.set_change_event_for_all_condition_group()
 
-        # Initiate QSettings
-        self.init_QSettings()
+        # init theme
         self.init_theme_menu()
         self.init_theme()
         
@@ -438,11 +447,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         for label in title_labes:
             label.setStyleSheet("font-size: 20px;")
 
-        # Check and load settings
-        self.load_basic_Settings()
         
         # set default tab index as 0 for all tabWidget
         self.set_default_tab_index()
+        
+        ## create settings widget instance
+        self.settings_dialog = None
         
 
     ###############   init function End   ###############
@@ -603,8 +613,33 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             )
         
 
-    
+    def show_settings_window(self):
+        if self.settings_dialog is None:
+            self.settings_dialog = QDialog(self.MainWindow)
+            self.settings_dialog.setWindowTitle("Settings")
+            self.settings_dialog.setModal(True)
+            layout = QVBoxLayout(self.settings_dialog)
+            # reszie the settings dialog
+            self.settings_dialog.resize(600, 400)
 
+            settings_widget = SettingsWidget(self.settings_dialog, self.update_branch, self.auto_check_update)
+            settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
+            settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
+
+            layout.addWidget(settings_widget)
+            self.settings_dialog.setLayout(layout)
+        
+        self.settings_dialog.exec_()
+        
+    # handle the update mode changed from settings window
+    def on_update_mode_changed(self, mode):
+        self.update_branch = mode
+        print(f"Update branch changed to: {mode}")
+
+    # handle the auto check update changed from settings window
+    def on_auto_check_update_changed(self, auto_check):
+        self.auto_check_update = auto_check
+        print(f"Auto check update set to: {auto_check}")
     
     ###############   basic function End   ###############
     
@@ -871,7 +906,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
                 self.pushButton_multi_deseq2.show()
                 print("Hidden Button of DESeq2 in Group Control Test is shown.")
-                
+        
+        if self.settings.contains("update_branch"):
+            self.update_branch = self.settings.value("update_branch", "main", type=str)
+        if self.settings.contains("auto_check_update"):
+            self.auto_check_update = self.settings.value("auto_check_update", True, type=bool)
             
         # load time and version
         print(f"Loaded settings from last time at {self.settings.value('time', '', type=str)} with version {self.settings.value('version', '', type=str)}")
@@ -906,8 +945,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.settings.setValue("version", __version__)
         # save update_branch setting
         self.settings.setValue("update_branch", self.update_branch)
-
-
+        self.settings.setValue("auto_check_update", self.auto_check_update)
 
 
     def save_set_multi_table_settings(self):
@@ -947,7 +985,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif isinstance(widget, QtWidgets.QSpinBox):
                 self.settings.setValue(f"{settings_key}/value", widget.value())
         
-
         
     def export_log_file(self):
         log_path = os.path.join(self.metax_home_path, "MetaX.log")
@@ -1303,16 +1340,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_data_overiew_theme.addItems(mat_style_list)
         
             
-    def check_update(self, show_message=False):
-        settings_path = os.path.join(self.metax_home_path, "settings.ini")
-        
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r') as f:
-                settings = f.read()
-            if 'update_branch=dev' in settings:
-                self.update_branch = 'dev'
-            else:
-                self.update_branch = 'main'
+    def check_update(self, show_message=False, manual_check_trigger=True):
+        if (manual_check_trigger is False) and (self.auto_check_update is False):
+            print("Auto check update is disabled.")
+            return
         
         updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=self.update_branch)
         updater.check_update(show_message=show_message)

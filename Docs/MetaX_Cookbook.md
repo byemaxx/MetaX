@@ -24,7 +24,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
   <img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu" style="zoom: 50%;" />
 
-## Database Builder
+# Module 1. Database Builder
 
 - You have to build the database for **the first time** using <u>Database Builder</u>.
 
@@ -74,7 +74,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
     | MGYG000000008 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Lactobacillus;s&#95;Lactobacillus johnsonii |
     | MGYG000000009 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Ligilactobacillus;s&#95;Ligilactobacillus murinus |
 
-## Database Updater
+# Module 2. Database Updater
 
 - Update the built database, and extend more annotations.
 
@@ -104,7 +104,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 
 
-## Peptide Annotator
+# Module 3. Peptide Annotator
 
 - Annotate the peptide to TaxaFunc before analyzing by <u>**Peptide Annotator**</u>
 
@@ -137,9 +137,9 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 
 
-# OTF Analyzer
+# Module 4. OTF Analyzer
 
-When we get the **Operational Taxa-Functions (OTF) Table** after using <u>**Peptide Annotator**</u>, we can use **<u>OTF Analyzer</u>** to do downstream analysis.
+When we get the **Operational Taxa-Functions (OTF) Table** after using the <u>**Peptide Annotator**</u>, we can use the **<u>OTF Analyzer</u>** to do downstream analysis.
 
 ## 1. Data Preparing
 
@@ -208,7 +208,7 @@ We can also filter some samples for downstream analysis.
 
 ###	Sum Proteins Intensity
 
-We can click **Create Proteins Intensity Table** to sum the peptide to the proteins, if the Protein col is in the original table.
+We can click **Create Proteins Intensity Table** to sum the peptide to the proteins if the Protein col is in the original table.
 
 - Occuam's Razor and Anti-Razor are methods both available for the inferring shared peptide. 1. build the Rank of proteins. 2. choose the protein with a higher rank for the shared peptide.
 - 4 methods to build the **Protein Rank**.
@@ -219,13 +219,15 @@ We can click **Create Proteins Intensity Table** to sum the peptide to the prote
 
 ### Data preprocessing
 
-- Data Preprocessing **Before Summing  Peptides**:  Perform data preprocessing first, then sum the peptides to calculate the intensity of each taxa, function and taxa-function pair.
-- Data Preprocessing **After Summing Peptides**: Sum the peptides to calculate the intensity of each taxa, function and taxa-function pair first, then perform data preprocessing for each table.
+- Data Preprocessing **Before Summing  Peptides**:  Perform data preprocessing first, then sum the peptides to calculate the intensity of each taxon, function and taxa-function pair.
+- Data Preprocessing **After Summing Peptides**: Sum the peptides to calculate the intensity of each taxon, function and taxa-function pair first, then perform data preprocessing for each table.
 
-There are several methods for Outliers detection and handling.
+There are several methods for outlier detection and handling.
 
 - **Outliers Detection:**
   - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
+  
+  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as an outlier (NaN).
   
   - **Half-Zero:** This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.
   
@@ -237,7 +239,7 @@ There are several methods for Outliers detection and handling.
   - **Z-Score:** Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.
   - **Mahalanobis Distance:** Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.
 
-​	<u>In all methods, You can chooses detection outliers by a meta column, and a meta to handle the outliers.</u>
+​	<u>In all methods, You can choose detection outliers by a meta column, and a meta to handle the outliers.</u>
 
 - **Outliers Imputation:**
 
@@ -337,7 +339,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Sunburst
 
-    - <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" style="zoom:50%;" />
+    - <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" style="zoom: 70%;" />
 
   - TreeMap
 
@@ -352,10 +354,10 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Heatmap and Bar Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap" style="zoom: 80%;" />
 
 - **Select items(Taxa, Function, Taxa-Func and Peptide ) to plot:**
-  - Just add **All Taxa**, or select one we are interested in.
+  - Add **All Taxa**, or select one we are interested in.
 
 <img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list"  />
 
@@ -365,7 +367,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Clicked <u>filter with threshold</u> will filter by the p-value of ANOVA and T-TEST and P-value and Log2FC of DESeq2 result (setting in the corresponding page).
 
-  ![add_top_list](./MetaX_Cookbook.assets/add_top_list.png)
+  <img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  />
 
 - **Add a list for ploting:**
 
@@ -422,6 +424,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     <img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line" style="zoom: 50%;" />
 
+- 3D Bar plot
+
+  - Plot 3D bar by selecting a **sub meta**.
+  - ![basic_stats_bar_3d_setting](MetaX_Cookbook.assets/basic_stats_bar_3d_setting.png)
+
+  - <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d" style="zoom:80%;" />
+
 
 
 ### Peptide Query
@@ -453,8 +462,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 ### Significant Taxa-Func
 
 - Significant comparing enables us to find the result of **<u>The taxa between the two groups showing no significant differences, while the related functions are significantly different</u>** and function no significant but relted taxa significant.
-
-
+- ![Significant_Taxa-Func](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
 
 ### Plot Corss Heatmap
 
@@ -527,12 +535,12 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   Set a Group as **"Control"**, then compare all groups to Control
 
-  - **Comparing in Each Condition:** Select a meta such as individual, then comparing groups to control in each individual.
+  - **Comparing in Each Condition:** Select a meta such as individual, then compare groups to control in each individual.
 
-  - ![image-20240311121010996](./MetaX_Cookbook.assets\group_control_test.png)
+  - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
   - Result of Dunnett's Test:
-    - T- Statistic value show in the heatmap
-  - ![image-20240311121834429](./MetaX_Cookbook.assets\image-20240311121834429.png)
+    - T- Statistic value shown in the heatmap
+  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap" style="zoom:80%;" />
 
 
 
@@ -556,9 +564,9 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Sankey:
 
-    - The last nodes level is the functions linked to each Taxon (When plot Taxa-Func)
+    - The last node level is the functions linked to each Taxon (When plotting Taxa-Func)
 
-    <img src="MetaX_Cookbook.assets/image-20230728140335297.png" alt="image-20230728140335297" style="zoom:50%;" />
+    <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" style="zoom:50%;" />
 
 ### Co-Expression Networks
 
@@ -687,7 +695,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - **Export Log**
 
   - You can export the log file for debugging or reporting the issue.
-  - ![image-20230816114901459](MetaX_Cookbook.assets/expot_log.png)
+  - ![dev_menu](MetaX_Cookbook.assets/dev_menu.png)
 
 - **Show or Hide the Console**
 
@@ -699,7 +707,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - ![](MetaX_Cookbook.assets/any_table_mode.png)
 
-    
+- Settings
+
+  - Check the box of **Auto Check Update** to enable or disable check update when launching
+  - Change to update from the **stable version** or **beta version** by settings
+  - <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
+
+  
 
 
 # Enjoy MetaX

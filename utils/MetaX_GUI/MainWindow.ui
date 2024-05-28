@@ -7788,6 +7788,7 @@
     <addaction name="actionExport_Log_File"/>
     <addaction name="actionHide_Show_Console"/>
     <addaction name="actionAny_Table_Mode"/>
+    <addaction name="actionSettings"/>
    </widget>
    <addaction name="menuTools"/>
    <addaction name="menuOthers"/>
@@ -7852,6 +7853,11 @@
   <action name="actionAny_Table_Mode">
    <property name="text">
     <string>Any Table Mode</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>
