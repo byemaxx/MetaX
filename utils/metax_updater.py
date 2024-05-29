@@ -213,7 +213,7 @@ class Updater:
             change_log_str = "No change log."
             
         if self.current_api != self.remote_api:
-            QMessageBox.warning(self.MainWindow, "Update", f"MetaX new version is available with a new API. Please download the new version manually.\n\n\
+            QMessageBox.warning(self.MainWindow, "Update", f"MetaX new version is available with a new API.\n\nPlease download the new version manually.\n\n\
             current version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}")
             return
 
@@ -282,7 +282,7 @@ class Updater:
                 self.remote_api = remote_version_api    
                 
                 if self.compare_version(self.remote_version, self.current_version): # return True if remote_version > current_version
-                    print(f"New version is available:\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}")
+                    print(f"New version is available: {self.current_version} -> {self.remote_version}")
                     self.update_metax()
                 else:
                     print("MetaX is up to date.")

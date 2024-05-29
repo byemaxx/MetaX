@@ -1,3 +1,8 @@
+# Version: 1.105.3
+## Date: 2024-05-29
+### Changes:
+- Fix: Fixed the bug of MetaX Updater.
+
 # Version: 1.105.2
 ## Date: 2024-05-28
 ### Changes:
