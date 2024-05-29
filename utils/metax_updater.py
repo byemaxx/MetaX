@@ -30,6 +30,7 @@ class Updater:
         self.current_api = 0
         self.current_changes = []
         self.metax_folder_path = None
+        self.version_path = None
         self.remote_path =None
         self.remote_version = None
         self.remote_api = None
@@ -42,6 +43,7 @@ class Updater:
         self.remote_version_path = ""
         self.remote_project_zip_download_path = ""
         self.set_init_path()
+        self.set_current_version_and_api()
 
 
     def set_init_path(self):
@@ -56,19 +58,33 @@ class Updater:
         print(f"MetaX folder path: {metax_folder_path}")
         self.metax_folder_path = metax_folder_path
         # get the version and API from version.py
-        version_path = os.path.join(metax_folder_path, 'utils/version.py')
-        with open(version_path, 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if line.startswith('__version__'):
-                    self.current_version = line.split("'")[1]
-                elif line.startswith('API_version'):
-                    self.current_api = line.split("=")[1]
-        print(f"Current version: {self.current_version}")
-        print(f"Current API: {self.current_api}")
+        self.version_path = os.path.join(metax_folder_path, 'utils/version.py')
+        try:
+            with open(self.version_path, 'r') as file:
+                local_version_str = file.read()
+                self.current_version = local_version_str.split("__version__ = '")[1].split("'")[0]
+                self.current_api = local_version_str.split("API_version = '")[1].split("'")[0]
+        except Exception as e:
+            print(f"Check local API failed: {e}")
+
+            
+        print(f"Local version: {self.current_version}. API: {self.current_api}")
         
-        
-        
+    def check_update_status(self):
+        try:
+            # get the version from version.py
+            with open(self.version_path, 'r') as file:
+                local_version_str = file.read()
+                new_local_version = local_version_str.split("__version__ = '")[1].split("'")[0]
+
+            if new_local_version == self.remote_version:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f"Check update status failed: {e}")
+            return False
+            
         
     
     def parse_changelog_md(self):
@@ -223,11 +239,10 @@ class Updater:
                     return
                 
                 # check if the update is successful
-                self.set_current_version_and_api()
-                if self.current_version == self.remote_version:
+                if self.check_update_status():
                     msg = f"MetaX has been updated to {self.remote_version}. Please restart MetaX."
                 else:
-                    msg = f"MetaX update failed. Still in version {self.current_version}. Please try again later or update manually."
+                    msg = f"Warning: MetaX update failed. Still in version {self.current_version}. Please try again later or update manually."
                 
                 QMessageBox.information(self.MainWindow, "Update", msg)
                 # force close MetaX without triggering closeEvent
@@ -253,17 +268,16 @@ class Updater:
                 print(f"Check update failed: {remote_version_re.status}")
                 return
             else:
-                print(f"Local version: {self.current_version}")
                 remote_version_str = remote_version_re.read().decode("utf-8")
                 self.remote_version = remote_version_str.split("__version__ = '")[1].split("'")[0]
-                print(f'Remote Version: {self.remote_version}')
                 try:
                     remote_version_api = remote_version_str.split("API_version = '")[1].split("'")[0]
-                    print(f'Remote API: {remote_version_api}')
                 except Exception as e:
                     print(f"Check API failed: {e}")
                     # set API to 0 if failed
                     remote_version_api = 0
+                    
+                print(f"Remote version: {self.remote_version}. Remote API: {remote_version_api}")
 
                 self.remote_api = remote_version_api    
                 
@@ -278,7 +292,7 @@ class Updater:
         except Exception as e:
             print(f"Check update failed:\n{e}")
             if show_message:
-                QMessageBox.warning(self.MainWindow, "Update", "Github is not available for now. Please try again later or update manually.")
+                QMessageBox.warning(self.MainWindow, "Update", "Warning: Github is not available for now. Please try again later or update manually.")
             return
             
 
