@@ -17,7 +17,7 @@
 
 ## Getting Started
 - `GUI version`:
-  - Please refer to the [MetaX Cookbook](./Docs/MetaX_Cookbook.md) for detailed instructions on how to use MetaX.
+  - Please refer to the [MetaX Cookbook](./Docs/index.md) for detailed instructions on how to use MetaX.
   <br>
 - `Command-line version`:
   - Please read the example documentation in the [Notebook](./Docs/example.ipynb) for detailed instructions on how to use MetaX.
