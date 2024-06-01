@@ -143,7 +143,7 @@ When we get the **Operational Taxa-Functions (OTF) Table** after using the <u>**
 
 ## 1. Data Preparing
 
-**TaxaFunction Table:** Get from  <u>Peptide Annotator</u> module
+**OTFs (Taxa-Functions) Table:** Get from  <u>Peptide Annotator</u> module
 
 **Meta Table:** The first column is sample names, and the other columns are different groups. *It would generate automatically meta info if the meta table were not provided (1. all samples are in the same group; 2. each sample is a group).*
 
@@ -222,12 +222,20 @@ We can click **Create Proteins Intensity Table** to sum the peptide to the prote
 - Data Preprocessing **Before Summing  Peptides**:  Perform data preprocessing first, then sum the peptides to calculate the intensity of each taxon, function and taxa-function pair.
 - Data Preprocessing **After Summing Peptides**: Sum the peptides to calculate the intensity of each taxon, function and taxa-function pair first, then perform data preprocessing for each table.
 
-There are several methods for outlier detection and handling.
+There are several methods for detecting and handling outliers.
+
+Two steps will be applied:
+
+1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN.
+
+2. <u>Outlier Handling:</u> First, peptides with NaN values in all samples will be removed. Then, users can choose a method to fill the remaining NaN values.
+
+   
 
 - **Outliers Detection:**
   - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
   
-  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as an outlier (NaN).
+  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as an NaN.
   
   - **Half-Zero:** This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.
   
@@ -243,6 +251,10 @@ There are several methods for outlier detection and handling.
 
 - **Outliers Imputation:**
 
+  - **Drop:** Remove peptides that contain any NaN values.
+
+  - **Original:** Remove peptides that contain any NaN values.
+
   - **Mean**: Outliers will be imputed by the mean.
 
   - **Median**: Outliers will be imputed by the median.
@@ -256,14 +268,14 @@ There are several methods for outlier detection and handling.
   You can choose the outliers Imputation by *each group* or by *all samples*.
 
 - **Remove Batch Effect:**
-  
+
   - Here, you can choose a group as the batch effect, then use [<u>reCombat</u>] (https://github.com/BorgwardtLab/reComBat) for handling.
 - **Data Transformation:**
-  
+
   - Log2, Log10, Square root transformation and Cube root transformation.
-  
+
 - **Data Normalization:**
-  
+
   - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by sum.
 
 <u>If you use [Z-Score, Mean centring and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.</u>
