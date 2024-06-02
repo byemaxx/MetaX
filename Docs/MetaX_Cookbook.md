@@ -4,7 +4,7 @@ This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the
 
 # Overview
 
-**MetaX** is a novel tool for the streamlined annotation of peptide sequences with taxonomic and functional information based on the lowest common ancestors. This versatile tool connects species-specific functions, enabling a more comprehensive analysis of the relationship between taxonomy and functionality. Furthermore, MetaX incorporates robust statistical modules for differential analysis of species-function contributions across distinct groups.
+**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for the streamlined annotation of peptide sequences with taxonomic and functional information based on the lowest common ancestors. This versatile tool connects species-specific functions, enabling a more comprehensive analysis of the relationship between taxonomy and functionality. Furthermore, MetaX incorporates robust statistical modules for differential analysis of species-function contributions across distinct groups.
 
 ![abstract](./MetaX_Cookbook.assets/abstract.png)
 
@@ -226,9 +226,9 @@ There are several methods for detecting and handling outliers.
 
 Two steps will be applied:
 
-1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN.
+1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contains NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
 
-2. <u>Outlier Handling:</u> First, peptides with NaN values in all samples will be removed. Then, users can choose a method to fill the remaining NaN values.
+2. <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
 
    
 
@@ -730,4 +730,4 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 # Enjoy MetaX
 
-If you have any issues or suggestions, please New issue in my GitHub(https://github.com/byemaxx/MetaX)
+If you have any issues or suggestions, please New issue in my [GitHub](https://github.com/byemaxx/MetaX).

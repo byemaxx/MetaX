@@ -1,0 +1,1227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Preprocessing Documentation</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+        }
+        nav {
+            width: 250px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+        nav a {
+            display: block;
+            padding: 8px 16px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #e2e6ea;
+            color: #0056b3;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            overflow-y: auto;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #343a40;
+        }
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #212529;
+            border-collapse: collapse;
+        }
+        table th,
+        table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid #dee2e6;
+        }
+        table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #dee2e6;
+        }
+        table tbody + tbody {
+            border-top: 2px solid #dee2e6;
+        }
+        table .table {
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h2>Navigation</h2>
+    <ul class="nav flex-column">
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#metax-cookbook">MetaX Cookbook</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#overview">Overview</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#contents">Contents</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#get-start">Get Start</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#module-1-database-builder">Module 1. Database Builder</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#module-2-database-updater">Module 2. Database Updater</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#module-3-peptide-annotator">Module 3. Peptide Annotator</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#module-4-otf-analyzer">Module 4. OTF Analyzer</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#1-data-preparing">1. Data Preparing</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#2-data-overview">2. Data Overview</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#3-set-taxafunc">3. Set TaxaFunc</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#data-selection">Data selection</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#data-preprocessing">Data preprocessing</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#4-basic-stats">4. Basic Stats</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#pca-correlation-and-box-plot">PCA, Correlation and Box Plot</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#heatmap-and-bar-plot">Heatmap and Bar Plot</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#peptide-query">Peptide Query</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#5-cross-test">5. Cross Test</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#t-test">T-TEST</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#anova-test">ANOVA-TEST</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#significant-taxa-func">Significant Taxa-Func</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#plot-corss-heatmap">Plot Corss Heatmap</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#tukey_test">TUKEY_TEST</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#group-control-test">Group-Control TEST</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#6-differential-analysis">6. Differential Analysis</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#fold-change-calculation">Fold Change Calculation</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#co-expression-networks">Co-Expression Networks</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#expression-trends">Expression Trends</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 20px;">
+            <a class="nav-link" href="#7-taxa-func-link">7. Taxa-Func Link</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 40px;">
+            <a class="nav-link" href="#taxa-func-link-plot">Taxa-Func Link Plot</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#restore-last-taxafunc-object">Restore Last TaxaFunc Object</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#developer-tools">Developer Tools</a>
+        </li>
+    
+        <li class="nav-item" style="margin-left: 0px;">
+            <a class="nav-link" href="#enjoy-metax">Enjoy MetaX</a>
+        </li>
+    
+    </ul>
+</nav>
+
+<main>
+    <h1 id="metax-cookbook">MetaX Cookbook</h1>
+<p>This is the guidebook for the <u>MetaX</u> <strong>GUI Version</strong>. If you are using the CLI to analyze, We recommend that you read the documentation for each MetaX module for instructions on how to use it from the command line.</p>
+<h1 id="overview">Overview</h1>
+<p><strong><a href="https://github.com/byemaxx/MetaX">MetaX</a></strong> is a novel tool for the streamlined annotation of peptide sequences with taxonomic and functional information based on the lowest common ancestors. This versatile tool connects species-specific functions, enabling a more comprehensive analysis of the relationship between taxonomy and functionality. Furthermore, MetaX incorporates robust statistical modules for differential analysis of species-function contributions across distinct groups.</p>
+<p><div style="text-align: center;"><img alt="abstract" src="./MetaX_Cookbook.assets/abstract.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h1 id="contents">Contents</h1>
+<div class="toc">
+<ul>
+<li><a href="#metax-cookbook">MetaX Cookbook</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#contents">Contents</a></li>
+<li><a href="#get-start">Get Start</a></li>
+<li><a href="#module-1-database-builder">Module 1. Database Builder</a></li>
+<li><a href="#module-2-database-updater">Module 2. Database Updater</a></li>
+<li><a href="#module-3-peptide-annotator">Module 3. Peptide Annotator</a></li>
+<li><a href="#module-4-otf-analyzer">Module 4. OTF Analyzer</a><ul>
+<li><a href="#1-data-preparing">1. Data Preparing</a></li>
+<li><a href="#2-data-overview">2. Data Overview</a></li>
+<li><a href="#3-set-taxafunc">3. Set TaxaFunc</a><ul>
+<li><a href="#data-selection">Data selection</a></li>
+<li><a href="#sum-proteins-intensity">Sum Proteins Intensity</a></li>
+<li><a href="#data-preprocessing">Data preprocessing</a></li>
+</ul>
+</li>
+<li><a href="#4-basic-stats">4. Basic Stats</a><ul>
+<li><a href="#pca-correlation-and-box-plot">PCA, Correlation and Box Plot</a></li>
+<li><a href="#heatmap-and-bar-plot">Heatmap and Bar Plot</a></li>
+<li><a href="#peptide-query">Peptide Query</a></li>
+</ul>
+</li>
+<li><a href="#5-cross-test">5. Cross Test</a><ul>
+<li><a href="#t-test">T-TEST</a></li>
+<li><a href="#anova-test">ANOVA-TEST</a></li>
+<li><a href="#significant-taxa-func">Significant Taxa-Func</a></li>
+<li><a href="#plot-corss-heatmap">Plot Corss Heatmap</a></li>
+<li><a href="#tukey_test">TUKEY_TEST</a></li>
+<li><a href="#group-control-test">Group-Control TEST</a></li>
+</ul>
+</li>
+<li><a href="#6-differential-analysis">6. Differential Analysis</a><ul>
+<li><a href="#fold-change-calculation">Fold Change Calculation</a></li>
+<li><a href="#co-expression-networks">Co-Expression Networks</a></li>
+<li><a href="#expression-trends">Expression Trends</a></li>
+</ul>
+</li>
+<li><a href="#7-taxa-func-link">7. Taxa-Func Link</a><ul>
+<li><a href="#taxa-func-link-plot">Taxa-Func Link Plot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#restore-last-taxafunc-object">Restore Last TaxaFunc Object</a></li>
+<li><a href="#developer-tools">Developer Tools</a></li>
+<li><a href="#enjoy-metax">Enjoy MetaX</a></li>
+</ul>
+</div>
+<h1 id="get-start">Get Start</h1>
+<ul>
+<li>The main window of MetaX</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Click 'Tools Menu' to switch different tool</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h1 id="module-1-database-builder">Module 1. Database Builder</h1>
+<ul>
+<li>You have to build the database for <strong>the first time</strong> using <u>Database Builder</u>.</li>
+</ul>
+<p><strong>(Option 1) Build Database By MGnify Data</strong></p>
+<p>Make sure to download the correct database type corresponding to your data</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><strong>(Option 2) Build Database By Own Data</strong></p>
+<ul>
+<li>(1). <strong>Annotation Table:</strong> a TSV table(separated by a tab), and make sure the first column is protein name joined Genome by "_", e.g.  "Genome1_protein1" and other columns are annotation information.</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/dbbuilder_own.png" alt="dbbuilder_own" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>(2). <strong>Taxa Table:</strong> a TSV table(separated by a tab), and make sure the first column is Genome name,e.g.  "Genome1"  and the second column is taxa.</li>
+<li>
+<p><strong>Example Annotation Table:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Query</th>
+<th>Preferred_name</th>
+<th>EC</th>
+<th>KEGG_ko</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001_00696</td>
+<td>mfd</td>
+<td>-</td>
+<td>ko:K03723</td>
+</tr>
+<tr>
+<td>MGYG000000001_02838</td>
+<td>hxlR</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MGYG000000001_01674</td>
+<td>ispG</td>
+<td>1.17.7.1,1.17.7.3</td>
+<td>ko:K03526</td>
+</tr>
+<tr>
+<td>MGYG000000001_02710</td>
+<td>glsA</td>
+<td>3.5.1.2</td>
+<td>ko:K01425</td>
+</tr>
+<tr>
+<td>MGYG000000001_01356</td>
+<td>mutS2</td>
+<td>-</td>
+<td>ko:K07456</td>
+</tr>
+<tr>
+<td>MGYG000000001_02630</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MGYG000000001_02418</td>
+<td>ackA</td>
+<td>2.7.2.1</td>
+<td>ko:K00925</td>
+</tr>
+<tr>
+<td>MGYG000000001_00728</td>
+<td>atpA</td>
+<td>3.6.3.14</td>
+<td>ko:K02111</td>
+</tr>
+<tr>
+<td>MGYG000000001_00695</td>
+<td>pth</td>
+<td>3.1.1.29</td>
+<td>ko:K01056</td>
+</tr>
+<tr>
+<td>MGYG000000001_02907</td>
+<td>-</td>
+<td>-</td>
+<td>ko:K03086</td>
+</tr>
+<tr>
+<td>MGYG000000001_02592</td>
+<td>rplC</td>
+<td>-</td>
+<td>ko:K02906</td>
+</tr>
+<tr>
+<td>MGYG000000001_00137</td>
+<td>-</td>
+<td>-</td>
+<td>ko:K03480,ko:K03488</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Example Taxa Table:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Genome</th>
+<th>Lineage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Peptostreptococcales;f&#95;Peptostreptococcaceae;g&#95;GCA-900066495;s&#95;GCA-900066495 sp902362365</td>
+</tr>
+<tr>
+<td>MGYG000000002</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Lachnospirales;f&#95;Lachnospiraceae;g&#95;Blautia_A;s&#95;Blautia_A faecis</td>
+</tr>
+<tr>
+<td>MGYG000000003</td>
+<td>d&#95;Bacteria;p&#95;Bacteroidota;c&#95;Bacteroidia;o&#95;Bacteroidales;f&#95;Rikenellaceae;g&#95;Alistipes;s&#95;Alistipes shahii</td>
+</tr>
+<tr>
+<td>MGYG000000004</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Oscillospirales;f&#95;Ruminococcaceae;g&#95;Anaerotruncus;s&#95;Anaerotruncus colihominis</td>
+</tr>
+<tr>
+<td>MGYG000000005</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Peptostreptococcales;f&#95;Peptostreptococcaceae;g&#95;Terrisporobacter;s&#95;Terrisporobacter glycolicus_A</td>
+</tr>
+<tr>
+<td>MGYG000000006</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Staphylococcales;f&#95;Staphylococcaceae;g&#95;Staphylococcus;s&#95;Staphylococcus xylosus</td>
+</tr>
+<tr>
+<td>MGYG000000007</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Lactobacillus;s&#95;Lactobacillus intestinalis</td>
+</tr>
+<tr>
+<td>MGYG000000008</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Lactobacillus;s&#95;Lactobacillus johnsonii</td>
+</tr>
+<tr>
+<td>MGYG000000009</td>
+<td>d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Ligilactobacillus;s&#95;Ligilactobacillus murinus</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h1 id="module-2-database-updater">Module 2. Database Updater</h1>
+<ul>
+<li>Update the built database, and extend more annotations.</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/db_updater.png" alt="db_updater" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>(Option 1) By built-in mode:</strong></p>
+</li>
+<li>
+<p>there are some extended db we recommend, eg. </p>
+<ul>
+<li>[<u>dbCAN_seq</u>] (https://bcb.unl.edu/dbCAN_seq )</li>
+</ul>
+</li>
+<li>
+<p><strong>(Option 2) By TSV table</strong></p>
+</li>
+<li>
+<p>Extend the database by adding a new database to the database table. </p>
+</li>
+<li>
+<p>Make sure the column separator is a tab.</p>
+</li>
+<li>
+<p>Make sure the first column is the Protein name and the other columns are function annotation</p>
+<table>
+<thead>
+<tr>
+<th>Protein ID</th>
+<th>COG</th>
+<th>KEGG</th>
+<th>...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001_02630</td>
+<td>Function 1</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+<tr>
+<td>MGYG000000001_01475</td>
+<td>Function 2</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+<tr>
+<td>MGYG000000001_01539</td>
+<td>Function 3</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h1 id="module-3-peptide-annotator">Module 3. Peptide Annotator</h1>
+<ul>
+<li>Annotate the peptide to TaxaFunc before analyzing by <u><strong>Peptide Annotator</strong></u></li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>You have to provide:</p>
+<ul>
+<li>
+<p><strong>Database</strong>: The database created by <u><strong>Database Builder</strong></u></p>
+</li>
+<li>
+<p><strong>Peptide Table</strong>:</p>
+<ul>
+<li>
+<p><em>Option 1</em>. From MetaLab-MAG results (<u>final_peptides.tsv</u>)</p>
+</li>
+<li>
+<p><em>Option 2</em>. You can also create it by yourself, make sure the first column is the ID(e.g. peptide sequence) and the second column is the proteins ID of <u>MGnify</u> (e.g. MGYG000003683_00301; MGYG000001490_01143) or <u>your Database</u>, and other columns are the intensity of each sample) </p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Proteins</th>
+<th>Intensity_V1_01</th>
+<th>Intensity_V1_02</th>
+<th>Intensity_V1_03</th>
+<th>Intensity_V1_04</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(Acetyl)KGGVEPQSETVWR</td>
+<td>MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;...</td>
+<td>714650</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)KVIPELNGK</td>
+<td>MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;...</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK</td>
+<td>MGYG000001199_02893</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)LLTGLPDAYGR</td>
+<td>MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269</td>
+<td>0</td>
+<td>307519</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)MDFTLDKK</td>
+<td>MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025</td>
+<td>306231</td>
+<td>0</td>
+<td>0</td>
+<td>1214497</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Output Save Path</strong>: the location to save the result table</p>
+</li>
+<li>
+<p><strong>LCA Threshold</strong>: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%)</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+<h1 id="module-4-otf-analyzer">Module 4. OTF Analyzer</h1>
+<p>When we get the <strong>Operational Taxa-Functions (OTF) Table</strong> after using the <u><strong>Peptide Annotator</strong></u>, we can use the <strong><u>OTF Analyzer</u></strong> to do downstream analysis.</p>
+<h2 id="1-data-preparing">1. Data Preparing</h2>
+<p><strong>OTFs (Taxa-Functions) Table:</strong> Get from  <u>Peptide Annotator</u> module</p>
+<p><strong>Meta Table:</strong> The first column is sample names, and the other columns are different groups. <em>It would generate automatically meta info if the meta table were not provided (1. all samples are in the same group; 2. each sample is a group).</em></p>
+<ul>
+<li>Example Meta Table: </li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>samples</th>
+<th>Individuals</th>
+<th>Treatment</th>
+<th>Sweetener</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample_1</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_2</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_3</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_4</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+<tr>
+<td>sample_5</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+<tr>
+<td>sample_6</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+</tbody>
+</table>
+<p>There, we can simply load the example data by <strong>clicking the button</strong>. </p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/load_example.png" alt="load_example" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>Then, click <strong>Go</strong> to start the analysis.</p>
+<h2 id="2-data-overview">2. Data Overview</h2>
+<p>Data Overview includes some basic information about your data, such as the number of taxa, functions and proportions.</p>
+<p>We can set the threshold of linked peptides and the differences between them to plot the figure.</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/data_overview.png" alt="data_overview" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>We Can Select different functions to plot the proportion distribution.</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/data_overview_func.png" alt="data_overview_func" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>We can also filter some samples for downstream analysis.</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/data_overview_filter.png" alt="data_overview_filter" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h2 id="3-set-taxafunc">3. Set TaxaFunc</h2>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/set_multi_table.png" alt="set_multi_table" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h3 id="data-selection">Data selection</h3>
+<ul>
+<li>
+<p><strong>Function:</strong> select a function for downstream analysis ( <u><strong>None</strong></u> in the list means that we do not select any function, only focus on peptides and Taxa).</p>
+</li>
+<li>
+<p><strong>Function Filter Threshold:</strong> If a specific function within a protein group of a peptide comprises the highest proportion of function, it will be considered as the representative function for that peptide. By default, the threshold for this proportion is set at 1.00 (100%).</p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/FUNC_prop.png" alt="FUNC_prop"  / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li><strong>Taxa Level:</strong> select a taxa level for downstream analysis(<u><strong>Life</strong></u> in the list means we do not filter by any taxa).</li>
+</ul>
+<h3 id="sum-proteins-intensity">Sum Proteins Intensity</h3>
+<p>We can click <strong>Create Proteins Intensity Table</strong> to sum the peptide to the proteins if the Protein col is in the original table.</p>
+<ul>
+<li>Occuam's Razor and Anti-Razor are methods both available for the inferring shared peptide. 1. build the Rank of proteins. 2. choose the protein with a higher rank for the shared peptide.</li>
+<li>4 methods to build the <strong>Protein Rank</strong>.</li>
+<li>unique_counts: use the counts of proteins inferred by unique peptide</li>
+<li>all_count: use the counts  of all proteins</li>
+<li>unique_intensity: use the intensity of proteins inferred by unique peptide</li>
+<li>shared_intensity: use the intensity divided by shared times of peptide for each protein</li>
+</ul>
+<h3 id="data-preprocessing">Data preprocessing</h3>
+<ul>
+<li>Data Preprocessing <strong>Before Summing  Peptides</strong>:  Perform data preprocessing first, then sum the peptides to calculate the intensity of each taxon, function and taxa-function pair.</li>
+<li>Data Preprocessing <strong>After Summing Peptides</strong>: Sum the peptides to calculate the intensity of each taxon, function and taxa-function pair first, then perform data preprocessing for each table.</li>
+</ul>
+<p>There are several methods for detecting and handling outliers.</p>
+<p>Two steps will be applied:</p>
+<ol>
+<li>
+<p><u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows <code>only contains NaN values and 0</code> will be removed. The remaining NaN values will be handled in the next step.</p>
+</li>
+<li>
+<p><u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.</p>
+</li>
+<li>
+<p><strong>Outliers Detection:</strong></p>
+</li>
+<li>
+<p><strong>IQR:</strong> In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.</p>
+</li>
+<li>
+<p><strong>Missing-Value:</strong> Detect nan values in the data. If a value is nan, it will be marked as an NaN.</p>
+</li>
+<li>
+<p><strong>Half-Zero:</strong> This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.</p>
+</li>
+<li>
+<p><strong>Zero-Dominant:</strong> This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.</p>
+</li>
+<li>
+<p><strong>Zero-Inflated Poisson:</strong> This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
+</li>
+<li>
+<p><strong>Negative Binomial:</strong> This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
+</li>
+<li><strong>Z-Score:</strong> Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.</li>
+<li><strong>Mahalanobis Distance:</strong> Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.</li>
+</ol>
+<p>​   <u>In all methods, You can choose detection outliers by a meta column, and a meta to handle the outliers.</u></p>
+<ul>
+<li>
+<p><strong>Outliers Imputation:</strong></p>
+</li>
+<li>
+<p><strong>Drop:</strong> Remove peptides that contain any NaN values.</p>
+</li>
+<li>
+<p><strong>Original:</strong> Remove peptides that contain any NaN values.</p>
+</li>
+<li>
+<p><strong>Mean</strong>: Outliers will be imputed by the mean.</p>
+</li>
+<li>
+<p><strong>Median</strong>: Outliers will be imputed by the median.</p>
+</li>
+<li>
+<p><strong>KNN</strong>: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbours to fill in missing values.</p>
+</li>
+<li>
+<p><strong>Regression</strong>: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modelling each feature with missing values as a function of other features.</p>
+</li>
+<li>
+<p><strong>Multiple</strong>: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of the nearest features.</p>
+</li>
+</ul>
+<p>You can choose the outliers Imputation by <em>each group</em> or by <em>all samples</em>.</p>
+<ul>
+<li>
+<p><strong>Remove Batch Effect:</strong></p>
+</li>
+<li>
+<p>Here, you can choose a group as the batch effect, then use [<u>reCombat</u>] (https://github.com/BorgwardtLab/reComBat) for handling.</p>
+</li>
+<li>
+<p><strong>Data Transformation:</strong></p>
+</li>
+<li>
+<p>Log2, Log10, Square root transformation and Cube root transformation.</p>
+</li>
+<li>
+<p><strong>Data Normalization:</strong></p>
+</li>
+<li>
+<p>Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by sum.</p>
+</li>
+</ul>
+<p><u>If you use [Z-Score, Mean centring and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.</u></p>
+<ul>
+<li><strong>Drag the item's name</strong> to change the <u><strong>order</strong></u> of data preprocessing.</li>
+</ul>
+<p><strong>Then, click Go to create a TaxaFunc object for analysis.</strong></p>
+<p><div style="text-align: center;"><img alt="TaxaFunc_ready" src="./MetaX_Cookbook.assets/TaxaFunc_ready.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>Then we can check tables in <strong>Table Review</strong> part, and export it.</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/table_review_open_window.png" alt="table_review_open_window" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h2 id="4-basic-stats">4. Basic Stats</h2>
+<h3 id="pca-correlation-and-box-plot">PCA, Correlation and Box Plot</h3>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>We can select <u><strong>meta</strong></u> <u><strong>groups</strong></u> or <u><strong>samples</strong></u> (default all) to plot <strong>PCA</strong>, <strong>Correlation</strong>,  and <strong>Box Plot</strong> for <strong>[Taxa, Function, Taxa-Func, Peptide table, Protein table</strong>]</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/pca.png" alt="pca" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" style="zoom: 46%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/boxplot.png" alt="boxplot" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Setting and modifying the plot</strong></p>
+</li>
+<li>
+<p>Show or hide labels in the figure by checking the checkbox <strong>Show Labels</strong></p>
+</li>
+<li>
+<p>Select <strong>Sub Meta</strong>  to plot with two meta</p>
+<ul>
+<li><div style="text-align: center;"><img alt="basic_setting" src="MetaX_Cookbook.assets/basic_setting.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>Select specific Groups <strong>with condition</strong></p>
+<p><strong>e.g. :</strong> Select PBS, BAS and others groups <strong>only in</strong> <u>Individual</u> <u>V1</u> </p>
+<ul>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/group_in_condition.png" alt="group_in_condition" style="zoom:80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>Select <strong>specific Samples</strong> to Analysis</p>
+<ul>
+<li>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="image-20230728112519665" src="./MetaX_Cookbook.assets/right_cilck_menu.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Number stats</strong></p>
+</li>
+<li>
+<p>We can plot the bar for the number for each table by <strong>groups</strong> or by <strong>samples</strong></p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Taxa Specific</strong></p>
+</li>
+<li>
+<p>Alpha/Beta Diversity</p>
+<ul>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>Sunburst</p>
+<ul>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" style="zoom: 70%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>TreeMap</p>
+<ul>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/treemap.png" alt="treemap" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>Sankey</p>
+<ul>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+</ul>
+<h3 id="heatmap-and-bar-plot">Heatmap and Bar Plot</h3>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap" style="zoom: 80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li><strong>Select items(Taxa, Function, Taxa-Func and Peptide ) to plot:</strong></li>
+<li>Add <strong>All Taxa</strong>, or select one we are interested in.</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list"  / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Add items to Top List:</strong> select the top items to plot by some statistical method.</p>
+</li>
+<li>
+<p>Clicked <u>filter with threshold</u> will filter by the p-value of ANOVA and T-TEST and P-value and Log2FC of DESeq2 result (setting in the corresponding page).</p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Add a list for ploting:</strong></p>
+</li>
+<li>
+<p>Make sure one row one item</p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Setting:</strong></p>
+</li>
+<li>
+<p>Change the setting fit for your data.</p>
+</li>
+<li><strong>Rename Samples</strong>: Add group info to each sample name</li>
+<li><strong>Rename Taxa</strong>: Only keep the last taxonomic level to reduce to name</li>
+<li>
+<p><strong>Plot Mean</strong>: calculate the mean of each group before plotting</p>
+<ul>
+<li><strong><u>For Heatmap</u></strong></li>
+<li><strong>Theme</strong>: The theme of the heatmap</li>
+<li><strong>scale</strong>: Scale method of the heatmap</li>
+<li><strong>Show All Labels:</strong> if show all labels in the heatmap</li>
+<li><strong><u>For Bar</u></strong></li>
+<li><strong>Bar Ldg</strong>: Show the legend when plotting Bar</li>
+<li><strong>Bar %:</strong>  Transfer each col to percent when plotting Bar</li>
+<li><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p>Plot all color maps to view by right click <u><strong>Theme</strong></u></p>
+<ul>
+<li><div style="text-align: center;"><img alt="right_click_theme" src="MetaX_Cookbook.assets/right_click_theme.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p><strong>Plot:</strong></p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Modify</strong> the pic to fit the window to get the <strong>Perfect picture</strong>:</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed" style="zoom: 40%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+</li>
+<li>
+<p><strong>Bar Plot:</strong></p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li><strong>interactive function:</strong></li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>change to line plot:</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p>3D Bar plot</p>
+</li>
+<li>
+<p>Plot 3D bar by selecting a <strong>sub meta</strong>.</p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="basic_stats_bar_3d_setting" src="MetaX_Cookbook.assets/basic_stats_bar_3d_setting.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p><div style="text-align: center;"><img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d" style="zoom:80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+<h3 id="peptide-query">Peptide Query</h3>
+<ul>
+<li>Query everything of a peptide</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h2 id="5-cross-test">5. Cross Test</h2>
+<h3 id="t-test">T-TEST</h3>
+<ul>
+<li>Select 2 group stats T-Test for  <strong>[Taxa, Function, Taxa-Func, Peptide table and Proteins Table</strong>]</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h3 id="anova-test">ANOVA-TEST</h3>
+<ul>
+<li>select <u>some groups</u> or <u>all groups</u> to ANOVA Test for  <strong>[Taxa, Function, Taxa-Func and Peptide table</strong>]</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h3 id="significant-taxa-func">Significant Taxa-Func</h3>
+<ul>
+<li>Significant comparing enables us to find the result of <strong><u>The taxa between the two groups showing no significant differences, while the related functions are significantly different</u></strong> and function no significant but relted taxa significant.</li>
+<li><div style="text-align: center;"><img alt="Significant_Taxa-Func" src="MetaX_Cookbook.assets/Significant_Taxa-Func.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+<h3 id="plot-corss-heatmap">Plot Corss Heatmap</h3>
+<ul>
+<li>The <strong>result</strong> of the T-test and ANOVA Test will show in a new window</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Plot Heatmap for results</p>
+</li>
+<li>
+<p>Chose a Table to plot <strong>top differences heatmap</strong> or get <strong>the top table</strong></p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting" style="zoom: 60%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Taxa-Func cross heatmap:</li>
+<li>The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Func(Taxa) Heatmap:</p>
+</li>
+<li>
+<p>The colour shows the intensity of the significant Func(Taxa) between groups.</p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Significant Taxa-Func Heatmap:</p>
+</li>
+<li>
+<p>The colored tiles represent the taxa which were not significantly different between groups but the related functions were.</p>
+</li>
+</ul>
+<h3 id="tukey_test">TUKEY_TEST</h3>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p><strong>Select a function:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this function.</p>
+</li>
+<li>
+<p><strong>Select a Taxon:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this taxon.</p>
+</li>
+<li>
+<p><strong>Select both function and taxon:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this function and this taxon.</p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only" style="zoom: 80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.</p>
+</li>
+<li>
+<p>Show Linked Func Only: only shows the function linked with the current taxon in the function combo box.</p>
+<p>​   <strong>Do  not forget to click <u>Reset Function Taxa List</u> to reset all items after the filtering</strong></p>
+</li>
+<li>
+<p><strong>Tukey result plot:</strong></p>
+</li>
+<li>The dots and lines show the difference in the mean value of the Tukey test</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h3 id="group-control-test">Group-Control TEST</h3>
+<ul>
+<li><strong>Dunnett's Test</strong></li>
+</ul>
+<p>Set a Group as <strong>"Control"</strong>, then compare all groups to Control</p>
+<ul>
+<li>
+<p><strong>Comparing in Each Condition:</strong> Select a meta such as individual, then compare groups to control in each individual.</p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="group_control_test" src="./MetaX_Cookbook.assets/group_control_test.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>Result of Dunnett's Test:<ul>
+<li>T- Statistic value shown in the heatmap</li>
+</ul>
+</li>
+<li><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap" style="zoom:80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+<h2 id="6-differential-analysis">6. Differential Analysis</h2>
+<h3 id="fold-change-calculation">Fold Change Calculation</h3>
+<ul>
+<li>Select two groups to calculate FoldChange by [<u>PyDESeq2</u>]: https://github.com/owkin/PyDESeq2</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Select <u>p-adjust</u>, <u>log2FC</u> to plot</li>
+</ul>
+<p>(<strong>Ultra-Up(Down):</strong> |log2FC| &gt; Max log2FC)</p>
+<ul>
+<li>
+<p>Volcano:</p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p>Sankey:</p>
+<ul>
+<li>The last node level is the functions linked to each Taxon (When plotting Taxa-Func)</li>
+</ul>
+<p><div style="text-align: center;"><img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+<h3 id="co-expression-networks">Co-Expression Networks</h3>
+<ul>
+<li>select Groups or Samples to calculate the correlation and plot the network</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/co_network_page.png" alt="image-20230728142606826" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Slecet table, and set the method of correlation and threshold</li>
+</ul>
+<p><div style="text-align: center;"><img alt="image-20230728142905839" src="./MetaX_Cookbook.assets/co_network_setting.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Add some items to the focus list (Optional)</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Network Plot</p>
+</li>
+<li>
+<p>The Red dots are focus items</p>
+</li>
+<li>The depth of green represents the correlation value</li>
+<li>The size of the dot indicates the number of connections</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h3 id="expression-trends">Expression Trends</h3>
+<ul>
+<li>Add items to the list window to plot the clusters with similar trends of intensity</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/trends_page.png" alt="image-20230728143806833" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Clusters plot (clustered by <strong>k-means</strong>)</p>
+</li>
+<li>
+<p>The coloured line is the average </p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/trends_cluster.png" alt="image-20230728144230514" style="zoom: 80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Select a <strong>specific cluster</strong> to plot <u>interactive Lines</u> or get the <u>table</u></p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="image-20230728144544988" src="./MetaX_Cookbook.assets/trends_cluster_setting.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p>The dashed red line  is the average </p>
+<p><div style="text-align: center;"><img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+<h2 id="7-taxa-func-link">7. Taxa-Func Link</h2>
+<h3 id="taxa-func-link-plot">Taxa-Func Link Plot</h3>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" alt="image-20230728150309898" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Check all taxa in one function (or Check all functions in a taxon)</p>
+</li>
+<li>
+<p>select <strong>a function</strong>, and click the button <strong><u>Show Linked Taxa Only</u></strong></p>
+<ul>
+<li><strong>Linked Number</strong>: The number shows how many taxa are linked in this function</li>
+<li><strong>The number starts with Taxa</strong>: The number shows how many peptides are in this Taxa-Func</li>
+</ul>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517" style="zoom:80%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Filter items of the Taxa and Func list</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_filter.png" alt="image-20230728150853953" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Plot Heatmap or Bar</p>
+</li>
+<li>
+<p>Select some groups (Default all) to get <strong>the intensity of each taxon of this function</strong></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" alt="image-20230728152953911" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="image-20230728151451213" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Plot <strong>peptides</strong> in <u>one Function of a Taxon</u></li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" alt="taxa_func_link_pep_heatmap" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" alt="taxa_func_link_pep_bar" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Switch Bar to Stacked or not ( Line)</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>Change Bar plot to Lines</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<p>### Taxa-Func Network</p>
+<ul>
+<li>Select some groups or samples (default all)</li>
+<li>add some taxa, func or taxa-func to focus the window  (Optional)</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517" style="zoom:50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<ul>
+<li>
+<p>Plot list only</p>
+<ul>
+<li>Checked the "<strong>Plot List Only</strong>" to show the items only in the list</li>
+</ul>
+</li>
+<li>
+<p>Network plot</p>
+<ul>
+<li>The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity</li>
+<li>The red dots are the taxa we focused on</li>
+<li>The green dots are the functions we focused on</li>
+</ul>
+</li>
+</ul>
+<p><div style="text-align: center;"><img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+<h1 id="restore-last-taxafunc-object">Restore Last TaxaFunc Object</h1>
+<ul>
+<li>Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.</li>
+<li>Also, we can export the current MetaX to a file and reload it again.</li>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" style="zoom:;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+<h1 id="developer-tools">Developer Tools</h1>
+<ul>
+<li>
+<p><strong>Export Log</strong></p>
+</li>
+<li>
+<p>You can export the log file for debugging or reporting the issue.</p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="dev_menu" src="MetaX_Cookbook.assets/dev_menu.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p><strong>Show or Hide the Console</strong></p>
+</li>
+<li>
+<p><div style="text-align: center;"><img src="MetaX_Cookbook.assets/show_console.png" alt="show_console" style="zoom: 50%;" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p><strong>Any Table Mode</strong></p>
+</li>
+<li>
+<p><u>Any Table Mode</u> enables us to use <strong>any matrix</strong> for basic statistical analysis in MetaX.</p>
+</li>
+<li>
+<p><div style="text-align: center;"><img alt="" src="MetaX_Cookbook.assets/any_table_mode.png" / class="img-fluid" style="max-width: 100%; height: auto;"></div></p>
+</li>
+<li>
+<p>Settings</p>
+</li>
+<li>
+<p>Check the box of <strong>Auto Check Update</strong> to enable or disable check update when launching</p>
+</li>
+<li>Change to update from the <strong>stable version</strong> or <strong>beta version</strong> by settings</li>
+<li><div style="text-align: center;"><img src="MetaX_Cookbook.assets/settings.png" alt="settings"  / class="img-fluid" style="max-width: 100%; height: auto;"></div></li>
+</ul>
+<h1 id="enjoy-metax">Enjoy MetaX</h1>
+<p>If you have any issues or suggestions, please New issue in my <a href="https://github.com/byemaxx/MetaX">GitHub</a>.</p>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

@@ -126,6 +126,63 @@ class DataPreprocessing:
     
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str = None, by_group:str=None) -> pd.DataFrame:
+        '''
+        ### \_outlier_detection
+
+        Detects outliers in the data using a specified method and marks them as NaN.
+        Then removes rows that contain `only NaN or 0 values`.
+
+        #### Parameters
+
+        - **df** (`pd.DataFrame`):  
+        The DataFrame in which outliers need to be detected.
+        
+        - **method** (`str`, optional):  
+        The method used for outlier detection. Options include:
+        - `none`: No outlier detection.
+        - `missing-value`: Detect missing values.
+        - `half-zero`: Detect outliers based on half-zero criteria (if half or more samples are 0, set to NaN).
+        - `zero-dominant`: Detect outliers based on zero-dominance (if half or more samples are 0, set to NaN).
+        - `iqr`: Interquartile range method (if sample is out of 1.5*IQR, set to NaN).
+        - `z-score`: Z-score method (if samples in a group are out of 3*std, set to NaN).
+        - `zero-inflated-poisson`: Zero-inflated Poisson distribution method (if the predicted value is less than 0.01, set to NaN).
+        - `negative-binomial`: Negative binomial distribution method (if the predicted value is less than 0.01, set to NaN).
+        - `mahalanobis-distance`: Mahalanobis distance method (if the Mahalanobis Distance is greater than the threshold, set to NaN).
+
+        - **by_group** (`str`, optional):  
+        The column name for grouping samples during outlier detection. If not specified, the default group list from `tfa` is used.
+
+        #### Returns
+
+        - **pd.DataFrame**:  
+        The DataFrame with outliers marked as NaN.
+
+        #### Description
+
+        This method detects outliers in the provided DataFrame using the specified detection method. Outliers are then marked as NaN. Different methods use different criteria to detect outliers:
+
+        - **`half-zero` and `zero-dominant`**: These methods detect outliers based on the proportion of zero values.
+        - **`iqr`**: Uses the interquartile range to identify outliers.
+        - **`z-score`**: Uses the Z-score to identify outliers.
+        - **`zero-inflated-poisson` and `negative-binomial`**: Use statistical models to identify outliers based on predicted values.
+        - **`mahalanobis-distance`**: Uses Mahalanobis distance for outlier detection based on a threshold.
+
+        For methods that require grouping, the `by_group` parameter specifies how to group the samples before applying the detection method.
+
+        Example usage:
+
+        ```python
+        # Example usage of _outlier_detection method
+        df = pd.DataFrame({
+            'sample1': [1, 2, 3, 0, 5],
+            'sample2': [4, 5, 6, 0, 8],
+        })
+
+        data_preprocessor = DataPreprocessing(tfa)
+        processed_df = data_preprocessor._outlier_detection(df, method='iqr', by_group='batch')
+
+        
+        '''
         from scipy.stats import zscore
         from scipy.spatial import distance
         from scipy.stats import chi2
@@ -276,7 +333,71 @@ class DataPreprocessing:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str = None,df_original: pd.DataFrame = None) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str = None,
+                              df_original: pd.DataFrame = None) -> pd.DataFrame:
+        '''
+        ### \_handle_missing_value
+
+        Handles missing values in the data using specified methods and fills or removes them as required.
+        - If after the first method, there are still missing values, the second method is applied.
+        - If the second method is also unable to handle all missing values, rows with missing values are removed.
+
+        #### Parameters
+
+        - **df** (`pd.DataFrame`):  
+        The DataFrame with missing values.
+
+        - **method** (`str`, optional):  
+        The method used for handling missing values, specified as methods separated by `+`. Options include:
+        - `drop`: Drop rows with missing values.
+        - `mean`: Fill missing values with the mean of the column.
+        - `median`: Fill missing values with the median of the column.
+        - `knn`: Use K-nearest neighbors imputation.
+        - `regression`: Use regression imputation.
+        - `multiple`: Use multiple imputation.
+        - `original`: Keep the original data unchanged.
+
+        - **by_group** (`str`, optional):  
+        The column name for grouping samples during missing value handling. If not specified, the default group list from `tfa` is used.
+
+        - **df_original** (`pd.DataFrame`, optional):  
+        The original DataFrame before any processing in this class. `Not the original data of TaxafuncAnalyzer`.
+
+        #### Returns
+
+        - **pd.DataFrame**:  
+        The DataFrame after handling missing values.
+
+        #### Description
+
+        This method handles missing values in the provided DataFrame using the specified method or combination of methods. The method parameter allows for multiple strategies to be applied sequentially, separated by `+`.
+
+        Available strategies include:
+
+        - **drop**: Removes rows with any missing values.
+        - **mean**: Fills missing values with the mean of the respective column.
+        - **median**: Fills missing values with the median of the respective column.
+        - **knn**: Uses K-nearest neighbors to impute missing values.
+        - **regression**: Uses regression models to predict and fill missing values.
+        - **multiple**: Uses multiple imputation to handle missing values.
+        - **original**: Retains the original data without any imputation or deletion.
+
+        If grouping is required, the `by_group` parameter specifies how to group the samples before applying the handling method.
+
+        Example usage:
+
+        ```python
+        # Example usage of _handle_missing_value method
+        df = pd.DataFrame({
+            'sample1': [1, 2, np.nan, 4, 5],
+            'sample2': [np.nan, 2, 3, 4, 5],
+        })
+
+        data_preprocessor = DataPreprocessing(tfa)
+        processed_df = data_preprocessor._handle_missing_value(df, method='mean+drop', by_group='batch')
+
+        '''
+        
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
@@ -358,6 +479,9 @@ class DataPreprocessing:
             
             elif method == 'original':
                 print(f'Fill NA by {method}, keep the original data...')
+                if df_original is None:
+                    raise ValueError('Original data is not provided for [original] method')
+                
                 df = df_original[df_original.iloc[:, 0].isin(df.iloc[:, 0])]
 
             elif method == 'drop':
