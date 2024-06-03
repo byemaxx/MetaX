@@ -12,7 +12,7 @@ This is the guidebook for the MetaX **GUI Version**. If you are using the CLI to
 
 Visit **Github** to get more information:
 
-https://github.com/byemaxx/MetaX
+[https://github.com/byemaxx/MetaX](https://github.com/byemaxx/MetaX)
 
 # Contents
 

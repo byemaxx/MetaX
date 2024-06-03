@@ -11,7 +11,7 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 ### `Desktop Version(Recommended)`:
 The desktop version comes fully set up and ready to use, including all required dependencies and a graphical user interface.
 
-[Download MetaX Desktop Version](https://shiny2.imetalab.ca/shiny/rstudio/metax_download/)
+<a href="https://shiny2.imetalab.ca/shiny/rstudio/metax_download/" target="_blank">Download MetaX Desktop Version</a>
 
 
 <br>
@@ -27,7 +27,7 @@ Clone the repository to your local machine and install the required dependencies
 
 ## Getting Started
 - `Desktop Version(desktop)`:
-  - Refer to the [MetaX Cookbook](https://byemaxx.github.io/MetaX/) for detailed instructions on how to use MetaX wtih the graphical user interface.
+  - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX wtih the graphical user interface.
   <br>
 - `Command-line version`:
   - Read the example documentation in the [Notebook](./Docs/example.ipynb) for detailed instructions and examples.
@@ -35,5 +35,5 @@ Clone the repository to your local machine and install the required dependencies
 
 ## Citing MetaX
 - If you use MetaX in your research, please cite the following publication:
-  - **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI: [10.1101/2024.04.19.590315](https://doi.org/10.1101/2024.04.19.590315).
+  - **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI:  <a href="https://doi.org/10.1101/2024.04.19.590315" target="_blank">10.1101/2024.04.19.590315</a>.
 
