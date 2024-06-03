@@ -4,7 +4,10 @@ This is the guidebook for the MetaX **GUI Version**. If you are using the CLI to
 
 # Overview
 
-**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for the streamlined annotation of peptide sequences with taxonomic and functional information based on the lowest common ancestors. This versatile tool connects species-specific functions, enabling a more comprehensive analysis of the relationship between taxonomy and functionality. Furthermore, MetaX incorporates robust statistical modules for differential analysis of species-function contributions across distinct groups.
+**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for linking peptide sequences with taxonomic and functional information in **Metaproteomics**. We introduce the ***Operational Taxa-Functions (OTF)*** concept to explore microbial roles and interactions ("**who is doing what and how**") within ecosystems. 
+
+MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.
+
 
 ![abstract](./MetaX_Cookbook.assets/abstract.png)
 
@@ -230,18 +233,17 @@ We can click **Create Proteins Intensity Table** to sum the peptide to the prote
 
 There are several methods for detecting and handling outliers.
 
-Two steps will be applied:
+- Two steps will be applied:
+  1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contain NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
+  2. <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
 
-1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contains NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
 
-2. <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
-
-   
 
 - **Outliers Detection:**
-  - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
+
+- - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
   
-  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as an NaN.
+  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as a NaN.
   
   - **Half-Zero:** This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.
   
