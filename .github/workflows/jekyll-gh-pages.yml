@@ -47,7 +47,7 @@ jobs:
           import re
 
           # read markdown file
-          markdown_file_path = './docs/MetaX_Cookbook.md'
+          markdown_file_path = './Docs/MetaX_Cookbook.md'
           with open(markdown_file_path, 'r', encoding='utf-8') as file:
               markdown_content = file.read()
 
@@ -162,7 +162,7 @@ jobs:
           html_output = template.render(content=html_content, toc_items=toc_items)
 
           # Write the HTML output to a file
-          output_file_path = './docs/index.html'
+          output_file_path = './Docs/index.html'
           with open(output_file_path, 'w', encoding='utf-8') as file:
               file.write(html_output)
 
