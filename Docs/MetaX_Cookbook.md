@@ -27,11 +27,11 @@ Visit **Github** to get more information:
 
 - The main window of MetaX
 
-  <img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window" style="zoom: 50%;" />
+  <img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window"  />
 
 - Click 'Tools Menu' to switch different tool
 
-  <img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu" style="zoom: 50%;" />
+  <img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu"  />
 
 # Module 1. Database Builder
 
@@ -43,13 +43,13 @@ Visit **Github** to get more information:
   
   
 
-<img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder"  />
 
 **(Option 2) Build Database By Own Data**
 
 + (1). **Annotation Table:** a TSV table(separated by a tab), and make sure the first column is protein name joined Genome by "_", e.g.  "Genome1_protein1" and other columns are annotation information.
 
-<img src="./MetaX_Cookbook.assets/dbbuilder_own.png" alt="dbbuilder_own" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/dbbuilder_own.png" alt="dbbuilder_own"  />
 
 - (2). **Taxa Table:** a TSV table(separated by a tab), and make sure the first column is Genome name,e.g.  "Genome1"  and the second column is taxa.
   - **Example Annotation Table:**
@@ -87,7 +87,7 @@ Visit **Github** to get more information:
 
 - Update the built database, and extend more annotations.
 
-<img src="./MetaX_Cookbook.assets/db_updater.png" alt="db_updater" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/db_updater.png" alt="db_updater"  />
 
 + **(Option 1) By built-in mode:**
 
@@ -117,7 +117,7 @@ Visit **Github** to get more information:
 
 - Annotate the peptide to TaxaFunc before analyzing by <u>**Peptide Annotator**</u>
 
-  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc" style="zoom: 50%;" />
+  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
 
   You have to provide:
 
@@ -173,7 +173,7 @@ When we get the **Operational Taxa-Functions (OTF) Table** after using the <u>**
 
 There, we can simply load the example data by **clicking the button**. 
 
-<img src="./MetaX_Cookbook.assets/load_example.png" alt="load_example" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/load_example.png" alt="load_example"  />
 
 Then, click **Go** to start the analysis.
 
@@ -183,17 +183,17 @@ Data Overview includes some basic information about your data, such as the numbe
 
 We can set the threshold of linked peptides and the differences between them to plot the figure.
 
-<img src="./MetaX_Cookbook.assets/data_overview.png" alt="data_overview" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/data_overview.png" alt="data_overview"  />
 
 We Can Select different functions to plot the proportion distribution.
 
-<img src="./MetaX_Cookbook.assets/data_overview_func.png" alt="data_overview_func" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/data_overview_func.png" alt="data_overview_func"  />
 
 
 
 We can also filter some samples for downstream analysis.
 
-<img src="./MetaX_Cookbook.assets/data_overview_filter.png" alt="data_overview_filter" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/data_overview_filter.png" alt="data_overview_filter"  />
 
 
 
@@ -201,7 +201,7 @@ We can also filter some samples for downstream analysis.
 
 ## 3. Set TaxaFunc
 
-<img src="./MetaX_Cookbook.assets/set_multi_table.png" alt="set_multi_table" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/set_multi_table.png" alt="set_multi_table"  />
 
 ### Data selection
 
@@ -234,14 +234,15 @@ We can click **Create Proteins Intensity Table** to sum the peptide to the prote
 There are several methods for detecting and handling outliers.
 
 - Two steps will be applied:
-  1. <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contain NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
-  2. <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
+  - <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contain NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
+  - <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
+  
 
 
 
 - **Outliers Detection:**
 
-- - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
+  - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
   
   - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as a NaN.
   
@@ -298,9 +299,9 @@ There are several methods for detecting and handling outliers.
 
 Then we can check tables in **Table Review** part, and export it.
 
-<img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review"  />
 
-<img src="./MetaX_Cookbook.assets/table_review_open_window.png" alt="table_review_open_window" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/table_review_open_window.png" alt="table_review_open_window"  />
 
 
 
@@ -308,15 +309,15 @@ Then we can check tables in **Table Review** part, and export it.
 
 ### PCA, Correlation and Box Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca"  />
 
 We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default all) to plot **PCA**, **Correlation**,  and **Box Plot** for **[Taxa, Function, Taxa-Func, Peptide table, Protein table**]
 
-<img src="./MetaX_Cookbook.assets/pca.png" alt="pca" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/pca.png" alt="pca"  />
 
-<img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" style="zoom: 46%;" />
+<img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d"  />
 
-<img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation"  />
 
 <img src="./MetaX_Cookbook.assets/boxplot.png" alt="boxplot" style="zoom:50%;" />
 
@@ -334,47 +335,47 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     **e.g. :** Select PBS, BAS and others groups **only in** <u>Individual</u> <u>V1</u> 
 
-    - <img src="MetaX_Cookbook.assets/group_in_condition.png" alt="group_in_condition" style="zoom:80%;" />
+    - <img src="MetaX_Cookbook.assets/group_in_condition.png" alt="group_in_condition"  />
 
   - Select **specific Samples** to Analysis
 
-    - <img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732" style="zoom:50%;" />
+    - <img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732"  />
 
     - ![image-20230728112519665](./MetaX_Cookbook.assets/right_cilck_menu.png)
 
-    - <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:50%;" />
+    - <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:80%;" />
 
 - **Number stats**
 
   - We can plot the bar for the number for each table by **groups** or by **samples**
 
-  <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number" style="zoom:50%;" />
+  <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number"  />
 
 - **Taxa Specific**
 
   - Alpha/Beta Diversity
 
-    - <img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div" style="zoom: 50%;" />
-    - <img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div" style="zoom:50%;" />
+    - <img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div"  />
+    - <img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div"  />
 
   - Sunburst
 
-    - <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" style="zoom: 70%;" />
+    - <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst"  />
 
   - TreeMap
 
-    - <img src="MetaX_Cookbook.assets/treemap.png" alt="treemap" style="zoom:50%;" />
+    - <img src="MetaX_Cookbook.assets/treemap.png" alt="treemap"  />
 
   - Sankey
 
-    - <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey" style="zoom:50%;" />
+    - <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey"  />
 
     
 
 
 ### Heatmap and Bar Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap" style="zoom: 80%;" />
+<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap"  />
 
 - **Select items(Taxa, Function, Taxa-Func and Peptide ) to plot:**
   - Add **All Taxa**, or select one we are interested in.
@@ -393,7 +394,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Make sure one row one item
 
-<img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list"  />
 
 
 
@@ -412,21 +413,21 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     - **<u>For Bar</u>**
       - **Bar Ldg**: Show the legend when plotting Bar
       - **Bar %:**  Transfer each col to percent when plotting Bar
-      - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting" style="zoom:80%;" />
+      - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting"  />
     
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
-    - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" style="zoom: 50%;" />
+    - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap"  />
   
 - **Plot:**
 
-  <img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original"  />
 
   - **Modify** the pic to fit the window to get the **Perfect picture**:
 
-    <img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic" style="zoom: 50%;" />
+    <img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic"  />
     
-    - <img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed" style="zoom: 40%;" />
+    - <img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed"  />
 
 
 
@@ -434,22 +435,22 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - **Bar Plot:**
 
-<img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar"  />
 
 - **interactive function:**
 
-  <img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting" style="zoom: 50%;" />
+  <img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting"  />
 
   - change to line plot:
 
-    <img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line" style="zoom: 50%;" />
+    <img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line"  />
 
 - 3D Bar plot
 
   - Plot 3D bar by selecting a **sub meta**.
   - ![basic_stats_bar_3d_setting](MetaX_Cookbook.assets/basic_stats_bar_3d_setting.png)
 
-  - <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d" style="zoom:80%;" />
+  - <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
 
 
 
@@ -457,7 +458,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Query everything of a peptide
 
-  <img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query"  />
 
 
 
@@ -471,13 +472,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Select 2 group stats T-Test for  **[Taxa, Function, Taxa-Func, Peptide table and Proteins Table**]
 
-<img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test"  />
 
 ### ANOVA-TEST
 
 - select <u>some groups</u> or <u>all groups</u> to ANOVA Test for  **[Taxa, Function, Taxa-Func and Peptide table**]
 
-<img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test"  />
 
 ### Significant Taxa-Func
 
@@ -488,7 +489,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - The **result** of the T-test and ANOVA Test will show in a new window
 
-  <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res"  />
 
   
 
@@ -496,18 +497,18 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Chose a Table to plot **top differences heatmap** or get **the top table**
 
-<img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting" style="zoom: 60%;" />
+<img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting"  />
 
 - Taxa-Func cross heatmap:
   - The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.
 
-<img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap"  />
 
 - Func(Taxa) Heatmap:
 
   - The colour shows the intensity of the significant Func(Taxa) between groups.
 
-  <img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap"  />
 
 - Significant Taxa-Func Heatmap:
 
@@ -520,7 +521,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### TUKEY_TEST
 
-<img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test"  />
 
 - **Select a function:** 
 
@@ -534,7 +535,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Test the significant groups in this function and this taxon.
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only" style="zoom: 80%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only"  />
 
   - Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.
 
@@ -547,7 +548,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - **Tukey result plot:**
   - The dots and lines show the difference in the mean value of the Tukey test
 
-<img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot"  />
 
 ### Group-Control TEST
 
@@ -560,7 +561,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
   - Result of Dunnett's Test:
     - T- Statistic value shown in the heatmap
-  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap" style="zoom:80%;" />
+  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
 
 
 
@@ -572,7 +573,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   
 
-<img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717"  />
 
 - Select <u>p-adjust</u>, <u>log2FC</u> to plot
 
@@ -580,19 +581,19 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Volcano:
 
-    <img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano" style="zoom:50%;" />
+    <img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano"  />
 
   - Sankey:
 
     - The last node level is the functions linked to each Taxon (When plotting Taxa-Func)
 
-    <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" style="zoom:50%;" />
+    <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey"  />
 
 ### Co-Expression Networks
 
 - select Groups or Samples to calculate the correlation and plot the network
 
-<img src="./MetaX_Cookbook.assets/co_network_page.png" alt="image-20230728142606826" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/co_network_page.png" alt="image-20230728142606826"  />
 
 - Slecet table, and set the method of correlation and threshold
 
@@ -600,7 +601,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Add some items to the focus list (Optional)
 
-  <img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568"  />
 
 - Network Plot
 
@@ -608,7 +609,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - The depth of green represents the correlation value
   - The size of the dot indicates the number of connections
 
-<img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic"  />
 
 
 
@@ -616,13 +617,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Add items to the list window to plot the clusters with similar trends of intensity
 
-<img src="./MetaX_Cookbook.assets/trends_page.png" alt="image-20230728143806833" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/trends_page.png" alt="image-20230728143806833"  />
 
 - Clusters plot (clustered by **k-means**)
 
   - The coloured line is the average 
 
-  <img src="./MetaX_Cookbook.assets/trends_cluster.png" alt="image-20230728144230514" style="zoom: 80%;" />
+  <img src="./MetaX_Cookbook.assets/trends_cluster.png" alt="image-20230728144230514"  />
 
 
 
@@ -632,7 +633,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - The dashed red line  is the average 
 
-    <img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032" style="zoom: 50%;" />
+    <img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032"  />
 
     
 
@@ -644,7 +645,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Taxa-Func Link Plot
 
-<img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" alt="image-20230728150309898" style="zoom:50%;" />
+<img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" alt="image-20230728150309898"  />
 
 - Check all taxa in one function (or Check all functions in a taxon)
 
@@ -652,7 +653,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     - **Linked Number**: The number shows how many taxa are linked in this function
     - **The number starts with Taxa**: The number shows how many peptides are in this Taxa-Func
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517" style="zoom:80%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517"  />
 
 - Filter items of the Taxa and Func list
 
@@ -664,30 +665,30 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select some groups (Default all) to get **the intensity of each taxon of this function**
 
-    <img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" alt="image-20230728152953911" style="zoom: 50%;" />
+    <img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" alt="image-20230728152953911"  />
 
-<img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="image-20230728151451213" style="zoom: 50%;" />
+<img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="image-20230728151451213"  />
 
 - Plot **peptides** in <u>one Function of a Taxon</u>
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" alt="taxa_func_link_pep_heatmap" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" alt="taxa_func_link_pep_heatmap"  />
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" alt="taxa_func_link_pep_bar" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" alt="taxa_func_link_pep_bar"  />
 
 - Switch Bar to Stacked or not ( Line)
 
-  <img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck"  />
 
 - Change Bar plot to Lines
 
-  <img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line"  />
 
   ### Taxa-Func Network
   
   - Select some groups or samples (default all)
   - add some taxa, func or taxa-func to focus the window  (Optional)
   
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517" style="zoom:50%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517"  />
   
   - Plot list only
     - Checked the "**Plot List Only**" to show the items only in the list
@@ -697,7 +698,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     - The red dots are the taxa we focused on
     - The green dots are the functions we focused on
   
-  <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network" style="zoom: 50%;" />
+  <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
   
   
 
@@ -719,7 +720,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - **Show or Hide the Console**
 
-  - <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console" style="zoom: 50%;" />
+  - <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console"  />
 
 - **Any Table Mode**
 

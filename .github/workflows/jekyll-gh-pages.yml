@@ -68,7 +68,7 @@ jobs:
           html_content = markdown.markdown(markdown_content, extensions=['tables', 'toc'])
           
           # Add Bootstrap classes to tables and images
-          html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 100%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
+          html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 60%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
           html_content = re.sub(r'<table>', r'<table class="table table-striped table-bordered">', html_content)
           
           # Jinja2 template for HTML output
