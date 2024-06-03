@@ -69,7 +69,8 @@ jobs:
           
           # Add Bootstrap classes to tables and images
           html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 60%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
-          html_content = re.sub(r'<table>', r'<table class="table table-striped table-bordered">', html_content)
+          html_content = re.sub(r'<table>', r'<div class="table-responsive"><table class="table table-striped table-bordered">', html_content)
+          html_content = re.sub(r'</table>', r'</table></div>', html_content)
           
           # Jinja2 template for HTML output
           template = Template('''
@@ -104,6 +105,10 @@ jobs:
                       color: #ecf0f1;
                       text-decoration: none;
                   }
+                  nav a.active {
+                      background-color: #34495e;
+                      color: #ffffff;
+                  }
                   nav a:hover {
                       background-color: #34495e;
                       color: #ffffff;
@@ -136,8 +141,11 @@ jobs:
                   table tbody + tbody {
                       border-top: 2px solid #dee2e6;
                   }
-                  table .table {
-                      background-color: #fff;
+                  .table-responsive {
+                      display: block;
+                      width: 100%;
+                      overflow-x: auto;
+                      -webkit-overflow-scrolling: touch;
                   }
               </style>
           </head>
@@ -148,7 +156,7 @@ jobs:
               <ul class="nav flex-column">
               {% for level, title, anchor in toc_items %}
                   <li class="nav-item" style="margin-left: {{ (level - 1) * 20 }}px;">
-                      <a class="nav-link" href="#{{ anchor }}">{{ title }}</a>
+                      <a class="nav-link" href="#{{ anchor }}" id="nav-{{ anchor }}">{{ title }}</a>
                   </li>
               {% endfor %}
               </ul>
@@ -161,6 +169,34 @@ jobs:
           <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
           <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
           <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+          <script>
+              // Function to get the current scroll position and update the active nav link
+              function updateActiveNavLink() {
+                  var sections = document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6');
+                  var navLinks = document.querySelectorAll('nav a');
+                  var fromTop = window.scrollY + 20;
+          
+                  sections.forEach(function(section) {
+                      var top = section.offsetTop;
+                      var bottom = top + section.offsetHeight;
+                      var id = section.id;
+          
+                      if (fromTop >= top && fromTop < bottom) {
+                          navLinks.forEach(function(link) {
+                              link.classList.remove('active');
+                          });
+                          var activeLink = document.querySelector('nav a[href="#' + id + '"]');
+                          if (activeLink) {
+                              activeLink.classList.add('active');
+                              // Scroll the navigation to the active link
+                              activeLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                      }
+                  });
+              }
+          
+              window.addEventListener('scroll', updateActiveNavLink);
+          </script>
           
           </body>
           </html>
