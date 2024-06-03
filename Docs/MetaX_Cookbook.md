@@ -1,12 +1,18 @@
 # MetaX Cookbook
 
-This is the guidebook for the <u>MetaX</u> **GUI Version**. If you are using the CLI to analyze, We recommend that you read the documentation for each MetaX module for instructions on how to use it from the command line.
+This is the guidebook for the MetaX **GUI Version**. If you are using the CLI to analyze, We recommend that you read the [documentation](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for each MetaX module for instructions on how to use it from the command line.
 
 # Overview
 
 **[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for the streamlined annotation of peptide sequences with taxonomic and functional information based on the lowest common ancestors. This versatile tool connects species-specific functions, enabling a more comprehensive analysis of the relationship between taxonomy and functionality. Furthermore, MetaX incorporates robust statistical modules for differential analysis of species-function contributions across distinct groups.
 
 ![abstract](./MetaX_Cookbook.assets/abstract.png)
+
+# Project Page
+
+Visit **Github** to get more information:
+
+https://github.com/byemaxx/MetaX
 
 # Contents
 

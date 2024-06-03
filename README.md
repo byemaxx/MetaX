@@ -27,7 +27,7 @@ Clone the repository to your local machine and install the required dependencies
 
 ## Getting Started
 - `Desktop Version(desktop)`:
-  - Refer to the [MetaX Cookbook](./Docs/MetaX_Cookbook.md) for detailed instructions on how to use MetaX wtih the graphical user interface.
+  - Refer to the [MetaX Cookbook](https://byemaxx.github.io/MetaX/) for detailed instructions on how to use MetaX wtih the graphical user interface.
   <br>
 - `Command-line version`:
   - Read the example documentation in the [Notebook](./Docs/example.ipynb) for detailed instructions and examples.

@@ -28,6 +28,147 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install markdown jinja2
+
+      - name: Convert Markdown to HTML
+        run: |
+          python <<EOF
+          import markdown
+          from jinja2 import Template
+          import re
+
+          # read markdown file
+          markdown_file_path = './docs/MetaX_Cookbook.md'
+          with open(markdown_file_path, 'r', encoding='utf-8') as file:
+              markdown_content = file.read()
+
+          #  Extract headings and generate table of contents
+          headings = re.findall(r'^(#+) (.+)', markdown_content, re.MULTILINE)
+          toc_items = []
+
+          for heading in headings:
+              level = len(heading[0])
+              title = heading[1]
+              anchor = re.sub(r'\W+', '-', title.lower()).strip('-')
+              toc_items.append((level, title, anchor))
+
+          # Convert markdown to HTML
+          html_content = markdown.markdown(markdown_content, extensions=['tables', 'toc'])
+
+          # Add Bootstrap classes to tables and images
+          html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 100%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
+
+          # Jinja2 template for HTML output
+          template = Template('''
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>MetaX</title>
+              <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+              <style>
+                  body {
+                      display: flex;
+                      font-family: Arial, sans-serif;
+                  }
+                  nav {
+                      width: 250px;
+                      padding: 20px;
+                      background-color: #f8f9fa;
+                      border-right: 1px solid #dee2e6;
+                      position: fixed;
+                      height: 100%;
+                      overflow-y: auto;
+                  }
+                  nav a {
+                      display: block;
+                      padding: 8px 16px;
+                      color: #007bff;
+                      text-decoration: none;
+                  }
+                  nav a:hover {
+                      background-color: #e2e6ea;
+                      color: #0056b3;
+                  }
+                  main {
+                      flex: 1;
+                      padding: 20px;
+                      margin-left: 250px;
+                      overflow-y: auto;
+                  }
+                  h1, h2, h3, h4, h5, h6 {
+                      color: #343a40;
+                  }
+                  table {
+                      width: 100%;
+                      margin-bottom: 1rem;
+                      color: #212529;
+                      border-collapse: collapse;
+                  }
+                  table th,
+                  table td {
+                      padding: 0.75rem;
+                      vertical-align: top;
+                      border-top: 1px solid #dee2e6;
+                  }
+                  table thead th {
+                      vertical-align: bottom;
+                      border-bottom: 2px solid #dee2e6;
+                  }
+                  table tbody + tbody {
+                      border-top: 2px solid #dee2e6;
+                  }
+                  table .table {
+                      background-color: #fff;
+                  }
+              </style>
+          </head>
+          <body>
+
+          <nav>
+              <h2>Navigation</h2>
+              <ul class="nav flex-column">
+              {% for level, title, anchor in toc_items %}
+                  <li class="nav-item" style="margin-left: {{ (level - 1) * 20 }}px;">
+                      <a class="nav-link" href="#{{ anchor }}">{{ title }}</a>
+                  </li>
+              {% endfor %}
+              </ul>
+          </nav>
+
+          <main>
+              {{ content }}
+          </main>
+
+          <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+          <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+          </body>
+          </html>
+          ''')
+
+          # Render the template with the content and TOC items
+          html_output = template.render(content=html_content, toc_items=toc_items)
+
+          # Write the HTML output to a file
+          output_file_path = './docs/index.html'
+          with open(output_file_path, 'w', encoding='utf-8') as file:
+              file.write(html_output)
+
+          print("HTML file has been generated successfully.")
+          EOF
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
