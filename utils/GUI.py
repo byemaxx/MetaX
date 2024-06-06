@@ -3787,8 +3787,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
             # BasicPlot(self.tfa).plot_taxa_stats()
-            pic = BasicPlot(self.tfa).plot_taxa_stats_pie()
-            
+            theme = self.comboBox_data_overiew_theme.currentText()
+            pic = BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme)
             # Add the new MatplotlibWidget
             self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
@@ -3808,7 +3808,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
-            pic = BasicPlot(self.tfa).plot_taxa_number().get_figure()
+            theme = self.comboBox_data_overiew_theme.currentText()
+            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme).get_figure()
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)

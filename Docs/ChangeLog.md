@@ -1,3 +1,8 @@
+# Version: 1.105.4
+## Date: 2024-06-05
+### Changes:
+- Fix: Fixed the theme doesn't work for data overview part when figuer emebed in the GUI.
+
 # Version: 1.105.3
 ## Date: 2024-05-29
 ### Changes:
