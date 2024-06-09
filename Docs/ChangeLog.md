@@ -1,3 +1,8 @@
+# Version: 1.106.0
+## Date: 2024-06-09
+### Changes:
+- New: Added a parameter in Settting to enable user to set the linkages method and linkage distance for the heatmap plot.(removed some metrices due to when the data has zero, the linkage will raise error.)
+
 # Version: 1.105.4
 ## Date: 2024-06-05
 ### Changes:

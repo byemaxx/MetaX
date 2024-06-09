@@ -1,10 +1,11 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QToolBox
 from PyQt5.QtCore import pyqtSignal
 from .Ui_Setting import Ui_Settings
 
 class SettingsWidget(QWidget):
     update_mode_changed = pyqtSignal(str)
     auto_check_update_changed = pyqtSignal(bool)
+    heatmap_params_dict_changed = pyqtSignal(dict)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True):
         super().__init__(parent)
@@ -21,9 +22,18 @@ class SettingsWidget(QWidget):
         # resize the window, 600x400 as default
         self.resize(600, 400)
         
+        # move to the first tab in QToolBox
+        toolbox = self.findChildren(QToolBox)
+        for widget in toolbox:
+            widget.setCurrentIndex(0)
+                    
+        # signal-slot connections
         self.ui.checkBox_auto_check_update.stateChanged.connect(self.handle_checkbox_state_changed)
         self.ui.radioButton_update_stable.toggled.connect(self.handle_radio_button_toggled)
         self.ui.radioButton_update_beta.toggled.connect(self.handle_radio_button_toggled)
+        
+        self.ui.comboBox_heatmap_linkage_method.currentTextChanged.connect(self.handle_heatmap_params_changed)
+        self.ui.comboBox_heatmap_linkage_metric.currentTextChanged.connect(self.handle_heatmap_params_changed)
 
     def init_ui(self, update_mode, auto_check_update):
         if update_mode == "main":
@@ -36,13 +46,16 @@ class SettingsWidget(QWidget):
         self.auto_check_update = self.ui.checkBox_auto_check_update.isChecked()
         self.auto_check_update_changed.emit(self.auto_check_update)
 
-    # def handle_radio_button_toggled(self):
-    #     if self.ui.radioButton_update_stable.isChecked():
-    #         self.update_mode = "main"
-    #     elif self.ui.radioButton_update_beta.isChecked():
-    #         self.update_mode = "dev"
-    #     self.update_mode_changed.emit(self.update_mode)
-    
+    def handle_heatmap_params_changed(self):
+        method = self.ui.comboBox_heatmap_linkage_method.currentText()
+        metric = self.ui.comboBox_heatmap_linkage_metric.currentText()
+        
+        heatmap_params_dict = {
+            "linkage_method": method,
+            "distance_metric": metric
+        }
+        
+        self.heatmap_params_dict_changed.emit(heatmap_params_dict)
     
     def handle_radio_button_toggled(self, checked):
         sender = self.sender()

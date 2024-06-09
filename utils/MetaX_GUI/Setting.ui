@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QToolBox" name="toolBox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page">
       <property name="geometry">
@@ -77,6 +77,137 @@
       <attribute name="label">
        <string>Others</string>
       </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>HeatMap</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Linkage Method</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_heatmap_linkage_method">
+           <property name="currentText">
+            <string>average</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>average</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>single</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>complete</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>centroid</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>median</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>weighted</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ward</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Linkage Metric</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_heatmap_linkage_metric">
+           <property name="currentText">
+            <string>euclidean</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>euclidean</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>chebyshev</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>cityblock</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>hamming</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>matching</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>minkowski</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>rogerstanimoto</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>russellrao</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>sqeuclidean</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>

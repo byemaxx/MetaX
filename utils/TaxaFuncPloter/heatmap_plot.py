@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 from .get_distinct_colors import GetDistinctColors
 
 class HeatmapPlot:
-    def __init__(self, tfobj):
+    def __init__(self, tfobj, linkage_method:str = 'average', distance_metric:str = 'correlation'):
         self.tfa =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         self.assign_colors = GetDistinctColors().assign_colors
+        self.linkage_method = linkage_method
+        self.distance_metric = distance_metric
         
         # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
@@ -93,8 +95,8 @@ class HeatmapPlot:
                     "figsize": fig_size,
                     "col_cluster": col_cluster,
                     "row_cluster": row_cluster,
-                    "method": "average",
-                    "metric": "correlation",
+                    "method": self.linkage_method,
+                    "metric": self.distance_metric,
                     "cbar_kws": {"label": plot_type, "shrink": 0.5},
                     "standard_scale": scale,
                     "mask": df_top.isnull(),
@@ -143,8 +145,8 @@ class HeatmapPlot:
                     "cmap": cmap,
                     "col_cluster": col_cluster,
                     "row_cluster": row_cluster,
-                    "method": "average",
-                    "metric": "correlation",
+                    "method": self.linkage_method,
+                    "metric": self.distance_metric,
                     "standard_scale": scale,
                     "mask": df_top.isnull(),
                 }
@@ -242,11 +244,20 @@ class HeatmapPlot:
            
             if rename_taxa:
                 mat = self.rename_taxa(mat)
-            sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
-                          'cbar_kws': {'label': 'Intensity',"shrink": 0.5},
-                          'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                            'standard_scale': scale, 'col_colors': color_list,
-                                "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
+            sns_params = {
+                "center": 0,
+                "cmap": cmap,
+                "figsize": fig_size,
+                "cbar_kws": {"label": "Intensity", "shrink": 0.5},
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "standard_scale": scale,
+                "col_colors": color_list,
+                "xticklabels": True if show_all_labels[0] else "auto",
+                "yticklabels": True if show_all_labels[1] else "auto",
+            }
             fig = sns.clustermap(mat, **sns_params)
 
 
@@ -324,16 +335,28 @@ class HeatmapPlot:
         if len(mat.columns) < 2:
             col_cluster = False
             scale = None
-        sns_params = {'center': 0, 'cmap': cmap, 'figsize': fig_size,
-                      'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                        'cbar_kws': {'label': 'Intensity',"shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                        'standard_scale': scale, 'col_colors': color_list if not plot_mean  else None,
-                            "xticklabels":True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
+            
+            
+        sns_params = {
+            "center": 0,
+            "cmap": cmap,
+            "figsize": fig_size,
+            "linewidths": 0.01,
+            "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+            "dendrogram_ratio": (0.1, 0.2),
+            "cbar_kws": {"label": "Intensity", "shrink": 0.5},
+            "col_cluster": col_cluster,
+            "row_cluster": row_cluster,
+            "method": self.linkage_method,
+            "metric": self.distance_metric,
+            "standard_scale": scale,
+            "col_colors": color_list if not plot_mean else None,
+            "xticklabels": True if show_all_labels[0] else "auto",
+            "yticklabels": True if show_all_labels[1] else "auto",
+        }
         fig = sns.clustermap(mat, **sns_params)
             
-        # fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
-        #                 cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
-        #                     standard_scale=scale, col_colors=color_list)
+
 
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
@@ -465,15 +488,28 @@ class HeatmapPlot:
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 
-                          'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                        'col_cluster': col_cluster, 'row_cluster': row_cluster,
-                        'cbar_kws': {"label":'log2FoldChange' if res_df_type == 'deseq2' else 't-statistic',
-                                     "shrink": 0.5},
-                        'xticklabels':True if show_all_labels[0] else "auto",
-                        "yticklabels":True if show_all_labels[1] else "auto",
-                        "col_colors":color_list if show_col_colors else None}
-            
+            sns_params = {
+                "cmap": cmap,
+                "figsize": fig_size,
+                "norm": norm,
+                "linewidths": 0.01,
+                "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                "dendrogram_ratio": (0.1, 0.2),
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "cbar_kws": {
+                    "label": "log2FoldChange"
+                    if res_df_type == "deseq2"
+                    else "t-statistic",
+                    "shrink": 0.5,
+                },
+                "xticklabels": True if show_all_labels[0] else "auto",
+                "yticklabels": True if show_all_labels[1] else "auto",
+                "col_colors": color_list if show_col_colors else None,
+            }
+
             if return_type == 'fig':
                 fig = sns.clustermap(dft, **sns_params)
 
@@ -502,10 +538,15 @@ class HeatmapPlot:
                 else:
                     return fig
             elif return_type == 'table':
-                fig = sns.clustermap(dft, norm=norm, 
-                                    col_cluster=col_cluster, row_cluster=row_cluster,                                
-                                    )
-                
+                sns_params = {
+                    "norm": norm,
+                    "col_cluster": col_cluster,
+                    "row_cluster": row_cluster,
+                    "method": self.linkage_method,
+                    "metric": self.distance_metric,
+                }
+                fig = sns.clustermap(dft, **sns_params)
+
                 # get the sorted dataframe
                 if row_cluster and not col_cluster:
                     sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
@@ -582,9 +623,22 @@ class HeatmapPlot:
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-            sns_params = {'cmap': cmap, 'figsize': fig_size,'norm': norm,'linewidths': .01, 'linecolor': (0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2), 
-                        'cbar_kws': {"label":'t-statistic', "shrink": 0.5}, 'col_cluster': col_cluster, 'row_cluster': row_cluster,"col_colors":col_colors if show_col_colors else None,
-                        'xticklabels':True if show_all_labels[0] else "auto", "yticklabels":True if show_all_labels[1] else "auto"}
+            sns_params = {
+                "cmap": cmap,
+                "figsize": fig_size,
+                "norm": norm,
+                "linewidths": 0.01,
+                "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                "dendrogram_ratio": (0.1, 0.2),
+                "cbar_kws": {"label": "t-statistic", "shrink": 0.5},
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "col_colors": col_colors if show_col_colors else None,
+                "xticklabels": True if show_all_labels[0] else "auto",
+                "yticklabels": True if show_all_labels[1] else "auto",
+            }
             fig = sns.clustermap(dft, **sns_params)
 
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
@@ -669,13 +723,17 @@ class HeatmapPlot:
             from matplotlib.colors import TwoSlopeNorm
             vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
-
-
-            fig = sns.clustermap(dft, norm=norm, 
-                                col_cluster=col_cluster, row_cluster=row_cluster,
-                                cbar_kws = dict(label='t-statistic'),
-                                   )
-
+            
+            sns_params = {
+                "norm": norm,
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "cbar_kws": {"label": "t-statistic"},
+            }
+            fig = sns.clustermap(dft, **sns_params)
+            
             # get the sorted dataframe
             if row_cluster and not col_cluster:
                 sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
@@ -766,9 +824,20 @@ class HeatmapPlot:
             if rename_taxa:
                 mat = self.rename_taxa(mat)
                 
-            fig  = sns.clustermap(mat, center=0,  cmap = cmap ,figsize=fig_size,
-                            cbar_kws={'label': 'Intensity'}, col_cluster=col_cluster, row_cluster=row_cluster,
-                                standard_scale=scale, col_colors=color_list)
+            sns_params = {
+                "center": 0,
+                "cmap": cmap,
+                "figsize": fig_size,
+                "cbar_kws": {"label": "Intensity"},
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "standard_scale": scale,
+                "col_colors": color_list,
+            }
+
+            fig = sns.clustermap(mat, **sns_params)
 
             # get the sorted dataframe
             if row_cluster and not col_cluster:

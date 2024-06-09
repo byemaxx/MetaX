@@ -156,6 +156,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
         self.executors = []  # save all FunctionExecutor object
         self.add_theme_to_combobox()
+        
+        # ploting parameters
+        self.heatmap_params_dict = {'linkage_method': 'average', 'distance_metric': 'euclidean'}
 
 
         # set icon
@@ -617,20 +620,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.settings_dialog is None:
             self.settings_dialog = QDialog(self.MainWindow)
             self.settings_dialog.setWindowTitle("Settings")
-            self.settings_dialog.setModal(True)
+            self.settings_dialog.setModal(False) 
             layout = QVBoxLayout(self.settings_dialog)
-            # reszie the settings dialog
             self.settings_dialog.resize(600, 400)
 
             settings_widget = SettingsWidget(self.settings_dialog, self.update_branch, self.auto_check_update)
             settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
             settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
-
+            settings_widget.heatmap_params_dict_changed.connect(self.on_heatmap_params_changed)
+            
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
         
-        self.settings_dialog.exec_()
-        
+        self.settings_dialog.show()
+
+            
     # handle the update mode changed from settings window
     def on_update_mode_changed(self, mode):
         self.update_branch = mode
@@ -640,6 +644,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def on_auto_check_update_changed(self, auto_check):
         self.auto_check_update = auto_check
         print(f"Auto check update set to: {auto_check}")
+        
+    # handle the heatmap params changed from settings window
+    def on_heatmap_params_changed(self, params_dict):
+        self.heatmap_params_dict = params_dict
+        print(f"Heatmap params changed to: {params_dict}")
     
     ###############   basic function End   ###############
     
@@ -3261,7 +3270,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
-                HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+                HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels, rename_sample=rename_sample,
@@ -4064,7 +4073,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message(f'Plotting heatmap for {table_name}...')
             if table_name.startswith('dunnett_test'):
-                fig = HeatmapPlot(self.tfa).plot_heatmap_of_dunnett_test_res(df=df, 
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_dunnett_test_res(df=df, 
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
@@ -4073,7 +4082,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
 
-                fig = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -4093,7 +4102,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             elif table_name.startswith('dunnettAllCondtion'):
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
                 
-                fig = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df=df, res_df_type='dunnett',
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type='dunnett',
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
@@ -4126,13 +4135,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     title = "Functions Non-Significant; Related Taxa Significantly Different Across Groups"
                 else:
                     title = ""
-                fig = HeatmapPlot(self.tfa).plot_top_taxa_func_heatmap_of_test_res(df=df, 
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_top_taxa_func_heatmap_of_test_res(df=df, 
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
                             col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
                             show_all_labels = show_all_labels)
             else:
-                fig = HeatmapPlot(self.tfa).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                         value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
                                                                         scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
                                                                         cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
@@ -4169,12 +4178,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             if table_name.startswith('dunnett_test'):
-                df_top_cross = HeatmapPlot(self.tfa).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
+                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
                                                                                       rename_taxa=rename_taxa)
             elif 'deseq2all' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
-                df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
+                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
                                                                                    pvalue=pvalue,scale = scale, 
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -4184,7 +4193,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                                                    remove_zero_col = remove_zero_col
                                                                                    )
             elif 'dunnettAllCondtion' in table_name:
-                df_top_cross = HeatmapPlot(self.tfa).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
+                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
                                                                                    pvalue=pvalue,scale = scale, 
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
@@ -4195,12 +4204,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             else:
                 if 'taxa-functions' in table_name:
-                    df_top_cross = HeatmapPlot(self.tfa).get_top_across_table(df=df, top_number=top_num, 
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table(df=df, top_number=top_num, 
                                                                               col_cluster = col_luster, row_cluster = row_luster,
                                                                               value_type=value_type, pvalue=pvalue, 
                                                                               rename_taxa=rename_taxa)
                 else:
-                    df_top_cross = HeatmapPlot(self.tfa).get_top_across_table_basic(df=df, top_number=top_num, 
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table_basic(df=df, top_number=top_num, 
                                                                                     col_cluster = col_luster, row_cluster = row_luster,
                                                                                     value_type=value_type, pvalue=pvalue, 
                                                                                     scale = scale, rename_taxa=rename_taxa)
@@ -5107,7 +5116,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         try:
             self.show_message('Plotting heatmap, please wait...')
-            HeatmapPlot(self.tfa).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+            HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
                                   rename_sample=self.checkBox_tflink_hetatmap_rename_sample.isChecked(), plot_mean=plot_mean

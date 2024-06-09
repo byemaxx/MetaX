@@ -370,6 +370,7 @@ class BasicPlot:
             sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
+                            'method':'average', 'metric':'euclidean',
                             "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),"col_colors":color_list,
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
                             "yticklabels":True if show_all_labels[1] else 'auto'}
