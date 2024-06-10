@@ -1,3 +1,8 @@
+# Version: 1.106.1
+## Date: 2024-06-09
+### Changes:
+- New: Added the linkages method and linkage distance for the heatmap of corelation plot.
+
 # Version: 1.106.0
 ## Date: 2024-06-09
 ### Changes:

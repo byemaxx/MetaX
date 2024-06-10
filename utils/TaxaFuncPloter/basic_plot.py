@@ -349,8 +349,20 @@ class BasicPlot:
         # plt.close()
         return ax
 
-    def plot_corr_sns(self, df, title_name = 'Table', cluster = False, width=10, height=8, font_size = 10,
-                      show_all_labels = (False,False) , theme:str = None, rename_sample:bool = False):
+    def plot_corr_sns(
+        self,
+        df,
+        title_name="Table",
+        cluster=False,
+        width=10,
+        height=8,
+        font_size=10,
+        show_all_labels=(False, False),
+        theme: str = None,
+        rename_sample: bool = False,
+        linkage_method: str = "average",
+        distance_metric: str = "euclidean",
+    ):
         dft= df.copy()
         if rename_sample:
             dft, group_list = self.tfa.add_group_name_for_sample(dft)
@@ -370,7 +382,8 @@ class BasicPlot:
             sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
-                            'method':'average', 'metric':'euclidean',
+                            'method':linkage_method,
+                            'metric':distance_metric,
                             "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),"col_colors":color_list,
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
                             "yticklabels":True if show_all_labels[1] else 'auto'}

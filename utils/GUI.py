@@ -335,7 +335,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # self.tabWidget_3.removeTab(3)
         
         # Hide button of DESeq2 in Group Control Test
-        self.pushButton_multi_deseq2.hide()
+        self.pushButton_multi_deseq2.hide() if self.like_times < 3 else None
 
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
@@ -912,9 +912,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if like_times:
             self.like_times = like_times
             if self.like_times >= 3:
-                # self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
-                self.pushButton_multi_deseq2.show()
-                print("Hidden Button of DESeq2 in Group Control Test is shown.")
+                print("Hidden Button of DESeq2 in Group Control Test is eligible to show.")
+                # if like_times < 3, the following code will hide the button
         
         if self.settings.contains("update_branch"):
             self.update_branch = self.settings.value("update_branch", "main", type=str)
@@ -1397,16 +1396,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         dialog.exec_()
 
     def like_us(self):
-        if self.like_times < 2:
+        if 0 <= self.like_times < 2:
             QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
             self.pushButton_others_plot_line.setText('Plot Bar')
             self.like_times += 1
-        elif self.like_times <3:
+            
+        elif self.like_times >= 2:
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
             self.like_times += 1
-            # self.tabWidget_3.insertTab(3, self.hiddenTab, "Group-Control TEST")
+            # now like_times = 3
             self.pushButton_multi_deseq2.show()
-
+            print("Hidden Button of DESeq2 in Group Control Test is shown.")
+            
         else:
             QMessageBox.information(self.MainWindow, "Thank you!", "There is no more hidden function.\n\nYou can like us again next time.")
         
@@ -3956,7 +3957,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.show_message('Correlation is running, please wait...')
                 BasicPlot(self.tfa).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
                                                 width=width, height=height, font_size=font_size, 
-                                                show_all_labels=show_all_labels, theme=theme,rename_sample = rename_sample)
+                                                show_all_labels=show_all_labels, theme=theme,
+                                                rename_sample = rename_sample, **self.heatmap_params_dict)
 
             elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
