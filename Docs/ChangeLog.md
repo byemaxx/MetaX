@@ -1,3 +1,8 @@
+# Version: 1.107.0
+## Date: 2024-06-15
+### Changes:
+- New: MetaX now supports make the OTFs Table from the MetaLab v2.3 MaxQuant output file.
+
 # Version: 1.106.1
 ## Date: 2024-06-09
 ### Changes:

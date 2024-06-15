@@ -219,7 +219,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.lineEdit_db_path = self.make_line_edit_drag_drop(self.lineEdit_db_path, 'file')
         self.lineEdit_final_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_final_peptide_path, 'file')
         self.lineEdit_peptide2taxafunc_outpath = self.make_line_edit_drag_drop(self.lineEdit_peptide2taxafunc_outpath, 'folder', 'OTF.tsv')
-        
+        self.lineEdit_metalab_anno_peptides_report = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_peptides_report, 'file')
+        self.lineEdit_metalab_anno_built_in_taxa = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_built_in_taxa, 'file')
+        self.lineEdit_metalab_anno_functions = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_functions, 'file')
+        self.lineEdit_metalab_anno_otf_save_path = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_otf_save_path, 'folder', 'OTF.tsv')
 
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
@@ -233,11 +236,18 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
         # set button click event
-        # peptide2taxafunc
+        # peptideAnnotator MAG
         self.pushButton_get_db_path.clicked.connect(self.set_lineEdit_db_path)
         self.pushButton_get_final_peptide_path.clicked.connect(self.set_lineEdit_final_peptide_path)
         self.pushButton_get_taxafunc_save_path.clicked.connect(self.set_lineEdit_peptide2taxafunc_outpath)
         self.pushButton_run_peptide2taxafunc.clicked.connect(self.run_peptide2taxafunc)
+        # peptideAnnotator MetaLab2.3
+        self.pushButton_open_metalab_res_folder.clicked.connect(self.set_lineEdit_metalab_res_folder)
+        self.pushButton_open_metalab_anno_peptides_report.clicked.connect(self.set_lineEdit_metalab_anno_peptides_report_path)
+        self.pushButton_open_metalab_anno_built_in_taxa.clicked.connect(self.set_lineEdit_metalab_anno_built_in_taxa_path)
+        self.pushButton_open_metalab_anno_functions.clicked.connect(self.set_lineEdit_metalab_anno_functions_path)
+        self.pushButton_open_metalab_anno_otf_save_path.clicked.connect(self.set_lineEdit_metalab_anno_otf_save_path)
+        self.pushButton_run_metalab_maxq_annotate.clicked.connect(self.run_metalab_maxq_annotate)
 
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -247,7 +257,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.pushButton_func_threshold_help.clicked.connect(self.show_func_threshold_help)
         self.toolButton_db_update_built_in_help.clicked.connect(self.show_toolButton_db_update_built_in_help)
         self.toolButton_db_update_table_help.clicked.connect(self.show_toolButton_db_update_table_help)
-        
+        self.toolButton_metalab_res_folder_help.clicked.connect(self.show_toolButton_metalab_res_folder_help)
         
 
 
@@ -1431,7 +1441,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         QApplication.processEvents()
 
 
-
+    ## peptideAnnotator MAG tab
     def set_lineEdit_db_path(self):
         db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Database', self.last_path, 'sqlite3 (*.db)')[0]
         self.last_path = os.path.dirname(db_path)
@@ -1448,7 +1458,50 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Operational Taxa-Functions (OTF) Table', os.path.join(self.last_path, 'OTF.tsv'), 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(peptide2taxafunc_outpath)
         self.lineEdit_peptide2taxafunc_outpath.setText(peptide2taxafunc_outpath)
+    ## peptideAnnotator MAG tab end
     
+    ## peptideAnnotator MetaLab2.3 tab
+    def set_lineEdit_metalab_res_folder(self):
+        metalab_res_folder = QFileDialog.getExistingDirectory(self.MainWindow, 'Select MetaLab Result Folder', self.last_path)
+        self.last_path = metalab_res_folder
+        # check if the folder contains MetaLab result files
+        peptide_file = os.path.join(metalab_res_folder, 'maxquant_search/combined/txt/peptides_report.txt')
+        pepTaxa_file = os.path.join(metalab_res_folder, 'maxquant_search/taxonomy_analysis/BuiltIn.pepTaxa.csv')
+        functions_file = os.path.join(metalab_res_folder, 'maxquant_search/functional_annotation/functions.tsv')
+        for file in [peptide_file, pepTaxa_file, functions_file]:
+            if not os.path.exists(file):
+                QMessageBox.warning(self.MainWindow, "Warning", f"MetaLab result folder does not contain the required file:\n{file}")
+                return
+            
+        # set the path to lineEdit
+        self.lineEdit_metalab_res_folder.setText(metalab_res_folder)
+        self.lineEdit_metalab_anno_peptides_report.setText(peptide_file)
+        self.lineEdit_metalab_anno_built_in_taxa.setText(pepTaxa_file)
+        self.lineEdit_metalab_anno_functions.setText(functions_file)
+        # switch to MetaLab Annotated set path tab
+        self.toolBox_metalab_res_anno.setCurrentIndex(1)
+    
+    def set_lineEdit_metalab_anno_peptides_report_path(self):
+        metalab_anno_peptides_report_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Peptides Report', self.last_path, 'txt (*.txt);;All Files (*)')[0]
+        self.last_path = os.path.dirname(metalab_anno_peptides_report_path)
+        self.lineEdit_metalab_anno_peptides_report.setText(metalab_anno_peptides_report_path)
+    
+    def set_lineEdit_metalab_anno_built_in_taxa_path(self):
+        metalab_anno_built_in_taxa_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Built-in Taxa', self.last_path, 'CSV Files (*.csv);;All Files (*)')[0]
+        self.lineEdit_metalab_anno_built_in_taxa.setText(metalab_anno_built_in_taxa_path)
+        self.last_path = os.path.dirname(metalab_anno_built_in_taxa_path)
+    
+    def set_lineEdit_metalab_anno_functions_path(self):
+        metalab_anno_functions_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Functions', self.last_path, 'TSV Files (*.tsv);;All Files (*)')[0]
+        self.lineEdit_metalab_anno_functions.setText(metalab_anno_functions_path)
+        self.last_path = os.path.dirname(metalab_anno_functions_path)
+        
+    def set_lineEdit_metalab_anno_otf_save_path(self):
+        metalab_anno_otf_save_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save MetaLab Annotated OTF Table', os.path.join(self.last_path, 'OTF.tsv'), 'tsv (*.tsv)')[0]
+        self.last_path = os.path.dirname(metalab_anno_otf_save_path)
+        self.lineEdit_metalab_anno_otf_save_path.setText(metalab_anno_otf_save_path)
+        
+    ## peptideAnnotator MetaLab2.3 tab end
 
     def load_example_for_analyzer(self):
         current_path = os.path.dirname(os.path.abspath(__file__))
@@ -1649,6 +1702,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
         # go to basic analysis tab and the first tab
+        self.stackedWidget.setCurrentIndex(0) # go to page_analyzer
         self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.tabWidget_4.setCurrentIndex(0)
         self.pushButton_set_multi_table.setEnabled(True)
@@ -1742,7 +1796,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     ## Database Updater
 
 
-    # Peptide to TaxaFunc
+    ## Peptide Annotator 
+    # MAG tab
     def run_peptide2taxafunc(self):
         db_path = f'''{self.lineEdit_db_path.text()}'''
         final_peptide_path = f'''{self.lineEdit_final_peptide_path.text()}'''
@@ -1767,6 +1822,30 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             except Exception as e:
                 self.logger.write_log(f'run_peptide2taxafunc error: {e}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
+    # MetaLab2.3 tab
+    def run_metalab_maxq_annotate(self):
+        pepTaxa_file = f'''{self.lineEdit_metalab_anno_peptides_report.text()}'''
+        peptide_file = f'''{self.lineEdit_metalab_anno_built_in_taxa.text()}'''
+        functions_file = f'''{self.lineEdit_metalab_anno_functions.text()}'''
+        otf_save_path = f'''{self.lineEdit_metalab_anno_otf_save_path.text()}'''
+        print(f'pepTaxa_file:\n{pepTaxa_file} \npeptide_file:\n{peptide_file} \nfunctions_file:\n{functions_file} \notf_save_path:\n{otf_save_path}')
+        
+        if pepTaxa_file == '' or peptide_file == '' or functions_file == '' or otf_save_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths')
+            return None
+        try:
+            self.logger.write_log(f'run_metalab_maxq_annotate: pepTaxa_file:{pepTaxa_file} peptide_file:{peptide_file} functions_file:{functions_file} otf_save_path:{otf_save_path}')
+            
+            from MetaX.utils.metalab2otf import MetaLab2OTF
+            def metalab_main_wrapper():
+                instance = MetaLab2OTF(pepTaxa_file, peptide_file, functions_file, otf_save_path)
+                return instance.main()            
+            
+            self.run_in_new_window(metalab_main_wrapper, show_msg=True)
+        except Exception as e:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'Error when run_metalab_maxq_annotate: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
     #### TaxaFuncAnalyzer ####
 
@@ -1855,6 +1934,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         msg_box.addButton(QMessageBox.Cancel)
         switch_button.clicked.connect(self.swith_stack_page_dbuilder)
         msg_box.exec_()
+    
+    def show_toolButton_metalab_res_folder_help(self):
+        QMessageBox.information(self.MainWindow, 'MetaLab Result Folder Help', 'Select the folder of MetaLab v2.3 result.\n\n make sure it contains [maxquant_search] folder.')
+        
+        
     def show_pushButton_preprocessing_help(self):
         msg_box = QMessageBox(parent=self.MainWindow)
         msg_box.setWindowTitle('Preprocessing Help')

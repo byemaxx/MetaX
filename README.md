@@ -6,6 +6,8 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 
 
 ![abstract](./Docs/MetaX_Cookbook.assets/abstract.png)
+## Taxa-Functions Linkage
+
 
 ## Download
 ### `Desktop Version(Recommended)`:
