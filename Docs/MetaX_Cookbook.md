@@ -760,7 +760,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - Change to update from the **stable version** or **beta version** by settings
   - <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
   - Other Options Settings
-  - ![settings_page2](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\settings_page2.png)
+  - ![settings_page2](MetaX_Cookbook.assets\settings_page2.png)
   
   
 
