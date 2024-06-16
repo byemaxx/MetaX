@@ -119,7 +119,9 @@ Visit **Github** to get more information:
 
 # Module 3. Peptide Annotator
 
-## 1. Result From MAG:
+## 1. Result From MAG Workflow
+
+
 
 The peptide result form Metagenome-assembled *genomes* (*MAGs*) as the reference database for proteins search, e.g. MetaLab-MAG, and other database like  MGnify.
 
@@ -151,7 +153,9 @@ The peptide result form Metagenome-assembled *genomes* (*MAGs*) as the reference
 
     <img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop" style="zoom:50%;" />
 
-## 2. Results from MetaLab 2.3:
+
+
+## 2. Results from MaxQuant Workflow
 
 The peptide result from **<u>MetaLab 2.3</u>** MaxQuant workflow
 
