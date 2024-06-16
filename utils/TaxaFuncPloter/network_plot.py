@@ -271,20 +271,20 @@ class NetworkPlot:
     
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
-                                   corr_threshold:float=0.5, sample_list:list = None, 
-                                   width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False,
-                                   ):
+                                corr_threshold:float=0.5, sample_list:list = None, 
+                                width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False,
+                                ):
         from matplotlib import colormaps
         #check sample_list length
         if len(sample_list) < 2:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
         df_dict = {'taxa': self.tfa.taxa_df, 
-                   'functions': self.tfa.func_df, 
-                   'taxa-functions': self.tfa.taxa_func_df, 
-                   'peptides': self.tfa.peptide_df,
-                   'proteins': self.tfa.protein_df,
-                   'custom': self.tfa.custom_df}
+                'functions': self.tfa.func_df, 
+                'taxa-functions': self.tfa.taxa_func_df, 
+                'peptides': self.tfa.peptide_df,
+                'proteins': self.tfa.protein_df,
+                'custom': self.tfa.custom_df}
         
         df = df_dict[df_type].copy()
         if self.rename_taxa:
@@ -314,7 +314,7 @@ class NetworkPlot:
         min_node_size = node_sizes.min()
         
         categories = [{"name": "Focused", "itemStyle": {"normal": {"color": self.co_network_focus_color}}}, 
-                      {"name": "Normal", "itemStyle": {"normal": {"color": self.co_network_normal_color}}}]
+                    {"name": "Normal", "itemStyle": {"normal": {"color": self.co_network_normal_color}}}]
 
         linked_nodes = set()
         if focus_list:
@@ -327,9 +327,28 @@ class NetworkPlot:
                         if node_i in focus_list or node_j in focus_list:
                             linked_nodes.add(node_i)
                             linked_nodes.add(node_j)
-                
+        
+        connected_nodes = set()
+        links = []
+        # calculate the correlation between each pair of nodes, and create a link if the correlation is above a threshold
+        # the color of the link is determined by the correlation value
+        for i in range(len(correlation_matrix)):
+            for j in range(i+1, len(correlation_matrix)):
+                correlation = correlation_matrix.iloc[i, j]
+                # create a link if the correlation is above a threshold
+                if correlation > corr_threshold:
+                    color = colormaps.get_cmap('viridis')(1 - (correlation - corr_threshold) / corr_threshold) 
+                    color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
+                    line_width = (correlation - corr_threshold) / (1 - corr_threshold) * self.line_width * 2
+                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color, "width": line_width}})
+                    connected_nodes.add(correlation_matrix.columns[i])
+                    connected_nodes.add(correlation_matrix.columns[j])
+
         nodes = []
         for item in correlation_matrix.columns:
+            if item not in connected_nodes and item not in focus_list:
+                continue  # Skip the node if it is not connected and not in focus list
+            
             if focus_list and len(focus_list) > 0:
                 if plot_list_only and item not in focus_list and item not in linked_nodes:
                     continue # skip the node if it's not in the focus list and not linked to any node in the focus list
@@ -356,20 +375,6 @@ class NetworkPlot:
                 "category": category
             })
         
-        links = []
-        # calculate the correlation between each pair of nodes, and create a link if the correlation is above a threshold
-        # the color of the link is determined by the correlation value
-        for i in range(len(correlation_matrix)):
-            for j in range(i+1, len(correlation_matrix)):
-                correlation = correlation_matrix.iloc[i, j]
-                # create a link if the correlation is above a threshold
-                if correlation > corr_threshold:
-                    color = colormaps.get_cmap('viridis')(1 - (correlation - corr_threshold) / corr_threshold) 
-                    color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-                    line_width = (correlation - corr_threshold) / (1 - corr_threshold) * self.line_width * 2
-                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color, "width": line_width}})
-
-            
         pic = (
             Graph(
                 init_opts=opts.InitOpts(
@@ -433,7 +438,8 @@ class NetworkPlot:
             )
         )
         return pic
-    
+
+        
 
 # NetworkPlot(sw).plot_co_expression_network(df_type='func', corr_threshold=0.8, sample_list=sw.get_sample_list_in_a_group('V1') , focus_list=["'glutamate synthase"]).render_notebook()
     

@@ -651,9 +651,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
-            
-            # set not pin to top
-            self.settings_dialog.setWindowFlags(self.settings_dialog.windowFlags() & ~Qt.WindowStaysOnTopHint)
         
         self.settings_dialog.show()
 

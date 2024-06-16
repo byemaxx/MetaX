@@ -29,115 +29,110 @@ Visit **Github** to get more information:
 
   <img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window"  />
 
-- Click 'Tools Menu' to switch different tool
+- Click 'Tools Menu' to switch **different modules**
 
   <img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu"  />
 
-# Module 1. Database Builder
+<br>
 
-**NOTE:** the result of **<u>MetaLab v2.3</u>** MaxQuant workflow do not need Build Database. However, we do not recommend the result files from this version of MetaLab as input to MetaX, and large amounts of Peptide may be discarded.
+# Preparing Your Data
 
+## Module 1. Database Builder
 
+**Note:** The results from **MetaLab v2.3** MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.
 
-- You have to build the database for **the first time** using <u>Database Builder</u>.
+- Build the database for the **first time** using the <u>Database Builder</u>.
 
-  **(Option 1) Build Database By MGnify Data**
+  **Option 1: Build Database Using MGnify Data**
 
-  Make sure to download the correct database type corresponding to your data
+  Ensure you download the correct database type corresponding to your data.
 
-  
+  ![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
 
-<img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder"  />
+  **Option 2: Build Database Using Own Data**
 
-**(Option 2) Build Database By Own Data**
+  1. **Annotation Table:** A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.
 
-+ (1). **Annotation Table:** a TSV table(separated by a tab), and make sure the first column is protein name joined Genome by "_", e.g.  "Genome1_protein1" and other columns are annotation information.
+  ![dbbuilder_own](./MetaX_Cookbook.assets/dbbuilder_own.png)
 
-<img src="./MetaX_Cookbook.assets/dbbuilder_own.png" alt="dbbuilder_own"  />
+  2. **Taxa Table:** A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.
 
-- (2). **Taxa Table:** a TSV table(separated by a tab), and make sure the first column is Genome name,e.g.  "Genome1"  and the second column is taxa.
-  - **Example Annotation Table:**
+  **Example Annotation Table:**
 
-    | Query               | Preferred_name | EC                | KEGG_ko             |
-    | ------------------- | -------------- | ----------------- | ------------------- |
-    | MGYG000000001_00696 | mfd            | -                 | ko:K03723           |
-    | MGYG000000001_02838 | hxlR           | -                 | -                   |
-    | MGYG000000001_01674 | ispG           | 1.17.7.1,1.17.7.3 | ko:K03526           |
-    | MGYG000000001_02710 | glsA           | 3.5.1.2           | ko:K01425           |
-    | MGYG000000001_01356 | mutS2          | -                 | ko:K07456           |
-    | MGYG000000001_02630 | -              | -                 | -                   |
-    | MGYG000000001_02418 | ackA           | 2.7.2.1           | ko:K00925           |
-    | MGYG000000001_00728 | atpA           | 3.6.3.14          | ko:K02111           |
-    | MGYG000000001_00695 | pth            | 3.1.1.29          | ko:K01056           |
-    | MGYG000000001_02907 | -              | -                 | ko:K03086           |
-    | MGYG000000001_02592 | rplC           | -                 | ko:K02906           |
-    | MGYG000000001_00137 | -              | -                 | ko:K03480,ko:K03488 |
+  | Query               | Preferred_name | EC                | KEGG_ko             |
+  | ------------------- | -------------- | ----------------- | ------------------- |
+  | MGYG000000001_00696 | mfd            | -                 | ko:K03723           |
+  | MGYG000000001_02838 | hxlR           | -                 | -                   |
+  | MGYG000000001_01674 | ispG           | 1.17.7.1,1.17.7.3 | ko:K03526           |
+  | MGYG000000001_02710 | glsA           | 3.5.1.2           | ko:K01425           |
+  | MGYG000000001_01356 | mutS2          | -                 | ko:K07456           |
+  | MGYG000000001_02630 | -              | -                 | -                   |
+  | MGYG000000001_02418 | ackA           | 2.7.2.1           | ko:K00925           |
+  | MGYG000000001_00728 | atpA           | 3.6.3.14          | ko:K02111           |
+  | MGYG000000001_00695 | pth            | 3.1.1.29          | ko:K01056           |
+  | MGYG000000001_02907 | -              | -                 | ko:K03086           |
+  | MGYG000000001_02592 | rplC           | -                 | ko:K02906           |
+  | MGYG000000001_00137 | -              | -                 | ko:K03480,ko:K03488 |
 
-  - **Example Taxa Table:**
+  **Example Taxa Table:**
 
-    | Genome        | Lineage                                                      |
-    | ------------- | ------------------------------------------------------------ |
-    | MGYG000000001 | d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Peptostreptococcales;f&#95;Peptostreptococcaceae;g&#95;GCA-900066495;s&#95;GCA-900066495 sp902362365 |
-    | MGYG000000002 | d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Lachnospirales;f&#95;Lachnospiraceae;g&#95;Blautia_A;s&#95;Blautia_A faecis |
-    | MGYG000000003 | d&#95;Bacteria;p&#95;Bacteroidota;c&#95;Bacteroidia;o&#95;Bacteroidales;f&#95;Rikenellaceae;g&#95;Alistipes;s&#95;Alistipes shahii |
-    | MGYG000000004 | d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Oscillospirales;f&#95;Ruminococcaceae;g&#95;Anaerotruncus;s&#95;Anaerotruncus colihominis |
-    | MGYG000000005 | d&#95;Bacteria;p&#95;Firmicutes_A;c&#95;Clostridia;o&#95;Peptostreptococcales;f&#95;Peptostreptococcaceae;g&#95;Terrisporobacter;s&#95;Terrisporobacter glycolicus_A |
-    | MGYG000000006 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Staphylococcales;f&#95;Staphylococcaceae;g&#95;Staphylococcus;s&#95;Staphylococcus xylosus |
-    | MGYG000000007 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Lactobacillus;s&#95;Lactobacillus intestinalis |
-    | MGYG000000008 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Lactobacillus;s&#95;Lactobacillus johnsonii |
-    | MGYG000000009 | d&#95;Bacteria;p&#95;Firmicutes;c&#95;Bacilli;o&#95;Lactobacillales;f&#95;Lactobacillaceae;g&#95;Ligilactobacillus;s&#95;Ligilactobacillus murinus |
+  | Genome        | Lineage                                                      |
+  | ------------- | ------------------------------------------------------------ |
+  | MGYG000000001 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_GCA-900066495;s_GCA-900066495 sp902362365 |
+  | MGYG000000002 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae;g_Blautia_A;s_Blautia_A faecis |
+  | MGYG000000003 | d_Bacteria;p_Bacteroidota;c_Bacteroidia;o_Bacteroidales;f_Rikenellaceae;g_Alistipes;s_Alistipes shahii |
+  | MGYG000000004 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Oscillospirales;f_Ruminococcaceae;g_Anaerotruncus;s_Anaerotruncus colihominis |
+  | MGYG000000005 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_Terrisporobacter;s_Terrisporobacter glycolicus_A |
+  | MGYG000000006 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Staphylococcales;f_Staphylococcaceae;g_Staphylococcus;s_Staphylococcus xylosus |
+  | MGYG000000007 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus intestinalis |
+  | MGYG000000008 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus johnsonii |
+  | MGYG000000009 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Ligilactobacillus;s_Ligilactobacillus murinus |
 
-# Module 2. Database Updater
+## Module 2. Database Updater
 
-- Update the built database, and extend more annotations.
+The **Database Updater** allows updating the database built by the **Database Builder** or adding more annotations. This step is **<u>optional</u>**.
 
-<img src="./MetaX_Cookbook.assets/db_updater.png" alt="db_updater"  />
+- Update the built database and extend annotations.
 
-+ **(Option 1) By built-in mode:**
+  ![db_updater](./MetaX_Cookbook.assets/db_updater.png)
 
-  - there are some extended db we recommend, eg. 
+  **Option 1: Built-in Mode**
 
-    - [<u>dbCAN_seq</u>] (https://bcb.unl.edu/dbCAN_seq )
-    
-    
+  We recommend some extended databases, such as [dbCAN_seq](https://bcb.unl.edu/dbCAN_seq).
 
-- **(Option 2) By TSV table**
+  **Option 2: TSV Table**
 
-  - Extend the database by adding a new database to the database table. 
+  Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.
 
-  - Make sure the column separator is a tab.
+  **Example:**
 
-  - Make sure the first column is the Protein name and the other columns are function annotation
+  | Protein ID          | COG        | KEGG       | ...  |
+  | ------------------- | ---------- | ---------- | ---- |
+  | MGYG000000001_02630 | Function 1 | Function 1 | ...  |
+  | MGYG000000001_01475 | Function 2 | Function 1 | ...  |
+  | MGYG000000001_01539 | Function 3 | Function 1 | ...  |
 
-    | Protein ID          | COG        | KEGG       | ...  |
-    | ------------------- | ---------- | ---------- | ---- |
-    | MGYG000000001_02630 | Function 1 | Function 1 | ...  |
-    | MGYG000000001_01475 | Function 2 | Function 1 | ...  |
-    | MGYG000000001_01539 | Function 3 | Function 1 | ...  |
+## Module 3. Peptide Annotator
 
+### 1. Results from MAG Workflow
 
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG and other databases like MGnify.
 
-# Module 3. Peptide Annotator
+- Annotate the peptide to Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
-## 1. Result From MAG Workflow
+  ![peptide2taxafunc](./MetaX_Cookbook.assets/peptide2taxafunc.png)
 
+  **Required:**
 
-
-The peptide result form Metagenome-assembled *genomes* (*MAGs*) as the reference database for proteins search, e.g. MetaLab-MAG, and other database like  MGnify.
-
-- Annotate the peptide to TaxaFunc before analyzing by <u>**Peptide Annotator**</u>
-
-  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
-
-  You have to provide:
-
-  - **Database**: The database created by <u>**Database Builder**</u>
+  - **Database**: The database created by <u>Database Builder</u>
 
   - **Peptide Table**:
 
-    - *Option 1*. From MetaLab-MAG results (<u>final_peptides.tsv</u>)
+    - *Option 1*: From MetaLab-MAG results (final_peptides.tsv)
 
-    - *Option 2*. You can also create it by yourself, make sure the first column is the ID(e.g. peptide sequence) and the second column is the proteins ID of <u>MGnify</u> (e.g. MGYG000003683_00301; MGYG000001490_01143) or <u>your Database</u>, and other columns are the intensity of each sample) 
+    - *Option 2*: Create it manually, with the first column as the ID (e.g., peptide sequence) and the second column as the proteins ID of MGnify (e.g., MGYG000003683_00301; MGYG000001490_01143) or your database, and other columns as the intensity of each sample.
+
+    **Example:**
 
     | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
     | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
@@ -147,109 +142,100 @@ The peptide result form Metagenome-assembled *genomes* (*MAGs*) as the reference
     | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
     | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
 
-  - **Output Save Path**: the location to save the result table
+  - **Output Save Path**: The location to save the result table.
 
-  - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%)
+  - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).
 
-    <img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop" style="zoom:50%;" />
+    ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
 
+### 2. Results from MaxQuant Workflow
 
-
-## 2. Results from MaxQuant Workflow
-
-The peptide result from **<u>MetaLab 2.3</u>** MaxQuant workflow
+The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
 - Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
 
-  - ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets\peptide2taxafunc_tab2_1.png)
+  ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png)
 
-- Then the **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv** and **functions.tsv** in the **maxquant_search** folder. Or you can select the files manually.
+- The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
 
+  - Select **OTFs Save To** to set the location to save the result table.
 
+  ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png)
 
-  - Select the **OTFs Save To** to set the location to save the result table.
-  - ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets\peptide2taxafunc_tab2_2.png)
+<br>
 
+# Exploring Data with MetaX
 
-# Module 4. OTF Analyzer
+## Module 4. OTF Analyzer
 
-When we get the **Operational Taxa-Functions (OTF) Table** after using the <u>**Peptide Annotator**</u>, we can use the **<u>OTF Analyzer</u>** to do downstream analysis.
+After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**Peptide Annotator**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
 
-## 1. Data Preparing
+## 1. Data Preparation
 
-**OTFs (Taxa-Functions) Table:** Get from  <u>Peptide Annotator</u> module
+**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>Peptide Annotator</u> module.
 
-**Meta Table:** The first column is sample names, and the other columns are different groups. *It would generate automatically meta info if the meta table were not provided (1. all samples are in the same group; 2. each sample is a group).*
+**Meta Table:** The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.
 
-- Example Meta Table: 
+**Example Meta Table:**
 
-  | samples  | Individuals | Treatment | Sweetener |
-  | -------- | ----------- | --------- | --------- |
-  | sample_1 | V1          | Treatment | XYL       |
-  | sample_2 | V1          | Treatment | XYL       |
-  | sample_3 | V1          | Treatment | XYL       |
-  | sample_4 | V1          | Control   | PBS       |
-  | sample_5 | V1          | Control   | PBS       |
-  | sample_6 | V1          | Control   | PBS       |
+| samples  | Individuals | Treatment | Sweetener |
+| -------- | ----------- | --------- | --------- |
+| sample_1 | V1          | Treatment | XYL       |
+| sample_2 | V1          | Treatment | XYL       |
+| sample_3 | V1          | Treatment | XYL       |
+| sample_4 | V1          | Control   | PBS       |
+| sample_5 | V1          | Control   | PBS       |
+| sample_6 | V1          | Control   | PBS       |
 
+You can load example data by **clicking the button**.
 
-
-
-
-There, we can simply load the example data by **clicking the button**. 
-
-<img src="./MetaX_Cookbook.assets/load_example.png" alt="load_example"  />
+![load_example](./MetaX_Cookbook.assets/load_example.png)
 
 Then, click **Go** to start the analysis.
 
 ## 2. Data Overview
 
-Data Overview includes some basic information about your data, such as the number of taxa, functions and proportions.
+The Data Overview provides basic information about your data, such as the number of taxa, functions, and proportions.
 
-We can set the threshold of linked peptides and the differences between them to plot the figure.
+- Set the threshold for linked peptides and the differences between them to plot figures.
 
-<img src="./MetaX_Cookbook.assets/data_overview.png" alt="data_overview"  />
+![data_overview](./MetaX_Cookbook.assets/data_overview.png)
 
-We Can Select different functions to plot the proportion distribution.
+- Select different functions to plot the proportion distribution.
 
-<img src="./MetaX_Cookbook.assets/data_overview_func.png" alt="data_overview_func"  />
+![data_overview_func](./MetaX_Cookbook.assets/data_overview_func.png)
 
+- Filter out samples for downstream analysis.
 
-
-We can also filter some samples for downstream analysis.
-
-<img src="./MetaX_Cookbook.assets/data_overview_filter.png" alt="data_overview_filter"  />
-
-
-
-
+![data_overview_filter](./MetaX_Cookbook.assets/data_overview_filter.png)
 
 ## 3. Set TaxaFunc
 
-<img src="./MetaX_Cookbook.assets/set_multi_table.png" alt="set_multi_table"  />
+![set_multi_table](./MetaX_Cookbook.assets/set_multi_table.png)
 
-### Data selection
+### Data Selection
 
-- **Function:** select a function for downstream analysis ( <u>**None**</u> in the list means that we do not select any function, only focus on peptides and Taxa).
+- **Function:** Select a function for downstream analysis (**None** in the list means no function is selected, focusing only on peptides and taxa).
 
-- **Function Filter Threshold:** If a specific function within a protein group of a peptide comprises the highest proportion of function, it will be considered as the representative function for that peptide. By default, the threshold for this proportion is set at 1.00 (100%).
+- **Function Filter Threshold:** If a specific function within a protein group of a peptide has the highest proportion, it will be considered the representative function for that peptide. The default threshold is 1.00 (100%).
 
-<img src="./MetaX_Cookbook.assets/FUNC_prop.png" alt="FUNC_prop"  />
+![FUNC_prop](./MetaX_Cookbook.assets/FUNC_prop.png)
 
+- **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by any taxa, the follow analysis focus on functions).
 
+### Sum Proteins Intensity
 
-- **Taxa Level:** select a taxa level for downstream analysis(<u>**Life**</u> in the list means we do not filter by any taxa).
+Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
 
-###	Sum Proteins Intensity
+- **Occam's Razor and Anti-Razor:** Methods available for inferring shared peptides. 
+  1. Build the rank of proteins.
+  2. Choose the protein with a higher rank for the shared peptide.
 
-We can click **Create Proteins Intensity Table** to sum the peptide to the proteins if the Protein col is in the original table.
-
-- Occuam's Razor and Anti-Razor are methods both available for the inferring shared peptide. 1. build the Rank of proteins. 2. choose the protein with a higher rank for the shared peptide.
-- 4 methods to build the **Protein Rank**.
-  - unique_counts: use the counts of proteins inferred by unique peptide
-  - all_count: use the counts  of all proteins
-  - unique_intensity: use the intensity of proteins inferred by unique peptide
-  - shared_intensity: use the intensity divided by shared times of peptide for each protein
+- **Methods to Build Protein Rank:**
+  - unique_counts: Use the counts of proteins inferred by unique peptides.
+  - all_count: Use the counts of all proteins.
+  - unique_intensity: Use the intensity of proteins inferred by unique peptides.
+  - shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
 
 ### Data preprocessing
 
@@ -631,7 +617,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Network Plot
 
   - The Red dots are focus items
-  - The depth of green represents the correlation value
+  - The depth of color and the width of edges represent the correlation value
   - The size of the dot indicates the number of connections
 
 <img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic"  />

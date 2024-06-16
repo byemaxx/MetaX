@@ -1,3 +1,9 @@
+# Version: 1.107.3
+## Date: 2024-06-16
+### Changes:
+- Change: Co-expression Network plot: hide the dots if no edge connected to it.
+
+
 # Version: 1.107.2
 ## Date: 2024-06-16
 ### Changes:
