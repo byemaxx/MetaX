@@ -6,6 +6,7 @@ class SettingsWidget(QWidget):
     update_mode_changed = pyqtSignal(str)
     auto_check_update_changed = pyqtSignal(bool)
     heatmap_params_dict_changed = pyqtSignal(dict)
+    tf_link_net_params_dict_changed = pyqtSignal(dict)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True):
         super().__init__(parent)
@@ -19,8 +20,8 @@ class SettingsWidget(QWidget):
         self.ui.setupUi(self)
         
         self.init_ui(self.update_mode, self.auto_check_update)
-        # resize the window, 600x400 as default
-        self.resize(600, 400)
+        # resize the window, 800 as default
+        self.resize(800, 400)
         
         # move to the first tab in QToolBox
         toolbox = self.findChildren(QToolBox)
@@ -34,6 +35,22 @@ class SettingsWidget(QWidget):
         
         self.ui.comboBox_heatmap_linkage_method.currentTextChanged.connect(self.handle_heatmap_params_changed)
         self.ui.comboBox_heatmap_linkage_metric.currentTextChanged.connect(self.handle_heatmap_params_changed)
+        
+        
+        # link all signal-slot connections for TF-link network
+        self.ui.comboBox_tf_link_net_taxa_sahpe.currentTextChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.comboBox_tf_link_net_func_shape.currentTextChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.lineEdit_tf_link_net_taxa_color.textChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.lineEdit_tf_link_net_taxa_focus_color.textChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.lineEdit_tf_link_net_func_color.textChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.lineEdit_tf_link_net_func_focus_color.textChanged.connect(self.handle_tf_link_network_changed)
+        
+        self.ui.doubleSpinBox_tf_link_net_line_opacity.valueChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.doubleSpinBox_tf_link_net_line_width.valueChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.doubleSpinBox_tf_link_net_line_curve.valueChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.lineEdit_tf_link_net_line_color.textChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.spinBox_tf_link_net_repulsion.valueChanged.connect(self.handle_tf_link_network_changed)
+        
 
     def init_ui(self, update_mode, auto_check_update):
         if update_mode == "main":
@@ -56,6 +73,25 @@ class SettingsWidget(QWidget):
         }
         
         self.heatmap_params_dict_changed.emit(heatmap_params_dict)
+        
+    def handle_tf_link_network_changed(self):
+        network_params_dict = {
+            "taxa_shape": self.ui.comboBox_tf_link_net_taxa_sahpe.currentText(),
+            "func_shape": self.ui.comboBox_tf_link_net_func_shape.currentText(),
+            "taxa_color": self.ui.lineEdit_tf_link_net_taxa_color.text(),
+            "taxa_focus_color": self.ui.lineEdit_tf_link_net_taxa_focus_color.text(),
+            "func_color": self.ui.lineEdit_tf_link_net_func_color.text(),
+            "func_focus_color": self.ui.lineEdit_tf_link_net_func_focus_color.text(),
+            
+            "line_opacity": self.ui.doubleSpinBox_tf_link_net_line_opacity.value(),
+            "line_width": self.ui.doubleSpinBox_tf_link_net_line_width.value(),
+            "line_curve": self.ui.doubleSpinBox_tf_link_net_line_curve.value(),
+            "line_color": self.ui.lineEdit_tf_link_net_line_color.text(),
+            
+            'repulsion': self.ui.spinBox_tf_link_net_repulsion.value()
+            
+        }
+        self.tf_link_net_params_dict_changed.emit(network_params_dict)
     
     def handle_radio_button_toggled(self, checked):
         sender = self.sender()

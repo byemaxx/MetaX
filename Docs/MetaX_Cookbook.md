@@ -35,12 +35,16 @@ Visit **Github** to get more information:
 
 # Module 1. Database Builder
 
+**NOTE:** the result of **<u>MetaLab v2.3</u>** MaxQuant workflow do not need Build Database. However, we do not recommend the result files from this version of MetaLab as input to MetaX, and large amounts of Peptide may be discarded.
+
+
+
 - You have to build the database for **the first time** using <u>Database Builder</u>.
 
   **(Option 1) Build Database By MGnify Data**
-  
+
   Make sure to download the correct database type corresponding to your data
-  
+
   
 
 <img src="./MetaX_Cookbook.assets/dbbuilder.png" alt="dbbuilder"  />
@@ -115,6 +119,10 @@ Visit **Github** to get more information:
 
 # Module 3. Peptide Annotator
 
+## 1. Result From MAG:
+
+The peptide result form Metagenome-assembled *genomes* (*MAGs*) as the reference database for proteins search, e.g. MetaLab-MAG, and other database like  MGnify.
+
 - Annotate the peptide to TaxaFunc before analyzing by <u>**Peptide Annotator**</u>
 
   <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
@@ -143,7 +151,20 @@ Visit **Github** to get more information:
 
     <img src="./MetaX_Cookbook.assets/LCA_prop.png" alt="LCA_prop" style="zoom:50%;" />
 
+## 2. Results from MetaLab 2.3:
 
+The peptide result from **<u>MetaLab 2.3</u>** MaxQuant workflow
+
+- Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
+
+  - ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets\peptide2taxafunc_tab2_1.png)
+
+- Then the **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv** and **functions.tsv** in the **maxquant_search** folder. Or you can select the files manually.
+
+
+
+  - Select the **OTFs Save To** to set the location to save the result table.
+  - ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets\peptide2taxafunc_tab2_2.png)
 
 
 # Module 4. OTF Analyzer
@@ -683,26 +704,27 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   <img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line"  />
 
-  ### Taxa-Func Network
-  
-  - Select some groups or samples (default all)
-  - add some taxa, func or taxa-func to focus the window  (Optional)
-  
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517"  />
-  
-  - Plot list only
-    - Checked the "**Plot List Only**" to show the items only in the list
-  
-  - Network plot
-    - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
-    - The red dots are the taxa we focused on
-    - The green dots are the functions we focused on
-  
-  <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
-  
-  
 
-# Restore Last TaxaFunc Object
+### Taxa-Func Network
+
+- Select some groups or samples (default all)
+- add some taxa, func or taxa-func to focus the window  (Optional)
+
+<img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517"  />
+
+- Plot list only
+  - Checked the "**Plot List Only**" to show the items only in the list
+
+- Network plot
+  - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
+  - The red dots are the taxa we focused on
+  - The green dots are the functions we focused on
+
+<img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
+
+
+
+## 8. Restore Last TaxaFunc Object
 
 - Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.
 - Also, we can export the current MetaX to a file and reload it again.
@@ -733,7 +755,9 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - Check the box of **Auto Check Update** to enable or disable check update when launching
   - Change to update from the **stable version** or **beta version** by settings
   - <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
-
+  - Other Options Settings
+  - ![settings_page2](C:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\docs\MetaX_Cookbook.assets\settings_page2.png)
+  
   
 
 

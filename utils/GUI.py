@@ -160,6 +160,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # ploting parameters
         self.heatmap_params_dict = {'linkage_method': 'average', 'distance_metric': 'euclidean'}
 
+        self.tf_link_net_params_dict = {'taxa_shape': 'circle', 'func_shape': 'rect', 
+                                        'taxa_color': '#374E55','taxa_focus_color': '#6A6599', 
+                                        'func_color': '#DF8F44', 'func_focus_color': '#B24745',
+                                        'line_opacity': 0.5, 'line_width': 2, 'line_curve': 0.1, 
+                                        'line_color': '#9aa7b1', 'repulsion': 500
+                                        } 
+
 
         # set icon
         self.actionTaxaFuncAnalyzer.setIcon(qta.icon('mdi.chart-areaspline'))
@@ -632,15 +639,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.settings_dialog.setWindowTitle("Settings")
             self.settings_dialog.setModal(False) 
             layout = QVBoxLayout(self.settings_dialog)
-            self.settings_dialog.resize(600, 400)
+            self.settings_dialog.resize(900, 600)
 
             settings_widget = SettingsWidget(self.settings_dialog, self.update_branch, self.auto_check_update)
             settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
             settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
             settings_widget.heatmap_params_dict_changed.connect(self.on_heatmap_params_changed)
+            settings_widget.tf_link_net_params_dict_changed.connect(self.on_tf_link_net_params_changed)
             
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
+            
+            # set not pin to top
+            self.settings_dialog.setWindowFlags(self.settings_dialog.windowFlags() & ~Qt.WindowStaysOnTopHint)
         
         self.settings_dialog.show()
 
@@ -659,6 +670,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def on_heatmap_params_changed(self, params_dict):
         self.heatmap_params_dict = params_dict
         print(f"Heatmap params changed to: {params_dict}")
+        
+    def on_tf_link_net_params_changed(self, params_dict):
+        self.tf_link_net_params_dict = params_dict
+        print(f"Taxa-func link network params changed to: {params_dict}")
     
     ###############   basic function End   ###############
     
@@ -4790,8 +4805,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         height = self.spinBox_co_expr_height.value()
         focus_list = self.co_expr_focus_list
         plot_list_only = self.checkBox_co_expr_plot_list_only.isChecked()
-
-
+        show_labels = self.checkBox_co_expr_show_label.isChecked()
+        rename_taxa = self.checkBox_co_expr_rename_taxa.isChecked()
+        font_size = self.spinBox_co_expr_font_size.value()
+        
         sample_list = self.tfa.sample_list
         if self.radioButton_co_expr_bysample.isChecked():
             slected_list = self.comboBox_co_expr_sample.getCheckedItems()
@@ -4813,9 +4830,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 return None
 
 
-        try:
+        try:            
             self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-            pic = NetworkPlot(self.tfa).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
+            pic = NetworkPlot(self.tfa,
+                              show_labels=show_labels,
+                              rename_taxa=rename_taxa,
+                              font_size=font_size,
+                              ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'co-expression network')
         except ValueError as e:
@@ -5020,6 +5041,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         sample_list =  self.tfa.sample_list
         focus_list = self.tfnet_fcous_list
         plot_list_only = self.checkBox_tf_link_net_plot_list_only.isChecked()
+        show_labels = self.checkBox_tf_link_net_show_label.isChecked()
+        rename_taxa = self.checkBox_tf_link_net_rename_taxa.isChecked()
+        font_size = self.spinBox_network_font_size.value()
+        
         
         if self.radioButton_network_bysample.isChecked():
             slected_list = self.comboBox_network_sample.getCheckedItems()
@@ -5034,7 +5059,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
         try:
             self.show_message('Plotting network...')
-            pic = NetworkPlot(self.tfa).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
+            pic = NetworkPlot(self.tfa,
+                              show_labels=show_labels,
+                              rename_taxa=rename_taxa,
+                              font_size=font_size,
+                            **self.tf_link_net_params_dict
+                              ).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()

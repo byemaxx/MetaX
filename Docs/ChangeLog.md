@@ -1,3 +1,8 @@
+# Version: 1.107.1
+## Date: 2024-06-16
+### Changes:
+- New: Added more options for the Taxa-Functions Network plot, including the color, label, layout, and edge width. etc.
+
 # Version: 1.107.0
 ## Date: 2024-06-15
 ### Changes:

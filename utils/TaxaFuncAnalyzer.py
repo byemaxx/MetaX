@@ -216,15 +216,25 @@ class TaxaFuncAnalyzer:
     def rename_taxa(self, df):
         first_index = df.index[0]
         index_list = df.index.tolist()
-        if 'd__' in first_index:
-            if '<' not in first_index:
-                new_index_list = [i.split('|')[-1] for i in index_list]
-            else:
-                new_index_list = [
-                    f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
-                    for i in index_list
-                ]
-            df.index = new_index_list
+        
+        # check if the df has two index
+        if isinstance(first_index, tuple) and len(first_index) > 1:  # multi-index, taxa-func table or func-taxa table
+            if 'd__' in first_index[0]:
+                new_index_list = [(i[0].split('|')[-1], i[1]) for i in index_list]
+            elif 'd__' in first_index[1]:
+                new_index_list = [(i[0], i[1].split('|')[-1]) for i in index_list]
+            df.index = pd.MultiIndex.from_tuples(new_index_list, names=df.index.names)
+        else:       
+            # single index, taxa table   
+            if 'd__' in first_index:
+                if '<' not in first_index:
+                    new_index_list = [i.split('|')[-1] for i in index_list]
+                else:
+                    new_index_list = [
+                        f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
+                        for i in index_list
+                    ]
+                df.index = new_index_list
         return df
 
     def rename_sample(self, df):

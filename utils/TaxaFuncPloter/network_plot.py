@@ -2,10 +2,62 @@ from pyecharts import options as opts
 from pyecharts.charts import Graph
 
 class NetworkPlot:
-    def __init__(self, tfobj=None):
+    def __init__(self, tfobj, 
+                show_labels=False,
+                rename_taxa=False, 
+                font_size=10,
+                taxa_shape='circle',
+                func_shape='rect',
+                taxa_color="#374E55",
+                taxa_focus_color="#6A6599",
+                func_color="#DF8F44",
+                func_focus_color="#B24745",
+                line_opacity=0.5,
+                line_width=1.5,
+                line_curve=0.1,
+                line_color="#9aa7b1",
+                repulsion=500
+                
+                 ):
+        
         self.tfa = tfobj
-    
+        self.show_labels = show_labels
+        self.font_size = font_size
+        self.rename_taxa = rename_taxa
+        self.taxa_shape = taxa_shape
+        self.func_shape = func_shape
+        self.taxa_color = taxa_color
+        self.taxa_focus_color = taxa_focus_color
+        self.func_color = func_color
+        self.func_focus_color = func_focus_color
+        
+        self.line_opacity = line_opacity
+        self.line_width = line_width
+        self.line_curve = line_curve
+        self.line_color = line_color
+        
+        self.repulsion = repulsion
+        
 
+    def modify_focus_list(self, focus_list):
+        new_focus_list = []
+        for i in focus_list:
+            if i.startswith('d__'):
+                if ' <' in i: # taxa-func item
+                    taxa = i.split(' <')[0].split('|')[-1]
+                    func = i.split(' <')[1][:-1]
+                    # i = taxa.split('|')[-1] + ' <' + func + '>'
+                    new_focus_list.append(taxa)
+                    new_focus_list.append(func)
+                else: # taxa item
+                    i = i.split('|')[-1]
+                    new_focus_list.append(i)
+            else: # function item
+                new_focus_list.append(i)
+                
+        focus_list = new_focus_list
+        return focus_list
+    
     def create_nodes_links(self, sample_list:list = None, focus_list:list = [], plot_list_only:bool = False):
         """
         Prepares data for network visualization of taxa and functions.
@@ -24,13 +76,17 @@ class NetworkPlot:
         - categories (list): Categories for nodes, used for coloring in the graph.
         """
         df = self.tfa.taxa_func_df.copy()
+        if self.rename_taxa:
+            print("Renaming taxa to last level")
+            df = self.tfa.rename_taxa(df)
+            focus_list = self.modify_focus_list(focus_list)
+            
         extra_cols = sample_list
         if extra_cols:
             print(f"Using sample list provided {extra_cols}")
             df = df[extra_cols]
         else:
             print("No sample list provided, using all samples")
-
 
         df = df.loc[~(df==0).all(axis=1)]
         df['sum'] = df.sum(axis=1)
@@ -57,46 +113,45 @@ class NetworkPlot:
             if max_value == min_value:
                 return 30
             scaled_value = 100 * (value - min_value) / (max_value - min_value)
-            return max(scaled_value, 10)  # set a minimum size
-
-
+            return max(scaled_value, 10)
 
         taxa = df["taxa"].unique().tolist()
         functions = df["function"].unique().tolist()
         nodes = []
         if focus_list is not None and len(focus_list) > 0:
             for taxon in taxa:
+                symbol = self.taxa_shape
                 if taxon in focus_list:
-                    nodes.append({"name": taxon, "category": 1, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]})
+                    nodes.append({"name": taxon, "category": 1, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": symbol})
                 else:
-                    nodes.append({"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]})
+                    nodes.append({"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": symbol})
             for function in functions:
+                symbol = self.func_shape
                 if function in focus_list:
-                    nodes.append({"name": function, "category": 3, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
+                    nodes.append({"name": function, "category": 3, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": symbol})
                 else:
-                    nodes.append({"name": function, "category": 2, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]})
+                    nodes.append({"name": function, "category": 2, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": symbol})
 
             links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
 
             categories = [
-                {"name": "Taxa", "itemStyle": {"normal": {"color": "#f1c40f"}}},
-                {"name": "Focus_Taxa", "itemStyle": {"normal": {"color": "#ff0000"}}},
-                {"name": "Function", "itemStyle": {"normal": {"color": "#95a5a6"}}},
-                {"name": "Focus_Function", "itemStyle": {"normal": {"color": "#27ae60"}}},
+                {"name": "Taxa", "itemStyle": {"normal": {"color": self.taxa_color}}},
+                {"name": "Focus_Taxa", "itemStyle": {"normal": {"color": self.taxa_focus_color}}},
+                {"name": "Function", "itemStyle": {"normal": {"color": self.func_color}}},
+                {"name": "Focus_Function", "itemStyle": {"normal": {"color": self.func_focus_color}}},
             ]
 
             return nodes, links, categories
 
-
         else:
-            nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon]} for taxon in taxa] + [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function]} for function in functions]
+            nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": 'triangle'} for taxon in taxa] + \
+                    [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": 'circle'} for function in functions]
 
             links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
             categories = [
-                {"name": "Taxa", "itemStyle": {"normal": {"color": "#f1c40f"}}},
-                {"name": "Function", "itemStyle": {"normal": {"color": "#95a5a6"}}},
+                {"name": "Taxa", "itemStyle": {"normal": {"color": self.taxa_color}}},
+                {"name": "Function", "itemStyle": {"normal": {"color": self.func_color}}},
             ]
-
 
         return nodes, links, categories
 
@@ -140,50 +195,67 @@ class NetworkPlot:
 
 
         c = (
-            Graph(init_opts=opts.InitOpts(width=f"{width*100}px",
-                                          height=f"{height*100}px"))
+            Graph(
+                init_opts=opts.InitOpts(
+                    width=f"{width*100}px", height=f"{height*100}px"
+                )
+            )
             .add(
                 "",
                 nodes,
                 links,
                 categories,
-                repulsion= 1000,
+                repulsion=self.repulsion,
                 is_focusnode=True,
-                is_layout_animation= True,
-                friction = 0.6,
-                linestyle_opts=opts.LineStyleOpts(curve=0.2, opacity=0.5),
+                is_layout_animation=True,
+                friction=0.6,
+                linestyle_opts=opts.LineStyleOpts(
+                    curve=self.line_curve, opacity=self.line_opacity, width=self.line_width, color=self.line_color
+                ),
                 # itemstyle_opts=opts.ItemStyleOpts(border_width=0.5, border_color="rgba(0,0,0,0.5)", opacity=0.8),
-                gravity = 0.05,
-                label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"),
+                gravity=0.05,
+                label_opts=opts.LabelOpts(
+                    is_show=self.show_labels,
+                    position="right",
+                    color="auto",
+                    formatter="{b}",
+                    font_size=self.font_size,
+                ),
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title=f"Taxa-Functions Network", subtitle=f"{sample_list}" if sample_list else None,
-                                          subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10)),
+                title_opts=opts.TitleOpts(
+                    title=f"Taxa-Functions Network",
+                    subtitle=f"{sample_list}" if sample_list else None,
+                    subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
+                ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
                     orient="vertical",
                     pos_left="left",
                     pos_top="bottom",
-                    feature=opts.ToolBoxFeatureOpts( 
-                                                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                    background_color="white", 
-                                                                                                    pixel_ratio=2, 
-                                                                                                    title="Save as PNG"),
-                                                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                                                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
-                                                                                              is_show=False,
-                                                                                            back_title="Back"),
-                                                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                                                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
-                                                                                                bar_title="Bar",
-                                                                                                is_show=False, 
-                                                                                                stack_title="Stack",
-                                                                                                tiled_title="Tiled"),
-                                                    
-                                                    ),
-                    )
-            )  
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
+                            type_="png",
+                            background_color="white",
+                            pixel_ratio=2,
+                            title="Save as PNG",
+                        ),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                            zoom_title="Zoom", is_show=False, back_title="Back"
+                        ),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                        magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                            line_title="Line",
+                            bar_title="Bar",
+                            is_show=False,
+                            stack_title="Stack",
+                            tiled_title="Tiled",
+                        ),
+                    ),
+                ),
             )
+        )
 
 
         return c
@@ -205,13 +277,19 @@ class NetworkPlot:
                    'custom': self.tfa.custom_df}
         
         df = df_dict[df_type].copy()
+        if self.rename_taxa:
+            print("Renaming taxa to last level")
+            df = self.tfa.rename_taxa(df)
+            # modify the focus_list to the last level taxa
+            focus_list = self.modify_focus_list(focus_list)
+                        
         if extra_cols := sample_list:
             print(f"Using sample list provided {extra_cols}")
             df = df[extra_cols]
         else:
             print("No sample list provided, using all samples")
 
-        df = self.replace_if_two_index(df)
+        df = self.tfa.replace_if_two_index(df)
 
         df = df.T
         if  corr_method == 'pearson':
@@ -289,56 +367,68 @@ class NetworkPlot:
                     ),
                 )
             )
-            .add("", nodes, links,
-                 categories=categories,
-                 repulsion= 1000,
-                 is_layout_animation= True,
-                 label_opts=opts.LabelOpts(is_show=False, position="right", color="auto", formatter="{b}"))
+            .add(
+                "",
+                nodes,
+                links,
+                categories=categories,
+                repulsion=self.repulsion,
+                is_layout_animation=True,
+                label_opts=opts.LabelOpts(
+                    is_show=self.show_labels,
+                    font_size=self.font_size,
+                    position="right", 
+                    color="auto", 
+                    formatter="{b}"
+                ),
+            )
             .set_global_opts(
                 legend_opts=opts.LegendOpts(is_show=True),
                 title_opts=opts.TitleOpts(
                     title="Co-expression Network",
                     # subtitle=f"{sample_list}" if sample_list != self.tfa.sample_list else "",
                     # subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
-                ), 
+                ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
                     orient="vertical",
                     pos_left="left",
                     pos_top="bottom",
-                    feature=opts.ToolBoxFeatureOpts( 
-                                                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                    background_color="white", 
-                                                                                                    pixel_ratio=2, 
-                                                                                                    title="Save as PNG"),
-                                                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                                                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
-                                                                                              is_show=False,
-                                                                                            back_title="Back"),
-                                                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                                                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
-                                                                                                bar_title="Bar",
-                                                                                                is_show=False, 
-                                                                                                stack_title="Stack",
-                                                                                                tiled_title="Tiled"),
-                                                    
-                                                    ),
-                    )
-        ))
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
+                            type_="png",
+                            background_color="white",
+                            pixel_ratio=2,
+                            title="Save as PNG",
+                        ),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                            zoom_title="Zoom", is_show=False, back_title="Back"
+                        ),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                        magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                            line_title="Line",
+                            bar_title="Bar",
+                            is_show=False,
+                            stack_title="Stack",
+                            tiled_title="Tiled",
+                        ),
+                    ),
+                ),
+            )
+        )
         return pic
     
-    def replace_if_two_index(self, df):
-        import pandas as pd
-        if isinstance(df.index, pd.MultiIndex):
-            df = df.copy()
-            df.reset_index(inplace=True)
-            # DO NOT USE f-string here, it will cause error
-            df['Taxa-Func'] = df.iloc[:,
-                                        0].astype(str) + ' <' + df.iloc[:, 1].astype(str) + '>'
-            df.set_index('Taxa-Func', inplace=True)
-            df = df.drop(df.columns[:2], axis=1)
-        else:
-            df = df.copy()
-        return df
 
 # NetworkPlot(sw).plot_co_expression_network(df_type='func', corr_threshold=0.8, sample_list=sw.get_sample_list_in_a_group('V1') , focus_list=["'glutamate synthase"]).render_notebook()
+    
+# NetworkPlot(sw,
+#             show_labels=True,
+#             rename_taxa=True,
+#             font_size=10
+
+#             ).plot_tflink_network(sample_list=sw.get_sample_list_in_a_group('V1'), 
+#                                   focus_list=["d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae <'glutamate synthase>"]
+                                  
+#                                     ).render_notebook()
+            
