@@ -1,3 +1,10 @@
+# Version: 1.107.2
+## Date: 2024-06-16
+### Changes:
+- New: Added an option in 'Help' menu to open the online Tutorial page.
+- Change: Co-expression Network plot: Use the corelation value as the weight of the edge, and improve the layout of the plot.
+- Fix: Fixed the bug of when plot the Taxa-Functions Network, the shape setting was not work withotu focus list.
+
 # Version: 1.107.1
 ## Date: 2024-06-16
 ### Changes:

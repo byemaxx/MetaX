@@ -50,7 +50,7 @@ class SettingsWidget(QWidget):
         self.ui.doubleSpinBox_tf_link_net_line_curve.valueChanged.connect(self.handle_tf_link_network_changed)
         self.ui.lineEdit_tf_link_net_line_color.textChanged.connect(self.handle_tf_link_network_changed)
         self.ui.spinBox_tf_link_net_repulsion.valueChanged.connect(self.handle_tf_link_network_changed)
-        
+        self.ui.comboBox_tf_link_net_font_weight.currentTextChanged.connect(self.handle_tf_link_network_changed)
 
     def init_ui(self, update_mode, auto_check_update):
         if update_mode == "main":
@@ -88,7 +88,8 @@ class SettingsWidget(QWidget):
             "line_curve": self.ui.doubleSpinBox_tf_link_net_line_curve.value(),
             "line_color": self.ui.lineEdit_tf_link_net_line_color.text(),
             
-            'repulsion': self.ui.spinBox_tf_link_net_repulsion.value()
+            'repulsion': self.ui.spinBox_tf_link_net_repulsion.value(),
+            'font_weight': self.ui.comboBox_tf_link_net_font_weight.currentText()
             
         }
         self.tf_link_net_params_dict_changed.emit(network_params_dict)

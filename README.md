@@ -9,7 +9,15 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 ## Taxa-Functions Linkage
 Linking Taxa and Functions in different levels of the hierarchy, and different functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc.
 
-![OTF](./Docs/MetaX_Cookbook.assets/tf_link_net.png)
+- ![OTF](./Docs/MetaX_Cookbook.assets/tf_link_net.png)
+
+
+
+e.g. The **KEGG Pathways** linked to ***Roseburia hominis***
+
+- ![tf_link_net_2](./Docs/MetaX_Cookbook.assets/tf_link_net_2.png)
+
+
 
 ## Download
 ### `Desktop Version(Recommended)`:

@@ -16,13 +16,18 @@ class NetworkPlot:
                 line_width=1.5,
                 line_curve=0.1,
                 line_color="#9aa7b1",
-                repulsion=500
+                repulsion=500,
+                co_network_focus_color="#B24745",
+                co_network_normal_color="#79af97",
+                font_weight="normal"
                 
                  ):
         
         self.tfa = tfobj
         self.show_labels = show_labels
         self.font_size = font_size
+        self.font_weight = font_weight
+        
         self.rename_taxa = rename_taxa
         self.taxa_shape = taxa_shape
         self.func_shape = func_shape
@@ -37,6 +42,9 @@ class NetworkPlot:
         self.line_color = line_color
         
         self.repulsion = repulsion
+        
+        self.co_network_focus_color = co_network_focus_color
+        self.co_network_normal_color = co_network_normal_color
         
 
     def modify_focus_list(self, focus_list):
@@ -144,8 +152,8 @@ class NetworkPlot:
             return nodes, links, categories
 
         else:
-            nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": 'triangle'} for taxon in taxa] + \
-                    [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": 'circle'} for function in functions]
+            nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": self.taxa_shape} for taxon in taxa] + \
+                    [{"name": function, "category": 1, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": self.func_shape} for function in functions]
 
             links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
             categories = [
@@ -220,11 +228,12 @@ class NetworkPlot:
                     color="auto",
                     formatter="{b}",
                     font_size=self.font_size,
+                    font_weight=self.font_weight
                 ),
             )
             .set_global_opts(
                 title_opts=opts.TitleOpts(
-                    title=f"Taxa-Functions Network",
+                    title= "Taxa-Functions Network",
                     subtitle=f"{sample_list}" if sample_list else None,
                     subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ),
@@ -263,7 +272,8 @@ class NetworkPlot:
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
                                    corr_threshold:float=0.5, sample_list:list = None, 
-                                   width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False):
+                                   width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False,
+                                   ):
         from matplotlib import colormaps
         #check sample_list length
         if len(sample_list) < 2:
@@ -303,8 +313,8 @@ class NetworkPlot:
         max_node_size = node_sizes.max()
         min_node_size = node_sizes.min()
         
-        categories = [{"name": "Focused", "itemStyle": {"normal": {"color": "#ff0000"}}}, 
-                      {"name": "Normal", "itemStyle": {"normal": {"color": "#9AF10F"}}}]
+        categories = [{"name": "Focused", "itemStyle": {"normal": {"color": self.co_network_focus_color}}}, 
+                      {"name": "Normal", "itemStyle": {"normal": {"color": self.co_network_normal_color}}}]
 
         linked_nodes = set()
         if focus_list:
@@ -326,16 +336,16 @@ class NetworkPlot:
 
                 if item in focus_list: # mark the focus nodes with a different color
                     node_size = 50
-                    color = '#ff0000'
+                    color = self.co_network_focus_color
                     category = 0  # Focus category
                 else:
                     node_size = (node_sizes[item] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
-                    color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
+                    color = colormaps.get_cmap('viridis_r')(node_size / 40)  # normalize the node size to [0, 1] for the color map
                     color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
                     category = 1  # Normal category
             else:
                 node_size = (node_sizes[item] - min_node_size) / (max_node_size - min_node_size) * 30 + 10
-                color = colormaps.get_cmap('viridis')(node_size / 40)  # normalize the node size to [0, 1] for the color map
+                color = colormaps.get_cmap('viridis_r')(node_size / 40)  # normalize the node size to [0, 1] for the color map
                 color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
                 category = 1  # Normal category
             
@@ -347,24 +357,24 @@ class NetworkPlot:
             })
         
         links = []
+        # calculate the correlation between each pair of nodes, and create a link if the correlation is above a threshold
+        # the color of the link is determined by the correlation value
         for i in range(len(correlation_matrix)):
             for j in range(i+1, len(correlation_matrix)):
                 correlation = correlation_matrix.iloc[i, j]
                 # create a link if the correlation is above a threshold
                 if correlation > corr_threshold:
-                    color = colormaps.get_cmap('viridis')((correlation - corr_threshold) / corr_threshold) 
+                    color = colormaps.get_cmap('viridis')(1 - (correlation - corr_threshold) / corr_threshold) 
                     color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color}})
+                    line_width = (correlation - corr_threshold) / (1 - corr_threshold) * self.line_width * 2
+                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color, "width": line_width}})
 
             
         pic = (
             Graph(
                 init_opts=opts.InitOpts(
                     width=f"{width*100}px",
-                    height=f"{height*100}px",
-                    animation_opts=opts.AnimationOpts(
-                        animation_threshold=100, animation_easing="cubicOut"
-                    ),
+                    height=f"{height*100}px"
                 )
             )
             .add(
@@ -379,7 +389,12 @@ class NetworkPlot:
                     font_size=self.font_size,
                     position="right", 
                     color="auto", 
-                    formatter="{b}"
+                    formatter="{b}",
+                    font_weight=self.font_weight
+                ),
+                linestyle_opts=opts.LineStyleOpts(
+                    opacity=self.line_opacity, 
+                    curve=self.line_curve
                 ),
             )
             .set_global_opts(

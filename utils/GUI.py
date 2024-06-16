@@ -163,8 +163,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.tf_link_net_params_dict = {'taxa_shape': 'circle', 'func_shape': 'rect', 
                                         'taxa_color': '#374E55','taxa_focus_color': '#6A6599', 
                                         'func_color': '#DF8F44', 'func_focus_color': '#B24745',
-                                        'line_opacity': 0.5, 'line_width': 2, 'line_curve': 0.1, 
-                                        'line_color': '#9aa7b1', 'repulsion': 500
+                                        'line_opacity': 0.5, 'line_width': 2, 'line_curve': 0, 
+                                        'line_color': '#9aa7b1', 'repulsion': 500, 'font_weight': 'bold'
                                         } 
 
 
@@ -182,12 +182,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
+        self.actionTutorial.setIcon(qta.icon('mdi6.book-open-page-variant-outline'))
         # set menu bar click event
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
         self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
         self.actionDatabase_Builder.triggered.connect(self.swith_stack_page_dbuilder)
         self.actionDatabase_Update.triggered.connect(self.swith_stack_page_db_update)
         self.actionAbout.triggered.connect(self.show_about)
+        self.actionTutorial.triggered.connect(self.open_tutorial)
         self.actionRestore_Last_TaxaFunc.triggered.connect(lambda: self.run_restore_taxafunnc_obj_from_file(last=True))
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
@@ -1381,7 +1383,15 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=self.update_branch)
         updater.check_update(show_message=show_message)
                 
+    def open_tutorial(self):
+        # use default browser to open the tutorial link
+        from PyQt5.QtGui import QDesktopServices
+        from PyQt5.QtCore import QUrl
 
+        url = QUrl("https://byemaxx.github.io/MetaX/")
+        QDesktopServices.openUrl(url)
+        
+        
     def show_about(self):
 
         dialog = QDialog(self.MainWindow)
@@ -1406,6 +1416,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         <h3>Aditional Information</h3>
         <p>For more information, please visit:</p>
         <p>GitHub: <a href='https://github.com/byemaxx/MetaX'>The MetaX Project</a></p>
+        <p>Tutorial: <a href='https://byemaxx.github.io/MetaX/' >MetaX Tutorial</a></p>
         <p>iMeta: <a href='https://wiki.imetalab.ca/'>iMetaWiki Page</a></p>
         '''
 
@@ -4836,6 +4847,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                               show_labels=show_labels,
                               rename_taxa=rename_taxa,
                               font_size=font_size,
+                              **self.tf_link_net_params_dict
                               ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'co-expression network')

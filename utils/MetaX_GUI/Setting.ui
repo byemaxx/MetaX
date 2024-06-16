@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>748</width>
-        <height>367</height>
+        <width>246</width>
+        <height>37</height>
        </rect>
       </property>
       <attribute name="label">
@@ -113,7 +113,7 @@
             <double>0.100000000000000</double>
            </property>
            <property name="value">
-            <double>0.100000000000000</double>
+            <double>0.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -335,7 +335,7 @@
          <item row="2" column="5">
           <widget class="QSpinBox" name="spinBox_tf_link_net_repulsion">
            <property name="maximum">
-            <number>10000</number>
+            <number>100000</number>
            </property>
            <property name="singleStep">
             <number>10</number>
@@ -343,6 +343,37 @@
            <property name="value">
             <number>500</number>
            </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Font Weight</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5">
+          <widget class="QComboBox" name="comboBox_tf_link_net_font_weight">
+           <item>
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>normal</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bolder</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lighter</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

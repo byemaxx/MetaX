@@ -7382,8 +7382,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>981</width>
-                    <height>332</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -8038,6 +8038,7 @@
     </property>
     <addaction name="actionAbout"/>
     <addaction name="actionCheck_Update"/>
+    <addaction name="actionTutorial"/>
    </widget>
    <widget class="QMenu" name="menuOthers">
     <property name="title">
@@ -8124,6 +8125,11 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionTutorial">
+   <property name="text">
+    <string>Tutorial</string>
    </property>
   </action>
  </widget>
