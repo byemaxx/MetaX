@@ -19,7 +19,8 @@ class NetworkPlot:
                 repulsion=500,
                 co_network_focus_color="#B24745",
                 co_network_normal_color="#79af97",
-                font_weight="normal"
+                font_weight="normal",
+                theme="white"
                 
                  ):
         
@@ -45,6 +46,8 @@ class NetworkPlot:
         
         self.co_network_focus_color = co_network_focus_color
         self.co_network_normal_color = co_network_normal_color
+        
+        self.theme = theme
         
 
     def modify_focus_list(self, focus_list):
@@ -205,7 +208,9 @@ class NetworkPlot:
         c = (
             Graph(
                 init_opts=opts.InitOpts(
-                    width=f"{width*100}px", height=f"{height*100}px"
+                    width=f"{width*100}px",
+                    height=f"{height*100}px",
+                    theme=self.theme
                 )
             )
             .add(
@@ -245,7 +250,7 @@ class NetworkPlot:
                     feature=opts.ToolBoxFeatureOpts(
                         save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
                             type_="png",
-                            background_color="white",
+                            background_color="black" if self.theme == 'dark' else "white",
                             pixel_ratio=2,
                             title="Save as PNG",
                         ),
@@ -379,7 +384,8 @@ class NetworkPlot:
             Graph(
                 init_opts=opts.InitOpts(
                     width=f"{width*100}px",
-                    height=f"{height*100}px"
+                    height=f"{height*100}px",
+                    theme=self.theme
                 )
             )
             .add(
@@ -417,7 +423,7 @@ class NetworkPlot:
                     feature=opts.ToolBoxFeatureOpts(
                         save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
                             type_="png",
-                            background_color="white",
+                            background_color="black" if self.theme == 'dark' else "white",
                             pixel_ratio=2,
                             title="Save as PNG",
                         ),

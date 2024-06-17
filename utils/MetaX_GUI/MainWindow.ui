@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>496</width>
-                 <height>373</height>
+                 <height>377</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -5301,6 +5301,9 @@
                       <property name="text">
                        <string>Rename Taxa</string>
                       </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
                      </widget>
                     </item>
                    </layout>
@@ -7081,6 +7084,9 @@
                     <property name="text">
                      <string>Raname Taxa</string>
                     </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
                    </widget>
                   </item>
                  </layout>
@@ -8020,7 +8026,7 @@
      <x>0</x>
      <y>0</y>
      <width>1059</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -8543,38 +8549,6 @@
     <hint type="destinationlabel">
      <x>137</x>
      <y>116</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_co_expr_show_label</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>spinBox_co_expr_font_size</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>917</x>
-     <y>336</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1012</x>
-     <y>313</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_tf_link_net_show_label</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>spinBox_network_font_size</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>203</x>
-     <y>123</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>203</x>
-     <y>127</y>
     </hint>
    </hints>
   </connection>

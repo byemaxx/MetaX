@@ -1,15 +1,16 @@
 from pyecharts.charts import TreeMap
 from pyecharts import options as opts
+# from .get_distinct_colors import GetDistinctColors
 
 
 class TreeMapPlot:
-    def __init__(self):
+    def __init__(self, theme='white'):
         self.sample_list = None
         self.level_num = None
         self.legend = False
         self.font_size = 5
         self.show_title = True
-
+        self.theme = theme
 
 
     def _build_treemap_data(self, df):
@@ -106,8 +107,16 @@ class TreeMapPlot:
                     
                 levels_styles.append(opts.TreeMapLevelsOpts(color_saturation=color_saturation, treemap_itemstyle_opts=item_style))
                 
-        c = (TreeMap(init_opts=opts.InitOpts(width=f'{width*100}px', height=f'{height*100}px')))
+        c = TreeMap(
+            init_opts=opts.InitOpts(
+                width=f"{width*100}px", height=f"{height*100}px", theme=self.theme
+            )
+        )
         
+        colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc']
+        # colors = GetDistinctColors().get_distinct_colors(10, convert=True)
+        c.options.update(color=colors)
+
         # make d__Bacteria frist in dict
         if 'd__Bacteria' in treemap_data_dict:
             treemap_data_dict = {'d__Bacteria': treemap_data_dict.pop('d__Bacteria')} | treemap_data_dict
@@ -130,7 +139,7 @@ class TreeMapPlot:
                 pos_top="bottom",
                 feature=opts.ToolBoxFeatureOpts( 
                                                 save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                background_color="white", 
+                                                                                                background_color="black" if self.theme == 'dark' else "white",
                                                                                                 pixel_ratio=2, 
                                                                                                 title="Save as PNG"),
                                                 restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),

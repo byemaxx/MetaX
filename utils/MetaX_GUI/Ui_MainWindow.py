@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 496, 373))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 496, 377))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -2779,6 +2779,7 @@ class Ui_metaX_main(object):
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.checkBox_co_expr_show_label)
         self.checkBox_co_expr_rename_taxa = QtWidgets.QCheckBox(self.tab_5)
         self.checkBox_co_expr_rename_taxa.setEnabled(True)
+        self.checkBox_co_expr_rename_taxa.setChecked(True)
         self.checkBox_co_expr_rename_taxa.setObjectName("checkBox_co_expr_rename_taxa")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.checkBox_co_expr_rename_taxa)
         self.verticalLayout_3.addLayout(self.formLayout)
@@ -3721,6 +3722,7 @@ class Ui_metaX_main(object):
         self.horizontalLayout_57.addWidget(self.checkBox_tf_link_net_show_label)
         self.checkBox_tf_link_net_rename_taxa = QtWidgets.QCheckBox(self.tab_9)
         self.checkBox_tf_link_net_rename_taxa.setEnabled(True)
+        self.checkBox_tf_link_net_rename_taxa.setChecked(True)
         self.checkBox_tf_link_net_rename_taxa.setObjectName("checkBox_tf_link_net_rename_taxa")
         self.horizontalLayout_57.addWidget(self.checkBox_tf_link_net_rename_taxa)
         self.gridLayout_6.addLayout(self.horizontalLayout_57, 10, 3, 1, 1)
@@ -4206,7 +4208,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4266,7 +4268,7 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(5)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(6)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(1)
         self.tabWidget_3.setCurrentIndex(0)
@@ -4300,8 +4302,6 @@ class Ui_metaX_main(object):
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_pca_if_adjust_pca_label.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_sunburst_show_all_lables.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.doubleSpinBox_basic_pca_label_font_transparency.setEnabled) # type: ignore
-        self.checkBox_co_expr_show_label.clicked['bool'].connect(self.spinBox_co_expr_font_size.setEnabled) # type: ignore
-        self.checkBox_tf_link_net_show_label.clicked['bool'].connect(self.spinBox_network_font_size.setEnabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
         metaX_main.setTabOrder(self.comboBox_taxa_level_to_stast, self.toolButton_meta_table_help)
         metaX_main.setTabOrder(self.toolButton_meta_table_help, self.comboBox_function_to_stast)

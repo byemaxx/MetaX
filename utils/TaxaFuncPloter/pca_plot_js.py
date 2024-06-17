@@ -6,9 +6,10 @@ import seaborn as sns
 from .get_distinct_colors import GetDistinctColors
 
 class PcaPlot_js:
-    def __init__(self, tfobj=None):
+    def __init__(self, tfobj=None, theme='white'):
         self.tfobj = tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        self.theme = theme
         
         
     def plot_pca_pyecharts_3d(self, df, title_name='Table',  show_label = True, rename_sample = True,
@@ -44,8 +45,10 @@ class PcaPlot_js:
         group_num = len(pca_df['group'].unique())
         
         colors = self.get_distinct_colors(group_num, convert=True)
+        
+        font_color = 'white' if self.theme == 'dark' else 'black'
 
-        scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height))
+        scatter3d = Scatter3D(init_opts=opts.InitOpts(width=width, height=height, theme=self.theme))
         unique_group = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
         for i, group in enumerate(unique_group):
             color = colors[i]
@@ -63,11 +66,29 @@ class PcaPlot_js:
             scatter3d.add(
                 series_name=group,
                 data=xyz_data,
-                xaxis3d_opts=opts.Axis3DOpts(type_="value", name=x_name),
-                yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name),
-                zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name),
-                itemstyle_opts=opts.ItemStyleOpts(color=color, border_color='black', border_width=0.2, opacity=0.8),
-                label_opts=opts.LabelOpts(is_show=show_label,  font_size=font_size, color='black', position='right'),
+                xaxis3d_opts=opts.Axis3DOpts(type_="value", name=x_name,
+                                             axislabel_opts=opts.LabelOpts(font_size=font_size,
+                                                                           color=font_color),
+                                             textstyle_opts=opts.TextStyleOpts(font_size=font_size,
+                                                                              color=font_color)),
+                yaxis3d_opts=opts.Axis3DOpts(type_="value", name=y_name,
+                                             axislabel_opts=opts.LabelOpts(font_size=font_size,
+                                                                           color=font_color),
+                                             textstyle_opts=opts.TextStyleOpts(font_size=font_size,
+                                                                              color=font_color)),
+                zaxis3d_opts=opts.Axis3DOpts(type_="value", name=z_name,
+                                             axislabel_opts=opts.LabelOpts(font_size=font_size,
+                                                                           color=font_color),
+                                             textstyle_opts=opts.TextStyleOpts(font_size=font_size,
+                                                                               color=font_color)),
+                itemstyle_opts=opts.ItemStyleOpts(color=color,
+                                                  border_color=font_color,
+                                                  border_width=0.2,
+                                                  opacity=0.8),
+                label_opts=opts.LabelOpts(is_show=show_label,
+                                          font_size=font_size,
+                                          color=font_color,
+                                          position='right'),
             )
 
         scatter3d.set_global_opts(

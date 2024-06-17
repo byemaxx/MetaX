@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\Setting.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\Setting.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -132,7 +132,7 @@ class Ui_Settings(object):
         self.doubleSpinBox_tf_link_net_line_width.setDecimals(1)
         self.doubleSpinBox_tf_link_net_line_width.setMinimum(0.1)
         self.doubleSpinBox_tf_link_net_line_width.setSingleStep(1.0)
-        self.doubleSpinBox_tf_link_net_line_width.setProperty("value", 2.0)
+        self.doubleSpinBox_tf_link_net_line_width.setProperty("value", 3.0)
         self.doubleSpinBox_tf_link_net_line_width.setObjectName("doubleSpinBox_tf_link_net_line_width")
         self.gridLayout_6.addWidget(self.doubleSpinBox_tf_link_net_line_width, 2, 1, 1, 1)
         self.lineEdit_tf_link_net_line_color = QtWidgets.QLineEdit(self.page_2)

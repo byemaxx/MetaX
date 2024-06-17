@@ -1,3 +1,8 @@
+# Version: 1.107.4
+## Date: 2024-06-17
+### Changes:
+- Change: Set the HTML plot(e.g. bar, sankey, sunburst, network) as the dark theme when the MetaX theme is dark.
+
 # Version: 1.107.3
 ## Date: 2024-06-16
 ### Changes:

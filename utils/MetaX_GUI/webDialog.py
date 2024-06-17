@@ -7,9 +7,9 @@ import sys
 import os
 from PyQt5.QtWidgets import QApplication
 
-class MyDialog(QDialog):
-    def __init__(self, html_path=None, parent=None):
-        super(MyDialog, self).__init__(parent)
+class WebDialog(QDialog):
+    def __init__(self, html_path=None, parent=None, theme="white"):
+        super(WebDialog, self).__init__(parent)
         self.setWindowTitle('HTML Viewer')
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.resize(1800, 1000)
@@ -21,13 +21,14 @@ class MyDialog(QDialog):
         self.exportButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.webEngineView = QWebEngineView(self)
         self.html_path = html_path
-
+        
+        self.init_background_color(theme)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.exportButton)
-        layout2 = QHBoxLayout()  # 创建一个水平布局
+        layout2 = QHBoxLayout()
 
-        layout.addLayout(layout2)  # 将水平布局添加到垂直布局中
+        layout.addLayout(layout2)
         layout.addWidget(self.webEngineView)
 
         self.exportButton.clicked.connect(self.export_html)
@@ -42,6 +43,12 @@ class MyDialog(QDialog):
             icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
             self.setWindowIcon(QIcon(icon_path))
 
+    def init_background_color(self, theme_mode):
+        if theme_mode == "dark":
+            # set background color to #100c2a
+            from PyQt5.QtGui import QColor
+            self.webEngineView.page().setBackgroundColor(QColor("#100c2a"))
+    
     def zoom(self, value):
         self.webEngineView.setZoomFactor(value / 100) 
 
@@ -74,6 +81,6 @@ class MyDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dialog = MyDialog(html_path="./sankey.html")
+    dialog = WebDialog(html_path="C:/Users/Qing/MetaX/html/Bar_of_Functions.html", theme="dark")
     dialog.show()
     sys.exit(app.exec_())

@@ -4,10 +4,11 @@ import random
 import colorsys
 
 class SunburstPlot:
-    def __init__(self):
+    def __init__(self, theme='white'):
         self.sameple_list = None
         self.level_num = None
-
+        self.theme = theme
+        
     def adjust_color(self, rgb_color, saturation_factor=0.7, lightness_factor=1.3):
         """
         Adjusts the saturation and lightness of an RGB color.
@@ -123,7 +124,7 @@ class SunburstPlot:
 
 
         sunburst_chart = (
-            Sunburst(init_opts=opts.InitOpts(width=f'{width*100}px', height=f'{height*100}px'))
+            Sunburst(init_opts=opts.InitOpts(width=f'{width*100}px', height=f'{height*100}px', theme=self.theme))
             .add(
                 series_name="",
                 data_pair=sunburst_data,
@@ -147,7 +148,7 @@ class SunburstPlot:
                     pos_top="bottom",
                     feature=opts.ToolBoxFeatureOpts( 
                                                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                    background_color="white", 
+                                                                                                    background_color="black" if self.theme == 'dark' else "white",
                                                                                                     pixel_ratio=2, 
                                                                                                     title="Save as PNG"),
                                                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),

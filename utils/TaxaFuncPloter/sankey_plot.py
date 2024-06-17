@@ -14,11 +14,12 @@ class SankeyPlot:
     #        pic.render_notebook()
     #     pic.render('sankey.html')
     
-    def __init__(self, taxa_func_analyzer):
+    def __init__(self, taxa_func_analyzer, theme='white'):
         self.tfa = taxa_func_analyzer
         
         self.font_size = 12
         self.show_legend = True
+        self.theme = theme
 
     def convert_logfc_df_for_sankey(self, df, pvalue: float = 0.05,p_type ='padj',
                                     log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
@@ -156,7 +157,8 @@ class SankeyPlot:
         # Remove duplicate nodes
         # nodes_combined = list({node['name']: node for node in nodes_up + nodes_down}.values())
         pic = Sankey(init_opts=opts.InitOpts(width=f"{width*100}px",
-                                             height=f"{height*100}px"))
+                                             height=f"{height*100}px",
+                                             theme=self.theme))
         pic.set_colors(GetDistinctColors().get_distinct_colors(20, convert=True))
         
         for key, value in link_nodes_dict.items():
@@ -185,7 +187,7 @@ class SankeyPlot:
                 pos_top="bottom",
                 feature=opts.ToolBoxFeatureOpts( 
                                                 save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                background_color="white", 
+                                                                                                background_color="black" if self.theme == 'dark' else "white",
                                                                                                 pixel_ratio=2, 
                                                                                                 title="Save as PNG"),
                                                 restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),

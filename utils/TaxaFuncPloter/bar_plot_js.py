@@ -4,9 +4,10 @@ from .get_distinct_colors import GetDistinctColors
 
 
 class BarPlot_js:
-    def __init__(self, tfobj):
+    def __init__(self, tfobj, theme='white'):
         self.tfa =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        self.theme = theme
 
     # plot intensity line for each sample
     # Example: plot_intensity_line(sw, func_name=func_name, taxon_name=taxon_name, fig_size=(30,20))
@@ -116,30 +117,39 @@ class BarPlot_js:
                 orient="vertical",
                 pos_left="left",
                 pos_top="bottom",
-                feature=opts.ToolBoxFeatureOpts( 
-                                                save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                background_color="white", 
-                                                                                                pixel_ratio=2, 
-                                                                                                title="Save as PNG"),
-                                                restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                                                data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 
-                                                                                        back_title="Back"),
-                                                data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                                                magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", 
-                                                                                            bar_title="Bar", 
-                                                                                                stack_title="Stack",
-                                                                                                tiled_title="Tiled"),
-                                                
-                                                ),
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
+                        type_="png",
+                        background_color="black" if self.theme == 'dark' else "white",
+                        pixel_ratio=2,
+                        title="Save as PNG",
+                    ),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                        zoom_title="Zoom", back_title="Back"
+                    ),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                        line_title="Line",
+                        bar_title="Bar",
+                        stack_title="Stack",
+                        tiled_title="Tiled",
+                    ),
                 ),
-                
-                
+            ),
             "title_opts": opts.TitleOpts(title=f"{title}", pos_left="center"),
             "xaxis_opts": opts.AxisOpts(
-                axislabel_opts=opts.LabelOpts(rotate=25, font_size=font_size, interval=0 if show_all_labels[0] else None),
+                axislabel_opts=opts.LabelOpts(
+                    rotate=25,
+                    font_size=font_size,
+                    interval=0 if show_all_labels[0] else None,
+                ),
             ),
             "yaxis_opts": opts.AxisOpts(
-                axislabel_opts=opts.LabelOpts(font_size=font_size, interval=0 if show_all_labels[1] else None),
+                axislabel_opts=opts.LabelOpts(
+                    font_size=font_size, 
+                    interval=0 if show_all_labels[1] else None,
+                ),
                 max_=100.02
                 if plot_percent
                 else None,  # set max value to 100.02 rather than 100: the sum of some columns may more than 100 due to float number
@@ -151,7 +161,7 @@ class BarPlot_js:
             colors = self.get_distinct_colors(col_num, convert=True)
                 
             c = (
-                Bar(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
+                Bar(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px", theme=self.theme))
                 .add_xaxis(list(df.columns))
             )
 
@@ -196,7 +206,7 @@ class BarPlot_js:
                     data.append([meta_group_index, submeta_group_index, z, color, item, meta_group, submeta_group])
 
 
-            bar3d = Bar3D(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
+            bar3d = Bar3D(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px", theme=self.theme))
 
             for index, item in enumerate(grouped_data.index):
                 series_data = []
@@ -217,9 +227,16 @@ class BarPlot_js:
                     data=series_data,
                     shading="lambert",
                     xaxis3d_opts=opts.Axis3DOpts(data=unique_meta_groups, type_="category", name=" ", 
-                                                 axislabel_opts=opts.LabelOpts(rotate=45, font_size=font_size, interval=0 if show_all_labels[0] else None)),
+                                                 axislabel_opts=opts.LabelOpts(rotate=45, 
+                                                                               font_size=font_size, 
+                                                                               interval=0 if show_all_labels[0] else None,
+                                                                               color="white" if self.theme == 'dark' else None,
+                                                                               )),
                     yaxis3d_opts=opts.Axis3DOpts(data=unique_individual_groups, type_="category", name=" ", 
-                                                 axislabel_opts=opts.LabelOpts(font_size=font_size, interval=0 if show_all_labels[1] else None)),
+                                                 axislabel_opts=opts.LabelOpts(font_size=font_size,
+                                                                               interval=0 if show_all_labels[1] else None,
+                                                                               color="white" if self.theme == 'dark' else None,
+                                                                               )),
                     zaxis3d_opts=opts.Axis3DOpts(type_="value", name=" "),
                     itemstyle_opts=opts.ItemStyleOpts(color=item_colors[index], border_type=None, border_width=0),
                 )
@@ -234,7 +251,7 @@ class BarPlot_js:
                 pos_top="bottom",
                 feature=opts.ToolBoxFeatureOpts( 
                                                 save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                background_color="white", 
+                                                                                                background_color="black" if self.theme == 'dark' else "white", 
                                                                                                 pixel_ratio=2, 
                                                                                                 title="Save as PNG"),
                                                 restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),

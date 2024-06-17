@@ -5,6 +5,9 @@ import numpy as np
 
 
 class VolcanoPlot():
+    
+    def __init__(self, theme='white'):
+        self.theme = theme
 
 
     def plot_volcano_js(self, df_fc, pvalue:float=0.05, p_type ='padj',
@@ -63,7 +66,7 @@ class VolcanoPlot():
         title = f'Volcano plot of {title_name} ({p_type} <= {pvalue},  {log2fc_min} <= log2FoldChange < {log2fc_max})'
         
         scatter = (
-            Scatter(init_opts=opts.InitOpts(width=f"{width*100}px", height=f"{height*100}px"))
+            Scatter(init_opts=opts.InitOpts(width=f"{width*100}px", height=f"{height*100}px", theme=self.theme))
             .add_xaxis(df['log2FoldChange'].tolist())
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(type_="value", splitline_opts=opts.SplitLineOpts(is_show=False), name='log2FoldChange'),
@@ -78,7 +81,7 @@ class VolcanoPlot():
                     pos_top="bottom",
                     feature=opts.ToolBoxFeatureOpts( 
                                                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                    background_color="white", 
+                                                                                                    background_color="black" if self.theme == 'dark' else "white",
                                                                                                     pixel_ratio=2, 
                                                                                                     title="Save as PNG"),
                                                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),

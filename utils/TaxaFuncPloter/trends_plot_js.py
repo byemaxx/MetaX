@@ -3,9 +3,10 @@ from pyecharts import options as opts
 from .get_distinct_colors import GetDistinctColors
 
 class TrendsPlot_js:
-    def __init__(self, tfobj):
+    def __init__(self, tfobj, theme='white'):
         self.tfobj =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
+        self.theme = theme
         
     def rename_taxa(self, df):
         first_index = df.index[0]
@@ -49,7 +50,7 @@ class TrendsPlot_js:
             df = self._add_group_name_to_sample(df)
             
         c = (
-            Line(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px"))
+            Line(init_opts=opts.InitOpts(width=f"{width}px", height=f"{height}px", theme=self.theme))
             .add_xaxis(list(df.columns))
         )
 
@@ -95,7 +96,7 @@ class TrendsPlot_js:
                     pos_top="bottom",
                     feature=opts.ToolBoxFeatureOpts( 
                                                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
-                                                                                                    background_color="white", 
+                                                                                                    background_color="black" if self.theme == 'dark' else "white",
                                                                                                     pixel_ratio=2, 
                                                                                                     title="Save as PNG"),
                                                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
