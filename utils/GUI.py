@@ -167,7 +167,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                         'taxa_color': '#374E55','taxa_focus_color': '#6A6599', 
                                         'func_color': '#DF8F44', 'func_focus_color': '#B24745',
                                         'line_opacity': 0.5, 'line_width': 3, 'line_curve': 0, 
-                                        'line_color': '#9aa7b1', 'repulsion': 500, 'font_weight': 'bold'
+                                        'line_color': '#9aa7b1', 'repulsion': 500, 'font_weight': 'bold',
+                                        'label_position':"bottom", 'text_width' : 300, 'gravity' : 0.2
                                         } 
 
 
@@ -516,7 +517,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             dft = self.tfa.replace_if_two_index(dft)
         return dft
     
-    def get_list_by_df_type(self, df_type:str) -> list:
+    def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list|None:
         '''
         return the list of df_type, ignore capital case
         df_type: str, one of ['taxa', 'functions', 'taxa-functions', 'peptides', 'proteins', 'custom']
@@ -532,6 +533,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         res_list = list_dict.get(df_type, None)
         if res_list is None:
             raise ValueError(f"Invalid df_type: {df_type}")
+
+        if remove_no_linked and df_type in ['taxa', 'functions', 'taxa-functions']:
+            res_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(res_list, type=df_type, silent=silent)
+
         return res_list
             
     def change_event_checkBox_basic_plot_table(self):
@@ -2718,30 +2723,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     
 
     
-
-    #! This function seems not used
-    # def show_others_linked(self):
-    #     func = self.comboBox_others_func.currentText().strip()
-    #     taxa = self.comboBox_others_taxa.currentText().strip()
-    #     self.logger.write_log(f'show_others_linked: func: {func}, taxa: {taxa}')
-    #     try:
-    #         if not func and not taxa:
-    #             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select function or taxa!')
-    #         elif func and taxa:
-    #             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select only one of function or taxa!')
-    #         elif not func:
-    #             df = self.tfa.taxa_func_df.loc[taxa, :]
-    #             func = df.index.tolist()
-    #             self.comboBox_others_func.clear()
-    #             self.comboBox_others_func.addItems(func)
-    #         else:
-    #             df = self.tfa.func_taxa_df.loc[func, :]
-    #             taxa = df.index.tolist()
-    #             self.comboBox_others_taxa.clear()
-    #             self.comboBox_others_taxa.addItems(taxa)
-    #     except Exception as e:
-    #         self.logger.write_log(f'show_others_linked error: {e}', 'e')
-    #         QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
     
     def update_combobox_and_label(self, current_text, type, label, comboBox):
         if not current_text:
@@ -2772,7 +2753,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             comboBox.addItem('')
             comboBox.addItems(items)
         except Exception as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Func for your Input! please check your input.\n\n{e}")
+            QMessageBox.warning(self.MainWindow, 'Warning', f"No Linked Taxa-Functions for your Input!\n\n{e}")
 
     def remove_pep_num_str_and_strip(self, text):
         text = text.strip()
@@ -3102,7 +3083,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 search_results.extend(matches)
             # Remove duplicates from search_results in case there are overlapping matches
             search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
-
+            
+            # Remove No Linked Taxa-Functions if aim_list is 'tfnet'
+            if search_results and aim_list == 'tfnet':
+                search_results = self.remove_no_linked_taxa_and_func_after_filter_tflink(search_results, type= df_type.lower())
+                
             # show the search results in a new window, allowing user to select the valid items
             if search_results:
                 self.input_window = InputWindow(self.MainWindow, input_mode=False)
@@ -4919,19 +4904,23 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
 
-    # Others Functions #
+    # Taxa-Functions Linkages Functions #
     # network
     def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
         if df_type == 'Taxa-Functions':
             self.comboBox_tfnet_select_list.clear()
-            self.comboBox_tfnet_select_list.addItems(self.taxa_func_list)
+            # remove no linked items to avoid error when plot focus list only
+            taxa_func_list = self.get_list_by_df_type('Taxa-Functions', remove_no_linked=True, silent=True)
+            self.comboBox_tfnet_select_list.addItems(taxa_func_list)
         elif df_type == 'Taxa':
             self.comboBox_tfnet_select_list.clear()
-            self.comboBox_tfnet_select_list.addItems(self.taxa_list)
+            taxa_list = self.get_list_by_df_type('Taxa', remove_no_linked=True, silent=True)
+            self.comboBox_tfnet_select_list.addItems(taxa_list)
         elif df_type == 'Functions':
             self.comboBox_tfnet_select_list.clear()
-            self.comboBox_tfnet_select_list.addItems(self.func_list)
+            func_list = self.get_list_by_df_type('Functions', remove_no_linked=True, silent=True)
+            self.comboBox_tfnet_select_list.addItems(func_list)
     
     def add_a_list_to_tfnet_focus_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
@@ -5147,7 +5136,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 sample_list = selected_samples
         return sample_list
     
-    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list | None = None, type:str = 'taxa'):
+    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list | None = None, type:str = 'taxa', silent:bool = False) -> list[str] | None:
         # keep taxa and func only in the taxa_func_linked_dict and remove others
         if check_list is None:
             print(f'check_list is {check_list}, return None')
@@ -5163,14 +5152,24 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         elif type == 'taxa-functions':
             return check_list
         else:
-            raise ValueError('type should be taxa, functions or taxa-functions!')
+            raise ValueError(f'type should be taxa, functions or taxa-functions! but got: {type}')
 
-        if removed:
-            QMessageBox.warning(
-                self.MainWindow, 
-                'Warning', 
-                f'{len(removed)} {type} are removed from the list because they do not have links!\n{len(check_list)} {type} are kept!'
-            )
+        if removed and not silent:
+            removed_str = '\n'.join(removed)
+            if len(removed) > 10:
+                self.input_window = InputWindow(self.MainWindow)
+                self.input_window.setWindowTitle('Warning')
+                self.input_window.text_edit.setText(
+                    f"[{len(removed)}] {type} are removed from the list because they do not have links!\n[{len(check_list)}] {type} are kept!\n\nRemoved {type}:\n{removed_str}"
+                )
+                self.input_window.exec_()
+                
+            else:  
+                QMessageBox.warning(
+                    self.MainWindow, 
+                    'Warning', 
+                    f'[{len(removed)}] {type} are removed from the list because they do not have links!\n[{len(check_list)}] {type} are kept!\n\nRemoved {type}:\n{removed_str}'
+                )
 
         return check_list
 

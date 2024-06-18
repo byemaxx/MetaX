@@ -51,7 +51,11 @@ class SettingsWidget(QWidget):
         self.ui.lineEdit_tf_link_net_line_color.textChanged.connect(self.handle_tf_link_network_changed)
         self.ui.spinBox_tf_link_net_repulsion.valueChanged.connect(self.handle_tf_link_network_changed)
         self.ui.comboBox_tf_link_net_font_weight.currentTextChanged.connect(self.handle_tf_link_network_changed)
-
+        self.ui.comboBox_tf_link_net_label_position.currentTextChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.spinBox_tf_link_net_text_width.valueChanged.connect(self.handle_tf_link_network_changed)
+        self.ui.doubleSpinBox_tf_link_net_gravity.valueChanged.connect(self.handle_tf_link_network_changed)
+        
+        
     def init_ui(self, update_mode, auto_check_update):
         if update_mode == "main":
             self.ui.radioButton_update_stable.setChecked(True)
@@ -82,14 +86,15 @@ class SettingsWidget(QWidget):
             "taxa_focus_color": self.ui.lineEdit_tf_link_net_taxa_focus_color.text(),
             "func_color": self.ui.lineEdit_tf_link_net_func_color.text(),
             "func_focus_color": self.ui.lineEdit_tf_link_net_func_focus_color.text(),
-            
             "line_opacity": self.ui.doubleSpinBox_tf_link_net_line_opacity.value(),
             "line_width": self.ui.doubleSpinBox_tf_link_net_line_width.value(),
             "line_curve": self.ui.doubleSpinBox_tf_link_net_line_curve.value(),
             "line_color": self.ui.lineEdit_tf_link_net_line_color.text(),
-            
             'repulsion': self.ui.spinBox_tf_link_net_repulsion.value(),
-            'font_weight': self.ui.comboBox_tf_link_net_font_weight.currentText()
+            'font_weight': self.ui.comboBox_tf_link_net_font_weight.currentText(),
+            'label_position': self.ui.comboBox_tf_link_net_label_position.currentText(),
+            'text_width': self.ui.spinBox_tf_link_net_text_width.value(),
+            'gravity': self.ui.doubleSpinBox_tf_link_net_gravity.value(),
             
         }
         self.tf_link_net_params_dict_changed.emit(network_params_dict)

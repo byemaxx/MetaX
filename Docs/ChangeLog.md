@@ -1,3 +1,9 @@
+# Version: 1.107.5
+## Date: 2024-06-18
+### Changes:
+- Fix: Fixed the bug of when plot the Taxa-Functions Network, the fcous list items which are not linked to any other items were not removed.
+- Change: Changed the default label width of the Taxa-Functions Network plot to 300 characters, then the label will be broken into multiple lines if the label is too long.
+
 # Version: 1.107.4
 ## Date: 2024-06-17
 ### Changes:

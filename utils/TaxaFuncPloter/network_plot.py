@@ -20,7 +20,10 @@ class NetworkPlot:
                 co_network_focus_color="#B24745",
                 co_network_normal_color="#79af97",
                 font_weight="normal",
-                theme="white"
+                theme="white",
+                label_position="bottom",
+                text_width = 300,
+                gravity = 0.2
                 
                  ):
         
@@ -48,6 +51,9 @@ class NetworkPlot:
         self.co_network_normal_color = co_network_normal_color
         
         self.theme = theme
+        self.label_position = label_position
+        self.text_width = text_width
+        self.gravity = gravity
         
 
     def modify_focus_list(self, focus_list):
@@ -219,21 +225,21 @@ class NetworkPlot:
                 links,
                 categories,
                 repulsion=self.repulsion,
+                gravity= self.gravity,
                 is_focusnode=True,
                 is_layout_animation=True,
-                friction=0.6,
                 linestyle_opts=opts.LineStyleOpts(
                     curve=self.line_curve, opacity=self.line_opacity, width=self.line_width, color=self.line_color
                 ),
-                # itemstyle_opts=opts.ItemStyleOpts(border_width=0.5, border_color="rgba(0,0,0,0.5)", opacity=0.8),
-                gravity=0.05,
                 label_opts=opts.LabelOpts(
                     is_show=self.show_labels,
-                    position="right",
+                    position=self.label_position,
                     color="auto",
                     formatter="{b}",
                     font_size=self.font_size,
-                    font_weight=self.font_weight
+                    font_weight=self.font_weight,
+                    overflow = 'break',
+                    text_width = self.text_width
                 ),
             )
             .set_global_opts(
@@ -393,15 +399,18 @@ class NetworkPlot:
                 nodes,
                 links,
                 categories=categories,
+                gravity= self.gravity,
                 repulsion=self.repulsion,
                 is_layout_animation=True,
                 label_opts=opts.LabelOpts(
                     is_show=self.show_labels,
                     font_size=self.font_size,
-                    position="right", 
+                    position=self.label_position,
                     color="auto", 
                     formatter="{b}",
-                    font_weight=self.font_weight
+                    font_weight=self.font_weight,
+                    overflow = 'break',
+                    text_width = self.text_width
                 ),
                 linestyle_opts=opts.LineStyleOpts(
                     opacity=self.line_opacity, 
