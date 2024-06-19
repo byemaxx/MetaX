@@ -129,9 +129,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # Check and load settings
         self.load_basic_Settings()
         
-        # set the default theme mode
-        self.theme = 'white'
-        
         #check update
         self.update_required = False
         self.check_update(manual_check_trigger=False)
@@ -161,6 +158,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.add_theme_to_combobox()
         
         # ploting parameters
+        # set the default theme mode
+        self.html_theme = 'white'
+        
         self.heatmap_params_dict = {'linkage_method': 'average', 'distance_metric': 'euclidean'}
 
         self.tf_link_net_params_dict = {'taxa_shape': 'circle', 'func_shape': 'rect', 
@@ -656,6 +656,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
             settings_widget.heatmap_params_dict_changed.connect(self.on_heatmap_params_changed)
             settings_widget.tf_link_net_params_dict_changed.connect(self.on_tf_link_net_params_changed)
+            settings_widget.html_theme_changed.connect(self.on_html_theme_changed)
             
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
@@ -681,6 +682,10 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def on_tf_link_net_params_changed(self, params_dict):
         self.tf_link_net_params_dict = params_dict
         print(f"Taxa-func link network params changed to: {params_dict}")
+    
+    def on_html_theme_changed(self, theme):
+        self.html_theme = theme
+        print(f"HTML theme changed to: {theme}")
     
     ###############   basic function End   ###############
     
@@ -722,9 +727,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.show_message(f"Changing theme to {theme}...")
         # save the theme to settings
         self.settings.setValue("theme", theme)
-        # save the theme mode to GUI attribute (dark or light)
-        self.theme = 'dark' if 'dark' in theme else 'white'
-        print(f"Theme mode: {self.theme}")
+        
+        #! Deprecated, switch to manual change in Settings
+        ## save the theme mode to GUI attribute (dark or light)
+        # self.html_theme = 'dark' if 'dark' in theme else 'white'
+        # print(f"Theme mode: {self.html_theme}")
         
         # recover the .xml suffix
         theme = theme + '.xml'
@@ -3396,7 +3403,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     if reply == QMessageBox.No:
                         return None
                 self.show_message(f'Plotting {plot_type}...')
-                pic = BarPlot_js(self.tfa, theme=self.theme).plot_intensity_bar(df = df, width=width, height=height, 
+                pic = BarPlot_js(self.tfa, theme=self.html_theme).plot_intensity_bar(df = df, width=width, height=height, 
                                                               title= '', rename_taxa=rename_taxa, 
                                                               show_legend=show_legend, font_size=font_size,
                                                               rename_sample=rename_sample, plot_mean = plot_mean,
@@ -3432,7 +3439,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 else:
                     title_new = ''
                     subtitle = ''
-                pic = SankeyPlot(self.tfa, theme=self.theme).plot_intensity_sankey(df=df, width=width, height=height, 
+                pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height, 
                                                                  title=title_new, subtitle=subtitle, font_size=font_size,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
@@ -3717,7 +3724,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
             
         try:
-            pic = TrendsPlot_js(self.tfa, theme=self.theme).plot_trends_js( df=df, width=width, height= height, title=title, 
+            pic = TrendsPlot_js(self.tfa, theme=self.html_theme).plot_trends_js( df=df, width=width, height= height, title=title, 
                                                          rename_taxa=rename_taxa, show_legend=show_legend, 
                                                          add_group_name = plot_samples, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
@@ -3792,7 +3799,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
-            web = webDialog.WebDialog(save_path, None, theme=self.theme)
+            web = webDialog.WebDialog(save_path, None, theme=self.html_theme)
             if title:
                 web.setWindowTitle(title)
                 
@@ -4036,7 +4043,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                     return None
                 self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tfa,
-                                 theme=self.theme
+                                 theme=self.html_theme
                                  ).plot_pca_pyecharts_3d(df=df, title_name=title_name, show_label = show_label, 
                                                                  rename_sample = rename_sample,
                                                                 width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
@@ -4094,7 +4101,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 else:
                     show_label = False
                     
-                pic = SunburstPlot(theme=self.theme).create_sunburst_chart(taxa_df= taxa_df, width=width, height=height,
+                pic = SunburstPlot(theme=self.html_theme).create_sunburst_chart(taxa_df= taxa_df, width=width, height=height,
                                                         title='Sunburst of Taxa', show_label=show_label,
                                                         label_font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Sunburst of Taxa')
@@ -4106,7 +4113,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 
                 taxa_df = self.tfa.taxa_df[sample_list]
 
-                pic = TreeMapPlot(theme=self.theme).create_treemap_chart(taxa_df= taxa_df, width=width, height=height,
+                pic = TreeMapPlot(theme=self.html_theme).create_treemap_chart(taxa_df= taxa_df, width=width, height=height,
                                                         show_sub_title = self.checkBox_pca_if_show_lable.isChecked(),
                                                         font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Treemap of Taxa')
@@ -4120,7 +4127,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 df = df[sample_list]
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
                 
-                pic = SankeyPlot(self.tfa, theme=self.theme).plot_intensity_sankey(df=df, width=width, height=height,
+                pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height,
                                                                  font_size = font_size, title='', subtitle='')
                 self.save_and_show_js_plot(pic, title)
             
@@ -4789,7 +4796,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
             df = self.table_dict[table_name]
-            pic = VolcanoPlot(theme=self.theme).plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
+            pic = VolcanoPlot(theme=self.html_theme).plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
                                                 log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
                                                 title_name=title_name,  font_size = font_size,
                                                 width=width, height=height)
@@ -4842,7 +4849,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                               show_labels=show_labels,
                               rename_taxa=rename_taxa,
                               font_size=font_size,
-                              theme=self.theme,
+                              theme=self.html_theme,
                               **self.tf_link_net_params_dict
                               ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
                                                                   corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
@@ -4889,7 +4896,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df = self.table_dict[table_name]
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
 
-            pic = SankeyPlot(self.tfa, theme=self.theme).plot_fc_sankey(df, width=width, height=height, pvalue=pvalue, p_type = p_type,
+            pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_fc_sankey(df, width=width, height=height, pvalue=pvalue, p_type = p_type,
                                                       log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Sankay plot {title_name}')
             
@@ -5075,7 +5082,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                               show_labels=show_labels,
                               rename_taxa=rename_taxa,
                               font_size=font_size,
-                              theme=self.theme,
+                              theme=self.html_theme,
                             **self.tf_link_net_params_dict
                               ).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
@@ -5354,7 +5361,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             params['show_all_labels'] = show_all_labels
             
             self.show_message('Plotting bar plot, please wait...')
-            pic = BarPlot_js(self.tfa, theme=self.theme).plot_intensity_bar(**params)
+            pic = BarPlot_js(self.tfa, theme=self.html_theme).plot_intensity_bar(**params)
             self.save_and_show_js_plot(pic, 'Intensity Bar Plot')
 
 

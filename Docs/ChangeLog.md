@@ -1,3 +1,9 @@
+# Version: 1.107.6
+## Date: 2024-06-19
+### Changes:
+- New: added an option in Settings to enable user to set the color of the theme (white or dark) of the HTML plot.
+
+
 # Version: 1.107.5
 ## Date: 2024-06-18
 ### Changes:

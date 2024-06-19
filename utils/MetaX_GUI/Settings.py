@@ -7,6 +7,7 @@ class SettingsWidget(QWidget):
     auto_check_update_changed = pyqtSignal(bool)
     heatmap_params_dict_changed = pyqtSignal(dict)
     tf_link_net_params_dict_changed = pyqtSignal(dict)
+    html_theme_changed = pyqtSignal(str)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True):
         super().__init__(parent)
@@ -54,6 +55,9 @@ class SettingsWidget(QWidget):
         self.ui.comboBox_tf_link_net_label_position.currentTextChanged.connect(self.handle_tf_link_network_changed)
         self.ui.spinBox_tf_link_net_text_width.valueChanged.connect(self.handle_tf_link_network_changed)
         self.ui.doubleSpinBox_tf_link_net_gravity.valueChanged.connect(self.handle_tf_link_network_changed)
+        
+        # HTML theme
+        self.ui.comboBox_html_theme.currentTextChanged.connect(self.handle_html_theme_changed)
         
         
     def init_ui(self, update_mode, auto_check_update):
@@ -110,7 +114,11 @@ class SettingsWidget(QWidget):
             self.update_mode = "dev"
             self.update_mode_changed.emit(self.update_mode)
             
-            
+    def handle_html_theme_changed(self):
+        theme = self.ui.comboBox_html_theme.currentText()
+        self.html_theme_changed.emit(theme)
+        
+         
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication

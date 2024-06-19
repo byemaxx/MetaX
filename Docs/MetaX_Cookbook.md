@@ -116,7 +116,7 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ### 1. Results from MAG Workflow
 
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG and other databases like MGnify.
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
 
 - Annotate the peptide to Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
@@ -709,6 +709,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
   - The red dots are the taxa we focused on
   - The green dots are the functions we focused on
+- More parameters can be set in **Dev**->**Settings**->**Others** (e.g. Nodes Shape, color, Line Style)
 
 <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
 
