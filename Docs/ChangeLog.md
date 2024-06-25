@@ -1,3 +1,8 @@
+# Version: 1.107.7
+## Date: 2024-06-24
+### Changes:
+- Change: Changed the method of summing peptiede intensity to protein intensity, changed the method "razor" to same as MaxQuant, and added a new method "rank".
+
 # Version: 1.107.6
 ## Date: 2024-06-19
 ### Changes:

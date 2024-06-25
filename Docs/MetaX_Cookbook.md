@@ -227,9 +227,16 @@ The Data Overview provides basic information about your data, such as the number
 
 Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
 
-- **Occam's Razor and Anti-Razor:** Methods available for inferring shared peptides. 
-  1. Build the rank of proteins.
-  2. Choose the protein with a higher rank for the shared peptide.
+- **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
+  - Razor:
+    1. Build a minimal set of proteins to cover all peptides (Set Cover Problem).
+    2. For each peptide, choose the protein which has most peptides (if multiple proteins have the same number of peptides, share intensity to them).
+  - Anti-Razor:
+    - All proteins are shared the intensity of each peptide.
+  - Rank:
+    1. Build the rank of proteins.
+    2. Choose the protein with a higher rank for the shared peptide.
+
 
 - **Methods to Build Protein Rank:**
   - unique_counts: Use the counts of proteins inferred by unique peptides.
