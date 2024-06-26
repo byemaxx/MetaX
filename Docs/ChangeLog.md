@@ -1,3 +1,10 @@
+# Version: 1.107.8
+## Date: 2024-06-26
+### Changes:
+- Change: 
+- 1.Use the heap as the default data structure to apply razor method to sum peptide intensity to protein intensity.
+- 2.Changed the update message to a dialog window to show the update message to avoid the update message is too long to show in the message box.
+
 # Version: 1.107.7
 ## Date: 2024-06-24
 ### Changes:

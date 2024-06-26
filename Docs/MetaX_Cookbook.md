@@ -229,7 +229,7 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
 
 - **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
   - Razor:
-    1. Build a minimal set of proteins to cover all peptides (Set Cover Problem).
+    1. Build a minimal set of proteins to cover all peptides.
     2. For each peptide, choose the protein which has most peptides (if multiple proteins have the same number of peptides, share intensity to them).
   - Anti-Razor:
     - All proteins are shared the intensity of each peptide.

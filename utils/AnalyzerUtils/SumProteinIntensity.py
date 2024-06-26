@@ -21,15 +21,16 @@ from tqdm import tqdm
 class SumProteinIntensity:
     def __init__(self, taxa_func_analyzer):
         self.tfa = taxa_func_analyzer
-        self.res_intensity_dict = {} #store all sample to output
-        self.rank_dict = {} #store the rank of protein intensity for each sample temporarily
-        self.rank_method = None # only used for rank method
+        self.res_intensity_dict = {}  # store all sample to output
+        self.rank_dict = {}  # store the rank of protein intensity for each sample temporarily
+        self.rank_method = None  # only used for rank method
         self.extract_col_name = [self.tfa.peptide_col_name, self.tfa.protein_col_name] + self.tfa.sample_list
-        self.df = self.tfa.original_df.loc[:,self.extract_col_name]
+        self.df = self.tfa.original_df.loc[:, self.extract_col_name]
         self._init_dicts()
+        self.greedy_method = None  # only used for razor method
 
             
-    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts'):
+    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap'):
 
         if method not in ['razor', 'anti-razor', 'rank']:
             raise ValueError('Method must in ["razor", "anti-razor", "rank"]')
@@ -37,6 +38,7 @@ class SumProteinIntensity:
             raise ValueError('Rank method must in ["shared_intensity", "all_counts", "unique_counts", "unique_intensity"]')
         
         self.rank_method = rank_method
+        self.greedy_method = greedy_method
         
         if method == 'rank':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   
@@ -84,27 +86,20 @@ class SumProteinIntensity:
         
         return res_df
 
-    
-    def _create_pep_to_protein_razor(self) -> dict:
-        """
-        Create a dictionary mapping peptides to proteins based on a minimum protein set.
-
-        Returns:
-            dict: A dictionary mapping peptides to proteins.
-            key: peptide
-            value: a list of proteins
-        """
-        # crate a function to find the minimum protein set
-        def find_minimum_protein_set(peptides, protein_to_peptides):
-            print('Start to create protein dict using "Set Cover Problem"')
-            peptides_to_cover = set(peptides)
-            selected_proteins = set()
-
+    # razor method
+    def find_minimum_protein_set(self, peptides, protein_to_peptides):
+        protein_to_peptides_copy = protein_to_peptides.copy()
+        peptides_to_cover = set(peptides)
+        selected_proteins = set()
+        method = self.greedy_method
+        
+        if method == 'greedy':
+            print('Start creating protein dict for "Set Cover Problem" with Greedy Approximation Algorithm')
             with tqdm(total=len(peptides_to_cover), desc="Covering peptides") as pbar:
                 while peptides_to_cover:
                     best_protein = None
                     peptides_covered_by_best = set()
-                    for protein, covered_peptides in protein_to_peptides.items():
+                    for protein, covered_peptides in protein_to_peptides_copy.items():
                         covered = peptides_to_cover & covered_peptides
                         if len(covered) > len(peptides_covered_by_best):
                             best_protein = protein
@@ -115,9 +110,52 @@ class SumProteinIntensity:
 
                     selected_proteins.add(best_protein)
                     peptides_to_cover -= peptides_covered_by_best
+                    protein_to_peptides_copy.pop(best_protein)  # remove the protein from the dict to speed up the process
+                    pbar.update(len(peptides_covered_by_best))
+        elif method == 'heap':
+            import heapq
+            print('Start creating protein dict for "Set Cover Problem" with Heap Optimization of Greedy Approximation Algorithm')
+            protein_coverage = {protein: covered_peptides & peptides_to_cover 
+                                for protein, covered_peptides in protein_to_peptides_copy.items()}
+            protein_heap = [(-len(covered), protein) for protein, covered in protein_coverage.items()]
+            heapq.heapify(protein_heap)
+
+            with tqdm(total=len(peptides_to_cover), desc="Covering peptides") as pbar:
+                while peptides_to_cover:
+                    while protein_heap:
+                        max_covered, best_protein = heapq.heappop(protein_heap)
+                        if best_protein in protein_coverage:
+                            peptides_covered_by_best = protein_coverage.pop(best_protein)
+                            break
+
+                    if not best_protein or not peptides_covered_by_best:
+                        break
+
+                    selected_proteins.add(best_protein)
+                    peptides_to_cover -= peptides_covered_by_best
                     pbar.update(len(peptides_covered_by_best))
 
-            return selected_proteins
+                    # update other proteins' coverage
+                    for protein in list(protein_coverage.keys()):
+                        if protein_coverage[protein] & peptides_covered_by_best:
+                            protein_coverage[protein] -= peptides_covered_by_best
+                            heapq.heappush(protein_heap, (-len(protein_coverage[protein]), protein))
+                            if not protein_coverage[protein]:
+                                del protein_coverage[protein]
+        else:
+            raise ValueError(f"Invalid greedy method: {method}. Must be ['greedy' or 'heap']")
+
+        return selected_proteins
+    
+    def _create_pep_to_protein_razor(self) -> dict:
+        """
+        Create a dictionary mapping peptides to proteins based on a minimum protein set.
+
+        Returns:
+            dict: A dictionary mapping peptides to proteins.
+            key: peptide
+            value: a list of proteins
+        """
         
         df = self.df.loc[:, [self.tfa.peptide_col_name, self.tfa.protein_col_name]]
         # Create a dictionary mapping proteins to peptides
@@ -130,7 +168,7 @@ class SumProteinIntensity:
             for protein in proteins:
                 protein_to_peptides[protein].add(sequence)
 
-        mini_protein_set = find_minimum_protein_set(peptides, protein_to_peptides)
+        mini_protein_set = self.find_minimum_protein_set(peptides, protein_to_peptides)
         
         # remove the proteins not in the mini_protein_set from the protein_to_peptides
         filtered_protein_to_peptides = {protein: protein_to_peptides[protein] for protein in mini_protein_set}

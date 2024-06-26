@@ -650,13 +650,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.settings_dialog.setModal(False) 
             layout = QVBoxLayout(self.settings_dialog)
             self.settings_dialog.resize(900, 600)
-
-            settings_widget = SettingsWidget(self.settings_dialog, self.update_branch, self.auto_check_update)
+            # General settings
+            settings_widget = SettingsWidget(
+                parent=self.settings_dialog,
+                update_branch=self.update_branch,
+                auto_check_update=self.auto_check_update,
+                QSettings=self.settings,
+            )
             settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
             settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
+            # plotting parameters
             settings_widget.heatmap_params_dict_changed.connect(self.on_heatmap_params_changed)
             settings_widget.tf_link_net_params_dict_changed.connect(self.on_tf_link_net_params_changed)
             settings_widget.html_theme_changed.connect(self.on_html_theme_changed)
+            # Other settings
+            settings_widget.protein_infer_method_changed.connect(self.on_protein_infer_method_changed)
             
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
@@ -686,6 +694,11 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
     def on_html_theme_changed(self, theme):
         self.html_theme = theme
         print(f"HTML theme changed to: {theme}")
+        
+    def on_protein_infer_method_changed(self, method):
+        #save to settings
+        self.settings.setValue("protein_infer_greedy_mode", method)
+        print(f"Protein infering razor mode changed to: {method}")
     
     ###############   basic function End   ###############
     
@@ -2478,7 +2491,8 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             sum_protein_params = {
                 'method': self.comboBox_method_of_protein_inference.currentText(),
                 'by_sample': self.checkBox_infrence_protein_by_sample.isChecked(),
-                'rank_method' :self.comboBox_protein_ranking_method.currentText()
+                'rank_method' :self.comboBox_protein_ranking_method.currentText(),
+                'greedy_method': self.settings.value('protein_infer_greedy_mode', 'heap')
             }
                 
 

@@ -479,9 +479,11 @@ class TaxaFuncAnalyzer:
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': None},
                           peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
-                          sum_protein:bool = False, sum_protein_params: dict = { 'method': 'razor',
+                          sum_protein:bool = False, sum_protein_params: dict = {'method': 'razor',
                                                                                 'by_sample': False,
-                                                                                'rank_method': 'unique_counts'}
+                                                                                'rank_method': 'unique_counts',
+                                                                                'greedy_method': 'heap',
+                                                                                }
                           ):
         """
         Example Usage:

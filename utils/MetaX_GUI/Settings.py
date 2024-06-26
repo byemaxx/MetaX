@@ -8,8 +8,9 @@ class SettingsWidget(QWidget):
     heatmap_params_dict_changed = pyqtSignal(dict)
     tf_link_net_params_dict_changed = pyqtSignal(dict)
     html_theme_changed = pyqtSignal(str)
+    protein_infer_method_changed = pyqtSignal(str)
 
-    def __init__(self, parent=None, update_branch="main", auto_check_update=True):
+    def __init__(self, parent=None, update_branch="main", auto_check_update=True, QSettings=None):
         super().__init__(parent)
         self.update_mode = update_branch
         self.auto_check_update = auto_check_update
@@ -20,7 +21,7 @@ class SettingsWidget(QWidget):
         self.ui = Ui_Settings()
         self.ui.setupUi(self)
         
-        self.init_ui(self.update_mode, self.auto_check_update)
+        self.init_ui(self.update_mode, self.auto_check_update, QSettings)
         # resize the window, 800 as default
         self.resize(800, 400)
         
@@ -59,13 +60,23 @@ class SettingsWidget(QWidget):
         # HTML theme
         self.ui.comboBox_html_theme.currentTextChanged.connect(self.handle_html_theme_changed)
         
+        # Protein inference method
+        self.ui.comboBox_protein_infer_greedy_mode.currentTextChanged.connect(self.handle_protein_infer_method_changed)
         
-    def init_ui(self, update_mode, auto_check_update):
+        
+    def init_ui(self, update_mode, auto_check_update, QSettings=None):
         if update_mode == "main":
             self.ui.radioButton_update_stable.setChecked(True)
         elif update_mode == "dev":
             self.ui.radioButton_update_beta.setChecked(True)
         self.ui.checkBox_auto_check_update.setChecked(auto_check_update)
+        
+        if QSettings:
+            method = QSettings.value('protein_infer_greedy_mode', 'fast')
+            selected_method = 'normal' if method == 'greedy' else 'fast'
+            print(f"Protein inference method: {method}")
+            self.ui.comboBox_protein_infer_greedy_mode.setCurrentText(selected_method)
+            
 
     def handle_checkbox_state_changed(self):
         self.auto_check_update = self.ui.checkBox_auto_check_update.isChecked()
@@ -118,6 +129,13 @@ class SettingsWidget(QWidget):
         theme = self.ui.comboBox_html_theme.currentText()
         self.html_theme_changed.emit(theme)
         
+    def handle_protein_infer_method_changed(self):
+        protein_infer_greedy_mode = self.ui.comboBox_protein_infer_greedy_mode.currentText()
+        method = {
+            'normal': 'greedy',
+            'fast': 'heap',
+        }
+        self.protein_infer_method_changed.emit(method[protein_infer_greedy_mode])
          
 if __name__ == "__main__":
     import sys
