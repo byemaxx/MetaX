@@ -200,6 +200,8 @@ class Updater:
                     shutil.move(os.path.join(root, file), os.path.join(metax_folder_path, file))
                 for dir in dirs:
                     shutil.move(os.path.join(root, dir), os.path.join(metax_folder_path, dir))
+        
+            return True
             
 
 
