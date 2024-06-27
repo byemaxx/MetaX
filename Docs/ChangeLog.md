@@ -1,3 +1,21 @@
+# Version: 1.107.8
+## Date: 2024-06-26
+### Changes:
+- Change: 
+- 1.Use the heap as the default data structure to apply razor method to sum peptide intensity to protein intensity.
+- 2.Changed the update message to a dialog window to show the update message to avoid the update message is too long to show in the message box.
+
+# Version: 1.107.7
+## Date: 2024-06-24
+### Changes:
+- Change: Changed the method of summing peptiede intensity to protein intensity, changed the method "razor" to same as MaxQuant, and added a new method "rank".
+
+# Version: 1.107.6
+## Date: 2024-06-19
+### Changes:
+- New: added an option in Settings to enable user to set the color of the theme (white or dark) of the HTML plot.
+
+
 # Version: 1.107.5
 ## Date: 2024-06-18
 ### Changes:

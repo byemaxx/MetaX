@@ -116,7 +116,7 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ### 1. Results from MAG Workflow
 
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG and other databases like MGnify.
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
 
 - Annotate the peptide to Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
@@ -227,9 +227,16 @@ The Data Overview provides basic information about your data, such as the number
 
 Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
 
-- **Occam's Razor and Anti-Razor:** Methods available for inferring shared peptides. 
-  1. Build the rank of proteins.
-  2. Choose the protein with a higher rank for the shared peptide.
+- **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
+  - Razor:
+    1. Build a minimal set of proteins to cover all peptides.
+    2. For each peptide, choose the protein which has most peptides (if multiple proteins have the same number of peptides, share intensity to them).
+  - Anti-Razor:
+    - All proteins are shared the intensity of each peptide.
+  - Rank:
+    1. Build the rank of proteins.
+    2. Choose the protein with a higher rank for the shared peptide.
+
 
 - **Methods to Build Protein Rank:**
   - unique_counts: Use the counts of proteins inferred by unique peptides.
@@ -709,6 +716,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
   - The red dots are the taxa we focused on
   - The green dots are the functions we focused on
+- More parameters can be set in **Dev**->**Settings**->**Others** (e.g. Nodes Shape, color, Line Style)
 
 <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
 

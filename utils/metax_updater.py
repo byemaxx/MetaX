@@ -200,27 +200,27 @@ class Updater:
                     shutil.move(os.path.join(root, file), os.path.join(metax_folder_path, file))
                 for dir in dirs:
                     shutil.move(os.path.join(root, dir), os.path.join(metax_folder_path, dir))
+        
+            return True
             
 
 
     def update_metax(self):
-        # ask if user want to update
+        # ask if user wants to update
         try:
             change_log_str = self.get_str()
-            
         except Exception as e:
             print(f"Read change log failed: {e}")
             change_log_str = "No change log."
-            
+
         if self.current_api != self.remote_api:
-            QMessageBox.warning(self.MainWindow, "Update", f"MetaX new version is available with a new API.\n\nPlease download the new version manually.\n\n\
+            self.display_message_in_text_browser("Update", f"MetaX new version is available with a new API.\n\nPlease download the new version manually.\n\n\
             current version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}")
             return
 
-        reply = QMessageBox.question(self.MainWindow, "Update",
-                                     f"MetaX new version is available. Do you want to update?\
-                                     \ncurrent version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        reply = self.display_message_in_text_browser("Update", f"MetaX new version is available. Do you want to update?\
+                                    \ncurrent version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}",
+                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.metaXGUI.show_message("Updating MetaX...", "Updating...")
             # set update_required flag to True
@@ -229,32 +229,69 @@ class Updater:
 
             try:
                 download_success = self.download_project_zip_and_unzip()
-                if download_success is False:
+                if not download_success:
                     QMessageBox.warning(self.MainWindow, "Update", "Download failed. Please try again later or update manually.")
                     return
                 # replace the old MetaX folder with the new one
                 replace_success = self.replace_metax_dir()
-                if replace_success is False:
+                if not replace_success:
                     QMessageBox.warning(self.MainWindow, "Update", "An error occurred while replacing the MetaX directory. Please try again later or update manually.")
                     return
-                
+
                 # check if the update is successful
                 if self.check_update_status():
                     msg = f"MetaX has been updated to {self.remote_version}. Please restart MetaX."
                 else:
                     msg = f"Warning: MetaX update failed. Still in version {self.current_version}. Please try again later or update manually."
-                
+
                 QMessageBox.information(self.MainWindow, "Update", msg)
                 # force close MetaX without triggering closeEvent
                 QtWidgets.QApplication.quit()
                 # close the QSplashScreen
                 self.splash.finish(self.MainWindow)
                 sys.exit()
-                
-                
+
             except Exception as e:
                 QMessageBox.warning(self.MainWindow, "Update", f'Update failed: {e}')
 
+    def display_message_in_text_browser(self, title, message, buttons=QMessageBox.NoButton, default_button=QMessageBox.NoButton):
+        dialog = QtWidgets.QDialog()
+        dialog.setWindowTitle(title)
+        layout = QtWidgets.QVBoxLayout(dialog)
+        
+        # set icon as parent's icon
+        dialog.setWindowIcon(self.MainWindow.windowIcon())
+
+        text_browser = QtWidgets.QTextBrowser()
+        text_browser.setText(message)
+        layout.addWidget(text_browser)
+
+        # create button box
+        button_box = QtWidgets.QDialogButtonBox()
+        # create yes and no buttons
+        if buttons & QMessageBox.Yes:
+            yes_button = button_box.addButton(QtWidgets.QDialogButtonBox.Yes)
+            if default_button == QMessageBox.Yes:
+                yes_button.setDefault(True)
+        if buttons & QMessageBox.No:
+            no_button = button_box.addButton(QtWidgets.QDialogButtonBox.No)
+            if default_button == QMessageBox.No:
+                no_button.setDefault(True)
+        layout.addWidget(button_box)
+
+        # connect signals
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+
+        dialog.setLayout(layout)
+        dialog.resize(500, 400) 
+
+        # show dialog and wait for user response
+        result = dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            return QMessageBox.Yes
+        else:
+            return QMessageBox.No
 
     def check_update(self, show_message=False):
         print(f"Checking update from {self.branch} branch...")

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -436,6 +436,7 @@ class Ui_metaX_main(object):
         self.comboBox_method_of_protein_inference = QtWidgets.QComboBox(self.tab_set_taxa_func)
         self.comboBox_method_of_protein_inference.setEnabled(False)
         self.comboBox_method_of_protein_inference.setObjectName("comboBox_method_of_protein_inference")
+        self.comboBox_method_of_protein_inference.addItem("")
         self.comboBox_method_of_protein_inference.addItem("")
         self.comboBox_method_of_protein_inference.addItem("")
         self.gridLayout_37.addWidget(self.comboBox_method_of_protein_inference, 0, 2, 1, 1)
@@ -4208,7 +4209,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4268,9 +4269,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(6)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(2)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(1)
+        self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(1)
@@ -4369,6 +4370,7 @@ class Ui_metaX_main(object):
         self.checkBox_infrence_protein_by_sample.setText(_translate("metaX_main", "Inference by each Sample"))
         self.comboBox_method_of_protein_inference.setItemText(0, _translate("metaX_main", "razor"))
         self.comboBox_method_of_protein_inference.setItemText(1, _translate("metaX_main", "anti-razor"))
+        self.comboBox_method_of_protein_inference.setItemText(2, _translate("metaX_main", "rank"))
         self.label_136.setText(_translate("metaX_main", "Protein Ranking Method"))
         self.comboBox_protein_ranking_method.setItemText(0, _translate("metaX_main", "unique_counts"))
         self.comboBox_protein_ranking_method.setItemText(1, _translate("metaX_main", "all_counts"))

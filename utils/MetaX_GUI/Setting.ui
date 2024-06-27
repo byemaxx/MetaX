@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QToolBox" name="toolBox">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="page">
       <property name="geometry">
@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>748</width>
-        <height>367</height>
+        <height>340</height>
        </rect>
       </property>
       <attribute name="label">
@@ -71,76 +71,125 @@
         <x>0</x>
         <y>0</y>
         <width>748</width>
-        <height>367</height>
+        <height>340</height>
        </rect>
       </property>
       <attribute name="label">
-       <string>Others</string>
+       <string>Plotting</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="2" column="0">
-        <widget class="QLabel" name="label_4">
+        <widget class="QLabel" name="label_21">
          <property name="text">
-          <string>Taxa-Functions Link Network</string>
+          <string>HTML Global</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>HeatMap</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <layout class="QGridLayout" name="gridLayout_6">
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_tf_link_net_taxa_sahpe">
-           <item>
-            <property name="text">
-             <string>circle</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>rect</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>roundRect</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>triangle</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>diamond</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>pin</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>arrow</string>
-            </property>
-           </item>
-          </widget>
-         </item>
+       <item row="3" column="3">
+        <layout class="QGridLayout" name="gridLayout_7">
          <item row="0" column="0">
-          <widget class="QLabel" name="label_5">
+          <widget class="QLabel" name="label_11">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
-            <string>Taxa Shape</string>
+            <string>Line Width</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="5">
+         <item row="0" column="3">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_curve">
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="toolTip">
+            <string>The larger the value the greater the repulsion</string>
+           </property>
+           <property name="text">
+            <string>Repulsion</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Line opacity</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_14">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Line Curve</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Text Width</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinBox_tf_link_net_repulsion">
+           <property name="maximum">
+            <number>100000</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>500</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_opacity">
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Font Weight</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
           <widget class="QComboBox" name="comboBox_tf_link_net_font_weight">
            <item>
             <property name="text">
@@ -164,60 +213,105 @@
            </item>
           </widget>
          </item>
-         <item row="0" column="3">
-          <widget class="QLineEdit" name="lineEdit_tf_link_net_taxa_color">
+         <item row="1" column="4">
+          <widget class="QLabel" name="label_17">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
-            <string>#374E55</string>
+            <string>Label Postion</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="4">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Repulsion</string>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="spinBox_tf_link_net_text_width">
+           <property name="maximum">
+            <number>9999</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>300</number>
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Focus Taxa Color</string>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_width">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>3.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="5">
+          <widget class="QComboBox" name="comboBox_tf_link_net_label_position">
+           <item>
+            <property name="text">
+             <string>bottom</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>top</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>right</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>left</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>inside</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>insideLeft</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>insideRight</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>Func Color</string>
+          <widget class="QLabel" name="label_19">
+           <property name="toolTip">
+            <string>The gravitational factor towards the centre to which the node is subjected. The larger the value the closer the node is to the centre.</string>
            </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QLabel" name="label_14">
            <property name="text">
-            <string>Line Curve</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3">
-          <widget class="QLineEdit" name="lineEdit_tf_link_net_line_color">
-           <property name="text">
-            <string>#9aa7b1</string>
+            <string>Gravity</string>
            </property>
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QLineEdit" name="lineEdit_tf_link_net_func_color">
-           <property name="text">
-            <string>#DF8F44</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_curve">
-           <property name="decimals">
-            <number>1</number>
-           </property>
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_gravity">
            <property name="maximum">
             <double>1.000000000000000</double>
            </property>
@@ -225,27 +319,43 @@
             <double>0.100000000000000</double>
            </property>
            <property name="value">
-            <double>0.000000000000000</double>
+            <double>0.200000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="2" column="5">
-          <widget class="QSpinBox" name="spinBox_tf_link_net_repulsion">
-           <property name="maximum">
-            <number>100000</number>
-           </property>
-           <property name="singleStep">
-            <number>10</number>
-           </property>
-           <property name="value">
-            <number>500</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="4">
-          <widget class="QLabel" name="label_16">
+        </layout>
+       </item>
+       <item row="2" column="3">
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_22">
            <property name="text">
-            <string>Font Weight</string>
+            <string>Theme</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_html_theme">
+           <item>
+            <property name="text">
+             <string>white</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>dark</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="3">
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Taxa Shape</string>
            </property>
           </widget>
          </item>
@@ -256,6 +366,13 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="5">
+          <widget class="QLineEdit" name="lineEdit_tf_link_net_taxa_focus_color">
+           <property name="text">
+            <string>#6A6599</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="4">
           <widget class="QLabel" name="label_8">
            <property name="text">
@@ -263,19 +380,10 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_opacity">
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.500000000000000</double>
+         <item row="0" column="3">
+          <widget class="QLineEdit" name="lineEdit_tf_link_net_taxa_color">
+           <property name="text">
+            <string>#374E55</string>
            </property>
           </widget>
          </item>
@@ -318,10 +426,10 @@
            </item>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QLabel" name="label_13">
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_9">
            <property name="text">
-            <string>Line Color</string>
+            <string>Focus Taxa Color</string>
            </property>
           </widget>
          </item>
@@ -332,43 +440,6 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>Line opacity</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="5">
-          <widget class="QLineEdit" name="lineEdit_tf_link_net_taxa_focus_color">
-           <property name="text">
-            <string>#6A6599</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>Line Width</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_line_width">
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="minimum">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>3.000000000000000</double>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
@@ -376,95 +447,83 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_17">
+         <item row="1" column="3">
+          <widget class="QLineEdit" name="lineEdit_tf_link_net_func_color">
            <property name="text">
-            <string>Label Postion</string>
+            <string>#DF8F44</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QComboBox" name="comboBox_tf_link_net_label_position">
-           <item>
-            <property name="text">
-             <string>bottom</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>top</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>right</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>left</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>inside</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>insideLeft</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>insideRight</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QLabel" name="label_18">
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Text Width</string>
+            <string>Func Color</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="3">
-          <widget class="QSpinBox" name="spinBox_tf_link_net_text_width">
-           <property name="maximum">
-            <number>9999</number>
-           </property>
-           <property name="singleStep">
-            <number>10</number>
-           </property>
-           <property name="value">
-            <number>300</number>
-           </property>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_tf_link_net_taxa_sahpe">
+           <item>
+            <property name="text">
+             <string>circle</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>rect</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>roundRect</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>triangle</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>diamond</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>pin</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>arrow</string>
+            </property>
+           </item>
           </widget>
          </item>
-         <item row="4" column="4">
-          <widget class="QLabel" name="label_19">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_13">
            <property name="text">
-            <string>Gravity</string>
+            <string>Line Color</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="5">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_tf_link_net_gravity">
-           <property name="maximum">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.200000000000000</double>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_tf_link_net_line_color">
+           <property name="text">
+            <string>#9aa7b1</string>
            </property>
           </widget>
          </item>
         </layout>
        </item>
-       <item row="0" column="3">
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Taxa-Functions Link Network</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
           <widget class="QLabel" name="label_2">
@@ -593,6 +652,59 @@
              <string>sqeuclidean</string>
             </property>
            </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Network Global</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>HeatMap</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_3">
+      <attribute name="label">
+       <string>Others</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_11">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_23">
+         <property name="text">
+          <string>Protein Infer</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_protein_infer_greedy_mode">
+           <item>
+            <property name="text">
+             <string>fast</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>normal</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>Greedy Mode in Razor Method</string>
+           </property>
           </widget>
          </item>
         </layout>
