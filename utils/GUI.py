@@ -240,6 +240,9 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
         
+        # update in condition combobox to multi checkable
+        self.update_in_condition_combobox()
+        
         # link double click event to list widget
         self.listWidget_table_list.itemDoubleClicked.connect(self.show_table_in_list)
         self.listWidget_tfnet_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
@@ -632,8 +635,14 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 meta_name = comboBox.currentText()
                 group_list = self.tfa.meta_df[meta_name].unique().tolist()
-                getattr(self, group_name).clear()
+                getattr(self, group_name).clear() # clear the comboBox list
                 getattr(self, group_name).addItems(group_list)
+                try:
+                    getattr(self, group_name).unselectAll() # unselect all items
+                    # select 1st item
+                    getattr(self, group_name).select_first()
+                except:
+                    pass
             except Exception as e:
                 print(e)
         
@@ -2649,7 +2658,60 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.add_basic_heatmap_list()
         
 
-    
+    def update_in_condition_combobox(self):
+        '''
+        Update condition_group comboBox to enable multi condition selection
+        '''
+        combobox_layout_dict = {
+            self.horizontalLayout_68: 'comboBox_basic_condition_group',
+            self.horizontalLayout_67: 'comboBox_basic_heatmap_condition_group',
+            self.horizontalLayout_70: 'comboBox_ttest_condition_group',
+            self.horizontalLayout_71: 'comboBox_anova_condition_group',
+            self.horizontalLayout_72: 'comboBox_tukey_condition_group',
+            self.horizontalLayout_73: 'comboBox_group_control_condition_group',
+            self.horizontalLayout_74: 'comboBox_co_expression_condition_group',
+            self.horizontalLayout_75: 'comboBox_deseq2_condition_group',
+            self.horizontalLayout_76: 'comboBox_trends_condition_group',
+            self.horizontalLayout_77: 'comboBox_tflink_condition_group',
+            self.horizontalLayout_80: 'comboBox_tfnetwork_condition_group',
+        }
+        
+        for layout, combobox_name in combobox_layout_dict.items():
+            try:
+                layout.itemAt(0).widget().deleteLater()
+            except Exception as e:
+                pass
+            new_combobox = CheckableComboBox()
+            setattr(self, combobox_name, new_combobox)
+            layout.addWidget(new_combobox)
+            # set as disabled
+            new_combobox.setEnabled(False)
+
+        # reconnect the signal and slot
+        signnal_slot_dict = {
+            self.checkBox_basic_in_condtion: 'comboBox_basic_condition_group',
+            self.checkBox_basic_heatmap_in_condition: 'comboBox_basic_heatmap_condition_group',
+            self.checkBox_ttest_in_condition: 'comboBox_ttest_condition_group',
+            self.checkBox_anova_in_condition: 'comboBox_anova_condition_group',
+            self.checkBox_tukey_in_condition: 'comboBox_tukey_condition_group',
+            self.checkBox_group_control_in_condition: 'comboBox_group_control_condition_group',
+            self.checkBox_co_expression_in_condition: 'comboBox_co_expression_condition_group',
+            self.checkBox_deseq2_comparing_in_condition: 'comboBox_deseq2_condition_group',
+            self.checkBox_trends_in_condition: 'comboBox_trends_condition_group',
+            self.checkBox_tflink_in_condition: 'comboBox_tflink_condition_group',
+            self.checkBox_tfnetwork_in_condition: 'comboBox_tfnetwork_condition_group',
+        }
+
+        # when checkBox is checked, enable the comboBox
+        def enable_combobox_by_checkbox(checkbox, combobox_name):
+            if checkbox.isChecked():
+                getattr(self, combobox_name).setEnabled(True)
+            else:
+                getattr(self, combobox_name).setEnabled(False)
+
+        for checkbox, combobox_name in signnal_slot_dict.items():
+            checkbox.stateChanged.connect(lambda state, cb=checkbox, cmb_name=combobox_name: enable_combobox_by_checkbox(cb, cmb_name))
+        
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
         if meta_name == None:
@@ -3176,7 +3238,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         top_num = self.spinBox_basic_heatmap_top_num.value()
         filtered = self.checkBox_basic_heatmap_top_filtered.isChecked()
         in_condition = (
-            [self.comboBox_basic_heatmap_condition_meta.currentText(), self.comboBox_basic_heatmap_condition_group.currentText()]
+            [self.comboBox_basic_heatmap_condition_meta.currentText(), self.comboBox_basic_heatmap_condition_group.getCheckedItems()]
             if self.checkBox_basic_heatmap_in_condition.isChecked() else None
         )    
         # get sample list
@@ -3253,7 +3315,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         if self.radioButton_co_expr_bygroup.isChecked(): # select by group
             group_list = self.comboBox_co_expr_group.getCheckedItems()
             in_condition = (
-                [self.comboBox_co_expression_condition_meta.currentText(), self.comboBox_co_expression_condition_group.currentText()]
+                [self.comboBox_co_expression_condition_meta.currentText(), self.comboBox_co_expression_condition_group.getCheckedItems()]
                 if self.checkBox_co_expression_in_condition.isChecked() else None
             )
             sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
@@ -3294,7 +3356,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # get sample list
         if self.radioButton_basic_heatmap_group.isChecked():
             condition = [self.comboBox_basic_heatmap_condition_meta.currentText(),
-                         self.comboBox_basic_heatmap_condition_group.currentText()]\
+                         self.comboBox_basic_heatmap_condition_group.getCheckedItems()]\
                              if self.checkBox_basic_heatmap_in_condition.isChecked() else None
                              
             group_list = self.comboBox_basic_group.getCheckedItems()
@@ -3549,7 +3611,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         group_list = self.comboBox_trends_group.getCheckedItems()
         filtered = self.checkBox_trends_top_filtered.isChecked()
         in_condition = (
-            [self.comboBox_trends_condition_meta.currentText(), self.comboBox_trends_condition_group.currentText()]
+            [self.comboBox_trends_condition_meta.currentText(), self.comboBox_trends_condition_group.getCheckedItems()]
             if self.checkBox_trends_in_condition.isChecked() else None
         )
         
@@ -3588,7 +3650,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # get sample list and check if the sample list at least has 2 groups
         if self.radioButton_trends_group.isChecked():
             condition = [self.comboBox_trends_condition_meta.currentText(),
-                            self.comboBox_trends_condition_group.currentText()]\
+                            self.comboBox_trends_condition_group.getCheckedItems()]\
                                 if self.checkBox_trends_in_condition.isChecked() else None
                                 
             group_list = self.comboBox_trends_group.getCheckedItems()
@@ -3684,7 +3746,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         font_size = self.spinBox_trends_font_size.value()
         
         condition = [self.comboBox_trends_condition_meta.currentText(),
-                     self.comboBox_trends_condition_group.currentText()]\
+                     self.comboBox_trends_condition_group.getCheckedItems()]\
                          if self.checkBox_trends_in_condition.isChecked() else None
         
         save_table_name = f'cluster({table_name.lower()})'
@@ -3757,7 +3819,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         save_table_name = f'cluster({table_name.lower()})'
         plot_samples = self.checkBox_trends_plot_interactive_plot_samples.isChecked()
         condition = [self.comboBox_trends_condition_meta.currentText(),
-                        self.comboBox_trends_condition_group.currentText()]\
+                        self.comboBox_trends_condition_group.getCheckedItems()]\
                             if self.checkBox_trends_in_condition.isChecked() else None
 
         try:
@@ -4016,7 +4078,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # get sample list when plot by group
         if self.radioButton_basic_pca_group.isChecked():
             condition = [self.comboBox_basic_condition_meta.currentText(), 
-                         self.comboBox_basic_condition_group.currentText()] \
+                         self.comboBox_basic_condition_group.getCheckedItems()] \
                             if self.checkBox_basic_in_condtion.isChecked() else None
                 
             group_list = self.comboBox_basic_pca_group.getCheckedItems() 
@@ -4370,7 +4432,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df_type = self.comboBox_table_for_anova.currentText().lower()
             
             condition = [self.comboBox_anova_condition_meta.currentText(),
-                            self.comboBox_anova_condition_group.currentText()] \
+                            self.comboBox_anova_condition_group.getCheckedItems()] \
                                 if self.checkBox_anova_in_condition.isChecked() else None
 
             group_list = self.comboBox_anova_group.getCheckedItems()
@@ -4468,7 +4530,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         df_type = self.comboBox_table_for_dunnett.currentText().lower()
         
         condition = [self.comboBox_group_control_condition_meta.currentText(),
-                        self.comboBox_group_control_condition_group.currentText()] \
+                        self.comboBox_group_control_condition_group.getCheckedItems()] \
                             if self.checkBox_group_control_in_condition.isChecked() else None
         all_condition_meta = self.comboBox_group_control_comparing_each_condition_meta.currentText()
                             
@@ -4576,7 +4638,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         func = self.remove_pep_num_str_and_strip(self.comboBox_tukey_func.currentText())
         
-        condition = [self.comboBox_tukey_condition_meta.currentText(), self.comboBox_tukey_condition_group.currentText()] \
+        condition = [self.comboBox_tukey_condition_meta.currentText(), self.comboBox_tukey_condition_group.getCheckedItems()] \
             if self.checkBox_tukey_in_condition.isChecked() else None
         
         if taxa == '' and func == '':
@@ -4620,7 +4682,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         group1 = self.comboBox_ttest_group1.currentText()
         group2 = self.comboBox_ttest_group2.currentText()
         df_type = self.comboBox_table_for_ttest.currentText().lower()
-        condition = [self.comboBox_ttest_condition_meta.currentText(), self.comboBox_ttest_condition_group.currentText()] \
+        condition = [self.comboBox_ttest_condition_meta.currentText(), self.comboBox_ttest_condition_group.getCheckedItems()] \
             if self.checkBox_ttest_in_condition.isChecked() else None
             
         if group1 is None or group2 is None:
@@ -4720,11 +4782,12 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
-        
+
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
-            condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.currentText()]
+            condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.getCheckedItems()]
             try:
-                self.tfa.check_if_condition_valid(condition_meta = condition[0], condition_group = condition[1], current_group_list = [group1, group2])
+                for cond_group in condition[1]:
+                    self.tfa.check_if_condition_valid(condition_meta = condition[0], condition_group = cond_group, current_group_list = [group1, group2])
             except Exception as e:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
                 return None
@@ -4846,7 +4909,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 # print(f'Plot with selected samples:{sample_list}')
         elif self.radioButton_co_expr_bygroup.isChecked():
             condition = [self.comboBox_co_expression_condition_meta.currentText(), 
-                         self.comboBox_co_expression_condition_group.currentText()] \
+                         self.comboBox_co_expression_condition_group.getCheckedItems()] \
                 if self.checkBox_co_expression_in_condition.isChecked() else None
             
             
@@ -4998,7 +5061,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
         else: # by group
             in_condition = (
-                [self.comboBox_tfnetwork_condition_meta.currentText(), self.comboBox_tfnetwork_condition_group.currentText()]
+                [self.comboBox_tfnetwork_condition_meta.currentText(), self.comboBox_tfnetwork_condition_group.getCheckedItems()]
                 if self.checkBox_tfnetwork_in_condition.isChecked() else None
             )
             group_list = self.comboBox_network_group.getCheckedItems()
@@ -5078,18 +5141,21 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_tf_link_net_rename_taxa.isChecked()
         font_size = self.spinBox_network_font_size.value()
         
-        
-        if self.radioButton_network_bysample.isChecked():
+        if self.radioButton_network_bysample.isChecked(): # by sample
             slected_list = self.comboBox_network_sample.getCheckedItems()
-            sample_list = slected_list
+            if slected_list:
+                sample_list = slected_list
+            else:
+                sample_list = self.tfa.sample_list
 
-                # print(f'Plot with selected samples:{sample_list}')
-        elif self.radioButton_network_bygroup.isChecked():
-            groups = self.comboBox_network_group.getCheckedItems()
-            sample_list = []
-            for group in groups:
-                sample_list += self.tfa.get_sample_list_in_a_group(group)
-            # print(f'Plot with selected groups:{groups} and samples:{sample_list}')
+        else: # by group
+            in_condition = (
+                [self.comboBox_tfnetwork_condition_meta.currentText(), self.comboBox_tfnetwork_condition_group.getCheckedItems()]
+                if self.checkBox_tfnetwork_in_condition.isChecked() else None
+            )
+            group_list = self.comboBox_network_group.getCheckedItems()
+            sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
+
         try:
             self.show_message('Plotting network...')
             pic = NetworkPlot(self.tfa,
@@ -5143,7 +5209,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # get sample list
         if self.radioButton_tflink_group.isChecked(): # by group
             in_condition = (
-                [self.comboBox_tflink_condition_meta.currentText(), self.comboBox_tflink_condition_group.currentText()]
+                [self.comboBox_tflink_condition_meta.currentText(), self.comboBox_tflink_condition_group.getCheckedItems()]
                 if self.checkBox_tflink_in_condition.isChecked() else None
             )
             group_list = self.comboBox_tflink_group.getCheckedItems()

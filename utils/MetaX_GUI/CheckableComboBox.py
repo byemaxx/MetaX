@@ -108,3 +108,8 @@ class CheckableComboBox(QtWidgets.QComboBox):
             item = self.model().item(i, 0)
             item.setCheckState(QtCore.Qt.Unchecked)
         self.checkedItemsOrder = []  # 清空勾选顺序列表
+    
+    def select_first(self):
+        item = self.model().item(0, 0)
+        item.setCheckState(QtCore.Qt.Checked)
+        self.checkedItemsOrder.append(item.text())

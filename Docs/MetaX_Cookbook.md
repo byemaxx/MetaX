@@ -23,7 +23,7 @@ Visit **Github** to get more information:
 
 
 
-# Get Start
+# Getting Started
 
 - The main window of MetaX
 

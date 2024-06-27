@@ -1,3 +1,8 @@
+# Version: 1.108.0
+## Date: 2024-06-27
+### Changes:
+- New: Enable multiple selection for the in condition group box.
+
 # Version: 1.107.8
 ## Date: 2024-06-26
 ### Changes:
