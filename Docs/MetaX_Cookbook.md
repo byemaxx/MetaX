@@ -230,19 +230,20 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
 - **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
   - Razor:
     1. Build a minimal set of proteins to cover all peptides.
-    2. For each peptide, choose the protein which has most peptides (if multiple proteins have the same number of peptides, share intensity to them).
+    2. For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).
   - Anti-Razor:
-    - All proteins are shared the intensity of each peptide.
+    - All proteins share the intensity of each peptide.
   - Rank:
     1. Build the rank of proteins.
     2. Choose the protein with a higher rank for the shared peptide.
-
-
-- **Methods to Build Protein Rank:**
-  - unique_counts: Use the counts of proteins inferred by unique peptides.
-  - all_count: Use the counts of all proteins.
-  - unique_intensity: Use the intensity of proteins inferred by unique peptides.
-  - shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
+    
+    
+    - **Methods to Build Protein Rank:**
+      - unique_counts: Use the counts of proteins inferred by unique peptides.
+      - all_count: Use the counts of all proteins.
+      - unique_intensity: Use the intensity of proteins inferred by unique peptides.
+      - shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
+    
 
 ### Data preprocessing
 
@@ -424,6 +425,8 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - **Rename Samples**: Add group info to each sample name
   - **Rename Taxa**: Only keep the last taxonomic level to reduce to name
   - **Plot Mean**: calculate the mean of each group before plotting
+    
+  - **Sub Meta:** select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
     - **<u>For Heatmap</u>**
       - **Theme**: The theme of the heatmap
       - **scale**: Scale method of the heatmap

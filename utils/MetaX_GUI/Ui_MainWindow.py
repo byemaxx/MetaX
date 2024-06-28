@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -145,7 +145,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 496, 377))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 496, 373))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -1126,15 +1126,6 @@ class Ui_metaX_main(object):
         self.pushButton_basic_heatmap_sankey_plot.setSizePolicy(sizePolicy)
         self.pushButton_basic_heatmap_sankey_plot.setObjectName("pushButton_basic_heatmap_sankey_plot")
         self.gridLayout_39.addWidget(self.pushButton_basic_heatmap_sankey_plot, 2, 0, 1, 1)
-        self.pushButton_basic_heatmap_plot = QtWidgets.QPushButton(self.tab_13)
-        self.pushButton_basic_heatmap_plot.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_basic_heatmap_plot.sizePolicy().hasHeightForWidth())
-        self.pushButton_basic_heatmap_plot.setSizePolicy(sizePolicy)
-        self.pushButton_basic_heatmap_plot.setObjectName("pushButton_basic_heatmap_plot")
-        self.gridLayout_39.addWidget(self.pushButton_basic_heatmap_plot, 0, 0, 2, 1)
         self.pushButton_basic_bar_plot = QtWidgets.QPushButton(self.tab_13)
         self.pushButton_basic_bar_plot.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
@@ -1147,6 +1138,18 @@ class Ui_metaX_main(object):
         self.comboBox_3dbar_sub_meta = QtWidgets.QComboBox(self.tab_13)
         self.comboBox_3dbar_sub_meta.setObjectName("comboBox_3dbar_sub_meta")
         self.gridLayout_39.addWidget(self.comboBox_3dbar_sub_meta, 0, 1, 1, 1)
+        self.pushButton_basic_heatmap_plot = QtWidgets.QPushButton(self.tab_13)
+        self.pushButton_basic_heatmap_plot.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pushButton_basic_heatmap_plot.sizePolicy().hasHeightForWidth())
+        self.pushButton_basic_heatmap_plot.setSizePolicy(sizePolicy)
+        self.pushButton_basic_heatmap_plot.setObjectName("pushButton_basic_heatmap_plot")
+        self.gridLayout_39.addWidget(self.pushButton_basic_heatmap_plot, 1, 0, 1, 1)
+        self.label_164 = QtWidgets.QLabel(self.tab_13)
+        self.label_164.setObjectName("label_164")
+        self.gridLayout_39.addWidget(self.label_164, 0, 0, 1, 1)
         self.gridLayout_23.addLayout(self.gridLayout_39, 6, 9, 1, 1)
         self.line_8 = QtWidgets.QFrame(self.tab_13)
         self.line_8.setFrameShape(QtWidgets.QFrame.VLine)
@@ -4261,7 +4264,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1059, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -4321,9 +4324,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(6)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(0)
+        self.tabWidget_4.setCurrentIndex(1)
         self.tabWidget_3.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(0)
@@ -4355,6 +4358,7 @@ class Ui_metaX_main(object):
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.checkBox_sunburst_show_all_lables.setEnabled) # type: ignore
         self.checkBox_pca_if_show_lable.clicked['bool'].connect(self.doubleSpinBox_basic_pca_label_font_transparency.setEnabled) # type: ignore
         self.checkBox_basic_in_condtion.clicked['bool'].connect(self.comboBox_basic_condition_group.setEnabled) # type: ignore
+        self.checkBox_basic_heatmap_plot_mean.clicked['bool'].connect(self.comboBox_3dbar_sub_meta.setDisabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(metaX_main)
         metaX_main.setTabOrder(self.comboBox_taxa_level_to_stast, self.toolButton_meta_table_help)
         metaX_main.setTabOrder(self.toolButton_meta_table_help, self.comboBox_function_to_stast)
@@ -4562,9 +4566,10 @@ class Ui_metaX_main(object):
         self.radioButton_basic_heatmap_sample.setText(_translate("metaX_main", "Sample"))
         self.pushButton_basic_heatmap_get_table.setText(_translate("metaX_main", "Get Table"))
         self.pushButton_basic_heatmap_sankey_plot.setText(_translate("metaX_main", "Plot  Sankey"))
-        self.pushButton_basic_heatmap_plot.setText(_translate("metaX_main", "Plot Heatmap"))
         self.pushButton_basic_bar_plot.setText(_translate("metaX_main", "Plot Bar"))
         self.comboBox_3dbar_sub_meta.setToolTip(_translate("metaX_main", "Sub Meta for Bar Plot"))
+        self.pushButton_basic_heatmap_plot.setText(_translate("metaX_main", "Plot Heatmap"))
+        self.label_164.setText(_translate("metaX_main", "Sub Meta "))
         self.checkBox_basic_heatmap_in_condition.setText(_translate("metaX_main", "In Condition"))
         self.label_34.setText(_translate("metaX_main", "List for Plotting"))
         self.pushButton_basic_heatmap_add.setToolTip(_translate("metaX_main", "Add selected item to the drawing box"))

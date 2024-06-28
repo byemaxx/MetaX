@@ -1,3 +1,9 @@
+# Version: 1.108.1
+## Date: 2024-06-27
+### Changes:
+- New: Add Sub Meta option for the basic Heatmap plot.
+
+
 # Version: 1.108.0
 ## Date: 2024-06-27
 ### Changes:

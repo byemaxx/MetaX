@@ -290,10 +290,11 @@ class HeatmapPlot:
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple|None = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
-                    show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False
+                    show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False,
+                    sub_meta: str = "None"
                     ):
         
-        if plot_mean:
+        if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
             df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
             rename_sample = False
             
@@ -322,11 +323,31 @@ class HeatmapPlot:
         if fig_size is None:
             fig_size = (30,30)
 
+        if sub_meta != 'None':
+            # group_list = (
+            #     [self.tfa.get_group_of_a_sample(i, sub_meta) for i in mat.columns]
+            #     if not plot_mean
+            #     else mat.columns.tolist()
+            # )
+            sample_groups = {sample: self.tfa.get_group_of_a_sample(sample, self.tfa.meta_name) for sample in mat.columns}
+            sub_groups = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in mat.columns}
 
-        if rename_sample:
-            mat, group_list = self.tfa.add_group_name_for_sample(mat)
+            # 合并同一meta和submeta的样本，计算平均值
+            grouped_data = mat.T.groupby([sample_groups, sub_groups]).mean().T
+            
+            # group_list is the sub_meta group
+            group_list = [i[1] for i in grouped_data.columns] if not plot_mean else grouped_data.columns.tolist()
+            
+            # convert multi-index to single index
+            grouped_data.columns = ['_'.join(col).strip() for col in grouped_data.columns.values]
+            
+            mat = grouped_data
+            
         else:
-            group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns] if not plot_mean else mat.columns.tolist()
+            if rename_sample:
+                mat, group_list = self.tfa.add_group_name_for_sample(mat)
+            else:
+                group_list = [self.tfa.get_group_of_a_sample(i) for i in mat.columns] if not plot_mean else mat.columns.tolist()
         
         color_list = self.assign_colors(group_list)
 

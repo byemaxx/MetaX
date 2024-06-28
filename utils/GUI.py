@@ -308,7 +308,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         # set change event
         self.checkBox_create_protein_table.stateChanged.connect(self.change_event_checkBox_create_protein_table)
         self.comboBox_method_of_protein_inference.currentIndexChanged.connect(self.update_method_of_protein_inference)
-        
+        self.comboBox_3dbar_sub_meta.currentIndexChanged.connect(self.change_event_comboBox_3dbar_sub_meta)
 
         ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
@@ -709,6 +709,19 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.settings.setValue("protein_infer_greedy_mode", method)
         print(f"Protein infering razor mode changed to: {method}")
     
+    def change_event_comboBox_3dbar_sub_meta(self):
+        # when the sub_meta comboBox is not None, the mean plot is not available
+        if self.comboBox_3dbar_sub_meta.currentText() != 'None':
+            self.checkBox_basic_heatmap_plot_mean.setEnabled(False)
+        else:
+            self.checkBox_basic_heatmap_plot_mean.setEnabled(True)
+        
+        # if self.checkBox_basic_heatmap_plot_mean.isChecked():
+        #     self.comboBox_3dbar_sub_meta.setEnabled(False)
+        # else:
+        #     self.comboBox_3dbar_sub_meta.setEnabled(True)
+
+        
     ###############   basic function End   ###############
     
     
@@ -2074,26 +2087,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
     #### Help info function End ####
 
-
-    #### Deprecated Function ####
-    #### TaxaFuncAnalyzer Function ####
-    # def check_tables_for_taxaFuncAnalyzer(self, taxafunc_path, meta_path):
-    #     try:
-    #         taxafunc_table = pd.read_csv(taxafunc_path, sep='\t', index_col=0,header=0)
-    #         meta_table = pd.read_csv(meta_path, sep='\t', index_col=0,header=0)
-    #         taxafunc_column_names = taxafunc_table.columns.tolist()
-    #         if 'Taxon_prop' not in taxafunc_column_names:
-    #             QMessageBox.warning(self.MainWindow, 'Warning', 'TaxaFunc table looks like not correct, please check!')
-    #             return False
-    #         meta_column_names = meta_table.columns.tolist()
-    #         if len(meta_column_names) < 1:
-    #             print(meta_column_names)
-    #             QMessageBox.warning(self.MainWindow, 'Warning', 'The meta table only has one column, please check!\n\nPlease make sure the first column is sample name and the following columns are meta information!\n\n And make sure the meta table is TSV format (table separated by tab)\n\nPlease check!')
-    #             return False
-    #     except Exception as e:
-    #         QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
-    #         return False
-    #### Deprecated Function ####
      
     def show_taxaFuncAnalyzer_init(self):
         original_row_num = self.tfa.original_row_num
@@ -2804,8 +2797,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         self.comboBox_others_taxa.addItem('')
         self.comboBox_others_taxa.addItems(self.taxa_list_linked)
     
-
-    
     
     def update_combobox_and_label(self, current_text, type, label, comboBox):
         if not current_text:
@@ -3263,7 +3254,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             df_type = self.comboBox_basic_table.currentText()
             self.add_a_list_to_list_window(df_type, aim_list='basic_heatmap', str_list=items, input_mode = False)
 
-
     
     def add_a_list_to_co_expr(self):
         df_type = self.comboBox_co_expr_table.currentText()
@@ -3461,7 +3451,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels, rename_sample=rename_sample,
-                                                         plot_mean = plot_mean)
+                                                         plot_mean = plot_mean, sub_meta = self.comboBox_3dbar_sub_meta.currentText())
                                                          
             
             elif plot_type == 'bar':
@@ -3888,8 +3878,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'save_and_show_js_plot error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
 
-        
-        
     
     def peptide_query(self):
         if self.tfa.any_df_mode:
@@ -4016,8 +4004,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
         self.show_message('Plotting taxa number...')
         BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num, theme=theme, res_type='show', font_size = font_size)
-
-
         
 
     def plot_peptide_num_in_func(self):
@@ -4041,8 +4027,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             
             self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
             self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
-
-   
 
     
     def plot_basic_info_sns(self, method:str ='pca'):

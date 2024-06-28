@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -240,7 +240,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>496</width>
-                 <height>377</height>
+                 <height>373</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1320,7 +1320,7 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -2246,22 +2246,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0" rowspan="2">
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Plot Heatmap</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="1">
                    <widget class="QPushButton" name="pushButton_basic_bar_plot">
                     <property name="enabled">
@@ -2282,6 +2266,29 @@
                    <widget class="QComboBox" name="comboBox_3dbar_sub_meta">
                     <property name="toolTip">
                      <string>Sub Meta for Bar Plot</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot Heatmap</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_164">
+                    <property name="text">
+                     <string>Sub Meta </string>
                     </property>
                    </widget>
                   </item>
@@ -8099,7 +8106,7 @@
      <x>0</x>
      <y>0</y>
      <width>1059</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -8232,12 +8239,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>149</y>
+     <x>156</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>318</x>
-     <y>151</y>
+     <x>156</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8248,12 +8255,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>149</y>
+     <x>156</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>418</x>
-     <y>151</y>
+     <x>156</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8328,12 +8335,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>114</y>
+     <x>184</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>114</y>
+     <x>259</x>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -8344,12 +8351,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>114</y>
+     <x>184</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>114</y>
+     <x>336</x>
+     <y>151</y>
     </hint>
    </hints>
   </connection>
@@ -8360,12 +8367,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>202</x>
-     <y>149</y>
+     <x>161</x>
+     <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>277</x>
-     <y>151</y>
+     <x>161</x>
+     <y>136</y>
     </hint>
    </hints>
   </connection>
@@ -8376,12 +8383,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>202</x>
-     <y>149</y>
+     <x>161</x>
+     <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>352</x>
-     <y>151</y>
+     <x>161</x>
+     <y>136</y>
     </hint>
    </hints>
   </connection>
@@ -8424,12 +8431,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>569</x>
-     <y>240</y>
+     <x>137</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
-     <x>752</x>
-     <y>241</y>
+     <x>137</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -8440,12 +8447,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>569</x>
-     <y>240</y>
+     <x>137</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
-     <x>936</x>
-     <y>241</y>
+     <x>137</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -8622,6 +8629,22 @@
     <hint type="destinationlabel">
      <x>404</x>
      <y>193</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_basic_heatmap_plot_mean</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>comboBox_3dbar_sub_meta</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>924</x>
+     <y>350</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>969</x>
+     <y>397</y>
     </hint>
    </hints>
   </connection>
