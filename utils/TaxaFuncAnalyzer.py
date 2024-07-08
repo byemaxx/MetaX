@@ -129,8 +129,8 @@ class TaxaFuncAnalyzer:
                 meta = pd.DataFrame({'Sample': self.sample_list, 'Group_NA': 'NA', 'Sample_Name': self.sample_list})
                 self.meta_df = meta
         else:
-            # read table without fill na
-            meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False)
+            # read table without fill na, and as string
+            meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False, dtype=str)
             # sample name must be in the first column
             # rename the first column to Sample
             meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
