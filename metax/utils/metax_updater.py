@@ -47,7 +47,7 @@ class Updater:
 
 
     def set_init_path(self):
-        self.remote_version_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/utils/version.py"
+        self.remote_version_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/metax/utils/version.py"
         self.remote_change_log_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/Docs/ChangeLog.md"
         self.remote_project_zip_download_path = f"https://github.com/byemaxx/MetaX/archive/refs/heads/{self.branch}.zip"
 
@@ -178,6 +178,7 @@ class Updater:
             # MetaX folder path is this file's parent and the parent's parent
             current_script_path = os.path.dirname(os.path.abspath(__file__))
             metax_folder_path = os.path.dirname(current_script_path)
+            metax_folder_path = os.path.dirname(metax_folder_path)
             print(f"MetaX folder path: {metax_folder_path}")
             
             #remove all files in the metax folder, except the __pycache__ folder and data folder and tsv files
@@ -373,4 +374,4 @@ if __name__ == "__main__":
     updater.check_update(show_message=True)
     
 
-    sys.exit(app.exec_())  # 启动事件循环
+    sys.exit(app.exec_()) 
