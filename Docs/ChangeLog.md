@@ -1,3 +1,9 @@
+# Version: 1.108.6
+## Date: 2024-07-11
+### Changes:
+- Change: Optimized file structure and code structure, make easlier to install and run the MetaX by pip or conda.
+
+
 # Version: 1.108.5
 ## Date: 2024-07-11
 ### Changes:

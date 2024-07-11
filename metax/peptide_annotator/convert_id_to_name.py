@@ -39,7 +39,7 @@ def download_ko_files(save_path):
 
 def parse_dat_file(file_path):
     if not os.path.exists(file_path):
-        print(f'Error: {file_path} does not exist! Try to download the file from https://ftp.expasy.org/databases/enzyme/enzyme.dat')
+        print(f'{file_path} does not exist!\nTry to download the file from https://ftp.expasy.org/databases/enzyme/enzyme.dat')
         download_ec_files(os.path.dirname(file_path))
         
     with open(file_path, 'r') as file:
@@ -110,7 +110,7 @@ def get_pathway_dict():
     script_path = os.path.dirname(os.path.realpath(__file__))
     dat_path = os.path.join(script_path, '../data/pathway.tsv')
     if not os.path.exists(dat_path):
-        print(f'Error: {dat_path} does not exist! Try to download the file from https://rest.kegg.jp/list/pathway')
+        print(f'{dat_path} does not exist!\nTry to download the file from https://rest.kegg.jp/list/pathway')
         download_kegg_files(os.path.dirname(dat_path))
         
     # create a dictionary of pathway IDs and names
@@ -231,7 +231,7 @@ def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     script_path = os.path.dirname(os.path.realpath(__file__))
     ko_path = os.path.join(script_path, '../data/ko.tsv')
     if not os.path.exists(ko_path):
-        print(f'Error: {ko_path} does not exist! Try to download the file from https://rest.kegg.jp/list/ko')
+        print(f'{ko_path} does not exist!\nTry to download the file from https://rest.kegg.jp/list/ko')
         download_ko_files(os.path.dirname(ko_path))
     ko_dict = {}
     with open(ko_path, 'r') as f:

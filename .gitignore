@@ -7,4 +7,7 @@ local_tests/
 *.db
 .gitignore
 .gitattributes
-.gitignore
+dist
+MetaXTools.egg-info
+.pypirc
+RE_build.md

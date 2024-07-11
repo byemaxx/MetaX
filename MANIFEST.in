@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+recursive-include metax/data/example_data *
+recursive-include metax/gui/metax_gui/resources *
