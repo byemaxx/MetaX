@@ -1,7 +1,7 @@
-# Version: 1.108.4
+# Version: 1.108.5
 ## Date: 2024-07-11
 ### Changes:
-- New: Add a option only show the fcous list items in the Taxa-Functions Network plot without any other linked items.
+- Fix: Fixed the Settting window was not able to minimize (Not perfect yet, need to be fixed in the future).
 
 # Version: 1.108.2
 ## Date: 2024-07-08

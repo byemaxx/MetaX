@@ -700,7 +700,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if self.settings_dialog is None:
             self.settings_dialog = QDialog(self.MainWindow)
             self.settings_dialog.setWindowTitle("Settings")
-            self.settings_dialog.setModal(False) 
+            self.settings_dialog.setModal(False)
+            self.settings_dialog.setWindowFlags(self.settings_dialog.windowFlags() | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint)
             layout = QVBoxLayout(self.settings_dialog)
             self.settings_dialog.resize(900, 600)
             # General settings

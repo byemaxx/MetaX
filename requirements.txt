@@ -3,8 +3,8 @@ fastcluster>=1.2.6
 matplotlib>=3.7.2
 numpy>=1.25.1
 pandas>=2.0.3
-pydeseq2==0.4.8
-pyecharts==2.0.5
+pydeseq2==0.4.10
+pyecharts==2.0.6
 PyQt5==5.15.9
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.12.1
