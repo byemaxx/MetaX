@@ -24,7 +24,8 @@ class NetworkPlot:
                 theme="white",
                 label_position="bottom",
                 text_width = 300,
-                gravity = 0.2
+                gravity = 0.2,
+                show_sub_title = True,
                 
                  ):
         
@@ -56,8 +57,13 @@ class NetworkPlot:
         self.text_width = text_width
         self.gravity = gravity
         
+        self.show_sub_title = show_sub_title
+        
 
     def modify_focus_list(self, focus_list):
+        '''
+        Split the taxa-func item into taxa and function if it's in the focus_list
+        '''
         new_focus_list = []
         for i in focus_list:
             if i.startswith('d__'):
@@ -143,8 +149,10 @@ class NetworkPlot:
                 df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
             print(f"New df shape: {df.shape}")
             
-        taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
-        function_sum = df.groupby('function')['sum'].sum().to_dict()
+        # taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
+        taxa_sum = df[df['taxa'] != ""].groupby('taxa')['sum'].sum().to_dict()
+        # function_sum = df.groupby('function')['sum'].sum().to_dict()
+        function_sum = df[df['function'] != ""].groupby('function')['sum'].sum().to_dict()
 
         min_value = min(min(taxa_sum.values()), min(function_sum.values()))
         max_value = max(max(taxa_sum.values()), max(function_sum.values()))
@@ -155,8 +163,9 @@ class NetworkPlot:
             scaled_value = 100 * (value - min_value) / (max_value - min_value)
             return max(scaled_value, 10)
 
-        taxa = df["taxa"].unique().tolist()
-        functions = df["function"].unique().tolist()
+        taxa = [i for i in df["taxa"].unique() if i != ""]
+        functions = [i for i in df["function"].unique() if i != ""]
+        
         nodes = []
         if focus_list is not None and len(focus_list) > 0:
             for taxon in taxa:
@@ -172,7 +181,8 @@ class NetworkPlot:
                 else:
                     nodes.append({"name": function, "category": 2, "symbolSize": normalize(function_sum[function]), "value": function_sum[function], "symbol": symbol})
 
-            links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows()]
+            
+            links = [{"source": row["taxa"], "target": row["function"]} for _, row in df.iterrows() if row["function"] != "" and row["taxa"] != ""]
 
             categories = [
                 {"name": "Taxa", "itemStyle": {"normal": {"color": self.taxa_color}}},
@@ -220,8 +230,7 @@ class NetworkPlot:
         Returns:
         - A Pyecharts Graph object that can be displayed in Jupyter notebooks or web pages.
         """
-        if focus_list is None:
-            focus_list = []
+
         # preprocess focus_list
         if focus_list is not None and focus_list:
             new_list = []
@@ -238,6 +247,7 @@ class NetworkPlot:
                     print(f"Warning: {i} is not in taxa or function list")
             nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only, list_only_no_link)
         else:
+            focus_list = []
             nodes, links, categories = self.create_nodes_links(sample_list)
 
 
@@ -275,7 +285,7 @@ class NetworkPlot:
             .set_global_opts(
                 title_opts=opts.TitleOpts(
                     title= "Taxa-Functions Network",
-                    subtitle=f"{sample_list}" if sample_list else None,
+                    subtitle= f"{sample_list}" if self.show_sub_title else None,
                     subtitle_textstyle_opts=opts.TextStyleOpts(font_size=10),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
