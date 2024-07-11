@@ -6,9 +6,9 @@ from PyQt5.QtCore import Qt
 import os
 
 
-class MyDialog(QDialog):
+class UifuncHelpDialog(QDialog):
     def __init__(self, parent=None):
-        super(MyDialog, self).__init__(parent)
+        super(UifuncHelpDialog, self).__init__(parent)
         self.setWindowTitle('Function Threshold Help')
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.resize(1400, 600)

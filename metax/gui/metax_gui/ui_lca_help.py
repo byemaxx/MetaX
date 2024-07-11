@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import Qt
 import os
 
-class MyDialog(QDialog):
+class UiLcaHelpDialog(QDialog):
     def __init__(self, parent=None):
-        super(MyDialog, self).__init__(parent)
+        super(UiLcaHelpDialog, self).__init__(parent)
         self.setWindowTitle('LCA Threshold Help')
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.resize(1400, 600)

@@ -2,9 +2,9 @@
 .vscode/
 .idea/
 .trunk/
-tests/
+local_tests/
 *.pyc
 *.db
 .gitignore
 .gitattributes
-todo.md
+.gitignore

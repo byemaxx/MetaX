@@ -1,5 +1,5 @@
 import pandas as pd
-from .reComBat import reComBat
+from .re_combat import reComBat
 import numpy as np
 from joblib import Parallel, delayed
 

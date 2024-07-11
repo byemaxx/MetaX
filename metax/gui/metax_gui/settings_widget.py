@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QToolBox
 from PyQt5.QtCore import pyqtSignal
-from .Ui_Setting import Ui_Settings
+from .ui_setting_window import Ui_Settings
 
 class SettingsWidget(QWidget):
     update_mode_changed = pyqtSignal(str)

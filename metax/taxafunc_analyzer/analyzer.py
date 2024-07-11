@@ -15,11 +15,11 @@ import pandas as pd
 from typing import Optional, Dict, List, Union
 
 # import AnalyzerUtils
-from .AnalyzerUtils.DataPreprocessing import DataPreprocessing
-from .AnalyzerUtils.SumProteinIntensity import SumProteinIntensity
-from .AnalyzerUtils.BasicStats import BasicStats
-from .AnalyzerUtils.CrossTest import CrossTest
-from .AnalyzerUtils.GetMatrix import GetMatrix
+from .AnalyzerUtils.data_preprocessing import DataPreprocessing
+from .AnalyzerUtils.sum_protein_intensity import SumProteinIntensity
+from .AnalyzerUtils.basic_stats import BasicStats
+from .AnalyzerUtils.cross_test import CrossTest
+from .AnalyzerUtils.get_matrix import GetMatrix
 
 
 import warnings

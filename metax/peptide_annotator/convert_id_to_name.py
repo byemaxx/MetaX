@@ -26,6 +26,15 @@ def download_ec_files(save_path):
     except Exception as e:
         print('Error: download enzyme.dat failed!')
         print(e)
+        
+def download_ko_files(save_path):
+    url = "https://rest.kegg.jp/list/ko"
+    try:
+        urllib.request.urlretrieve(url, os.path.join(save_path, 'ko.tsv'))
+        print(f'ko.tsv downloaded to {save_path}')
+    except Exception as e:
+        print('Error: download ko.tsv failed!')
+        print(e)
     
 
 def parse_dat_file(file_path):
@@ -165,22 +174,25 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     df['EC_CA_prop'] = df['EC_prop']
     df.fillna('-', inplace=True)
     df.replace('', '-', inplace=True)
-
+    print("Add EC columns to df successfully!")
     return df
 
 def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     def query_kegg(id_str, pathway_dict):
         id_list = id_str.split(',')
         if id_list[0] == 'not_found':
-            return '-'
+            return 'not_found'
         pathway_list = []
         for id in id_list:
             if id in pathway_dict:
                 pathway_list.append(pathway_dict[id])
         # remove duplicates
         pathway_list = list(set(pathway_list))
+        if len(pathway_list) == 0:
+            return '-'
+        
         # join the list into a string
-        pathway_list = ';'.join(pathway_list)
+        pathway_list = '|'.join(pathway_list)
         return pathway_list
     
     # check if the column 'KEGG_Pathway' exists
@@ -191,13 +203,54 @@ def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     pathway_dict = get_pathway_dict()
     df.loc[:, 'KEGG_Pathway_name'] = df['KEGG_Pathway'].apply(lambda x: query_kegg(x, pathway_dict))
     df.loc[:, 'KEGG_Pathway_name_prop'] = df['KEGG_Pathway_prop']    
-    
+    print("Add KEGG_Pathway_name to df successfully!")
     return df
 
+def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
+    def query_ko(id_str, ko_dict):
+        id_list = id_str.split(',')
+        ko_list = []
+        for ko_id in id_list:
+            if ko_id in ['not_found', '-']:
+                ko_list.append('-')
+            else:
+                ko_id = ko_id.split(':')[1]
+                ko_name = ko_dict.get(ko_id, '-')
+                ko_list.append(f'{ko_id}:{ko_name}')
+        # join the list into a string
+        ko_name_str = '|'.join(ko_list)
+        return ko_name_str
+        
+        
+    # check if the column 'KEGG_ko' exists
+    if 'KEGG_ko' not in df.columns:
+        print('KEGG_ko column does not exist!, return the original dataframe')
+        return df
+    
+    # read ko.tsv
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    ko_path = os.path.join(script_path, '../data/ko.tsv')
+    if not os.path.exists(ko_path):
+        print(f'Error: {ko_path} does not exist! Try to download the file from https://rest.kegg.jp/list/ko')
+        download_ko_files(os.path.dirname(ko_path))
+    ko_dict = {}
+    with open(ko_path, 'r') as f:
+        for line in f:
+            line = line.strip().split('\t')
+            ko_dict[line[0]] = line[1]
+    
+    df.loc[:, 'KEGG_ko_name'] = df['KEGG_ko'].apply(lambda x: query_ko(x, ko_dict))
+    df.loc[:, 'KEGG_ko_name_prop'] = df['KEGG_ko_prop']
+    print("Add KEGG_ko_name to df successfully!")
+    return df
+    
+    
+    
+
 # if __name__ == '__main__':
-#     df_path = "MetaX/data/example_data/Example_final_peptide2.tsv"
+#     df_path = "MetaX/data/example_data/Example_OTF.tsv"
 #     df = pd.read_csv(df_path, sep='\t')
 #     df = add_pathway_name_to_df(df)
 #     df = add_ec_name_to_df(df)
-#     df.head()
-#     df.to_csv("1.tsv", sep='\t', index=False)
+#     df = add_ko_name_to_df(df)
+#     df.to_csv("11.tsv", sep='\t', index=False)

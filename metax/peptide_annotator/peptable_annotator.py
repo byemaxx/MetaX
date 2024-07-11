@@ -2,9 +2,6 @@
 # input: table of final peptides from MetaLab_MAG
 # output: table of final peptides with taxonomic and functional information
 
-from .pep2taxafunc import proteins_to_taxa_func
-from .convert_ID_to_name import add_pathway_name_to_df, add_ec_name_to_df
-
 from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
@@ -13,6 +10,14 @@ from tqdm import tqdm
 import time
 import argparse
 import os
+
+if __name__ == '__main__':
+
+    from pep2taxafunc import proteins_to_taxa_func
+    from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
+else:
+    from .pep2taxafunc import proteins_to_taxa_func
+    from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
 
 # run the function proteins_to_taxa_func
 def run_pep2taxafunc(proteins, db_path, threshold, genome_mode) -> dict:
@@ -26,7 +31,7 @@ def run_pep2taxafunc(proteins, db_path, threshold, genome_mode) -> dict:
             genome_mode=genome_mode,
         )
     except Exception as e:
-        re = ""
+        re = {}
         print(f"Error: {protein_list}")
         print(e)
     return re
@@ -48,7 +53,7 @@ def add_additional_columns(df):
     try:
         print("Trying to add 'EC_DE', 'EC_AN', 'EC_CC' and 'EC_CA' to the dataframe...")
         df = add_ec_name_to_df(df)
-        print("Additional EC columns added!")
+
     except Exception as e:
         print('Error: add additional EC columns failed!')
         print(e)
@@ -56,11 +61,19 @@ def add_additional_columns(df):
     try:
         print("Trying to add 'KEGG_Pathway_name' to the dataframe...")
         df = add_pathway_name_to_df(df)
-        print("Additional KEGG_Pathway_name column added!")
+
     except Exception as e:
         print('Error: add additional KEGG_Pathway_name column failed!')
         print(e)
-    
+
+    try:
+        print("Trying to add 'KO_name' to the dataframe...")
+        df = add_ko_name_to_df(df)
+        
+    except Exception as e:
+        print('Error: add additional KO_name column failed!')
+        print(e)
+            
     return df
         
 

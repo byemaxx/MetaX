@@ -9,9 +9,11 @@ class GetMatrix:
         # input: a taxon with its function, a function with its taxon,
         # and the peptides in the function or taxon
         # output: a matrix of the intensity of the taxon or function or peptide in each sample
+        # `peptide_seq` (str, optional): when `taxon_name` and `func_name` are both None, extract the intensity matrix of the peptide. Defaults to None.
+        
         if condition is not None:
             sample_list = self.tfa.get_sample_list_for_group_list(condition=condition)
-
+        
         if func_name is not None:
             dft = self.tfa.func_taxa_df.copy()
             dft.reset_index(inplace=True)

@@ -29,55 +29,8 @@ import pickle
 import datetime
 from collections import OrderedDict
 import re
-####### add parent path to sys.path #######
-myDir = os.getcwd()
-sys.path.append(myDir)
-
-from pathlib import Path
-path = Path(myDir)
-a=str(path.parent.absolute())
-
-sys.path.append(a)
-####### add parent path to sys.path #######
-
-# import Version
-from MetaX.utils.version import __version__
 
 
-# import core scripts of MetaX
-from MetaX.utils.TaxaFuncAnalyzer import TaxaFuncAnalyzer
-
-# import utils scripts of MetaX
-from MetaX.utils.metax_updater import Updater
-
-# import ploter
-from MetaX.utils.TaxaFuncPloter.heatmap_plot import HeatmapPlot
-from MetaX.utils.TaxaFuncPloter.basic_plot import BasicPlot
-from MetaX.utils.TaxaFuncPloter.volcano_plot_js import VolcanoPlot
-from MetaX.utils.TaxaFuncPloter.tukey_plot import TukeyPlot
-from MetaX.utils.TaxaFuncPloter.bar_plot_js import BarPlot_js
-from MetaX.utils.TaxaFuncPloter.sankey_plot import SankeyPlot
-from MetaX.utils.TaxaFuncPloter.network_plot import NetworkPlot
-from MetaX.utils.TaxaFuncPloter.trends_plot import TrendsPlot
-from MetaX.utils.TaxaFuncPloter.trends_plot_js import TrendsPlot_js
-from MetaX.utils.TaxaFuncPloter.pca_plot_js import PcaPlot_js
-from MetaX.utils.TaxaFuncPloter.diversity_plot import DiversityPlot
-from MetaX.utils.TaxaFuncPloter.sunburst_plot import SunburstPlot
-from MetaX.utils.TaxaFuncPloter.treemap_plot import TreeMapPlot
-
-# import GUI scripts
-from MetaX.utils.MetaX_GUI import Ui_MainWindow
-from MetaX.utils.MetaX_GUI import webDialog
-from MetaX.utils.MetaX_GUI.MatplotlibFigureCanvas import MatplotlibWidget
-from MetaX.utils.MetaX_GUI.CheckableComboBox import CheckableComboBox
-from MetaX.utils.MetaX_GUI.Ui_Table_view import Ui_Table_view
-from MetaX.utils.MetaX_GUI.DrageLineEdit import FileDragDropLineEdit
-from MetaX.utils.MetaX_GUI.ExtendedComboBox import ExtendedComboBox
-# from MetaX.utils.MetaX_GUI.ShowPltDialog import PltDialog
-from MetaX.utils.MetaX_GUI.ShowPlt import ExportablePlotDialog
-from MetaX.utils.MetaX_GUI.InputWindow import InputWindow
-from MetaX.utils.MetaX_GUI.UserAgreementDialog import UserAgreementDialog
-from MetaX.utils.MetaX_GUI.Settings import SettingsWidget
 
 # import third-party modules
 import pandas as pd
@@ -97,10 +50,101 @@ import qtawesome as qta
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
 
+# if not run as script, import the necessary MetaX modules by absolute path
+if __name__ == '__main__':
+    # Use absolute path to import the module
+    metax_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # set parent dir as the root dir
+    metax_dir = os.path.dirname(metax_dir)
+    print(metax_dir)
+    sys.path.append(metax_dir)
+    
+    from metax.utils.version import __version__
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+    from metax.utils.metax_updater import Updater
+    from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
+    from metax.taxafunc_ploter.basic_plot import BasicPlot
+    from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlot
+    from metax.taxafunc_ploter.tukey_plot import TukeyPlot
+    from metax.taxafunc_ploter.bar_plot_js import BarPlot_js
+    from metax.taxafunc_ploter.sankey_plot import SankeyPlot
+    from metax.taxafunc_ploter.network_plot import NetworkPlot
+    from metax.taxafunc_ploter.trends_plot import TrendsPlot
+    from metax.taxafunc_ploter.trends_plot_js import TrendsPlot_js
+    from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
+    from metax.taxafunc_ploter.diversity_plot import DiversityPlot
+    from metax.taxafunc_ploter.sunburst_plot import SunburstPlot
+    from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
+
+    from metax.gui.metax_gui import ui_main_window
+    from metax.gui.metax_gui import web_dialog
+    from metax.gui.metax_gui.matplotlib_figure_canvas import MatplotlibWidget
+    from metax.gui.metax_gui.checkable_combo_box import CheckableComboBox
+    from metax.gui.metax_gui.ui_table_view import Ui_Table_view
+    from metax.gui.metax_gui.drag_line_edit import FileDragDropLineEdit
+    from metax.gui.metax_gui.extended_combo_box import ExtendedComboBox
+    from metax.gui.metax_gui.show_plt import ExportablePlotDialog
+    from metax.gui.metax_gui.input_window import InputWindow
+    from metax.gui.metax_gui.user_agreement_dialog import UserAgreementDialog
+    from metax.gui.metax_gui.settings_widget import SettingsWidget
+    from metax.gui.metax_gui.cmap_combo_box import CmapComboBox
+    from metax.gui.metax_gui.ui_lca_help import UiLcaHelpDialog
+    from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
+    from metax.gui.metax_gui.generic_thread import FunctionExecutor
+
+    from metax.peptide_annotator.metalab2otf import MetaLab2OTF
+    from metax.peptide_annotator.peptable_annotator import peptableAnnotate
+
+    from metax.database_builder.database_builder_own import build_db
+    from metax.database_updater.database_updater import run_db_update
+    from metax.database_builder.database_builder_mag import download_and_build_database
+    
+    
+else:
+    from ..utils.version import __version__
+    from ..taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+    from ..utils.metax_updater import Updater
+    from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
+    from ..taxafunc_ploter.basic_plot import BasicPlot
+    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlot
+    from ..taxafunc_ploter.tukey_plot import TukeyPlot
+    from ..taxafunc_ploter.bar_plot_js import BarPlot_js
+    from ..taxafunc_ploter.sankey_plot import SankeyPlot
+    from ..taxafunc_ploter.network_plot import NetworkPlot
+    from ..taxafunc_ploter.trends_plot import TrendsPlot
+    from ..taxafunc_ploter.trends_plot_js import TrendsPlot_js
+    from ..taxafunc_ploter.pca_plot_js import PcaPlot_js
+    from ..taxafunc_ploter.diversity_plot import DiversityPlot
+    from ..taxafunc_ploter.sunburst_plot import SunburstPlot
+    from ..taxafunc_ploter.treemap_plot import TreeMapPlot
+
+    from .metax_gui import ui_main_window
+    from .metax_gui import web_dialog
+    from .metax_gui.matplotlib_figure_canvas import MatplotlibWidget
+    from .metax_gui.checkable_combo_box import CheckableComboBox
+    from .metax_gui.ui_table_view import Ui_Table_view
+    from .metax_gui.drag_line_edit import FileDragDropLineEdit
+    from .metax_gui.extended_combo_box import ExtendedComboBox
+    from .metax_gui.show_plt import ExportablePlotDialog
+    from .metax_gui.input_window import InputWindow
+    from .metax_gui.user_agreement_dialog import UserAgreementDialog
+    from .metax_gui.settings_widget import SettingsWidget
+    from .metax_gui.cmap_combo_box import CmapComboBox
+    from .metax_gui.ui_lca_help import UiLcaHelpDialog
+    from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
+    from .metax_gui.generic_thread import FunctionExecutor
+
+    from ..peptide_annotator.metalab2otf import MetaLab2OTF
+    from ..peptide_annotator.peptable_annotator import peptableAnnotate
+
+    from ..database_builder.database_builder_own import build_db
+    from ..database_updater.database_updater import run_db_update
+    from ..database_builder.database_builder_mag import download_and_build_database
+
 
 
 ###############   Class MetaXGUI Begin   ###############
-class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
+class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def __init__(self, MainWindow):
         super().__init__()
         MainWindow.closeEvent = self.closeEvent
@@ -1408,8 +1452,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         from matplotlib import colormaps
         cmap_list = ['Auto'] + sorted(list(colormaps))
 
-        # add right click menu for comboBox
-        from MetaX.utils.MetaX_GUI.CmapComboBox import CmapComboBox
+
         cmap_combox_list = ['comboBox_basic_hetatmap_theme', 'comboBox_tflink_cmap', 'comboBox_top_heatmap_cmap']
         for name in cmap_combox_list:
             old_combobox = getattr(self, name)
@@ -1621,7 +1664,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         
         try:
             # self.open_output_window(DBBuilderMAG, save_path, db_type, meta_path, mgyg_dir)
-            from MetaX.utils.DatabaseBuilderMAG import download_and_build_database
             parm_kwargs = {'save_path': save_path, 'db_type': db_type, 'meta_path': meta_path, 'mgyg_dir': mgyg_dir, 'db_name': db_name}
             self.run_in_new_window(download_and_build_database, show_msg=True, **parm_kwargs)
 
@@ -1631,7 +1673,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
 
 
     def run_in_new_window(self, func, *args, show_msg=False, **kwargs):
-        from MetaX.utils.MetaX_GUI.GenericThread import FunctionExecutor
 
         # 定义 handle_finished 方法来处理执行完成后的逻辑
         def handle_finished(result, success):
@@ -1819,7 +1860,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                 self.logger.write_log(f'run_db_builder_own_table: anno_path:{anno_path} taxa_path:{taxa_path} save_path:{save_path}')
                 
                 # self.open_output_window(DBBuilderOwn, anno_path, taxa_path, save_path)
-                from MetaX.utils.DatabaseBuilderOwn import build_db
                 parm_kwargs = {'anno_path': anno_path, 'taxa_path': taxa_path, 'db_path': save_path}
                 self.run_in_new_window(build_db, show_msg=True,**parm_kwargs)
                 
@@ -1860,7 +1900,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
         try:
             self.logger.write_log(f'run_db_updater: update_type:{update_type} tsv_path:{tsv_path} old_db_path:{old_db_path} new_db_path:{new_db_path} built_in_db_name:{built_in_db_name}')
             # self.open_output_window(DBUpdater, update_type, tsv_path, old_db_path, new_db_path,  built_in_db_name)
-            from MetaX.utils.DatabaseUpdater import run_db_update
             parm_kwargs = {
                 'update_type': update_type, 'tsv_path': tsv_path, 
                 'old_db_path': old_db_path, 'new_db_path': new_db_path, 
@@ -1895,7 +1934,6 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             try:
                 self.logger.write_log(f'run_peptide2taxafunc: db_path:{db_path} final_peptide_path:{final_peptide_path} peptide2taxafunc_outpath:{peptide2taxafunc_outpath} threshold:{threshold}')
                 # self.open_output_window(PeptideAnnotator, final_peptide_path, peptide2taxafunc_outpath, db_path, threshold)4
-                from MetaX.utils.PeptableAnnotator import peptableAnnotate
                 parm_kwargs = {'final_peptides_path': final_peptide_path, 'output_path': peptide2taxafunc_outpath, 
                                'db_path': db_path, 'threshold': threshold}
                 self.run_in_new_window(peptableAnnotate,show_msg=True, **parm_kwargs)
@@ -1916,8 +1954,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             return None
         try:
             self.logger.write_log(f'run_metalab_maxq_annotate: pepTaxa_file:{pepTaxa_file} peptide_file:{peptide_file} functions_file:{functions_file} otf_save_path:{otf_save_path}')
-            
-            from MetaX.utils.metalab2otf import MetaLab2OTF
+                        
             def metalab_main_wrapper():
                 instance = MetaLab2OTF(pepTaxa_file, peptide_file, functions_file, otf_save_path)
                 return instance.main()            
@@ -2057,15 +2094,13 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
                                     
     def show_toolButton_lca_threshould_help(self):
         # QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
-        from MetaX.utils.MetaX_GUI.Ui_LCA_help import MyDialog
-        lca_help = MyDialog(self.MainWindow)
+        lca_help = UiLcaHelpDialog(self.MainWindow)
         lca_help.exec_()
 
 
     def show_func_threshold_help(self):
         # QMessageBox.information(self.MainWindow, 'Function Threshold Help', 'The proportion threshold of the largest number of function in a protein group of a peptide, it will be considered a representative function of that peptide. The default is 1.00 (100%).')
-        from MetaX.utils.MetaX_GUI.Ui_func_threshold_help import MyDialog
-        lca_help = MyDialog(self.MainWindow)
+        lca_help = UifuncHelpDialog(self.MainWindow)
         lca_help.exec_()
 
     # database builder help
@@ -3865,7 +3900,7 @@ class MetaXGUI(Ui_MainWindow.Ui_metaX_main,QtStyleTools):
             pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
-            web = webDialog.WebDialog(save_path, None, theme=self.html_theme)
+            web = web_dialog.WebDialog(save_path, None, theme=self.html_theme)
             if title:
                 web.setWindowTitle(title)
                 
@@ -5524,7 +5559,5 @@ def runGUI():
     
     sys.exit(app.exec_())
 
-
-if __name__ == '__main__':
-    # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+if __name__ == "__main__":
     runGUI()
