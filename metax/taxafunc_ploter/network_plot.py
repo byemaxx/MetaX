@@ -1,5 +1,6 @@
 from pyecharts import options as opts
 from pyecharts.charts import Graph
+import pandas as pd
 
 class NetworkPlot:
     def __init__(self, tfobj, 
@@ -74,8 +75,14 @@ class NetworkPlot:
                 
         focus_list = new_focus_list
         return focus_list
-    
-    def create_nodes_links(self, sample_list:list = None, focus_list:list = [], plot_list_only:bool = False):
+
+    def create_nodes_links(
+        self,
+        sample_list: list = None,
+        focus_list: list = [],
+        plot_list_only: bool = False,
+        list_only_no_link: bool = False,
+    ):
         """
         Prepares data for network visualization of taxa and functions.
 
@@ -85,7 +92,8 @@ class NetworkPlot:
         Parameters:
         - sample_list (list, optional): Specifies which samples to include. If None, all samples are used.
         - focus_list (list, optional): List of taxa and functions to highlight in the network.
-        - plot_list_only (bool, optional): If True, only items in focus_list are plotted.
+        - plot_list_only (bool, optional): If True, only items and theri linked items in focus_list are plotted.
+        - strict_list (bool, optional): If True, only items in focus_list are plotted.
 
         Returns:
         - nodes (list): Information about each node for the graph, including name and size.
@@ -117,7 +125,22 @@ class NetworkPlot:
         if plot_list_only:
             print("Plotting only the list provided in focus_list")
             print(f"Original df shape: {df.shape}")
-            df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
+            if list_only_no_link:
+                df_coverd = df.loc[df['taxa'].isin(focus_list) & df['function'].isin(focus_list)]
+                covered_taxa = df_coverd['taxa'].unique().tolist()
+                covered_func = df_coverd['function'].unique().tolist()
+                uncovered_list = [i for i in focus_list if i not in covered_taxa and i not in covered_func]
+
+                df_taxa = df.loc[df['taxa'].isin(uncovered_list)]
+                df_taxa['function'] = "" # use empty string to show the dots and not the links
+                df_func = df.loc[df['function'].isin(uncovered_list)]
+                df_func['taxa'] = "" 
+                # concatenate the uncovered taxa and functions
+                df = pd.concat([df_coverd, df_taxa, df_func])
+                
+                
+            else:
+                df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
             print(f"New df shape: {df.shape}")
             
         taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
@@ -172,9 +195,15 @@ class NetworkPlot:
 
         return nodes, links, categories
 
-
-    
-    def plot_tflink_network(self, sample_list:list = None, width:int = 12, height:int = 8, focus_list: list = None, plot_list_only:bool = False):
+    def plot_tflink_network(
+        self,
+        sample_list: list = None,
+        width: int = 12,
+        height: int = 8,
+        focus_list: list = None,
+        plot_list_only: bool = False,
+        list_only_no_link: bool = False,
+    ):
         """
         Creates a network graph of taxa and functions using Pyecharts.
 
@@ -185,7 +214,8 @@ class NetworkPlot:
         - width (int, optional): Width of the graph in pixels.
         - height (int, optional): Height of the graph in pixels.
         - focus_list (list, optional): List of taxa and functions to highlight.
-        - plot_list_only (bool, optional): If True, only plots items in focus_list.
+        - plot_list_only (bool, optional): If True, only plots items in focus_list and their linked items.
+        - strict_list_only (bool, optional): If True, only plots items in focus_list.
 
         Returns:
         - A Pyecharts Graph object that can be displayed in Jupyter notebooks or web pages.
@@ -206,7 +236,7 @@ class NetworkPlot:
                     new_list.extend((taxon, func))
                 else:
                     print(f"Warning: {i} is not in taxa or function list")
-            nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only)
+            nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only, list_only_no_link)
         else:
             nodes, links, categories = self.create_nodes_links(sample_list)
 

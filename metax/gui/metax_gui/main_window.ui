@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -5986,7 +5986,7 @@
                <bool>true</bool>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -6788,40 +6788,50 @@
                 <string>Taxa-Func Network</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_6">
-                <item row="14" column="3">
-                 <widget class="QPushButton" name="pushButton_plot_network">
+                <item row="10" column="0">
+                 <widget class="QPushButton" name="pushButton_tfnet_drop_item">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Plot Ntework</string>
-                  </property>
-                  <property name="checkable">
-                   <bool>false</bool>
+                   <string>Drop Item</string>
                   </property>
                  </widget>
                 </item>
-                <item row="13" column="0">
-                 <widget class="QPushButton" name="pushButton_tfnet_clean_list">
+                <item row="7" column="3">
+                 <widget class="QPushButton" name="pushButton_tfnet_add_top">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
+                  <property name="toolTip">
+                   <string>Add conditionally filtered items to the drawing box</string>
+                  </property>
+                  <property name="text">
+                   <string>Add Top to List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QRadioButton" name="radioButton_network_bysample">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Clean List</string>
+                   <string>Sample</string>
                   </property>
                  </widget>
+                </item>
+                <item row="8" column="1" rowspan="9" colspan="2">
+                 <widget class="QListWidget" name="listWidget_tfnet_focus_list"/>
                 </item>
                 <item row="1" column="0">
                  <widget class="QRadioButton" name="radioButton_network_bygroup">
@@ -6839,31 +6849,264 @@
                   </property>
                  </widget>
                 </item>
-                <item row="14" column="0">
-                 <widget class="QPushButton" name="pushButton_tfnet_add_a_list">
+                <item row="10" column="3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_57">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tf_link_net_show_label">
+                    <property name="text">
+                     <string>Show Labels</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tf_link_net_rename_taxa">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="text">
+                     <string>Raname Taxa</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="3" column="1" colspan="3">
+                 <layout class="QGridLayout" name="gridLayout_network_sample"/>
+                </item>
+                <item row="13" column="0">
+                 <widget class="QPushButton" name="pushButton_tfnet_clean_list">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
-                  <property name="toolTip">
-                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
-                  </property>
-                  <property name="text">
-                   <string>Add a list</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QRadioButton" name="radioButton_network_bysample">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Sample</string>
+                   <string>Clean List</string>
                   </property>
                  </widget>
+                </item>
+                <item row="1" column="2" colspan="2">
+                 <layout class="QGridLayout" name="gridLayout_network_group"/>
+                </item>
+                <item row="0" column="0" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_9">
+                  <item>
+                   <widget class="QLabel" name="label_49">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Table</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_tfnet_table">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Taxa</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Functions</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Taxa-Functions</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_150">
+                    <property name="text">
+                     <string>Meta</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_network_meta"/>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="3">
+                 <widget class="QPushButton" name="pushButton_tfnet_add_to_list">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
+                  <property name="text">
+                   <string>Add to Focus List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_56">
+                  <item>
+                   <widget class="QLabel" name="label_50">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Width</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_network_width">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>99</number>
+                    </property>
+                    <property name="singleStep">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_51">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Height</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_network_height">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>20</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>99</number>
+                    </property>
+                    <property name="singleStep">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>8</number>
+                    </property>
+                    <property name="displayIntegerBase">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="1" colspan="2">
+                 <widget class="QComboBox" name="comboBox_tfnet_select_list"/>
+                </item>
+                <item row="1" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_55">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_tfnetwork_in_condition">
+                    <property name="layoutDirection">
+                     <enum>Qt::RightToLeft</enum>
+                    </property>
+                    <property name="text">
+                     <string>In Condition</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_tfnetwork_condition_meta">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_80">
+                    <item>
+                     <widget class="QComboBox" name="comboBox_tfnetwork_condition_group">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item row="11" column="3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_69">
+                  <item>
+                   <widget class="QLabel" name="label_163">
+                    <property name="text">
+                     <string>Font Size</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_network_font_size">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item row="7" column="2">
                  <layout class="QHBoxLayout" name="horizontalLayout_58">
@@ -6989,35 +7232,22 @@
                   </item>
                  </layout>
                 </item>
-                <item row="4" column="3">
-                 <widget class="QPushButton" name="pushButton_tfnet_add_to_list">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Add selected item to the drawing box</string>
-                  </property>
-                  <property name="text">
-                   <string>Add to Focus List</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="2" colspan="2">
-                 <layout class="QGridLayout" name="gridLayout_network_group"/>
-                </item>
-                <item row="10" column="0">
-                 <widget class="QPushButton" name="pushButton_tfnet_drop_item">
+                <item row="14" column="3">
+                 <widget class="QPushButton" name="pushButton_plot_network">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Drop Item</string>
+                   <string>Plot Ntework</string>
+                  </property>
+                  <property name="checkable">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -7034,251 +7264,38 @@
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="1" colspan="2">
-                 <widget class="QComboBox" name="comboBox_tfnet_select_list"/>
-                </item>
-                <item row="0" column="0" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_9">
-                  <item>
-                   <widget class="QLabel" name="label_49">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_tfnet_table">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>Taxa</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Functions</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Taxa-Functions</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_150">
-                    <property name="text">
-                     <string>Meta</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_network_meta"/>
-                  </item>
-                 </layout>
-                </item>
-                <item row="3" column="1" colspan="3">
-                 <layout class="QGridLayout" name="gridLayout_network_sample"/>
-                </item>
-                <item row="1" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_55">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_tfnetwork_in_condition">
-                    <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
-                    </property>
-                    <property name="text">
-                     <string>In Condition</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_tfnetwork_condition_meta">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_80">
-                    <item>
-                     <widget class="QComboBox" name="comboBox_tfnetwork_condition_group">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </item>
-                <item row="8" column="1" rowspan="9" colspan="2">
-                 <widget class="QListWidget" name="listWidget_tfnet_focus_list"/>
-                </item>
-                <item row="13" column="3">
-                 <widget class="QCheckBox" name="checkBox_tf_link_net_plot_list_only">
-                  <property name="text">
-                   <string>Plot List Only</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="3">
-                 <widget class="QPushButton" name="pushButton_tfnet_add_top">
+                <item row="14" column="0">
+                 <widget class="QPushButton" name="pushButton_tfnet_add_a_list">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="toolTip">
-                   <string>Add conditionally filtered items to the drawing box</string>
+                   <string>Add a list to the drawing box, make sure there is one item per line.</string>
                   </property>
                   <property name="text">
-                   <string>Add Top to List</string>
+                   <string>Add a list</string>
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="3">
-                 <layout class="QHBoxLayout" name="horizontalLayout_57">
+                <item row="13" column="3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_85">
                   <item>
-                   <widget class="QCheckBox" name="checkBox_tf_link_net_show_label">
+                   <widget class="QCheckBox" name="checkBox_tf_link_net_plot_list_only">
                     <property name="text">
-                     <string>Show Labels</string>
+                     <string>Plot List Only</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_tf_link_net_rename_taxa">
+                   <widget class="QCheckBox" name="checkBox_tf_link_net_plot_list_only_no_link">
                     <property name="enabled">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Raname Taxa</string>
+                     <string>Without Links</string>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="8" column="3">
-                 <layout class="QHBoxLayout" name="horizontalLayout_56">
-                  <item>
-                   <widget class="QLabel" name="label_50">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Width</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="spinBox_network_width">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>99</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>10</number>
-                    </property>
-                    <property name="displayIntegerBase">
-                     <number>10</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_51">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Height</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="spinBox_network_height">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>20</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>99</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>8</number>
-                    </property>
-                    <property name="displayIntegerBase">
-                     <number>10</number>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="11" column="3">
-                 <layout class="QHBoxLayout" name="horizontalLayout_69">
-                  <item>
-                   <widget class="QLabel" name="label_163">
-                    <property name="text">
-                     <string>Font Size</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="spinBox_network_font_size">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>10</number>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -8239,12 +8256,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>114</y>
+     <x>59</x>
+     <y>107</y>
     </hint>
     <hint type="destinationlabel">
-     <x>156</x>
-     <y>114</y>
+     <x>65</x>
+     <y>107</y>
     </hint>
    </hints>
   </connection>
@@ -8255,12 +8272,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>114</y>
+     <x>59</x>
+     <y>107</y>
     </hint>
     <hint type="destinationlabel">
-     <x>156</x>
-     <y>114</y>
+     <x>71</x>
+     <y>108</y>
     </hint>
    </hints>
   </connection>
@@ -8271,12 +8288,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>110</y>
+     <x>615</x>
+     <y>153</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>110</y>
+     <x>787</x>
+     <y>155</y>
     </hint>
    </hints>
   </connection>
@@ -8287,12 +8304,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>110</y>
+     <x>615</x>
+     <y>153</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>110</y>
+     <x>959</x>
+     <y>155</y>
     </hint>
    </hints>
   </connection>
@@ -8303,11 +8320,11 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
+     <x>55</x>
      <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>58</x>
+     <x>64</x>
      <y>105</y>
     </hint>
    </hints>
@@ -8319,12 +8336,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
+     <x>55</x>
      <y>105</y>
     </hint>
     <hint type="destinationlabel">
-     <x>63</x>
-     <y>105</y>
+     <x>72</x>
+     <y>106</y>
     </hint>
    </hints>
   </connection>
@@ -8371,8 +8388,8 @@
      <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>161</x>
-     <y>136</y>
+     <x>277</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>
@@ -8387,8 +8404,8 @@
      <y>136</y>
     </hint>
     <hint type="destinationlabel">
-     <x>161</x>
-     <y>136</y>
+     <x>353</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>
@@ -8419,8 +8436,8 @@
      <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>120</x>
-     <y>102</y>
+     <x>119</x>
+     <y>103</y>
     </hint>
    </hints>
   </connection>
@@ -8431,12 +8448,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>109</y>
+     <x>96</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>109</y>
+     <x>108</x>
+     <y>102</y>
     </hint>
    </hints>
   </connection>
@@ -8447,12 +8464,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>109</y>
+     <x>96</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>109</y>
+     <x>119</x>
+     <y>103</y>
     </hint>
    </hints>
   </connection>
@@ -8495,12 +8512,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>204</x>
-     <y>191</y>
+     <x>84</x>
+     <y>108</y>
     </hint>
     <hint type="destinationlabel">
-     <x>304</x>
-     <y>193</y>
+     <x>96</x>
+     <y>108</y>
     </hint>
    </hints>
   </connection>
@@ -8531,8 +8548,8 @@
      <y>116</y>
     </hint>
     <hint type="destinationlabel">
-     <x>80</x>
-     <y>116</y>
+     <x>81</x>
+     <y>117</y>
     </hint>
    </hints>
   </connection>
@@ -8543,12 +8560,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>96</x>
-     <y>102</y>
+     <x>539</x>
+     <y>166</y>
     </hint>
     <hint type="destinationlabel">
-     <x>108</x>
-     <y>102</y>
+     <x>734</x>
+     <y>168</y>
     </hint>
    </hints>
   </connection>
@@ -8559,12 +8576,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>96</x>
-     <y>102</y>
+     <x>539</x>
+     <y>166</y>
     </hint>
     <hint type="destinationlabel">
-     <x>120</x>
-     <y>102</y>
+     <x>931</x>
+     <y>168</y>
     </hint>
    </hints>
   </connection>
@@ -8575,12 +8592,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>823</x>
-     <y>322</y>
+     <x>111</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>976</x>
-     <y>322</y>
+     <x>119</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8591,12 +8608,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>823</x>
-     <y>322</y>
+     <x>111</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>230</x>
-     <y>526</y>
+     <x>78</x>
+     <y>124</y>
     </hint>
    </hints>
   </connection>
@@ -8607,12 +8624,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>823</x>
-     <y>322</y>
+     <x>111</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>398</x>
-     <y>324</y>
+     <x>85</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -8623,12 +8640,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>204</x>
-     <y>191</y>
+     <x>84</x>
+     <y>108</y>
     </hint>
     <hint type="destinationlabel">
-     <x>404</x>
-     <y>193</y>
+     <x>106</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -8645,6 +8662,22 @@
     <hint type="destinationlabel">
      <x>969</x>
      <y>397</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_tf_link_net_plot_list_only</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>checkBox_tf_link_net_plot_list_only_no_link</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>834</x>
+     <y>339</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>932</x>
+     <y>340</y>
     </hint>
    </hints>
   </connection>

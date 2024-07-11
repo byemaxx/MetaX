@@ -1,9 +1,7 @@
-# Version: 1.108.3
-## Date: 2024-07-10
+# Version: 1.108.4
+## Date: 2024-07-11
 ### Changes:
-- Change: restrucutre the code to be more clear and easy to maintain.
-- New: Add KO_name base on the KO_id in the OTF table.
-
+- New: Add a option only show the fcous list items in the Taxa-Functions Network plot without any other linked items.
 
 # Version: 1.108.2
 ## Date: 2024-07-08

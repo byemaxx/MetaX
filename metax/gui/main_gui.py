@@ -5177,13 +5177,22 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             self.show_message('Plotting network...')
-            pic = NetworkPlot(self.tfa,
-                              show_labels=show_labels,
-                              rename_taxa=rename_taxa,
-                              font_size=font_size,
-                              theme=self.html_theme,
-                            **self.tf_link_net_params_dict
-                              ).plot_tflink_network(sample_list=sample_list, width=width, height=height, focus_list=focus_list,plot_list_only=plot_list_only)
+            list_only_no_link = self.checkBox_tf_link_net_plot_list_only_no_link.isChecked()
+            pic = NetworkPlot(
+                self.tfa,
+                show_labels=show_labels,
+                rename_taxa=rename_taxa,
+                font_size=font_size,
+                theme=self.html_theme,
+                **self.tf_link_net_params_dict,
+            ).plot_tflink_network(
+                sample_list=sample_list,
+                width=width,
+                height=height,
+                focus_list=focus_list,
+                plot_list_only=plot_list_only,
+                list_only_no_link=list_only_no_link,
+            )
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
         except Exception as e:
             error_message = traceback.format_exc()
