@@ -1,3 +1,9 @@
+# Version: 1.108.7
+## Date: 2024-07-14
+### Changes:
+- Change: Optimized Peptide Annotator, changed them to class method for better performance.
+
+
 # Version: 1.108.6
 ## Date: 2024-07-11
 ### Changes:

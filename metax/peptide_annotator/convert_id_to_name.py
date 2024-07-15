@@ -187,7 +187,7 @@ def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
             if id in pathway_dict:
                 pathway_list.append(pathway_dict[id])
         # remove duplicates
-        pathway_list = list(set(pathway_list))
+        pathway_list = list(dict.fromkeys(pathway_list))
         if len(pathway_list) == 0:
             return '-'
         

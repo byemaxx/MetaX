@@ -10,4 +10,4 @@ local_tests/
 dist
 MetaXTools.egg-info
 .pypirc
-RE_build.md
+README_PyPi.md

@@ -44,131 +44,150 @@
 # Date: 2024-03-05
 # Version:0.2.10
 # add an option to count the genome level in the taxonomic level
+#
+# Date: 2024-07-14
+# Version:0.2.11
+# change it to a class for easy to use
 
 from collections import Counter
 import sqlite3
 
-# open the database of eggNOG animation of MGYG and return the connection
-def open_eggnog_db(db_path):
-    conn = sqlite3.connect(db_path)
-    conn.cursor()
-    return conn
+class Pep2TaxaFunc:
+    def __init__(self, db_path: str|None = None, threshold: float = 1.0, genome_mode: bool = True, conn = None):
+        if db_path is None and conn is None:
+            raise ValueError('Please provide the path of the database or the connection of the database')
+        
+        self.db_path = db_path
+        self.threshold = threshold
+        self.genome_mode = genome_mode
+        self.protein_genome_separator = '_'
+        self.conn = conn or self.open_eggnog_db()
+                
+            
+    # open the database of eggNOG animation of MGYG and return the connection
+    def open_eggnog_db(self):
+        if self.db_path is None:
+            raise ValueError('Database path is required to open a new connection')
+        conn = sqlite3.connect(self.db_path)
+        return conn
+        
 
-# return a list of taxonomic levels of each protein
-def query_taxon_from_db(conn, protein_list, genome_mode = True):
-    c = conn.cursor()
-    taxa = []
-    sql = 'SELECT Taxa from id2taxa where ID = ?'
-    for i in protein_list:
-        i = i.split('_')[0]
-        if re := c.execute(sql, (i,)).fetchone():
-            taxa_str = re[0]
-            if genome_mode:
-                taxa_genome = f'{taxa_str};m__{i}'
-                taxa.append(taxa_genome)
-            else:
-                taxa.append(taxa_str)
-        else:
-            #taxon_level.append('d__NULL;p__NULL;c__NULL;o__NULL;f__NULL;g__NULL;s__NULL')
-            taxa.append('not_found')
-
-    return taxa
-
-
-
-# return the last common ancestor and its percentage         
-def find_LCA(taxa_list: list, threshold: float =1.0, genome_mode = True):
-    # split the taxon level by semicolon for each element in the list
-    taxa_list = [tax.split(';') for tax in taxa_list]
-    taxa_level_dict = {'d': 'domain', 'p': 'phylum', 'c': 'class',
-                       'o': 'order', 'f': 'family', 'g': 'genus', 's': 'species'}
-    if genome_mode:
-        taxa_level_dict['m'] = 'genome' # add genome level
-    tax_re = None
-    # '6543210' present the location of the taxon level in the list(s to d)
-    # for j in range(6, -1, -1):
-    for j in range(7, -1, -1)  if genome_mode else range(6, -1, -1):
-        # join the taxon level by the level number
-        taxa_level_list = [str.join('|', k[:int(j)+1]) for k in taxa_list]
-
-        most = Counter(taxa_level_list).most_common(1)
-        proportion = most[0][1] / len(taxa_level_list)
-        tax = most[0][0]
-        if tax == 'not_found':
-            tax_re = 'not_found', tax, proportion
-
-        elif proportion >= float(threshold) and tax.split('__')[-1] != '':
-            lca_level = taxa_level_dict[tax.split('|')[-1].split('__')[0]]
-            tax_re = lca_level, tax, proportion
-            break
-        elif j == 0 and tax_re is None:
-            # when taxa level move to domain and still not_found, return 'l' means 'life'
-            tax_re = 'life', tax, proportion
-
-    return tax_re
-         
-# return a dict of anatation of each protein
-def query_protein_from_db(conn, protein_list):
-    c = conn.cursor()
-    # get all columns name
-    c.execute('select * from id2annotation')
-    col_name = [tuple[0] for tuple in c.description]
-    # remove the columns that not need
-    for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
-        if i in col_name:
-            col_name.remove(i)
-   
-    sql = 'SELECT ' + ','.join(col_name) + ' from id2annotation where ID = ?'
-    re_dict = {i: [] for i in col_name}
-    
-    for i in protein_list:
-        re = c.execute(sql, (i,)).fetchone()
-        if re is not None:
-            for j in range(len(re)):
-                func = re[j]
-                if func not in ['', '-']:
-                    re_dict[list(re_dict.keys())[j]].append(func)
+    # return a list of taxonomic levels of each protein
+    def query_taxon_from_db(self, protein_list, genome_mode = True):
+        c = self.conn.cursor()
+        taxa = []
+        sql = 'SELECT Taxa from id2taxa where ID = ?'
+        for i in protein_list:
+            i = i.split(self.protein_genome_separator)[0]
+            if re := c.execute(sql, (i,)).fetchone():
+                taxa_str = re[0]
+                if genome_mode:
+                    taxa_genome = f'{taxa_str};m__{i}'
+                    taxa.append(taxa_genome)
                 else:
-                    re_dict[list(re_dict.keys())[j]].append('-')
+                    taxa.append(taxa_str)
+            else:
+                #taxon_level.append('d__NULL;p__NULL;c__NULL;o__NULL;f__NULL;g__NULL;s__NULL')
+                taxa.append('not_found')
 
+        return taxa
+
+
+    # return the last common ancestor and its percentage         
+    def find_LCA(self,taxa_list: list):
+        # split the taxon level by semicolon for each element in the list
+        taxa_list = [tax.split(';') for tax in taxa_list]
+        taxa_level_dict = {'d': 'domain', 'p': 'phylum', 'c': 'class',
+                        'o': 'order', 'f': 'family', 'g': 'genus', 's': 'species'}
+        if self.genome_mode:
+            taxa_level_dict['m'] = 'genome' # add genome level
+            level_range = range(7, -1, -1)
         else:
-            for v in re_dict.values():
-                # if the protein is not found in the database, return 'not_found'
-                v.append('not_found')
+            level_range = range(6, -1, -1)
+            
+        tax_re = None
+        
+        # '6543210' present the location of the taxon level in the list(s to d)
+        # for j in range(6, -1, -1):
+        for j in level_range:
+            # join the taxon level by the level number
+            taxa_level_list = [str.join('|', k[:int(j)+1]) for k in taxa_list]
 
-    return re_dict
+            most = Counter(taxa_level_list).most_common(1)
+            proportion = most[0][1] / len(taxa_level_list)
+            tax = most[0][0]
+            if tax == 'not_found':
+                tax_re = 'not_found', tax, proportion
 
+            elif proportion >= float(self.threshold) and tax.split('__')[-1] != '':
+                lca_level = taxa_level_dict[tax.split('|')[-1].split('__')[0]]
+                tax_re = lca_level, tax, proportion
+                break
+            elif j == 0 and tax_re is None:
+                # when taxa level move to domain and still not_found, return 'l' means 'life'
+                tax_re = 'life', tax, proportion
 
-
-
-# find the most common annotation and its percentage
-def stats_fun(re_dict):
-    for i in re_dict:
-        re_dict[i] = Counter(re_dict[i]).most_common(1)[0][0], Counter(re_dict[i]).most_common(1)[0][1]/len(re_dict[i])
-    return re_dict
-
-# return a dict of taxonomic level and annotation and their percentage    
-def create_dict_out(function_results, taxa_results):
-    taxa_level, taxa, taxa_prop = taxa_results[0], taxa_results[1], round(taxa_results[2], ndigits=4)
-    re_out = {'LCA_level': taxa_level, 'Taxon': taxa, 'Taxon_prop': taxa_prop}
-    for function, (result, proportion) in function_results.items():
-        re_out[function] = result
-        re_out[f'{function}_prop'] = proportion
-    return re_out
-
+        return tax_re
+            
+    # return a dict of anatation of each protein
+    def query_protein_from_db(self, protein_list):
+        c = self.conn.cursor()
+        # get all columns name
+        c.execute('select * from id2annotation')
+        col_name = [tuple[0] for tuple in c.description]
+        # remove the columns that not need
+        for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
+            if i in col_name:
+                col_name.remove(i)
     
-def proteins_to_taxa_func(protein_list: list,  db_path: str, threshold = 1.0, genome_mode =True ) -> dict:
-    conn = open_eggnog_db(db_path)
+        sql = 'SELECT ' + ','.join(col_name) + ' from id2annotation where ID = ?'
+        re_dict = {i: [] for i in col_name}
+        
+        for i in protein_list:
+            re = c.execute(sql, (i,)).fetchone()
+            if re is not None:
+                for j in range(len(re)):
+                    func = re[j]
+                    if func not in ['', '-']:
+                        re_dict[list(re_dict.keys())[j]].append(func)
+                    else:
+                        re_dict[list(re_dict.keys())[j]].append('-')
 
-    re_dict = query_protein_from_db(conn, protein_list)
+            else:
+                for v in re_dict.values():
+                    # if the protein is not found in the database, return 'not_found'
+                    v.append('not_found')
 
-    fun_re = stats_fun(re_dict = re_dict)
+        return re_dict
 
-    taxa_list = query_taxon_from_db(conn = conn, protein_list = protein_list, genome_mode = genome_mode)
 
-    taxa_re = find_LCA(taxa_list = taxa_list, threshold = threshold, genome_mode = genome_mode)
+    # find the most common annotation and its percentage
+    def stats_fun(self,re_dict):
+        for i in re_dict:
+            re_dict[i] = Counter(re_dict[i]).most_common(1)[0][0], Counter(re_dict[i]).most_common(1)[0][1]/len(re_dict[i])
+        return re_dict
 
-    return create_dict_out(fun_re, taxa_re)
+    # return a dict of taxonomic level and annotation and their percentage    
+    def create_dict_out(self,function_results, taxa_results):
+        taxa_level, taxa, taxa_prop = taxa_results[0], taxa_results[1], round(taxa_results[2], ndigits=4)
+        re_out = {'LCA_level': taxa_level, 'Taxon': taxa, 'Taxon_prop': taxa_prop}
+        for function, (result, proportion) in function_results.items():
+            re_out[function] = result
+            re_out[f'{function}_prop'] = proportion
+        return re_out
+
+        
+    def proteins_to_taxa_func(self,protein_list: list ) -> dict:
+
+        re_dict = self.query_protein_from_db( protein_list)
+
+        fun_re = self.stats_fun(re_dict = re_dict)
+
+        taxa_list = self.query_taxon_from_db( protein_list = protein_list)
+
+        taxa_re = self.find_LCA(taxa_list = taxa_list)
+
+        return self.create_dict_out(fun_re, taxa_re)
 
 
 # ### test data
@@ -192,17 +211,17 @@ if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
-
-    print(db_path)
+    db_path = 'C:/Users/max/Desktop/MetaX_Suite/MetaX-human-gut-new.db'
+    
+    pep2taxafunc = Pep2TaxaFunc(db_path = db_path, threshold = 1, genome_mode = True)
 
     
     # for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
-    for i in [pep_mag_level]:
+    for i in [pep3]:
         print(i)
         protein_list = i.split(';')
         # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/id2annotation.db')
-        re = proteins_to_taxa_func(protein_list, threshold = 1, db_path=db_path)
+        re = pep2taxafunc.proteins_to_taxa_func(protein_list)
         keys = list(re.keys())
         for i in range(len(keys)):
             key = keys[i]

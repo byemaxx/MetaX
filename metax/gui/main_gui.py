@@ -93,7 +93,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.generic_thread import FunctionExecutor
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
-    from metax.peptide_annotator.peptable_annotator import peptableAnnotate
+    from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
 
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
@@ -135,7 +135,7 @@ else:
     from .metax_gui.generic_thread import FunctionExecutor
 
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
-    from ..peptide_annotator.peptable_annotator import peptableAnnotate
+    from ..peptide_annotator.peptable_annotator import PeptideAnnotator
 
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
@@ -1934,11 +1934,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             try:
                 self.logger.write_log(f'run_peptide2taxafunc: db_path:{db_path} final_peptide_path:{final_peptide_path} peptide2taxafunc_outpath:{peptide2taxafunc_outpath} threshold:{threshold}')
-                # self.open_output_window(PeptideAnnotator, final_peptide_path, peptide2taxafunc_outpath, db_path, threshold)4
-                parm_kwargs = {'final_peptides_path': final_peptide_path, 'output_path': peptide2taxafunc_outpath, 
-                               'db_path': db_path, 'threshold': threshold}
-                self.run_in_new_window(peptableAnnotate,show_msg=True, **parm_kwargs)
-
+                def peptide2taxafunc_main_wrapper():
+                    instance = PeptideAnnotator(
+                        db_path=db_path,
+                        peptide_path = final_peptide_path,
+                        output_path = peptide2taxafunc_outpath,
+                        threshold=threshold,
+                    )
+                    return instance.run_annotate()
+                self.run_in_new_window(peptide2taxafunc_main_wrapper, show_msg=True)
+                
             except Exception as e:
                 self.logger.write_log(f'run_peptide2taxafunc error: {e}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
