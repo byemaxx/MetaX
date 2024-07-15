@@ -1,3 +1,37 @@
+# Version: 1.108.7
+## Date: 2024-07-14
+### Changes:
+- Change: Optimized Peptide Annotator, changed them to class method for better performance.
+
+
+# Version: 1.108.6
+## Date: 2024-07-11
+### Changes:
+- Change: Optimized file structure and code structure, make easlier to install and run the MetaX by pip or conda.
+
+
+# Version: 1.108.5
+## Date: 2024-07-11
+### Changes:
+- Fix: Fixed the Settting window was not able to minimize (Not perfect yet, need to be fixed in the future).
+
+# Version: 1.108.2
+## Date: 2024-07-08
+### Changes:
+- Fix: Fixed the bug of when int number in the meta table, the protential error will raise.
+
+
+# Version: 1.108.1
+## Date: 2024-06-27
+### Changes:
+- New: Add Sub Meta option for the basic Heatmap plot.
+
+
+# Version: 1.108.0
+## Date: 2024-06-27
+### Changes:
+- New: Enable multiple selection for the in condition group box.
+
 # Version: 1.107.8
 ## Date: 2024-06-26
 ### Changes:

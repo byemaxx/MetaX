@@ -5,17 +5,17 @@
 MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.
 
 
-![abstract](./Docs/MetaX_Cookbook.assets/abstract.png)
+![abstract](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/abstract.png)
 ## Taxa-Functions Linkage
 Linking Taxa and Functions in different levels of the hierarchy, and different functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc.
 
-- ![OTF](./Docs/MetaX_Cookbook.assets/tf_link_net.png)
+- ![OTF](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net.png)
 
 
 
 e.g. The **KEGG Pathways** linked to ***Roseburia hominis***
 
-- ![tf_link_net_2](./Docs/MetaX_Cookbook.assets/tf_link_net_2.png)
+- ![tf_link_net_2](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net_2.png)
 
 
 
@@ -42,7 +42,7 @@ Clone the repository to your local machine and install the required dependencies
   - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX wtih the graphical user interface.
   <br>
 - `Command-line version`:
-  - Read the example documentation in the [Notebook](./Docs/example.ipynb) for detailed instructions and examples.
+  - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for detailed instructions and examples.
 
 
 ## Citing MetaX

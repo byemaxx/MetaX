@@ -2,9 +2,12 @@
 .vscode/
 .idea/
 .trunk/
-tests/
+local_tests/
 *.pyc
 *.db
 .gitignore
 .gitattributes
-todo.md
+dist
+MetaXTools.egg-info
+.pypirc
+README_PyPi.md
