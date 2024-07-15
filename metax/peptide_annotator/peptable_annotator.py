@@ -7,16 +7,16 @@ import os
 import threading
 import sqlite3
 if __name__ == '__main__':
-    from pep2taxafunc import Pep2TaxaFunc
+    from pep_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
 else:
-    from .pep2taxafunc import Pep2TaxaFunc
+    from .pep_to_taxafunc import Pep2TaxaFunc
     from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
     
     
 class PeptideAnnotator:
     def __init__(self, db_path:str, peptide_path: str, output_path: str,
-                 threshold=1.0, genome_mode=True, protein_separator=';', 
+                 threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity_'):
 
         self.db_path = db_path
@@ -25,7 +25,8 @@ class PeptideAnnotator:
         
         self.threshold = round(float(threshold), 4)
         self.genome_mode = genome_mode
-        self.protein_separator = protein_separator
+        self.protein_separator = protein_separator # the separator between proteins in the proteins group column
+        self.protein_genome_separator = protein_genome_separator # the separator between protein and genome in each protein ID
         self.protein_col = protein_col
         self.peptide_col = peptide_col
         self.sample_col_prefix = sample_col_prefix
@@ -43,6 +44,7 @@ class PeptideAnnotator:
                 threshold=self.threshold,
                 genome_mode=self.genome_mode,
                 conn=self.get_connection(),
+                protein_genome_separator = self.protein_genome_separator
             )
         return self.thread_local.p2tf
 
@@ -184,9 +186,9 @@ class PeptideAnnotator:
         return df_res
 
 if __name__ == '__main__':
-    final_peptides_path = 'C:/Users/max/Desktop/MetaX_Suite/MetaX/metax/metax/data/example_data/Example_final_peptide.tsv'
-    output_path = 'C:/Users/max/Desktop/Example_OTF.tsv'
-    db_path = 'C:/Users/max/Desktop/MetaX_Suite/MetaX-human-gut-new.db'
+    final_peptides_path = 'peptides.tsv'
+    output_path = 'OTF.tsv'
+    db_path = 'metax.db'
     threshold = 1
     t0 = time.time()
 
@@ -197,9 +199,10 @@ if __name__ == '__main__':
         threshold=threshold,
         genome_mode=True,
         protein_separator=';',
+        protein_genome_separator = '-',
         protein_col='Proteins',
         peptide_col='Sequence',
-        sample_col_prefix='Intensity_'
+        sample_col_prefix='CHFL'
         
     )
     annotator.run_annotate()

@@ -53,14 +53,21 @@ from collections import Counter
 import sqlite3
 
 class Pep2TaxaFunc:
-    def __init__(self, db_path: str|None = None, threshold: float = 1.0, genome_mode: bool = True, conn = None):
+    def __init__(
+        self,
+        db_path: str | None = None,
+        threshold: float = 1.0,
+        genome_mode: bool = True,
+        conn=None,
+        protein_genome_separator="_",
+    ):
         if db_path is None and conn is None:
             raise ValueError('Please provide the path of the database or the connection of the database')
         
         self.db_path = db_path
         self.threshold = threshold
         self.genome_mode = genome_mode
-        self.protein_genome_separator = '_'
+        self.protein_genome_separator = protein_genome_separator
         self.conn = conn or self.open_eggnog_db()
                 
             
