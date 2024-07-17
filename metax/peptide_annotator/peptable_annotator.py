@@ -148,7 +148,7 @@ class PeptideAnnotator:
         print('Removing reversed proteins...')
         print(f'Original shape: {df.shape}')
         try:
-            df = df[~df['Proteins'].str.contains('REV_')]
+            df = df[~df[self.protein_col].str.contains('REV_')]
             print(f'After removing reversed proteins: {df.shape}')
         except Exception as e:
             print('Error: removing reversed proteins failed!')
@@ -186,9 +186,9 @@ class PeptideAnnotator:
         return df_res
 
 if __name__ == '__main__':
-    final_peptides_path = 'peptides.tsv'
+    db_path = 'UHGP.db'
+    final_peptides_path = 'peptide.tsv'
     output_path = 'OTF.tsv'
-    db_path = 'metax.db'
     threshold = 1
     t0 = time.time()
 
@@ -199,8 +199,8 @@ if __name__ == '__main__':
         threshold=threshold,
         genome_mode=True,
         protein_separator=';',
-        protein_genome_separator = '-',
-        protein_col='Proteins',
+        protein_genome_separator = '_',
+        protein_col='final_proteins',
         peptide_col='Sequence',
         sample_col_prefix='CHFL'
         
