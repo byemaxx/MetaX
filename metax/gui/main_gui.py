@@ -5005,7 +5005,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 print(f'Calculate correlation with {corr_method} method...')
                 df = self.tfa.BasicStats.get_correlation(df_type = df_type, sample_list = sample_list, focus_list = focus_list, plot_list_only = plot_list_only, rename_taxa = rename_taxa, method=corr_method)
                 # save df to table_dict
-                self.update_table_dict(f'co-expression heatmap({df_type})', df)
+                self.update_table_dict(f'expression correlation heatmap({df_type})', df)
 
                 show_all_labels = (
                     self.checkBox_corr_hetatmap_show_all_labels_x.isChecked(),
@@ -5013,7 +5013,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 )
                 cmap = self.comboBox_corr_hetatmap_cmap.currentText()
                 BasicPlot(self.tfa).plot_items_corr_heatmap(df=df,
-                                                title_name=f'Co-expression heatmap of {df_type}', 
+                                                title_name=f'Expression Correlation Heatmap({df_type})',
                                                 cluster=True,
                                                 cmap=cmap,
                                                 width=width, height=height, 
