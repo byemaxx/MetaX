@@ -2545,10 +2545,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
 
             if normalize_method != 'None' or transform_method != 'None':
-                transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 
-                                'Square root transformation': 'sqrt', 'Cube root transformation': 'cube'}
-                normalize_dict = {'None': None, 'Mean centering': 'mean','Standard Scaling (Z-Score)' : 'zscore',
-                                'Min-Max Scaling': 'minmax', 'Pareto Scaling': 'pareto'}
+                transform_dict = {
+                    "None": None,
+                    "Log 2 transformation": "log2",
+                    "Log 10 transformation": "log10",
+                    "Square root transformation": "sqrt",
+                    "Cube root transformation": "cube",
+                }
+                normalize_dict = {
+                    "None": None,
+                    "Mean centering": "mean",
+                    "Standard Scaling (Z-Score)": "zscore",
+                    "Min-Max Scaling": "minmax",
+                    "Pareto Scaling": "pareto",
+                    "Normalization by sum": "sum",
+                }
                 normalize_method = normalize_dict[normalize_method]
                 transform_method = transform_dict[transform_method]
 

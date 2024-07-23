@@ -1,3 +1,9 @@
+# Version: 1.109.2
+## Date: 2024-07-23
+### Changes:
+- Fix: Fixef the bug of data preprossing, when the 'sum' method was selected for normalization, the program will raise error.
+
+
 # Version: 1.109.1
 ## Date: 2024-07-23
 ### Changes:
