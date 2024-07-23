@@ -43,6 +43,7 @@ from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListW
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
+from PyQt5.QtWidgets import QToolBox
 
 import qtawesome as qta
 # from qt_material import apply_stylesheet
@@ -429,8 +430,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
 
-        # ### Co-Expression Network
+        # ### Co-Expression
         self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
+        self.pushButton_co_expr_heatmap_plot.clicked.connect(self.plot_co_expr_heatmap)
         self.comboBox_co_expr_table.currentIndexChanged.connect(self.update_co_expr_select_list)
         self.pushButton_co_expr_add_to_list.clicked.connect(self.add_co_expr_to_list)
         self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
@@ -841,7 +843,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QGroupBox {{
                     text-transform: none;
                     margin: 0px;
-                    padding: 10px 0px 10px 0px;
                     }}
                     QTabBar {{
                     text-transform: none;
@@ -851,21 +852,51 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     }}
                     QHeaderView::section {{
                     text-transform: none;
-                    padding: 5px;
+                    }}
+                    QLineEdit {{
+                    font-size: 12px;
+                    }}
+                    QLabel {{
+                    font-size: 12px;
+                    }}
+                    QComboBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QSpinBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QListWidget {{
+                    font-size: 12px;
+                    }}
+                    QDoubleSpinBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QCheckBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QRadioButton {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QToolBox {{
+                    font-size: 12px;
+                    font-weight: bold;
                     }}
                     QPushButton {{
                     text-transform: none;
-                    }}
-                    QLabel {{
-                    font-size: 13px;
-                    }}
-                    QComboBox {{
-                    font-size: 13px;
-                    }}
-                    QToolBox {{
-                    font-size: 14px;
-                    font-weight: bold;
-                    }}
+                    color: {QTMATERIAL_PRIMARYCOLOR};
+                    background-color: {QTMATERIAL_SECONDARYCOLOR};
+                    border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
+                    border-radius: 2px;
+                    font-size: 12px;
+                    padding: 5px;
+                    margin: 2px;
+                    height: 20px;
+                }}
 
                     '''
         current_app = QtWidgets.QApplication.instance()
@@ -940,6 +971,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         tab_widget =self.MainWindow.findChildren(QtWidgets.QTabWidget)
         for widget in tab_widget:
             widget.setCurrentIndex(0)
+            
+        # Set default current index as 0 for all ToolBox
+        toolbox_widgets = self.MainWindow.findChildren(QtWidgets.QToolBox)
+        for toolbox in toolbox_widgets:
+            toolbox.setCurrentIndex(0)
             
     def update_outlier_detection(self):
         if self.comboBox_outlier_detection.currentText() == "None":
@@ -1410,42 +1446,50 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     #     self.stackedWidget.setCurrentIndex(3)
     
     def cross_test_tab_change(self, index):        
-        if index == 2: #TUKEY
-            self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
+        if index in [3, 4]: # TUKEY Test or DESeq2 Test
+            # self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
+            self.hide_all_in_layout(self.toolBox_9)
         else:
-            self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
+            self.show_all_in_layout(self.toolBox_9)
             
-        if index == 3:
+        if index == 2: # Group Control Test
             self.hide_all_in_layout(self.gridLayout_38)
         else:
             self.show_all_in_layout(self.gridLayout_38)
             
 
+
     def hide_all_in_layout(self, layout):
-        for i in range(layout.count()):
-            layout_item = layout.itemAt(i)
-            if layout_item.widget() is not None:
-                # 隐藏小部件
-                layout_item.widget().hide()
-            elif layout_item.layout() is not None:
-                # 递归隐藏嵌套布局中的元素
-                self.hide_all_in_layout(layout_item.layout())
+        if isinstance(layout, QToolBox):
+            # For QToolBox
+            layout.hide()
+        else:
+            # For other types of layout
+            for i in range(layout.count()):
+                layout_item = layout.itemAt(i)
+                if layout_item.widget() is not None:
+                    layout_item.widget().hide()
+                elif layout_item.layout() is not None:
+                    self.hide_all_in_layout(layout_item.layout())
 
     def show_all_in_layout(self, layout, if_except=True):
         except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
-                       'comboBox_cross_3_level_plot_df_type','label_141',
-                       'checkBox_cross_3_level_plot_remove_zero_col',
-                       'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
-        
-        for i in range(layout.count()):
-            layout_item = layout.itemAt(i)
-            if layout_item.widget() is not None:
-                if layout_item.widget().objectName() not in except_list:
-                    # 显示小部件
-                    layout_item.widget().show()
-            elif layout_item.layout() is not None:
-                # 递归显示嵌套布局中的元素
-                self.show_all_in_layout(layout_item.layout(), if_except=if_except)
+                    'comboBox_cross_3_level_plot_df_type', 'label_141',
+                    'checkBox_cross_3_level_plot_remove_zero_col', 'label_139',
+                    'doubleSpinBox_max_log2fc_heatmap'] if if_except else []
+
+        if isinstance(layout, QToolBox):
+            # For QToolBox
+            layout.show()
+        else:
+            # For other types of layout
+            for i in range(layout.count()):
+                layout_item = layout.itemAt(i)
+                if layout_item.widget() is not None:
+                    if layout_item.widget().objectName() not in except_list:
+                        layout_item.widget().show()
+                elif layout_item.layout() is not None:
+                    self.show_all_in_layout(layout_item.layout(), if_except=if_except)
 
 
     def add_theme_to_combobox(self):
@@ -2939,6 +2983,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_sankey_plot,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
+        self.pushButton_co_expr_heatmap_plot,
         self.comboBox_co_expr_table,
         self.comboBox_basic_table,
         self.pushButton_co_expr_add_to_list,
@@ -4966,6 +5011,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
 
+    def plot_co_expr_heatmap(self):
+        pass
+    
+    
     #Sankey
     def deseq2_plot_sankey(self):
 
@@ -5397,10 +5446,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # use InputWindow to show the deleted rows
                 self.input_window = InputWindow(self.MainWindow)
                 self.input_window.setWindowTitle('Warning')
-                self.input_window.text_edit.setText(f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.text_edit.setText(f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted rows:\n{row_str}')
                 self.input_window.exec_()
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted rows:\n{row_str}')
         return dataframe
 
     # delete all 0 columns and show a warning message including the deleted columns
@@ -5415,10 +5464,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # use InputWindow to show the deleted rows
                 self.input_window = InputWindow(self.MainWindow)
                 self.input_window.setWindowTitle('Warning')
-                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted columns:\n{col_str}')
                 self.input_window.exec_()
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted columns:\n{col_str}')
         return dataframe
 
     # Plot Line
