@@ -149,13 +149,12 @@ class NetworkPlot:
                 df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
             print(f"New df shape: {df.shape}")
             
-        # taxa_sum = df.groupby('taxa')['sum'].sum().to_dict()
         taxa_sum = df[df['taxa'] != ""].groupby('taxa')['sum'].sum().to_dict()
-        # function_sum = df.groupby('function')['sum'].sum().to_dict()
         function_sum = df[df['function'] != ""].groupby('function')['sum'].sum().to_dict()
-
-        min_value = min(min(taxa_sum.values()), min(function_sum.values()))
-        max_value = max(max(taxa_sum.values()), max(function_sum.values()))
+        
+        sum_dict = {**taxa_sum, **function_sum}
+        min_value = min(sum_dict.values())
+        max_value = max(sum_dict.values())
 
         def normalize(value):
             if max_value == min_value:
@@ -232,7 +231,7 @@ class NetworkPlot:
         """
 
         # preprocess focus_list
-        if focus_list is not None and focus_list:
+        if focus_list:
             new_list = []
             for i in focus_list:
                 if i in self.tfa.taxa_df.index.tolist():
@@ -322,12 +321,12 @@ class NetworkPlot:
     
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
-                                corr_threshold:float=0.5, sample_list:list = None, 
-                                width:int = 12, height:int = 8, focus_list:list = [], plot_list_only:bool = False,
+                                corr_threshold:float=0.5, sample_list:list[str]|None = None, 
+                                width:int = 12, height:int = 8, focus_list:list[str] = [], plot_list_only:bool = False,
                                 ):
         from matplotlib import colormaps
         #check sample_list length
-        if len(sample_list) < 2:
+        if sample_list and len(sample_list) < 2:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
         df_dict = {'taxa': self.tfa.taxa_df, 

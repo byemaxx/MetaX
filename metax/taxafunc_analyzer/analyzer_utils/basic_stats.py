@@ -108,3 +108,74 @@ class BasicStats:
         df_prop['label'] = df_prop['prop'] + \
             ' (' + df_prop['freq'].astype(str) + '%)'
         return df_prop
+    
+    
+    def get_correlation(self, df_type: str,
+                        sample_list: list[str]|None = None,
+                        focus_list: list[str]|None = None,
+                        plot_list_only: bool = False,
+                        rename_taxa: bool = False,
+                        method='pearson') -> pd.DataFrame:
+        '''
+        Get correlation between items in a dataframe.
+        `df_type`: str: 'taxa', 'func', 'taxa_func', 'func_taxa', 'custom'
+        `sample_list`: a list of samples to calculate correlation
+        `plot_list_only`: bool: if True, only return the list of samples that can be plotted
+        `method`: str: 'pearson', 'spearman'
+        '''
+        df = self.tfa.get_df(df_type)
+        df = self.tfa.replace_if_two_index(df)
+        if sample_list:
+            df = df[sample_list]
+        if plot_list_only:
+            # extrat the row that index is in the focus_list
+            if focus_list and len(focus_list) > 0:
+                df = df.loc[focus_list]
+        if rename_taxa:
+            df = self.tfa.rename_taxa(df)
+        
+        corr = df.T.corr(method=method)
+        return corr
+
+    def get_combined_sub_meta_df(
+        self,
+        df: pd.DataFrame,
+        sub_meta: str,
+        rename_sample: bool = False,
+        plot_mean: bool = False,
+    ) -> tuple[pd.DataFrame, list[str]]:
+        """
+        Combines the sub-meta information with the main meta information in the given DataFrame and returns the combined DataFrame and a list of sub-meta groups.
+
+        Args:
+            df (pd.DataFrame): The DataFrame containing the main meta information.
+            sub_meta (str): The sub-meta information to be combined with the main meta information.
+            rename_sample (bool, optional): Whether to rename the samples in the DataFrame. Defaults to False.
+            plot_mean (bool, optional): Whether to plot the mean values. Defaults to False.
+
+        Returns:
+            tuple[pd.DataFrame, list[str]]: A tuple containing the combined DataFrame and a list of sub-meta groups.
+        """
+        if sub_meta != 'None':
+
+            sample_groups = {sample: self.tfa.get_group_of_a_sample(sample, self.tfa.meta_name) for sample in df.columns}
+            sub_groups = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in df.columns}
+
+            # Combine samples with the same meta and sub-meta, and calculate the mean value
+            grouped_data = df.T.groupby([sample_groups, sub_groups]).mean().T
+            
+            # group_list is the sub-meta group
+            group_list = [i[1] for i in grouped_data.columns] if not plot_mean else grouped_data.columns.tolist()
+            
+            # Convert multi-index to single index
+            grouped_data.columns = ['_'.join(col).strip() for col in grouped_data.columns.values]
+            
+            df = grouped_data
+            
+        else:
+            if rename_sample:
+                df, group_list = self.tfa.add_group_name_for_sample(df)
+            else:
+                group_list = [self.tfa.get_group_of_a_sample(i) for i in df.columns] if not plot_mean else df.columns.tolist()
+        
+        return df, group_list

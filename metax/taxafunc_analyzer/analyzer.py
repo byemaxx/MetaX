@@ -409,7 +409,28 @@ class TaxaFuncAnalyzer:
             df = df.drop(df.columns[:2], axis=1)
         return df
 
-    def add_group_name_for_sample(self, df: pd.DataFrame) -> tuple:
+    def add_group_name_for_sample(self, df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        '''
+        Adds group names to sample names in the given DataFrame.
+
+        Parameters:
+        df (pd.DataFrame): The DataFrame containing the samples.
+
+        Returns:
+        tuple[pd.DataFrame, list[str]]: A tuple containing the modified DataFrame with updated sample names and a list of group names.
+
+        Example:
+        >>> df = pd.DataFrame({'Sample1': [1, 2, 3], 'Sample2': [4, 5, 6]})
+        >>> analyzer = Analyzer()
+        >>> modified_df, group_names = analyzer.add_group_name_for_sample(df)
+        >>> modified_df
+           Sample1 (Group1)  Sample2 (Group2)
+        0                 1                 4
+        1                 2                 5
+        2                 3                 6
+        >>> group_names
+        ['Group1', 'Group2']
+        '''
         sample_list = df.columns.tolist()
 
         new_sample_list = []
@@ -766,6 +787,11 @@ class TaxaFuncAnalyzer:
             "taxa_func": "taxa_func_df",
             "func_taxa": "func_taxa_df",
             "custom": "custom_df",
+            "functions": "func_df",
+            "taxa-functions": "taxa_func_df",
+            "peptides": "peptide_df",
+            "proteins": "protein_df",
+            
         }
         dft = getattr(self, name_dict[table_name])
         # remove peptide_num column if exists
