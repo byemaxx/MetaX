@@ -328,7 +328,7 @@ Then we can check tables in **Table Review** part, and export it.
 
 ### PCA, Correlation and Box Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca"  />
+<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" style="zoom:;" />
 
 We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default all) to plot **PCA**, **Correlation**,  and **Box Plot** for **[Taxa, Function, Taxa-Func, Peptide table, Protein table**]
 
@@ -346,7 +346,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select **Sub Meta**  to plot with two meta
 
-    - ![basic_setting](MetaX_Cookbook.assets/basic_setting.png)
+    - <img src="MetaX_Cookbook.assets/sub_meta.png" alt="sub_meta"  />
+
+  - Change settings in the **PLOT PARAMETER** tab
+
+    - <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting" style="zoom:80%;" />
 
       
 
@@ -360,7 +364,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     - <img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732"  />
 
-    - ![image-20230728112519665](./MetaX_Cookbook.assets/right_cilck_menu.png)
+      
 
     - <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:80%;" />
 
@@ -438,7 +442,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
-    - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap"  />
+    - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">
   
 - **Plot:**
 
@@ -469,8 +473,6 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - 3D Bar plot
 
   - Plot 3D bar by selecting a **sub meta**.
-  - ![basic_stats_bar_3d_setting](MetaX_Cookbook.assets/basic_stats_bar_3d_setting.png)
-
   - <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
 
 
@@ -493,13 +495,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Select 2 group stats T-Test for  **[Taxa, Function, Taxa-Func, Peptide table and Proteins Table**]
 
-<img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test"  />
+<img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test"/>
 
 ### ANOVA-TEST
 
 - select <u>some groups</u> or <u>all groups</u> to ANOVA Test for  **[Taxa, Function, Taxa-Func and Peptide table**]
 
-<img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test"  />
+<img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test"/>
 
 ### Significant Taxa-Func
 
@@ -510,7 +512,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - The **result** of the T-test and ANOVA Test will show in a new window
 
-  <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res"  />
+  <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res"/>
 
   
 
@@ -520,6 +522,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting"  />
 
+- 
 - Taxa-Func cross heatmap:
   - The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.
 
@@ -535,14 +538,53 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - The colored tiles represent the taxa which were not significantly different between groups but the related functions were.
 
+### Group-Control TEST
+
+- **Dunnett's Test**
+
+  Set a Group as **"Control"**, then compare all groups to Control
+
+  - **Comparing in Each Condition:** Select a meta such as individual, then compare groups to control in each individual.
+
+- **DESeq2 Test**
+
+  Bingo! You noticed the hidden function of MetaX,  click **Help -> About -> Like** 3 times to unlock the function to compare all groups to control.
+
+  
+
+  - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
+  - Result of Dunnett's Test:
+    - T- Statistic value shown in the heatmap
+  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
 
 
 
+### DESeq2
+
+- Select two groups to calculate FoldChange by [<u>PyDESeq2</u>]: https://github.com/owkin/PyDESeq2
+
+  
+
+<img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717"/>
+
+- Select <u>p-adjust</u>, <u>log2FC</u> to plot
+
+  (**Ultra-Up(Down):** |log2FC| > Max log2FC)
+
+  - Volcano:
+
+    <img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano"/>
+
+  - Sankey:
+
+    - The last node level is the functions linked to each Taxon (When plotting Taxa-Func)
+
+    <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" />
 
 
 ### TUKEY_TEST
 
-<img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test"  />
+<img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test"/>
 
 - **Select a function:** 
 
@@ -571,50 +613,17 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot"  />
 
-### Group-Control TEST
-
-- **Dunnett's Test**
-
-  Set a Group as **"Control"**, then compare all groups to Control
-
-  - **Comparing in Each Condition:** Select a meta such as individual, then compare groups to control in each individual.
-
-  - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
-  - Result of Dunnett's Test:
-    - T- Statistic value shown in the heatmap
-  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
 
 
 
-## 6. Differential Analysis
 
-### Fold Change Calculation
+## 6. Expression Analysis
 
-- Select two groups to calculate FoldChange by [<u>PyDESeq2</u>]: https://github.com/owkin/PyDESeq2
-
-  
-
-<img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717"  />
-
-- Select <u>p-adjust</u>, <u>log2FC</u> to plot
-
-  (**Ultra-Up(Down):** |log2FC| > Max log2FC)
-
-  - Volcano:
-
-    <img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano"  />
-
-  - Sankey:
-
-    - The last node level is the functions linked to each Taxon (When plotting Taxa-Func)
-
-    <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey"  />
-
-### Co-Expression Networks
+### Co-Expression Networks & Heatmap
 
 - select Groups or Samples to calculate the correlation and plot the network
 
-<img src="./MetaX_Cookbook.assets/co_network_page.png" alt="image-20230728142606826"  />
+<img src="./MetaX_Cookbook.assets/co_network_page.png">
 
 - Slecet table, and set the method of correlation and threshold
 
@@ -632,13 +641,14 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic"  />
 
-
+- Correlation of expression
+  - ![image-20240723162241316](MetaX_Cookbook.assets/expression_corelation_heatmap.png)
 
 ### Expression Trends
 
 - Add items to the list window to plot the clusters with similar trends of intensity
 
-<img src="./MetaX_Cookbook.assets/trends_page.png" alt="image-20230728143806833"  />
+<img src="./MetaX_Cookbook.assets/trends_page.png">
 
 - Clusters plot (clustered by **k-means**)
 
@@ -666,7 +676,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Taxa-Func Link Plot
 
-<img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" alt="image-20230728150309898"  />
+<img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png">
 
 - Check all taxa in one function (or Check all functions in a taxon)
 
@@ -710,11 +720,13 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Select some groups or samples (default all)
 - add some taxa, func or taxa-func to focus the window  (Optional)
 
-<img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" alt="image-20230728145518517"  />
+<img src="./MetaX_Cookbook.assets/taxa_func_link_page.png">
 
 - Plot list only
-  - Checked the "**Plot List Only**" to show the items only in the list
-
+  - **Plot List Only:** Show the items only in the list and the items linked to them
+  - **Without Links:** Only show the items in the focus list
+    - <img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" >
+  
 - Network plot
   - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
   - The red dots are the taxa we focused on

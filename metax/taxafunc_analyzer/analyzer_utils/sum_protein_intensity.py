@@ -29,7 +29,14 @@ class SumProteinIntensity:
         self._init_dicts()
         self.greedy_method = None  # only used for razor method
 
-            
+    def check_protein_col(self):
+        # if any NA, '', or empty in the protein column, raise error
+        if self.df[self.tfa.protein_col_name].isnull().values.any():
+            raise ValueError(f'There are NA values in {self.tfa.protein_col_name} column')
+
+        if (self.df[self.tfa.protein_col_name].str.strip() == '').any():
+            raise ValueError(f'There are empty values in {self.tfa.protein_col_name} column')
+        
     def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap'):
 
         if method not in ['razor', 'anti-razor', 'rank']:
@@ -39,6 +46,7 @@ class SumProteinIntensity:
         
         self.rank_method = rank_method
         self.greedy_method = greedy_method
+        self.check_protein_col()
         
         if method == 'rank':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   

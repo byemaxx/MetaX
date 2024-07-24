@@ -43,6 +43,7 @@ from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListW
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
+from PyQt5.QtWidgets import QToolBox
 
 import qtawesome as qta
 # from qt_material import apply_stylesheet
@@ -429,8 +430,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
 
-        # ### Co-Expression Network
-        self.pushButton_co_expr_plot.clicked.connect(self.plot_co_expr_network)
+        # ### Co-Expression
+        self.pushButton_co_expr_plot.clicked.connect(lambda: self.plot_co_expr('network'))
+        self.pushButton_co_expr_heatmap_plot.clicked.connect(lambda: self.plot_co_expr('heatmap'))
         self.comboBox_co_expr_table.currentIndexChanged.connect(self.update_co_expr_select_list)
         self.pushButton_co_expr_add_to_list.clicked.connect(self.add_co_expr_to_list)
         self.pushButton_co_expr_drop_item.clicked.connect(self.drop_co_expr_list)
@@ -841,7 +843,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QGroupBox {{
                     text-transform: none;
                     margin: 0px;
-                    padding: 10px 0px 10px 0px;
                     }}
                     QTabBar {{
                     text-transform: none;
@@ -851,21 +852,51 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     }}
                     QHeaderView::section {{
                     text-transform: none;
-                    padding: 5px;
+                    }}
+                    QLineEdit {{
+                    font-size: 12px;
+                    }}
+                    QLabel {{
+                    font-size: 12px;
+                    }}
+                    QComboBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QSpinBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QListWidget {{
+                    font-size: 12px;
+                    }}
+                    QDoubleSpinBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QCheckBox {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QRadioButton {{
+                    font-size: 12px;
+                    height: 20px;
+                    }}
+                    QToolBox {{
+                    font-size: 12px;
+                    font-weight: bold;
                     }}
                     QPushButton {{
                     text-transform: none;
-                    }}
-                    QLabel {{
-                    font-size: 13px;
-                    }}
-                    QComboBox {{
-                    font-size: 13px;
-                    }}
-                    QToolBox {{
-                    font-size: 14px;
-                    font-weight: bold;
-                    }}
+                    color: {QTMATERIAL_PRIMARYCOLOR};
+                    background-color: {QTMATERIAL_SECONDARYCOLOR};
+                    border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
+                    border-radius: 2px;
+                    font-size: 12px;
+                    padding: 5px;
+                    margin: 2px;
+                    height: 20px;
+                }}
 
                     '''
         current_app = QtWidgets.QApplication.instance()
@@ -940,6 +971,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         tab_widget =self.MainWindow.findChildren(QtWidgets.QTabWidget)
         for widget in tab_widget:
             widget.setCurrentIndex(0)
+            
+        # Set default current index as 0 for all ToolBox
+        toolbox_widgets = self.MainWindow.findChildren(QtWidgets.QToolBox)
+        for toolbox in toolbox_widgets:
+            toolbox.setCurrentIndex(0)
             
     def update_outlier_detection(self):
         if self.comboBox_outlier_detection.currentText() == "None":
@@ -1410,42 +1446,50 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     #     self.stackedWidget.setCurrentIndex(3)
     
     def cross_test_tab_change(self, index):        
-        if index == 2: #TUKEY
-            self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
+        if index in [3, 4]: # TUKEY Test or DESeq2 Test
+            # self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
+            self.hide_all_in_layout(self.toolBox_9)
         else:
-            self.show_all_in_layout(self.gridLayout_top_heatmap_plot)
+            self.show_all_in_layout(self.toolBox_9)
             
-        if index == 3:
+        if index == 2: # Group Control Test
             self.hide_all_in_layout(self.gridLayout_38)
         else:
             self.show_all_in_layout(self.gridLayout_38)
             
 
+
     def hide_all_in_layout(self, layout):
-        for i in range(layout.count()):
-            layout_item = layout.itemAt(i)
-            if layout_item.widget() is not None:
-                # 隐藏小部件
-                layout_item.widget().hide()
-            elif layout_item.layout() is not None:
-                # 递归隐藏嵌套布局中的元素
-                self.hide_all_in_layout(layout_item.layout())
+        if isinstance(layout, QToolBox):
+            # For QToolBox
+            layout.hide()
+        else:
+            # For other types of layout
+            for i in range(layout.count()):
+                layout_item = layout.itemAt(i)
+                if layout_item.widget() is not None:
+                    layout_item.widget().hide()
+                elif layout_item.layout() is not None:
+                    self.hide_all_in_layout(layout_item.layout())
 
     def show_all_in_layout(self, layout, if_except=True):
         except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
-                       'comboBox_cross_3_level_plot_df_type','label_141',
-                       'checkBox_cross_3_level_plot_remove_zero_col',
-                       'label_139','doubleSpinBox_max_log2fc_heatmap'] if if_except else []
-        
-        for i in range(layout.count()):
-            layout_item = layout.itemAt(i)
-            if layout_item.widget() is not None:
-                if layout_item.widget().objectName() not in except_list:
-                    # 显示小部件
-                    layout_item.widget().show()
-            elif layout_item.layout() is not None:
-                # 递归显示嵌套布局中的元素
-                self.show_all_in_layout(layout_item.layout(), if_except=if_except)
+                    'comboBox_cross_3_level_plot_df_type', 'label_141',
+                    'checkBox_cross_3_level_plot_remove_zero_col', 'label_139',
+                    'doubleSpinBox_max_log2fc_heatmap'] if if_except else []
+
+        if isinstance(layout, QToolBox):
+            # For QToolBox
+            layout.show()
+        else:
+            # For other types of layout
+            for i in range(layout.count()):
+                layout_item = layout.itemAt(i)
+                if layout_item.widget() is not None:
+                    if layout_item.widget().objectName() not in except_list:
+                        layout_item.widget().show()
+                elif layout_item.layout() is not None:
+                    self.show_all_in_layout(layout_item.layout(), if_except=if_except)
 
 
     def add_theme_to_combobox(self):
@@ -1454,7 +1498,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         cmap_list = ['Auto'] + sorted(list(colormaps))
 
 
-        cmap_combox_list = ['comboBox_basic_hetatmap_theme', 'comboBox_tflink_cmap', 'comboBox_top_heatmap_cmap']
+        cmap_combox_list = ['comboBox_basic_corr_cmap','comboBox_basic_hetatmap_theme', 'comboBox_tflink_cmap', 'comboBox_top_heatmap_cmap', 'comboBox_corr_hetatmap_cmap']
         for name in cmap_combox_list:
             old_combobox = getattr(self, name)
             new_combobox = CmapComboBox(old_combobox.parent())
@@ -2501,10 +2545,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
 
             if normalize_method != 'None' or transform_method != 'None':
-                transform_dict = {'None': None, 'Log 2 transformation': 'log2', 'Log 10 transformation': 'log10', 
-                                'Square root transformation': 'sqrt', 'Cube root transformation': 'cube'}
-                normalize_dict = {'None': None, 'Mean centering': 'mean','Standard Scaling (Z-Score)' : 'zscore',
-                                'Min-Max Scaling': 'minmax', 'Pareto Scaling': 'pareto'}
+                transform_dict = {
+                    "None": None,
+                    "Log 2 transformation": "log2",
+                    "Log 10 transformation": "log10",
+                    "Square root transformation": "sqrt",
+                    "Cube root transformation": "cube",
+                }
+                normalize_dict = {
+                    "None": None,
+                    "Mean centering": "mean",
+                    "Standard Scaling (Z-Score)": "zscore",
+                    "Min-Max Scaling": "minmax",
+                    "Pareto Scaling": "pareto",
+                    "Normalization by sum": "sum",
+                }
                 normalize_method = normalize_dict[normalize_method]
                 transform_method = transform_dict[transform_method]
 
@@ -2939,6 +2994,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_sankey_plot,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
+        self.pushButton_co_expr_heatmap_plot,
         self.comboBox_co_expr_table,
         self.comboBox_basic_table,
         self.pushButton_co_expr_add_to_list,
@@ -3378,7 +3434,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         rename_sample = self.checkBox_basic_hetatmap_rename_sample_name.isChecked()
         show_all_labels = (self.checkBox_basic_hetatmap_show_all_labels_x.isChecked(), self.checkBox_basic_hetatmap_show_all_labels_y.isChecked())
         plot_mean = self.checkBox_basic_heatmap_plot_mean.isChecked()
-
+        sub_meta = self.comboBox_3dbar_sub_meta.currentText()
+        
         table_name = self.comboBox_basic_table.currentText()
 
         if cmap == 'Auto':
@@ -3492,7 +3549,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels, rename_sample=rename_sample,
-                                                         plot_mean = plot_mean, sub_meta = self.comboBox_3dbar_sub_meta.currentText())
+                                                         plot_mean = plot_mean, sub_meta = sub_meta)
                                                          
             
             elif plot_type == 'bar':
@@ -3521,13 +3578,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
-                if plot_mean:
+                if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
                     df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+                elif sub_meta != 'None':
+                    df, _ = self.tfa.BasicStats.get_combined_sub_meta_df(df=df, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
                 else:
-                    if rename_taxa:
-                        df = self.tfa.rename_taxa(df)
                     if rename_sample:
                         df = self.tfa.rename_sample(df)
+                        
+                if rename_taxa:
+                    df = self.tfa.rename_taxa(df)
                         
                 self.show_table(df=df, title=title)
                 
@@ -3542,12 +3602,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.show_message('Plotting Sankey...')
                 if self.checkBox_basic_heatmap_sankey_title.isChecked():
                     title_new = title
-                    subtitle = sample_list
+                    subtitle = str(sample_list)
                 else:
                     title_new = ''
                     subtitle = ''
                 pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height, 
                                                                  title=title_new, subtitle=subtitle, font_size=font_size,
+                                                                 sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
                 
@@ -4160,6 +4221,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
                 show_all_labels = (self.checkBox_corr_show_all_labels_x.isChecked(), self.checkBox_corr_show_all_labels_y.isChecked())
+                cmap = self.comboBox_basic_corr_cmap.currentText()
                 # checek if the dataframe has at least 2 rows and 2 columns
                 if df.shape[0] < 2 or df.shape[1] < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows or columns is less than 2, correlation cannot be plotted!')
@@ -4170,7 +4232,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.show_message('Correlation is running, please wait...')
                 BasicPlot(self.tfa).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
                                                 width=width, height=height, font_size=font_size, 
-                                                show_all_labels=show_all_labels, theme=theme,
+                                                show_all_labels=show_all_labels, theme=theme, cmap=cmap,
                                                 rename_sample = rename_sample, **self.heatmap_params_dict)
 
             elif method == 'alpha_div':
@@ -4229,7 +4291,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 title = 'Sankey of Taxa' if table_name == 'Taxa' else 'Sankey of Taxa-Functions'
                 
                 pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height,
-                                                                 font_size = font_size, title='', subtitle='')
+                                                                 font_size = font_size, title='', subtitle='', sub_meta=sub_meta)
                 self.save_and_show_js_plot(pic, title)
             
             elif method == 'num_bar':
@@ -4912,7 +4974,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
     
-    def plot_co_expr_network(self):
+    def plot_co_expr(self, plot_type = 'network'):
+        '''
+        plot_type: network or heatmap
+        '''
         df_type = self.comboBox_co_expr_table.currentText().lower()
         corr_method = self.comboBox_co_expr_corr_method.currentText()
         corr_threshold = self.doubleSpinBox_co_expr_corr_threshold.value()
@@ -4945,27 +5010,60 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return None
 
 
-        try:            
-            self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-            pic = NetworkPlot(self.tfa,
-                              show_labels=show_labels,
-                              rename_taxa=rename_taxa,
-                              font_size=font_size,
-                              theme=self.html_theme,
-                              **self.tf_link_net_params_dict
-                              ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
-                                                                  corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
-            self.save_and_show_js_plot(pic, 'co-expression network')
-        except ValueError as e:
-            if 'sample_list should have at least 2' in str(e):
-                QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
-        except Exception as e:
-            error_message = traceback.format_exc()
-            self.logger.write_log(f'plot_co_expr_network error: {error_message}', 'e')
-            self.logger.write_log(f'plot_co_expr_network: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
-            return None
+        if plot_type == 'heatmap':
+            self.show_message('Co-expression heatmap is plotting...\n\n It may take a long time! Please wait...')
+            try:
+                print(f'Calculate correlation with {corr_method} method...')
+                df = self.tfa.BasicStats.get_correlation(df_type = df_type, sample_list = sample_list, focus_list = focus_list, plot_list_only = plot_list_only, rename_taxa = rename_taxa, method=corr_method)
+                # save df to table_dict
+                self.update_table_dict(f'expression correlation heatmap({df_type})', df)
 
+                show_all_labels = (
+                    self.checkBox_corr_hetatmap_show_all_labels_x.isChecked(),
+                    self.checkBox_corr_hetatmap_show_all_labels_y.isChecked(),
+                )
+                cmap = self.comboBox_corr_hetatmap_cmap.currentText()
+                BasicPlot(self.tfa).plot_items_corr_heatmap(df=df,
+                                                title_name=f'Expression Correlation Heatmap({df_type})',
+                                                cluster=True,
+                                                cmap=cmap,
+                                                width=width, height=height, 
+                                                font_size=font_size, 
+                                                show_all_labels=show_all_labels,
+                                                **self.heatmap_params_dict)
+                                                        
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_co_expr_heatmap error: {error_message}', 'e')
+                self.logger.write_log(f'plot_co_expr_heatmap: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
+                return None
+            
+            
+        elif plot_type == 'network':   
+            try:
+                self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
+                pic = NetworkPlot(self.tfa,
+                                show_labels=show_labels,
+                                rename_taxa=rename_taxa,
+                                font_size=font_size,
+                                theme=self.html_theme,
+                                **self.tf_link_net_params_dict
+                                ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
+                                                                    corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
+                self.save_and_show_js_plot(pic, 'co-expression network')
+            except ValueError as e:
+                if 'sample_list should have at least 2' in str(e):
+                    QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
+            except Exception as e:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'plot_co_expr_network error: {error_message}', 'e')
+                self.logger.write_log(f'plot_co_expr_network: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
+                return None
+        else:
+            raise ValueError(f'No such plot_type: {plot_type}')
+    
     #Sankey
     def deseq2_plot_sankey(self):
 
@@ -5397,10 +5495,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # use InputWindow to show the deleted rows
                 self.input_window = InputWindow(self.MainWindow)
                 self.input_window.setWindowTitle('Warning')
-                self.input_window.text_edit.setText(f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.text_edit.setText(f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted rows:\n{row_str}')
                 self.input_window.exec_()
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nDeleted rows: \n{row_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_rows)}] rows are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted rows:\n{row_str}')
         return dataframe
 
     # delete all 0 columns and show a warning message including the deleted columns
@@ -5415,10 +5513,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # use InputWindow to show the deleted rows
                 self.input_window = InputWindow(self.MainWindow)
                 self.input_window.setWindowTitle('Warning')
-                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                self.input_window.text_edit.setText(f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted columns:\n{col_str}')
                 self.input_window.exec_()
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nDeleted columns: \n{col_str}\n\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'[{len(zero_columns)}] columns are all 0, so they are deleted!\nIf you want to keep them, please uncheck the [cluster] checkbox or change a [scale method]!\n\nDeleted columns:\n{col_str}')
         return dataframe
 
     # Plot Line

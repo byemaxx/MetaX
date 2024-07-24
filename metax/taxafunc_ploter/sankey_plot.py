@@ -20,6 +20,46 @@ class SankeyPlot:
         self.font_size = 12
         self.show_legend = True
         self.theme = theme
+        
+    def convert_df_by_group_for_sankey(self,df, sub_meta, plot_mean) -> dict:
+        sample_list = df.columns.tolist()
+        
+        if plot_mean or sub_meta != 'None':
+            if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
+                df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            elif sub_meta != 'None':
+                df, _ = self.tfa.BasicStats.get_combined_sub_meta_df(df=df, sub_meta=sub_meta, plot_mean=plot_mean)
+            group_dict = {col: col for col in df.columns}
+            
+        else:
+            # group_dict = group is key, samples in a list is value
+            group_dict = {}
+            for sample in sample_list:
+                group = self.tfa.get_group_of_a_sample(sample, self.tfa.meta_name)
+                if group not in group_dict:
+                    group_dict[group] = [sample]
+                else:
+                    group_dict[group].append(sample)
+                    
+        df_dict = {}
+        # add all samples to the dict
+        df['sum'] = df.sum(axis=1)
+        df_dict['All'] = self.df_to_sankey_df(df, value_col='sum')
+        # add samples for each group to the dict
+        for group, samples in group_dict.items():
+            df_temp = df.loc[:, samples]
+            # convert to dataframe if it is a series, when there is only one sample, it will be a series
+            if isinstance(df_temp, pd.Series):
+                df_temp = pd.DataFrame(df_temp)
+                
+            df_temp['sum'] = df_temp.sum(axis=1)
+            # remove values that are 0
+            df_temp = df_temp[df_temp['sum'] != 0]
+            df_temp = self.df_to_sankey_df(df_temp, value_col='sum')
+            df_dict[group] = df_temp
+            
+        return df_dict
+            
 
     def convert_logfc_df_for_sankey(self, df, pvalue: float = 0.05,p_type ='padj',
                                     log2fc_min: float = 1,log2fc_max:float = 10)  -> dict:
@@ -78,6 +118,9 @@ class SankeyPlot:
                 df_t['value'] = abs(df_t['value'])
                 df_out_dict[key] = [df_t, len(df_t)]
                 # df_out_dict[key] = df_t
+        # remove normal if other not all empty,
+        if len(df_out_dict) > 1:
+            df_out_dict.pop('normal', None)
         return df_out_dict
 
     def df_to_sankey_df(self, df, value_col='value'):
@@ -166,7 +209,7 @@ class SankeyPlot:
             links = value[1]
             num = value[2]
             pic.add(
-                f'{key} (Total items: {num})',
+                f'{key} ({num})',
                 nodes=nodes,
                 links=links,
                 node_align='left',
@@ -179,7 +222,9 @@ class SankeyPlot:
 
 
         pic.set_global_opts(
-            legend_opts=opts.LegendOpts(selected_mode='single', is_show=self.show_legend),
+            legend_opts=opts.LegendOpts(selected_mode='single', is_show=self.show_legend,
+                                        type_="scroll",page_icon_size=8,
+                                        ),
             toolbox_opts=opts.ToolboxOpts(
                 is_show=True,
                 orient="vertical",
@@ -228,19 +273,18 @@ class SankeyPlot:
             link_nodes_dict[key] = [nodes, links, value[1]]
         pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title)
         return pic
-    
-    
-    def plot_intensity_sankey(self, df,width=12, height=8, title='Sankey Plot', subtitle='', font_size=12, show_legend=True):
+
+    def plot_intensity_sankey(self,df, width=12, height=8, title="Sankey Plot", subtitle="",
+                              font_size=12, show_legend=True, sub_meta='None', plot_mean=False):
         df = df.copy()
-        df['sum'] = df.sum(axis=1)
         self.font_size = font_size
         self.show_legend=show_legend
         
-        df_sankey = self.df_to_sankey_df(df, value_col='sum')
-        nodes, links = self.create_nodes_links(df_sankey)
-        # only state the number of last nodes
-        link_nodes_dict = {'Intensity Sum': [nodes, links, len(df.index)]}
-
-        pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title, subtitle= subtitle)
+        df_sankey = self.convert_df_by_group_for_sankey(df, sub_meta, plot_mean)
+        link_nodes_dict = {}
+        for key, value in df_sankey.items():
+            print(f'Creating nodes and links for {key}...')
+            nodes, links = self.create_nodes_links(value)
+            link_nodes_dict[key] = [nodes, links, len(value.index)]
+        pic = self.__plot_sankey(link_nodes_dict, width=width, height=height, title=title, subtitle=subtitle)
         return pic
-    

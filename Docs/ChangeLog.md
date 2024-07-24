@@ -1,3 +1,23 @@
+# Version: 1.109.2
+## Date: 2024-07-23
+### Changes:
+- Fix: Fixef the bug of data preprossing, when the 'sum' method was selected for normalization, the program will raise error.
+
+
+# Version: 1.109.1
+## Date: 2024-07-23
+### Changes:
+- New: Added a function to plot the heatmap of the correlation of the taxa, functions, taxa-functions items.
+- Fix: Fixed a bug of when plot the taxa-functions network.
+- Change: Changed the sankey plot for intensity, split samples to different groups to show.
+
+
+# Version: 1.109.0
+## Date: 2024-07-22
+### Changes:
+- Change: Changed the layout of the main window to make the GUI more user-friendly and clear.
+
+
 # Version: 1.108.7
 ## Date: 2024-07-14
 ### Changes:

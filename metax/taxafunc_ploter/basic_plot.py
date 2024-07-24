@@ -359,6 +359,7 @@ class BasicPlot:
         font_size=10,
         show_all_labels=(False, False),
         theme: str = None,
+        cmap: str = "Auto",
         rename_sample: bool = False,
         linkage_method: str = "average",
         distance_metric: str = "euclidean",
@@ -369,6 +370,10 @@ class BasicPlot:
         else:
             group_list = [self.tfa.get_group_of_a_sample(i) for i in dft.columns]
 
+        if cmap == 'Auto':
+            cmap = 'RdYlBu_r'
+        else:
+            cmap = cmap
 
         color_list = self.assign_colors(group_list)
         corr = dft.corr()
@@ -379,7 +384,7 @@ class BasicPlot:
                 plt.style.use(theme)
             else:
                 sns.set_theme(style="ticks")
-            sns_params = {"linewidths":.01, "cmap":'coolwarm', "cbar_kws":{ "shrink": 0.5},
+            sns_params = {"linewidths":.01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
                             'method':linkage_method,
@@ -579,37 +584,53 @@ class BasicPlot:
 
 
 
+    def plot_items_corr_heatmap(
+        self,
+        df,
+        title_name="Table",
+        cluster=False,
+        cmap = 'RdYlBu_r',
+        width=10,
+        height=8,
+        font_size=10,
+        show_all_labels=(False, False),
+        linkage_method: str = "average",
+        distance_metric: str = "euclidean",
+    ):
+        corr = df.copy()
+        # mask = np.triu(np.ones_like(corr, dtype=bool))
 
-    #! Deprecated function, use plot_taxa_stats_pie chart instead
-    # def plot_taxa_stats_bar(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
-    #     df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
-    #     # if 'not_found' is 0, then remove it
-    #     if df[df['LCA_level'] == 'notFound']['count'].values[0] == 0:
-    #         df = df[df['LCA_level'] != 'notFound']
+        try:
+            if cmap == 'Auto':
+                cmap = 'RdYlBu_r'
+            else:
+                cmap = cmap
+                
+            sns_params = {"linewidths":.01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
+                            'col_cluster':True if cluster else False,
+                            'row_cluster':True if cluster else False,
+                            'method':linkage_method,
+                            'metric':distance_metric,
+                            "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
+                            "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
+                            "yticklabels":True if show_all_labels[1] else 'auto'}
+            fig = sns.clustermap(corr, **sns_params)
 
-    #     if theme is not None and theme != 'Auto':
-    #         plt.style.use(theme)
-    #     else:
-    #         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
+            ax = fig.ax_heatmap
+            ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
+            ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
 
-    #         # plt.figure(figsize=(8, 6))
-    #         sns.set_theme(style="ticks", rc=custom_params)
+            cbar = fig.ax_heatmap.collections[0].colorbar
+            cbar.set_label("Correlation", rotation=90, labelpad=1)
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
+            plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
-    #     plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
-
-    #     ax = sns.barplot(data=df, x='LCA_level', y='count', hue='label',dodge=False)
-    #     for i in ax.containers:
-    #         ax.bar_label(i, fontsize=font_size)
-    #     ax.set_title('Number of identified peptides in different taxa level', fontsize=font_size+2, fontweight='bold')
-    #     ax.set_xlabel('Taxa level')
-    #     ax.set_ylabel('Number of peptides')
-    #     ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
-    #     ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
-    #     ax.legend(title='Taxa level (frequency)',  ncol=2)
-    #     if res_type == 'show':
-    #         plt.tight_layout()
-    #         plt.show()
-    #     else:
-    #         plt.close()
-    #     return ax # use "pic = BasicPlot(self.tfa).plot_taxa_stats().get_figure()" to get the figure object in GUI script
-
+            plt.tight_layout()
+            plt.show()
+            # plt.close()
+            return ax
+        except Exception as e:
+            plt.close('all')
+            raise e
