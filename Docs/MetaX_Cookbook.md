@@ -350,7 +350,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Change settings in the **PLOT PARAMETER** tab
 
-    - <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting" style="zoom:80%;" />
+    - <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting"  />
 
       
 
@@ -565,7 +565,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   
 
-<img src="./MetaX_Cookbook.assets/deseq2.png" alt="image-20230728123725717"/>
+<img src="./MetaX_Cookbook.assets/deseq2.png">
 
 - Select <u>p-adjust</u>, <u>log2FC</u> to plot
 

@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListW
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
-from PyQt5.QtWidgets import QToolBox
+from PyQt5.QtWidgets import QToolBox, QGroupBox
 
 import qtawesome as qta
 # from qt_material import apply_stylesheet
@@ -398,9 +398,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         ### ANOVA
         self.pushButton_anova_test.clicked.connect(self.anova_test)
-
-        ### Group Control Test
-        self.hide_all_in_layout(self.gridLayout_38)
         
         # self.hiddenTab = self.tabWidget_3.widget(3)
         # self.tabWidget_3.removeTab(3)
@@ -512,6 +509,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.toolButton_db_anno_folder_help.clicked.connect(self.show_toolButton_db_anno_folder_help)
 
         self.set_change_event_for_all_condition_group()
+        
+        # hide ploting setting groupbox
+        self.hide_plot_setting_groupbox()
 
         # init theme
         self.init_theme_menu()
@@ -768,6 +768,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # else:
         #     self.comboBox_3dbar_sub_meta.setEnabled(True)
 
+    def hide_plot_setting_groupbox(self):
+        groupbox_list = ["groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
+                         "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
+                         "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
+                         "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings"
+                         ]
+        for groupbox_name in groupbox_list:
+            groupbox = getattr(self, groupbox_name)
+            groupbox.setVisible(False)
+        
+        
         
     ###############   basic function End   ###############
     
@@ -1442,55 +1453,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def swith_stack_page_db_update(self):
         self.stackedWidget.setCurrentIndex(3)
     
-    # def swith_stack_page_about(self):
-    #     self.stackedWidget.setCurrentIndex(3)
     
     def cross_test_tab_change(self, index):        
         if index in [3, 4]: # TUKEY Test or DESeq2 Test
-            # self.hide_all_in_layout(self.gridLayout_top_heatmap_plot)
-            self.hide_all_in_layout(self.toolBox_9)
+            self.groupBox_cross_heatmap_plot.setVisible(False)
         else:
-            self.show_all_in_layout(self.toolBox_9)
+            self.groupBox_cross_heatmap_plot.setVisible(True)
             
-        if index == 2: # Group Control Test
-            self.hide_all_in_layout(self.gridLayout_38)
-        else:
-            self.show_all_in_layout(self.gridLayout_38)
-            
-
-
-    def hide_all_in_layout(self, layout):
-        if isinstance(layout, QToolBox):
-            # For QToolBox
-            layout.hide()
-        else:
-            # For other types of layout
-            for i in range(layout.count()):
-                layout_item = layout.itemAt(i)
-                if layout_item.widget() is not None:
-                    layout_item.widget().hide()
-                elif layout_item.layout() is not None:
-                    self.hide_all_in_layout(layout_item.layout())
-
-    def show_all_in_layout(self, layout, if_except=True):
-        except_list = ['doubleSpinBox_mini_log2fc_heatmap', 'label_138',
-                    'comboBox_cross_3_level_plot_df_type', 'label_141',
-                    'checkBox_cross_3_level_plot_remove_zero_col', 'label_139',
-                    'doubleSpinBox_max_log2fc_heatmap'] if if_except else []
-
-        if isinstance(layout, QToolBox):
-            # For QToolBox
-            layout.show()
-        else:
-            # For other types of layout
-            for i in range(layout.count()):
-                layout_item = layout.itemAt(i)
-                if layout_item.widget() is not None:
-                    if layout_item.widget().objectName() not in except_list:
-                        layout_item.widget().show()
-                elif layout_item.layout() is not None:
-                    self.show_all_in_layout(layout_item.layout(), if_except=if_except)
-
 
     def add_theme_to_combobox(self):
         # get all themes
@@ -2275,7 +2244,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if 'dunnett_test' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
-                self.hide_all_in_layout(self.gridLayout_38)
 
             if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('dunnettAllCondtion'):
                 self.comboBox_cross_3_level_plot_df_type.setEnabled(True)
@@ -2284,7 +2252,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if selected_table_name.startswith('deseq2'):
 
-                self.show_all_in_layout(self.gridLayout_38, if_except=False)
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
                 
@@ -2299,14 +2266,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
             if selected_table_name.startswith('dunnettAllCondtion'):
-                self.show_all_in_layout(self.gridLayout_38, if_except=False)
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(False)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(False)
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)
 
             
         else:
-            self.hide_all_in_layout(self.gridLayout_38)
             self.label_57.setText('Sort By:')
             sort_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
             if 't_test' in selected_table_name:

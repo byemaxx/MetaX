@@ -1,3 +1,9 @@
+# Version: 1.109.3
+## Date: 2024-07-24
+### Changes:
+- Change: Optimized the UI of plot settings.
+
+
 # Version: 1.109.2
 ## Date: 2024-07-23
 ### Changes:
