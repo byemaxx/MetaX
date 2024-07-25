@@ -25,7 +25,7 @@ class NetworkPlot:
                 label_position="bottom",
                 text_width = 300,
                 gravity = 0.2,
-                show_sub_title = True,
+                show_sub_title = False,
                 
                  ):
         
