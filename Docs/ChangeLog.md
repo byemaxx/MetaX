@@ -1,3 +1,8 @@
+# Version: 1.109.5
+## Date: 2024-07-25
+### Changes:
+- Fix: Fixed the bug of when add taxa-functions list to plot, the "<>" was not correctly recognized. 
+
 # Version: 1.109.4
 ## Date: 2024-07-24
 ### Changes:

@@ -3227,7 +3227,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # show the search results in a new window, allowing user to select the valid items
             if search_results:
                 self.input_window = InputWindow(self.MainWindow, input_mode=False)
-                self.input_window.text_edit.setText('\n'.join(search_results))
+                self.input_window.text_edit.setPlainText('\n'.join(search_results))
                 result = self.input_window.exec_()
                 if result == QDialog.Accepted:
                     text = self.input_window.text_edit.toPlainText()
