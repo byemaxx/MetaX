@@ -1,3 +1,9 @@
+# Version: 1.109.4
+## Date: 2024-07-24
+### Changes:
+- Fix: Fixed the size of group box in the Taxa-Functions Network plot was too small to show the content.
+
+
 # Version: 1.109.3
 ## Date: 2024-07-24
 ### Changes:
