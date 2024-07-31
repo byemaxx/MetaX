@@ -49,7 +49,7 @@ class BarPlot_js:
                            show_legend:bool=True, font_size:int=10,
                            rename_sample:bool=True, plot_mean:bool=False,
                            plot_percent:bool=False, sub_meta:str="None",
-                           show_all_labels:tuple = (False, False)
+                           show_all_labels:tuple = (False, False), use_3d:bool=False
                            ):
         if df is None:
             df = self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
@@ -63,6 +63,11 @@ class BarPlot_js:
                 df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
                 
             rename_sample = False
+            
+        if use_3d:
+            if sub_meta == "None":
+                use_3d = False
+                print('sub_meta must be provided for 3D bar plot, use 2D bar plot instead')
             
         # rename taxa
         if rename_taxa:
@@ -157,7 +162,9 @@ class BarPlot_js:
         }
         
         
-        if sub_meta == "None":
+        if not use_3d:
+            if sub_meta != "None":
+                df, _ = self.tfa.BasicStats.get_combined_sub_meta_df(df=df, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
             colors = self.get_distinct_colors(col_num, convert=True)
                 
             c = (

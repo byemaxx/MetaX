@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>3</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>528</width>
-                 <height>482</height>
+                 <height>486</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1332,7 +1332,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1405,143 +1405,6 @@
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_34">
-                       <item row="0" column="0">
-                        <widget class="QLabel" name="label_122">
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>general</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="1">
-                        <layout class="QHBoxLayout" name="horizontalLayout_32">
-                         <item>
-                          <widget class="QLabel" name="label_94">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Width</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QSpinBox" name="spinBox_basic_pca_width">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="value">
-                            <number>10</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QLabel" name="label_101">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Height</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QSpinBox" name="spinBox_basic_pca_height">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="value">
-                            <number>8</number>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="0" column="2">
-                        <layout class="QHBoxLayout" name="horizontalLayout_25">
-                         <item>
-                          <widget class="QLabel" name="label_159">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="toolTip">
-                            <string>The number of columns in the legend, set 0 to hide</string>
-                           </property>
-                           <property name="text">
-                            <string>Legend Cols</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QSpinBox" name="spinBox_basic_legend_col_num">
-                           <property name="minimum">
-                            <number>0</number>
-                           </property>
-                           <property name="value">
-                            <number>1</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QLabel" name="label_151">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Theme</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QComboBox" name="comboBox_basic_theme">
-                           <property name="editable">
-                            <bool>false</bool>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
                        <item row="1" column="1">
                         <layout class="QHBoxLayout" name="horizontalLayout_33">
                          <item>
@@ -1574,424 +1437,6 @@
                            <property name="value">
                             <number>10</number>
                            </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="1" column="2">
-                        <layout class="QHBoxLayout" name="horizontalLayout_34">
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
-                           <property name="enabled">
-                            <bool>true</bool>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="toolTip">
-                            <string>Add group name to Sample names</string>
-                           </property>
-                           <property name="statusTip">
-                            <string/>
-                           </property>
-                           <property name="text">
-                            <string>Rename Samples</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="toolTip">
-                            <string>Show label text in diagram</string>
-                           </property>
-                           <property name="layoutDirection">
-                            <enum>Qt::LeftToRight</enum>
-                           </property>
-                           <property name="text">
-                            <string>Show Labels</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="2" column="1" colspan="2">
-                        <widget class="Line" name="line_15">
-                         <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="0">
-                        <widget class="QLabel" name="label_179">
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Scatter Plot</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="1">
-                        <layout class="QHBoxLayout" name="horizontalLayout_79">
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="toolTip">
-                            <string>Adjust label text to reduce overlap</string>
-                           </property>
-                           <property name="text">
-                            <string>Adjust Labels</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="3" column="2">
-                        <layout class="QHBoxLayout" name="horizontalLayout_63">
-                         <item>
-                          <widget class="QLabel" name="label_116">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="toolTip">
-                            <string>Transparency of labes</string>
-                           </property>
-                           <property name="text">
-                            <string>Transparency</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QDoubleSpinBox" name="doubleSpinBox_basic_pca_label_font_transparency">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="maximum">
-                            <double>1.000000000000000</double>
-                           </property>
-                           <property name="singleStep">
-                            <double>0.050000000000000</double>
-                           </property>
-                           <property name="value">
-                            <double>0.600000000000000</double>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QLabel" name="label_160">
-                           <property name="toolTip">
-                            <string>Dots size for PCA and Beta Diversity</string>
-                           </property>
-                           <property name="text">
-                            <string>Dot Size</string>
-                           </property>
-                           <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QSpinBox" name="spinBox_basic_dot_size">
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="maximum">
-                            <number>1000</number>
-                           </property>
-                           <property name="singleStep">
-                            <number>10</number>
-                           </property>
-                           <property name="value">
-                            <number>150</number>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="4" column="0">
-                        <widget class="QLabel" name="label_168">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>150</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Correlation Heatmap</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="1">
-                        <layout class="QHBoxLayout" name="horizontalLayout_3">
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_corr_cluster">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Cluster</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QLabel" name="label_192">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Theme</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QComboBox" name="comboBox_basic_corr_cmap"/>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="4" column="2">
-                        <layout class="QHBoxLayout" name="horizontalLayout_5">
-                         <item>
-                          <widget class="QLabel" name="label_129">
-                           <property name="text">
-                            <string>Show All Labels</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_corr_show_all_labels_x">
-                           <property name="text">
-                            <string>X</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_corr_show_all_labels_y">
-                           <property name="text">
-                            <string>Y</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item row="5" column="0">
-                        <widget class="QLabel" name="label_155">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Bar Plot</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="5" column="1">
-                        <widget class="QCheckBox" name="checkBox_basic_plot_number_plot_sample">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="acceptDrops">
-                          <bool>false</bool>
-                         </property>
-                         <property name="toolTip">
-                          <string/>
-                         </property>
-                         <property name="text">
-                          <string>Plot Samples</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="6" column="0">
-                        <widget class="QLabel" name="label_169">
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Box Plot</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="6" column="1">
-                        <widget class="QCheckBox" name="checkBox_box_plot_samples">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="text">
-                          <string>Plot Samples</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="6" column="2">
-                        <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="text">
-                          <string>show Fliers</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="7" column="0">
-                        <widget class="QLabel" name="label_167">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <weight>75</weight>
-                           <bold>true</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Diversity</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="7" column="1">
-                        <layout class="QHBoxLayout" name="horizontalLayout_10">
-                         <item>
-                          <widget class="QLabel" name="label_117">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Alpha Diversity</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="checkBox_alpha_div_plot_all_samples">
-                           <property name="text">
-                            <string>Plot Samples</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QComboBox" name="comboBox_alpha_div_method">
-                           <property name="enabled">
-                            <bool>true</bool>
-                           </property>
-                           <item>
-                            <property name="text">
-                             <string>shannon</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>simpson</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>ace</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>observed_otus</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>chao1</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>fisher_alpha</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>dominance</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>menhinick</string>
-                            </property>
-                           </item>
                           </widget>
                          </item>
                         </layout>
@@ -2068,6 +1513,480 @@
                          </item>
                         </layout>
                        </item>
+                       <item row="7" column="1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_10">
+                         <item>
+                          <widget class="QLabel" name="label_117">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Alpha Diversity</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_alpha_div_plot_all_samples">
+                           <property name="text">
+                            <string>Plot Samples</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="comboBox_alpha_div_method">
+                           <property name="enabled">
+                            <bool>true</bool>
+                           </property>
+                           <item>
+                            <property name="text">
+                             <string>shannon</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>simpson</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>ace</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>observed_otus</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>chao1</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>fisher_alpha</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>dominance</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>menhinick</string>
+                            </property>
+                           </item>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="5" column="1">
+                        <widget class="QCheckBox" name="checkBox_basic_plot_number_plot_sample">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="acceptDrops">
+                          <bool>false</bool>
+                         </property>
+                         <property name="toolTip">
+                          <string/>
+                         </property>
+                         <property name="text">
+                          <string>Plot Samples</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="0">
+                        <widget class="QLabel" name="label_122">
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>general</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="2" column="1" colspan="2">
+                        <widget class="Line" name="line_15">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="3" column="2">
+                        <layout class="QHBoxLayout" name="horizontalLayout_63">
+                         <item>
+                          <widget class="QLabel" name="label_116">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="toolTip">
+                            <string>Transparency of labes</string>
+                           </property>
+                           <property name="text">
+                            <string>Transparency</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QDoubleSpinBox" name="doubleSpinBox_basic_pca_label_font_transparency">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="maximum">
+                            <double>1.000000000000000</double>
+                           </property>
+                           <property name="singleStep">
+                            <double>0.050000000000000</double>
+                           </property>
+                           <property name="value">
+                            <double>0.600000000000000</double>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_160">
+                           <property name="toolTip">
+                            <string>Dots size for PCA and Beta Diversity</string>
+                           </property>
+                           <property name="text">
+                            <string>Dot Size</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QSpinBox" name="spinBox_basic_dot_size">
+                           <property name="minimum">
+                            <number>1</number>
+                           </property>
+                           <property name="maximum">
+                            <number>1000</number>
+                           </property>
+                           <property name="singleStep">
+                            <number>10</number>
+                           </property>
+                           <property name="value">
+                            <number>150</number>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="4" column="2">
+                        <layout class="QHBoxLayout" name="horizontalLayout_5">
+                         <item>
+                          <widget class="QLabel" name="label_129">
+                           <property name="text">
+                            <string>Show All Labels</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_corr_show_all_labels_x">
+                           <property name="text">
+                            <string>X</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_corr_show_all_labels_y">
+                           <property name="text">
+                            <string>Y</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="1" column="2">
+                        <layout class="QHBoxLayout" name="horizontalLayout_34">
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_pca_if_show_group_name_in_label">
+                           <property name="enabled">
+                            <bool>true</bool>
+                           </property>
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="toolTip">
+                            <string>Add group name to Sample names</string>
+                           </property>
+                           <property name="statusTip">
+                            <string/>
+                           </property>
+                           <property name="text">
+                            <string>Rename Samples</string>
+                           </property>
+                           <property name="checked">
+                            <bool>true</bool>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_pca_if_show_lable">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="toolTip">
+                            <string>Show label text in diagram</string>
+                           </property>
+                           <property name="layoutDirection">
+                            <enum>Qt::LeftToRight</enum>
+                           </property>
+                           <property name="text">
+                            <string>Show Labels</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="6" column="2">
+                        <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>show Fliers</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_32">
+                         <item>
+                          <widget class="QLabel" name="label_94">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Width</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QSpinBox" name="spinBox_basic_pca_width">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="minimum">
+                            <number>1</number>
+                           </property>
+                           <property name="value">
+                            <number>10</number>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_101">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Height</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QSpinBox" name="spinBox_basic_pca_height">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="minimum">
+                            <number>1</number>
+                           </property>
+                           <property name="value">
+                            <number>8</number>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="6" column="1">
+                        <widget class="QCheckBox" name="checkBox_box_plot_samples">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>Plot Samples</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="4" column="0">
+                        <widget class="QLabel" name="label_168">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>Correlation Heatmap</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="2">
+                        <layout class="QHBoxLayout" name="horizontalLayout_25">
+                         <item>
+                          <widget class="QLabel" name="label_159">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="toolTip">
+                            <string>The number of columns in the legend, set 0 to hide</string>
+                           </property>
+                           <property name="text">
+                            <string>Legend Cols</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QSpinBox" name="spinBox_basic_legend_col_num">
+                           <property name="minimum">
+                            <number>0</number>
+                           </property>
+                           <property name="value">
+                            <number>1</number>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_151">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Theme</string>
+                           </property>
+                           <property name="alignment">
+                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="comboBox_basic_theme">
+                           <property name="editable">
+                            <bool>false</bool>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="3" column="1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_79">
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_pca_if_adjust_pca_label">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="toolTip">
+                            <string>Adjust label text to reduce overlap</string>
+                           </property>
+                           <property name="text">
+                            <string>Adjust Labels</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="5" column="0">
+                        <widget class="QLabel" name="label_155">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>Bar Plot</string>
+                         </property>
+                        </widget>
+                       </item>
                        <item row="8" column="0">
                         <widget class="QLabel" name="label_137">
                          <property name="font">
@@ -2078,6 +1997,87 @@
                          </property>
                          <property name="text">
                           <string>Sunburst</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="6" column="0">
+                        <widget class="QLabel" name="label_169">
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>Box Plot</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="7" column="0">
+                        <widget class="QLabel" name="label_167">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>Diversity</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="4" column="1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_3">
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_corr_cluster">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Cluster</string>
+                           </property>
+                           <property name="checked">
+                            <bool>true</bool>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_192">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Theme</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="comboBox_basic_corr_cmap"/>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="3" column="0">
+                        <widget class="QLabel" name="label_179">
+                         <property name="font">
+                          <font>
+                           <weight>75</weight>
+                           <bold>true</bold>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>Scatter Plot</string>
                          </property>
                         </widget>
                        </item>
@@ -2670,8 +2670,8 @@
                       <property name="geometry">
                        <rect>
                         <x>0</x>
-                        <y>0</y>
-                        <width>629</width>
+                        <y>-64</y>
+                        <width>999</width>
                         <height>150</height>
                        </rect>
                       </property>
@@ -3149,6 +3149,13 @@
                             </widget>
                            </item>
                           </layout>
+                         </item>
+                         <item row="4" column="3">
+                          <widget class="QCheckBox" name="checkBox_basic_bar_3d_for_sub_meta">
+                           <property name="text">
+                            <string>3D for Sub Meta</string>
+                           </property>
+                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -8999,7 +9006,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>89</height>
+                        <height>93</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -9993,7 +10000,7 @@
      <x>0</x>
      <y>0</y>
      <width>1122</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

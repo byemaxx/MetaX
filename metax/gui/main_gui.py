@@ -760,8 +760,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # when the sub_meta comboBox is not None, the mean plot is not available
         if self.comboBox_3dbar_sub_meta.currentText() != 'None':
             self.checkBox_basic_heatmap_plot_mean.setEnabled(False)
+            self.checkBox_basic_bar_3d_for_sub_meta.setEnabled(True)
+            
         else:
             self.checkBox_basic_heatmap_plot_mean.setEnabled(True)
+            self.checkBox_basic_bar_3d_for_sub_meta.setEnabled(False)
         
         # if self.checkBox_basic_heatmap_plot_mean.isChecked():
         #     self.comboBox_3dbar_sub_meta.setEnabled(False)
@@ -3521,6 +3524,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
                 plot_percent = self.checkBox_basic_bar_plot_percent.isChecked()
                 sub_meta = self.comboBox_3dbar_sub_meta.currentText()
+                use_3d_for_sub_meta = self.checkBox_basic_bar_3d_for_sub_meta.isChecked()
                 
                 width = width*100
                 height = height*100
@@ -3537,7 +3541,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                               show_legend=show_legend, font_size=font_size,
                                                               rename_sample=rename_sample, plot_mean = plot_mean,
                                                               plot_percent = plot_percent, sub_meta = sub_meta,
-                                                              show_all_labels = show_all_labels)
+                                                              show_all_labels = show_all_labels, use_3d = use_3d_for_sub_meta)
                                                               
                 self.save_and_show_js_plot(pic, title)
             
