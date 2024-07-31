@@ -1,6 +1,12 @@
 # Version: 1.109.6
 ## Date: 2024-07-31
 ### Changes:
+- Change: Optimized the Sankey plot.
+
+
+# Version: 1.109.6
+## Date: 2024-07-31
+### Changes:
 - New: Added a checkbox to enable user to plot 2D or 3D bar plot for the baisc plot part with sub meta.
 
 

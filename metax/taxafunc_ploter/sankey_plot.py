@@ -166,17 +166,15 @@ class SankeyPlot:
         
 
     def create_nodes_links(self, df, value_col='value'):
-
         lis = df.columns.tolist()[:-1]
         lis1 = lis[:-1]
         lis2 = lis[1:]
 
         df2 = pd.DataFrame()
         for i in zip(lis1, lis2):
-            dfi = df.pivot_table(value_col, index=list(i),
-                                aggfunc='sum').reset_index()
+            dfi = df.pivot_table(value_col, index=list(i), aggfunc='sum').reset_index()
             dfi.columns = [0, 1, 2]
-            df2 = pd.concat([df2, dfi])  # Use pd.concat instead of append
+            df2 = pd.concat([df2, dfi])
 
         nodes = []
         ln = df2.iloc[:, 0].to_list() + df2.iloc[:, 1].to_list()
@@ -191,6 +189,27 @@ class SankeyPlot:
             dic = {'source': i[0], 'target': i[1], 'value': i[2]}
             links.append(dic)
         print(f'Number of links: {len(links)}')
+
+        # Get 20 distinct colors
+        colors = GetDistinctColors().get_distinct_colors(20, convert=True)
+
+        # Assign colors to nodes ensuring adjacent nodes do not have the same color
+        node_colors = {}
+        for idx, node in enumerate(nodes):
+            available_colors = colors[:]
+            for link in links:
+                if link['source'] == node['name'] and link['target'] in node_colors:
+                    if node_colors[link['target']] in available_colors:
+                        available_colors.remove(node_colors[link['target']])
+                if link['target'] == node['name'] and link['source'] in node_colors:
+                    if node_colors[link['source']] in available_colors:
+                        available_colors.remove(node_colors[link['source']])
+            if not available_colors:
+                available_colors = colors[:]
+            chosen_color = available_colors[idx % len(available_colors)]
+            node_colors[node['name']] = chosen_color
+            node['itemStyle'] = {'color': chosen_color}
+
         return nodes, links
 
 
@@ -202,7 +221,6 @@ class SankeyPlot:
         pic = Sankey(init_opts=opts.InitOpts(width=f"{width*100}px",
                                              height=f"{height*100}px",
                                              theme=self.theme))
-        pic.set_colors(GetDistinctColors().get_distinct_colors(20, convert=True))
         
         for key, value in link_nodes_dict.items():
             nodes  = value[0]
@@ -212,14 +230,15 @@ class SankeyPlot:
                 f'{key} ({num})',
                 nodes=nodes,
                 links=links,
-                node_align='left',
+                node_align='justify',
                 layout_iterations=50,
+                node_width=25,
                 emphasis_opts=opts.EmphasisOpts(focus='adjacency'),
                 linestyle_opt=opts.LineStyleOpts(
-                    curve=0.5, opacity=0.2, color="source"),
-                label_opts=opts.LabelOpts(position='right', font_size=self.font_size),
+                    curve=0.5, opacity=0.3, color="gray"),
+                label_opts=opts.LabelOpts(position='right', font_size=self.font_size, color='whithe' if self.theme == 'dark' else 'black'),
+                itemstyle_opts=opts.ItemStyleOpts(border_width=1, border_color="black", opacity=0.7),
             )
-
 
         pic.set_global_opts(
             legend_opts=opts.LegendOpts(selected_mode='single', is_show=self.show_legend,
