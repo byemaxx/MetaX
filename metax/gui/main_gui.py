@@ -65,7 +65,8 @@ if __name__ == '__main__':
     from metax.utils.metax_updater import Updater
     from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
     from metax.taxafunc_ploter.basic_plot import BasicPlot
-    from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlot
+    from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
+    from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
     from metax.taxafunc_ploter.tukey_plot import TukeyPlot
     from metax.taxafunc_ploter.bar_plot_js import BarPlot_js
     from metax.taxafunc_ploter.sankey_plot import SankeyPlot
@@ -107,7 +108,8 @@ else:
     from ..utils.metax_updater import Updater
     from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
     from ..taxafunc_ploter.basic_plot import BasicPlot
-    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlot
+    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
+    from ..taxafunc_ploter.volcano_plot import VolcanoPlot
     from ..taxafunc_ploter.tukey_plot import TukeyPlot
     from ..taxafunc_ploter.bar_plot_js import BarPlot_js
     from ..taxafunc_ploter.sankey_plot import SankeyPlot
@@ -4915,7 +4917,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
             title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
-            font_size = self.spinBox_seqeq2_font_size.value()
+            font_size = self.spinBox_deseq2_font_size.value()
+            dot_size = self.spinBox_deseq2_dot_size.value()
+            plot_js = self.checkBox_deseq2_js_volcano.isChecked()
             
             if log2fc_min > log2fc_max:
                 QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
@@ -4929,12 +4933,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # VolcanoPlot().plot_volcano(df, padj = pvalue, log2fc = log2fc,  title_name='2 groups',  width=width, height=height)
         try:
             df = self.table_dict[table_name]
-            pic = VolcanoPlot(theme=self.html_theme).plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
-                                                log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
-                                                title_name=title_name,  font_size = font_size,
-                                                width=width, height=height)
-            
-            self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
+            if plot_js:
+                pic = VolcanoPlotJS(theme=self.html_theme).plot_volcano_js(df, pvalue = pvalue, p_type = p_type,
+                                                    log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
+                                                    title_name=title_name,  font_size = font_size,
+                                                    width=width, height=height, dot_size=dot_size)
+                
+                self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
+            else:
+                pic = VolcanoPlot().plot_volcano(df, pvalue = pvalue, p_type = p_type,
+                                                    log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
+                                                    title_name=title_name,  font_size = font_size,
+                                                    width=width, height=height, dot_size=dot_size)
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -5048,7 +5058,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             width = self.spinBox_fc_plot_width.value()
             height = self.spinBox_fc_plot_height.value()
-            font_size = self.spinBox_seqeq2_font_size.value()
+            font_size = self.spinBox_deseq2_font_size.value()
             
             if log2fc_min > log2fc_max:
                 QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')

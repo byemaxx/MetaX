@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\utils\MetaX_GUI\Setting.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\setting_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -83,7 +83,7 @@ class Ui_Settings(object):
         self.gridLayout_7.addWidget(self.label_18, 2, 0, 1, 1)
         self.spinBox_tf_link_net_repulsion = QtWidgets.QSpinBox(self.page_2)
         self.spinBox_tf_link_net_repulsion.setMaximum(100000)
-        self.spinBox_tf_link_net_repulsion.setSingleStep(10)
+        self.spinBox_tf_link_net_repulsion.setSingleStep(50)
         self.spinBox_tf_link_net_repulsion.setProperty("value", 500)
         self.spinBox_tf_link_net_repulsion.setObjectName("spinBox_tf_link_net_repulsion")
         self.gridLayout_7.addWidget(self.spinBox_tf_link_net_repulsion, 1, 1, 1, 1)
@@ -145,7 +145,7 @@ class Ui_Settings(object):
         self.gridLayout_7.addWidget(self.label_19, 1, 2, 1, 1)
         self.doubleSpinBox_tf_link_net_gravity = QtWidgets.QDoubleSpinBox(self.page_2)
         self.doubleSpinBox_tf_link_net_gravity.setMaximum(1.0)
-        self.doubleSpinBox_tf_link_net_gravity.setSingleStep(0.1)
+        self.doubleSpinBox_tf_link_net_gravity.setSingleStep(0.01)
         self.doubleSpinBox_tf_link_net_gravity.setProperty("value", 0.2)
         self.doubleSpinBox_tf_link_net_gravity.setObjectName("doubleSpinBox_tf_link_net_gravity")
         self.gridLayout_7.addWidget(self.doubleSpinBox_tf_link_net_gravity, 1, 3, 1, 1)
@@ -275,6 +275,7 @@ class Ui_Settings(object):
         self.gridLayout_4.addWidget(self.label, 1, 0, 1, 1)
         self.toolBox.addItem(self.page_2, "")
         self.page_3 = QtWidgets.QWidget()
+        self.page_3.setGeometry(QtCore.QRect(0, 0, 748, 340))
         self.page_3.setObjectName("page_3")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.page_3)
         self.gridLayout_11.setObjectName("gridLayout_11")
@@ -296,7 +297,7 @@ class Ui_Settings(object):
         self.gridLayout.addWidget(self.toolBox, 0, 0, 1, 1)
 
         self.retranslateUi(Settings)
-        self.toolBox.setCurrentIndex(2)
+        self.toolBox.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Settings)
 
     def retranslateUi(self, Settings):

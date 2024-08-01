@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -1400,7 +1400,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>999</width>
+                        <width>660</width>
                         <height>232</height>
                        </rect>
                       </property>
@@ -2670,7 +2670,7 @@
                       <property name="geometry">
                        <rect>
                         <x>0</x>
-                        <y>-64</y>
+                        <y>0</y>
                         <width>999</width>
                         <height>150</height>
                        </rect>
@@ -3545,7 +3545,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>3</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -4074,10 +4074,16 @@
                 <string>DESeq2</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_16">
-                <item row="1" column="0" colspan="3">
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_166">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Groups</string>
                   </property>
                  </widget>
                 </item>
@@ -4106,82 +4112,6 @@
                   </property>
                   <property name="text">
                    <string>Run DESeq2</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_22">
-                  <item>
-                   <widget class="QLabel" name="label_2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Group 1</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_deseq2_group1">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_3">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Group 2</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_deseq2_group2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_4">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Table</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="label_166">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Groups</string>
                   </property>
                  </widget>
                 </item>
@@ -4232,6 +4162,56 @@
                      </widget>
                     </item>
                    </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item row="3" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_22">
+                  <item>
+                   <widget class="QLabel" name="label_2">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Group 1</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_deseq2_group1">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_3">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Group 2</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_deseq2_group2">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -4302,6 +4282,26 @@
                   </item>
                  </layout>
                 </item>
+                <item row="1" column="0" colspan="3">
+                 <widget class="Line" name="line">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_4">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Table</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="6" column="0" colspan="3">
                  <widget class="QGroupBox" name="groupBox">
                   <property name="sizePolicy">
@@ -4326,6 +4326,45 @@
                    <string>Plot</string>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_55">
+                   <item row="1" column="1">
+                    <widget class="QPushButton" name="pushButton_deseq2_plot_sankey">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Plot Sankey</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="checkBox_3">
+                     <property name="text">
+                      <string>Show Plotting Parameter</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Plot Volcano</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="0" column="0">
                     <layout class="QHBoxLayout" name="horizontalLayout_92">
                      <item>
@@ -4356,39 +4395,7 @@
                      </item>
                     </layout>
                    </item>
-                   <item row="0" column="1">
-                    <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Plot Volcano</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QPushButton" name="pushButton_deseq2_plot_sankey">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Plot Sankey</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0" colspan="2">
+                   <item row="5" column="0" colspan="2">
                     <widget class="QGroupBox" name="groupBox_deseq2_plot_settings">
                      <property name="maximumSize">
                       <size>
@@ -4410,77 +4417,23 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>403</width>
-                           <height>66</height>
+                           <width>996</width>
+                           <height>70</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
                           <item row="0" column="0">
                            <layout class="QGridLayout" name="gridLayout_53">
-                            <item row="1" column="0">
-                             <widget class="QLabel" name="label_16">
+                            <item row="0" column="6">
+                             <widget class="QLabel" name="label_63">
                               <property name="sizePolicy">
-                               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="layoutDirection">
-                               <enum>Qt::LeftToRight</enum>
-                              </property>
-                              <property name="text">
-                               <string>Width</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item row="1" column="1">
-                             <widget class="QSpinBox" name="spinBox_fc_plot_width">
-                              <property name="minimum">
-                               <number>1</number>
-                              </property>
-                              <property name="maximum">
-                               <number>99</number>
-                              </property>
-                              <property name="singleStep">
-                               <number>1</number>
-                              </property>
-                              <property name="value">
-                               <number>10</number>
-                              </property>
-                             </widget>
-                            </item>
-                            <item row="1" column="2">
-                             <widget class="QLabel" name="label_17">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                               <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                                 <horstretch>0</horstretch>
                                 <verstretch>0</verstretch>
                                </sizepolicy>
                               </property>
                               <property name="text">
-                               <string>Height</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item row="0" column="0">
-                             <widget class="QLabel" name="label_14">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="text">
-                               <string>Threshold</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                               <string>Max Log2FC</string>
                               </property>
                              </widget>
                             </item>
@@ -4504,38 +4457,16 @@
                               </item>
                              </widget>
                             </item>
-                            <item row="1" column="3">
-                             <widget class="QSpinBox" name="spinBox_fc_plot_height">
+                            <item row="0" column="0">
+                             <widget class="QLabel" name="label_14">
                               <property name="sizePolicy">
-                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="minimum">
-                               <number>1</number>
-                              </property>
-                              <property name="maximum">
-                               <number>99</number>
-                              </property>
-                              <property name="singleStep">
-                               <number>1</number>
-                              </property>
-                              <property name="value">
-                               <number>8</number>
-                              </property>
-                             </widget>
-                            </item>
-                            <item row="0" column="4">
-                             <widget class="QLabel" name="label_71">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                                 <horstretch>0</horstretch>
                                 <verstretch>0</verstretch>
                                </sizepolicy>
                               </property>
                               <property name="text">
-                               <string>Log2FC Range</string>
+                               <string>Threshold</string>
                               </property>
                               <property name="alignment">
                                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -4552,24 +4483,8 @@
                               </property>
                              </widget>
                             </item>
-                            <item row="0" column="5">
-                             <widget class="QDoubleSpinBox" name="doubleSpinBox_deseq2_log2fc_min">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="decimals">
-                               <number>1</number>
-                              </property>
-                              <property name="value">
-                               <double>1.000000000000000</double>
-                              </property>
-                             </widget>
-                            </item>
                             <item row="1" column="5">
-                             <widget class="QSpinBox" name="spinBox_seqeq2_font_size">
+                             <widget class="QSpinBox" name="spinBox_deseq2_font_size">
                               <property name="minimum">
                                <number>1</number>
                               </property>
@@ -4578,35 +4493,19 @@
                               </property>
                              </widget>
                             </item>
-                            <item row="0" column="6">
-                             <widget class="QLabel" name="label_63">
+                            <item row="0" column="4">
+                             <widget class="QLabel" name="label_71">
                               <property name="sizePolicy">
-                               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                                 <horstretch>0</horstretch>
                                 <verstretch>0</verstretch>
                                </sizepolicy>
                               </property>
                               <property name="text">
-                               <string>-</string>
+                               <string>Mini Log2FC</string>
                               </property>
                               <property name="alignment">
                                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item row="0" column="7">
-                             <widget class="QDoubleSpinBox" name="doubleSpinBox_deseq2_log2fc_max">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="decimals">
-                               <number>1</number>
-                              </property>
-                              <property name="value">
-                               <double>20.000000000000000</double>
                               </property>
                              </widget>
                             </item>
@@ -4632,6 +4531,145 @@
                               </property>
                              </widget>
                             </item>
+                            <item row="1" column="7">
+                             <widget class="QSpinBox" name="spinBox_deseq2_dot_size">
+                              <property name="minimum">
+                               <number>1</number>
+                              </property>
+                              <property name="maximum">
+                               <number>999</number>
+                              </property>
+                              <property name="value">
+                               <number>15</number>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="1" column="6">
+                             <widget class="QLabel" name="label_193">
+                              <property name="text">
+                               <string>Dot Size</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="0" column="5">
+                             <widget class="QDoubleSpinBox" name="doubleSpinBox_deseq2_log2fc_min">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="decimals">
+                               <number>1</number>
+                              </property>
+                              <property name="value">
+                               <double>1.000000000000000</double>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="0" column="7">
+                             <widget class="QDoubleSpinBox" name="doubleSpinBox_deseq2_log2fc_max">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="decimals">
+                               <number>1</number>
+                              </property>
+                              <property name="value">
+                               <double>20.000000000000000</double>
+                              </property>
+                             </widget>
+                            </item>
+                            <item row="1" column="2" colspan="2">
+                             <layout class="QHBoxLayout" name="horizontalLayout_14">
+                              <item>
+                               <widget class="QLabel" name="label_16">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="layoutDirection">
+                                 <enum>Qt::LeftToRight</enum>
+                                </property>
+                                <property name="text">
+                                 <string>Width</string>
+                                </property>
+                                <property name="alignment">
+                                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QSpinBox" name="spinBox_fc_plot_width">
+                                <property name="minimum">
+                                 <number>1</number>
+                                </property>
+                                <property name="maximum">
+                                 <number>99</number>
+                                </property>
+                                <property name="singleStep">
+                                 <number>1</number>
+                                </property>
+                                <property name="value">
+                                 <number>10</number>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="label_17">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="text">
+                                 <string>Height</string>
+                                </property>
+                                <property name="alignment">
+                                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QSpinBox" name="spinBox_fc_plot_height">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="minimum">
+                                 <number>1</number>
+                                </property>
+                                <property name="maximum">
+                                 <number>99</number>
+                                </property>
+                                <property name="singleStep">
+                                 <number>1</number>
+                                </property>
+                                <property name="value">
+                                 <number>8</number>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                            <item row="1" column="0" colspan="2">
+                             <widget class="QCheckBox" name="checkBox_deseq2_js_volcano">
+                              <property name="text">
+                               <string>Interactive Volcano</string>
+                              </property>
+                              <property name="checked">
+                               <bool>true</bool>
+                              </property>
+                             </widget>
+                            </item>
                            </layout>
                           </item>
                          </layout>
@@ -4639,13 +4677,6 @@
                        </widget>
                       </item>
                      </layout>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QCheckBox" name="checkBox_3">
-                     <property name="text">
-                      <string>Show Plotting Parameter</string>
-                     </property>
                     </widget>
                    </item>
                   </layout>

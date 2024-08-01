@@ -1,3 +1,8 @@
+# Version: 1.109.7
+## Date: 2024-07-31
+### Changes:
+- Change: Optimized the volcano plot.
+
 # Version: 1.109.6
 ## Date: 2024-07-31
 ### Changes:
