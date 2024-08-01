@@ -1,3 +1,10 @@
+# Version: 1.109.8
+## Date: 2024-08-1
+### Changes:
+- Fix: Fixed title of the static volcano plot.
+- New: added theme option for the static volcano plot.
+
+
 # Version: 1.109.7
 ## Date: 2024-07-31
 ### Changes:

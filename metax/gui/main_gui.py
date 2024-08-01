@@ -1490,6 +1490,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         self.comboBox_basic_theme.addItems(mat_style_list)
         self.comboBox_data_overiew_theme.addItems(mat_style_list)
+        self.comboBox_deseq2_volcano_sns_theme.addItems(mat_style_list)
         
             
     def check_update(self, show_message=False, manual_check_trigger=True):
@@ -4941,10 +4942,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 self.save_and_show_js_plot(pic, f'volcano plot of {title_name.split(" (")[0]}')
             else:
-                pic = VolcanoPlot().plot_volcano(df, pvalue = pvalue, p_type = p_type,
+                theme = self.comboBox_deseq2_volcano_sns_theme.currentText()
+                VolcanoPlot().plot_volcano(df, pvalue = pvalue, p_type = p_type,
                                                     log2fc_min = log2fc_min, log2fc_max=log2fc_max, 
                                                     title_name=title_name,  font_size = font_size,
-                                                    width=width, height=height, dot_size=dot_size)
+                                                    width=width, height=height, dot_size=dot_size,
+                                                    theme = theme)
 
         except Exception as e:
             error_message = traceback.format_exc()
