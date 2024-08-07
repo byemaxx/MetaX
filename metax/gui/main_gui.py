@@ -1199,7 +1199,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             # checek if name is a part of current_table_name
             for name in current_table_name_list:
-                if any([match in name for match in top_heatmap_match_list]):
+                if any([match in name for match in top_heatmap_match_list]) and 'Cross_Test[' not in name:
                     comboBox_top_heatmap_table_list.append(name)
                 elif 'deseq2(' in name:
                     comboBox_deseq2_tables_list.append(name)

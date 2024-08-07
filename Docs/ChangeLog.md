@@ -1,3 +1,10 @@
+# Version: 1.109.9
+## Date: 2024-08-7
+### Changes:
+- Fix: Fixed the bug when restore the object, some cross_test top table was added to the GUI by wrong.
+- Change: Changed the "pixel_ratio" from 2 to 3 for the HTML plot to make the plot more clear.
+
+
 # Version: 1.109.8
 ## Date: 2024-08-1
 ### Changes:

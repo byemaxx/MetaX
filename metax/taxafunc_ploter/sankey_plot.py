@@ -231,7 +231,7 @@ class SankeyPlot:
                 nodes=nodes,
                 links=links,
                 node_align='justify',
-                layout_iterations=50,
+                layout_iterations=100,
                 node_width=25,
                 emphasis_opts=opts.EmphasisOpts(focus='adjacency'),
                 linestyle_opt=opts.LineStyleOpts(
@@ -252,7 +252,7 @@ class SankeyPlot:
                 feature=opts.ToolBoxFeatureOpts( 
                                                 save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
                                                                                                 background_color="black" if self.theme == 'dark' else "white",
-                                                                                                pixel_ratio=2, 
+                                                                                                pixel_ratio=3, 
                                                                                                 title="Save as PNG"),
                                                 restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
                                                 data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 

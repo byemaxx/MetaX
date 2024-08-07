@@ -126,7 +126,7 @@ class BarPlot_js:
                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(
                         type_="png",
                         background_color="black" if self.theme == 'dark' else "white",
-                        pixel_ratio=2,
+                        pixel_ratio=3,
                         title="Save as PNG",
                     ),
                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
@@ -259,7 +259,7 @@ class BarPlot_js:
                 feature=opts.ToolBoxFeatureOpts( 
                                                 save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
                                                                                                 background_color="black" if self.theme == 'dark' else "white", 
-                                                                                                pixel_ratio=2, 
+                                                                                                pixel_ratio=3, 
                                                                                                 title="Save as PNG"),
                                                 restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
                                                 data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", 

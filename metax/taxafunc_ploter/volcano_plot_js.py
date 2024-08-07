@@ -82,7 +82,7 @@ class VolcanoPlotJS():
                     feature=opts.ToolBoxFeatureOpts( 
                                                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
                                                                                                     background_color="black" if self.theme == 'dark' else "white",
-                                                                                                    pixel_ratio=2, 
+                                                                                                    pixel_ratio=3, 
                                                                                                     title="Save as PNG"),
                                                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
                                                     data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
