@@ -151,6 +151,10 @@ class CrossTest:
             res["t-statistic"].append(t)
 
         res = pd.DataFrame(res)
+
+        # print('reverse the t-statistic value due to the order of group_list is not correct')
+        res['t-statistic'] = -res['t-statistic']
+
         on_values = [primary]
         if df_type in ['taxa-func', 'func-taxa']:
             on_values.append(secondary)

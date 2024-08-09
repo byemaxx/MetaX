@@ -1175,7 +1175,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
     def export_log_file(self):
         log_path = os.path.join(self.metax_home_path, "MetaX.log")
-        if os.path.exists(path):
+        if os.path.exists(log_path):
             #select a file to save
             # default output path is self.last_path
             file_path, _ = QFileDialog.getSaveFileName(self.MainWindow, "Export log file", self.last_path, "Log file (*.log)")
@@ -2238,15 +2238,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # selected_table_name = sender.currentText()
         selected_table_name = self.comboBox_top_heatmap_table.currentText()
         
-        scale_method_list =  [self.comboBox_top_heatmap_scale.itemText(i) for i in range(self.comboBox_top_heatmap_scale.count())]
         
         if 'dunnett' in selected_table_name or 'deseq2' in selected_table_name:
             self.spinBox_top_heatmap_number.setEnabled(False)
             self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
-            # add 'all' to comboBox_top_heatmap_scale.
-            if 'all' not in scale_method_list:
-                self.comboBox_top_heatmap_scale.addItem('all')
+
             
             if 'dunnett_test' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
@@ -2295,9 +2292,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_get_top_cross_table.setText('Get Top Table')
             self.comboBox_top_heatmap_sort_type.setEnabled(True)
             self.spinBox_top_heatmap_number.setEnabled(True)
-            # remove 'all' from comboBox_top_heatmap_scale.
-            if 'all' in scale_method_list:
-                self.comboBox_top_heatmap_scale.removeItem(scale_method_list.index('all'))
+
             
             
     
@@ -4292,6 +4287,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pvalue = round(pvalue, 4)
         cmap = self.comboBox_top_heatmap_cmap.currentText()
         scale = self.comboBox_top_heatmap_scale.currentText()
+        scale_method = self.comboBox_top_heatmap_scale_method.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
         rename_sample = self.checkBox_top_heatmap_rename_sample.isChecked()
         show_all_labels = (self.checkBox_top_heatmap_show_all_labels_x.isChecked(), self.checkBox_top_heatmap_show_all_labels_y.isChecked())
@@ -4326,7 +4322,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
-                                                                               show_all_labels = show_all_labels)
+                                                                               show_all_labels = show_all_labels, scale_method = scale_method)
             elif table_name.startswith('deseq2all'):
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
@@ -4338,7 +4334,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
-                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col
+                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
+                                                                               scale_method = scale_method
                                                                                 )
 
                 # if fig is a tuple
@@ -4356,7 +4353,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig',
-                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col
+                                                                               three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
+                                                                               scale_method = scale_method
                                                                                )
 
                 # if fig is a tuple
@@ -4388,13 +4386,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
                             col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
-                            show_all_labels = show_all_labels)
+                            show_all_labels = show_all_labels, scale = scale, scale_method = scale_method)
             else:
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                         value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
                                                                         scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
                                                                         cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
-                                                                        show_all_labels = show_all_labels, rename_sample = rename_sample)
+                                                                        show_all_labels = show_all_labels, rename_sample = rename_sample,
+                                                                        sort_by = sort_by, scale_method = scale_method)
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -4413,6 +4412,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         pvalue = round(pvalue, 4)
         scale = self.comboBox_top_heatmap_scale.currentText()
+        scale_method = self.comboBox_top_heatmap_scale_method.currentText()
         rename_taxa = self.checkBox_top_heatmap_rename_taxa.isChecked()
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
@@ -4429,7 +4429,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if table_name.startswith('dunnett_test'):
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
-                                                                                      rename_taxa=rename_taxa)
+                                                                                      rename_taxa=rename_taxa, scale_method = scale_method)
             elif 'deseq2all' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
@@ -4439,7 +4439,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table', p_type = p_type,
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                   remove_zero_col = remove_zero_col
+                                                                                   remove_zero_col = remove_zero_col, scale_method = scale_method
                                                                                    )
             elif 'dunnettAllCondtion' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
@@ -4447,7 +4447,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                    remove_zero_col = remove_zero_col
+                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method
                                                                                    )
 
             
@@ -4456,12 +4456,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table(df=df, top_number=top_num, 
                                                                               col_cluster = col_luster, row_cluster = row_luster,
                                                                               value_type=value_type, pvalue=pvalue, 
-                                                                              rename_taxa=rename_taxa)
-                else:
+                                                                              rename_taxa=rename_taxa, scale = scale, scale_method = scale_method)
+                else: # get result of test and anova of [taxa, functions, peptides and custom table]
+                    # get the intensity of the result items which are significant
                     df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table_basic(df=df, top_number=top_num, 
                                                                                     col_cluster = col_luster, row_cluster = row_luster,
                                                                                     value_type=value_type, pvalue=pvalue, 
-                                                                                    scale = scale, rename_taxa=rename_taxa)
+                                                                                    scale = scale, rename_taxa=rename_taxa, scale_method = scale_method)
         except ValueError as e:
             QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{e}')
             return None

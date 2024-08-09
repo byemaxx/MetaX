@@ -1,3 +1,10 @@
+# Version: 1.109.10
+## Date: 2024-08-9
+### Changes:
+- Fix: Fixed the of test result table, the t-statistic was reversed.
+- New: adde z-score for heatmap scale.
+
+
 # Version: 1.109.9
 ## Date: 2024-08-7
 ### Changes:

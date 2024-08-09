@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1122</width>
-    <height>707</height>
+    <height>794</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>528</width>
-                 <height>486</height>
+                 <height>573</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1371,7 +1371,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>250</height>
+                    <height>280</height>
                    </size>
                   </property>
                   <property name="title">
@@ -1400,7 +1400,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>660</width>
+                        <width>1016</width>
                         <height>232</height>
                        </rect>
                       </property>
@@ -2376,7 +2376,7 @@
                   <item>
                    <widget class="QComboBox" name="comboBox_table4pca">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -2654,7 +2654,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>250</height>
+                    <height>280</height>
                    </size>
                   </property>
                   <property name="title">
@@ -2671,8 +2671,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>999</width>
-                        <height>150</height>
+                        <width>1016</width>
+                        <height>162</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -2809,6 +2809,11 @@
                              <item>
                               <property name="text">
                                <string>column</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>all</string>
                               </property>
                              </item>
                              <item>
@@ -3640,7 +3645,7 @@
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>220</height>
+                   <height>240</height>
                   </size>
                  </property>
                  <property name="title">
@@ -3670,7 +3675,7 @@
                        <x>0</x>
                        <y>0</y>
                        <width>1003</width>
-                       <height>124</height>
+                       <height>126</height>
                       </rect>
                      </property>
                      <layout class="QGridLayout" name="gridLayout_38">
@@ -3802,60 +3807,14 @@
                             </item>
                             <item>
                              <property name="text">
+                              <string>all</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
                               <string>None</string>
                              </property>
                             </item>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="1" column="2">
-                         <layout class="QHBoxLayout" name="horizontalLayout_21">
-                          <item>
-                           <widget class="QLabel" name="label_38">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string>Theme</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QComboBox" name="comboBox_top_heatmap_cmap">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
                            </widget>
                           </item>
                          </layout>
@@ -4099,7 +4058,7 @@
                           <item>
                            <widget class="QLabel" name="label_59">
                             <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                               <horstretch>0</horstretch>
                               <verstretch>0</verstretch>
                              </sizepolicy>
@@ -4160,6 +4119,92 @@
                         <item row="1" column="3">
                          <layout class="QHBoxLayout" name="horizontalLayout_86">
                           <item>
+                           <layout class="QHBoxLayout" name="horizontalLayout_21">
+                            <item>
+                             <widget class="QLabel" name="label_38">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="minimumSize">
+                               <size>
+                                <width>0</width>
+                                <height>0</height>
+                               </size>
+                              </property>
+                              <property name="maximumSize">
+                               <size>
+                                <width>16777215</width>
+                                <height>16777215</height>
+                               </size>
+                              </property>
+                              <property name="text">
+                               <string>Colors</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QComboBox" name="comboBox_top_heatmap_cmap">
+                              <property name="sizePolicy">
+                               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                               </sizepolicy>
+                              </property>
+                              <property name="minimumSize">
+                               <size>
+                                <width>0</width>
+                                <height>0</height>
+                               </size>
+                              </property>
+                              <property name="maximumSize">
+                               <size>
+                                <width>16777215</width>
+                                <height>16777215</height>
+                               </size>
+                              </property>
+                             </widget>
+                            </item>
+                           </layout>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="2" column="0">
+                         <widget class="QLabel" name="label_180">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="font">
+                           <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>T &amp; ANOVA</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="4">
+                         <layout class="QHBoxLayout" name="horizontalLayout_93">
+                          <item>
                            <widget class="QLabel" name="label_57">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -4219,48 +4264,6 @@
                               <string>t-statistic (T-Test)</string>
                              </property>
                             </item>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="2" column="0">
-                         <widget class="QLabel" name="label_180">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="font">
-                           <font>
-                            <weight>75</weight>
-                            <bold>true</bold>
-                           </font>
-                          </property>
-                          <property name="text">
-                           <string>T &amp; ANOVA</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item row="1" column="4">
-                         <layout class="QHBoxLayout" name="horizontalLayout_93">
-                          <item>
-                           <widget class="QLabel" name="label_30">
-                            <property name="text">
-                             <string>p</string>
-                            </property>
                            </widget>
                           </item>
                           <item>
@@ -4611,6 +4614,43 @@
                            <bool>true</bool>
                           </property>
                          </widget>
+                        </item>
+                        <item row="1" column="2">
+                         <layout class="QHBoxLayout" name="horizontalLayout_48">
+                          <item>
+                           <widget class="QLabel" name="label_30">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>with</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QComboBox" name="comboBox_top_heatmap_scale_method">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <item>
+                             <property name="text">
+                              <string>maxmin</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>zscore</string>
+                             </property>
+                            </item>
+                           </widget>
+                          </item>
+                         </layout>
                         </item>
                        </layout>
                       </item>
@@ -5501,9 +5541,9 @@
                          <property name="geometry">
                           <rect>
                            <x>0</x>
-                           <y>-17</y>
-                           <width>979</width>
-                           <height>94</height>
+                           <y>0</y>
+                           <width>996</width>
+                           <height>146</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6021,7 +6061,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_5">
                <attribute name="title">
@@ -6053,8 +6093,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>493</width>
-                        <height>128</height>
+                        <width>1016</width>
+                        <height>181</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7284,7 +7324,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>69</height>
+                        <height>144</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -7615,7 +7655,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -8131,8 +8171,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>775</width>
-                        <height>102</height>
+                        <width>1016</width>
+                        <height>185</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_69">
@@ -8516,6 +8556,11 @@
                              <item>
                               <property name="text">
                                <string>column</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>all</string>
                               </property>
                              </item>
                              <item>
@@ -9047,7 +9092,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>93</height>
+                        <height>168</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
