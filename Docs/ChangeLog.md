@@ -1,3 +1,8 @@
+# Version: 1.109.11
+## Date: 2024-08-10
+### Changes:
+- Fix: Fixed the scale method and color bar of heatmap for Cross Test result table.
+
 # Version: 1.109.10
 ## Date: 2024-08-9
 ### Changes:

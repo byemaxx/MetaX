@@ -397,6 +397,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_get_top_cross_table.clicked.connect(self.get_top_cross_table)
 
         self.tabWidget_3.currentChanged.connect(self.cross_test_tab_change)
+        self.comboBox_top_heatmap_scale.currentIndexChanged.connect(self.change_event_comboBox_top_heatmap_scale)
         
         ### ANOVA
         self.pushButton_anova_test.clicked.connect(self.anova_test)
@@ -1465,6 +1466,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             self.groupBox_cross_heatmap_plot.setVisible(True)
             
+    def change_event_comboBox_top_heatmap_scale(self):
+        if self.comboBox_top_heatmap_scale.currentText() == 'None':
+            self.comboBox_top_heatmap_scale_method.setEnabled(False)
+        else:
+            self.comboBox_top_heatmap_scale_method.setEnabled(True)
 
     def add_theme_to_combobox(self):
         # get all themes
@@ -4393,7 +4399,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                         scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
                                                                         cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                                         show_all_labels = show_all_labels, rename_sample = rename_sample,
-                                                                        sort_by = sort_by, scale_method = scale_method)
+                                                                        sort_by = sort_by, scale_method = scale_method, return_type = 'fig')
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -4453,16 +4459,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             else:
                 if 'taxa-functions' in table_name:
-                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table(df=df, top_number=top_num, 
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_top_taxa_func_heatmap_of_test_res(df=df, top_number=top_num, 
                                                                               col_cluster = col_luster, row_cluster = row_luster,
-                                                                              value_type=value_type, pvalue=pvalue, 
-                                                                              rename_taxa=rename_taxa, scale = scale, scale_method = scale_method)
+                                                                              value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa, scale = scale, scale_method = scale_method,
+                                                                              return_type = 'table')
                 else: # get result of test and anova of [taxa, functions, peptides and custom table]
                     # get the intensity of the result items which are significant
-                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_top_across_table_basic(df=df, top_number=top_num, 
-                                                                                    col_cluster = col_luster, row_cluster = row_luster,
-                                                                                    value_type=value_type, pvalue=pvalue, 
-                                                                                    scale = scale, rename_taxa=rename_taxa, scale_method = scale_method)
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
+                                                                        value_type=value_type, pvalue=pvalue, scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
+                                                                       rename_taxa=rename_taxa, sort_by = sort_by, scale_method = scale_method, return_type = 'table')
+                    
+                    
         except ValueError as e:
             QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{e}')
             return None

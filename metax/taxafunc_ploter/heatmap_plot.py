@@ -52,8 +52,10 @@ class HeatmapPlot:
 
         
         # type_map: 1st: plot_type, 2nd: cmap
-        type_map = {'f': ('f-statistic', 'Spectral_r'),
-                    'p': ('P-value', 'Reds_r'),
+        #! cmap for f-statistic and p-value, only when scale_method is 'zscores', the values are negative and positive, otherwise, the values are positive
+        #! cmap for t-statistic, the values always are negative and positive
+        type_map = {'f': ('f-statistic', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare'),
+                    'p': ('P-value', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare_r'),
                     't': ('t-statistic', 'RdBu_r')}
 
         plot_type = type_map.get(value_type, "None")[0]
@@ -93,88 +95,76 @@ class HeatmapPlot:
             df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
             
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
-
-            if return_type == 'fig':
-                sns_params = {
-                    "center": 0,
-                    "cmap": cmap,
-                    "linewidths": 0.5, 
-                    "linecolor": 'gray',
-                    "dendrogram_ratio": (0.1, 0.2),
-                    "figsize": fig_size,
-                    "col_cluster": col_cluster,
-                    "row_cluster": row_cluster,
-                    "method": self.linkage_method,
-                    "metric": self.distance_metric,
-                    "cbar_kws": {"label": plot_type, "shrink": 0.5},
-                    "standard_scale": scale,
-                    "mask": df_top.isnull(),
-                    "vmin": 0 if plot_type == 'P-value' else None,
-                    "vmax": pvalue if plot_type == 'P-value' else None,
-                    "xticklabels": True if show_all_labels[0] else "auto",
-                    "yticklabels": True if show_all_labels[1] else "auto",
-                }
-
-                fig = sns.clustermap(df_plot, **sns_params)
-                fig.ax_heatmap.set_xlabel("Taxa")
-                fig.ax_heatmap.set_ylabel("Functions")
-                if title == "":
-                    title = f"Significant Differences between groups in Taxa-Function (Top {top_number} sorted by {plot_type} , scaled by {scale})"
-                else:
-                    title = f"{title} (Top {top_number} sorted by {plot_type} , scaled by {scale})"
-
-                plt.suptitle(title, weight='bold')
-
-                fig.ax_heatmap.set_xticklabels(
-                    fig.ax_heatmap.get_xmajorticklabels(),
-                    fontsize=font_size,
-                    rotation=90,
-                )
-                fig.ax_heatmap.set_yticklabels(
-                    fig.ax_heatmap.get_ymajorticklabels(),
-                    fontsize=font_size,
-                    rotation=0,
-                )
-                    
-                cbar = fig.ax_heatmap.collections[0].colorbar
-                cbar.set_label(plot_type, rotation=90, labelpad=1)
-                cbar.ax.yaxis.set_ticks_position('left')
-                cbar.ax.yaxis.set_label_position('right')
-                
-                plt.subplots_adjust(left=0.06, bottom=0.35, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
-
-                plt.tight_layout()
-                plt.show()
-                return fig
-
             
-            elif return_type == 'table':
-                sns_params = {
-                    "center": 0,
-                    "cmap": cmap,
-                    "col_cluster": col_cluster,
-                    "row_cluster": row_cluster,
-                    "method": self.linkage_method,
-                    "metric": self.distance_metric,
-                    "mask": df_top.isnull(),
-                }
-                fig = sns.clustermap(df_plot, **sns_params)
-                              
+            data_include_negative_and_positive = True if (df_plot.min().min() < 0 and df_plot.max().max() > 0) else False
+
+            sns_params = {
+                'center': 0 if data_include_negative_and_positive else None,
+                "cmap": cmap,
+                "linewidths": 0.5, 
+                "linecolor": 'gray',
+                "dendrogram_ratio": (0.1, 0.2),
+                "figsize": fig_size if return_type == 'fig' else None,
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+                "cbar_kws": {"label": plot_type, "shrink": 0.5},
+                "mask": df_top.isnull(),
+                "xticklabels": (True if show_all_labels[0] else "auto") if return_type == 'fig' else False,
+                "yticklabels": (True if show_all_labels[1] else "auto") if return_type == 'fig' else False,
+            }
+
+            fig = sns.clustermap(df_plot, **sns_params)
+            
+            if return_type == 'table':
                 # get the sorted dataframe
-                row_num = len(df_plot)
-                col_num = len(df_plot.columns)
-                if row_num > 1 and col_num < 2:
-                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, :] if row_cluster else df_plot
-                elif row_num < 2 and col_num > 1:
-                    sorted_df = df_plot.iloc[:, fig.dendrogram_col.reordered_ind] if col_cluster else df_plot
-                elif row_num > 1 and col_num > 1:
-                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind if row_cluster else slice(None),
-                                        fig.dendrogram_col.reordered_ind if col_cluster else slice(None)]
+                if row_cluster and not col_cluster:
+                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, :]
+                elif col_cluster and not row_cluster:
+                    sorted_df = df_plot.iloc[:, fig.dendrogram_col.reordered_ind]
+                elif row_cluster and col_cluster:
+                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
                 else:
                     sorted_df = df_plot
-                # remove fig object
                 plt.close(fig.figure)
-                return sorted_df                
+                return sorted_df
+            
+            
+            fig.ax_heatmap.set_xlabel("Taxa")
+            fig.ax_heatmap.set_ylabel("Functions")
+            
+            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
+            if title == "":
+                title = f"Significant Differences between groups in Taxa-Function (Top {top_number} sorted by {plot_type}{scale_title})"
+            else:
+                title = f"{title} (Top {top_number} sorted by {plot_type}{scale_title})"
+                
+            plt.suptitle(title)
+
+            fig.ax_heatmap.set_xticklabels(
+                fig.ax_heatmap.get_xmajorticklabels(),
+                fontsize=font_size,
+                rotation=90,
+            )
+            fig.ax_heatmap.set_yticklabels(
+                fig.ax_heatmap.get_ymajorticklabels(),
+                fontsize=font_size,
+                rotation=0,
+            )
+                
+            cbar = fig.ax_heatmap.collections[0].colorbar
+            cbar.set_label(plot_type, rotation=90, labelpad=1)
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
+            
+            
+            plt.subplots_adjust(left=0.06, bottom=0.35, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+
+            plt.tight_layout()
+            plt.show()
+            return fig
+        
                 
         except ValueError as e:
             print(f"Error: {e}")
@@ -182,44 +172,31 @@ class HeatmapPlot:
             raise ValueError(f"Error: {e}")
     
 
-    # For taxa, func and peptides table
+    # For taxa, func and peptides table, plot the intensity of significant differences items
     def plot_basic_heatmap_of_test_res(self, df, top_number:int = 100, value_type:str = 'p', 
                                        fig_size:tuple|None = None, pvalue:float = 0.05, scale = None, 
                                        col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True,
-                                       sort_by:str = 'P-value', scale_method:str = 'maxmin'
-                                       ):
+                                       sort_by:str = 'P-value', scale_method:str = 'maxmin', return_type:str = 'fig'):
 
         dft = df.copy()
 
 
-        scale_map ={None: None,
-                    'None': None,
-                    'row': 0,
-                    'column': 1}
-        scale = scale_map.get(scale)
-  
-        scale_map ={None: None,
-                    'None': None,
-                    'row': 0,
-                    'column': 1}
-        scale = scale_map.get(scale)
 
-        type_map = {'f': ('f-statistic', 'Spectral_r' if scale_method == 'maxmin' else 'RdBu_r'),
-                    'p': ('P-value', 'RdGy_r' if scale_method == 'maxmin' else 'RdBu_r'),
-                    't': ('t-statistic', 'RdGy_r' if scale_method == 'maxmin' else 'RdBu_r')}
+        # type_map = {'f': ('f-statistic', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r'),
+        #             'p': ('P-value', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r'),
+        #             't': ('t-statistic', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r')}
 
-        if cmap is None:
-            plot_type, cmap = type_map.get(value_type)
-        else:
-            plot_type, _ = type_map.get(value_type)
+        type_map = {'f': 'f-statistic', 'p': 'P-value', 't': 't-statistic'}
+        plot_type = type_map.get(value_type)
 
         if plot_type is None:
             raise ValueError("type must be 'p' or 'f' or 't'")
 
         
         if plot_type not in df.columns:
+            print(f"Warning: [{plot_type}] is not in the dataframe, change to [P-value]")
             plot_type = 'P-value'
 
         
@@ -267,34 +244,58 @@ class HeatmapPlot:
            
             if rename_taxa:
                 mat = self.rename_taxa(mat)
-                
+            
             mat = self.scale_data(df = mat, scale_by = scale, method = scale_method)
-                
+            
+            data_include_negative_and_positive = True if (mat.min().min() < 0 and mat.max().max() > 0) else False
+            
+            if cmap is None:
+                cmap = 'RdBu_r' if data_include_negative_and_positive else 'OrRd'
+              
             sns_params = {
-                "center": 0,
+                "center": 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
-                "figsize": fig_size,
+                "linewidths": 0.5, 
+                "linecolor": 'gray',
+                "figsize": fig_size if return_type == 'fig' else None,
                 "cbar_kws": {"label": "Intensity", "shrink": 0.5},
                 "col_cluster": col_cluster,
                 "row_cluster": row_cluster,
                 "method": self.linkage_method,
                 "metric": self.distance_metric,
                 "col_colors": color_list,
-                "xticklabels": True if show_all_labels[0] else "auto",
-                "yticklabels": True if show_all_labels[1] else "auto",
+                "xticklabels": (True if show_all_labels[0] else "auto") if return_type == 'fig' else False,
+                "yticklabels": (True if show_all_labels[1] else "auto") if return_type == 'fig' else False,
             }
             fig = sns.clustermap(mat, **sns_params)
 
-
+            if return_type == 'table':
+                # get the sorted dataframe
+                if row_cluster and not col_cluster:
+                    sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, :]
+                elif col_cluster and not row_cluster:
+                    sorted_df = mat.iloc[:, fig.dendrogram_col.reordered_ind]
+                elif row_cluster and col_cluster:
+                    sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+                else:
+                    sorted_df = mat
+                
+                plt.close(fig.figure)
+                
+                return sorted_df
+                    
+            # plot heatmap figure        
             fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
             fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+            
+            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             plt.suptitle(
-                f"The Heatmap of intensity of Significant differences between groups (top {top_number} sorted by {sort_by.split('(')[0]}, scaled by {scale})"
+                f"The Heatmap of intensity of Significant differences between groups (top {top_number} sorted by {sort_by.split('(')[0]}{scale_title})"
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label("Intensity", rotation=90, labelpad=1)
             cbar.ax.yaxis.set_ticks_position('left')
-            cbar.ax.yaxis.set_label_position('right')
+            cbar.ax.yaxis.set_label_position('left')
 
             plt.subplots_adjust(left=0.05, bottom=0.11, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
             
@@ -383,7 +384,7 @@ class HeatmapPlot:
         cbar = fig.ax_heatmap.collections[0].colorbar
         cbar.set_label('Intensity', rotation=90, labelpad=1)
         cbar.ax.yaxis.set_ticks_position('left')
-        cbar.ax.yaxis.set_label_position('right')
+        cbar.ax.yaxis.set_label_position('left')
         
         plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
         plt.tight_layout()
@@ -392,18 +393,7 @@ class HeatmapPlot:
 
 
         # For taxa-func heatmap
-    # get the top intensity matrix of taxa-func table
-    def get_top_across_table(self, df, top_number:str|int = 100, value_type:str = 'p', pvalue:float = 0.05, 
-                             rename_taxa:bool = False, col_cluster:bool = True, row_cluster:bool = True, scale:str|None = None, scale_method:str = 'maxmin'):
-        '''
-        For  taxa-func table only
-        Return a table x, and y are taxa and functions, respectively, and the values are the p-value, f-statistic or t-statistic.
-        '''
-        res = self.plot_top_taxa_func_heatmap_of_test_res(df=df, top_number=top_number, value_type=value_type, pvalue=pvalue, 
-                                                          col_cluster=col_cluster, row_cluster=row_cluster, rename_taxa=rename_taxa, return_type='table',
-                                                          scale=scale, scale_method=scale_method)
-        return res
-    
+
     # plot heatmap for all condtion results of DESeq2All or DunnettAll
     def plot_heatmap_of_all_condition_res(self, df,  pvalue:float = 0.05,scale:str|None = None, log2fc_min:float = 1.0,log2fc_max:float = 30.0,
                                        fig_size:tuple = (10,10), col_cluster:bool = True, row_cluster:bool = True,
@@ -548,7 +538,7 @@ class HeatmapPlot:
                 cbar.set_label("log2FC" if res_df_type == 'deseq2' else 't-statistic', 
                                rotation=90, labelpad=1)
                 cbar.ax.yaxis.set_ticks_position('left')
-                cbar.ax.yaxis.set_label_position('right')
+                cbar.ax.yaxis.set_label_position('left')
                 
                 plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
@@ -670,7 +660,7 @@ class HeatmapPlot:
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label('t-statistic', rotation=90, labelpad=1)
             cbar.ax.yaxis.set_ticks_position('left')
-            cbar.ax.yaxis.set_label_position('right')
+            cbar.ax.yaxis.set_label_position('left')
             
             plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
 
@@ -752,124 +742,20 @@ class HeatmapPlot:
         
         
 
-    def get_top_across_table_basic(self, df, top_number:int = 100, value_type:str = 'p', 
-                                       fig_size:tuple|None = None, pvalue:float = 0.05, scale = None, 
-                                       col_cluster:bool = True, row_cluster:bool = True, cmap:str|None = None, rename_taxa:bool = False, 
-                                       scale_method:str = 'maxmin'):
-        '''
-        for the tables of taxa, func, protein, peptides and custom table
-        Return a intensity matrix of top significant results.
-        '''
-        dft = df.copy()
-        
-
-
-        type_map = {'f': ('f-statistic', 'Spectral_r'),
-                    'p': ('P-value', 'Reds_r'),
-                    't': ('t-statistic', 'hot_r')}
-
-        if cmap is None:
-            plot_type, cmap = type_map.get(value_type)
-        else:
-            plot_type, _ = type_map.get(value_type)
-
-        if plot_type is None:
-            raise ValueError("type must be 'p' or 'f' or 't'")
-
-        
-        if plot_type not in df.columns:
-            plot_type = 'P-value'
-
-        
-        dft = dft[dft['P-value'] < pvalue]
-
-
-        if 'f-statistic' in dft.columns.tolist():
-            dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False])
-            mat = dft.head(top_number)
-            mat= mat.drop(['P-value', 'f-statistic' ], axis=1)
-        elif 't-statistic' in dft.columns.tolist():
-            #! t-statistic incude positive and negative value
-            dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False])
-            mat = dft.head(top_number)
-            mat= mat.drop(['P-value', 't-statistic'], axis=1)
-
-        if len(mat) < 2:
-            row_cluster = False
-        if len(mat.columns) < 2:
-            col_cluster = False
-            
-        mat = self.scale_data(df = mat, scale_by = scale, method = scale_method)
-            
-        # meta_df = self.tfa.meta_df
-        # meta_name = self.tfa.meta_name
-
-
-        if fig_size is None:
-            fig_size = (5,5)
-
-        
-        
-        try:
-            # create color list for groups & rename columns
-            col_names = mat.columns.tolist()
-            groups_list = []
-            new_col_names = []
-            for i in col_names:
-                # group = meta_df[meta_df['Sample'] == i]
-                group = self.tfa.meta_df[self.tfa.meta_df['Sample'] == i]
-                # group = group[meta_name].values[0]
-                group = group[self.tfa.meta_name].values[0]
-                new_col_names.append(f'{i} ({group})')
-                groups_list.append(group)
-            color_list = self.assign_colors(groups_list)
-            mat.columns = new_col_names
-            
-            if rename_taxa:
-                mat = self.rename_taxa(mat)
-                
-            sns_params = {
-                "center": 0,
-                "cmap": cmap,
-                "figsize": fig_size,
-                "cbar_kws": {"label": "Intensity"},
-                "col_cluster": col_cluster,
-                "row_cluster": row_cluster,
-                "method": self.linkage_method,
-                "metric": self.distance_metric,
-                "col_colors": color_list,
-            }
-
-            fig = sns.clustermap(mat, **sns_params)
-
-            # get the sorted dataframe
-            if row_cluster and not col_cluster:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, :]
-            elif col_cluster and not row_cluster:
-                sorted_df = mat.iloc[:, fig.dendrogram_col.reordered_ind]
-            elif row_cluster and col_cluster:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
-            else:
-                sorted_df = mat
-            
-            
-            plt.close(fig.fig)
-
-            return sorted_df
-        except Exception as e:
-            print(f'Error: {e}')
-            raise ValueError("Can not get the result table, please check the error message in consel.")
-        # finally:
-        #     plt.close('all')
-
-
-
 
     def scale_data(self, df: pd.DataFrame, scale_by: str|None = None, method: str|None = 'maxmin') -> pd.DataFrame:
-        scale_by = scale_by.lower() if scale_by else 'all'
-        method = method.lower() if method else 'maxmin'
+        scale_by = scale_by.lower() if scale_by else None
+        method = method.lower() if method else None
         
         print(f"Scaling the data by [{scale_by}] using method [{method}]")
+        
+        if scale_by == 'none' or method == 'none' or scale_by is None or method is None:
+            print("No scaling is performed.")
+            return df
+        
+        df = df.copy()
+        if scale_by not in ['row', 'col', 'all', 'none']:
+            raise ValueError("scale_by must be 'row', 'col', 'all' or 'none'")
 
         try:
             if method == 'zscore':
@@ -912,34 +798,3 @@ class HeatmapPlot:
         
         return df
 
-
-
-    # def scale_data(self, df, scale:str|None = None):
-    #     ''''
-    #     Scale the data by Max-Min scaling method
-    #     '''
-    #     try:
-    #         scale = scale.lower() if scale else None
-            
-    #         print(f"Scaling the data by [{scale}]")
-    #         if scale == 'row':
-    #             for index, row in df.iterrows():
-    #                 max_val = abs(row).max()
-    #                 if max_val != 0:
-    #                     df.loc[index] = row / max_val
-    #         elif scale == 'col':
-    #             for col in df:
-    #                 max_val = abs(df[col]).max()
-    #                 if max_val != 0:
-    #                     df[col] = df[col] / max_val
-    #         elif scale == 'all':
-    #             max_val = abs(df.values).max()
-    #             if max_val != 0:
-    #                 df = df / max_val
-    #         else:
-    #             print('No scale applied')
-                    
-    #     except Exception as e:
-    #         print(f'Error in scaling the data: {e}')
-
-    #     return df
