@@ -4,7 +4,7 @@ from pyecharts import options as opts
 import numpy as np
 
 
-class VolcanoPlot():
+class VolcanoPlotJS():
     
     def __init__(self, theme='white'):
         self.theme = theme
@@ -13,7 +13,7 @@ class VolcanoPlot():
     def plot_volcano_js(self, df_fc, pvalue:float=0.05, p_type ='padj',
                         log2fc_min:float=1, log2fc_max:float = 10, 
                         title_name:str='2 groups',  font_size:int=12,
-                        width:int=12, height:int=8):
+                        width:int=12, height:int=8, dot_size:int=15):
         
         df = df_fc.copy()
        
@@ -54,7 +54,7 @@ class VolcanoPlot():
             elif type_value == 'ultra-down':
                 return "#206864"
             else: # normal
-                return "#9aa7b1"
+                return "#6b798e"
 
         # create a list of dict for each type
         Scatter_up = df[df['type'] == 'up'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
@@ -82,7 +82,7 @@ class VolcanoPlot():
                     feature=opts.ToolBoxFeatureOpts( 
                                                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(type_="png", 
                                                                                                     background_color="black" if self.theme == 'dark' else "white",
-                                                                                                    pixel_ratio=2, 
+                                                                                                    pixel_ratio=3, 
                                                                                                     title="Save as PNG"),
                                                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
                                                     data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
@@ -113,8 +113,8 @@ class VolcanoPlot():
                     f"{type_name.title()} ({count_dict[type_name]})",
                     scatter_data.tolist(),
                     label_opts=opts.LabelOpts(is_show=False),
-                    itemstyle_opts=opts.ItemStyleOpts(color=color_mapping(color_name)),
-                    symbol_size=font_size,
+                    itemstyle_opts=opts.ItemStyleOpts(color=color_mapping(color_name), opacity=0.8, border_width=0.5, border_color='black'),
+                    symbol_size=dot_size,
                 )
 
             

@@ -1,3 +1,46 @@
+# Version: 1.109.11
+## Date: 2024-08-10
+### Changes:
+- Fix: Fixed the scale method and color bar of heatmap for Cross Test result table.
+
+# Version: 1.109.10
+## Date: 2024-08-9
+### Changes:
+- Fix: Fixed the of test result table, the t-statistic was reversed.
+- New: adde z-score for heatmap scale.
+
+
+# Version: 1.109.9
+## Date: 2024-08-7
+### Changes:
+- Fix: Fixed the bug when restore the object, some cross_test top table was added to the GUI by wrong.
+- Change: Changed the "pixel_ratio" from 2 to 3 for the HTML plot to make the plot more clear.
+
+
+# Version: 1.109.8
+## Date: 2024-08-1
+### Changes:
+- Fix: Fixed title of the static volcano plot.
+- New: added theme option for the static volcano plot.
+
+
+# Version: 1.109.7
+## Date: 2024-07-31
+### Changes:
+- Change: Optimized the volcano plot.
+
+# Version: 1.109.6
+## Date: 2024-07-31
+### Changes:
+- Change: Optimized the Sankey plot.
+
+
+# Version: 1.109.6
+## Date: 2024-07-31
+### Changes:
+- New: Added a checkbox to enable user to plot 2D or 3D bar plot for the baisc plot part with sub meta.
+
+
 # Version: 1.109.5
 ## Date: 2024-07-25
 ### Changes:
