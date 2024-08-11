@@ -1,3 +1,8 @@
+# Version: 1.109.12
+## Date: 2024-08-10
+### Changes:
+- Fix: Fixed the function table didn't filter by taxa level.
+
 # Version: 1.109.11
 ## Date: 2024-08-10
 ### Changes:

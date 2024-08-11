@@ -533,7 +533,8 @@ class TaxaFuncAnalyzer:
                                                                                 'by_sample': False,
                                                                                 'rank_method': 'unique_counts',
                                                                                 'greedy_method': 'heap',
-                                                                                }
+                                                                                },
+                          keep_unknow_func: bool = False
                           ):
         """
         Example Usage:
@@ -543,7 +544,9 @@ class TaxaFuncAnalyzer:
                                                             'outlier_detect_by_group': 'Individual',
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
-                    peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3})
+                            peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
+                            sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
+                            keep_unknow_func = False)
         """
         # for any_df_mode, the df is considered as other_df
         if self.any_df_mode:
@@ -570,33 +573,6 @@ class TaxaFuncAnalyzer:
                 self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
 
 
-
-
-
-        print("Starting to set Function table...")
-        # filter prop = 100% and func are not (NULL, -, NaN)
-        df_func = df[(df[f'{self.func_name}_prop'] >= func_threshold) &
-                     (df[self.func_name].notnull()) &
-                     (df[self.func_name] != 'not_found') &
-                     (df[self.func_name] != '-') &
-                     (df[self.func_name] != 'NaN') &
-                     (df[self.func_name] != 'unknown') #! uncomment this line if needed show the peptide annotated to unknown function
-                     ].copy()
-
-        df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]
-        if processing_after_sum:
-            print("\n-----Starting to perform data pre-processing for Function table...-----")
-            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
-
-        # add column 'peptide_num' to df_func
-        df_func['peptide_num'] = df.groupby(self.func_name).count()[self.peptide_col_name]
-        # move the column 'peptide_num' to the first column
-        cols = list(df_func.columns)
-        cols = [cols[-1]] + cols[:-1]
-        df_func = df_func[cols]
-        # filter the df_func by peptide_num_threshold
-        df_func = df_func[df_func['peptide_num'] >= peptide_num_threshold['func']]
-        print(f"Function number with prop >= [{func_threshold}], peptide_num >= [{peptide_num_threshold['func']}]: {df_func.shape[0]}")
 
         print("Starting to set Taxa table...")
         # select taxa level and create dfc (df clean)
@@ -656,11 +632,33 @@ class TaxaFuncAnalyzer:
             dfc[self.func_name].notnull() &
             (dfc[self.func_name] != 'not_found') &
             (dfc[self.func_name] != '-') &
-            (dfc[self.func_name] != 'unknown') &
-            (dfc[self.func_name] != 'NaN')
+            (dfc[self.func_name] != 'NaN') 
         )
+        
+        if not keep_unknow_func:
+            filter_conditions = filter_conditions & (dfc[self.func_name] != 'unknown')
 
         dfc = dfc[filter_conditions]
+        
+
+        print("Starting to set Function table...")
+        df_func = dfc.copy()
+        df_func = df_func.groupby(self.func_name).sum(numeric_only=True)[self.sample_list]
+        if processing_after_sum:
+            print("\n-----Starting to perform data pre-processing for Function table...-----")
+            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
+
+        # add column 'peptide_num' to df_func
+        df_func['peptide_num'] = dfc.groupby(self.func_name).count()[self.peptide_col_name]
+        # move the column 'peptide_num' to the first column
+        cols = list(df_func.columns)
+        cols = [cols[-1]] + cols[:-1]
+        df_func = df_func[cols]
+        # filter the df_func by peptide_num_threshold
+        df_func = df_func[df_func['peptide_num'] >= peptide_num_threshold['func']]
+        print(f"Function number with prop >= [{func_threshold}], peptide_num >= [{peptide_num_threshold['func']}]: {df_func.shape[0]}")
+        
+        
         # create clean peptide table
         if processing_after_sum:
             print("\n-----Starting to perform data pre-processing for dfc...-----")
@@ -801,16 +799,21 @@ class TaxaFuncAnalyzer:
 
 
 if __name__ == '__main__':
+    import os
+    current_path = os.path.dirname(os.path.abspath(__file__))
     df_path = '../data/example_data/Example_OTF.tsv'
     meta_path = '../data/example_data/Example_Meta.tsv'
+    df_path = os.path.join(current_path, df_path)
+    meta_path = os.path.join(current_path, meta_path)
+    
     sw = TaxaFuncAnalyzer(df_path, meta_path)
-    sw.set_func('KEGG_Pathway_name')
+    sw.set_func('dbcan_EC')
     sw.set_multi_tables(level='m', data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
                                                             'batch_meta': None, 'outlier_detect_method': None,
                                                             'outlier_handle_method': None,
                                                             'outlier_detect_by_group': None,
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': None},
-                    peptide_num_threshold = {'taxa': 3, 'func': 1, 'taxa_func': 1},)
+                    peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},)
 
     sw.check_attributes()
