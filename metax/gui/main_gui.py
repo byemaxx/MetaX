@@ -2594,11 +2594,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                             'outlier_handle_by_group': outlier_handle_by_group,
                                             'processing_order': processing_order}
                 
-                set_multi_table_params = {'level': taxa_level, f'func_threshold': func_threshold,
+                set_multi_table_params = {'level': taxa_level, 'func_threshold': func_threshold,
                                         'data_preprocess_params': data_preprocess_params,
                                         'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
-                                        'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params}
+                                        'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
+                                        'keep_unknow_func': False}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
