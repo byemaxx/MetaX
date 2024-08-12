@@ -791,6 +791,7 @@ class TaxaFuncAnalyzer:
             "proteins": "protein_df",
             
         }
+        table_name = table_name.lower()
         dft = getattr(self, name_dict[table_name])
         # remove peptide_num column if exists
         if "peptide_num" in dft.columns:

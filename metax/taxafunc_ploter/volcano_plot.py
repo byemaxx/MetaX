@@ -10,7 +10,7 @@ class VolcanoPlot:
 
         
     def plot_volcano(self, df_fc, pvalue: float = 0.05, p_type='padj', log2fc_min: float = 1, log2fc_max: float = 10,
-                     title_name='2 groups',font_size:int=12, width=8, height=6, dot_size=15, theme:str|None = None):
+                     title_name='2 groups',font_size:int=12, width=8, height=6, dot_size=15, theme:str|None = None, alpha=0.8):
         
         def color_mapping(type_value):
             if type_value == 'up':
@@ -42,14 +42,22 @@ class VolcanoPlot:
             
             # create the volcano plot
             plt.figure(figsize=(width, height))
-            fig = sns.scatterplot(x=df['log2FoldChange'], y=-np.log10(df[p_type]), s=dot_size*10, hue=df['type'], alpha=0.8,
-                                palette={'up': '#d23918', 'down': '#68945c', 'ultra-up': '#663d74', 'ultra-down': '#206864', 'normal': '#6b798e'}, linewidth=0.5, edgecolor='black')
+            fig = sns.scatterplot(x=df['log2FoldChange'], y=-np.log10(df[p_type]), s=dot_size*10, hue=df['type'], alpha=alpha,
+                                # palette={'up': '#d23918', 'down': '#68945c', 'ultra-up': '#663d74', 'ultra-down': '#206864', 'normal': '#6b798e'}, 
+                                palette={'up': color_mapping('up'), 'down': color_mapping('down'), 'ultra-up': color_mapping('ultra-up'), 'ultra-down': color_mapping('ultra-down'), 'normal': color_mapping('normal')},
+                                linewidth=0.5, edgecolor='black')
             plt.axhline(y=-np.log10(pvalue), linestyle='--', color='grey', linewidth=1)  # padj line
             plt.axvline(x=-log2fc_min, linestyle='--', color='grey', linewidth=1)  # log2FoldChange line
             plt.axvline(x=log2fc_min, linestyle='--', color='grey', linewidth=1)   # log2FoldChange line
 
             # set the title and labels
-            fig.set_title(f'Volcano plot of {title_name} ({"padj" if p_type == "padj" else "pvalue"} < {pvalue}, |log2FoldChange| > {log2fc_min})', fontsize=font_size)
+            # if ultra-up or ultra-down is not in the data, then don't show it in the title
+            if len(df[df['type'].isin(['ultra-up', 'ultra-down'])]) == 0:
+                log2fc_title = f'|log2FoldChange| >= {log2fc_min}'
+            else:
+                log2fc_title = f'{log2fc_min} <= |log2FoldChange| < {log2fc_max}'
+                
+            fig.set_title(f'Volcano plot of {title_name} ({"padj" if p_type == "padj" else "pvalue"} <= {pvalue}, {log2fc_title})', fontsize=font_size)
             fig.set_xlabel('log2FoldChange', fontsize=font_size)
             fig.set_ylabel('-log10(padj)', fontsize=font_size)
             sns.despine(trim=True)
@@ -63,7 +71,7 @@ class VolcanoPlot:
                 if count_dict[t] == 0:
                     continue
                 # set the size of dot as font size*10, because when the font size is small, the dot will be overlapped
-                h = plt.scatter([], [], s=font_size*10, color=color_mapping(t), alpha=0.8, linewidth=0.5, edgecolor='black')
+                h = plt.scatter([], [], s=font_size*10, color=color_mapping(t), alpha=alpha, linewidth=0.5, edgecolor='black')
                 handles.append(h)
                 labels.append(f'{t} ({count_dict[t]})')
             fig.legend(handles=handles, labels=labels,

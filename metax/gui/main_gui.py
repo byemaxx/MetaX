@@ -592,8 +592,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return res_list
             
     def change_event_checkBox_basic_plot_table(self):
-        taxa_only_button_list = [self.pushButton_plot_alpha_div, self.pushButton_plot_beta_div, 
-                                 self.pushButton_plot_sunburst, self.pushButton_plot_basic_treemap]
+        taxa_only_button_list = [
+                                # self.pushButton_plot_alpha_div, 
+                                # self.pushButton_plot_beta_div, 
+                                 self.pushButton_plot_sunburst, 
+                                 self.pushButton_plot_basic_treemap]
         
         taxa_func_button_list = [self.pushButton_plot_basic_sankey]
 
@@ -2984,6 +2987,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_trends_clean_list,
         self.comboBox_trends_table,
         self.pushButton_plot_pca_js,
+        self.pushButton_plot_alpha_div, 
+        self.pushButton_plot_beta_div,
         self.pushButton_trends_add_a_list,
         self.pushButton_co_expr_add_a_list,
         self.pushButton_basic_heatmap_add_a_list,
@@ -4217,8 +4222,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                              width=width, height=height, font_size=font_size, 
                                                              plot_all_samples=plot_all_samples, theme=theme,
                                                              sub_meta = sub_meta, show_fliers = show_fliers,
-                                                             legend_col_num=legend_col_num, rename_sample = rename_sample)
-                self.update_table_dict('alpha_diversity', aplha_diversity_df)
+                                                             legend_col_num=legend_col_num, rename_sample = rename_sample, 
+                                                             df_type=table_name, title_name=title_name)
+                self.update_table_dict(f'alpha_diversity({title_name})', aplha_diversity_df)
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
@@ -4227,8 +4233,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                             rename_sample = rename_sample,
                                                             show_label = show_label, adjust_label = adjust_label, 
                                                             theme=theme,sub_meta = sub_meta, legend_col_num=legend_col_num,
-                                                            dot_size = dot_size)
-                self.update_table_dict('beta_diversity_distance_matrix', beta_diversity_distance_matrix)
+                                                            dot_size = dot_size, df_type=table_name, title_name=title_name)
+                self.update_table_dict(f'beta_diversity_distance_matrix({title_name})', beta_diversity_distance_matrix)
                                                             
 
             elif method == 'sunburst':
@@ -4926,7 +4932,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             height = self.spinBox_fc_plot_height.value()
             group1 = self.comboBox_deseq2_group1.currentText()
             group2 = self.comboBox_deseq2_group2.currentText()
-            title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
+            title_name = f'{group2} vs {group1} of {table_name.split("(")[1].split(")")[0]}'
             font_size = self.spinBox_deseq2_font_size.value()
             dot_size = self.spinBox_deseq2_dot_size.value()
             plot_js = self.checkBox_deseq2_js_volcano.isChecked()
@@ -5085,7 +5091,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return None
         try:
             df = self.table_dict[table_name]
-            title_name = f'{group1} vs {group2} of {table_name.split("(")[1].split(")")[0]}'
+            title_name = f'{group2} vs {group1} of {table_name.split("(")[1].split(")")[0]}'
 
             pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_fc_sankey(df, width=width, height=height, pvalue=pvalue, p_type = p_type,
                                                       log2fc_min=log2fc_min, log2fc_max=log2fc_max, title =title_name, font_size=font_size)

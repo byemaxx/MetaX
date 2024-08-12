@@ -177,15 +177,18 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     print("Add EC columns to df successfully!")
     return df
 
-def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
-    def query_kegg(id_str, pathway_dict):
+def add_pathway_name_to_df(df: pd.DataFrame, kppe_id:bool = False) -> pd.DataFrame:
+    def query_kegg(id_str, pathway_dict, kppe_id=False):
         id_list = id_str.split(',')
         if id_list[0] == 'not_found':
             return 'not_found'
         pathway_list = []
         for id in id_list:
             if id in pathway_dict:
-                pathway_list.append(pathway_dict[id])
+                if kppe_id:
+                    pathway_list.append(f'{id}:{pathway_dict[id]}')
+                else:
+                    pathway_list.append(pathway_dict[id])
         # remove duplicates
         pathway_list = list(dict.fromkeys(pathway_list))
         if len(pathway_list) == 0:
@@ -199,9 +202,12 @@ def add_pathway_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     if 'KEGG_Pathway' not in df.columns:
         print('KEGG_Pathway column does not exist!, return the original dataframe')
         return df
+    
+    #! fill the missing pathway names if necessary
+    # df['KEGG_Pathway'] = df['KEGG_Pathway'].fillna('not_found')
 
     pathway_dict = get_pathway_dict()
-    df.loc[:, 'KEGG_Pathway_name'] = df['KEGG_Pathway'].apply(lambda x: query_kegg(x, pathway_dict))
+    df.loc[:, 'KEGG_Pathway_name'] = df['KEGG_Pathway'].apply(lambda x: query_kegg(x, pathway_dict, kppe_id))
     df.loc[:, 'KEGG_Pathway_name_prop'] = df['KEGG_Pathway_prop']    
     print("Add KEGG_Pathway_name to df successfully!")
     return df
@@ -250,7 +256,7 @@ def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
 # if __name__ == '__main__':
 #     df_path = "MetaX/data/example_data/Example_OTF.tsv"
 #     df = pd.read_csv(df_path, sep='\t')
-#     df = add_pathway_name_to_df(df)
+#     df = add_pathway_name_to_df(df, kppe_id=True)
 #     df = add_ec_name_to_df(df)
 #     df = add_ko_name_to_df(df)
 #     df.to_csv("11.tsv", sep='\t', index=False)

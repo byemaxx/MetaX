@@ -28,7 +28,10 @@ class SumProteinIntensity:
         self.df = self.tfa.original_df.loc[:, self.extract_col_name]
         self._init_dicts()
         self.greedy_method = None  # only used for razor method
-
+        self.share_intensity = False
+        self.__multi_target_count = 0
+        
+        
     def check_protein_col(self):
         # if any NA, '', or empty in the protein column, raise error
         if self.df[self.tfa.protein_col_name].isnull().values.any():
@@ -71,6 +74,8 @@ class SumProteinIntensity:
             # use Set Cover Problem to get the protein list, then sum the intensity
             pep_to_protein = self._create_pep_to_protein_razor()
             self._sum_protein_razor(pep_to_protein)
+            self.__multi_target_count = self.__multi_target_count/len(self.tfa.sample_list)
+            print(f'Peptides with multiple targets: {self.__multi_target_count} ({self.__multi_target_count/len(pep_to_protein)*100:.2f}%)')
         
         elif method == 'anti-razor':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [True] rank_method: [Shared]-------------")    
@@ -269,13 +274,19 @@ class SumProteinIntensity:
             else:
                 self.res_intensity_dict[sample_name][protein] = intensity
         else:
-            intensity = intensity/len(protein_list)
-            for protein in protein_list:
-                if protein in self.res_intensity_dict[sample_name].keys():
+            if self.share_intensity:
+                intensity = intensity/len(protein_list)
+                for protein in protein_list:
+                    self.res_intensity_dict.setdefault(sample_name, {}).setdefault(protein, 0)
                     self.res_intensity_dict[sample_name][protein] += intensity
-                else:
-                    self.res_intensity_dict[sample_name][protein] = intensity
-                    
+            else:
+                self.__multi_target_count += 1
+                protein = protein_list[0]
+                self.res_intensity_dict.setdefault(sample_name, {}).setdefault(protein, 0)
+                self.res_intensity_dict[sample_name][protein] += intensity
+                
+                
+                
                     
     def _sum_protein_rank(self, sample_name:str, by_sample=False):
         # print in one line
