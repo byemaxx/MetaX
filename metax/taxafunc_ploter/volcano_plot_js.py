@@ -63,7 +63,13 @@ class VolcanoPlotJS():
         scatter_ultra_down = df[df['type'] == 'ultra-down'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
         Scatter_normal = df[df['type'] == 'normal'].apply(lambda p: {'name': p['label'], 'value': [p['log2FoldChange'], p[p_type]]}, axis=1)
 
-        title = f'Volcano plot of {title_name} ({p_type} <= {pvalue},  {log2fc_min} <= log2FoldChange < {log2fc_max})'
+        # if ultra-up or ultra-down is not in the data, then don't show it in the title
+        if len(df[df['type'].isin(['ultra-up', 'ultra-down'])]) == 0:
+            log2fc_title = f'|log2FoldChange| >= {log2fc_min}'
+        else:
+            log2fc_title = f'{log2fc_min} <= |log2FoldChange| < {log2fc_max}'
+        
+        title = f'Volcano plot of {title_name} ({p_type} <= {pvalue}, {log2fc_title})'
         
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width*100}px", height=f"{height*100}px", theme=self.theme))

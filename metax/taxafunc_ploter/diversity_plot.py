@@ -27,10 +27,12 @@ class DiversityPlot(object):
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
                              width:int = 10, height:int = 8,  font_size:int = 10,
                              plot_all_samples:bool = False, theme:str = None, sub_meta:str = 'None',
-                             show_fliers = True, legend_col_num: int | None = None, rename_sample:bool = False
+                             show_fliers = True, legend_col_num: int | None = None, rename_sample:bool = False,
+                             df_type:str = 'taxa', title_name:str = "Table"
                              ):
         '''
         Calculate alpha diversity and plot boxplot\n
+        df_type: ['taxa', 'functions', 'taxa_functions', 
         return: (fig, aplha_diversity_df)
         '''
         if sample_list is None:
@@ -63,7 +65,8 @@ class DiversityPlot(object):
             raise ValueError(f'Invalid metric: {metric}. Please choose from: {list(metric_dict.keys())}')
         
         try:
-            df = self.tfa.taxa_df.copy()
+            # df = self.tfa.taxa_df.copy()
+            df = self.tfa.get_df(df_type)
             df = df[sample_list]
             
             if metric == 'ace':
@@ -135,7 +138,8 @@ class DiversityPlot(object):
             fig.set_yticklabels(fig.get_yticks(), fontsize=font_size)
             fig.set_xlabel('Group', fontsize=font_size)
             fig.set_ylabel(f'{metric} Index', fontsize=font_size)
-            fig.set_title(f'Alpha Diversity ({metric})', fontsize=font_size+2, fontweight='bold')
+            fig.set_title(f'Alpha Diversity of {title_name} ({metric})', 
+                          fontsize=font_size+2, fontweight='bold')
             if sub_meta:
                 if legend_col_num != 0:
                     plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., 
@@ -171,7 +175,8 @@ class DiversityPlot(object):
                              width:int = 10, height:int = 8,  font_size:int = 10, 
                              font_transparency:float = 0.8, show_label:bool = False,rename_sample:bool = False,
                               adjust_label:bool = False , theme:str|None = None, sub_meta:str = "None", 
-                              legend_col_num: int | None = None, dot_size: float|None = None):
+                              legend_col_num: int | None = None, dot_size: float|None = None, df_type:str = 'taxa',
+                              title_name:str = "Table"):
         '''
         Calculate beta diversity and plot PCoA plot
         Return:(fig, distance_matrix)
@@ -200,7 +205,7 @@ class DiversityPlot(object):
             color_palette = None  # Let seaborn handle the color mapping
 
         try:
-            df = self.tfa.taxa_df.copy()
+            df = self.tfa.get_df(df_type)
             df = df[sample_list]
             df = df.T
             
@@ -225,8 +230,10 @@ class DiversityPlot(object):
             fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
             # set title
             num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
-
-            plt.title(f'PCoA plot of {metric} distance (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)', fontsize=font_size+2, fontweight='bold')
+            
+            title = f'PCoA plot of {metric} distance {title_name} (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)'
+            plt.title(title, fontsize=font_size+2, fontweight='bold')
+            
             if legend_col_num != 0:
                 plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
                         fontsize=font_size +2 , ncol= (num_legend//30 + 1) if legend_col_num is None else legend_col_num)

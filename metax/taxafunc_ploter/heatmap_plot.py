@@ -378,7 +378,7 @@ class HeatmapPlot:
 
         fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
         fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-        title = f"{title} (scaled by {scale})"
+        title = f"{title} (scaled by {scale})" if scale not in [None, 'None'] else title
         plt.suptitle(title, weight='bold')
         
         cbar = fig.ax_heatmap.collections[0].colorbar
@@ -754,6 +754,11 @@ class HeatmapPlot:
             return df
         
         df = df.copy()
+        
+        # convert 'column' to 'col' for consistency
+        if scale_by == 'column':
+            scale_by = 'col'
+             
         if scale_by not in ['row', 'col', 'all', 'none']:
             raise ValueError("scale_by must be 'row', 'col', 'all' or 'none'")
 

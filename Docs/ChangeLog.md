@@ -1,3 +1,10 @@
+# Version: 1.110.0
+## Date: 2024-08-12
+### Changes:
+- Fix: 1. Fixed the group order was not correct in the title of the volcano plot. 2. col scale bug when plot the basic heatmap.
+- Change: 1. Enable alpha/beta divversity for all type of tables. 2. Only asiign peptide to one protein rather than sahre the intensity when sum peptide to protein by razor method.
+
+
 # Version: 1.109.12
 ## Date: 2024-08-10
 ### Changes:
