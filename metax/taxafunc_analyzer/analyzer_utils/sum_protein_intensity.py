@@ -317,7 +317,8 @@ class SumProteinIntensity:
     def _sum_protein_anti_razor(self, sample_name:str):
         print(f'Creating protein intensity dict for [{sample_name}]', end='\r')
         df = self.df.loc[:,[ self.tfa.protein_col_name, sample_name]]
-
+        self.share_intensity = True
+        
         for row in df.itertuples():
             proteins = row[1].split(';')
             intensity = row[2]

@@ -1,3 +1,10 @@
+# Version: 1.110.1
+## Date: 2024-08-20
+### Changes:
+- Fix: Fixed the bug of sum protein by anti-razor method.
+- Change: Changed the default color of the heatmap plot to make the color more clear.
+
+
 # Version: 1.110.0
 ## Date: 2024-08-12
 ### Changes:
