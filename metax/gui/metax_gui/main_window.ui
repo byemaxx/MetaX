@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>6</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -2803,6 +2803,11 @@
                              </property>
                              <item>
                               <property name="text">
+                               <string>None</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
                                <string>row</string>
                               </property>
                              </item>
@@ -2814,11 +2819,6 @@
                              <item>
                               <property name="text">
                                <string>all</string>
-                              </property>
-                             </item>
-                             <item>
-                              <property name="text">
-                               <string>None</string>
                               </property>
                              </item>
                             </widget>
@@ -3674,7 +3674,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>1020</width>
+                       <width>929</width>
                        <height>126</height>
                       </rect>
                      </property>
@@ -5542,8 +5542,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>996</width>
-                           <height>140</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -8171,8 +8171,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>775</width>
-                        <height>102</height>
+                        <width>1016</width>
+                        <height>185</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_69">
@@ -8550,6 +8550,11 @@
                              </property>
                              <item>
                               <property name="text">
+                               <string>None</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
                                <string>row</string>
                               </property>
                              </item>
@@ -8561,11 +8566,6 @@
                              <item>
                               <property name="text">
                                <string>all</string>
-                              </property>
-                             </item>
-                             <item>
-                              <property name="text">
-                               <string>None</string>
                               </property>
                              </item>
                             </widget>

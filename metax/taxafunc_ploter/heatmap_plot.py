@@ -101,8 +101,8 @@ class HeatmapPlot:
             sns_params = {
                 'center': 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
-                "linewidths": 0.5, 
-                "linecolor": 'gray',
+                "linewidths": 0.01, 
+                "linecolor": (0 ,0 ,0 ,0.1),
                 "dendrogram_ratio": (0.1, 0.2),
                 "figsize": fig_size if return_type == 'fig' else None,
                 "col_cluster": col_cluster,
@@ -255,8 +255,8 @@ class HeatmapPlot:
             sns_params = {
                 "center": 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
-                "linewidths": 0.5, 
-                "linecolor": 'gray',
+                "linewidths": 0.01, 
+                "linecolor": (0 ,0 ,0 ,0.01),
                 "figsize": fig_size if return_type == 'fig' else None,
                 "cbar_kws": {"label": "Intensity", "shrink": 0.5},
                 "col_cluster": col_cluster,
@@ -341,7 +341,7 @@ class HeatmapPlot:
             mat = self.rename_taxa(mat)
 
         if cmap is None:
-            cmap = 'Spectral_r'
+            cmap = 'YlOrRd'
         if fig_size is None:
             fig_size = (30,30)
 
@@ -357,11 +357,11 @@ class HeatmapPlot:
             
             
         sns_params = {
-            "center": 0,
+            # "center": 0,
             "cmap": cmap,
             "figsize": fig_size,
             "linewidths": 0.01,
-            "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+            "linecolor": (0 ,0 ,0 ,0.01),
             "dendrogram_ratio": (0.1, 0.2),
             "cbar_kws": {"label": "Intensity", "shrink": 0.5},
             "col_cluster": col_cluster,
@@ -504,8 +504,8 @@ class HeatmapPlot:
                 "cmap": cmap,
                 "figsize": fig_size,
                 "norm": norm,
-                "linewidths": 0.01,
-                "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                "linewidths": 0.01, 
+                "linecolor": (0 ,0 ,0 ,0.01),
                 "dendrogram_ratio": (0.1, 0.2),
                 "col_cluster": col_cluster,
                 "row_cluster": row_cluster,
@@ -638,8 +638,8 @@ class HeatmapPlot:
                 "cmap": cmap,
                 "figsize": fig_size,
                 "norm": norm,
-                "linewidths": 0.01,
-                "linecolor": (0 / 255, 0 / 255, 0 / 255, 0.01),
+                "linewidths": 0.01, 
+                "linecolor": (0 ,0 ,0 ,0.01),
                 "dendrogram_ratio": (0.1, 0.2),
                 "cbar_kws": {"label": "t-statistic", "shrink": 0.5},
                 "col_cluster": col_cluster,
