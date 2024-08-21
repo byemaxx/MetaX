@@ -1,3 +1,8 @@
+# Version: 1.111.4
+## Date: 2024-08-21
+### Changes:
+- New: Added rotation option for the x-axis and y-axis of the heatmap plot.
+
 # Version: 1.111.3
 ## Date: 2024-08-21
 ### Changes:

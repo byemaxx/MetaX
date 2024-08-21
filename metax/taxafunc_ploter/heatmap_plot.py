@@ -9,12 +9,16 @@ import matplotlib.pyplot as plt
 from .get_distinct_colors import GetDistinctColors
 
 class HeatmapPlot:
-    def __init__(self, tfobj, linkage_method:str = 'average', distance_metric:str = 'correlation'):
+    def __init__(self, tfobj, linkage_method:str = 'average', distance_metric:str = 'correlation',
+                 x_labels_rotation:int = 90, y_labels_rotation:int = 0):
         self.tfa =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         self.assign_colors = GetDistinctColors().assign_colors
         self.linkage_method = linkage_method
         self.distance_metric = distance_metric
+        self.x_labels_rotation = x_labels_rotation
+        self.y_labels_rotation = y_labels_rotation
+        
         
         # input: df, func_name, top_number, value_type, fig_size
     # EXAMPLE: plot_top_taxa_func_heatmap_of_test_res(df_anova, sw.func, 200, 'f', (30,30))
@@ -145,12 +149,15 @@ class HeatmapPlot:
             fig.ax_heatmap.set_xticklabels(
                 fig.ax_heatmap.get_xmajorticklabels(),
                 fontsize=font_size,
-                rotation=90,
+                rotation=self.x_labels_rotation,
+                ha = 'right' if self.x_labels_rotation > 0 else 'left'
             )
             fig.ax_heatmap.set_yticklabels(
                 fig.ax_heatmap.get_ymajorticklabels(),
                 fontsize=font_size,
-                rotation=0,
+                rotation=self.y_labels_rotation,
+                ha = 'left',
+                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
             )
                 
             cbar = fig.ax_heatmap.collections[0].colorbar
@@ -284,10 +291,21 @@ class HeatmapPlot:
                 
                 return sorted_df
                     
-            # plot heatmap figure        
-            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
-            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
-            
+            # plot heatmap figure
+            fig.ax_heatmap.set_xticklabels(
+                fig.ax_heatmap.get_xmajorticklabels(),
+                fontsize=font_size,
+                rotation=self.x_labels_rotation,
+                ha = 'right' if self.x_labels_rotation > 0 else 'left'
+            )
+            fig.ax_heatmap.set_yticklabels(
+                fig.ax_heatmap.get_ymajorticklabels(),
+                fontsize=font_size,
+                rotation=self.y_labels_rotation,
+                ha = 'left',
+                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+            )
+
             scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             plt.suptitle(
                 f"The Heatmap of intensity of Significant differences between groups (top {top_number} sorted by {sort_by.split('(')[0]}{scale_title})"
@@ -373,11 +391,20 @@ class HeatmapPlot:
             "yticklabels": True if show_all_labels[1] else "auto",
         }
         fig = sns.clustermap(mat, **sns_params)
-            
 
-
-        fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
-        fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+        fig.ax_heatmap.set_xticklabels(
+            fig.ax_heatmap.get_xmajorticklabels(),
+            fontsize=font_size,
+            rotation=self.x_labels_rotation,
+            ha="right" if self.x_labels_rotation > 0 else "left",
+        )
+        fig.ax_heatmap.set_yticklabels(
+            fig.ax_heatmap.get_ymajorticklabels(),
+            fontsize=font_size,
+            rotation=self.y_labels_rotation,
+            ha="left",
+            va="baseline" if self.y_labels_rotation > 0 else "top",
+        )
         title = f"{title} (scaled by {scale})" if scale not in [None, 'None'] else title
         plt.suptitle(title, weight='bold')
         
@@ -525,8 +552,19 @@ class HeatmapPlot:
             if return_type == 'fig':
                 fig = sns.clustermap(dft, **sns_params)
 
-                fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
-                fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+                fig.ax_heatmap.set_xticklabels(
+                    fig.ax_heatmap.get_xmajorticklabels(),
+                    fontsize=font_size,
+                    rotation=self.x_labels_rotation,
+                    ha = 'right' if self.x_labels_rotation > 0 else 'left'
+                )
+                fig.ax_heatmap.set_yticklabels(
+                    fig.ax_heatmap.get_ymajorticklabels(),
+                    fontsize=font_size,
+                    rotation=self.y_labels_rotation,
+                    ha = 'left',
+                    va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+                )
                 if res_df_type == 'deseq2':
                     title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
                 else:
@@ -652,8 +690,19 @@ class HeatmapPlot:
             }
             fig = sns.clustermap(dft, **sns_params)
 
-            fig.ax_heatmap.set_xticklabels(fig.ax_heatmap.get_xmajorticklabels(), fontsize=font_size, rotation=90)
-            fig.ax_heatmap.set_yticklabels(fig.ax_heatmap.get_ymajorticklabels(), fontsize=font_size, rotation=0)
+            fig.ax_heatmap.set_xticklabels(
+                fig.ax_heatmap.get_xmajorticklabels(),
+                fontsize=font_size,
+                rotation=self.x_labels_rotation,
+                ha = 'right' if self.x_labels_rotation > 0 else 'left'
+            )
+            fig.ax_heatmap.set_yticklabels(
+                fig.ax_heatmap.get_ymajorticklabels(),
+                fontsize=font_size,
+                rotation=self.y_labels_rotation,
+                ha = 'left',
+                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+            )
             plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
                          weight='bold')
 

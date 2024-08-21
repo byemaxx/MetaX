@@ -37,6 +37,8 @@ class SettingsWidget(QWidget):
         
         self.ui.comboBox_heatmap_linkage_method.currentTextChanged.connect(self.handle_heatmap_params_changed)
         self.ui.comboBox_heatmap_linkage_metric.currentTextChanged.connect(self.handle_heatmap_params_changed)
+        self.ui.spinBox_heatmap_x_labels_rotation.valueChanged.connect(self.handle_heatmap_params_changed)
+        self.ui.spinBox_heatmap_y_labels_rotation.valueChanged.connect(self.handle_heatmap_params_changed)
         
         
         # link all signal-slot connections for TF-link network
@@ -85,10 +87,14 @@ class SettingsWidget(QWidget):
     def handle_heatmap_params_changed(self):
         method = self.ui.comboBox_heatmap_linkage_method.currentText()
         metric = self.ui.comboBox_heatmap_linkage_metric.currentText()
+        x_labels_rotation = self.ui.spinBox_heatmap_x_labels_rotation.value()
+        y_labels_rotation = self.ui.spinBox_heatmap_y_labels_rotation.value()
         
         heatmap_params_dict = {
             "linkage_method": method,
-            "distance_metric": metric
+            "distance_metric": metric,
+            "x_labels_rotation": x_labels_rotation,
+            "y_labels_rotation": y_labels_rotation,
         }
         
         self.heatmap_params_dict_changed.emit(heatmap_params_dict)

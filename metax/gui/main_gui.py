@@ -207,8 +207,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # ploting parameters
         # set the default theme mode
         self.html_theme = 'white'
-        
-        self.heatmap_params_dict = {'linkage_method': 'average', 'distance_metric': 'euclidean'}
+
+        self.heatmap_params_dict = {
+            "linkage_method": "average",
+            "distance_metric": "euclidean",
+            "x_labels_rotation": 90,
+            "y_labels_rotation": 0,
+        }
 
         self.tf_link_net_params_dict = {'taxa_shape': 'circle', 'func_shape': 'rect', 
                                         'taxa_color': '#374E55','taxa_focus_color': '#6A6599', 
