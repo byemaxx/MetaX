@@ -4,7 +4,7 @@ This is the guidebook for the MetaX **GUI Version**. If you are using the CLI to
 
 # Overview
 
-**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for linking peptide sequences with taxonomic and functional information in **Metaproteomics**. We introduce the ***Operational Taxa-Functions (OTF)*** concept to explore microbial roles and interactions ("**who is doing what and how**") within ecosystems. 
+**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for linking peptide sequences with taxonomic and functional information in **Metaproteomics**. We introduce the ***Operational Taxon-Function (OTF)*** concept to explore microbial roles and interactions ("**who is doing what and how**") within ecosystems. 
 
 MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.
 

@@ -1,3 +1,9 @@
+# Version: 1.111.0
+## Date: 2024-08-20
+### Changes:
+- New: Added a option to split the items contain multiple functions to multiple items when set OTF table.
+
+
 # Version: 1.110.1
 ## Date: 2024-08-20
 ### Changes:

@@ -2452,6 +2452,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
             
+            split_func = self.checkBox_set_taxa_func_split_func.isChecked()
+            split_func_params: dict = {'split_by': self.lineEdit_set_taxa_func_split_func_sep.text(),
+                                       'share_intensity': self.checkBox_set_taxa_func_split_func_share_intensity.isChecked()}
+            
             peptide_num_threshold = {
                 'taxa': self.spinBox_peptide_num_threshold_taxa.value(),
                 'func': self.spinBox_peptide_num_threshold_func.value(),
@@ -2602,7 +2606,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
-                                        'keep_unknow_func': False}
+                                        'keep_unknow_func': False,
+                                        'split_func': split_func, 'split_func_params': split_func_params}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
