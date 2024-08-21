@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MetaXTools"
-version = "1.111.1"
+version = "1.111.2"
 description = "MetaXTools is a novel tool for linking peptide sequences with taxonomic and functional information in Metaproteomics."
 readme = "README_PyPi.md"
 license = { text = "NorthOmics" }

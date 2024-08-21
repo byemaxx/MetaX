@@ -1,3 +1,9 @@
+# Version: 1.111.2
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug when restore the object, the seetings was not restored completely.
+
+
 # Version: 1.111.1
 ## Date: 2024-08-21
 ### Changes:

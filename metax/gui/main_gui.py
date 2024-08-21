@@ -1175,6 +1175,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             elif isinstance(widget, QtWidgets.QSpinBox):
                 self.settings.setValue(f"{settings_key}/value", widget.value())
+            
+            elif isinstance(widget, QtWidgets.QCheckBox):
+                self.settings.setValue(f"{settings_key}/isChecked", widget.isChecked())
+            
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                self.settings.setValue(f"{settings_key}/text", widget.text())
         
         
     def export_log_file(self):
@@ -1251,6 +1257,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             elif isinstance(widget, QtWidgets.QSpinBox):
                 value = self.settings.value(f"{settings_key}/value", 0, type=int)
                 widget.setValue(value)
+            elif isinstance(widget, QtWidgets.QCheckBox):
+                checked = self.settings.value(f"{settings_key}/isChecked", False, type=bool)
+                widget.setChecked(checked)
+                if widget.objectName() == 'checkBox_set_taxa_func_split_func':
+                    enable_list = [self.lineEdit_set_taxa_func_split_func_sep, self.checkBox_set_taxa_func_split_func_share_intensity]
+                    for w in enable_list:
+                        w.setEnabled(checked)
+                        
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                text = self.settings.value(f"{settings_key}/text", "", type=str)
+                widget.setText(text)
             
         
         # enable button after multi table is set  
