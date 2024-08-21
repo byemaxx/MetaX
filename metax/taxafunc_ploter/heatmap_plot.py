@@ -25,6 +25,21 @@ class HeatmapPlot:
         # reset sns style
         sns.set_theme()
         plt.style.use('default')
+        
+    def get_x_labels_ha(self):
+        x_rotation = self.x_labels_rotation
+        if x_rotation > 0:
+            return 'right'
+        elif x_rotation < 0:
+            return 'left'
+        else:
+            return 'center'
+    def get_y_labels_va(self):
+        y_rotation = self.y_labels_rotation
+        if y_rotation >= 0:
+            return 'baseline'
+        else:
+            return 'top'
 
     def rename_taxa(self, df):
         first_index = df.index[0]
@@ -150,14 +165,14 @@ class HeatmapPlot:
                 fig.ax_heatmap.get_xmajorticklabels(),
                 fontsize=font_size,
                 rotation=self.x_labels_rotation,
-                ha = 'right' if self.x_labels_rotation > 0 else 'left'
+                ha = self.get_x_labels_ha()
             )
             fig.ax_heatmap.set_yticklabels(
                 fig.ax_heatmap.get_ymajorticklabels(),
                 fontsize=font_size,
                 rotation=self.y_labels_rotation,
                 ha = 'left',
-                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+                va = self.get_y_labels_va()
             )
                 
             cbar = fig.ax_heatmap.collections[0].colorbar
@@ -296,14 +311,14 @@ class HeatmapPlot:
                 fig.ax_heatmap.get_xmajorticklabels(),
                 fontsize=font_size,
                 rotation=self.x_labels_rotation,
-                ha = 'right' if self.x_labels_rotation > 0 else 'left'
+                ha = self.get_x_labels_ha()
             )
             fig.ax_heatmap.set_yticklabels(
                 fig.ax_heatmap.get_ymajorticklabels(),
                 fontsize=font_size,
                 rotation=self.y_labels_rotation,
                 ha = 'left',
-                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+                va = self.get_y_labels_va()
             )
 
             scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
@@ -396,14 +411,14 @@ class HeatmapPlot:
             fig.ax_heatmap.get_xmajorticklabels(),
             fontsize=font_size,
             rotation=self.x_labels_rotation,
-            ha="right" if self.x_labels_rotation > 0 else "left",
+            ha=self.get_x_labels_ha()
         )
         fig.ax_heatmap.set_yticklabels(
             fig.ax_heatmap.get_ymajorticklabels(),
             fontsize=font_size,
             rotation=self.y_labels_rotation,
             ha="left",
-            va="baseline" if self.y_labels_rotation > 0 else "top",
+            va=self.get_y_labels_va()
         )
         title = f"{title} (scaled by {scale})" if scale not in [None, 'None'] else title
         plt.suptitle(title, weight='bold')
@@ -556,14 +571,14 @@ class HeatmapPlot:
                     fig.ax_heatmap.get_xmajorticklabels(),
                     fontsize=font_size,
                     rotation=self.x_labels_rotation,
-                    ha = 'right' if self.x_labels_rotation > 0 else 'left'
+                    ha = self.get_x_labels_ha()
                 )
                 fig.ax_heatmap.set_yticklabels(
                     fig.ax_heatmap.get_ymajorticklabels(),
                     fontsize=font_size,
                     rotation=self.y_labels_rotation,
                     ha = 'left',
-                    va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+                    va = self.get_y_labels_va()
                 )
                 if res_df_type == 'deseq2':
                     title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
@@ -694,14 +709,14 @@ class HeatmapPlot:
                 fig.ax_heatmap.get_xmajorticklabels(),
                 fontsize=font_size,
                 rotation=self.x_labels_rotation,
-                ha = 'right' if self.x_labels_rotation > 0 else 'left'
+                ha = self.get_x_labels_ha()
             )
             fig.ax_heatmap.set_yticklabels(
                 fig.ax_heatmap.get_ymajorticklabels(),
                 fontsize=font_size,
                 rotation=self.y_labels_rotation,
                 ha = 'left',
-                va = 'baseline' if self.y_labels_rotation > 0 else 'top'
+                va = self.get_y_labels_va()
             )
             plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
                          weight='bold')

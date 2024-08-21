@@ -1,3 +1,9 @@
+# Version: 1.111.5
+## Date: 2024-08-21
+### Changes:
+- Change: Optimized the x-axis and y-axis labels of the heatmap plot to make the labels more clear.
+
+
 # Version: 1.111.4
 ## Date: 2024-08-21
 ### Changes:
