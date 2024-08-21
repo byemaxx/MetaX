@@ -1,3 +1,10 @@
+# Version: 1.111.1
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug of spliting the function items, the redundant items were not sumed.
+
+
+
 # Version: 1.111.0
 ## Date: 2024-08-20
 ### Changes:

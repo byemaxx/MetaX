@@ -187,7 +187,8 @@ class TaxaFuncAnalyzer:
                 pep_num = df.loc[(key1, key2), 'peptide_num']
                 result_dict.setdefault(key1, []).append((key2, pep_num))
             return result_dict
-
+        print("Setting taxa_func_linked_dict and func_taxa_linked_dict...")
+        
         self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
         self.func_taxa_linked_dict = _index_to_nested_dict(self.func_taxa_df)
 
@@ -544,7 +545,7 @@ class TaxaFuncAnalyzer:
         share_intensity = split_func_params['share_intensity']
         df = taxa_func_df.copy()
         
-        print(f'Start splitting function by [{split_by}] for {df.index.name}, share_intensity={share_intensity}, it may take a while...')
+        print(f'Start splitting function by [ {split_by} ], share_intensity={share_intensity}, it may take a while...')
 
         # multi index
         df = df.reset_index()
@@ -566,16 +567,14 @@ class TaxaFuncAnalyzer:
                 # Use the peptide_num of the original row
                 split_row['peptide_num'] = row['peptide_num']
                 
-                result_rows.append((row[taxon_col], new_func, split_row))
-        
-        # create a new multi index
-        new_index = pd.MultiIndex.from_tuples([(tax, func) for tax, func, _ in result_rows], names=[taxon_col, func_col])
-        new_data = pd.DataFrame([split_row for _, _, split_row in result_rows], index=new_index)
-        # drop the taxon and func columns
-        new_data.drop(columns=[taxon_col, func_col], inplace=True)
-        # move the peptide_num to the first column if it exists
-        new_data = new_data[['peptide_num'] + [col for col in new_data.columns if col != 'peptide_num']]
-        
+                result_rows.append(split_row)
+        # creeate a new df
+        new_data = pd.DataFrame(result_rows)
+
+        #groupby taxon and func and sum the sample intensity
+        new_data = new_data.groupby([taxon_col, func_col]).sum(numeric_only=True)
+
+
         return new_data
 
 
