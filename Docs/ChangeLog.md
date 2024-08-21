@@ -1,3 +1,8 @@
+# Version: 1.111.3
+## Date: 2024-08-21
+### Changes:
+- New: Added protein_id as a function to the OTF table, only keep the first protein_id as the function.
+
 # Version: 1.111.2
 ## Date: 2024-08-21
 ### Changes:

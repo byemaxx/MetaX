@@ -48,6 +48,11 @@
 # Date: 2024-07-14
 # Version:0.2.11
 # change it to a class for easy to use
+#
+# Date: 2024-08-21
+# Version:0.2.12
+# add the protein_id as a function to the output
+
 
 from collections import Counter
 import sqlite3
@@ -164,6 +169,8 @@ class Pep2TaxaFunc:
                 for v in re_dict.values():
                     # if the protein is not found in the database, return 'not_found'
                     v.append('not_found')
+        # add the protein_id as a function            
+        re_dict['protein_id'] = protein_list
 
         return re_dict
 
@@ -218,13 +225,13 @@ if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    db_path = 'C:/Users/max/Desktop/MetaX_Suite/MetaX-human-gut-new.db'
+    db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
     
     pep2taxafunc = Pep2TaxaFunc(db_path = db_path, threshold = 1, genome_mode = True)
 
     
     # for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
-    for i in [pep3]:
+    for i in [pep2]:
         print(i)
         protein_list = i.split(';')
         # re = proteins_to_taxa_func(protein_list, threshold = 1, db_path='C:/Projects/pep2func/id2annotation.db')
