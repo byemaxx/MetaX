@@ -3479,28 +3479,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df = self.tfa.peptide_df.copy()
 
             else:
+                peptides_list = []
+                
                 if table_name == 'Taxa':
-                    df = self.tfa.clean_df.loc[self.tfa.clean_df['Taxon'].isin(self.basic_heatmap_list)]
-                    df.index = df[self.tfa.peptide_col_name]
+                    for i in self.basic_heatmap_list:
+                        peptides_list.extend(self.tfa.peptides_linked_dict['taxa'][i])
 
                 elif table_name == 'Functions':
-                    df = self.tfa.clean_df.loc[self.tfa.clean_df[self.tfa.func_name].isin(self.basic_heatmap_list)]
-                    df.index = df[self.tfa.peptide_col_name]
+                    for i in self.basic_heatmap_list:
+                        peptides_list.extend(self.tfa.peptides_linked_dict['func'][i])
 
                 elif table_name == 'Taxa-Functions':
-                    df_list = [] 
                     for i in self.basic_heatmap_list:
-                        taxon, func = i.split(' <')
-                        func = func[:-1] 
-                        dft = self.tfa.clean_df.loc[(self.tfa.clean_df['Taxon'] == taxon) & (self.tfa.clean_df[self.tfa.func_name] == func)]
-                        df_list.append(dft)
-
-                    if df_list:  
-                        df_all = pd.concat(df_list)
-                        df_all.index = df_all[self.tfa.peptide_col_name] 
-                        df = df_all
-                    else:
-                        raise ValueError('No valid taxa-function belongs to the selected taxa-function!')
+                        peptides_list.extend(self.tfa.peptides_linked_dict['taxa_func'][i])
 
                 elif table_name == 'Proteins':
                     QMessageBox.warning(self.MainWindow, 'Warning',
@@ -3511,9 +3502,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     return
                 
                 else: # Peptide
-                    df = self.tfa.peptide_df.copy()
-                    df = df.loc[self.basic_heatmap_list]
+                    peptides_list = self.basic_heatmap_list
                 
+                df = self.tfa.peptide_df.loc[peptides_list]
                 df = df[sample_list]
 
         else:

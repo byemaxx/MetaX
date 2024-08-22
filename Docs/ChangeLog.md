@@ -1,8 +1,13 @@
+# Version: 1.111.6
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug of extrcting the peptides of taxa, funcs or taxa-funcs, when split the function items.
+
+
 # Version: 1.111.5
 ## Date: 2024-08-21
 ### Changes:
 - Change: Optimized the x-axis and y-axis labels of the heatmap plot to make the labels more clear.
-
 
 # Version: 1.111.4
 ## Date: 2024-08-21

@@ -70,11 +70,15 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df: Optional[pd.DataFrame] = None
         self.taxa_func_linked_dict: Optional[Dict[str, List[tuple]]] = None
         self.func_taxa_linked_dict: Optional[Dict[str, List[tuple]]] = None
+        self.peptides_linked_dict = {'taxa': {}, 'func': {}, 'taxa_func': {}}
         self.protein_df: Optional[pd.DataFrame] = None
         self.any_df_mode = any_df_mode  # if True, the consider the TaxaFunc df as other_df
         self.custom_df: Optional[pd.DataFrame] = None # other df, any df that user want to add
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None,
                                'taxa_func': None, 'protein': None, 'custom': None}
+        
+        self.split_func_status:bool = False
+        self.split_func_sep:str = ''
 
         # load function
         self.BasicStats = BasicStats(self)
@@ -560,6 +564,7 @@ class TaxaFuncAnalyzer:
             num_splits = len(split_funcs_list)
             
             for new_func in split_funcs_list:
+                new_func = new_func.strip()
                 split_row = row[sample_list] / num_splits if share_intensity else row[sample_list]
                 split_row[func_col] = new_func
                 split_row[taxon_col] = row[taxon_col]
@@ -577,6 +582,65 @@ class TaxaFuncAnalyzer:
 
         return new_data
 
+    def create_peptides_dict_in_taxa_func(self, dfc):
+        """
+        Creates a dictionary of peptides in taxa, func, and taxa_func.
+        Parameters:
+            dfc (DataFrame): The input DataFrame containing the peptide, taxon, and function columns.
+        Returns:
+            self.peptides_linked_dict (dict): A dictionary containing the peptides in taxa, func, and taxa_func.
+        """
+        print("Creating peptides_linked_dict in taxa, func, and taxa_func...")
+        df = dfc.copy()[[self.peptide_col_name, 'Taxon', self.func_name]]
+        peptide_col = self.peptide_col_name
+        taxa_col = 'Taxon'
+        func_col = self.func_name
+        
+        peptides_in_taxa_func = {}
+        peptides_in_taxa = {}
+        peptides_in_func = {}
+
+        if self.split_func_status:
+            for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating peptides_dict"):
+                peptide = row[peptide_col]
+                taxa = row[taxa_col]
+                func_list = [f.strip() for f in row[func_col].split(self.split_func_sep)]
+
+                if taxa not in peptides_in_taxa:
+                    peptides_in_taxa[taxa] = []
+                peptides_in_taxa[taxa].append(peptide)
+
+                for f in func_list:
+                    if f not in peptides_in_func:
+                        peptides_in_func[f] = []
+                    peptides_in_func[f].append(peptide)
+                    taxa_func = f'{taxa} <{f}>'
+                    if taxa_func not in peptides_in_taxa_func:
+                        peptides_in_taxa_func[taxa_func] = []
+                    peptides_in_taxa_func[taxa_func].append(peptide)
+        else:
+            for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating peptides_dict"):
+                peptide = row[peptide_col]
+                taxa = row[taxa_col]
+                func = row[func_col]
+
+                if taxa not in peptides_in_taxa:
+                    peptides_in_taxa[taxa] = []
+                peptides_in_taxa[taxa].append(peptide)
+
+                if func not in peptides_in_func:
+                    peptides_in_func[func] = []
+                peptides_in_func[func].append(peptide)
+
+                taxa_func = f'{taxa} <{func}>'
+                if taxa_func not in peptides_in_taxa_func:
+                    peptides_in_taxa_func[taxa_func] = []
+                peptides_in_taxa_func[taxa_func].append(peptide)
+                
+                
+        self.peptides_linked_dict = {'taxa': peptides_in_taxa, 'func': peptides_in_func, 'taxa_func': peptides_in_taxa_func}
+        return self.peptides_linked_dict
+    
 
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                          processing_after_sum: bool = False,
@@ -615,7 +679,10 @@ class TaxaFuncAnalyzer:
         #! fllowing code is for the normal mode
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
-
+        # reset split_func status
+        self.split_func_status = split_func
+        self.split_func_sep = split_func_params['split_by']
+        
         df = self.original_df.copy()
         # perform data pre-processing
         if not processing_after_sum:
@@ -727,7 +794,9 @@ class TaxaFuncAnalyzer:
         df_taxa = df_taxa[df_taxa['peptide_num'] >= peptide_num_threshold['taxa']]
         print(f"Taxa number with '{level}' level, peptide_num >= [{peptide_num_threshold['taxa']}]: {df_taxa.shape[0]}")
         #-----Taxa Table End-----
-
+        
+        #------create peptides_dict in taxa, func and taxa_func------
+        self.create_peptides_dict_in_taxa_func(dfc)
 
         # ----- create taxa_func table -----
         df_taxa_func = dfc.copy()
@@ -879,7 +948,7 @@ if __name__ == '__main__':
                                                             'processing_order': None},
                     peptide_num_threshold = {'taxa': 1, 'func': 1, 'taxa_func': 1},
                     keep_unknow_func=False, sum_protein=False, sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
-                    split_func=True, split_func_params = {'split_by': ';', 'share_intensity': False}
+                    split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False}
                     )
 
     sw.check_attributes()
