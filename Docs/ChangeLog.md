@@ -1,3 +1,43 @@
+# Version: 1.111.6
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug of extrcting the peptides of taxa, funcs or taxa-funcs, when split the function items.
+
+
+# Version: 1.111.5
+## Date: 2024-08-21
+### Changes:
+- Change: Optimized the x-axis and y-axis labels of the heatmap plot to make the labels more clear.
+
+# Version: 1.111.4
+## Date: 2024-08-21
+### Changes:
+- New: Added rotation option for the x-axis and y-axis of the heatmap plot.
+
+# Version: 1.111.3
+## Date: 2024-08-21
+### Changes:
+- New: Added protein_id as a function to the OTF table, only keep the first protein_id as the function.
+
+# Version: 1.111.2
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug when restore the object, the seetings was not restored completely.
+
+
+# Version: 1.111.1
+## Date: 2024-08-21
+### Changes:
+- Fix: Fixed the bug of spliting the function items, the redundant items were not sumed.
+
+
+
+# Version: 1.111.0
+## Date: 2024-08-20
+### Changes:
+- New: Added a option to split the items contain multiple functions to multiple items when set OTF table.
+
+
 # Version: 1.110.1
 ## Date: 2024-08-20
 ### Changes:

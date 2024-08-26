@@ -4,8 +4,8 @@ class GetMatrix:
     def __init__(self, tfa):
         self.tfa = tfa
         
-    def get_intensity_matrix(self, func_name: str = None, taxon_name: str = None,
-                             peptide_seq: str = None, sample_list: list = None, condition:list = None) -> pd.DataFrame:
+    def get_intensity_matrix(self, func_name: str|None = None, taxon_name: str|None  = None,
+                             peptide_seq: str|None  = None, sample_list: list|None  = None, condition:list|None  = None) -> pd.DataFrame:
         # input: a taxon with its function, a function with its taxon,
         # and the peptides in the function or taxon
         # output: a matrix of the intensity of the taxon or function or peptide in each sample
@@ -21,10 +21,13 @@ class GetMatrix:
             if taxon_name is None:
                 dft = dft[dft[self.tfa.func_name] == func_name]
                 dft.set_index('Taxon', inplace=True)
-            if taxon_name is not None:
-                dft = self.tfa.clean_df[(self.tfa.clean_df['Taxon'] == taxon_name) & (
-                    self.tfa.clean_df[self.tfa.func_name] == func_name)]
-                dft.set_index(self.tfa.peptide_col_name, inplace=True)
+                
+            if taxon_name is not None: #all peptides in the taxon-function
+                # get the intensity matrix of the taxon with its function
+                taxa_func = f'{taxon_name} <{func_name}>'
+                peptides_list = self.tfa.peptides_linked_dict['taxa_func'][taxa_func]
+                dft = self.tfa.peptide_df.loc[peptides_list]
+
 
         elif taxon_name is not None and peptide_seq is None:
             dft = self.tfa.func_taxa_df.copy()

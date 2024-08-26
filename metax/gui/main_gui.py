@@ -207,8 +207,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # ploting parameters
         # set the default theme mode
         self.html_theme = 'white'
-        
-        self.heatmap_params_dict = {'linkage_method': 'average', 'distance_metric': 'euclidean'}
+
+        self.heatmap_params_dict = {
+            "linkage_method": "average",
+            "distance_metric": "euclidean",
+            "x_labels_rotation": 90,
+            "y_labels_rotation": 0,
+        }
 
         self.tf_link_net_params_dict = {'taxa_shape': 'circle', 'func_shape': 'rect', 
                                         'taxa_color': '#374E55','taxa_focus_color': '#6A6599', 
@@ -1175,6 +1180,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             elif isinstance(widget, QtWidgets.QSpinBox):
                 self.settings.setValue(f"{settings_key}/value", widget.value())
+            
+            elif isinstance(widget, QtWidgets.QCheckBox):
+                self.settings.setValue(f"{settings_key}/isChecked", widget.isChecked())
+            
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                self.settings.setValue(f"{settings_key}/text", widget.text())
         
         
     def export_log_file(self):
@@ -1251,6 +1262,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             elif isinstance(widget, QtWidgets.QSpinBox):
                 value = self.settings.value(f"{settings_key}/value", 0, type=int)
                 widget.setValue(value)
+            elif isinstance(widget, QtWidgets.QCheckBox):
+                checked = self.settings.value(f"{settings_key}/isChecked", False, type=bool)
+                widget.setChecked(checked)
+                if widget.objectName() == 'checkBox_set_taxa_func_split_func':
+                    enable_list = [self.lineEdit_set_taxa_func_split_func_sep, self.checkBox_set_taxa_func_split_func_share_intensity]
+                    for w in enable_list:
+                        w.setEnabled(checked)
+                        
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                text = self.settings.value(f"{settings_key}/text", "", type=str)
+                widget.setText(text)
             
         
         # enable button after multi table is set  
@@ -2452,6 +2474,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
             
+            split_func = self.checkBox_set_taxa_func_split_func.isChecked()
+            split_func_params: dict = {'split_by': self.lineEdit_set_taxa_func_split_func_sep.text(),
+                                       'share_intensity': self.checkBox_set_taxa_func_split_func_share_intensity.isChecked()}
+            
             peptide_num_threshold = {
                 'taxa': self.spinBox_peptide_num_threshold_taxa.value(),
                 'func': self.spinBox_peptide_num_threshold_func.value(),
@@ -2602,7 +2628,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
-                                        'keep_unknow_func': False}
+                                        'keep_unknow_func': False,
+                                        'split_func': split_func, 'split_func_params': split_func_params}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
@@ -3452,28 +3479,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df = self.tfa.peptide_df.copy()
 
             else:
+                peptides_list = []
+                
                 if table_name == 'Taxa':
-                    df = self.tfa.clean_df.loc[self.tfa.clean_df['Taxon'].isin(self.basic_heatmap_list)]
-                    df.index = df[self.tfa.peptide_col_name]
+                    for i in self.basic_heatmap_list:
+                        peptides_list.extend(self.tfa.peptides_linked_dict['taxa'][i])
 
                 elif table_name == 'Functions':
-                    df = self.tfa.clean_df.loc[self.tfa.clean_df[self.tfa.func_name].isin(self.basic_heatmap_list)]
-                    df.index = df[self.tfa.peptide_col_name]
+                    for i in self.basic_heatmap_list:
+                        peptides_list.extend(self.tfa.peptides_linked_dict['func'][i])
 
                 elif table_name == 'Taxa-Functions':
-                    df_list = [] 
                     for i in self.basic_heatmap_list:
-                        taxon, func = i.split(' <')
-                        func = func[:-1] 
-                        dft = self.tfa.clean_df.loc[(self.tfa.clean_df['Taxon'] == taxon) & (self.tfa.clean_df[self.tfa.func_name] == func)]
-                        df_list.append(dft)
-
-                    if df_list:  
-                        df_all = pd.concat(df_list)
-                        df_all.index = df_all[self.tfa.peptide_col_name] 
-                        df = df_all
-                    else:
-                        raise ValueError('No valid taxa-function belongs to the selected taxa-function!')
+                        peptides_list.extend(self.tfa.peptides_linked_dict['taxa_func'][i])
 
                 elif table_name == 'Proteins':
                     QMessageBox.warning(self.MainWindow, 'Warning',
@@ -3484,9 +3502,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     return
                 
                 else: # Peptide
-                    df = self.tfa.peptide_df.copy()
-                    df = df.loc[self.basic_heatmap_list]
+                    peptides_list = self.basic_heatmap_list
                 
+                df = self.tfa.peptide_df.loc[peptides_list]
                 df = df[sample_list]
 
         else:
