@@ -10,14 +10,21 @@ from adjustText import adjust_text
 from .get_distinct_colors import GetDistinctColors
 
 class BasicPlot:
-    def __init__(self, tfobj):
+    def __init__(self, tfobj,
+                 linkage_method:str = 'average', distance_metric:str = 'correlation',
+                 x_labels_rotation:int = 90, y_labels_rotation:int = 0):
         self.tfa =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
         self.assign_colors = GetDistinctColors().assign_colors
+        # for heatmap
+        self.linkage_method = linkage_method
+        self.distance_metric = distance_metric
+        self.x_labels_rotation = x_labels_rotation
+        self.y_labels_rotation = y_labels_rotation
+
         # reset the style
         plt.style.use('default')
         sns.set_theme()
-
 
 
     def plot_taxa_stats_pie(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
@@ -361,8 +368,6 @@ class BasicPlot:
         theme: str = None,
         cmap: str = "Auto",
         rename_sample: bool = False,
-        linkage_method: str = "average",
-        distance_metric: str = "euclidean",
     ):
         dft= df.copy()
         if rename_sample:
@@ -387,17 +392,29 @@ class BasicPlot:
             sns_params = {"linewidths":.01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
-                            'method':linkage_method,
-                            'metric':distance_metric,
+                            'method':self.linkage_method,
+                            'metric':self.distance_metric,
                             "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),"col_colors":color_list,
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
                             "yticklabels":True if show_all_labels[1] else 'auto'}
             fig = sns.clustermap(corr, **sns_params)
-
-            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
             ax = fig.ax_heatmap
-            ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
-            ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
+            
+            fig.ax_heatmap.set_xticklabels(
+                fig.ax_heatmap.get_xmajorticklabels(),
+                fontsize=font_size,
+                rotation=self.x_labels_rotation,
+                ha = self.get_x_labels_ha()
+            )
+            fig.ax_heatmap.set_yticklabels(
+                fig.ax_heatmap.get_ymajorticklabels(),
+                fontsize=font_size,
+                rotation=self.y_labels_rotation,
+                ha = 'left',
+                va = self.get_y_labels_va()
+            )
+            
+            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label('Intensity', rotation=90, labelpad=1)
@@ -594,8 +611,6 @@ class BasicPlot:
         height=8,
         font_size=10,
         show_all_labels=(False, False),
-        linkage_method: str = "average",
-        distance_metric: str = "euclidean",
     ):
         corr = df.copy()
         # mask = np.triu(np.ones_like(corr, dtype=bool))
@@ -609,17 +624,33 @@ class BasicPlot:
             sns_params = {"linewidths":.01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
-                            'method':linkage_method,
-                            'metric':distance_metric,
+                            'method':self.linkage_method,
+                            'metric':self.distance_metric,
                             "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
                             "yticklabels":True if show_all_labels[1] else 'auto'}
             fig = sns.clustermap(corr, **sns_params)
-
-            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
             ax = fig.ax_heatmap
-            ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size, rotation=90)
-            ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size, rotation=0)
+            
+            
+            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
+            fig.ax_heatmap.set_xticklabels(
+                fig.ax_heatmap.get_xmajorticklabels(),
+                fontsize=font_size,
+                rotation=self.x_labels_rotation,
+                ha = self.get_x_labels_ha()
+            )
+            fig.ax_heatmap.set_yticklabels(
+                fig.ax_heatmap.get_ymajorticklabels(),
+                fontsize=font_size,
+                rotation=self.y_labels_rotation,
+                ha = 'left',
+                va = self.get_y_labels_va()
+            )
+
+            # hiend the x and y labels
+            fig.ax_heatmap.set_xlabel('')
+            fig.ax_heatmap.set_ylabel('')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label("Correlation", rotation=90, labelpad=1)
@@ -634,3 +665,19 @@ class BasicPlot:
         except Exception as e:
             plt.close('all')
             raise e
+
+
+    def get_x_labels_ha(self):
+        x_rotation = self.x_labels_rotation
+        if x_rotation > 0:
+            return 'right'
+        elif x_rotation < 0:
+            return 'left'
+        else:
+            return 'center'
+    def get_y_labels_va(self):
+        y_rotation = self.y_labels_rotation
+        if y_rotation >= 0:
+            return 'baseline'
+        else:
+            return 'top'

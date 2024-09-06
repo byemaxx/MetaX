@@ -4227,10 +4227,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 if cluster:
                     df = self.delete_zero_columns(df)
                 self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tfa).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
+                BasicPlot(self.tfa, **self.heatmap_params_dict).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
                                                 width=width, height=height, font_size=font_size, 
                                                 show_all_labels=show_all_labels, theme=theme, cmap=cmap,
-                                                rename_sample = rename_sample, **self.heatmap_params_dict)
+                                                rename_sample = rename_sample)
 
             elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
@@ -5038,14 +5038,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     self.checkBox_corr_hetatmap_show_all_labels_y.isChecked(),
                 )
                 cmap = self.comboBox_corr_hetatmap_cmap.currentText()
-                BasicPlot(self.tfa).plot_items_corr_heatmap(df=df,
+                BasicPlot(self.tfa, **self.heatmap_params_dict).plot_items_corr_heatmap(df=df,
                                                 title_name=f'Expression Correlation Heatmap({df_type})',
                                                 cluster=True,
                                                 cmap=cmap,
                                                 width=width, height=height, 
                                                 font_size=font_size, 
-                                                show_all_labels=show_all_labels,
-                                                **self.heatmap_params_dict)
+                                                show_all_labels=show_all_labels
+                                                )
                                                         
             except Exception as e:
                 error_message = traceback.format_exc()

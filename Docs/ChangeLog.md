@@ -1,3 +1,9 @@
+# Version: 1.111.7
+## Date: 2024-09-06
+### Changes:
+- Fix: Fixed the bug of when plot the heatmap of correlation, the rotation of x-axis and y-axis raise error.
+
+
 # Version: 1.111.6
 ## Date: 2024-08-21
 ### Changes:
