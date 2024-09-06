@@ -219,15 +219,16 @@ pep11 = 'MGYG000002864_01541;MGYG000004383_00684;MGYG000004407_01207;MGYG0000027
 pep_null = 'MGYG000000137_01815;MGYG000001639_01406;MGYG000000236_03945'
 pep_no_species_level = "MGYG000000385;MGYG000002077;MGYG000003829"
 pep_mag_level = 'MGYG000003142_02726;MGYG000003142_02725'
+pep_t ='GCF_943193095.1-2283;concoct.103-megahit_28365_1'
 ### test data
 
 if __name__ == '__main__':
     import time
     t1 = time.time()
     
-    db_path = 'C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX-human-gut_20231211.db'
+    db_path = 'metax_db.db'
     
-    pep2taxafunc = Pep2TaxaFunc(db_path = db_path, threshold = 1, genome_mode = True)
+    pep2taxafunc = Pep2TaxaFunc(db_path = db_path, threshold = 1, genome_mode = True, protein_genome_separator= "_")
 
     
     # for i in [pep_no_species_level, pep_null, pep2, pep7, pep8, pep9, pep10, pep11]:
