@@ -42,10 +42,10 @@ class BarPlot_js:
         return df
     
     
-    def plot_intensity_bar(self, taxon_name:str=None, sample_list:list = None, 
-                           func_name:str=None, peptide_seq=None, 
+    def plot_intensity_bar(self, taxon_name:str|None=None, sample_list:list|None = None, 
+                           func_name:str|None =None, peptide_seq=None, 
                            width:int=1200, height:int=800, df= None, 
-                           title:str=None, rename_taxa:bool=False, 
+                           title:str|None =None, rename_taxa:bool=False, 
                            show_legend:bool=True, font_size:int=10,
                            rename_sample:bool=True, plot_mean:bool=False,
                            plot_percent:bool=False, sub_meta:str="None",
@@ -83,16 +83,25 @@ class BarPlot_js:
             df = df.div(df.sum(axis=0), axis=1) * 100
             
             
-        # create title
+        # Create title
         if title is None:
-            if taxon_name is None:
-                title = f'{func_name}'
-            elif func_name is None:
-                title = f'{taxon_name}'
-            elif peptide_seq is not None:
+            if peptide_seq is not None:
                 title = f'The intensity of {peptide_seq}'
             else:
-                title = f'{taxon_name}\n{func_name}'
+                renamed_taxon = taxon_name.split('|')[-1] if rename_taxa and taxon_name else taxon_name
+                
+                # If only taxon_name exists
+                if renamed_taxon and not func_name:
+                    title = f'{renamed_taxon}'
+                
+                # If only func_name exists
+                elif func_name and not renamed_taxon:
+                    title = f'{func_name}'
+                
+                # If both taxon_name and func_name exist
+                elif renamed_taxon and func_name:
+                    title = f'{renamed_taxon}\n{func_name}'
+                
         
         global_opts_params = {
             "legend_opts": opts.LegendOpts(

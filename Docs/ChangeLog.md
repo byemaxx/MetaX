@@ -1,4 +1,10 @@
-# Version: 1.1118
+# Version: 1.112.0
+## Date: 2024-09-09
+### Changes:
+- New: Added sub_meta for taxa-func link part.
+- Change: Chnaged the [Get Table] of the taxa-func link part to get the table from the heatmap(values and order).
+
+# Version: 1.111.8
 ## Date: 2024-09-08
 ### Changes:
 - New: 1. Added Box-Cox method of Data Preprocessing. 2. Added an option to change number of cos of trends clusuter figure.

@@ -361,6 +361,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.checkBox_create_protein_table.stateChanged.connect(self.change_event_checkBox_create_protein_table)
         self.comboBox_method_of_protein_inference.currentIndexChanged.connect(self.update_method_of_protein_inference)
         self.comboBox_3dbar_sub_meta.currentIndexChanged.connect(self.change_event_comboBox_3dbar_sub_meta)
+        self.comboBox_tflink_sub_meta.currentIndexChanged.connect(self.change_event_comboBox_tflink_sub_meta)
 
         ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
@@ -473,8 +474,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_tfnet_select_list.add_all_searched.connect(self.add_all_searched_tfnet_to_focus_list)
 
         # Taxa-func link
-        self.pushButton_others_get_intensity_matrix.clicked.connect(self.get_tflink_intensity_matrix)
-        self.pushButton_others_plot_heatmap.clicked.connect(self.plot_tflink_heatmap)
+        self.pushButton_others_get_intensity_matrix.clicked.connect(lambda: self.plot_tflink_heatmap('table'))
+        self.pushButton_others_plot_heatmap.clicked.connect(lambda: self.plot_tflink_heatmap('fig'))
         self.pushButton_others_plot_line.clicked.connect(self.plot_tflink_bar)
         self.pushButton_others_show_linked_taxa.clicked.connect(self.show_others_linked_taxa)
         self.pushButton_others_show_linked_func.clicked.connect(self.show_others_linked_func)
@@ -671,7 +672,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_sub_meta_pca.addItems(['None'] + meta_list)
             self.comboBox_3dbar_sub_meta.clear()
             self.comboBox_3dbar_sub_meta.addItems(['None'] + meta_list)
-        
+            self.comboBox_tflink_sub_meta.clear()
+            self.comboBox_tflink_sub_meta.addItems(['None'] + meta_list)
+            
         except Exception as e:
             print(e)
 
@@ -781,6 +784,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         #     self.comboBox_3dbar_sub_meta.setEnabled(False)
         # else:
         #     self.comboBox_3dbar_sub_meta.setEnabled(True)
+    def change_event_comboBox_tflink_sub_meta(self):
+        # when the sub_meta comboBox is not None, the mean plot is not available
+        if self.comboBox_tflink_sub_meta.currentText() != 'None':
+            self.checkBox_tflink_plot_mean.setEnabled(False)
+            
+        else:
+            self.checkBox_tflink_plot_mean.setEnabled(True)
 
     def hide_plot_setting_groupbox(self):
         groupbox_list = ["groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
@@ -3547,7 +3557,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels, rename_sample=rename_sample,
-                                                         plot_mean = plot_mean, sub_meta = sub_meta)
+                                                         plot_mean = plot_mean, sub_meta = sub_meta, return_type = 'fig')
                                                          
             
             elif plot_type == 'bar':
@@ -5327,39 +5337,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'plot_network error: {error_message}', 'e')
             self.logger.write_log(f'plot_network: sample_list:{sample_list}, focus_list:{focus_list}, plot_list_only:{plot_list_only}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-
-    # link
-    def get_tflink_intensity_matrix(self):
-        taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
-        func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
-
-        if not taxa and not func:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
-            return None
-
-        params = {}
-        
-        # extract sample list
-        sample_list = self.get_sample_list_tflink()
-                
-        params['sample_list'] = sample_list
-
-        if taxa:
-            params['taxon_name'] = taxa
-        if func:
-            params['func_name'] = func
-
-        df = self.tfa.GetMatrix.get_intensity_matrix(**params)
-
-        if not df.empty:
-            if self.checkBox_tflink_hetatmap_rename_taxa.isChecked():
-                df = self.tfa.rename_taxa(df)
-            if self.checkBox_tflink_plot_mean.isChecked():
-                df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
-            self.show_table(df, title=f'{taxa} [ {func} ]')
-        else:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
-            
+           
             
     def get_sample_list_tflink(self):
         # get sample list
@@ -5441,7 +5419,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         pass
     # Plot Heatmap
-    def plot_tflink_heatmap(self):
+    def plot_tflink_heatmap(self, return_type = 'fig'):
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
@@ -5452,20 +5430,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_tflink_hetatmap_rename_taxa.isChecked()
         show_all_labels = (self.checkBox_tflink_bar_show_all_labels_x.isChecked(), self.checkBox_tflink_bar_show_all_labels_y.isChecked())
         plot_mean = self.checkBox_tflink_plot_mean.isChecked()
+        rename_sample=self.checkBox_tflink_hetatmap_rename_sample.isChecked()
+        row_cluster = True if self.checkBox_tflink_hetatmap_row_cluster.isChecked() else False
+        col_cluster = True if self.checkBox_tflink_hetatmap_col_cluster.isChecked() else False
+        sub_meta = self.comboBox_tflink_sub_meta.currentText()
         
         if cmap == 'Auto':
             cmap = None
-
-        row_cluster = False
-        col_cluster = False
-
-        if self.checkBox_tflink_hetatmap_row_cluster.isChecked():
-            row_cluster = True
-        
-        if self.checkBox_tflink_hetatmap_col_cluster.isChecked():
-            col_cluster = True
-
-        
 
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
@@ -5477,10 +5448,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         if taxa:
             params['taxon_name'] = taxa
-            title = taxa
+            if rename_taxa:
+                short_taxa = taxa.split('|')[-1]
+            else:
+                short_taxa = taxa
+            title = short_taxa
+            
         if func:
             params['func_name'] = func
-            title = func if not title else f"{taxa} [ {func} ]"
+            title = func
+            
+        if taxa and func:    
+            title = f"{short_taxa}\n{func}"
         
     
         df = self.tfa.GetMatrix.get_intensity_matrix(**params)
@@ -5497,12 +5476,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             df = self.delete_zero_columns(df)
 
         try:
-            self.show_message('Plotting heatmap, please wait...')
-            HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+            self.show_message('Plotting heatmap, please wait...') if return_type == 'fig' else self.show_message('Calculating data, please wait...')
+            fig_res = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
-                                  rename_sample=self.checkBox_tflink_hetatmap_rename_sample.isChecked(), plot_mean=plot_mean
+                                  rename_sample=rename_sample,  sub_meta=sub_meta,
+                                  plot_mean=plot_mean, return_type = return_type
                                   )
+            
+            if return_type == 'table':
+                self.show_table(fig_res, title=title.replace('\n', '-'))
+            
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_others_heatmap error: {error_message}', 'e')
@@ -5554,7 +5538,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         show_legend = self.checkBox_tflink_bar_show_legend.isChecked()
         plot_mean = self.checkBox_tflink_plot_mean.isChecked()
         show_all_labels = (self.checkBox_tflink_bar_show_all_labels_x.isChecked(), self.checkBox_tflink_bar_show_all_labels_y.isChecked())
-
+        sub_meta = self.comboBox_tflink_sub_meta.currentText()
+        
         if not taxa and not func:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select taxa or function!')
 
@@ -5595,6 +5580,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             params['font_size'] = font_size
             params['plot_mean'] = plot_mean
             params['show_all_labels'] = show_all_labels
+            params['sub_meta'] = sub_meta
             
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot_js(self.tfa, theme=self.html_theme).plot_intensity_bar(**params)
