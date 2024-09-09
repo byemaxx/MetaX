@@ -2,6 +2,7 @@ import pandas as pd
 from .re_combat import reComBat
 import numpy as np
 from joblib import Parallel, delayed
+from scipy import stats
 
 
 
@@ -71,7 +72,8 @@ class DataPreprocessing:
                 'cube': np.cbrt,
                 'log10': lambda x: np.log10(x + 1),
                 'log2': lambda x: np.log2(x + 1),
-                'sqrt': np.sqrt
+                'sqrt': np.sqrt,
+                'boxcox': lambda x: x.apply(lambda col: stats.boxcox(col + 1)[0])
             }
 
             if transform_method in transform_operations:

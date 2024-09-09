@@ -52,6 +52,10 @@ class HeatmapPlot:
                     f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
                     for i in index_list
                 ]
+            # check if the new_index_list is unique
+            if len(new_index_list) != len(set(new_index_list)):
+                raise ValueError("Duplicate taxa names after renaming!")
+            
             df.index = new_index_list
         return df
 
@@ -246,6 +250,10 @@ class HeatmapPlot:
         else:
             raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
 
+        # if mat is empty, raise error
+        if mat.empty:
+            raise ValueError(f"No significant differences between groups in {plot_type} <= [{pvalue}]")
+        
         if len(mat) < 2:
             row_cluster = False
         if len(mat.columns) < 2:
@@ -338,7 +346,7 @@ class HeatmapPlot:
         except Exception as e:
             print(f'Error: {e}')
             plt.close('all')
-            raise ValueError("No significant differences")
+            raise ValueError(f"Error: {e}")
  
 
     # Plot basic heatmap of matrix with color bar

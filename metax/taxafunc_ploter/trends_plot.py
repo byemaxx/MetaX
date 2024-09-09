@@ -3,12 +3,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 
 class TrendsPlot:
     def __init__(self, tfobj):
-        self.tfobj =  tfobj
-        
-    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster', font_size=10):
+        self.tfobj = tfobj
+
+    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster', font_size=10, num_col=1):
         
         # Load the data
         df = self.tfobj.BasicStats.get_stats_mean_df_by_group(df)
@@ -26,18 +27,19 @@ class TrendsPlot:
 
         # Add the cluster labels to the DataFrame
         clustered_df = scaled_df.copy()
-        # 不再重新排序列
-        # adding the cluster column
         clustered_df['Cluster'] = clusters
-        
-        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 
+        custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         sns.set_theme(style="ticks", rc=custom_params)
         palette = sns.color_palette("dark", n_clusters)
-        try:    
-            fig, axs = plt.subplots(n_clusters, 1, figsize=(width, height*n_clusters))
-            if n_clusters == 1:
-                axs = [axs]
+
+        try:
+            # Calculate the number of rows based on num_col
+            num_row = math.ceil(n_clusters / num_col)
+            
+            fig, axs = plt.subplots(num_row, num_col, figsize=(width, height * num_row))
+            axs = axs.flatten()  # Flatten the axs array for easy iteration
+
             for i in range(n_clusters):
                 cluster_data = clustered_df[clustered_df['Cluster'] == i]
                 avg_data = cluster_data.drop('Cluster', axis=1).mean()
@@ -53,6 +55,11 @@ class TrendsPlot:
                 axs[i].tick_params(axis='x', rotation=90)  # Rotate x-axis labels
                 axs[i].tick_params(axis='both', which='major', labelsize=font_size)
 
+            # Remove any empty subplots if n_clusters is not a perfect multiple of num_col
+            for ax in axs[n_clusters:]:
+                ax.remove()
+
+            plt.tight_layout()
             plt.close()
             return fig, clustered_df
         except Exception as e:

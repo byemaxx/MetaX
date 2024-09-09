@@ -1,3 +1,9 @@
+# Version: 1.1118
+## Date: 2024-09-08
+### Changes:
+- New: 1. Added Box-Cox method of Data Preprocessing. 2. Added an option to change number of cos of trends clusuter figure.
+
+
 # Version: 1.111.7
 ## Date: 2024-09-06
 ### Changes:

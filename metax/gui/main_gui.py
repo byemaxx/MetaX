@@ -2552,6 +2552,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "Log 10 transformation": "log10",
                     "Square root transformation": "sqrt",
                     "Cube root transformation": "cube",
+                    "Box-Cox": "boxcox",
+                    
                 }
                 normalize_dict = {
                     "None": None,
@@ -3732,7 +3734,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         table_name = self.comboBox_trends_table.currentText()
         font_size = self.spinBox_trends_font_size.value()
 
-        title = f'{table_name.capitalize()} Cluster'
+        # title = f'{table_name.capitalize()} Cluster'
+        title = 'Cluster'
         num_cluster = self.spinBox_trends_num_cluster.value()
         
 
@@ -3786,15 +3789,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             df = dft.loc[self.trends_cluster_list]
         
         try:
+            num_col = self.spinBox_trends_num_col.value()
+            if num_col > num_cluster:
+                print(f'num_col: {num_col} > num_cluster: {num_cluster}. Reset num_col to num_cluster.')
+                num_col = num_cluster
+                
             df = df.loc[(df!=0).any(axis=1)]
-            self.show_message(f'Plotting trends cluster...')
+            self.show_message('Plotting trends cluster...')
             # plot trends and get cluster table
             fig, cluster_df = TrendsPlot(self.tfa).plot_trends(df= df, num_cluster = num_cluster, 
                                                                width=width, height=height, title=title
-                                                               , font_size=font_size)
+                                                               , font_size=font_size, num_col=num_col)
             # create a dialog to show the figure
             # plt_dialog = PltDialog(self.MainWindow, fig)
-            plt_size= (width*50,height*num_cluster*50)
+            plt_size= (width*50, int(height*num_cluster*50/num_col) )
             plt_dialog = ExportablePlotDialog(self.MainWindow,fig, plt_size)
             #set title
             plt_dialog.setWindowTitle(title)
@@ -4431,7 +4439,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
             self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
             if 'No significant' in error_message:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results. \n\n{error_message}')
             else:
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
     
@@ -4495,14 +4503,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                        rename_taxa=rename_taxa, sort_by = sort_by, scale_method = scale_method, return_type = 'table')
                     
                     
-        except ValueError as e:
-            QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{e}')
-            return None
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'get_top_cross_table error: {error_message}', 'e')
             self.logger.write_log(f'get_top_cross_table: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, pvalue: {pvalue}, sort_by: {sort_by}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Erro', error_message)
+            if 'No significant' in error_message:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{error_message}')
+            else:
+                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            
             return None
 
         try:

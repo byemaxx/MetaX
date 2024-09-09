@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1122</width>
-    <height>794</height>
+    <height>774</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>5</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>528</width>
-                 <height>569</height>
+                 <height>549</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -935,6 +935,11 @@
                 <item>
                  <property name="text">
                   <string>Cube root transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Box-Cox</string>
                  </property>
                 </item>
                </widget>
@@ -2730,8 +2735,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1016</width>
-                        <height>158</height>
+                        <width>999</width>
+                        <height>150</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -5602,7 +5607,7 @@
                            <x>0</x>
                            <y>0</y>
                            <width>996</width>
-                           <height>140</height>
+                           <height>120</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6120,7 +6125,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_5">
                <attribute name="title">
@@ -6153,7 +6158,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>179</height>
+                        <height>169</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7382,13 +7387,42 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>538</width>
-                        <height>63</height>
+                        <width>1016</width>
+                        <height>120</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
                        <item row="0" column="0">
                         <layout class="QGridLayout" name="gridLayout_59">
+                         <item row="1" column="7">
+                          <widget class="QCheckBox" name="checkBox_trends_plot_interactive_rename_taxa">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Simplify Taxa Names</string>
+                           </property>
+                           <property name="checked">
+                            <bool>true</bool>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="1" column="1" colspan="3">
+                          <widget class="QCheckBox" name="checkBox_trends_plot_interactive_plot_samples">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Plot Samples</string>
+                           </property>
+                          </widget>
+                         </item>
                          <item row="0" column="0">
                           <widget class="QLabel" name="label_174">
                            <property name="font">
@@ -7399,25 +7433,6 @@
                            </property>
                            <property name="text">
                             <string>General</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="4">
-                          <widget class="QSpinBox" name="spinBox_trends_height">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="maximum">
-                            <number>200</number>
-                           </property>
-                           <property name="value">
-                            <number>9</number>
                            </property>
                           </widget>
                          </item>
@@ -7434,46 +7449,7 @@
                            </property>
                           </widget>
                          </item>
-                         <item row="1" column="3" colspan="2">
-                          <widget class="QCheckBox" name="checkBox_get_trends_cluster_intensity">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Get Intnsity Results</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="5">
-                          <widget class="QLabel" name="label_158">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Font Size</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="0" column="3">
-                          <widget class="QLabel" name="label_92">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Height</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="5">
+                         <item row="1" column="6">
                           <widget class="QCheckBox" name="checkBox_trends_plot_interactive_show_legend">
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -7489,8 +7465,8 @@
                            </property>
                           </widget>
                          </item>
-                         <item row="1" column="1" colspan="2">
-                          <widget class="QCheckBox" name="checkBox_trends_plot_interactive_plot_samples">
+                         <item row="1" column="4" colspan="2">
+                          <widget class="QCheckBox" name="checkBox_get_trends_cluster_intensity">
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                              <horstretch>0</horstretch>
@@ -7498,73 +7474,135 @@
                             </sizepolicy>
                            </property>
                            <property name="text">
-                            <string>Plot Samples</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="6">
-                          <widget class="QCheckBox" name="checkBox_trends_plot_interactive_rename_taxa">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Simplify Taxa Names</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
+                            <string>Get Intnsity Results</string>
                            </property>
                           </widget>
                          </item>
                          <item row="0" column="1">
-                          <widget class="QLabel" name="label_97">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Width</string>
-                           </property>
-                          </widget>
+                          <layout class="QHBoxLayout" name="horizontalLayout_97">
+                           <item>
+                            <widget class="QLabel" name="label_97">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Width</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_trends_width">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimum">
+                              <number>1</number>
+                             </property>
+                             <property name="maximum">
+                              <number>200</number>
+                             </property>
+                             <property name="value">
+                              <number>16</number>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
                          <item row="0" column="2">
-                          <widget class="QSpinBox" name="spinBox_trends_width">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="maximum">
-                            <number>200</number>
-                           </property>
-                           <property name="value">
-                            <number>16</number>
-                           </property>
-                          </widget>
+                          <layout class="QHBoxLayout" name="horizontalLayout_98">
+                           <item>
+                            <widget class="QLabel" name="label_92">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Height</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_trends_height">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimum">
+                              <number>1</number>
+                             </property>
+                             <property name="maximum">
+                              <number>200</number>
+                             </property>
+                             <property name="value">
+                              <number>9</number>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
-                         <item row="0" column="6">
-                          <widget class="QSpinBox" name="spinBox_trends_font_size">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="value">
-                            <number>10</number>
-                           </property>
-                          </widget>
+                         <item row="0" column="4">
+                          <layout class="QHBoxLayout" name="horizontalLayout_99">
+                           <item>
+                            <widget class="QLabel" name="label_158">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Font Size</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_trends_font_size">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimum">
+                              <number>1</number>
+                             </property>
+                             <property name="value">
+                              <number>10</number>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item row="0" column="5" colspan="3">
+                          <layout class="QHBoxLayout" name="horizontalLayout_100">
+                           <item>
+                            <widget class="QLabel" name="label_195">
+                             <property name="text">
+                              <string>Number of Col for Cluster Plot</string>
+                             </property>
+                             <property name="alignment">
+                              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_trends_num_col">
+                             <property name="minimum">
+                              <number>1</number>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
                         </layout>
                        </item>

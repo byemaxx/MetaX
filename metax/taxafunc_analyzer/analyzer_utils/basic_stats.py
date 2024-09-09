@@ -1,5 +1,6 @@
 import pandas as pd
 from collections import OrderedDict
+from scipy import stats
 
 class BasicStats:
     def __init__(self, tfa):
@@ -179,3 +180,26 @@ class BasicStats:
                 group_list = [self.tfa.get_group_of_a_sample(i) for i in df.columns] if not plot_mean else df.columns.tolist()
         
         return df, group_list
+    
+    # Shapiro-Wilk Test
+    def shapiro_test(self, df: pd.DataFrame, alpha=0.05) :
+        """
+        Perform Shapiro-Wilk test on the given DataFrame and return the results.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to be tested.
+            alpha (float, optional): The significance level. Defaults to 0.05.
+
+        Returns:
+            dict: A dictionary containing the boolean result of the Shapiro-Wilk test for each sample.
+        """
+        shapiro_results = {}
+        for sample in df[self.tfa.sample_list]:
+            values = df[sample].dropna()
+            # remove zero values
+            values = values[values != 0]
+            _, p = stats.shapiro(values)
+            # save the boolean result in the dictionary
+            shapiro_results[sample] = {'p_value': p, 'is_normal': p > alpha}
+            
+        return shapiro_results
