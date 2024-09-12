@@ -1,3 +1,8 @@
+# Version: 1.112.1
+## Date: 2024-09-12
+### Changes:
+- Fix: Fixed the PcoA plot of the beta diversity, the x-axis and y-axis labels were not correct.
+
 # Version: 1.112.0
 ## Date: 2024-09-09
 ### Changes:
