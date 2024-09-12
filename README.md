@@ -6,7 +6,15 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 
 
 ![abstract](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/abstract.png)
-## Taxa-Functions Linkage
+
+## Operational Taxon-Function (OTF)
+
+**Operational Taxon-Function (OTF) Unit**: An operational unit which represents the association between specific taxa and biological functions. 
+
+![OTF_Structure](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/OTF_Structure.png)
+
+## OTFs Network
+
 Linking Taxa and Functions in different levels of the hierarchy, and different functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc.
 
 - ![OTF](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net.png)

@@ -58,7 +58,7 @@ class CrossTest:
             
 
 
-    def get_stats_anova(self, group_list: list = None, df_type:str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+    def get_stats_anova(self, group_list: list|None = None, df_type:str = 'taxa-func', condition:list|None =None) -> pd.DataFrame:
         df_type = self.convert_df_name_to_simple_name(df_type)
         
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
@@ -108,7 +108,7 @@ class CrossTest:
         res_all = res_all[['P-value', 'f-statistic'] + all_sample_list]
         return res_all
         
-    def get_stats_ttest(self, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+    def get_stats_ttest(self, group_list: list|None = None, df_type: str = 'taxa-func', condition:list|None =None) -> pd.DataFrame:
         df_type = self.convert_df_name_to_simple_name(df_type)
 
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
@@ -163,7 +163,7 @@ class CrossTest:
         res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
         return res_all
     
-    def get_stats_dunnett_test_against_control_with_conditon(self, control_group, condition, group_list:list =None, df_type: str = 'taxa-func') -> pd.DataFrame:
+    def get_stats_dunnett_test_against_control_with_conditon(self, control_group, condition, group_list:list|None =None, df_type: str = 'taxa-func') -> pd.DataFrame:
         df_type = self.convert_df_name_to_simple_name(df_type)
         
         meta_df = self.tfa.meta_df.copy()
@@ -183,7 +183,7 @@ class CrossTest:
         return res_df # a dataframe with 3 level columns index
             
             
-    def get_stats_dunnett_test(self, control_group, group_list: list = None, df_type: str = 'taxa-func', condition:list =None) -> pd.DataFrame:
+    def get_stats_dunnett_test(self, control_group, group_list: list|None = None, df_type: str = 'taxa-func', condition:list|None =None) -> pd.DataFrame:
         df_type = self.convert_df_name_to_simple_name(df_type)
         
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
@@ -327,7 +327,7 @@ class CrossTest:
         return res_df # a dataframe with 3 level columns index
 
             
-    def get_stats_deseq2_against_control(self, df, control_group, group_list: list = None, concat_sample_to_result: bool = False, quiet: bool = False, condition: list = None) -> pd.DataFrame:
+    def get_stats_deseq2_against_control(self, df, control_group, group_list: list|None = None, concat_sample_to_result: bool = False, quiet: bool = False, condition: list|None = None) -> pd.DataFrame:
             all_group_list = sorted(set(self.tfa.group_list))
             if group_list is None:
                 group_list = all_group_list
@@ -359,7 +359,7 @@ class CrossTest:
             
             
             
-    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list = None) -> pd.DataFrame:
+    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list|None = None) -> pd.DataFrame:
         print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
         
         group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
@@ -447,7 +447,7 @@ class CrossTest:
         return res_merged
 
     # Get the Tukey test result of a taxon or a function
-    def get_stats_tukey_test(self, taxon_name: str=None, func_name: str=None, sum_all: bool=True, condition:list =None):
+    def get_stats_tukey_test(self, taxon_name: str|None =None, func_name: str|None =None, sum_all: bool=True, condition:list|None =None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
@@ -459,7 +459,7 @@ class CrossTest:
 
         return tukey_df
     
-    def get_stats_tukey_test_each(self, taxon_name: str = None, func_name: str = None, condition:list =None):
+    def get_stats_tukey_test_each(self, taxon_name: str|None = None, func_name: str|None = None, condition:list|None =None):
         # Copy the dataframe and reset index
         df = self.tfa.taxa_func_df.copy()
         df = df.reset_index()
@@ -515,7 +515,7 @@ class CrossTest:
         # Return the combined Tukey test results
         return tukey_results
 
-    def get_stats_tukey_test_sum(self, taxon_name: str=None, func_name: str=None, condition:list =None):
+    def get_stats_tukey_test_sum(self, taxon_name: str|None=None, func_name: str|None=None, condition:list|None =None):
         # :param taxon_name: the taxon name
         # :param func_name: the function name
         # :return: the Tukey test result
@@ -569,10 +569,10 @@ class CrossTest:
     
     
     # find out the items that are not significant in taxa but significant in function, and vice versa
-    def get_stats_diff_taxa_but_func(self, group_list: list = None, p_value: float = 0.05,
-                                     taxa_res_df: pd.DataFrame =None, 
-                                     func_res_df: pd.DataFrame=None, 
-                                     taxa_func_res_df: pd.DataFrame=None, condition:list =None) -> tuple:
+    def get_stats_diff_taxa_but_func(self, group_list: list|None = None, p_value: float = 0.05,
+                                     taxa_res_df: pd.DataFrame|None =None, 
+                                     func_res_df: pd.DataFrame|None =None, 
+                                     taxa_func_res_df: pd.DataFrame|None =None, condition:list|None =None) -> tuple:
         
         # calculate the test result if not given
         if taxa_res_df is None or func_res_df is None or taxa_func_res_df is None:
@@ -605,10 +605,11 @@ class CrossTest:
         # check the p_value is between 0 and 1
         if p_value < 0 or p_value > 1:
             raise ValueError("p_value must be between 0 and 1")
-        # 获取p-value大于0.05的Taxon条目
+        # 获取p-value大于0.05的Taxon items
         not_significant_taxa = df_taxa_test_res[df_taxa_test_res['P-value'] >= p_value].index.get_level_values('Taxon').tolist()
         print(f"Under P-value = {p_value}: \n \
               Significant Taxa: [{len(df_taxa_test_res) - len(not_significant_taxa)}], Not Significant Taxa: [{len(not_significant_taxa)}]")
+        # 获取p-value小于0.05的Function items
         not_significant_func = df_func_test_res[df_func_test_res['P-value'] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
         print(f"Under P-value = {p_value}: \n \
                 Significant Function: [{len(df_func_test_res) - len(not_significant_func)}], Not Significant Function: [{len(not_significant_func)}]")

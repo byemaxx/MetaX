@@ -52,6 +52,10 @@ class HeatmapPlot:
                     f'{i.split(" <")[0].split("|")[-1]} <{i.split(" <")[1][:-1]}>'
                     for i in index_list
                 ]
+            # check if the new_index_list is unique
+            if len(new_index_list) != len(set(new_index_list)):
+                raise ValueError("Duplicate taxa names after renaming!")
+            
             df.index = new_index_list
         return df
 
@@ -246,6 +250,10 @@ class HeatmapPlot:
         else:
             raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
 
+        # if mat is empty, raise error
+        if mat.empty:
+            raise ValueError(f"No significant differences between groups in {plot_type} <= [{pvalue}]")
+        
         if len(mat) < 2:
             row_cluster = False
         if len(mat.columns) < 2:
@@ -338,7 +346,7 @@ class HeatmapPlot:
         except Exception as e:
             print(f'Error: {e}')
             plt.close('all')
-            raise ValueError("No significant differences")
+            raise ValueError(f"Error: {e}")
  
 
     # Plot basic heatmap of matrix with color bar
@@ -349,7 +357,7 @@ class HeatmapPlot:
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False,
-                    sub_meta: str = "None", scale_method:str = 'maxmin'
+                    sub_meta: str = "None", scale_method:str = 'maxmin', return_type:str = 'fig'
                     ):
         '''
         sub_meta is higher plot_mean, if sub_meta provided, plot_mean is False
@@ -357,6 +365,7 @@ class HeatmapPlot:
         
         if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
             df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            print('Plot the mean of the data, set rename_sample to False')
             rename_sample = False
             
         
@@ -373,22 +382,40 @@ class HeatmapPlot:
         if rename_taxa:
             mat = self.rename_taxa(mat)
 
-        if cmap is None:
-            cmap = 'YlOrRd'
-        if fig_size is None:
-            fig_size = (30,30)
-
         mat, group_list = self.tfa.BasicStats.get_combined_sub_meta_df(df=mat, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
-        
-        color_list = self.assign_colors(group_list)
-
         
         # if only one column, remove col_cluster, set scale to None
         if len(mat.columns) < 2:
             col_cluster = False
             # scale = None
+        
+        if return_type == 'table':
+            sns_params = {
+                "col_cluster": col_cluster,
+                "row_cluster": row_cluster,
+                "method": self.linkage_method,
+                "metric": self.distance_metric,
+            }
+            fig = sns.clustermap(mat, **sns_params)
+            # get the sorted dataframe
+            if row_cluster and not col_cluster:
+                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, :]
+            elif col_cluster and not row_cluster:
+                sorted_df = mat.iloc[:, fig.dendrogram_col.reordered_ind]
+            elif row_cluster and col_cluster:
+                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+            else:
+                sorted_df = mat
+            plt.close(fig.figure)
+            return sorted_df
+        
+        # else plot heatmap figure
+        if cmap is None:
+            cmap = 'YlOrRd'
+        if fig_size is None:
+            fig_size = (30,30)
             
-            
+        color_list = self.assign_colors(group_list)
         sns_params = {
             # "center": 0,
             "cmap": cmap,
