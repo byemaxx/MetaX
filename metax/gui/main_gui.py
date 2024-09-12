@@ -41,7 +41,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 from PyQt5.QtWidgets import QToolBox, QGroupBox
 
@@ -256,7 +256,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
-        self.screen = QDesktopWidget().screenGeometry()
+        self.screen = self.screen = QApplication.screenAt(QCursor.pos()).geometry()
+
         self.screen_width = self.screen.width()
         self.screen_height = self.screen.height()
         # set figure width and height(16 * 9) if the screen is larger than 1920 * 1080

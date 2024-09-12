@@ -1,3 +1,8 @@
+# Version: 1.112.2
+## Date: 2024-09-12
+### Changes:
+- Fix: Fixed the the figsize intialization didn't correctly when multiple monitor was used.
+
 # Version: 1.112.1
 ## Date: 2024-09-12
 ### Changes:
