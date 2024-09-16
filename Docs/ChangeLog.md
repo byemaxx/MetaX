@@ -1,3 +1,8 @@
+# Version: 1.113.0
+## Date: 2024-09-16
+### Changes:
+- New: Added BH method for multiple test correction for t-test, anova, and dnnet's test.
+
 # Version: 1.112.2
 ## Date: 2024-09-12
 ### Changes:

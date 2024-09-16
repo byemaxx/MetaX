@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -1464,7 +1464,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1016</width>
+                        <width>660</width>
                         <height>232</height>
                        </rect>
                       </property>
@@ -3738,12 +3738,12 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>1020</width>
-                       <height>126</height>
+                       <width>1003</width>
+                       <height>128</height>
                       </rect>
                      </property>
                      <layout class="QGridLayout" name="gridLayout_38">
-                      <item row="0" column="1">
+                      <item row="0" column="0">
                        <layout class="QGridLayout" name="gridLayout_51">
                         <item row="0" column="5">
                          <widget class="QLabel" name="label_131">
@@ -4266,106 +4266,6 @@
                           </property>
                          </widget>
                         </item>
-                        <item row="1" column="4">
-                         <layout class="QHBoxLayout" name="horizontalLayout_93">
-                          <item>
-                           <widget class="QLabel" name="label_57">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string>Sort By</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QComboBox" name="comboBox_top_heatmap_sort_type">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <item>
-                             <property name="text">
-                              <string>p-value</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>f-statistic (ANOVA)</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>t-statistic (T-Test)</string>
-                             </property>
-                            </item>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="decimals">
-                             <number>4</number>
-                            </property>
-                            <property name="maximum">
-                             <double>1.000000000000000</double>
-                            </property>
-                            <property name="singleStep">
-                             <double>0.010000000000000</double>
-                            </property>
-                            <property name="value">
-                             <double>0.050000000000000</double>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
                         <item row="0" column="4">
                          <layout class="QHBoxLayout" name="horizontalLayout_84">
                           <item>
@@ -4715,6 +4615,132 @@
                            </widget>
                           </item>
                          </layout>
+                        </item>
+                        <item row="2" column="6">
+                         <layout class="QHBoxLayout" name="horizontalLayout_102">
+                          <item>
+                           <widget class="QComboBox" name="comboBox_top_heatmap_p_type">
+                            <item>
+                             <property name="text">
+                              <string>padj</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>pvalue</string>
+                             </property>
+                            </item>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="decimals">
+                             <number>4</number>
+                            </property>
+                            <property name="maximum">
+                             <double>1.000000000000000</double>
+                            </property>
+                            <property name="singleStep">
+                             <double>0.010000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>0.050000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="2" column="5">
+                         <widget class="QLabel" name="label_197">
+                          <property name="text">
+                           <string>Filter By</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="3">
+                         <widget class="QLabel" name="label_57">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Sort By</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="4">
+                         <widget class="QComboBox" name="comboBox_top_heatmap_sort_type">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <item>
+                           <property name="text">
+                            <string>padj</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>f-statistic (ANOVA)</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>t-statistic (T-Test)</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>pvalue</string>
+                           </property>
+                          </item>
+                         </widget>
                         </item>
                        </layout>
                       </item>

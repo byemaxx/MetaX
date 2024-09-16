@@ -27,10 +27,10 @@ class VolcanoPlot:
         df = df_fc.copy()
         try:
             df['type'] = 'normal'
-            df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
-            df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
-            df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
-            df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
+            df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+            df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
+            df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+            df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
 
             # set style of the plot
             if theme is not None and theme != 'Auto':
@@ -57,7 +57,7 @@ class VolcanoPlot:
             else:
                 log2fc_title = f'{log2fc_min} <= |log2FoldChange| < {log2fc_max}'
                 
-            fig.set_title(f'Volcano plot of {title_name} ({"padj" if p_type == "padj" else "pvalue"} <= {pvalue}, {log2fc_title})', fontsize=font_size)
+            fig.set_title(f'Volcano plot of {title_name} ({"padj" if p_type == "padj" else "pvalue"} < {pvalue}, {log2fc_title})', fontsize=font_size)
             fig.set_xlabel('log2FoldChange', fontsize=font_size)
             fig.set_ylabel('-log10(padj)', fontsize=font_size)
             sns.despine(trim=True)

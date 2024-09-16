@@ -24,10 +24,10 @@ class VolcanoPlotJS():
         df['type'] = 'normal'
 
         # 然后根据条件覆盖 'type' 列的值
-        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
-        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
-        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
-        df.loc[(df[p_type] <= pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
+        df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] >= log2fc_min) & (df['log2FoldChange'] < log2fc_max), 'type'] = 'up'
+        df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] >= log2fc_max), 'type'] = 'ultra-up'
+        df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] <= -log2fc_min) & (df['log2FoldChange'] > -log2fc_max), 'type'] = 'down'
+        df.loc[(df[p_type] < pvalue) & (df['log2FoldChange'] <= -log2fc_max), 'type'] = 'ultra-down'
 
         # 统计每种类型的数量
         count_dict = {type_name: len(df[df['type'] == type_name]) for type_name in ['up', 'down', 'ultra-up', 'ultra-down', 'normal']}
@@ -69,7 +69,7 @@ class VolcanoPlotJS():
         else:
             log2fc_title = f'{log2fc_min} <= |log2FoldChange| < {log2fc_max}'
         
-        title = f'Volcano plot of {title_name} ({p_type} <= {pvalue}, {log2fc_title})'
+        title = f'Volcano plot of {title_name} ({p_type} < {pvalue}, {log2fc_title})'
         
         scatter = (
             Scatter(init_opts=opts.InitOpts(width=f"{width*100}px", height=f"{height*100}px", theme=self.theme))

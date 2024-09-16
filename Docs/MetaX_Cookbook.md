@@ -409,7 +409,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - **Add items to Top List:** select the top items to plot by some statistical method.
 
-  - Clicked <u>filter with threshold</u> will filter by the p-value of ANOVA and T-TEST and P-value and Log2FC of DESeq2 result (setting in the corresponding page).
+  - Clicked <u>filter with threshold</u> will filter by the padj of ANOVA and T-TEST and padj and Log2FC of DESeq2 result (setting in the corresponding page).
 
   <img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  />
 

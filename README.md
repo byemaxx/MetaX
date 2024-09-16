@@ -39,9 +39,7 @@ The desktop version comes fully set up and ready to use, including all required 
 ### `Command-line version`:
 Clone the repository to your local machine and install the required dependencies.
   ```bash
-  git clone https://github.com/byemaxx/MetaX.git
-  cd MetaX
-  python -m pip install -r requirements.txt
+  python -m pip install MetaXTools
   ```
 
 

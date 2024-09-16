@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 from pydeseq2.ds import DeseqStats
 from pydeseq2.dds import DeseqDataSet
 from scipy.stats import dunnett
+from statsmodels.stats.multitest import multipletests
 
 class CrossTest:
     def __init__(self, tfa):
@@ -80,7 +81,7 @@ class CrossTest:
         else:
             print(f"--ANOVA test for {primary} in {group_list} with condition: {condition}--")
 
-        res = {primary: [], "P-value": [], "f-statistic": []}
+        res = {primary: [], "pvalue": [], "f-statistic": []}
         if df_type in ['taxa-func', 'func-taxa']:
             res[secondary] = []
 
@@ -96,7 +97,7 @@ class CrossTest:
             list_for_anova = [row[1][self.tfa.get_sample_list_in_a_group(group, condition=condition)].to_list() for group in group_list]
 
             f, p = f_oneway(*list_for_anova)
-            res["P-value"].append(p)
+            res["pvalue"].append(p)
             res["f-statistic"].append(f)
 
         res = pd.DataFrame(res)
@@ -105,7 +106,11 @@ class CrossTest:
             on_values.append(secondary)
         res_all = pd.merge(df, res, on=on_values)
         res_all.index = df.index
-        res_all = res_all[['P-value', 'f-statistic'] + all_sample_list]
+        # fill nan with 1 for pvalue
+        res_all['pvalue'] = res_all['pvalue'].fillna(1)
+        # adjust the pvalue as 'adj_pvalue'
+        res_all['padj'] = multipletests(res_all['pvalue'], method='fdr_bh')[1]
+        res_all = res_all[['pvalue', 'padj', 'f-statistic'] + all_sample_list]        
         return res_all
         
     def get_stats_ttest(self, group_list: list|None = None, df_type: str = 'taxa-func', condition:list|None =None) -> pd.DataFrame:
@@ -124,7 +129,7 @@ class CrossTest:
 
         df, primary, secondary = self._get_df_primary_secondary(df_type)
 
-        res = {primary: [], "P-value": [], "t-statistic": []}
+        res = {primary: [], "pvalue": [], "t-statistic": []}
         
         if df_type in ['taxa-func', 'func-taxa']:
             print(f"t-test for {df_type} in {group_list}")
@@ -147,20 +152,22 @@ class CrossTest:
                 raise ValueError(f"sample size must be more than 1 for t-test")
 
             t, p = ttest_ind(*list_for_ttest)
-            res["P-value"].append(p)
+            res["pvalue"].append(p)
             res["t-statistic"].append(t)
 
         res = pd.DataFrame(res)
 
         # print('reverse the t-statistic value due to the order of group_list is not correct')
         res['t-statistic'] = -res['t-statistic']
-
         on_values = [primary]
         if df_type in ['taxa-func', 'func-taxa']:
             on_values.append(secondary)
         res_all = pd.merge(df, res, on=on_values)
         res_all.index = df.index
-        res_all = res_all[['P-value', 't-statistic'] + all_sample_list]
+        # fill nan with 1 for pvalue
+        res_all['pvalue'] = res_all['pvalue'].fillna(1)
+        res_all['padj'] = multipletests(res_all['pvalue'], method='fdr_bh')[1]
+        res_all = res_all[['pvalue', 'padj', 't-statistic'] + all_sample_list]
         return res_all
     
     def get_stats_dunnett_test_against_control_with_conditon(self, control_group, condition, group_list:list|None =None, df_type: str = 'taxa-func') -> pd.DataFrame:
@@ -185,7 +192,7 @@ class CrossTest:
             
     def get_stats_dunnett_test(self, control_group, group_list: list|None = None, df_type: str = 'taxa-func', condition:list|None =None) -> pd.DataFrame:
         df_type = self.convert_df_name_to_simple_name(df_type)
-        
+
         group_list_all = sorted(set(self.tfa.get_meta_list(self.tfa.meta_name)))
         #! Output a dataframe with (p_value, t_statistic) for each group
         # check if the control_group is in group_list_all
@@ -204,24 +211,24 @@ class CrossTest:
                 group_list.remove(control_group)
             # sort group_list incase the order is not correct for final result
             group_list = sorted(set(group_list))
-            
-   
+
+
         df, primary_index, secondary_index = self._get_df_primary_secondary(df_type)
 
         res_dict = {primary_index: [], "p_value": [], "t_statistic": []}
-        
+
         if df_type in ['taxa-func', 'func-taxa']:
             print(f"Dunnett's test for {df_type} in {group_list} with condition: {condition}")
             res_dict[secondary_index] = []
         else:
             print(f"Dunnett's test for {primary_index} in {group_list}")
         print(f"control group: {control_group}")
-        
+
         print(f"primary index: {primary_index}", f"secondary index: {secondary_index}", sep='\n')
-        
+
         # extract head 10 rows for test
         # df = df.head(10)
-        
+
         # start dunnett for each row
         for row in tqdm(df.iterrows(), total=len(df)):
             # row[0] is the index, row[1] is the row data
@@ -231,11 +238,10 @@ class CrossTest:
                 secondary_value = row[0][1]
                 res_dict[secondary_index].append(secondary_value)
             # else the index is a string, and the secondary is empty
-            
-            res_dict[primary_index].append(primary_value)
-            
 
-           
+            res_dict[primary_index].append(primary_value)
+
+
             test_dict = {group: row[1][self.tfa.get_sample_list_in_a_group(group, condition=condition)].to_list() for group in group_list}
 
             list_for_ttest = []
@@ -247,45 +253,61 @@ class CrossTest:
                     if condition is not None:
                         output += f" with condition: {condition}"
                     raise ValueError(output)
-                               
+
                 list_for_ttest.append(values)
-                
+
             #! check if the sample size are the same is not necessary for Dunnett's test
             # if len(set([len(i) for i in list_for_ttest])) != 1:
             #     raise ValueError("sample size must be the same for Dunnett's test")
-                
-            
+
             dunnett_res = dunnett(*list_for_ttest, control=row[1][self.tfa.get_sample_list_in_a_group(control_group, condition=condition)].to_list())
             res_dict["p_value"].append(dunnett_res.pvalue)
             res_dict["t_statistic"].append(dunnett_res.statistic)
-            
 
-        
+
         res_df = pd.DataFrame(res_dict)
         if df_type in ['taxa-func', 'func-taxa']:
             # set multi-index
             res_df.set_index([primary_index, secondary_index], inplace=True)
         else:
             res_df.set_index(primary_index, inplace=True)
-            
+
+        # Separate p_value and t_statistic for each group
         res_df_pvalue = res_df.copy()
         res_df_pvalue.drop(columns=['t_statistic'], inplace=True)
         for index, group_name in enumerate(group_list):
             res_df_pvalue[group_name] = res_df_pvalue['p_value'].apply(lambda x: x[index])
         res_df_pvalue.drop(columns=['p_value'], inplace=True)
-        
+
         res_df_tstatistic = res_df.copy()
         res_df_tstatistic.drop(columns=['p_value'], inplace=True)
         for index, group_name in enumerate(group_list):
             res_df_tstatistic[group_name] = res_df_tstatistic['t_statistic'].apply(lambda x: x[index])
         res_df_tstatistic.drop(columns=['t_statistic'], inplace=True)
 
+        # Combine pvalue and statistic into one dataframe
         res_df = pd.concat({'pvalue': res_df_pvalue, 'statistic': res_df_tstatistic}, axis=1)
-        # swap level for columns index
+        # Swap level for columns index
         res_df = res_df.swaplevel(axis=1).sort_index(axis=1)
 
-        return res_df # dataframe with (pvalue, statistic) for each group in two level columns index
+        # Flatten all pvalues and apply correction
+        res_df_pvalue_filled = res_df_pvalue.fillna(1)
+        p_values_flat = res_df_pvalue_filled.values.flatten()
+        _, p_values_corrected, _, _ = multipletests(p_values_flat, method='fdr_bh')
+                
+        # Reshape corrected pvalues back to the original shape
+        p_values_corrected_reshaped = p_values_corrected.reshape(res_df_pvalue.shape)
+        
+        # Add corrected pvalues to the dataframe
+        res_df_padj = pd.DataFrame(p_values_corrected_reshaped, index=res_df_pvalue.index, columns=res_df_pvalue.columns)
+        
+        # Merge corrected pvalues into the final result
+        res_df = pd.concat({'padj': res_df_padj, 'pvalue': res_df_pvalue, 'statistic': res_df_tstatistic}, axis=1)
+        
+        # Swap levels and sort the columns
+        res_df = res_df.swaplevel(axis=1).sort_index(axis=1)
 
+        return res_df
         
         
 
@@ -572,7 +594,10 @@ class CrossTest:
     def get_stats_diff_taxa_but_func(self, group_list: list|None = None, p_value: float = 0.05,
                                      taxa_res_df: pd.DataFrame|None =None, 
                                      func_res_df: pd.DataFrame|None =None, 
-                                     taxa_func_res_df: pd.DataFrame|None =None, condition:list|None =None) -> tuple:
+                                     taxa_func_res_df: pd.DataFrame|None =None, 
+                                     condition:list|None =None, p_type: str = 'padj'
+                                     ) -> tuple:
+        p_col_name = 'pvalue' if p_type == 'pvalue' else 'padj'
         
         # calculate the test result if not given
         if taxa_res_df is None or func_res_df is None or taxa_func_res_df is None:
@@ -605,22 +630,22 @@ class CrossTest:
         # check the p_value is between 0 and 1
         if p_value < 0 or p_value > 1:
             raise ValueError("p_value must be between 0 and 1")
-        # 获取p-value大于0.05的Taxon items
-        not_significant_taxa = df_taxa_test_res[df_taxa_test_res['P-value'] >= p_value].index.get_level_values('Taxon').tolist()
-        print(f"Under P-value = {p_value}: \n \
+        # 获取pvalue大于0.05的Taxon items
+        not_significant_taxa = df_taxa_test_res[df_taxa_test_res[p_col_name] >= p_value].index.get_level_values('Taxon').tolist()
+        print(f"Under {p_col_name} = {p_value}: \n \
               Significant Taxa: [{len(df_taxa_test_res) - len(not_significant_taxa)}], Not Significant Taxa: [{len(not_significant_taxa)}]")
-        # 获取p-value小于0.05的Function items
-        not_significant_func = df_func_test_res[df_func_test_res['P-value'] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
-        print(f"Under P-value = {p_value}: \n \
+        # 获取pvalue小于0.05的Function items
+        not_significant_func = df_func_test_res[df_func_test_res[p_col_name] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
+        print(f"Under {p_col_name} = {p_value}: \n \
                 Significant Function: [{len(df_func_test_res) - len(not_significant_func)}], Not Significant Function: [{len(not_significant_func)}]")
 
-        # 选择这些Taxon在df_taxa_func_test_res中的行 and P-value < 0.05
-        df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa) & (df_taxa_func_test_res['P-value'] < p_value)]
-        print(f"Taxa not significant but related function significant with P-value <= {p_value}: [{len(df_filtered_taxa_not_significant)}]")
-        df_filtered_func_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func) & (df_taxa_func_test_res['P-value'] < p_value)]
+        # 选择这些Taxon在df_taxa_func_test_res中的行 and pvalue < 0.05
+        df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa) & (df_taxa_func_test_res[p_col_name] < p_value)]
+        print(f"Taxa not significant but related function significant with {p_col_name} < {p_value}: [{len(df_filtered_taxa_not_significant)}]")
+        df_filtered_func_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func) & (df_taxa_func_test_res[p_col_name] < p_value)]
         # reset_index for df_filtered_func_not_significant
         df_filtered_func_not_significant = df_filtered_func_not_significant.swaplevel(0, 1).sort_index()
-        print(f"Function not significant but related taxa significant with P-value <= {p_value}: [{len(df_filtered_func_not_significant)}]")
+        print(f"Function not significant but related taxa significant with {p_col_name} < {p_value}: [{len(df_filtered_func_not_significant)}]")
         
         print("Returning a tuple of two dataframesthe:\n \
             1. the taxa not significant but related function significant\n \
@@ -628,11 +653,26 @@ class CrossTest:
         
         return (df_filtered_taxa_not_significant, df_filtered_func_not_significant)
     
-    def extrcat_significant_stat_from_dunnett(self, df, p_value=0.05):
+    def extrcat_significant_stat_from_dunnett(self, df, p_value=0.05, p_type='padj'):
+        """
+        Extract significant statistical results from a Dunnett test.
+        Parameters:
+            df (pd.DataFrame): A multi-level DataFrame containing statistical results,
+                               where the first level of columns represents different groups
+                               and the second level contains statistical metrics.
+            p_value (float, optional): The p-value threshold for significance. Default is 0.05.
+            p_type (str, optional): 'padj' or 'pvalue'. Default is 'padj'.
+        Returns:
+            pd.DataFrame: A DataFrame containing only the significant statistics for each group,
+                          with the first level of columns representing the groups and the second
+                          level containing only the 'statistic' values.
+        Raises:
+            KeyError: If the specified p_type is not found in the DataFrame columns.
+        """
         res_dict= {}
         for i in df.columns.levels[0]:
             df_i = df[i]
-            df_i = df_i[df_i['pvalue'] < p_value]
+            df_i = df_i[df_i[p_type] < p_value]
             res_dict[i] = df_i
             print(f'Group: {i} | Number of significant taxa: {len(df_i)}')
         dft = pd.concat(res_dict, axis=1)
@@ -659,7 +699,7 @@ class CrossTest:
             # print(f'Extracting [{i}] with (padj <= {padj}) and (log2fc >= {log2fc})')
             # extract i from multi-index
             df_i = df_extrcted[i]
-            df_i = df_i.loc[(df_i[p_type] <= p_value) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
+            df_i = df_i.loc[(df_i[p_type] < p_value) & (abs(df_i['log2FoldChange']) >= log2fc_min) & (abs(df_i['log2FoldChange']) <= log2fc_max)]
             print(f"Group: [{i}] | Significant results: [{df_i.shape[0]}]    (up:{(df_i['log2FoldChange'] > 0).sum()} down:{(df_i['log2FoldChange'] < 0).sum()})")
             res_dict[i] = df_i
             
@@ -689,7 +729,7 @@ class CrossTest:
                 sub_df = df[value]
                 print(f"\nExtracting significant Stats from '{value}':")
                 if df_type == 'dunnett':
-                    dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value)
+                    dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value, p_type=p_type)
                 elif df_type == 'deseq2':
                     dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
                 else:

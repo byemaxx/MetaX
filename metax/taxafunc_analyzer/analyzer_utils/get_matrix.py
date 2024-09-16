@@ -88,19 +88,22 @@ class GetMatrix:
     # input: df, df_type, top_num, show_stats_col
     # output: df
     # df_type: 'anova' or 'ttest' or 'log2fc'
-    def get_top_intensity_matrix_of_test_res(self, df, df_type: str = None, top_num: int = 100, show_stats_cols: bool = False):
-
+    def get_top_intensity_matrix_of_test_res(self, df, df_type: str|None = None, top_num: int = 100, 
+                                             show_stats_cols: bool = False, p_type: str = 'padj') -> pd.DataFrame:
+        p_col_name = 'pvalue' if p_type == 'pvalue' else 'padj'
+        print(f'Getting top [{top_num}] intensity matrix of [{df_type}] by [{p_col_name}]...')
+        
         dft = df.copy()
         if df_type is None:
             dft = dft.head(top_num)
 
         elif df_type == 'anova':
             dft = dft.sort_values(
-                by=['P-value', 'f-statistic'], ascending=[True, False], ignore_index=False)
+                by=[p_col_name, 'f-statistic'], ascending=[True, False], ignore_index=False)
 
         elif df_type == 'ttest':
             dft = dft.sort_values(
-                by=['P-value'], ascending=[True], ignore_index=False)
+                by=[p_col_name], ascending=[True], ignore_index=False)
 
         elif df_type == 'log2fc':
             dft['abs_log2FoldChange'] = dft['log2FoldChange'].abs()
