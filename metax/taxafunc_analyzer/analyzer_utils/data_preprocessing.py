@@ -135,7 +135,7 @@ class DataPreprocessing:
         return df
 
 
-    def get_group_dict(self, by_group:str|None = None):
+    def _get_group_dict(self, by_group:str|None = None):
         if by_group is None:
             if self.tfa.group_list is None:
                 raise ValueError('You must set set group before handling outlier if you do not set by_group')
@@ -146,7 +146,7 @@ class DataPreprocessing:
             return self.tfa._get_group_dict_from_meta(by_group)
     
     # set outlier to nan
-    def _outlier_detection(self, df: pd.DataFrame, method: str = None, by_group:str=None) -> pd.DataFrame:
+    def _outlier_detection(self, df: pd.DataFrame, method: str|None = None, by_group:str|None = None) -> pd.DataFrame:
         '''
         ### \_outlier_detection
 
@@ -223,7 +223,7 @@ class DataPreprocessing:
             return df
 
         df_mat = df[self.tfa.sample_list]
-        groups_dict = self.get_group_dict(by_group)
+        groups_dict = self._get_group_dict(by_group)
         print(f'\nRow number before outlier detection: [{len(df_mat)}]')
 
         if method == 'half-zero':
@@ -354,8 +354,8 @@ class DataPreprocessing:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str = None,
-                              df_original: pd.DataFrame = None) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str|None = None,
+                              df_original: pd.DataFrame|None = None) -> pd.DataFrame:
         '''
         ### \_handle_missing_value
 
@@ -475,7 +475,7 @@ class DataPreprocessing:
                         imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
                     df[self.tfa.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
                 else: # by_group is True
-                    group_dict = self.get_group_dict(by_group)
+                    group_dict = self._get_group_dict(by_group)
                     print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
                     results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in group_dict.items())
                     df_mat_filled = pd.concat(results, axis=1)
@@ -487,7 +487,7 @@ class DataPreprocessing:
                     print(f'Fill NA by [{method}] on the [All Samples]...')
                     df[self.tfa.sample_list] = df_mat.apply(lambda x: x.fillna(x.mean() if method == 'mean' else x.median()), axis=1)
                 else:
-                    group_dict = self.get_group_dict(by_group)
+                    group_dict = self._get_group_dict(by_group)
                     print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
                     results = Parallel(n_jobs=-1)(
                         delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
@@ -557,13 +557,13 @@ class DataPreprocessing:
         import time
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
 
-    def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
-                         transform_method: str = None, batch_meta: str =None,
-                         outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
-                         df_name:str=None) -> pd.DataFrame:
+    def data_preprocess(self, df: pd.DataFrame, normalize_method: str|None = None, 
+                         transform_method: str|None = None, batch_meta: str|None =None,
+                         outlier_detect_method: str|None = None, outlier_handle_method: str|None = None,
+                         outlier_detect_by_group: str|None = None, outlier_handle_by_group: str|None = None, processing_order:list|None =None,
+                         df_name:str|None =None) -> pd.DataFrame:
         """
-        ## `_data_preprocess` Method
+        ## `data_preprocess` Method
 
         Processes the given DataFrame by applying normalization, transformation, batch effect removal, and outlier handling in a specified order.
 

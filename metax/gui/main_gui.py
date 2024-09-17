@@ -2493,8 +2493,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'taxa_func': self.spinBox_peptide_num_threshold_taxa_func.value()
             }
             
-            # Data Preprocessing
-            processing_after_sum = self.radioButton_data_preprocessing_after_sum.isChecked()
 
             # outlier detect and handle
             outlier_detect_method = self.comboBox_outlier_detection.currentText()
@@ -2636,7 +2634,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 set_multi_table_params = {'level': taxa_level, 'func_threshold': func_threshold,
                                         'data_preprocess_params': data_preprocess_params,
-                                        'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
                                         'keep_unknow_func': False,

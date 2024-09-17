@@ -16,17 +16,14 @@ V1_14	V1	ACE005	synthetic	NAS	Acesulfame K
 V1_15	V1	SUC	synthetic	NAS	Sucralose
 V1_16	V1	GLU	dietary sugar	CHO	Glucose (D-Glucose)
 V1_17	V1	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
-V1_18	V1	BAS	BAS	BAS	BAS
 V1_19	V1	THA2	synthetic	NAS	Thaumatin
 V1_20	V1	THA03	synthetic	NAS	Thaumatin
 V1_21	V1	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
 V1_22	V1	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
-V1_23	V1	BAS	BAS	BAS	BAS
 V1_24	V1	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
 V1_25	V1	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
 V1_26	V1	PBS	PBS	PBS	PBS
 V1_27	V1	ADV	synthetic	NAS	Advantame
-V1_28	V1	BAS	BAS	BAS	BAS
 V1_29	V1	XYL	sugar alcohols	CHO	Xylitol
 V1_30	V1	STE	natural extracted	NAS	Stevia extract (Stevioside)
 V1_31	V1	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
@@ -54,17 +51,14 @@ V2_14	V2	ACE005	synthetic	NAS	Acesulfame K
 V2_15	V2	SUC	synthetic	NAS	Sucralose
 V2_16	V2	GLU	dietary sugar	CHO	Glucose (D-Glucose)
 V2_17	V2	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
-V2_18	V2	BAS	BAS	BAS	BAS
 V2_19	V2	THA2	synthetic	NAS	Thaumatin
 V2_20	V2	THA03	synthetic	NAS	Thaumatin
 V2_21	V2	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
 V2_22	V2	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
-V2_23	V2	BAS	BAS	BAS	BAS
 V2_24	V2	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
 V2_25	V2	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
 V2_26	V2	PBS	PBS	PBS	PBS
 V2_27	V2	ADV	synthetic	NAS	Advantame
-V2_28	V2	BAS	BAS	BAS	BAS
 V2_29	V2	XYL	sugar alcohols	CHO	Xylitol
 V2_30	V2	STE	natural extracted	NAS	Stevia extract (Stevioside)
 V2_31	V2	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
@@ -92,17 +86,14 @@ V3_14	V3	ACE005	synthetic	NAS	Acesulfame K
 V3_15	V3	SUC	synthetic	NAS	Sucralose
 V3_16	V3	GLU	dietary sugar	CHO	Glucose (D-Glucose)
 V3_17	V3	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
-V3_18	V3	BAS	BAS	BAS	BAS
 V3_19	V3	THA2	synthetic	NAS	Thaumatin
 V3_20	V3	THA03	synthetic	NAS	Thaumatin
 V3_21	V3	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
 V3_22	V3	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
-V3_23	V3	BAS	BAS	BAS	BAS
 V3_24	V3	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
 V3_25	V3	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
 V3_26	V3	PBS	PBS	PBS	PBS
 V3_27	V3	ADV	synthetic	NAS	Advantame
-V3_28	V3	BAS	BAS	BAS	BAS
 V3_29	V3	XYL	sugar alcohols	CHO	Xylitol
 V3_30	V3	STE	natural extracted	NAS	Stevia extract (Stevioside)
 V3_31	V3	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
@@ -130,17 +121,14 @@ V4_14	V4	ACE005	synthetic	NAS	Acesulfame K
 V4_15	V4	SUC	synthetic	NAS	Sucralose
 V4_16	V4	GLU	dietary sugar	CHO	Glucose (D-Glucose)
 V4_17	V4	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
-V4_18	V4	BAS	BAS	BAS	BAS
 V4_19	V4	THA2	synthetic	NAS	Thaumatin
 V4_20	V4	THA03	synthetic	NAS	Thaumatin
 V4_21	V4	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
 V4_22	V4	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
-V4_23	V4	BAS	BAS	BAS	BAS
 V4_24	V4	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
 V4_25	V4	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
 V4_26	V4	PBS	PBS	PBS	PBS
 V4_27	V4	ADV	synthetic	NAS	Advantame
-V4_28	V4	BAS	BAS	BAS	BAS
 V4_29	V4	XYL	sugar alcohols	CHO	Xylitol
 V4_30	V4	STE	natural extracted	NAS	Stevia extract (Stevioside)
 V4_31	V4	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)
@@ -168,17 +156,14 @@ V5_14	V5	ACE005	synthetic	NAS	Acesulfame K
 V5_15	V5	SUC	synthetic	NAS	Sucralose
 V5_16	V5	GLU	dietary sugar	CHO	Glucose (D-Glucose)
 V5_17	V5	NDC	natural extracted	NAS	Neohesperidin Dihydrochalcone
-V5_18	V5	BAS	BAS	BAS	BAS
 V5_19	V5	THA2	synthetic	NAS	Thaumatin
 V5_20	V5	THA03	synthetic	NAS	Thaumatin
 V5_21	V5	REB	natural extracted	NAS	Stevia extract (Rebaudioside A)
 V5_22	V5	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
-V5_23	V5	BAS	BAS	BAS	BAS
 V5_24	V5	MAN	sugar alcohols	CHO	Mannitol (D-Mannitol)
 V5_25	V5	CYC	synthetic	NAS	Cyclamate (Sodium cyclamate)
 V5_26	V5	PBS	PBS	PBS	PBS
 V5_27	V5	ADV	synthetic	NAS	Advantame
-V5_28	V5	BAS	BAS	BAS	BAS
 V5_29	V5	XYL	sugar alcohols	CHO	Xylitol
 V5_30	V5	STE	natural extracted	NAS	Stevia extract (Stevioside)
 V5_31	V5	LAC	sugar alcohols	CHO	Lactitol (Lactitol monohydrate)

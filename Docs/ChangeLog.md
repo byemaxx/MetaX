@@ -1,3 +1,8 @@
+# Version: 1.113.2
+## Date: 2024-09-17
+### Changes:
+- Change: Changed the default data preprossing after sum peptide to tables, and set only apply outlier handle and combat on peptide level.
+
 # Version: 1.113.1
 ## Date: 2024-09-17
 ### Changes:

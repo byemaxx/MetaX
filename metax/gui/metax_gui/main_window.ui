@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -568,6 +568,32 @@
             </item>
             <item row="4" column="0">
              <layout class="QGridLayout" name="gridLayout_37">
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_135">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Protein Inference Method</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="checkBox_create_protein_table">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Create Proteins Intensity Table</string>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="2">
                <widget class="QComboBox" name="comboBox_method_of_protein_inference">
                 <property name="enabled">
@@ -588,16 +614,6 @@
                   <string>rank</string>
                  </property>
                 </item>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QCheckBox" name="checkBox_infrence_protein_by_sample">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="text">
-                 <string>Inference by each Sample</string>
-                </property>
                </widget>
               </item>
               <item row="1" column="2">
@@ -638,475 +654,15 @@
                 </item>
                </layout>
               </item>
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="checkBox_create_protein_table">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Create Proteins Intensity Table</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_135">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Protein Inference Method</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="9" column="0">
-             <layout class="QGridLayout" name="gridLayout_15">
-              <item row="6" column="0">
-               <widget class="QLabel" name="label_43">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Rmove Batch Effect</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_41">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Data Normalization</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_40">
-                <property name="text">
-                 <string>Data Transformation</string>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1">
-               <widget class="QLabel" name="label_24">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Data Preprocessing</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <layout class="QHBoxLayout" name="horizontalLayout_11">
-                <item>
-                 <widget class="QLabel" name="label_89">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Primary Handling Method</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="comboBox_outlier_handling_method1">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Drop</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Original</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>mean</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>median</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>KNN</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>regression</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>multiple</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_69">
-                <property name="text">
-                 <string>Outliers  Detection Method</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QComboBox" name="comboBox_outlier_detection">
-                <item>
-                 <property name="text">
-                  <string>None</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Missing-Value</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>IQR</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Half-Zero</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Zero-Dominant</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Z-Score</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Mahalanobis-Distance</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Zero-Inflated-Poisson</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Negative-Binomial</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_22">
-                <property name="text">
-                 <string>Outliers  Detection by</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QComboBox" name="comboBox_outlier_detection_group_or_sample">
+               <widget class="QCheckBox" name="checkBox_infrence_protein_by_sample">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
-               </widget>
-              </item>
-              <item row="2" column="3">
-               <layout class="QHBoxLayout" name="horizontalLayout_8">
-                <item>
-                 <widget class="QLabel" name="label_90">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Secondary Handling Method</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="comboBox_outlier_handling_method2">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Drop</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Original</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>KNN</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>multiple</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>regression</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="4" column="1" colspan="3">
-               <widget class="QComboBox" name="comboBox_set_data_transformation">
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>None</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Log 2 transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Log 10 transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Square root transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Cube root transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Box-Cox</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="5" column="1" colspan="3">
-               <widget class="QComboBox" name="comboBox_set_data_normalization">
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>None</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Standard Scaling (Z-Score)</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Min-Max Scaling</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Pareto Scaling</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Mean centering</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Normalization by sum</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="6" column="1" colspan="3">
-               <widget class="QComboBox" name="comboBox_remove_batch_effect">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>None</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="2" column="4" rowspan="5">
-               <widget class="QListWidget" name="listWidget_data_processing_order">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>167796</height>
-                 </size>
-                </property>
-                <property name="dragDropMode">
-                 <enum>QAbstractItemView::InternalMove</enum>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Outlier Handling</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Data Transformation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Data Normalization</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Rmove Batch Effect</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QPushButton" name="pushButton_preprocessing_help">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
                 <property name="text">
-                 <string>?</string>
+                 <string>Inference by each Sample</string>
                 </property>
                </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QRadioButton" name="radioButton_data_preprocessing_before_sum">
-                <property name="text">
-                 <string>Before Summing  Peptides</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="3">
-               <widget class="QRadioButton" name="radioButton_data_preprocessing_after_sum">
-                <property name="text">
-                 <string>After Summing Peptides</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="4">
-               <widget class="QLabel" name="label_45">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <property name="text">
-                 <string>Drag to change the processing order</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="2">
-               <layout class="QHBoxLayout" name="horizontalLayout_27">
-                <item>
-                 <widget class="QLabel" name="label_102">
-                  <property name="text">
-                   <string>Outliers Handling by</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="comboBox_outlier_handling_group_or_sample">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </item>
              </layout>
             </item>
@@ -1377,6 +933,420 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+             </layout>
+            </item>
+            <item row="9" column="0">
+             <layout class="QGridLayout" name="gridLayout_15">
+              <item row="5" column="1" colspan="3">
+               <widget class="QComboBox" name="comboBox_set_data_normalization">
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>None</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Standard Scaling (Z-Score)</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Min-Max Scaling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Pareto Scaling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Mean centering</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Normalization by sum</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <layout class="QHBoxLayout" name="horizontalLayout_11">
+                <item>
+                 <widget class="QLabel" name="label_89">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Primary Handling Method</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_outlier_handling_method1">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Drop</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Original</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>mean</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>median</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>KNN</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>regression</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>multiple</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="2" column="4" rowspan="5">
+               <widget class="QListWidget" name="listWidget_data_processing_order">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>167796</height>
+                 </size>
+                </property>
+                <property name="dragDropMode">
+                 <enum>QAbstractItemView::InternalMove</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Outlier Handling</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Data Transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Data Normalization</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Rmove Batch Effect</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="4" column="1" colspan="3">
+               <widget class="QComboBox" name="comboBox_set_data_transformation">
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>None</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Log 2 transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Log 10 transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Square root transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cube root transformation</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Box-Cox</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QComboBox" name="comboBox_outlier_detection">
+                <item>
+                 <property name="text">
+                  <string>None</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Missing-Value</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>IQR</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Half-Zero</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Zero-Dominant</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Z-Score</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Mahalanobis-Distance</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Zero-Inflated-Poisson</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Negative-Binomial</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QComboBox" name="comboBox_outlier_detection_group_or_sample">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1" colspan="3">
+               <widget class="QComboBox" name="comboBox_remove_batch_effect">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>None</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_22">
+                <property name="text">
+                 <string>Outliers  Detection by</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_69">
+                <property name="text">
+                 <string>Outliers  Detection Method</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <layout class="QHBoxLayout" name="horizontalLayout_27">
+                <item>
+                 <widget class="QLabel" name="label_102">
+                  <property name="text">
+                   <string>Outliers Handling by</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_outlier_handling_group_or_sample">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="2" column="3">
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <item>
+                 <widget class="QLabel" name="label_90">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Secondary Handling Method</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_outlier_handling_method2">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Drop</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Original</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>KNN</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>multiple</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>regression</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_41">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Data Normalization</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_40">
+                <property name="text">
+                 <string>Data Transformation</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="label_43">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Rmove Batch Effect</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="4">
+               <widget class="QLabel" name="label_45">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <property name="text">
+                 <string>Drag to change the processing order</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QPushButton" name="pushButton_preprocessing_help">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>?</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -3738,7 +3708,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>1003</width>
+                       <width>1020</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -5633,7 +5603,7 @@
                            <x>0</x>
                            <y>0</y>
                            <width>996</width>
-                           <height>124</height>
+                           <height>122</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">

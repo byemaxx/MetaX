@@ -599,7 +599,11 @@ class BasicPlot:
         # plt.close()
         return ax
 
-
+    def plot_distribution_sns(self, df, title_name = 'Table', width=10, height=8, font_size = 10,
+                                theme:str = 'Auto', plot_sample = False, show_label = True,
+                                rename_sample:bool = False, legend_col_num: int | None = None,
+                                sub_meta:str|None = 'None', bins:int = 10):
+        pass
 
     def plot_items_corr_heatmap(
         self,
