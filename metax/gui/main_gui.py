@@ -2127,11 +2127,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msg_box.setWindowTitle('Preprocessing Help')
         msg_box.setStyleSheet('QLabel{min-width: 900px;}')
         msg_box.setWindowFlags(msg_box.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        help_text ='''Data Preprocessing before summing peptides:\
-            \nPerform data preprocessing first, then sum the peptides to calculate the intensity of each taxa, function and taxa-function pair.\
-            \n\nData Preprocessing after summing peptides:\
-            \nSum the peptides to calculate the intensity of each taxa, function and taxa-function pair first, then perform data preprocessing for each table.\
-            \n\n\nOutliers Detection:\
+        help_text ='''Outliers Detection (only apply to peptide data):\
             \nMissing-Value: Detect nan values in the data. If a value is nan, it will be marked as an outlier (NaN).\
             \n\nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
@@ -2149,7 +2145,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             \n\nRegression: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modeling each feature with missing values as a function of other features, in turn.\
             \n\nMultiple: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of nearest features.\
             \n\n\nData Normalization:\
-            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.'''
+            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.\
+            \n\n\nBatch Effect Correction: only apply to peptide data.
+            '''
         msg_box.setText(help_text)
         msg_box.exec_()
                 

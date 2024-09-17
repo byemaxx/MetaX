@@ -1309,7 +1309,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Rmove Batch Effect</string>
+                 <string>Batch Effect Correction</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1342,6 +1342,12 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>30</width>
+                  <height>0</height>
+                 </size>
                 </property>
                 <property name="text">
                  <string>?</string>
