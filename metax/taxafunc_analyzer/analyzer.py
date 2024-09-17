@@ -676,6 +676,9 @@ class TaxaFuncAnalyzer:
             return
 
         #! fllowing code is for the normal mode
+        # add 'peptide_num_threshold' to 'data_preprocess_params
+        data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
+        
         # reset outlier_status
         self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
         # reset split_func status
@@ -684,11 +687,6 @@ class TaxaFuncAnalyzer:
         
         df = self.original_df.copy()
         print(f"Original data shape: {df.shape}")
-
-        # sum the protein intensity
-        if sum_protein:
-            self.protein_df = SumProteinIntensity(self).sum_protein_intensity( **sum_protein_params)
-            self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
 
 
         print("Starting to set Taxa table...")
@@ -777,16 +775,9 @@ class TaxaFuncAnalyzer:
         extract_list = [self.peptide_col_name,'Taxon', self.func_name] + self.sample_list
         dfc = dfc[extract_list]
 
-        # filter the df_taxa by peptide_num_threshold
-        df_taxa = df_taxa[df_taxa['peptide_num'] >= peptide_num_threshold['taxa']]
-        print(f"Taxa number with '{level}' level, peptide_num >= [{peptide_num_threshold['taxa']}]: {df_taxa.shape[0]}")
         
         print("\n-----Starting to perform data pre-processing for Taxa table...-----")
-        taxa_pep_num_dict = df_taxa['peptide_num'].to_dict() # save the peptide_num to avoid the loss of data after data preprocess
         df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
-        df_taxa['peptide_num'] = df_taxa.index.map(taxa_pep_num_dict)
-        # move the column 'peptide_num' to the first column
-        df_taxa = df_taxa[['peptide_num'] + [col for col in df_taxa.columns if col != 'peptide_num']]
         #-----Taxa Table End-----
         
         #------create peptides_dict in taxa, func and taxa_func------
@@ -803,39 +794,25 @@ class TaxaFuncAnalyzer:
             
         # save the df_taxa_func before filter for calculating the func table later
         df_taxa_func_before_filter = df_taxa_func.copy()
-            
-        # filter the df by peptide_num_threshold
-        df_taxa_func = df_taxa_func[df_taxa_func['peptide_num'] >= peptide_num_threshold['taxa_func']]
         
         print("\n-----Starting to perform data pre-processing for Taxa-Function table...-----")
-        taxa_func_pep_num_dict = df_taxa_func['peptide_num'].to_dict() # save the peptide_num to avoid the loss of data after data preprocess
         df_taxa_func = self.data_preprocess(df=df_taxa_func,df_name = 'taxa_func', **data_preprocess_params)
-        df_taxa_func['peptide_num'] = df_taxa_func.index.map(taxa_func_pep_num_dict)
-        # move the column 'peptide_num' to the first column
-        df_taxa_func = df_taxa_func[['peptide_num'] + [col for col in df_taxa_func.columns if col != 'peptide_num']]
         # -----taxa_func table End-----
         
         # exchange the multi-index, sort the index
         df_func_taxa = df_taxa_func.swaplevel().sort_index()
 
 
-        print(f"Taxa-Function number with peptide_num >= [{peptide_num_threshold['taxa_func']}]: {df_taxa_func.shape[0]}")
         # ----- func_taxa table End -----
         
         # ----- create func table -----
         print("Starting to set Function table...")
         df_func = df_taxa_func_before_filter.groupby(self.func_name).sum(numeric_only=True)
-
-        # filter the df_func by peptide_num_threshold
-        df_func = df_func[df_func['peptide_num'] >= peptide_num_threshold['func']]
-        print(f"Function number with prop >= [{func_threshold}], peptide_num >= [{peptide_num_threshold['func']}]: {df_func.shape[0]}")
+        # initialize the peptide_num col
+        
         
         print("\n-----Starting to perform data pre-processing for Function table...-----")
-        func_pep_num_dict = df_func['peptide_num'].to_dict()
-        df_func = self.data_preprocess(df=df_func[self.sample_list],df_name = 'func', **data_preprocess_params)
-        df_func['peptide_num'] = df_func.index.map(func_pep_num_dict)
-        # move the column 'peptide_num' to the first column
-        df_func = df_func[['peptide_num'] + [col for col in df_func.columns if col != 'peptide_num']]
+        df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
         # ----- func table End -----
 
         self.taxa_df = df_taxa
@@ -844,6 +821,11 @@ class TaxaFuncAnalyzer:
         self.func_taxa_df = df_func_taxa
         self.clean_df = dfc_with_peptides
         self.peptide_df = df_peptide
+        
+        # sum the protein intensity
+        if sum_protein:
+            self.protein_df = SumProteinIntensity(self).sum_protein_intensity( **sum_protein_params)
+            self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', **data_preprocess_params)
 
         # set the taxa_func_linked_dict and func_taxa_linked_dict
         self.set_taxa_func_linked_dict()
@@ -940,9 +922,9 @@ if __name__ == '__main__':
                                                             'outlier_detect_by_group': None,
                                                             'outlier_handle_by_group': None,
                                                             'processing_order': None},
-                    peptide_num_threshold = {'taxa': 1, 'func': 1, 'taxa_func': 1},
+                    peptide_num_threshold = {'taxa': 2, 'func': 2, 'taxa_func': 2},
                     keep_unknow_func=False, sum_protein=False, sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
-                    split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False}
+                    split_func=False, split_func_params = {'split_by': '|', 'share_intensity': False}
                     )
 
     sw.check_attributes()

@@ -1,3 +1,14 @@
+
+# Version: 1.113.4
+## Date: 2024-09-17
+### Changes:
+- Change: move peptide number filter to the class of data preprossing to optimize the code.
+
+# Version: 1.113.3
+## Date: 2024-09-17
+### Changes:
+- Fix: Fixed the data preprossing order of function.
+
 # Version: 1.113.2
 ## Date: 2024-09-17
 ### Changes:

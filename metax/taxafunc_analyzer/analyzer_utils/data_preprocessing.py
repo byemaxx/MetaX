@@ -561,7 +561,8 @@ class DataPreprocessing:
                          transform_method: str|None = None, batch_meta: str|None =None,
                          outlier_detect_method: str|None = None, outlier_handle_method: str|None = None,
                          outlier_detect_by_group: str|None = None, outlier_handle_by_group: str|None = None, processing_order:list|None =None,
-                         df_name:str|None =None) -> pd.DataFrame:
+                         df_name:str|None =None, peptide_num_threshold:dict[str, int] ={'taxa': 3, 'func': 3, 'taxa_func': 3}
+                         ) -> pd.DataFrame:
         """
         ## `data_preprocess` Method
 
@@ -635,7 +636,12 @@ class DataPreprocessing:
             - `taxa_func`
             - `protein`
             - `custom`
-
+        - `peptide_num_threshold` (`dict`, optional):
+        The threshold for the number of peptides in each DataFrame. Default values are:
+        - `taxa`: 3
+        - `func`: 3
+        - `taxa_func`: 3
+        
         ### Returns:
 
         - `pd.DataFrame`:  
@@ -645,6 +651,13 @@ class DataPreprocessing:
         
         df = df.copy()
         original_row_num = len(df)
+        
+        # remove items with peptide number less than threshold
+        if df_name in peptide_num_threshold:
+            print(f'{df_name.upper()} number before removing: {df.shape[0]}')
+            df = df[df['peptide_num'] >= peptide_num_threshold[df_name]]
+            print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
+           
         if processing_order is None:
             processing_order = ['outlier' , 'transform', 'normalize', 'batch']
         else:
@@ -666,7 +679,7 @@ class DataPreprocessing:
         if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein', 'custom'}:
             left_row_num = len(df)
             # self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
-            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}%)'
-
+            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}% of the data before outlier handling)'
+           
         return df
     

@@ -1855,8 +1855,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
         
         if outlier_detect_method != 'None':
-            nan_stats_str = '\n\nLeft row after outlier handling:\n'
+            nan_stats_str = '\n\nLeft row after data preprocessing:\n'
             for i, j in self.tfa.outlier_status.items():
+                if i not in ['peptide', 'custom']:
+                    continue
                 if j:
                     nan_stats_str += f'{i}: [{j}]\n'
             # print(nan_stats_str)
@@ -1872,7 +1874,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             msg = f'Operational Taxa-Functions (OTF) data is ready! \
             \n{nan_stats_str}\
             \n\nFunction: [{self.tfa.func_name}]\
-            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
+            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}% of all peptides)]\
             \nNumber of function: [{num_func}]\
             \nNumber of taxa: [{num_taxa}]\
             \nNumber of taxa-function: [{num_taxa_func}]\
