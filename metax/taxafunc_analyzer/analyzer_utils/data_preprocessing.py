@@ -85,38 +85,57 @@ class DataPreprocessing:
             df[self.tfa.sample_list] = df_mat
 
         return df
+
     
-    def _data_normalization(self, df: pd.DataFrame, normalize_method: str = None) -> pd.DataFrame:
+    def _data_normalization(self, df: pd.DataFrame, normalize_method: str|None = None) -> pd.DataFrame:
         if normalize_method is None:
             print('normalize_method is not set, data normalization did not perform.')
         else:
             df = df.copy()
             df_mat = df[self.tfa.sample_list]
 
-            # plus 1e-10 to avoid divided by zero
+            # Define a small value to avoid division by zero
+            epsilon = 1e-10
+
+            # define normalization operations
             normalize_operations = {
                 'None': lambda x: x,
                 'mean': lambda x: x - x.mean(),
-                'sum': lambda x: x / (x.sum() + 1e-10),
-                'minmax': lambda x: (x - x.min()) / (x.max() - x.min() + 1e-10),
-                'zscore': lambda x: (x - x.mean()) / (x.std() + 1e-10),
-                'pareto': lambda x: (x - x.mean()) / np.sqrt(x.std())
+                'sum': lambda x: x / (x.sum() + epsilon),
+                'minmax': lambda x: (x - x.min()) / (x.max() - x.min()),
+                'zscore': lambda x: (x - x.mean()) / (x.std() + epsilon),
+                'pareto': lambda x: (x - x.mean()) / (np.sqrt(x.std() + epsilon))
             }
 
             if normalize_method in normalize_operations:
-                df_mat = normalize_operations[normalize_method](df_mat)
+                # get the normalization function
+                normalize_func = normalize_operations[normalize_method]
+
+                df_mat = normalize_func(df_mat)
+                
+                # in case of minmax normalization, if the range is zero, set the column to zero
+                if normalize_method == 'minmax':
+                    # Calculate the range of each column
+                    range_values = df[self.tfa.sample_list].max() - df[self.tfa.sample_list].min()
+                    # Get the columns with zero range
+                    zero_range_columns = range_values[range_values == 0].index
+                    print(f'Columns with zero range: {zero_range_columns}') if len(zero_range_columns) > 0 else None
+                    # Set the columns with zero range to zero
+                    df_mat[zero_range_columns] = 0.0
+
                 print(f'Data normalized by [{normalize_method}]')
             else:
-                raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore]')
+                raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore, pareto]')
 
-            # shift values by their absolute minimum to ensure all values are non-negative
+            # move the data to positive
             df_mat = df_mat - df_mat.min()
 
             df[self.tfa.sample_list] = df_mat
 
         return df
 
-    def get_group_dict(self, by_group:str = None):
+
+    def get_group_dict(self, by_group:str|None = None):
         if by_group is None:
             if self.tfa.group_list is None:
                 raise ValueError('You must set set group before handling outlier if you do not set by_group')

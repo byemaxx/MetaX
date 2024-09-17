@@ -1,3 +1,8 @@
+# Version: 1.113.1
+## Date: 2024-09-17
+### Changes:
+- Fix: remove epsilon(1e-10) when scale the data with min-max method to avoid the max value is 0.9999999999... rather than 1.0.
+
 # Version: 1.113.0
 ## Date: 2024-09-16
 ### Changes:
