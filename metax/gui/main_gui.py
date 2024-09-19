@@ -969,9 +969,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tfa and self.tfa.clean_df is not None:
+        if self.tfa and self.tfa.processed_original_df is not None:
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
+            self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
 
             
             
@@ -1788,8 +1788,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if self.tfa.any_df_mode:
                 self.update_table_dict('custom', self.tfa.custom_df)
             else:
-                self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
-                # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
                 self.update_table_dict('peptides', self.tfa.peptide_df)
                 self.update_table_dict('taxa', self.tfa.taxa_df)
                 self.update_table_dict('functions', self.tfa.func_df)
@@ -1819,7 +1817,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         # update comboBox of basic peptide query
         self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
+        self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
 
         
         # clear list of taxa-func link network
@@ -2285,7 +2283,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
 
             
-            if 'dunnett_test' in selected_table_name:
+            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
 
             if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('dunnettAllCondtion'):
@@ -2298,15 +2296,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
                 
-                ### for keeping the order of comboBox_top_heatmap_sort_type when change table same type
-                sort_type_list =  []
-                for i in range(self.comboBox_top_heatmap_sort_type.count()):
-                    sort_type_list.append(self.comboBox_top_heatmap_sort_type.itemText(i))
-
-                if sorted(sort_type_list) != sorted(['padj', 'pvalue']):
-                    self.comboBox_top_heatmap_sort_type.setEnabled(True)
-                    self.comboBox_top_heatmap_sort_type.clear()
-                    self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
             if selected_table_name.startswith('dunnettAllCondtion'):
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(False)
@@ -2315,14 +2304,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             
         else:
-            self.label_57.setText('Sort By:')
-            sort_type_list =  ['padj', "f-statistic (ANOVA)", "t-statistic (T-Test)", "pvalue"]
             if 't_test' in selected_table_name:
             # remove 'f-statistic (ANOVA)' from comboBox_top_heatmap_sort_type
                 sort_type_list =  ['padj', "t-statistic (T-Test)", "pvalue"]
-            
-            if 'anova' in selected_table_name:
+            elif 'anova' in selected_table_name:
                 sort_type_list =  ['padj', "f-statistic (ANOVA)", "pvalue"]
+            else:
+                sort_type_list =  ['padj', "f-statistic (ANOVA)", "t-statistic (T-Test)", "pvalue"]
             
             self.comboBox_top_heatmap_sort_type.clear()
             self.comboBox_top_heatmap_sort_type.addItems(sort_type_list)
@@ -2506,7 +2494,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             transform_method = self.comboBox_set_data_transformation.currentText()
             # batch effect
             batch_meta =  self.comboBox_remove_batch_effect.currentText() if self.comboBox_remove_batch_effect.currentText() != 'None' else None
-
+            taxa_and_func_only_from_otf = self.checkBox_set_otf_taxa_and_func_only_from_otf.isChecked()
+            
             if self.tfa.has_na_in_original_df and outlier_detect_method == 'None':
                 # ask user if they want to continue
                 reply = QMessageBox.question(self.MainWindow, 'Warning', 'There are NaN(Missing Value) values in the original data. If you do not handle them, the row containing NaN will be removed.\
@@ -2580,7 +2569,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                     'Data Normalization': 'normalize', 
                                     'Data Transformation': 'transform',
                                     'Outlier Handling': 'outlier'}
-            processing_order = [processing_order_dict[i] for i in processing_order]
+            processing_order = ['outlier'] + [processing_order_dict[i] for i in processing_order]
             
             # ask if continue when create protein table
             if self.checkBox_create_protein_table.isChecked():
@@ -2637,7 +2626,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
                                         'keep_unknow_func': False,
-                                        'split_func': split_func, 'split_func_params': split_func_params}
+                                        'split_func': split_func, 'split_func_params': split_func_params,
+                                        'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
@@ -4001,7 +3991,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if peptide == '':
             return None
         else:
-            df = self.tfa.preprocessed_df.loc[self.tfa.preprocessed_df[self.tfa.peptide_col_name] == peptide]
+            df = self.tfa.original_df.loc[self.tfa.original_df[self.tfa.peptide_col_name] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None

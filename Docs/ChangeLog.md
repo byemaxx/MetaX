@@ -1,4 +1,11 @@
 
+# Version: 1.114.0
+## Date: 2024-09-19
+### Changes:
+- New: Added an option to create taxa table and function table from the OTF only, or from all eligible peptides.
+- Change: 1. Set Outlier handle only apply to peptide level. 2. Change 'None' function to "None_func' in the OTF table to avoid the conflict with the None value. 3.optimize the code of OTF Analyzer.
+- Fix: Fixed some bugs of GUI settings.
+
 # Version: 1.113.4
 ## Date: 2024-09-17
 ### Changes:
@@ -7,7 +14,7 @@
 # Version: 1.113.3
 ## Date: 2024-09-17
 ### Changes:
-- Fix: Fixed the data preprossing order of function.
+- Fix: Fixed the data preprossing order of function. Suming peptide to taxa, funcs, taxa-funcs etc. should be before the data preprossing of transform, normalization, or combact.
 
 # Version: 1.113.2
 ## Date: 2024-09-17

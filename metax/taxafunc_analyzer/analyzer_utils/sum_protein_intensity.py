@@ -19,13 +19,13 @@ from tqdm import tqdm
 
 
 class SumProteinIntensity:
-    def __init__(self, taxa_func_analyzer):
+    def __init__(self, taxa_func_analyzer, df=None):
         self.tfa = taxa_func_analyzer
         self.res_intensity_dict = {}  # store all sample to output
         self.rank_dict = {}  # store the rank of protein intensity for each sample temporarily
         self.rank_method = None  # only used for rank method
         self.extract_col_name = [self.tfa.peptide_col_name, self.tfa.protein_col_name] + self.tfa.sample_list
-        self.df = self.tfa.original_df.loc[:, self.extract_col_name]
+        self.df = self.tfa.original_df.loc[:, self.extract_col_name] if df is None else df.loc[:, self.extract_col_name]
         self._init_dicts()
         self.greedy_method = None  # only used for razor method
         self.share_intensity = False
@@ -41,11 +41,22 @@ class SumProteinIntensity:
             raise ValueError(f'There are empty values in {self.tfa.protein_col_name} column')
         
     def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap'):
-
+        '''
+        method: str, default 'razor'
+            options: ['razor', 'anti-razor', 'rank']
+        by_sample: bool, default False. only used for `rank` method
+            if True, calculate the protein set for each sample, then sum the intensity
+        rank_method: str, default 'shared_intensity'. only used for `rank` method
+            options: ['shared_intensity', 'all_counts', 'unique_counts', 'unique_intensity']
+        greedy_method: str, default 'heap'. only used for `razor` method
+            options: ['greedy', 'heap']
+        '''
         if method not in ['razor', 'anti-razor', 'rank']:
             raise ValueError('Method must in ["razor", "anti-razor", "rank"]')
         if rank_method not in ['shared_intensity', 'all_counts', 'unique_counts', 'unique_intensity']:
             raise ValueError('Rank method must in ["shared_intensity", "all_counts", "unique_counts", "unique_intensity"]')
+        if greedy_method not in ['greedy', 'heap']:
+            raise ValueError('Greedy method must in ["greedy", "heap"]')
         
         self.rank_method = rank_method
         self.greedy_method = greedy_method
@@ -102,12 +113,13 @@ class SumProteinIntensity:
     # razor method
     def find_minimum_protein_set(self, peptides, protein_to_peptides):
         protein_to_peptides_copy = protein_to_peptides.copy()
+        print(f'Current target number: {len(protein_to_peptides)}')
         peptides_to_cover = set(peptides)
         selected_proteins = set()
         method = self.greedy_method
         
         if method == 'greedy':
-            print('Start creating protein dict for "Set Cover Problem" with Greedy Approximation Algorithm')
+            print('Start creating protein dict for "Set Cover Problem" with [Greedy] Approximation Algorithm')
             with tqdm(total=len(peptides_to_cover), desc="Covering peptides") as pbar:
                 while peptides_to_cover:
                     best_protein = None
@@ -127,7 +139,7 @@ class SumProteinIntensity:
                     pbar.update(len(peptides_covered_by_best))
         elif method == 'heap':
             import heapq
-            print('Start creating protein dict for "Set Cover Problem" with Heap Optimization of Greedy Approximation Algorithm')
+            print('Start creating protein dict for "Set Cover Problem" with [Heap Optimization] of Greedy Approximation Algorithm')
             protein_coverage = {protein: covered_peptides & peptides_to_cover 
                                 for protein, covered_peptides in protein_to_peptides_copy.items()}
             protein_heap = [(-len(covered), protein) for protein, covered in protein_coverage.items()]
@@ -157,7 +169,8 @@ class SumProteinIntensity:
                                 del protein_coverage[protein]
         else:
             raise ValueError(f"Invalid greedy method: {method}. Must be ['greedy' or 'heap']")
-
+        
+        print(f'Minium target number: {len(selected_proteins)}')
         return selected_proteins
     
     def _create_pep_to_protein_razor(self) -> dict:

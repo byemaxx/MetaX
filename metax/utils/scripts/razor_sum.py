@@ -120,7 +120,7 @@ class RazorSum:
         method = self.greedy_method
 
         if method == 'greedy':
-            print('Start creating protein dict for "Set Cover Problem" with Greedy Approximation Algorithm')
+            print('Start creating protein dict for "Set Cover Problem" with [Greedy] Approximation Algorithm')
             with tqdm(total=len(peptides_to_cover), desc="Covering peptides") as pbar:
                 while peptides_to_cover:
                     best_protein = None
@@ -139,6 +139,7 @@ class RazorSum:
                     target_to_peptides_copy.pop(best_protein)  # remove the protein from the dict to speed up the process
                     pbar.update(len(peptides_covered_by_best))
         elif method == 'heap':
+            print('Start creating protein dict for "Set Cover Problem" with [Heap Optimization] of Greedy Approximation Algorithm')
             import heapq
             target_coverage = {target: covered_peptides & peptides_to_cover 
                             for target, covered_peptides in target_to_peptides_copy.items()}

@@ -101,8 +101,8 @@ class PeptideAnnotator:
 
         df_t0 = pd.DataFrame(results, index=df_t.index)
         df_t0 = self.add_additional_columns(df_t0)
-        df_t0['None'] = 'none'
-        df_t0['None_prop'] = '1.0'
+        df_t0['None_func'] = 'none_func'
+        df_t0['None_func_prop'] = '1.0'
         
         if 'Description' in df_t0.columns:
             df_t0.rename(columns={'Description': 'eggNOG_Description', 'Description_prop': 'eggNOG_Description_prop'}, inplace=True)

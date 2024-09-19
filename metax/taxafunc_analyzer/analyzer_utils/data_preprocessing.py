@@ -24,13 +24,26 @@ class DataPreprocessing:
         
         
     # data pre-processing for multi-tables
-    def _remove_batch_effect(self, df: pd.DataFrame= None, batch_meta: str =None) -> pd.DataFrame:
+    def _remove_batch_effect(self, df: pd.DataFrame, batch_meta: str|None =None) -> pd.DataFrame:
+        """
+        Removes batch effects from the given DataFrame.
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing the data.
+        batch_meta (str or None): The metadata column name used for batch effect removal. If None or 'None', batch effect removal is not performed.
+        Returns:
+        pd.DataFrame: The DataFrame with batch effects removed, if applicable.
+        Notes:
+        - If the DataFrame has less than 2 rows, batch effect removal is not performed.
+        - If batch_meta is provided and not 'None', batch effect removal is performed using the specified metadata column.
+        - If batch_meta is None or 'None', batch effect removal is not performed.
+        - The function prints messages indicating the status of batch effect removal.
+        """
         df = df.copy()
         #check if len df is less than 2
         if len(df) < 2:
             print('ATTENTION: df has less than 2 rows, Batch effect removal did not perform.')
             return df
-        if df is not None and batch_meta is not None and batch_meta != 'None':
+        if batch_meta not in [None, 'None']:
             print(f'Remove batch effect by [{batch_meta}]...')
             batch_list = self.tfa.meta_df[batch_meta].tolist()
             df_samples = df[self.tfa.sample_list]
@@ -48,16 +61,16 @@ class DataPreprocessing:
             df_corrected = np.where(df_corrected < 2, 0, df_corrected)
             df[self.tfa.sample_list] = df_corrected
 
-        elif batch_meta is None or batch_meta == 'None':
-            print('batch_meta is not set, Batch effect removal did not perform.')
         else:
-            print('df and batch_meta are not set, Batch effect removal did not perform.')
+            print('batch_meta is not set, Batch effect removal did not perform.')
+
         return df
             
     
-    def _data_transform(self, df: pd.DataFrame, transform_method: str = None) -> pd.DataFrame:
-        if transform_method is None:
+    def _data_transform(self, df: pd.DataFrame, transform_method: str|None = None) -> pd.DataFrame:
+        if transform_method in [None, 'None']:
             print('transform_method is not set, data transform did not perform.')
+            return df
         else:
             df_mat = df[self.tfa.sample_list]
             # check if there are negative values
@@ -84,7 +97,7 @@ class DataPreprocessing:
 
             df[self.tfa.sample_list] = df_mat
 
-        return df
+            return df
 
     
     def _data_normalization(self, df: pd.DataFrame, normalize_method: str|None = None) -> pd.DataFrame:
@@ -218,7 +231,7 @@ class DataPreprocessing:
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
-        if method is None or method in['None', 'missing-value', 'none']:
+        if method in['None', 'missing-value', 'none', None]:
             print('outlier_method is not set, outlier detection did not perform.')
             return df
 
@@ -354,7 +367,7 @@ class DataPreprocessing:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str|None = None,
+    def _handle_missing_value(self, df: pd.DataFrame, method: str |None= 'drop+drop', by_group:str|None = None,
                               df_original: pd.DataFrame|None = None) -> pd.DataFrame:
         '''
         ### \_handle_missing_value
@@ -433,7 +446,10 @@ class DataPreprocessing:
         if not df_mat.isnull().any().any():
             print('No missing value, skip outlier handling')
             return df
-
+        
+        if method is None:
+            method = 'drop+drop'
+            
         method_list = method.split("+")
         method1, method2 = method_list[0], method_list[0] if len(method_list) == 1 else method_list[1]
         
@@ -537,14 +553,14 @@ class DataPreprocessing:
             print(f'Drop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.tfa.sample_list)
         print(f'Final number of rows after missing value handling: [{len(df)}]')
-        print(f'\n{self._get_current_time()} Data processing finished.\n')
+        print(f'\n{self._get_current_time()} Outlier handling finished.\n')
 
         return df
 
 
 
 
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', detection_by_group:str=None, handling_by_group:str=None) -> pd.DataFrame:
+    def _handle_outlier(self, df: pd.DataFrame, detect_method: str|None = 'none',handle_method: str|None = 'drop+drop', detection_by_group:str|None=None, handling_by_group:str|None=None) -> pd.DataFrame:
         # if self.tfa.group_list is None:
         #     raise ValueError('You must set set group before handling outlier')
 
@@ -561,7 +577,7 @@ class DataPreprocessing:
                          transform_method: str|None = None, batch_meta: str|None =None,
                          outlier_detect_method: str|None = None, outlier_handle_method: str|None = None,
                          outlier_detect_by_group: str|None = None, outlier_handle_by_group: str|None = None, processing_order:list|None =None,
-                         df_name:str|None =None, peptide_num_threshold:dict[str, int] ={'taxa': 3, 'func': 3, 'taxa_func': 3}
+                         df_name:str = "None", peptide_num_threshold:dict[str, int] ={'taxa': 1, 'func': 1, 'taxa_func': 1}
                          ) -> pd.DataFrame:
         """
         ## `data_preprocess` Method
@@ -653,7 +669,7 @@ class DataPreprocessing:
         original_row_num = len(df)
         
         # remove items with peptide number less than threshold
-        if df_name in peptide_num_threshold:
+        if df_name in ['taxa', 'func', 'taxa_func']:
             print(f'{df_name.upper()} number before removing: {df.shape[0]}')
             df = df[df['peptide_num'] >= peptide_num_threshold[df_name]]
             print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
@@ -674,7 +690,7 @@ class DataPreprocessing:
                 df = self._data_normalization(df, normalize_method)
             else:
                 raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
-        print(f'\n{self._get_current_time()} -----Data preprocessing finished.-----\n')
+        print(f'\n{self._get_current_time()} -----Data preprocessing of {df_name.upper()} finished.-----\n')
 
         if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein', 'custom'}:
             left_row_num = len(df)
