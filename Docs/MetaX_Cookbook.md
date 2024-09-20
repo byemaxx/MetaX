@@ -223,6 +223,34 @@ The Data Overview provides basic information about your data, such as the number
 
 - **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by any taxa, the follow analysis focus on functions).
 
+- **Split Function:** Split the annotations with multi-functions.
+
+  - | KO                  | Intensity |
+    | ------------------- | --------- |
+    | ko:K00625,ko:K13788 | 10        |
+
+    to
+
+    | KO        | Intensity |
+    | --------- | --------- |
+    | ko:K00625 | 10        |
+    | ko:K13788 | 10        |
+
+    If <u>Share Intensity</u> is checked, the intensity above would given <u>5</u> to each split KO
+
+- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+
+- **Create Taxa and Func only from OTFs:**
+
+  - **Without selection (checkbox not checked):**
+    - <u>Taxa table:</u> Peptides are filtered based solely on taxa levels, without considering any functional categories.
+    - <u>Function table:</u> Peptides are filtered solely by functional categories and thresholds, regardless of their taxa levels.
+    - <u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
+  - **With selection (checkbox checked):**
+
+
+- All tables are filtered by both taxa levels and functional categories simultaneously.
+
 ### Sum Proteins Intensity
 
 Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
@@ -246,9 +274,6 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
     
 
 ### Data preprocessing
-
-- Data Preprocessing **Before Summing  Peptides**:  Perform data preprocessing first, then sum the peptides to calculate the intensity of each taxon, function and taxa-function pair.
-- Data Preprocessing **After Summing Peptides**: Sum the peptides to calculate the intensity of each taxon, function and taxa-function pair first, then perform data preprocessing for each table.
 
 There are several methods for detecting and handling outliers.
 
@@ -300,7 +325,7 @@ There are several methods for detecting and handling outliers.
   - Here, you can choose a group as the batch effect, then use [<u>reCombat</u>] (https://github.com/BorgwardtLab/reComBat) for handling.
 - **Data Transformation:**
 
-  - Log2, Log10, Square root transformation and Cube root transformation.
+  - Log2, Log10, Square root transformation, Cube root transformation and box-cox.
 
 - **Data Normalization:**
 
@@ -391,7 +416,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Sankey
 
-    - <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey"  />
+    - <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey">
 
     
 
@@ -654,7 +679,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - The coloured line is the average 
 
-  <img src="./MetaX_Cookbook.assets/trends_cluster.png" alt="image-20230728144230514"  />
+  <img src="./MetaX_Cookbook.assets/trends_cluster.png" style="zoom: 67%;"  >
 
 
 
