@@ -24,13 +24,26 @@ class DataPreprocessing:
         
         
     # data pre-processing for multi-tables
-    def _remove_batch_effect(self, df: pd.DataFrame= None, batch_meta: str =None) -> pd.DataFrame:
+    def _remove_batch_effect(self, df: pd.DataFrame, batch_meta: str|None =None) -> pd.DataFrame:
+        """
+        Removes batch effects from the given DataFrame.
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing the data.
+        batch_meta (str or None): The metadata column name used for batch effect removal. If None or 'None', batch effect removal is not performed.
+        Returns:
+        pd.DataFrame: The DataFrame with batch effects removed, if applicable.
+        Notes:
+        - If the DataFrame has less than 2 rows, batch effect removal is not performed.
+        - If batch_meta is provided and not 'None', batch effect removal is performed using the specified metadata column.
+        - If batch_meta is None or 'None', batch effect removal is not performed.
+        - The function prints messages indicating the status of batch effect removal.
+        """
         df = df.copy()
         #check if len df is less than 2
         if len(df) < 2:
             print('ATTENTION: df has less than 2 rows, Batch effect removal did not perform.')
             return df
-        if df is not None and batch_meta is not None and batch_meta != 'None':
+        if batch_meta not in [None, 'None']:
             print(f'Remove batch effect by [{batch_meta}]...')
             batch_list = self.tfa.meta_df[batch_meta].tolist()
             df_samples = df[self.tfa.sample_list]
@@ -48,16 +61,16 @@ class DataPreprocessing:
             df_corrected = np.where(df_corrected < 2, 0, df_corrected)
             df[self.tfa.sample_list] = df_corrected
 
-        elif batch_meta is None or batch_meta == 'None':
-            print('batch_meta is not set, Batch effect removal did not perform.')
         else:
-            print('df and batch_meta are not set, Batch effect removal did not perform.')
+            print('batch_meta is not set, Batch effect removal did not perform.')
+
         return df
             
     
-    def _data_transform(self, df: pd.DataFrame, transform_method: str = None) -> pd.DataFrame:
-        if transform_method is None:
+    def _data_transform(self, df: pd.DataFrame, transform_method: str|None = None) -> pd.DataFrame:
+        if transform_method in [None, 'None']:
             print('transform_method is not set, data transform did not perform.')
+            return df
         else:
             df_mat = df[self.tfa.sample_list]
             # check if there are negative values
@@ -84,39 +97,58 @@ class DataPreprocessing:
 
             df[self.tfa.sample_list] = df_mat
 
-        return df
+            return df
+
     
-    def _data_normalization(self, df: pd.DataFrame, normalize_method: str = None) -> pd.DataFrame:
+    def _data_normalization(self, df: pd.DataFrame, normalize_method: str|None = None) -> pd.DataFrame:
         if normalize_method is None:
             print('normalize_method is not set, data normalization did not perform.')
         else:
             df = df.copy()
             df_mat = df[self.tfa.sample_list]
 
-            # plus 1e-10 to avoid divided by zero
+            # Define a small value to avoid division by zero
+            epsilon = 1e-10
+
+            # define normalization operations
             normalize_operations = {
                 'None': lambda x: x,
                 'mean': lambda x: x - x.mean(),
-                'sum': lambda x: x / (x.sum() + 1e-10),
-                'minmax': lambda x: (x - x.min()) / (x.max() - x.min() + 1e-10),
-                'zscore': lambda x: (x - x.mean()) / (x.std() + 1e-10),
-                'pareto': lambda x: (x - x.mean()) / np.sqrt(x.std())
+                'sum': lambda x: x / (x.sum() + epsilon),
+                'minmax': lambda x: (x - x.min()) / (x.max() - x.min()),
+                'zscore': lambda x: (x - x.mean()) / (x.std() + epsilon),
+                'pareto': lambda x: (x - x.mean()) / (np.sqrt(x.std() + epsilon))
             }
 
             if normalize_method in normalize_operations:
-                df_mat = normalize_operations[normalize_method](df_mat)
+                # get the normalization function
+                normalize_func = normalize_operations[normalize_method]
+
+                df_mat = normalize_func(df_mat)
+                
+                # in case of minmax normalization, if the range is zero, set the column to zero
+                if normalize_method == 'minmax':
+                    # Calculate the range of each column
+                    range_values = df[self.tfa.sample_list].max() - df[self.tfa.sample_list].min()
+                    # Get the columns with zero range
+                    zero_range_columns = range_values[range_values == 0].index
+                    print(f'Columns with zero range: {zero_range_columns}') if len(zero_range_columns) > 0 else None
+                    # Set the columns with zero range to zero
+                    df_mat[zero_range_columns] = 0.0
+
                 print(f'Data normalized by [{normalize_method}]')
             else:
-                raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore]')
+                raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore, pareto]')
 
-            # shift values by their absolute minimum to ensure all values are non-negative
+            # move the data to positive
             df_mat = df_mat - df_mat.min()
 
             df[self.tfa.sample_list] = df_mat
 
         return df
 
-    def get_group_dict(self, by_group:str = None):
+
+    def _get_group_dict(self, by_group:str|None = None):
         if by_group is None:
             if self.tfa.group_list is None:
                 raise ValueError('You must set set group before handling outlier if you do not set by_group')
@@ -127,7 +159,7 @@ class DataPreprocessing:
             return self.tfa._get_group_dict_from_meta(by_group)
     
     # set outlier to nan
-    def _outlier_detection(self, df: pd.DataFrame, method: str = None, by_group:str=None) -> pd.DataFrame:
+    def _outlier_detection(self, df: pd.DataFrame, method: str|None = None, by_group:str|None = None) -> pd.DataFrame:
         '''
         ### \_outlier_detection
 
@@ -199,12 +231,12 @@ class DataPreprocessing:
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
-        if method is None or method in['None', 'missing-value', 'none']:
+        if method in['None', 'missing-value', 'none', None]:
             print('outlier_method is not set, outlier detection did not perform.')
             return df
 
         df_mat = df[self.tfa.sample_list]
-        groups_dict = self.get_group_dict(by_group)
+        groups_dict = self._get_group_dict(by_group)
         print(f'\nRow number before outlier detection: [{len(df_mat)}]')
 
         if method == 'half-zero':
@@ -335,8 +367,8 @@ class DataPreprocessing:
 
     
 
-    def _handle_missing_value(self, df: pd.DataFrame, method: str = 'drop+drop', by_group:str = None,
-                              df_original: pd.DataFrame = None) -> pd.DataFrame:
+    def _handle_missing_value(self, df: pd.DataFrame, method: str |None= 'drop+drop', by_group:str|None = None,
+                              df_original: pd.DataFrame|None = None) -> pd.DataFrame:
         '''
         ### \_handle_missing_value
 
@@ -414,7 +446,10 @@ class DataPreprocessing:
         if not df_mat.isnull().any().any():
             print('No missing value, skip outlier handling')
             return df
-
+        
+        if method is None:
+            method = 'drop+drop'
+            
         method_list = method.split("+")
         method1, method2 = method_list[0], method_list[0] if len(method_list) == 1 else method_list[1]
         
@@ -456,7 +491,7 @@ class DataPreprocessing:
                         imputer = IterativeImputer(random_state=0 if method == 'multiple' else None)
                     df[self.tfa.sample_list] = pd.DataFrame(imputer.fit_transform(df_mat), columns=df_mat.columns, index=df.index)
                 else: # by_group is True
-                    group_dict = self.get_group_dict(by_group)
+                    group_dict = self._get_group_dict(by_group)
                     print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
                     results = Parallel(n_jobs=-1)(delayed(apply_imputer)(df_mat, cols, method) for _, cols in group_dict.items())
                     df_mat_filled = pd.concat(results, axis=1)
@@ -468,7 +503,7 @@ class DataPreprocessing:
                     print(f'Fill NA by [{method}] on the [All Samples]...')
                     df[self.tfa.sample_list] = df_mat.apply(lambda x: x.fillna(x.mean() if method == 'mean' else x.median()), axis=1)
                 else:
-                    group_dict = self.get_group_dict(by_group)
+                    group_dict = self._get_group_dict(by_group)
                     print(f'Fill NA by [{method}] within [{len(group_dict)}] groups...')
                     results = Parallel(n_jobs=-1)(
                         delayed(fill_na_mean_median)([df_mat.loc[:, cols], method]) 
@@ -518,33 +553,66 @@ class DataPreprocessing:
             print(f'Drop rows with missing value after [{method}]: [{final_na_num} in {len(df)} ({final_na_num/len(df)*100:.2f}%)]')
             df = df.dropna(subset=self.tfa.sample_list)
         print(f'Final number of rows after missing value handling: [{len(df)}]')
-        print(f'\n{self._get_current_time()} Data processing finished.\n')
+        print(f'\n{self._get_current_time()} Outlier handling finished.\n')
 
         return df
 
-
-
-
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str = 'none',handle_method: str = 'drop+drop', detection_by_group:str=None, handling_by_group:str=None) -> pd.DataFrame:
-        # if self.tfa.group_list is None:
-        #     raise ValueError('You must set set group before handling outlier')
-
-        df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
-        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handling_by_group, df_original=df)
-
-        return df_t
 
     def _get_current_time(self):
         import time
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
 
-    def _data_preprocess(self, df: pd.DataFrame, normalize_method: str = None, 
-                         transform_method: str = None, batch_meta: str =None,
-                         outlier_detect_method: str = None, outlier_handle_method: str = None,
-                         outlier_detect_by_group: str = None, outlier_handle_by_group: str = None, processing_order:list=None,
-                         df_name:str=None) -> pd.DataFrame:
+    def detect_and_handle_outliers(self, df: pd.DataFrame, 
+                                    detect_method: str|None = 'none',
+                                    handle_method: str|None = 'drop+drop', 
+                                    detection_by_group:str|None=None, 
+                                    handle_by_group:str|None=None) -> pd.DataFrame:
+        '''
+        - `detect_method` (`str`, optional):  
+        Method for outlier detection. Options include:
+            - `none`: No outlier detection.
+            - `missing-value`: Detect missing values.
+            - `half-zero`: Detect outliers based on half-zero criteria.
+            - `zero-dominant`: Detect outliers based on zero-dominance.
+            - `iqr`: Interquartile range method.
+            - `z-score`: Z-score method.
+            - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
+            - `negative-binomial`: Negative binomial distribution method.
+            - `mahalanobis-distance`: Mahalanobis distance method.
+
+        - `handle_method` (`str`, optional):  
+        Method for handling outliers, specified as methods separated by +. Options include:
+            - `drop`: Drop rows with outliers.
+            - `mean`: Fill with mean.
+            - `median`: Fill with median.
+            - `knn`: K-nearest neighbors imputation.
+            - `regression`: Regression imputation.
+            - `multiple`: Multiple imputation.
+            - `original`: Keep original data unchanged.
+
+        - `detect_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier detection.
+
+        - `handle_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier handling.
+
+        '''
+        # if self.tfa.group_list is None:
+        #     raise ValueError('You must set set group before handling outlier')
+
+        df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
+        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handle_by_group, df_original=df)
+
+        return df_t
+
+
+    def data_preprocess(self, df: pd.DataFrame, normalize_method: str|None = None, 
+                         transform_method: str|None = None, batch_meta: str|None =None,
+                         processing_order:list|None =None,
+                         df_name:str = "None", peptide_num_threshold:dict[str, int] ={'taxa': 1, 'func': 1, 'taxa_func': 1}
+                         ) -> pd.DataFrame:
         """
-        ## `_data_preprocess` Method
+        ## `data_preprocess` Method
 
         Processes the given DataFrame by applying normalization, transformation, batch effect removal, and outlier handling in a specified order.
 
@@ -573,37 +641,9 @@ class DataPreprocessing:
         - `batch_meta` (`str`, optional):  
         Column name for batch metadata, used for batch effect removal.
 
-        - `outlier_detect_method` (`str`, optional):  
-        Method for outlier detection. Options include:
-            - `none`: No outlier detection.
-            - `missing-value`: Detect missing values.
-            - `half-zero`: Detect outliers based on half-zero criteria.
-            - `zero-dominant`: Detect outliers based on zero-dominance.
-            - `iqr`: Interquartile range method.
-            - `z-score`: Z-score method.
-            - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
-            - `negative-binomial`: Negative binomial distribution method.
-            - `mahalanobis-distance`: Mahalanobis distance method.
-
-        - `outlier_handle_method` (`str`, optional):  
-        Method for handling outliers, specified as methods separated by +. Options include:
-            - `drop`: Drop rows with outliers.
-            - `mean`: Fill with mean.
-            - `median`: Fill with median.
-            - `knn`: K-nearest neighbors imputation.
-            - `regression`: Regression imputation.
-            - `multiple`: Multiple imputation.
-            - `original`: Keep original data unchanged.
-
-        - `outlier_detect_by_group` (`str`, optional):  
-        Column name for grouping samples for outlier detection.
-
-        - `outlier_handle_by_group` (`str`, optional):  
-        Column name for grouping samples for outlier handling.
 
         - `processing_order` (`list of following str`, optional):  
         Order of processing steps to apply. Options include:
-            - `outlier`: Outlier handling.
             - `batch`: Batch effect removal.
             - `transform`: Data transformation.
             - `normalize`: Data normalization.
@@ -616,7 +656,12 @@ class DataPreprocessing:
             - `taxa_func`
             - `protein`
             - `custom`
-
+        - `peptide_num_threshold` (`dict`, optional):
+        The threshold for the number of peptides in each DataFrame. Default values are:
+        - `taxa`: 3
+        - `func`: 3
+        - `taxa_func`: 3
+        
         ### Returns:
 
         - `pd.DataFrame`:  
@@ -626,15 +671,20 @@ class DataPreprocessing:
         
         df = df.copy()
         original_row_num = len(df)
+        
+        # remove items with peptide number less than threshold
+        if df_name in ['taxa', 'func', 'taxa_func']:
+            print(f'{df_name.upper()} number before removing: {df.shape[0]}')
+            df = df[df['peptide_num'] >= peptide_num_threshold[df_name]]
+            print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
+           
         if processing_order is None:
-            processing_order = ['outlier' , 'transform', 'normalize', 'batch']
+            processing_order = ['transform', 'normalize', 'batch']
         else:
             processing_order = processing_order
         # perform data processing in order
         for process in processing_order:
-            if process == 'outlier':
-                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, detection_by_group = outlier_detect_by_group, handling_by_group=outlier_handle_by_group)
-            elif process == 'batch':
+            if process == 'batch':
                 df = self._remove_batch_effect(df, batch_meta)
             elif process == 'transform':
                 df = self._data_transform(df, transform_method)
@@ -642,12 +692,12 @@ class DataPreprocessing:
                 df = self._data_normalization(df, normalize_method)
             else:
                 raise ValueError('processing_order must be in [outlier, batch, transform, normalize]')
-        print(f'\n{self._get_current_time()} -----Data preprocessing finished.-----\n')
+        print(f'\n{self._get_current_time()} -----Data preprocessing of {df_name.upper()} finished.-----\n')
 
         if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein', 'custom'}:
             left_row_num = len(df)
             # self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
-            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}%)'
-
+            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}% of the data before outlier handling)'
+           
         return df
     

@@ -226,8 +226,8 @@ class DiversityPlot(object):
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.9,
                                   edgecolor='black', linewidth=0.5)
                 
-            fig.set_xlabel("PC1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
-            fig.set_ylabel("PC2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
+            fig.set_xlabel("PCo1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
+            fig.set_ylabel("PCo2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
             # set title
             num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
             

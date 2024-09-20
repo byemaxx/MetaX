@@ -64,58 +64,55 @@ class HeatmapPlot:
                                         value_type:str = 'p', fig_size:tuple|None = None, pvalue:float = 0.05, 
                                          col_cluster:bool = True, row_cluster:bool = True,
                                         cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
-                                        show_all_labels:tuple = (False, False), return_type:str = 'fig', scale = None, scale_method:str = 'maxmin'):
-
-        
+                                        show_all_labels:tuple = (False, False), return_type:str = 'fig', scale = None, 
+                                        scale_method:str = 'maxmin', p_type:str = 'padj'):
 
         func_name = self.tfa.func_name
         dft = df.copy()
         dft.reset_index(inplace=True)
-        
 
-        
+
         # type_map: 1st: plot_type, 2nd: cmap
-        #! cmap for f-statistic and p-value, only when scale_method is 'zscores', the values are negative and positive, otherwise, the values are positive
+        #! cmap for f-statistic and pvalue, only when scale_method is 'zscores', the values are negative and positive, otherwise, the values are positive
         #! cmap for t-statistic, the values always are negative and positive
         type_map = {'f': ('f-statistic', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare'),
-                    'p': ('P-value', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare_r'),
+                    'pvalue': ('pvalue', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare_r'),
+                    'padj': ('padj', 'RdBu_r' if (scale in ['row', 'column', 'all'] and scale_method == 'zscore') else 'flare_r'),
                     't': ('t-statistic', 'RdBu_r')}
 
-        plot_type = type_map.get(value_type, "None")[0]
+        plot_type = p_type if value_type in ['pvalue', 'padj'] else type_map.get(value_type, "None")[0]
+        
+        
         if plot_type == "None":
-            raise ValueError("type must be 'p' or 'f' or 't'")
-        
-        
+            raise ValueError("type must be 'f' or 'pvalue' or 'padj' or 't'")
+
         if plot_type not in dft.columns: # inout wrong t-statistic to f-statistic, or reverse
             old_value_type = value_type
-            value_type = 'f' if value_type == 't' else 't' if value_type == 'f' else 'p'
+            value_type = 'f' if value_type == 't' else 't' if value_type == 'f' else p_type
             print(f"Warning: [{old_value_type}] is not in the dataframe, change to [{value_type}]")
                 
 
-        if cmap is None:
-            plot_type, cmap = type_map.get(value_type, None)
-        else:
-            plot_type, _ = type_map.get(value_type, None)
+        cmap = type_map.get(value_type, "None")[1] if cmap is None else cmap
 
 
 
         try:
-            dft = dft[dft['P-value'] < pvalue]
-            print(f"\nRESULT:\nNumber of significant rows: {len(dft)}")
+            dft = dft[dft[p_type] < pvalue]
+            print(f"\nRESULT:\nNumber of significant by {p_type} < {pvalue}: {len(dft)}")
             if dft.empty:
                 raise ValueError(f"No significant differences between groups in {func_name}-Function")
             if 'f-statistic' in dft.columns.tolist():
-                dft = dft.sort_values(by=['P-value', 'f-statistic'], ascending=[True, False], ignore_index=True)
+                dft = dft.sort_values(by=[p_type, 'f-statistic'], ascending=[True, False], ignore_index=True)
             elif 't-statistic' in dft.columns.tolist():
-                dft = dft.sort_values(by=['P-value', 't-statistic'], ascending=[True, False], ignore_index=True)
+                dft = dft.sort_values(by=[p_type, 't-statistic'], ascending=[True, False], ignore_index=True)
             df_top = dft.head(top_number)
 
             if rename_taxa:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
                 # df_top = self.rename_taxa(df_top)
-            df_top = df_top.pivot(index=func_name, columns='Taxon', values=plot_type)
+            df_top = df_top.pivot(index=func_name, columns='Taxon', values=p_type)
             print(f"Top [{top_number}] significant: Taxa ({df_top.shape[1]}), Functions ({df_top.shape[0]})")
-            df_plot = df_top.fillna(1) if plot_type == 'P-value' else df_top.fillna(0)
+            df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
             
@@ -157,11 +154,11 @@ class HeatmapPlot:
             fig.ax_heatmap.set_xlabel("Taxa")
             fig.ax_heatmap.set_ylabel("Functions")
             
-            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
+            scale_title = f"scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             if title == "":
-                title = f"Significant Differences between groups in Taxa-Function (Top {top_number} sorted by {plot_type}{scale_title})"
+                title = f"Significant Differences in Taxa-Function (Top {top_number} sorted by {plot_type}, filtered by {p_type}, {scale_title})"
             else:
-                title = f"{title} (Top {top_number} sorted by {plot_type}{scale_title})"
+                title = f"{title} (Top {top_number} sorted by {plot_type}, filtered by {p_type}, {scale_title})"
                 
             plt.suptitle(title)
 
@@ -204,36 +201,31 @@ class HeatmapPlot:
                                        col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True,
-                                       sort_by:str = 'P-value', scale_method:str = 'maxmin', return_type:str = 'fig'):
+                                       sort_by:str = 'padj', scale_method:str = 'maxmin', return_type:str = 'fig',
+                                       p_type:str = 'padj'):
 
         dft = df.copy()
-
-
-
-        # type_map = {'f': ('f-statistic', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r'),
-        #             'p': ('P-value', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r'),
-        #             't': ('t-statistic', 'OrRd' if scale_method == 'maxmin' else 'RdBu_r')}
-
-        type_map = {'f': 'f-statistic', 'p': 'P-value', 't': 't-statistic'}
+        
+        type_map = {'f': 'f-statistic', 't': 't-statistic', 'pvalue': 'pvalue', 'padj': 'padj'}
         plot_type = type_map.get(value_type)
 
         if plot_type is None:
-            raise ValueError("type must be 'p' or 'f' or 't'")
+            raise ValueError("type must be 'f' or 't' or 'pvalue' or 'padj'")
 
         
         if plot_type not in df.columns:
-            print(f"Warning: [{plot_type}] is not in the dataframe, change to [P-value]")
-            plot_type = 'P-value'
+            print(f"Warning: [{plot_type}] is not in the dataframe, change to [padj]")
+            plot_type = 'padj'
 
         
-        dft = dft[dft['P-value'] < pvalue]
+        dft = dft[dft[p_type] < pvalue]
 
 
         if 'f-statistic' in dft.columns:
-            sort_column = 'f-statistic' if sort_by == 'f-statistic' else 'P-value'
-            ascending = sort_by == 'P-value' # True if sort_by is 'P-value' else False
+            sort_column = 'f-statistic' if sort_by == 'f-statistic' else p_type
+            ascending = sort_by in ['pvalue', 'padj']
             dft = dft.sort_values(by=[sort_column], ascending=ascending)
-            mat = dft.head(top_number).drop(['P-value', 'f-statistic'], axis=1)
+            mat = dft.head(top_number).drop(['pvalue', 'padj', 'f-statistic'], axis=1)
 
         elif 't-statistic' in dft.columns:
             if sort_by == 't-statistic':
@@ -241,11 +233,11 @@ class HeatmapPlot:
                 sort_column = 'abs_t-statistic'
                 ascending = False
             else:
-                sort_column = 'P-value'
+                sort_column = p_type
                 ascending = True
             
             dft = dft.sort_values(by=[sort_column], ascending=ascending)
-            mat = dft.head(top_number).drop(['P-value', 't-statistic', 'abs_t-statistic'], axis=1, errors='ignore')
+            mat = dft.head(top_number).drop(['pvalue', 'padj','t-statistic', 'abs_t-statistic'], axis=1, errors='ignore')
 
         else:
             raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
@@ -329,9 +321,9 @@ class HeatmapPlot:
                 va = self.get_y_labels_va()
             )
 
-            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
+            scale_title = f"scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             plt.suptitle(
-                f"The Heatmap of intensity of Significant differences between groups (top {top_number} sorted by {sort_by.split('(')[0]}{scale_title})"
+                f"The intensity of Significant differences (top {len(mat)} sorted by {sort_by.split('(')[0]}, filtered by {p_type}, {scale_title})"
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label("Intensity", rotation=90, labelpad=1)
@@ -476,7 +468,7 @@ class HeatmapPlot:
 
         Parameters:
             - df (DataFrame): The input DataFrame containing the condition results.
-            - pvalue (float): The p-value threshold for significance. Default is 0.05.
+            - pvalue (float): The p threshold for significance. Default is 0.05.
             - scale (str | None): The scaling method for the data. Default is None.
             - log2fc_min (float): The minimum log2 fold change value. Default is 1.0.
             - log2fc_max (float): The maximum log2 fold change value. Default is 30.0.
@@ -489,7 +481,7 @@ class HeatmapPlot:
             - show_all_labels (tuple): Whether to show all labels for x-axis and y-axis. Default is (False, False).
             - return_type (str): The type of the return value. Default is 'fig'. options: 'fig', 'table'
             - res_df_type (str): The type of the result DataFrame. Default is 'deseq2'.
-            - p_type (str): The type of p-value. Default is 'padj'. options: 'pvalue', 'padj'
+            - p_type (str): The type of pvalue. Default is 'padj'. options: 'pvalue', 'padj'
             - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'same_trends'
             - show_col_colors (bool): Whether to show column colors. Default is True.
             - remove_zero_col (bool): Whether to remove zero columns. Default is True.
@@ -511,7 +503,7 @@ class HeatmapPlot:
                 dft = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
                                                                 log2fc_max=log2fc_max, p_type=p_type)
             elif res_df_type == 'dunnet':
-                dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
+                dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
                 
         elif df.columns.nlevels == 3:
             df_dict = self.tfa.CrossTest.extrcat_significant_fc_from_all_3_levels(df, p_value=pvalue, 
@@ -529,9 +521,9 @@ class HeatmapPlot:
                     
         if dft.empty or dft is None:
             if res_df_type == 'deseq2':
-                error_msg = f"No significant differences Results in {p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All"
+                error_msg = f"No significant differences Results in {p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All"
             else:
-                error_msg = f"No significant differences Results in p-value < {pvalue} for {three_levels_df_type} in Dunnett test"
+                error_msg = f"No significant differences Results in  {p_type} < {pvalue} for {three_levels_df_type} in Dunnett test"
             raise ValueError(error_msg)
     
             
@@ -608,9 +600,9 @@ class HeatmapPlot:
                     va = self.get_y_labels_va()
                 )
                 if res_df_type == 'deseq2':
-                    title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} <= {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
+                    title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
                 else:
-                    title = f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})"                
+                    title = f"The Heatmap of t-statistic calculated by Dunnett test ({p_type} < {pvalue}, scaled by {scale})"                
                 
                 plt.suptitle(title, weight='bold')
                 
@@ -662,16 +654,15 @@ class HeatmapPlot:
     def plot_heatmap_of_dunnett_test_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
                                        fig_size:tuple|None = None, col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
-                                       show_all_labels:tuple = (False, False),  show_col_colors:bool = False, scale_method:str = 'maxmin'
+                                       show_all_labels:tuple = (False, False),  show_col_colors:bool = False,
+                                       scale_method:str = 'maxmin', p_type:str = 'padj'
                                        ):
-        #! 只画t-statistic的heatmap, 用p-value过滤
-
-        
+        #! 只画t-statistic的heatmap, 用p_type来判断: 'padj' or 'pvalue'
         
         pvalue = round(pvalue, 5)
 
 
-        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
+        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
 
@@ -745,7 +736,7 @@ class HeatmapPlot:
                 ha = 'left',
                 va = self.get_y_labels_va()
             )
-            plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test (p-value < {pvalue}, scaled by {scale})", 
+            plt.suptitle(f"The Heatmap of t-statistic calculated by Dunnett test ({p_type} < {pvalue}, scaled by {scale})", 
                          weight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
@@ -765,10 +756,11 @@ class HeatmapPlot:
 
 
     def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
-                                        col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True, scale_method:str = 'maxmin'):
+                                        col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True,
+                                        scale_method:str = 'maxmin', p_type:str = 'padj'):
 
         
-        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue)
+        dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
 
         # fill na with 0
         dft = dft.fillna(0, inplace=False)

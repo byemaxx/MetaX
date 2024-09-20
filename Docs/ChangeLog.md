@@ -1,3 +1,52 @@
+
+# Version: 1.114.1
+## Date: 2024-09-19
+### Changes:
+- Change: Optimized the code of Data Preprocessing, split oulier handle and data preprossing to two independent steps.
+
+
+# Version: 1.114.0
+## Date: 2024-09-19
+### Changes:
+- New: Added an option to create taxa table and function table from the OTF only, or from all eligible peptides.
+- Change: 1. Set Outlier handle only apply to peptide level. 2. Change 'None' function to "None_func' in the OTF table to avoid the conflict with the None value. 3.optimize the code of OTF Analyzer.
+- Fix: Fixed some bugs of GUI settings.
+
+# Version: 1.113.4
+## Date: 2024-09-17
+### Changes:
+- Change: move peptide number filter to the class of data preprossing to optimize the code.
+
+# Version: 1.113.3
+## Date: 2024-09-17
+### Changes:
+- Fix: Fixed the data preprossing order of function. Suming peptide to taxa, funcs, taxa-funcs etc. should be before the data preprossing of transform, normalization, or combact.
+
+# Version: 1.113.2
+## Date: 2024-09-17
+### Changes:
+- Change: Changed the default data preprossing after sum peptide to tables, and set only apply outlier handle and combat on peptide level.
+
+# Version: 1.113.1
+## Date: 2024-09-17
+### Changes:
+- Fix: remove epsilon(1e-10) when scale the data with min-max method to avoid the max value is 0.9999999999... rather than 1.0.
+
+# Version: 1.113.0
+## Date: 2024-09-16
+### Changes:
+- New: Added BH method for multiple test correction for t-test, anova, and dnnet's test.
+
+# Version: 1.112.2
+## Date: 2024-09-12
+### Changes:
+- Fix: Fixed the the figsize intialization didn't correctly when multiple monitor was used.
+
+# Version: 1.112.1
+## Date: 2024-09-12
+### Changes:
+- Fix: Fixed the PcoA plot of the beta diversity, the x-axis and y-axis labels were not correct.
+
 # Version: 1.112.0
 ## Date: 2024-09-09
 ### Changes:

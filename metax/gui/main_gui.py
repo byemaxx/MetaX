@@ -31,7 +31,6 @@ from collections import OrderedDict
 import re
 
 
-
 # import third-party modules
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -41,7 +40,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 from PyQt5.QtWidgets import QToolBox, QGroupBox
 
@@ -256,7 +255,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
-        self.screen = QDesktopWidget().screenGeometry()
+        self.screen = self.screen = QApplication.screenAt(QCursor.pos()).geometry()
+
         self.screen_width = self.screen.width()
         self.screen_height = self.screen.height()
         # set figure width and height(16 * 9) if the screen is larger than 1920 * 1080
@@ -969,9 +969,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tfa and self.tfa.clean_df is not None:
+        if self.tfa and self.tfa.processed_original_df is not None:
             self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
+            self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
 
             
             
@@ -1734,7 +1734,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def run_in_new_window(self, func, *args, show_msg=False, **kwargs):
-
         # 定义 handle_finished 方法来处理执行完成后的逻辑
         def handle_finished(result, success):
             # # 存储执行结果到类的属性中
@@ -1789,8 +1788,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if self.tfa.any_df_mode:
                 self.update_table_dict('custom', self.tfa.custom_df)
             else:
-                self.update_table_dict('preprocessed-data', self.tfa.preprocessed_df)
-                # self.update_table_dict('filtered-by-threshold', self.tfa.clean_df)
                 self.update_table_dict('peptides', self.tfa.peptide_df)
                 self.update_table_dict('taxa', self.tfa.taxa_df)
                 self.update_table_dict('functions', self.tfa.func_df)
@@ -1820,7 +1817,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         # update comboBox of basic peptide query
         self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.clean_df[self.tfa.peptide_col_name].tolist())
+        self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
 
         
         # clear list of taxa-func link network
@@ -1856,8 +1853,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         outlier_detect_method = self.comboBox_outlier_detection.currentText()
         
         if outlier_detect_method != 'None':
-            nan_stats_str = '\n\nLeft row after outlier handling:\n'
+            nan_stats_str = '\n\nLeft row after data preprocessing:\n'
             for i, j in self.tfa.outlier_status.items():
+                if i not in ['peptide', 'custom']:
+                    continue
                 if j:
                     nan_stats_str += f'{i}: [{j}]\n'
             # print(nan_stats_str)
@@ -1873,7 +1872,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             msg = f'Operational Taxa-Functions (OTF) data is ready! \
             \n{nan_stats_str}\
             \n\nFunction: [{self.tfa.func_name}]\
-            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}%)]\
+            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}% of all peptides)]\
             \nNumber of function: [{num_func}]\
             \nNumber of taxa: [{num_taxa}]\
             \nNumber of taxa-function: [{num_taxa_func}]\
@@ -2128,11 +2127,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msg_box.setWindowTitle('Preprocessing Help')
         msg_box.setStyleSheet('QLabel{min-width: 900px;}')
         msg_box.setWindowFlags(msg_box.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        help_text ='''Data Preprocessing before summing peptides:\
-            \nPerform data preprocessing first, then sum the peptides to calculate the intensity of each taxa, function and taxa-function pair.\
-            \n\nData Preprocessing after summing peptides:\
-            \nSum the peptides to calculate the intensity of each taxa, function and taxa-function pair first, then perform data preprocessing for each table.\
-            \n\n\nOutliers Detection:\
+        help_text ='''Outliers Detection (only apply to peptide data):\
             \nMissing-Value: Detect nan values in the data. If a value is nan, it will be marked as an outlier (NaN).\
             \n\nIQR: In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.\
             \n\nHalf-Zero: This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.\
@@ -2150,7 +2145,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             \n\nRegression: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modeling each feature with missing values as a function of other features, in turn.\
             \n\nMultiple: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of nearest features.\
             \n\n\nData Normalization:\
-            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.'''
+            \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.\
+            \n\n\nBatch Effect Correction: only apply to peptide data.
+            '''
         msg_box.setText(help_text)
         msg_box.exec_()
                 
@@ -2286,7 +2283,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
 
             
-            if 'dunnett_test' in selected_table_name:
+            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
 
             if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('dunnettAllCondtion'):
@@ -2299,15 +2296,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
                 
-                ### for keeping the order of comboBox_top_heatmap_sort_type when change table same type
-                sort_type_list =  []
-                for i in range(self.comboBox_top_heatmap_sort_type.count()):
-                    sort_type_list.append(self.comboBox_top_heatmap_sort_type.itemText(i))
-
-                if sorted(sort_type_list) != sorted(['padj', 'pvalue']):
-                    self.comboBox_top_heatmap_sort_type.setEnabled(True)
-                    self.comboBox_top_heatmap_sort_type.clear()
-                    self.comboBox_top_heatmap_sort_type.addItems(['padj', 'pvalue'])
             
             if selected_table_name.startswith('dunnettAllCondtion'):
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(False)
@@ -2316,14 +2304,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             
         else:
-            self.label_57.setText('Sort By:')
-            sort_type_list =  ["p-value", "f-statistic (ANOVA)", "t-statistic (T-Test)"]
             if 't_test' in selected_table_name:
             # remove 'f-statistic (ANOVA)' from comboBox_top_heatmap_sort_type
-                sort_type_list =  ["p-value", "t-statistic (T-Test)"]
-            
-            if 'anova' in selected_table_name:
-                sort_type_list =  ["p-value", "f-statistic (ANOVA)"]
+                sort_type_list =  ['padj', "t-statistic (T-Test)", "pvalue"]
+            elif 'anova' in selected_table_name:
+                sort_type_list =  ['padj', "f-statistic (ANOVA)", "pvalue"]
+            else:
+                sort_type_list =  ['padj', "f-statistic (ANOVA)", "t-statistic (T-Test)", "pvalue"]
             
             self.comboBox_top_heatmap_sort_type.clear()
             self.comboBox_top_heatmap_sort_type.addItems(sort_type_list)
@@ -2494,8 +2481,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'taxa_func': self.spinBox_peptide_num_threshold_taxa_func.value()
             }
             
-            # Data Preprocessing
-            processing_after_sum = self.radioButton_data_preprocessing_after_sum.isChecked()
 
             # outlier detect and handle
             outlier_detect_method = self.comboBox_outlier_detection.currentText()
@@ -2509,7 +2494,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             transform_method = self.comboBox_set_data_transformation.currentText()
             # batch effect
             batch_meta =  self.comboBox_remove_batch_effect.currentText() if self.comboBox_remove_batch_effect.currentText() != 'None' else None
-
+            taxa_and_func_only_from_otf = self.checkBox_set_otf_taxa_and_func_only_from_otf.isChecked()
+            
             if self.tfa.has_na_in_original_df and outlier_detect_method == 'None':
                 # ask user if they want to continue
                 reply = QMessageBox.question(self.MainWindow, 'Warning', 'There are NaN(Missing Value) values in the original data. If you do not handle them, the row containing NaN will be removed.\
@@ -2625,23 +2611,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
 
-                
+                outlier_params = {'detect_method': outlier_detect_method, 'handle_method': outlier_handle_method,
+                                  "detection_by_group": outlier_detect_by_group, "handle_by_group": outlier_handle_by_group}
                 data_preprocess_params = {'normalize_method': normalize_method, 
                                           'transform_method': transform_method,
                                             'batch_meta': batch_meta, 
-                                            'outlier_detect_method': outlier_detect_method,
-                                            'outlier_handle_method': outlier_handle_method,
-                                            'outlier_detect_by_group': outlier_detect_by_group,
-                                            'outlier_handle_by_group': outlier_handle_by_group,
                                             'processing_order': processing_order}
                 
                 set_multi_table_params = {'level': taxa_level, 'func_threshold': func_threshold,
+                                        'outlier_params': outlier_params,
                                         'data_preprocess_params': data_preprocess_params,
-                                        'processing_after_sum': processing_after_sum, 
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
                                         'keep_unknow_func': False,
-                                        'split_func': split_func, 'split_func_params': split_func_params}
+                                        'split_func': split_func, 'split_func_params': split_func_params,
+                                        'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
@@ -3131,7 +3115,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                           't_test_t'.
             top_num (int): The number of top rows to extract.
             df_type (str): The type of DataFrame. Possible values are 'taxa-functions' and 'other'.
-            filtered (bool): Whether to apply additional filtering to the DataFrame(e.g., p-value < 0.05, log2fc > 1.0, etc.)
+            filtered (bool): Whether to apply additional filtering to the DataFrame(e.g., pvalue < 0.05, log2fc > 1.0, etc.)
 
         Returns:
             list[str] | None: A list of index values from the top rows of the DataFrame, or None if the DataFrame
@@ -3201,13 +3185,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.logger.write_log('filtered enabled')
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
                 p_value = round(p_value, 4)
-                df = df[df['P-value'] < p_value]
-                output = f'p_value: {p_value}, df.shape: {df.shape}'
+                df = df[df['padj'] < p_value]
+                output = f'padj: {p_value}, df.shape: {df.shape}'
                 print(output)
                 self.logger.write_log('filtered enabled')
 
             if method.split('_')[2] == 'p':
-                df = df.sort_values(by='P-value',ascending = True)
+                df = df.sort_values(by='padj',ascending = True)
             elif method.split('_')[2] == 'f':
                 df = df.sort_values(by='f-statistic',ascending = False)
             elif method.split('_')[2] == 't':
@@ -4005,7 +3989,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if peptide == '':
             return None
         else:
-            df = self.tfa.preprocessed_df.loc[self.tfa.preprocessed_df[self.tfa.peptide_col_name] == peptide]
+            df = self.tfa.original_df.loc[self.tfa.original_df[self.tfa.peptide_col_name] == peptide]
             if len(df) == 0:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'No peptide found!')
                 return None
@@ -4343,11 +4327,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
         remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
-
+        p_type = self.comboBox_top_heatmap_p_type.currentText()
+        
         if cmap == 'Auto':
             cmap = None
 
-        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p', 'padj': 'padj', 'pvalue': 'pvalue'}
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'padj': 'padj', 'pvalue': 'pvalue'}
         value_type = sort_by_dict[sort_by]
 
         df = self.table_dict[table_name]
@@ -4371,9 +4356,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
-                                                                               show_all_labels = show_all_labels, scale_method = scale_method)
+                                                                               show_all_labels = show_all_labels, 
+                                                                               scale_method = scale_method, p_type = p_type)
             elif table_name.startswith('deseq2all'):
-                p_type = self.comboBox_top_heatmap_sort_type.currentText()
+                
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
 
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
@@ -4403,7 +4389,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig',
                                                                                three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
-                                                                               scale_method = scale_method
+                                                                               scale_method = scale_method, p_type = p_type
                                                                                )
 
                 # if fig is a tuple
@@ -4435,14 +4421,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
                             col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
-                            show_all_labels = show_all_labels, scale = scale, scale_method = scale_method)
+                            show_all_labels = show_all_labels, scale = scale, scale_method = scale_method, p_type = p_type)
             else:
-                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
-                                                                        value_type=value_type, fig_size=fig_size, pvalue=pvalue, 
-                                                                        scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
-                                                                        cmap = cmap, rename_taxa=rename_taxa, font_size=font_size,
-                                                                        show_all_labels = show_all_labels, rename_sample = rename_sample,
-                                                                        sort_by = sort_by, scale_method = scale_method, return_type = 'fig')
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(
+                    df=df, top_number=top_num, value_type=value_type, fig_size=fig_size,
+                    pvalue=pvalue, scale=scale, col_cluster=col_luster,
+                    row_cluster=row_luster, cmap=cmap, rename_taxa=rename_taxa,
+                    font_size=font_size, show_all_labels=show_all_labels, rename_sample=rename_sample,
+                    sort_by=sort_by, scale_method=scale_method, return_type="fig",
+                    p_type = p_type
+                )
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -4457,7 +4445,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def get_top_cross_table(self):
         table_name = self.comboBox_top_heatmap_table.currentText()
         top_num = self.spinBox_top_heatmap_number.value()
-        sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
         pvalue = round(pvalue, 4)
         scale = self.comboBox_top_heatmap_scale.currentText()
@@ -4466,8 +4453,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         col_luster = self.checkBox_cross_heatmap_col_cluster.isChecked()
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
         remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
-
-        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'p-value': 'p', 'padj': 'padj', 'pvalue': 'pvalue'}
+        p_type = self.comboBox_top_heatmap_p_type.currentText()
+        
+        sort_by = self.comboBox_top_heatmap_sort_type.currentText()
+        sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'padj': 'padj', 'pvalue': 'pvalue'}
         value_type = sort_by_dict[sort_by]
         
 
@@ -4478,7 +4467,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if table_name.startswith('dunnett_test'):
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
-                                                                                      rename_taxa=rename_taxa, scale_method = scale_method)
+                                                                                      rename_taxa=rename_taxa, scale_method = scale_method,
+                                                                                      p_type = p_type)
             elif 'deseq2all' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
@@ -4496,32 +4486,43 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method
+                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method, p_type = p_type
                                                                                    )
 
             
             else:
                 if 'taxa-functions' in table_name:
-                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_top_taxa_func_heatmap_of_test_res(df=df, top_number=top_num, 
-                                                                              col_cluster = col_luster, row_cluster = row_luster,
-                                                                              value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa, scale = scale, scale_method = scale_method,
-                                                                              return_type = 'table')
-                else: # get result of test and anova of [taxa, functions, peptides and custom table]
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_top_taxa_func_heatmap_of_test_res(
+                        df=df, top_number=top_num, col_cluster=col_luster, row_cluster=row_luster,
+                        value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa,
+                        scale=scale, scale_method=scale_method, return_type="table",
+                        p_type = p_type
+                    )
+                else:  # get result of test and anova of [taxa, functions, peptides and custom table]
                     # get the intensity of the result items which are significant
-                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(df=df, top_number=top_num, 
-                                                                        value_type=value_type, pvalue=pvalue, scale = scale, col_cluster = col_luster, row_cluster = row_luster, 
-                                                                       rename_taxa=rename_taxa, sort_by = sort_by, scale_method = scale_method, return_type = 'table')
-                    
-                    
+                    df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(
+                        df=df, top_number=top_num, value_type=value_type, pvalue=pvalue,
+                        scale=scale, col_cluster=col_luster, row_cluster=row_luster,
+                        rename_taxa=rename_taxa, sort_by=sort_by,
+                        scale_method=scale_method, return_type="table",
+                        p_type = p_type
+                    )
+
         except Exception as e:
             error_message = traceback.format_exc()
-            self.logger.write_log(f'get_top_cross_table error: {error_message}', 'e')
-            self.logger.write_log(f'get_top_cross_table: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, pvalue: {pvalue}, sort_by: {sort_by}', 'e')
-            if 'No significant' in error_message:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results.\n\n{error_message}')
+            self.logger.write_log(f"get_top_cross_table error: {error_message}", "e")
+            self.logger.write_log(
+                f"get_top_cross_table: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, pvalue: {pvalue}, sort_by: {sort_by}", "e",
+            )
+            if "No significant" in error_message:
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Warning",
+                    f"No significant results.\n\n{error_message}",
+                )
             else:
-                QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
-            
+                QMessageBox.warning(self.MainWindow, "Error", f"{error_message}")
+
             return None
 
         try:
@@ -4562,8 +4563,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if df_type == 'Significant Taxa-Func'.lower():
                 p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
+                p_type = self.comboBox_top_heatmap_p_type.currentText()
                 p_value = round(p_value, 4)
-                anova_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
+                anova_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition, 'p_type': p_type}
                 self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_anova_test, **anova_sig_tf_params)
             
             else:  
@@ -4845,7 +4847,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         if success:
             
-            if type(result) == pd.DataFrame:
+            if type(result) is pd.DataFrame:
                 df = result
                 table_name = f't_test({df_type})'
                 self.show_table(df, title=table_name)
@@ -4853,7 +4855,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.pushButton_plot_top_heatmap.setEnabled(True)
                 self.pushButton_get_top_cross_table.setEnabled(True)
                 table_names = [table_name]
-            elif type(result) == tuple:
+            elif type(result) is tuple:
                 df_tuple = result
                 table_name_1 = 'NonSigTaxa_SigFuncs(taxa-functions)'
                 self.show_table(df_tuple[0], title=table_name_1)
@@ -5281,7 +5283,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             index_list = df.index.get_level_values(0).value_counts().index.tolist()
             return index_list[:top_num] if top_num <= len(index_list) else index_list
 
-        else: # p-value or f-statistic and log2FC
+        else: # padj or f-statistic and log2FC
             df = self.get_table_by_df_type(df_type=df_type)
             index_list = self.extract_top_from_test_result(method=method, top_num=top_num, df_type=df_type, filtered=filtered)
             return index_list
