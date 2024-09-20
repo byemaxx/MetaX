@@ -1,4 +1,10 @@
 
+# Version: 1.114.1
+## Date: 2024-09-19
+### Changes:
+- Change: Optimized the code of Data Preprocessing, split oulier handle and data preprossing to two independent steps.
+
+
 # Version: 1.114.0
 ## Date: 2024-09-19
 ### Changes:

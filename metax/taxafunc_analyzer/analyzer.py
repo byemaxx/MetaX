@@ -84,6 +84,7 @@ class TaxaFuncAnalyzer:
         self.BasicStats = BasicStats(self)
         self.CrossTest = CrossTest(self)
         self.GetMatrix = GetMatrix(self)
+        self.detect_and_handle_outliers = DataPreprocessing(self).detect_and_handle_outliers
         self.data_preprocess = DataPreprocessing(self).data_preprocess
 
 
@@ -491,14 +492,14 @@ class TaxaFuncAnalyzer:
 
 
 ######### Cross Test End #########
-    def set_any_df_table(self, data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
-                                                            'batch_meta': None, 'outlier_detect_method': None,
-                                                            'outlier_handle_method': None,
-                                                            'outlier_detect_by_group': None,
-                                                            'outlier_handle_by_group': None,
-                                                            'processing_order': None}):
+    def set_any_df_table(self,
+                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                                                 "detection_by_group" : None, "handle_by_group": None},
+                         data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
+                                                            'batch_meta': None, 'processing_order': None}):
         df = self.original_df.copy()
         self.outlier_status['custom'] = None # reset outlier_status
+        df =self.detect_and_handle_outliers(df=df,  **outlier_params)
         df = self.data_preprocess(df=df,df_name = 'custom', **data_preprocess_params)
         # set index as first column
         self.processed_original_df = df
@@ -661,12 +662,10 @@ class TaxaFuncAnalyzer:
         return df[filter_conditions]
             
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
+                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                                                 "detection_by_group" : None, "handle_by_group": None},
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
-                                                            'batch_meta': None, 'outlier_detect_method': None,
-                                                            'outlier_handle_method': None,
-                                                            'outlier_detect_by_group': None,
-                                                            'outlier_handle_by_group': None,
-                                                            'processing_order': None},
+                                                            'batch_meta': None, 'processing_order': None},
                           peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
                           sum_protein:bool = False, sum_protein_params: dict = {'method': 'razor',
                                                                                 'by_sample': False,
@@ -679,44 +678,36 @@ class TaxaFuncAnalyzer:
 
         """
         Example Usage:
-        sw.set_multi_tables(level='s', data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
-                                                            'batch_meta': "Individual", 'outlier_detect_method': 'zero-dominant',
-                                                            'outlier_handle_method': 'original',
-                                                            'outlier_detect_by_group': 'Individual',
-                                                            'outlier_handle_by_group': None,
-                                                            'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
+        sw.set_multi_tables(level='s', 
+        outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
+                            "detection_by_group" : 'Individual', "handle_by_group": None},
+        data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
+                                'batch_meta': "Individual", 'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
                             peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
                             sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
                             keep_unknow_func = False)
         """
         print(f"Original data shape: {self.original_df.shape}")
         
-        
+
         # for any_df_mode, the df is considered as other_df
         if self.any_df_mode:
-            self.set_any_df_table(data_preprocess_params)
+            self.set_any_df_table(outlier_params=outlier_params, data_preprocess_params=data_preprocess_params)
             return
 
         #! fllowing code is for the normal mode
-        #1. split the data_preprocess_params to outlier_params and rest_params
-        # do outlier detection and handling onlly for peptide level, and then do the rest for all tables
-        # outlier_params: outlier_detect_method, outlier_handle_method, outlier_detect_by_group, outlier_handle_by_group
-        data_preprocess_outlier_params = {k: v for k, v in data_preprocess_params.items() if 'outlier' in k}
-        # non_outlier_params: normalize_method, transform_method, batch_meta, processing_order
-        data_preprocess_non_outlier_params = {k: v for k, v in data_preprocess_params.items() if 'outlier' not in k}
+
         # add 'peptide_num_threshold' to 'data_preprocess_params
-        data_preprocess_non_outlier_params['peptide_num_threshold'] = peptide_num_threshold
+        data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
         
         #2. sum the protein intensity
         if sum_protein:
             # data preprocess for peptide table
             print("---Starting to create protein table---")
-            df_peptide_for_protein = self.data_preprocess(df=self.original_df, df_name = 'peptide', 
-                                                          **data_preprocess_outlier_params)
-            
+            df_peptide_for_protein = self.detect_and_handle_outliers(df=self.original_df, **outlier_params)
             self.protein_df = SumProteinIntensity(taxa_func_analyzer=self, df=df_peptide_for_protein).sum_protein_intensity( **sum_protein_params)
             self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', 
-                                                   **data_preprocess_non_outlier_params)
+                                                   **data_preprocess_params)
             
         
         # reset outlier_status
@@ -782,10 +773,10 @@ class TaxaFuncAnalyzer:
         if True: # for testing
             # groupby 'Taxon' and sum the sample intensity
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
-            df_taxa_pep = self.data_preprocess(df=df_taxa_pep, df_name = 'peptide', **data_preprocess_outlier_params)
+            df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
             df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
-            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_non_outlier_params)
+            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             self.taxa_df = df_taxa
             #-----Taxa Table End-----
             # create func table
@@ -793,14 +784,14 @@ class TaxaFuncAnalyzer:
                                        keep_unknow_func=keep_unknow_func, filter_taxa=False)
             df_func_pep = df_func_pep[[self.peptide_col_name, self.func_name] + self.sample_list]
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
-            df_func_pep = self.data_preprocess(df=df_func_pep, df_name = 'peptide', **data_preprocess_outlier_params)
+            df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
             df_func_pep['peptide_num'] = 1
             df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
             
             if split_func:
                 df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func')
                 
-            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_non_outlier_params)
+            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
             self.func_df = df_func
             #-----Func Table End-----
 
@@ -811,7 +802,7 @@ class TaxaFuncAnalyzer:
         
         # do outlier detection and handling for the df_filtered_peptides table
         print("\n-----Starting to perform outlier detection and handling for [Peptide (filtered by taxa level and func_threshold)] table...-----")
-        df_half_processed_peptides = self.data_preprocess(df=df_filtered_peptides, df_name = 'peptide',**data_preprocess_outlier_params)
+        df_half_processed_peptides = self.detect_and_handle_outliers(df=df_filtered_peptides, **outlier_params)
         # the preprocessed_df is the peptide table filtered by taxa level and func_threshold, then do outlier detection and handling
         #------create peptides_dict in taxa, func and taxa_func------
         self.create_peptides_dict_in_taxa_func(df_half_processed_peptides)
@@ -821,7 +812,7 @@ class TaxaFuncAnalyzer:
         # do rest of data preprocess, e.g. normalize, transform, batch effect correction
         print("\n-----Starting to perform transformation, normalization, and batch effect correction for [Peptide] table...-----")
         self.processed_original_df = self.data_preprocess(df=df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list], 
-                                                          df_name = 'peptide', **data_preprocess_non_outlier_params)
+                                                          df_name = 'peptide', **data_preprocess_params)
         # processed_original_df is the peptide table after selected taxa level, func_threshold, outlier detection and handling, then do the rest of data preprocess
         self.peptide_df = self.processed_original_df.drop([self.peptide_col_name, 'Taxon', self.func_name], axis=1)
         ###------Peptide Table End------###
@@ -839,7 +830,7 @@ class TaxaFuncAnalyzer:
             
         print("\n-----Starting to perform data pre-processing for [Taxa-Function] table...-----")
         df_taxa_func_all_processed = self.data_preprocess(df=df_taxa_func
-                                                          ,df_name = 'taxa_func', **data_preprocess_non_outlier_params)
+                                                          ,df_name = 'taxa_func', **data_preprocess_params)
         self.taxa_func_df = df_taxa_func_all_processed
         # -----taxa_func table End-----
         
@@ -854,14 +845,14 @@ class TaxaFuncAnalyzer:
             print("Starting to set Taxa table...")
             df_taxa = df_taxa_func.groupby('Taxon').sum(numeric_only=True)
             print("\n-----Starting to perform data pre-processing for [Taxa] table...-----")
-            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_non_outlier_params)
+            df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             self.taxa_df = df_taxa
             
             # ----- create func table -----
             print("Starting to set Function table...")
             df_func = df_taxa_func.groupby(self.func_name).sum(numeric_only=True)            
             print("\n-----Starting to perform data pre-processing for [Function] table...-----")
-            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_non_outlier_params)
+            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
             self.func_df = df_func
             # ----- func table End -----
             

@@ -2569,7 +2569,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                     'Data Normalization': 'normalize', 
                                     'Data Transformation': 'transform',
                                     'Outlier Handling': 'outlier'}
-            processing_order = ['outlier'] + [processing_order_dict[i] for i in processing_order]
+            processing_order = [processing_order_dict[i] for i in processing_order]
             
             # ask if continue when create protein table
             if self.checkBox_create_protein_table.isChecked():
@@ -2611,17 +2611,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
 
-                
+                outlier_params = {'detect_method': outlier_detect_method, 'handle_method': outlier_handle_method,
+                                  "detection_by_group": outlier_detect_by_group, "handle_by_group": outlier_handle_by_group}
                 data_preprocess_params = {'normalize_method': normalize_method, 
                                           'transform_method': transform_method,
                                             'batch_meta': batch_meta, 
-                                            'outlier_detect_method': outlier_detect_method,
-                                            'outlier_handle_method': outlier_handle_method,
-                                            'outlier_detect_by_group': outlier_detect_by_group,
-                                            'outlier_handle_by_group': outlier_handle_by_group,
                                             'processing_order': processing_order}
                 
                 set_multi_table_params = {'level': taxa_level, 'func_threshold': func_threshold,
+                                        'outlier_params': outlier_params,
                                         'data_preprocess_params': data_preprocess_params,
                                         'peptide_num_threshold': peptide_num_threshold, 
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,

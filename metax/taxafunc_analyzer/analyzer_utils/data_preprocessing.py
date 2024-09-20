@@ -558,25 +558,57 @@ class DataPreprocessing:
         return df
 
 
-
-
-    def _handle_outlier(self, df: pd.DataFrame, detect_method: str|None = 'none',handle_method: str|None = 'drop+drop', detection_by_group:str|None=None, handling_by_group:str|None=None) -> pd.DataFrame:
-        # if self.tfa.group_list is None:
-        #     raise ValueError('You must set set group before handling outlier')
-
-        df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
-        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handling_by_group, df_original=df)
-
-        return df_t
-
     def _get_current_time(self):
         import time
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
 
+    def detect_and_handle_outliers(self, df: pd.DataFrame, 
+                                    detect_method: str|None = 'none',
+                                    handle_method: str|None = 'drop+drop', 
+                                    detection_by_group:str|None=None, 
+                                    handle_by_group:str|None=None) -> pd.DataFrame:
+        '''
+        - `detect_method` (`str`, optional):  
+        Method for outlier detection. Options include:
+            - `none`: No outlier detection.
+            - `missing-value`: Detect missing values.
+            - `half-zero`: Detect outliers based on half-zero criteria.
+            - `zero-dominant`: Detect outliers based on zero-dominance.
+            - `iqr`: Interquartile range method.
+            - `z-score`: Z-score method.
+            - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
+            - `negative-binomial`: Negative binomial distribution method.
+            - `mahalanobis-distance`: Mahalanobis distance method.
+
+        - `handle_method` (`str`, optional):  
+        Method for handling outliers, specified as methods separated by +. Options include:
+            - `drop`: Drop rows with outliers.
+            - `mean`: Fill with mean.
+            - `median`: Fill with median.
+            - `knn`: K-nearest neighbors imputation.
+            - `regression`: Regression imputation.
+            - `multiple`: Multiple imputation.
+            - `original`: Keep original data unchanged.
+
+        - `detect_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier detection.
+
+        - `handle_by_group` (`str`, optional):  
+        Column name for grouping samples for outlier handling.
+
+        '''
+        # if self.tfa.group_list is None:
+        #     raise ValueError('You must set set group before handling outlier')
+
+        df_t = self._outlier_detection(df, method=detect_method, by_group=detection_by_group)
+        df_t = self._handle_missing_value(df_t, method=handle_method, by_group=handle_by_group, df_original=df)
+
+        return df_t
+
+
     def data_preprocess(self, df: pd.DataFrame, normalize_method: str|None = None, 
                          transform_method: str|None = None, batch_meta: str|None =None,
-                         outlier_detect_method: str|None = None, outlier_handle_method: str|None = None,
-                         outlier_detect_by_group: str|None = None, outlier_handle_by_group: str|None = None, processing_order:list|None =None,
+                         processing_order:list|None =None,
                          df_name:str = "None", peptide_num_threshold:dict[str, int] ={'taxa': 1, 'func': 1, 'taxa_func': 1}
                          ) -> pd.DataFrame:
         """
@@ -609,37 +641,9 @@ class DataPreprocessing:
         - `batch_meta` (`str`, optional):  
         Column name for batch metadata, used for batch effect removal.
 
-        - `outlier_detect_method` (`str`, optional):  
-        Method for outlier detection. Options include:
-            - `none`: No outlier detection.
-            - `missing-value`: Detect missing values.
-            - `half-zero`: Detect outliers based on half-zero criteria.
-            - `zero-dominant`: Detect outliers based on zero-dominance.
-            - `iqr`: Interquartile range method.
-            - `z-score`: Z-score method.
-            - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
-            - `negative-binomial`: Negative binomial distribution method.
-            - `mahalanobis-distance`: Mahalanobis distance method.
-
-        - `outlier_handle_method` (`str`, optional):  
-        Method for handling outliers, specified as methods separated by +. Options include:
-            - `drop`: Drop rows with outliers.
-            - `mean`: Fill with mean.
-            - `median`: Fill with median.
-            - `knn`: K-nearest neighbors imputation.
-            - `regression`: Regression imputation.
-            - `multiple`: Multiple imputation.
-            - `original`: Keep original data unchanged.
-
-        - `outlier_detect_by_group` (`str`, optional):  
-        Column name for grouping samples for outlier detection.
-
-        - `outlier_handle_by_group` (`str`, optional):  
-        Column name for grouping samples for outlier handling.
 
         - `processing_order` (`list of following str`, optional):  
         Order of processing steps to apply. Options include:
-            - `outlier`: Outlier handling.
             - `batch`: Batch effect removal.
             - `transform`: Data transformation.
             - `normalize`: Data normalization.
@@ -675,14 +679,12 @@ class DataPreprocessing:
             print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
            
         if processing_order is None:
-            processing_order = ['outlier' , 'transform', 'normalize', 'batch']
+            processing_order = ['transform', 'normalize', 'batch']
         else:
             processing_order = processing_order
         # perform data processing in order
         for process in processing_order:
-            if process == 'outlier':
-                df = self._handle_outlier(df, detect_method=outlier_detect_method, handle_method=outlier_handle_method, detection_by_group = outlier_detect_by_group, handling_by_group=outlier_handle_by_group)
-            elif process == 'batch':
+            if process == 'batch':
                 df = self._remove_batch_effect(df, batch_meta)
             elif process == 'transform':
                 df = self._data_transform(df, transform_method)
