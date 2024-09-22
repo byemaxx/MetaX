@@ -80,8 +80,10 @@ class RazorSum:
         
         
         df = self.df.copy()
-        df[self.column_map['target']] = df[self.column_map['target']].apply(remove_proteins)
         
+        tqdm.pandas(desc="Removing proteins")
+        df[self.column_map['target']] = df[self.column_map['target']].progress_apply(remove_proteins)
+                
         # remove the rows with NA protein of sellf.df
         self.df  = self.df[df[self.column_map['target']] != '']
         # print The number of proteins and peptides after removing the proteins with less than threshold peptides
@@ -265,5 +267,5 @@ if __name__ == '__main__':
     # res_df.to_csv('razor_protein_intensity.tsv', sep='\t')
 
     # or get minimum target set only
-    mini_target_set = sia.get_mini_target_set(greedy_method='heap')
+    # mini_target_set = sia.get_mini_target_set(greedy_method='heap')
 
