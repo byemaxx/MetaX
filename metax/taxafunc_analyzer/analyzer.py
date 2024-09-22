@@ -671,6 +671,7 @@ class TaxaFuncAnalyzer:
                                                                                 'by_sample': False,
                                                                                 'rank_method': 'unique_counts',
                                                                                 'greedy_method': 'heap',
+                                                                                'peptide_mun_threshold': 1
                                                                                 },
                           keep_unknow_func: bool = False, 
                           split_func: bool = False, split_func_params: dict = {'split_by': '|', 'share_intensity': False},
@@ -684,7 +685,9 @@ class TaxaFuncAnalyzer:
         data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
                                 'batch_meta': "Individual", 'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
                             peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
-                            sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
+                            sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 
+                                                                        'rank_method': 'unique_counts', 'greedy_method': 'heap',
+                                                                        'peptide_num_threshold': 3},
                             keep_unknow_func = False)
         """
         print(f"Original data shape: {self.original_df.shape}")
@@ -814,7 +817,8 @@ class TaxaFuncAnalyzer:
         self.processed_original_df = self.data_preprocess(df=df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list], 
                                                           df_name = 'peptide', **data_preprocess_params)
         # processed_original_df is the peptide table after selected taxa level, func_threshold, outlier detection and handling, then do the rest of data preprocess
-        self.peptide_df = self.processed_original_df.drop([self.peptide_col_name, 'Taxon', self.func_name], axis=1)
+        self.peptide_df = self.processed_original_df.drop(['Taxon', self.func_name], axis=1)
+        self.peptide_df = self.peptide_df.set_index(self.peptide_col_name)
         ###------Peptide Table End------###
         
 
@@ -934,6 +938,10 @@ class TaxaFuncAnalyzer:
         # remove peptide_num column if exists
         if "peptide_num" in dft.columns:
             dft = dft.drop(columns="peptide_num")
+        
+        if table_name in ['protein', 'proteins']:
+            dft = dft.drop(columns='peptides')
+            
         return dft
 
 

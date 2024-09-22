@@ -1,3 +1,9 @@
+# Version: 1.114.2
+## Date: 2024-09-22
+### Changes:
+- New: Added Mini peptides threshold for the Protein Suming part.
+- Fix: Fixed the index of peptide table lost after data preprossing.
+
 
 # Version: 1.114.1
 ## Date: 2024-09-19

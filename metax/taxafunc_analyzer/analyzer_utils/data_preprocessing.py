@@ -670,7 +670,6 @@ class DataPreprocessing:
         
         
         df = df.copy()
-        original_row_num = len(df)
         
         # remove items with peptide number less than threshold
         if df_name in ['taxa', 'func', 'taxa_func']:
@@ -697,7 +696,7 @@ class DataPreprocessing:
         if df_name in {'peptide', 'taxa', 'func', 'taxa_func', 'protein', 'custom'}:
             left_row_num = len(df)
             # self.tfa.outlier_status[df_name] = f'{left_row_num}/{original_row_num} ({left_row_num/original_row_num*100:.2f}%)'
-            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/original_row_num*100:.2f}% of the data before outlier handling)'
+            self.tfa.outlier_status[df_name] = f'{left_row_num} ({left_row_num/len(self.tfa.original_df)*100:.2f}%)'
            
         return df
     

@@ -16,10 +16,11 @@
 from collections import defaultdict
 import pandas as pd
 from tqdm import tqdm
+from .razor_sum import RazorSum
 
 
 class SumProteinIntensity:
-    def __init__(self, taxa_func_analyzer, df=None):
+    def __init__(self, taxa_func_analyzer, df=None, peptide_mun_threshold=1, protein_separator=';'):
         self.tfa = taxa_func_analyzer
         self.res_intensity_dict = {}  # store all sample to output
         self.rank_dict = {}  # store the rank of protein intensity for each sample temporarily
@@ -30,7 +31,9 @@ class SumProteinIntensity:
         self.greedy_method = None  # only used for razor method
         self.share_intensity = False
         self.__multi_target_count = 0
-        
+        self.peptide_mun_threshold = peptide_mun_threshold # the protein must have at least 3 peptides to be considered as a target
+        self.protein_separator = protein_separator
+
         
     def check_protein_col(self):
         # if any NA, '', or empty in the protein column, raise error
@@ -40,7 +43,7 @@ class SumProteinIntensity:
         if (self.df[self.tfa.protein_col_name].str.strip() == '').any():
             raise ValueError(f'There are empty values in {self.tfa.protein_col_name} column')
         
-    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap'):
+    def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap', peptide_mun_threshold=None):
         '''
         method: str, default 'razor'
             options: ['razor', 'anti-razor', 'rank']
@@ -57,13 +60,28 @@ class SumProteinIntensity:
             raise ValueError('Rank method must in ["shared_intensity", "all_counts", "unique_counts", "unique_intensity"]')
         if greedy_method not in ['greedy', 'heap']:
             raise ValueError('Greedy method must in ["greedy", "heap"]')
+        if peptide_mun_threshold is not None:
+            self.peptide_mun_threshold = peptide_mun_threshold
+        
+        # remove the protein with less than the threshold of peptides
+        # use teh methood in RazorSum
+        razor_integrator = RazorSum(df=self.df, 
+                                    column_map={
+                                                'peptide': self.tfa.peptide_col_name,
+                                                'target': self.tfa.protein_col_name,
+                                                'sample_list': self.tfa.sample_list,
+                                            }, 
+                                    peptide_mun_threshold=self.peptide_mun_threshold, 
+                                    share_intensity=self.share_intensity, 
+                                    greedy_method=greedy_method,
+                                    protein_separator= self.protein_separator)
         
         self.rank_method = rank_method
-        self.greedy_method = greedy_method
         self.check_protein_col()
         
         if method == 'rank':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   
+            self.df = razor_integrator.remove_protein_less_than_threshold()
             # make a dict to count the intensity of each protein, intensity sahred by peptides will be divided by the number of peptides
             if by_sample:
                 for sample in self.tfa.sample_list:
@@ -82,14 +100,13 @@ class SumProteinIntensity:
                     self._sum_protein_rank(sample, by_sample)
         elif method == 'razor':
             print('start to sum protein intensity using method: [razor]')
-            # use Set Cover Problem to get the protein list, then sum the intensity
-            pep_to_protein = self._create_pep_to_protein_razor()
-            self._sum_protein_razor(pep_to_protein)
-            self.__multi_target_count = self.__multi_target_count/len(self.tfa.sample_list)
-            print(f'Peptides with multiple targets: {self.__multi_target_count} ({self.__multi_target_count/len(pep_to_protein)*100:.2f}%)')
+                 
+            res_df = razor_integrator.sum_protein_intensity(greedy_method=greedy_method)
+            return res_df       
         
         elif method == 'anti-razor':
-            print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [True] rank_method: [Shared]-------------")    
+            print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [True] rank_method: [Shared]-------------")
+            self.df = razor_integrator.remove_protein_less_than_threshold()
             for sample in self.tfa.sample_list:
                 self._sum_protein_anti_razor(sample)
         
@@ -188,9 +205,10 @@ class SumProteinIntensity:
         protein_to_peptides = defaultdict(set)
         peptides = set(df[self.tfa.peptide_col_name])
 
+        separator = self.protein_separator
         for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Creating protein to peptides mapping"):
             sequence = row[self.tfa.peptide_col_name]
-            proteins = row[self.tfa.protein_col_name].split(';')
+            proteins = row[self.tfa.protein_col_name].split(separator)
             for protein in proteins:
                 protein_to_peptides[protein].add(sequence)
 
@@ -235,8 +253,10 @@ class SumProteinIntensity:
     def _update_protein_rank_dict(self, sample_name = None, rank_method = None):
         
         def update_by_intesity(df, sample_name=sample_name, method=rank_method):
+            separator = self.protein_separator
+
             for row in df.itertuples():
-                proteins = row[1].split(';')
+                proteins = row[1].split(separator)
                 shared_times = len(proteins)
 
                 if method == 'shared_intensity':
@@ -305,9 +325,10 @@ class SumProteinIntensity:
         # print in one line
         print(f'Asigning protein intensity for [{sample_name}]', end='\r')
         df = self.df.loc[:,[ self.tfa.protein_col_name, sample_name]]
+        separator = self.protein_separator
 
         for row in df.itertuples():
-            proteins = row[1].split(';')
+            proteins = row[1].split(separator)
             intensity = row[2]
             if len(proteins) == 1:
                 self._update_output_dict(proteins, sample_name, intensity)
@@ -331,8 +352,8 @@ class SumProteinIntensity:
         print(f'Creating protein intensity dict for [{sample_name}]', end='\r')
         df = self.df.loc[:,[ self.tfa.protein_col_name, sample_name]]
         self.share_intensity = True
-        
+        separator = self.protein_separator
         for row in df.itertuples():
-            proteins = row[1].split(';')
+            proteins = row[1].split(separator)
             intensity = row[2]
             self._update_output_dict(proteins, sample_name, intensity)

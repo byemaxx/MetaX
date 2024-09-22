@@ -4,42 +4,90 @@ from tqdm import tqdm
 
 
 class RazorSum:
-    def __init__(self, df, column_map):
+    def __init__(self, df, column_map, peptide_mun_threshold=1,
+                 greedy_method = 'greedy', share_intensity=False, protein_separator=';'):
         self.df = df
         self.column_map = column_map
+        self.greedy_method = greedy_method  
+        self.peptide_mun_threshold = peptide_mun_threshold # the protein must have at least 3 peptides to be considered as a target
+        self.share_intensity = share_intensity
+        self.protein_separator = protein_separator
+        
         self.res_intensity_dict = {}  # store all sample to output
-        self.greedy_method = None  # only used for razor method
         self.mini_target_set = None
         self.filtered_target_to_peptides = None
-        self.share_intensity = False
         self.__multi_target_count = 0
-
-
+        
+        
     def sum_protein_intensity(self, greedy_method='heap'):
         self.greedy_method = greedy_method
         print('Start to sum protein intensity using method: [razor]')
-        if column_map['sample_list'] is None or len(column_map['sample_list']) == 0:
+        if self.column_map['sample_list'] is None or len(self.column_map['sample_list']) == 0:
             raise ValueError('Please provide [sample_list] in column_map for sum, e.g. ["Sample1", "Sample2", "Sample3"]')
         # only extract the peptide and target columns
         extract_cols = [self.column_map['peptide'], self.column_map['target']] + self.column_map['sample_list']
         self.df = self.df.loc[:, extract_cols]
         
         pep_to_target = self._create_pep_to_target_razor()
+        
+        
         self._sum_target_intensity(pep_to_target)
         
         # show summary
         print(f"Total peptides count: {len(pep_to_target)}")
-        self.__multi_target_count = self.__multi_target_count/len(sample_list)
+        # calculate the mean of the multi-target peptides of each sample
+        self.__multi_target_count = self.__multi_target_count/len(self.column_map['sample_list'])
         print(f"Multi-target peptides count: {self.__multi_target_count} ({self.__multi_target_count / len(pep_to_target) * 100:.2f}%)")
 
         
         res_df = pd.DataFrame.from_dict(self.res_intensity_dict)
         res_df.fillna(0, inplace=True)
-        res_df.index.name = 'Target'
+        res_df.index.name = self.column_map['target']
+        
+        #add a column of all peptide of the protein
+        res_df['peptides'] = res_df.index.map(lambda x: ';'.join(self.filtered_target_to_peptides[x]))
+        # add a column of the peptide number of the protein
+        res_df['peptide_num'] = res_df.index.map(lambda x: len(self.filtered_target_to_peptides[x]))
+        
+        # move teh 2 columns to the front
+        res_df = res_df[['peptides', 'peptide_num'] + [col for col in res_df.columns if col not in ['peptides', 'peptide_num']]]
         
         print('Finish summing protein intensity')
         
         return res_df
+    
+    
+    def remove_protein_less_than_threshold(self,):
+        '''
+        Remove the proteins with less than threshold peptides in `self.df`
+        '''
+        if self.peptide_mun_threshold <= 1:
+            print(f"Peptide threshold is [{self.peptide_mun_threshold}], no protein will be removed")
+            return self.df
+        
+        # calculate the number of peptides for each protein
+        # remove the proteins with less than threshold peptides in df in the protein column not
+        def remove_proteins(proteins):
+            proteins_list = proteins.split(self.protein_separator)
+            proteins_list = [protein for protein in proteins_list if protein not in proteins_less_than_threshold]
+            return self.protein_separator.join(proteins_list)
+        
+        target_to_peptides = self._create_target_to_peptides()
+        
+        print(f"Remove proteins with less than [{self.peptide_mun_threshold}] peptides, then the peptide with NA protein will be removed")
+        print(f"Orignal Protein number: [{len(target_to_peptides)}], Peptide number: [{len(self.df)}]")
+        proteins_less_than_threshold = [target for target, peps in target_to_peptides.items() if len(peps) < self.peptide_mun_threshold]
+        
+        
+        df = self.df.copy()
+        df[self.column_map['target']] = df[self.column_map['target']].apply(remove_proteins)
+        
+        # remove the rows with NA protein of sellf.df
+        self.df  = self.df[df[self.column_map['target']] != '']
+        # print The number of proteins and peptides after removing the proteins with less than threshold peptides
+        print(f"After removing, Protein number: [{len(target_to_peptides) - len(proteins_less_than_threshold)}], Peptide number: [{len(self.df)}]")
+
+        return self.df
     
     def get_mini_target_set(self, greedy_method='heap'):
         self.greedy_method = greedy_method
@@ -51,8 +99,10 @@ class RazorSum:
             raise ValueError(f'NA or empty value in target column: {self.column_map["target"]}')
         
         self.df = self.df.loc[:, extract_cols]
-        df = self.df.loc[:, [self.column_map['peptide'], self.column_map['target']]]
-        peptides = set(df[self.column_map['peptide']])
+        
+        self.remove_protein_less_than_threshold()
+        
+        peptides = set(self.df[self.column_map['peptide']])
         target_to_peptides = self._create_target_to_peptides()
         mini_target_set = self.find_minimum_target_set(peptides, target_to_peptides)
         filtered_target_to_peptides = {target: target_to_peptides[target] for target in mini_target_set}
@@ -95,7 +145,7 @@ class RazorSum:
 
         for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Creating target to peptides mapping"):
             sequence = row[self.column_map['peptide']]
-            targets = row[self.column_map['target']].split(';')
+            targets = row[self.column_map['target']].split(self.protein_separator)
             for target in targets:
                 target_to_peptides[target].add(sequence)
                 
@@ -195,9 +245,13 @@ class RazorSum:
 # Example usage:
 # Assuming df is your pandas dataframe and column_map is your dictionary
 if __name__ == '__main__':
-    df = pd.read_csv('OTF.tsv', sep='\t')
-    df_meta = pd.read_csv('meta.txt', sep='\t')
-    sample_list = df_meta['Samples'].unique().tolist()
+    import os
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    df_path = os.path.join(current_path, '../../data/example_data/Example_OTF.tsv')
+    meta_path = os.path.join(current_path, '../../data/example_data/Example_Meta.tsv')
+    df = pd.read_csv(df_path, sep='\t')
+    df_meta = pd.read_csv(meta_path, sep='\t')
+    sample_list = df_meta['Sample'].unique().tolist()
     sample_list = ["Intensity_" + sample for sample in sample_list]
     
     column_map = {
@@ -205,11 +259,11 @@ if __name__ == '__main__':
         'target': 'Proteins',
         'sample_list': sample_list  # ['Sample1', 'Sample2', 'Sample3']
     }
-    sia = RazorSum(df, column_map)
+    sia = RazorSum(df, column_map, peptide_mun_threshold=3)
     
     res_df = sia.sum_protein_intensity(greedy_method='heap')
-    res_df.to_csv('razor_protein_intensity.tsv', sep='\t')
+    # res_df.to_csv('razor_protein_intensity.tsv', sep='\t')
 
     # or get minimum target set only
-    # mini_target_set = sia.get_mini_target_set(greedy_method='heap')
+    mini_target_set = sia.get_mini_target_set(greedy_method='heap')
 
