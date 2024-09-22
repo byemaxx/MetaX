@@ -980,8 +980,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # self.checkBox_infrence_protein_by_sample.setEnabled(True)
             # self.comboBox_protein_ranking_method.setEnabled(True)
             self.comboBox_method_of_protein_inference.setEnabled(True)
+            self.spinBox_peptide_num_threshold_protein.setEnabled(True)
         else:
             self.comboBox_method_of_protein_inference.setEnabled(False)
+            self.spinBox_peptide_num_threshold_protein.setEnabled(False)
             self.checkBox_infrence_protein_by_sample.setEnabled(False)
             self.comboBox_protein_ranking_method.setEnabled(False)
 
@@ -2146,7 +2148,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             \n\nMultiple: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of nearest features.\
             \n\n\nData Normalization:\
             \n\nIf you use [Z-Score, Mean centering and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.\
-            \n\n\nBatch Effect Correction: only apply to peptide data.
             '''
         msg_box.setText(help_text)
         msg_box.exec_()
@@ -2589,7 +2590,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'method': self.comboBox_method_of_protein_inference.currentText(),
                 'by_sample': self.checkBox_infrence_protein_by_sample.isChecked(),
                 'rank_method' :self.comboBox_protein_ranking_method.currentText(),
-                'greedy_method': self.settings.value('protein_infer_greedy_mode', 'heap')
+                'greedy_method': self.settings.value('protein_infer_greedy_mode', 'heap'),
+                'peptide_mun_threshold': self.spinBox_peptide_num_threshold_protein.value(),
             }
                 
 
