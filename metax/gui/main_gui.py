@@ -1947,7 +1947,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         print(f'\n----Multi Table Result----\n{msg_for_print}\n---------------------------\n')
         self.logger.write_log(msg_for_print.replace('\n', ''))
         QMessageBox.information(self.MainWindow, 'Result', msg)
- 
+        print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
+        # go to basic analysis tab and the first tab
+        self.stackedWidget.setCurrentIndex(0) # go to page_analyzer
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_4.setCurrentIndex(0)
+        self.pushButton_set_multi_table.setEnabled(True)
     
     ## Database builder by own Table
     def show_toolButton_db_own_anno_help(self):
