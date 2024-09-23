@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -147,7 +147,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 530))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 534))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -682,7 +682,7 @@ class Ui_metaX_main(object):
         self.gridLayout_17.addLayout(self.horizontalLayout, 1, 3, 1, 1)
         self.checkBox_set_otf_taxa_and_func_only_from_otf = QtWidgets.QCheckBox(self.tab_set_taxa_func)
         self.checkBox_set_otf_taxa_and_func_only_from_otf.setStatusTip("")
-        self.checkBox_set_otf_taxa_and_func_only_from_otf.setChecked(True)
+        self.checkBox_set_otf_taxa_and_func_only_from_otf.setChecked(False)
         self.checkBox_set_otf_taxa_and_func_only_from_otf.setObjectName("checkBox_set_otf_taxa_and_func_only_from_otf")
         self.gridLayout_17.addWidget(self.checkBox_set_otf_taxa_and_func_only_from_otf, 1, 4, 1, 1)
         self.gridLayout_25.addLayout(self.gridLayout_17, 1, 0, 1, 1)
@@ -2879,7 +2879,7 @@ class Ui_metaX_main(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollArea_3.setObjectName("scrollArea_3")
         self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 99))
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 103))
         self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
         self.gridLayout_68 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName("gridLayout_68")
@@ -3825,7 +3825,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollArea_5.setObjectName("scrollArea_5")
         self.scrollAreaWidgetContents_6 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 101))
+        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 105))
         self.scrollAreaWidgetContents_6.setObjectName("scrollAreaWidgetContents_6")
         self.gridLayout_57 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName("gridLayout_57")
@@ -5345,7 +5345,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")

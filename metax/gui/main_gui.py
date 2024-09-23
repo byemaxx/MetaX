@@ -1852,46 +1852,102 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         
         # Final message
-        outlier_detect_method = self.comboBox_outlier_detection.currentText()
-        
-        if outlier_detect_method != 'None':
-            nan_stats_str = '\n\nLeft row after data preprocessing:\n'
-            for i, j in self.tfa.outlier_status.items():
-                if i not in ['peptide', 'custom']:
-                    continue
-                if j:
-                    nan_stats_str += f'{i}: [{j}]\n'
-            # print(nan_stats_str)
-        else:    
-            nan_stats_str = ''
-        
         if self.tfa.any_df_mode:
             num_item = self.tfa.custom_df.shape[0]
-            msg = f'Custom data is ready! \
-            \n{nan_stats_str}\
-            \n\nNumber of item: [{num_item}]'
+            msg = f"""<html>
+            <body>
+            <p>Custom data is ready!</p>
+            <p>{nan_stats_str}</p>
+            <p>Number of items: [{num_item}]</p>
+            </body>
+            </html>
+            """
         else:
-            msg = f'Operational Taxa-Functions (OTF) data is ready! \
-            \n{nan_stats_str}\
-            \n\nFunction: [{self.tfa.func_name}]\
-            \nNumber of peptide: [{num_peptide} ({num_peptide/self.tfa.original_df.shape[0]*100:.2f}% of all peptides)]\
-            \nNumber of function: [{num_func}]\
-            \nNumber of taxa: [{num_taxa}]\
-            \nNumber of taxa-function: [{num_taxa_func}]\
-            \nNumber of protein: [{num_protein}]'
-        
-        print(f'\n----Multi Table Result----\n{msg}\n---------------------------\n')
-        self.logger.write_log(msg.replace('\n', ''))
-        QMessageBox.information(self.MainWindow, 'Information', msg )
-        
-        print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
-        # go to basic analysis tab and the first tab
-        self.stackedWidget.setCurrentIndex(0) # go to page_analyzer
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
-        self.tabWidget_4.setCurrentIndex(0)
-        self.pushButton_set_multi_table.setEnabled(True)
+            original_num_peptide = self.tfa.original_df.shape[0]
 
-    
+            msg = f"""<html>
+            <head>
+            <style>
+                table {{
+                    border-collapse: collapse;
+                    width: 100%;
+                }}
+                th, td {{
+                    border: 1px solid black;
+                    padding: 8px;
+                    text-align: left;
+                }}
+                h2 {{
+                    text-align: center;
+                }}
+            </style>
+            </head>
+            <body>
+                <h2>Operational Taxa-Functions (OTF) data is ready!</h2>
+                <p>Taxa Level: <b>{self.tfa.taxa_level}</b></p>
+                <p>Function Category: <b>{self.tfa.func_name}</b></p>
+                <hr>
+                <table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Number</th>
+                        <th>Used Peptides</th>
+                        <th>% of All Peptides</th>
+                    </tr>
+                    <tr>
+                        <td>Taxa</td>
+                        <td>{num_taxa}</td>
+                        <td>{self.tfa.peptide_num_used["taxa"]}</td>
+                        <td>{self.tfa.peptide_num_used["taxa"] / original_num_peptide * 100:.2f}%</td>
+                    </tr>
+                    <tr>
+                        <td>Functions</td>
+                        <td>{num_func}</td>
+                        <td>{self.tfa.peptide_num_used["func"]}</td>
+                        <td>{self.tfa.peptide_num_used["func"] / original_num_peptide * 100:.2f}%</td>
+                    </tr>
+                    <tr>
+                        <td>OTFs</td>
+                        <td>{num_taxa_func}</td>
+                        <td>{self.tfa.peptide_num_used["taxa_func"]}</td>
+                        <td>{self.tfa.peptide_num_used["taxa_func"] / original_num_peptide * 100:.2f}%</td>
+                    </tr>
+                    <tr>
+                        <td>Clean Peptides</td>
+                        <td>{num_peptide}</td>
+                        <td>-</td>
+                        <td>{num_peptide / original_num_peptide * 100:.2f}%</td>
+                    </tr>"""
+
+            # add protein number if protein df is not None
+            if num_protein != 'NA':
+                msg += f"""
+                    <tr>
+                        <td>Proteins</td>
+                        <td>{num_protein}</td>
+                        <td>{self.tfa.peptide_num_used["protein"]}</td>
+                        <td>{self.tfa.peptide_num_used["protein"] / original_num_peptide * 100:.2f}%</td>
+                    </tr>"""
+
+            # close the HTML
+            msg += """
+                </table>
+            </body>
+            </html>"""
+
+        msg_for_print = f'''
+        Taxa Level: {self.tfa.taxa_level}
+        Function Category: {self.tfa.func_name}
+        Number of Taxa: {num_taxa} (Peptides Used: {self.tfa.peptide_num_used["taxa"]})
+        Number of Functions: {num_func} (Peptides Used: {self.tfa.peptide_num_used["func"]})
+        Number of OTFs: {num_taxa_func} (Peptides Used: {self.tfa.peptide_num_used["taxa_func"]})
+        Number of Peptides: {num_peptide} ({num_peptide / original_num_peptide * 100:.2f}%)
+        '''
+        
+        print(f'\n----Multi Table Result----\n{msg_for_print}\n---------------------------\n')
+        self.logger.write_log(msg_for_print.replace('\n', ''))
+        QMessageBox.information(self.MainWindow, 'Result', msg)
+ 
     
     ## Database builder by own Table
     def show_toolButton_db_own_anno_help(self):

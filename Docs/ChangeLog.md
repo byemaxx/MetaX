@@ -1,3 +1,9 @@
+# Version: 1.114.4
+## Date: 2024-09-23
+### Changes:
+- Fix: Fixed the bug of create taxa table and function table from the OTF only,the option didn't work correctly.
+- Change: Changed the message of the result of creating Taxon-Function Table.
+
 # Version: 1.114.3
 ## Date: 2024-09-22
 ### Changes:
