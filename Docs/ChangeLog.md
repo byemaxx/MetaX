@@ -1,3 +1,8 @@
+# Version: 1.114.5
+## Date: 2024-09-23
+### Changes:
+- Fix: Fixed the bug of finish the data preprossing, the page was not changed to the next page.
+
 # Version: 1.114.4
 ## Date: 2024-09-23
 ### Changes:
