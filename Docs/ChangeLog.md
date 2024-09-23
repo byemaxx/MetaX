@@ -1,3 +1,8 @@
+# Version: 1.114.3
+## Date: 2024-09-22
+### Changes:
+- Fix: Fixed the razor method of sum peptide to protein, the intensity was not stable in different runs.
+
 # Version: 1.114.2
 ## Date: 2024-09-22
 ### Changes:
