@@ -74,8 +74,7 @@ class TaxaFuncAnalyzer:
         self.protein_df: Optional[pd.DataFrame] = None
         self.any_df_mode = any_df_mode  # if True, the consider the TaxaFunc df as other_df
         self.custom_df: Optional[pd.DataFrame] = None # other df, any df that user want to add
-        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None,
-                               'taxa_func': None, 'protein': None, 'custom': None}
+        self.peptide_num_used = {'taxa': 0, 'func': 0, 'taxa_func': 0, 'protein': 0}
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
@@ -498,7 +497,6 @@ class TaxaFuncAnalyzer:
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'processing_order': None}):
         df = self.original_df.copy()
-        self.outlier_status['custom'] = None # reset outlier_status
         df =self.detect_and_handle_outliers(df=df,  **outlier_params)
         df = self.data_preprocess(df=df,df_name = 'custom', **data_preprocess_params)
         # set index as first column
@@ -699,7 +697,6 @@ class TaxaFuncAnalyzer:
             return
 
         #! fllowing code is for the normal mode
-
         # add 'peptide_num_threshold' to 'data_preprocess_params
         data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
         
@@ -707,14 +704,15 @@ class TaxaFuncAnalyzer:
         if sum_protein:
             # data preprocess for peptide table
             print("---Starting to create protein table---")
+            self.peptide_num_used['protein'] = 0
             df_peptide_for_protein = self.detect_and_handle_outliers(df=self.original_df, **outlier_params)
             self.protein_df = SumProteinIntensity(taxa_func_analyzer=self, df=df_peptide_for_protein).sum_protein_intensity( **sum_protein_params)
             self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', 
                                                    **data_preprocess_params)
             
-        
-        # reset outlier_status
-        self.outlier_status = {'peptide': None, 'taxa': None, 'func': None, 'taxa_func': None}
+        for df_name in ['taxa', 'func', 'taxa_func']:
+            self.peptide_num_used[df_name] = 0  # reset the peptide_num_used
+            
         # reset split_func status
         self.split_func_status = split_func
         self.split_func_sep = split_func_params['split_by']
@@ -767,27 +765,28 @@ class TaxaFuncAnalyzer:
             raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
 
         
-        # extract 'taxa', sample intensity #! and 'peptide_num' fto avoid the duplicated items when handling outlier
-        df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list]
-        # add column 'peptide_num' to df_taxa as 1
-        df_taxa_pep['peptide_num'] = 1
-        
-        # if taxa_and_func_only_from_otf:
-        if True: # for testing
+        if not taxa_and_func_only_from_otf:
+            # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
+            df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list]
+            # add column 'peptide_num' to df_taxa as 1
+            df_taxa_pep['peptide_num'] = 1
             # groupby 'Taxon' and sum the sample intensity
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
             df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
+            self.peptide_num_used['taxa'] = len(df_taxa_pep)
             df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
             df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             self.taxa_df = df_taxa
             #-----Taxa Table End-----
+            
             # create func table
             df_func_pep = self.filter_peptides_by_taxa_func(df= self.original_df, func_threshold=func_threshold,
                                        keep_unknow_func=keep_unknow_func, filter_taxa=False)
             df_func_pep = df_func_pep[[self.peptide_col_name, self.func_name] + self.sample_list]
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
             df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
+            self.peptide_num_used['func'] = len(df_func_pep)
             df_func_pep['peptide_num'] = 1
             df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
             
@@ -826,6 +825,11 @@ class TaxaFuncAnalyzer:
         # ----- create taxa_func table -----
         df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
         df_taxa_func['peptide_num'] = 1
+        
+        for key in ['taxa_func', 'taxa', 'func']:
+            self.peptide_num_used[key] = len(df_taxa_func) if self.peptide_num_used[key] == 0 else self.peptide_num_used[key]
+
+
         df_taxa_func = df_taxa_func.groupby(['Taxon', self.func_name], as_index=True).sum(numeric_only=True)
         
         # split the function before data preprocess

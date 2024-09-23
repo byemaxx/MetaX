@@ -79,9 +79,11 @@ class SumProteinIntensity:
         self.rank_method = rank_method
         self.check_protein_col()
         
+        self.df = razor_integrator.remove_protein_less_than_threshold()
+        self.tfa.peptide_num_used['protein'] = len(self.df)
+        
         if method == 'rank':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [{by_sample}] rank_method: [{rank_method}]-------------")   
-            self.df = razor_integrator.remove_protein_less_than_threshold()
             # make a dict to count the intensity of each protein, intensity sahred by peptides will be divided by the number of peptides
             if by_sample:
                 for sample in self.tfa.sample_list:
@@ -100,13 +102,12 @@ class SumProteinIntensity:
                     self._sum_protein_rank(sample, by_sample)
         elif method == 'razor':
             print('start to sum protein intensity using method: [razor]')
-                 
+            razor_integrator.peptide_mun_threshold = 1 # set the threshold to 1, to avoid run filter again
             res_df = razor_integrator.sum_protein_intensity(greedy_method=greedy_method)
             return res_df       
         
         elif method == 'anti-razor':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [True] rank_method: [Shared]-------------")
-            self.df = razor_integrator.remove_protein_less_than_threshold()
             for sample in self.tfa.sample_list:
                 self._sum_protein_anti_razor(sample)
         

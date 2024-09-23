@@ -20,6 +20,12 @@ class RazorSum:
         
         
     def sum_protein_intensity(self, greedy_method='heap'):
+        # reset the results to avoid the influence of previous results
+        self.res_intensity_dict = {}  #
+        self.__multi_target_count = 0  
+        self.mini_target_set = None  
+        self.filtered_target_to_peptides = None  
+        
         self.greedy_method = greedy_method
         print('Start to sum protein intensity using method: [razor]')
         if self.column_map['sample_list'] is None or len(self.column_map['sample_list']) == 0:
@@ -35,7 +41,7 @@ class RazorSum:
         
         # show summary
         print(f"Total peptides count: {len(pep_to_target)}")
-        # calculate the mean of the multi-target peptides of each sample
+        # calculate the the multi-target peptides
         self.__multi_target_count = self.__multi_target_count/len(self.column_map['sample_list'])
         print(f"Multi-target peptides count: {self.__multi_target_count} ({self.__multi_target_count / len(pep_to_target) * 100:.2f}%)")
 
@@ -80,8 +86,10 @@ class RazorSum:
         
         
         df = self.df.copy()
-        df[self.column_map['target']] = df[self.column_map['target']].apply(remove_proteins)
         
+        tqdm.pandas(desc="Removing proteins")
+        df[self.column_map['target']] = df[self.column_map['target']].progress_apply(remove_proteins)
+                
         # remove the rows with NA protein of sellf.df
         self.df  = self.df[df[self.column_map['target']] != '']
         # print The number of proteins and peptides after removing the proteins with less than threshold peptides
@@ -102,7 +110,8 @@ class RazorSum:
         
         self.remove_protein_less_than_threshold()
         
-        peptides = set(self.df[self.column_map['peptide']])
+        # peptides = set(self.df[self.column_map['peptide']])
+        peptides = list(dict.fromkeys(self.df[self.column_map['peptide']]))
         target_to_peptides = self._create_target_to_peptides()
         mini_target_set = self.find_minimum_target_set(peptides, target_to_peptides)
         filtered_target_to_peptides = {target: target_to_peptides[target] for target in mini_target_set}
@@ -121,15 +130,19 @@ class RazorSum:
         """
         self.get_mini_target_set(self.greedy_method)
         
-        peptides = set(self.df[self.column_map['peptide']])
+        # keep the order of the peptides
+        peptides = list(dict.fromkeys(self.df[self.column_map['peptide']]))
         filtered_target_to_peptides = self.filtered_target_to_peptides
         
         peptide_to_target = defaultdict(list)
         for peptide in tqdm(peptides, desc="Assigning peptides to targets"):
-            possible_targets = [target for target, peps in filtered_target_to_peptides.items() if peptide in peps]
+            # possible_targets = [target for target, peps in filtered_target_to_peptides.items() if peptide in peps]
+            possible_targets = sorted([target for target, peps in filtered_target_to_peptides.items() if peptide in peps])
+
             if possible_targets:
                 max_target_count = max(len(filtered_target_to_peptides[target]) for target in possible_targets)
-                best_targets = [target for target in possible_targets if len(filtered_target_to_peptides[target]) == max_target_count]
+                # best_targets = [target for target in possible_targets if len(filtered_target_to_peptides[target]) == max_target_count]
+                best_targets = sorted([target for target in possible_targets if len(filtered_target_to_peptides[target]) == max_target_count])
                 peptide_to_target[peptide].extend(best_targets)
         
         return peptide_to_target
@@ -230,6 +243,7 @@ class RazorSum:
             self.res_intensity_dict.setdefault(sample_name, {}).setdefault(target, 0)
             self.res_intensity_dict[sample_name][target] += intensity
         else:
+            target_list = sorted(target_list)
             if self.share_intensity:
                 intensity /= len(target_list)
                 for target in target_list:
@@ -261,9 +275,10 @@ if __name__ == '__main__':
     }
     sia = RazorSum(df, column_map, peptide_mun_threshold=3)
     
-    res_df = sia.sum_protein_intensity(greedy_method='heap')
+    res_df = sia.sum_protein_intensity(greedy_method='greedy')
+    
     # res_df.to_csv('razor_protein_intensity.tsv', sep='\t')
 
     # or get minimum target set only
-    mini_target_set = sia.get_mini_target_set(greedy_method='heap')
+    # mini_target_set = sia.get_mini_target_set(greedy_method='heap')
 
