@@ -956,22 +956,20 @@ if __name__ == '__main__':
     meta_path = '../data/example_data/Example_Meta.tsv'
     df_path = os.path.join(current_path, df_path)
     meta_path = os.path.join(current_path, meta_path)
-    
     sw = TaxaFuncAnalyzer(df_path, meta_path)
     # sw.set_func('None')
     sw.set_func('KEGG_Pathway_name')
     sw.set_group('Individual')
-    sw.set_multi_tables(level='l', data_preprocess_params = {
-                                                            'outlier_detect_method': 'zero-dominant',
-                                                            'outlier_handle_method': 'original',
-                                                            'outlier_detect_by_group': None,
-                                                            'outlier_handle_by_group': None,
-                                                            'normalize_method': None, 
-                                                            'transform_method': "log2",
-                                                            'batch_meta': 'None', 
-                                                            'processing_order': None},
+    sw.set_multi_tables(level='l', 
+                        outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
+                            "detection_by_group" : 'Individual', "handle_by_group": None},
+                        data_preprocess_params = {
+                                                'normalize_method': None, 
+                                                'transform_method': "log2",
+                                                'batch_meta': 'None', 
+                                                'processing_order': None},
                     peptide_num_threshold = {'taxa': 2, 'func': 2, 'taxa_func': 2},
-                    keep_unknow_func=False, sum_protein=False, 
+                    keep_unknow_func=False, sum_protein=True, 
                     sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
                     split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False},
                     taxa_and_func_only_from_otf=True

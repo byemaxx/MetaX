@@ -42,7 +42,21 @@ class SumProteinIntensity:
 
         if (self.df[self.tfa.protein_col_name].str.strip() == '').any():
             raise ValueError(f'There are empty values in {self.tfa.protein_col_name} column')
-        
+    
+    def get_razor_pep_df(self, greedy_method='heap'):
+        razor_integrator = RazorSum(df=self.df, 
+                            column_map={
+                                        'peptide': self.tfa.peptide_col_name,
+                                        'target': self.tfa.protein_col_name,
+                                        'sample_list': self.tfa.sample_list,
+                                    }, 
+                            peptide_mun_threshold=self.peptide_mun_threshold, 
+                            share_intensity=self.share_intensity, 
+                            greedy_method=greedy_method,
+                            protein_separator= self.protein_separator)
+        df = razor_integrator.get_razor_pep_df(greedy_method = greedy_method)
+        return df
+    
     def sum_protein_intensity(self, method='razor', by_sample=False, rank_method='unique_counts', greedy_method='heap', peptide_mun_threshold=None):
         '''
         method: str, default 'razor'

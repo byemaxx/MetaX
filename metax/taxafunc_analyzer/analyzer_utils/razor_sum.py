@@ -19,6 +19,34 @@ class RazorSum:
         self.__multi_target_count = 0
         
         
+    def get_razor_pep_df(self, greedy_method='heap'):
+        # reset the results to avoid the influence of previous results
+        self.res_intensity_dict = {}  #
+        self.__multi_target_count = 0  
+        self.mini_target_set = None  
+        self.filtered_target_to_peptides = None  
+        
+        self.greedy_method = greedy_method
+        print('Start to sum protein intensity using method: [razor]')
+        if self.column_map['sample_list'] is None or len(self.column_map['sample_list']) == 0:
+            raise ValueError('Please provide [sample_list] in column_map for sum, e.g. ["Sample1", "Sample2", "Sample3"]')
+        # only extract the peptide and target columns
+        extract_cols = [self.column_map['peptide'], self.column_map['target']] + self.column_map['sample_list']
+        self.df = self.df.loc[:, extract_cols]
+        
+        pep_to_target = self._create_pep_to_target_razor()
+        pep_to_1st_target = {pep: targets[0] for pep, targets in pep_to_target.items()}
+        df_pep = self.df.copy()
+        # repalce the target column with the 1st target
+        df_pep[self.column_map['target']] = df_pep[self.column_map['peptide']].map(pep_to_1st_target)
+        # join groups with ';' to the target_group column
+        df_pep[f'{self.column_map["target"]}_group'] = df_pep[self.column_map['peptide']].map(lambda x: ';'.join(pep_to_target[x]))
+        # reorder the columns[target, target_group, peptide, sample1, sample2, sample3]
+        df_pep = df_pep[[ self.column_map['peptide'], self.column_map['target'], f'{self.column_map["target"]}_group'] + self.column_map['sample_list']]
+        
+        return df_pep
+        
+        
     def sum_protein_intensity(self, greedy_method='heap'):
         # reset the results to avoid the influence of previous results
         self.res_intensity_dict = {}  #
@@ -275,8 +303,8 @@ if __name__ == '__main__':
     }
     sia = RazorSum(df, column_map, peptide_mun_threshold=3)
     
-    res_df = sia.sum_protein_intensity(greedy_method='greedy')
-    
+    res_df = sia.get_razor_pep_df(greedy_method='greedy')
+    print(res_df.head())
     # res_df.to_csv('razor_protein_intensity.tsv', sep='\t')
 
     # or get minimum target set only
