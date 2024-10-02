@@ -23,12 +23,15 @@ if __name__ == '__main__':
     from analyzer_utils.basic_stats import BasicStats
     from analyzer_utils.cross_test import CrossTest
     from analyzer_utils.get_matrix import GetMatrix
+    from analyzer_utils.lfq import run_lfq
+    
 else:
     from .analyzer_utils.data_preprocessing import DataPreprocessing
     from .analyzer_utils.sum_protein_intensity import SumProteinIntensity
     from .analyzer_utils.basic_stats import BasicStats
     from .analyzer_utils.cross_test import CrossTest
     from .analyzer_utils.get_matrix import GetMatrix
+    from .analyzer_utils.lfq import run_lfq
 
 
 import warnings
@@ -658,6 +661,33 @@ class TaxaFuncAnalyzer:
         if filter_taxa:
             filter_conditions = filter_conditions & (df['Taxon'] != 'not_found')
         return df[filter_conditions]
+    
+    def run_lfq_for_taxa_or_func(self, df, df_type: str):
+        target_col = 'Taxon' if df_type == 'taxa' else self.func_name
+        target_pep_num_dict = df.groupby(target_col).size().to_dict()
+        df.drop(['peptide_num'], axis=1, inplace=True)
+        df, _ = run_lfq(df, protein_id=target_col, quant_id=self.peptide_col_name)
+        df['peptide_num'] = df[target_col].map(target_pep_num_dict)
+        df.set_index(target_col, inplace=True)
+        return df
+
+    
+    def run_lfq_for_taxa_func(self, df_taxa_func):
+        df_taxa_func_t = df_taxa_func.copy()
+        df_taxa_func_t["taxa_func"] = df_taxa_func_t["Taxon"] + "&&&&" + df_taxa_func_t[self.func_name]
+        # create the dict of taxa_func_linked_peptide_num
+        taxa_func_pep_num_dict = df_taxa_func_t.groupby("taxa_func").size().to_dict()
+        df_taxa_func_t = df_taxa_func_t.drop(["Taxon", self.func_name, 'peptide_num'], axis=1)
+        df_taxa_func_t, _ = run_lfq(df_taxa_func_t, protein_id="taxa_func", quant_id=self.peptide_col_name)
+        # add the peptide_num to the df_taxa_func_t
+        df_taxa_func_t["peptide_num"] = df_taxa_func_t["taxa_func"].map(taxa_func_pep_num_dict)
+        # expand the taxa_func to Taxon and Function
+        df_taxa_func_t[["Taxon", self.func_name]] = df_taxa_func_t["taxa_func"].str.split("&&&&", expand=True)
+        df_taxa_func = df_taxa_func_t.drop("taxa_func", axis=1)
+        # set multi-index
+        df_taxa_func = df_taxa_func.set_index(['Taxon', self.func_name], drop=True)
+        
+        return df_taxa_func
             
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                          outlier_params: dict = {'detect_method': None, 'handle_method': None,
@@ -669,24 +699,28 @@ class TaxaFuncAnalyzer:
                                                                                 'by_sample': False,
                                                                                 'rank_method': 'unique_counts',
                                                                                 'greedy_method': 'heap',
-                                                                                'peptide_mun_threshold': 1
+                                                                                'peptide_num_threshold': 1
                                                                                 },
                           keep_unknow_func: bool = False, 
                           split_func: bool = False, split_func_params: dict = {'split_by': '|', 'share_intensity': False},
-                          taxa_and_func_only_from_otf: bool = False):
+                          taxa_and_func_only_from_otf: bool = False,
+                          quant_method: str = 'sum'):
 
         """
-        Example Usage:
-        sw.set_multi_tables(level='s', 
-        outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
-                            "detection_by_group" : 'Individual', "handle_by_group": None},
-        data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
-                                'batch_meta': "Individual", 'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
-                            peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
-                            sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 
-                                                                        'rank_method': 'unique_counts', 'greedy_method': 'heap',
-                                                                        'peptide_num_threshold': 3},
-                            keep_unknow_func = False)
+        `Example Usage:`
+            sw.set_multi_tables(level='s', 
+            outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
+                                "detection_by_group" : 'Individual', "handle_by_group": None},
+            data_preprocess_params = {'normalize_method': None, 'transform_method': "log10",
+                                    'batch_meta': "Individual", 'processing_order': ['outlier', 'transform', 'normalize', 'batch']},
+                                peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
+                                sum_protein = False, sum_protein_params = {'method': 'razor', 'by_sample': False, 
+                                                                            'rank_method': 'unique_counts', 'greedy_method': 'heap',
+                                                                            'peptide_num_threshold': 3},
+                                keep_unknow_func = False),
+                                split_func = False, split_func_params = {'split_by': '|', 'share_intensity': False},
+                                taxa_and_func_only_from_otf = False,
+                                quant_method = 'lfq')
         """
         print(f"Original data shape: {self.original_df.shape}")
         
@@ -705,6 +739,7 @@ class TaxaFuncAnalyzer:
             # data preprocess for peptide table
             print("---Starting to create protein table---")
             self.peptide_num_used['protein'] = 0
+            sum_protein_params['quant_method'] = quant_method
             df_peptide_for_protein = self.detect_and_handle_outliers(df=self.original_df, **outlier_params)
             self.protein_df = SumProteinIntensity(taxa_func_analyzer=self, df=df_peptide_for_protein).sum_protein_intensity( **sum_protein_params)
             self.protein_df = self.data_preprocess(df=self.protein_df,df_name = 'protein', 
@@ -768,13 +803,17 @@ class TaxaFuncAnalyzer:
         if not taxa_and_func_only_from_otf:
             # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
             df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list]
-            # add column 'peptide_num' to df_taxa as 1
-            df_taxa_pep['peptide_num'] = 1
-            # groupby 'Taxon' and sum the sample intensity
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
             df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
             self.peptide_num_used['taxa'] = len(df_taxa_pep)
-            df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
+            # add column 'peptide_num' to df_taxa as 1
+            df_taxa_pep['peptide_num'] = 1
+            
+            if quant_method == 'lfq':
+                df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, df_type='taxa')
+            else: # sum
+                df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
+                
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
             df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             self.taxa_df = df_taxa
@@ -788,7 +827,11 @@ class TaxaFuncAnalyzer:
             df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
             self.peptide_num_used['func'] = len(df_func_pep)
             df_func_pep['peptide_num'] = 1
-            df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
+            
+            if quant_method == 'lfq':
+                df_func = self.run_lfq_for_taxa_or_func(df_func_pep, df_type='func')
+            else: # sum
+                df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
             
             if split_func:
                 df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func')
@@ -829,8 +872,10 @@ class TaxaFuncAnalyzer:
         for key in ['taxa_func', 'taxa', 'func']:
             self.peptide_num_used[key] = len(df_taxa_func) if self.peptide_num_used[key] == 0 else self.peptide_num_used[key]
 
-
-        df_taxa_func = df_taxa_func.groupby(['Taxon', self.func_name], as_index=True).sum(numeric_only=True)
+        if quant_method == 'lfq':
+            df_taxa_func = self.run_lfq_for_taxa_func(df_taxa_func)
+        else: # sum
+            df_taxa_func = df_taxa_func.groupby(['Taxon', self.func_name], as_index=True).sum(numeric_only=True)
         
         # split the function before data preprocess
         if split_func:
@@ -960,7 +1005,7 @@ if __name__ == '__main__':
     # sw.set_func('None')
     sw.set_func('KEGG_Pathway_name')
     sw.set_group('Individual')
-    sw.set_multi_tables(level='l', 
+    sw.set_multi_tables(level='s', 
                         outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
                             "detection_by_group" : 'Individual', "handle_by_group": None},
                         data_preprocess_params = {
@@ -969,10 +1014,10 @@ if __name__ == '__main__':
                                                 'batch_meta': 'None', 
                                                 'processing_order': None},
                     peptide_num_threshold = {'taxa': 2, 'func': 2, 'taxa_func': 2},
-                    keep_unknow_func=False, sum_protein=True, 
-                    sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap'},
+                    keep_unknow_func=False, sum_protein=False, 
+                    sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False},
-                    taxa_and_func_only_from_otf=True
+                    taxa_and_func_only_from_otf=False, quant_method='lfq'
                     )
 
     sw.check_attributes()

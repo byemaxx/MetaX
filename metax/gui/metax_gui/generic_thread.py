@@ -6,7 +6,7 @@ from PyQt5.QtGui import QIcon
 import sys
 import re
 import os
-
+import logging
 
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
@@ -21,6 +21,16 @@ class EmittingStream(QObject):
 
     def flush(self):
         self.original.flush()
+        
+        
+class LoggingHandler(logging.Handler):
+    def __init__(self, signal):
+        super().__init__()
+        self.text_written_signal = signal
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.text_written_signal.emit(log_entry)
 
 
 class FunctionExecutor(QMainWindow):
@@ -69,6 +79,10 @@ class FunctionExecutor(QMainWindow):
         self.progress_regex = re.compile(r'\d+%|\d+/\d+')  #  match progress text
         # self.progress_regex = re.compile(r'\d+%\|\S+\s+\d+/\d+\s+\[\d{2}:\d{2}<\d{2}:\d{2},\s+\d+\.\d+it/s')
 
+        # 创建 LoggingHandler，并连接到 text_written 信号
+        log_handler = LoggingHandler(self.stream_out.text_written)
+        log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        logging.getLogger().addHandler(log_handler)
 
         self.thread.start()
 

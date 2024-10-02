@@ -4,12 +4,12 @@ from tqdm import tqdm
 
 
 class RazorSum:
-    def __init__(self, df, column_map, peptide_mun_threshold=1,
+    def __init__(self, df, column_map, peptide_num_threshold=1,
                  greedy_method = 'greedy', share_intensity=False, protein_separator=';'):
         self.df = df
         self.column_map = column_map
         self.greedy_method = greedy_method  
-        self.peptide_mun_threshold = peptide_mun_threshold # the protein must have at least 3 peptides to be considered as a target
+        self.peptide_num_threshold = peptide_num_threshold # the protein must have at least 3 peptides to be considered as a target
         self.share_intensity = share_intensity
         self.protein_separator = protein_separator
         
@@ -17,6 +17,7 @@ class RazorSum:
         self.mini_target_set = None
         self.filtered_target_to_peptides = None
         self.__multi_target_count = 0
+        self.pep_to_target = None
         
         
     def get_razor_pep_df(self, greedy_method='heap'):
@@ -95,8 +96,8 @@ class RazorSum:
         '''
         Remove the proteins with less than threshold peptides in `self.df`
         '''
-        if self.peptide_mun_threshold <= 1:
-            print(f"Peptide threshold is [{self.peptide_mun_threshold}], no protein will be removed")
+        if self.peptide_num_threshold <= 1:
+            print(f"Peptide threshold is [{self.peptide_num_threshold}], no protein will be removed")
             return self.df
         
         # calculate the number of peptides for each protein
@@ -108,9 +109,9 @@ class RazorSum:
         
         target_to_peptides = self._create_target_to_peptides()
         
-        print(f"Remove proteins with less than [{self.peptide_mun_threshold}] peptides, then the peptide with NA protein will be removed")
+        print(f"Remove proteins with less than [{self.peptide_num_threshold}] peptides, then the peptide with NA protein will be removed")
         print(f"Orignal Protein number: [{len(target_to_peptides)}], Peptide number: [{len(self.df)}]")
-        proteins_less_than_threshold = [target for target, peps in target_to_peptides.items() if len(peps) < self.peptide_mun_threshold]
+        proteins_less_than_threshold = [target for target, peps in target_to_peptides.items() if len(peps) < self.peptide_num_threshold]
         
         
         df = self.df.copy()
@@ -172,7 +173,7 @@ class RazorSum:
                 # best_targets = [target for target in possible_targets if len(filtered_target_to_peptides[target]) == max_target_count]
                 best_targets = sorted([target for target in possible_targets if len(filtered_target_to_peptides[target]) == max_target_count])
                 peptide_to_target[peptide].extend(best_targets)
-        
+        self.pep_to_target = peptide_to_target
         return peptide_to_target
     
     def _create_target_to_peptides(self):
@@ -301,7 +302,7 @@ if __name__ == '__main__':
         'target': 'Proteins',
         'sample_list': sample_list  # ['Sample1', 'Sample2', 'Sample3']
     }
-    sia = RazorSum(df, column_map, peptide_mun_threshold=3)
+    sia = RazorSum(df, column_map, peptide_num_threshold=3)
     
     res_df = sia.get_razor_pep_df(greedy_method='greedy')
     print(res_df.head())

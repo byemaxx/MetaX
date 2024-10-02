@@ -1,3 +1,9 @@
+# Version: 1.115.0
+## Date: 2024-10-02
+### Changes:
+- New: added DriectLFQ algorithm option for quantification.
+
+
 # Version: 1.114.5
 ## Date: 2024-09-23
 ### Changes:
