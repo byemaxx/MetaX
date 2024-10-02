@@ -81,7 +81,7 @@ class FunctionExecutor(QMainWindow):
 
         # 创建 LoggingHandler，并连接到 text_written 信号
         log_handler = LoggingHandler(self.stream_out.text_written)
-        log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         logging.getLogger().addHandler(log_handler)
 
         self.thread.start()
