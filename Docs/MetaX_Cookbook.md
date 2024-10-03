@@ -275,6 +275,16 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
 
 ### Data preprocessing
 
+- **Quantitative Method：**
+
+  - **<u>Sum</u>**: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.
+
+  - **<u>DirecteLFQ</u>**: Using DirecteLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
+
+    
+
+- **Outlier handling:**
+
 There are several methods for detecting and handling outliers.
 
 - Two steps will be applied:

@@ -2543,7 +2543,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'taxa_func': self.spinBox_peptide_num_threshold_taxa_func.value()
             }
             
-
+            quant_method_dict = {
+                'sum': 'sum',
+                'directlfq': 'lfq'}
+            quant_method = quant_method_dict.get(self.comboBox_quant_method.currentText().lower(), 'sum')
+            
             # outlier detect and handle
             outlier_detect_method = self.comboBox_outlier_detection.currentText()
             outlier_detect_by_group = self.comboBox_outlier_detection_group_or_sample.currentText()
@@ -2652,7 +2656,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'by_sample': self.checkBox_infrence_protein_by_sample.isChecked(),
                 'rank_method' :self.comboBox_protein_ranking_method.currentText(),
                 'greedy_method': self.settings.value('protein_infer_greedy_mode', 'heap'),
-                'peptide_mun_threshold': self.spinBox_peptide_num_threshold_protein.value(),
+                'peptide_num_threshold': self.spinBox_peptide_num_threshold_protein.value(),
             }
                 
 
@@ -2688,7 +2692,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'sum_protein': sum_protein, 'sum_protein_params': sum_protein_params,
                                         'keep_unknow_func': False,
                                         'split_func': split_func, 'split_func_params': split_func_params,
-                                        'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf}
+                                        'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf,
+                                        'quant_method': quant_method}
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:

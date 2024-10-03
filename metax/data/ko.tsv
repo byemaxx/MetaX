@@ -1502,7 +1502,7 @@ K01633	folB; 7,8-dihydroneopterin aldolase/epimerase/oxygenase [EC:4.1.2.25 5.1.
 K01634	SGPL1, DPL1; sphinganine-1-phosphate aldolase [EC:4.1.2.27]
 K01635	lacD; tagatose 1,6-diphosphate aldolase [EC:4.1.2.40]
 K01636	K01636; ribulose 1-phosphate aldolase [EC:4.1.2.-]
-K01637	E4.1.3.1, aceA; isocitrate lyase [EC:4.1.3.1]
+K01637	ICL, aceA; isocitrate/methylisocitrate lyase [EC:4.1.3.1 4.1.3.30]
 K01638	aceB, glcB; malate synthase [EC:2.3.3.9]
 K01639	E4.1.3.3, nanA, NPL; N-acetylneuraminate lyase [EC:4.1.3.3]
 K01640	HMGCL, hmgL; hydroxymethylglutaryl-CoA lyase [EC:4.1.3.4]
@@ -1541,7 +1541,7 @@ K01676	E4.2.1.2A, fumA, fumB; fumarate hydratase, class I [EC:4.2.1.2]
 K01677	E4.2.1.2AA, fumA; fumarate hydratase subunit alpha [EC:4.2.1.2]
 K01678	E4.2.1.2AB, fumB; fumarate hydratase subunit beta [EC:4.2.1.2]
 K01679	E4.2.1.2B, fumC, FH; fumarate hydratase, class II [EC:4.2.1.2]
-K01681	ACO, acnA; aconitate hydratase [EC:4.2.1.3]
+K01681	ACO; aconitate hydratase [EC:4.2.1.3]
 K01682	acnB; aconitate hydratase 2 / 2-methylisocitrate dehydratase [EC:4.2.1.3 4.2.1.99]
 K01683	araD; D-arabinonate dehydratase [EC:4.2.1.5]
 K01684	dgoD; galactonate dehydratase [EC:4.2.1.6]
@@ -2293,7 +2293,7 @@ K02469	gyrA; DNA gyrase subunit A [EC:5.6.2.2]
 K02470	gyrB; DNA gyrase subunit B [EC:5.6.2.2]
 K02471	bacA, bclA; vitamin B12/bleomycin/antimicrobial peptide transport system ATP-binding/permease protein
 K02472	wecC; UDP-N-acetyl-D-mannosaminuronic acid dehydrogenase [EC:1.1.1.336]
-K02473	wbpP; UDP-N-acetylglucosamine/UDP-N-acetylgalactosamine 4-epimerase [EC:5.1.3.7 5.1.3.-]
+K02473	wbpP; UDP-N-acetylglucosamine/UDP-N-acetyl-alpha-D-glucosaminouronate 4-epimerase [EC:5.1.3.7 5.1.3.45]
 K02474	wbpO; UDP-N-acetyl-D-glucosamine/UDP-N-acetyl-D-galactosamine dehydrogenase [EC:1.1.1.136 1.1.1.-]
 K02475	K02475; two-component system, CitB family, response regulator
 K02476	K02476; two-component system, CitB family, sensor kinase [EC:2.7.13.3]
@@ -4242,7 +4242,7 @@ K04510	VANGL; vang-like
 K04511	PRICKLE; prickle
 K04512	DAAM; dishevelled associated activator of morphogenesis
 K04513	RHOA; Ras homolog gene family, member A
-K04514	ROCK1; Rho-associated protein kinase 1 [EC:2.7.11.1]
+K04514	ROCK1; Rho-associated protein kinase 1 [EC:2.7.11.39]
 K04515	CAMK2; calcium/calmodulin-dependent protein kinase (CaM kinase) II [EC:2.7.11.17]
 K04516	AROA1, aroA; chorismate mutase [EC:5.4.99.5]
 K04517	tyrA2; prephenate dehydrogenase [EC:1.3.1.12]
@@ -4439,7 +4439,7 @@ K04710	CERS1, LASS1; sphingoid base N-stearoyltransferase [EC:2.3.1.299]
 K04711	ACER3, YDC1; dihydroceramidase [EC:3.5.1.-]
 K04712	DEGS; sphingolipid 4-desaturase/C4-monooxygenase [EC:1.14.19.17 1.14.18.5]
 K04713	SUR2; sphinganine C4-monooxygenase [EC:1.14.18.5]
-K04714	SGMS; shingomyelin synthase [EC:2.7.8.27]
+K04714	SGMS; sphingomyelin synthase / phosphatidylethanolamine phospholipase C [EC:2.7.8.27 3.1.4.62]
 K04715	CERK; ceramide kinase [EC:2.7.1.138]
 K04716	SGPP1; sphingosine-1-phosphate phosphatase 1 [EC:3.1.3.-]
 K04717	SGPP2; sphingosine-1-phosphate phosphotase 2 [EC:3.1.3.-]
@@ -6662,7 +6662,7 @@ K07064	K07064; uncharacterized protein
 K07065	K07065; uncharacterized protein
 K07066	K07066; uncharacterized protein
 K07067	disA; diadenylate cyclase [EC:2.7.7.85]
-K07068	K07068; uncharacterized protein
+K07068	DUF35; scaffold protein (connect acetoacetyl-CoA thiolase and HMG-CoA synthase)
 K07069	K07069; uncharacterized protein
 K07070	K07070; uncharacterized protein
 K07071	K07071; uncharacterized protein
@@ -11895,7 +11895,7 @@ K12418	DES4, des1; acyl-lipid (7-3)-desaturase (Delta-4 desaturase) [EC:1.14.19.
 K12419	FADS6; fatty acid desaturase 6 [EC:1.14.19.-]
 K12420	actIII, oxyJ, snoaD, aknA; ketoreductase [EC:1.1.1.-]
 K12421	fadD9; fatty acid CoA ligase FadD9
-K12422	fadD10; long chain fatty acid CoA ligase FadD10 [EC:6.2.1.-]
+K12422	fadD10; medium/long-chain-fatty-acid---[acyl-carrier-protein] ligase FadD10 [EC:6.2.1.-]
 K12423	fadD21; fatty acid CoA ligase FadD21
 K12424	fadD22; 4-hydroxybenzoate adenylyltransferase [EC:6.2.1.50]
 K12425	fadD23; long-chain fatty acid adenylase/transferase FadD23 [EC:6.2.1.57]
@@ -13159,7 +13159,7 @@ K13723	ERAP2; endoplasmic reticulum aminopeptidase 2 [EC:3.4.11.-]
 K13724	AQPEP; aminopeptidase Q [EC:3.4.11.-]
 K13725	PFAM1; M1-family aminopeptidase [EC:3.4.11.-]
 K13726	MEPB; metallopeptidase MepB [EC:3.4.24.-]
-K13727	pdc; phenolic acid decarboxylase [EC:4.1.1.-]
+K13727	pad, pdc, fdc; phenacrylate decarboxylase [EC:4.1.1.102]
 K13728	MAD2L2; mitotic spindle assembly checkpoint protein MAD2B
 K13729	TCAC2, TC52; thiol-dependent reductase 1
 K13730	inlA; internalin A
@@ -16763,7 +16763,7 @@ K17384	SPRY3; protein sprouty homolog 3
 K17385	SPRY4; protein sprouty homolog 4
 K17386	PDGFB; platelet-derived growth factor subunit B
 K17387	KIF23; kinesin family member 23
-K17388	ROCK2; Rho-associated protein kinase 2 [EC:2.7.11.1]
+K17388	ROCK2; Rho-associated protein kinase 2 [EC:2.7.11.39]
 K17389	MIR520C; microRNA 520c
 K17390	CDCA5; sororin
 K17391	IGF2BP1; insulin-like growth factor 2 mRNA-binding protein 1
@@ -17888,7 +17888,7 @@ K18533	AK9; adenylate/nucleoside-diphosphate kinase [EC:2.7.4.3 2.7.4.6]
 K18534	K18534; MPBQ/MSBQ methyltransferase [EC:2.1.1.295]
 K18535	thnA; putative oxidoreductase
 K18536	thnD; putative oxidoreductase
-K18537	thnK; putative methyltransferase
+K18537	thnK; 2-(S-pantetheinyl)-carbapenam-3-carboxylate methyltransferase [EC:2.1.1.394]
 K18538	thnN; thienamycin biosynthesis protein ThnN
 K18539	thnO; thienamycin biosynthesis protein ThnO
 K18540	ramA; (R)-amidase [EC:3.5.1.100]
@@ -18732,7 +18732,7 @@ K19383	TGIF1; homeobox protein TGIF1
 K19384	TMEM17; transmembrane protein 17
 K19385	TMEM216; transmembrane protein 216
 K19386	POS5; NADH kinase [EC:2.7.1.86]
-K19387	PTRF; polymerase I and transcript release factor
+K19387	CAVIN1, PTRF; caveolae-associated protein 1
 K19388	PB2; Influenza virus polymerase basic protein 2
 K19389	PB1; Influenza virus RNA-directed RNA polymerase catalytic subunit [EC:2.7.7.48]
 K19390	PA; Influenza virus polymerase acidic protein
@@ -19823,8 +19823,8 @@ K20479	WHAMM; WASP homolog-associated protein with actin, membranes and microtub
 K20480	nprR, nprA; HTH-type transcriptional regulator, quorum sensing regulator NprR
 K20481	nprX, nprRB; regulatory peptide NprX
 K20482	nisA, spaS, epiA; lantibiotic bacteriocin
-K20483	nisB, spaB, epiB; lantibiotic biosynthesis protein
-K20484	nisC, spaC, epiC; lantibiotic biosynthesis protein
+K20483	lanB, nisB, spaB, epiB; class I lanthipeptide synthase [EC:3.13.2.4]
+K20484	lanC, nisC, spaC, epiC; class I lanthipeptide synthase [EC:3.13.2.4]
 K20485	nisT, spaT; ATP-binding cassette, subfamily B, bacterial NisT/SpaT
 K20486	nisP, epiP; lantibiotic leader peptide-processing serine protease [EC:3.4.21.-]
 K20487	nisK, spaK; two-component system, OmpR family, lantibiotic biosynthesis sensor histidine kinase NisK/SpaK [EC:2.7.13.3]
@@ -20216,7 +20216,7 @@ K20873	NEK3; serine/threonine-protein kinase Nek3 [EC:2.7.11.1]
 K20875	NEK6; serine/threonine-protein kinase Nek6 [EC:2.7.11.34]
 K20876	NEK7; serine/threonine-protein kinase Nek7 [EC:2.7.11.34]
 K20877	NEK8; serine/threonine-protein kinase Nek8 [EC:2.7.11.1]
-K20878	NEK9, NERCC1; serine/threonine-protein kinase Nek9 [EC:2.7.11.1]
+K20878	NEK9, NERCC1; serine/threonine-protein kinase Nek9 [EC:2.7.11.38]
 K20879	NEK10; serine/threonine-protein kinase Nek10 [EC:2.7.11.1]
 K20880	NEK11; serine/threonine-protein kinase Nek11 [EC:2.7.11.1]
 K20881	yrfG; GMP/IMP 5'-nucleotidase [EC:3.1.3.-]
@@ -20866,7 +20866,7 @@ K21528	gin; Enterobacteriaceae phage serine recombinase [EC:3.1.22.- 6.5.1.-]
 K21529	A28L; Orthopoxvirus envelope protein A28
 K21530	gp25; Straboviridae baseplate wedge protein
 K21531	gp18; Straboviridae tail sheath protein
-K21532	BNRF1; Lymphocryptovirus major tegument protein
+K21532	BNRF1; Orthoherpesviridae tegument protein
 K21533	vIL10; Herpesviridae/Poxviridae viral interleukin 10
 K21534	SAMase; Enterobacteria phage S-adenosyl-L-methionine lyase [EC:4.4.1.42]
 K21535	p22; Tombusvirus movement protein
@@ -22029,7 +22029,7 @@ K22693	pyrH; tryptophan 5-halogenase [EC:1.14.19.58]
 K22694	sttH; tryptophan 6-halogenase [EC:1.14.19.59]
 K22695	ktzR; 7-chloro-L-tryptophan 6-halogenase [EC:1.14.19.60]
 K22696	EEF2KMT; protein-lysine N-methyltransferase EEF2KMT [EC:2.1.1.-]
-K22697	SAMD8; sphingomyelin synthase-related protein 1
+K22697	SAMD8; phosphatidylethanolamine phospholipase C [EC:3.1.4.62]
 K22698	SEY1; protein SEY1 [EC:3.6.5.-]
 K22699	thi4; sulfide-dependent adenosine diphosphate thiazole synthase [EC:2.4.2.59]
 K22700	ZCCHC2; Zinc finger CCHC domain-containing protein 2
@@ -22257,7 +22257,7 @@ K22921	vexB; Vi polysaccharide transport system permease protein
 K22922	vexD; Vi polysaccharide transport system permease protein
 K22923	vexC; Vi polysaccharide transport system ATP-binding protein [EC:7.6.2.12]
 K22924	vexA, tviF; Vi polysaccharide export protein VexA
-K22925	tviC, vipB; UDP-N-acetylglucosaminuronic acid 4-epimerase [EC:5.1.3.-]
+K22925	tviC, vipB; UDP-N-acetyl-alpha-D-glucosaminouronate 4-epimerase [EC:5.1.3.45]
 K22926	tviB, vipA; UDP-N-acetylglucosamine 6-dehydrogenase [EC:1.1.1.136]
 K22927	gdpP; cyclic-di-AMP phosphodiesterase [EC:3.1.4.59]
 K22928	DNPH1; 2'-deoxynucleoside 5'-phosphate N-hydrolase [EC:3.2.2.-]
@@ -23871,7 +23871,7 @@ K24537	KAT14; cysteine-rich protein 2-binding protein
 K24538	MBIP; MAP3K12-binding inhibitory protein 1
 K24539	YEATS2; YEATS domain-contaning protein 2
 K24540	PRKRA; interferon-inducible double-stranded RNA-dependent protein kinase activator A
-K24541	CYP71P1; tryptamine 5-hydroxylase [EC:1.14.-.-]
+K24541	CYP71P1; tryptamine 5-hydroxylase [EC:1.14.14.186]
 K24542	CYP81D; cytochrome P450 family 81 subfamily D
 K24543	CYP97B3; cytochrome P450 family 97 subfamily B polypeptide 3
 K24544	CYP714C; cytochrome P450 family 714 subfamily C
@@ -24244,7 +24244,7 @@ K24910	ramA, amfB; ATP-binding cassette, subfamily B, bacterial RamA/AmfB
 K24911	ramB, amfA; ATP-binding cassette, subfamily B, bacterial RamB/AmfA
 K24912	ramR, amfR; LuxR family transcriptional regulator, transcriptional activator for aerial hyphae formation
 K24913	ramS, amfS; lanthionine-containing peptide SapB
-K24914	ramC, amfT; probable SapB synthase
+K24914	lanKC, ramC, amfT; class III lanthionine synthetase [EC:3.13.2.4]
 K24915	TMEM175; TMEM175 potassium channel family protein
 K24916	ZNF521, EVI3; zinc finger protein 521
 K24917	AAP; amino acid permease
@@ -25969,7 +25969,7 @@ K26635	RdRp; Chrysoviridae RNA-directed RNA polymerase
 K26636	RdRp; Chuviridae RNA-directed RNA polymerase
 K26637	RdRp; Velarivirus RNA-directed RNA polymerase
 K26638	RdRp; Pseudomonas phage RNA-directed RNA polymerase
-K26639	K26639; Druskaviridae DNA polymerase elongation subunit family B
+K26639	K26639; Thumleimavirales DNA polymerase elongation subunit family B
 K26640	RdRp; Duinviridae RNA-directed RNA polymerase
 K26641	RdRp; Emaravirus RNA-directed RNA polymerase
 K26642	RdRp; Fusariviridae RNA-directed RNA polymerase
@@ -26265,7 +26265,7 @@ K26931	sacY; levansucrase and sucrase synthesis operon transcriptional antitermi
 K26932	sacT; sacPA operon transcriptional antiterminator
 K26933	kdgF; unsaturated pyranuronate lyase [EC:4.2.99.25]
 K26934	ATP11; phospholipid-transporting ATPase [EC:7.6.2.1]
-K26935	TMEM30A, CDC50A; cell cycle control protein 50A
+K26935	TMEM30, CDC50; cell cycle control protein 50
 K26936	TIMD4, TIM4; T-cell immunoglobulin and mucin domain-containing protein 4
 K26937	dinF, mepA, vmrA; MATE family, multidrug efflux pump
 K26938	MATE; MATE family, citrate exporter
@@ -26547,8 +26547,8 @@ K27218	K27218; Ackermannviridae endonuclease V N-glycosylase UV repair enzyme
 K27219	K27219; Ackermannviridae exonuclease
 K27220	K27220; Ackermannviridae exonuclease
 K27221	K27221; Kuttervirus GIY-YIG homing endonuclease
-K27222	K27222; Ackermannviridae HNH endonuclease
-K27223	K27223; Salmonella phage HNH endonuclease
+K27222	K27222; Ackermannviridae DNA primase
+K27223	K27223; Autographiviridae DNA primase
 K27224	K27224; Ackermannviridae HNH endonuclease
 K27225	K27225; Salmonella phage homing endonuclease
 K27226	K27226; Salmonella phage homing endonuclease
@@ -26646,29 +26646,29 @@ K27317	MPZL3; myelin protein zero-like protein 3
 K27318	MTARC; mitochondrial amidoxime-reducing component [EC:1.7.-.-]
 K27319	STMP1; short transmembrane mitochondrial protein 1
 K27320	MSTO1, MST; protein misato
-K27321	K27321; Autographiviridae HNH endonuclease
+K27321	K27321; Casjensviridae DNA primase
 K27322	K27322; Autographiviridae HNH endonuclease
 K27323	K27323; Autographiviridae HNH endonuclease
-K27324	K27324; Escherichia phage HNH endonuclease
+K27324	K27324; Demerecviridae DNA primase
 K27325	K27325; Yersinia phage homing endonuclease
-K27326	K27326; Autographiviridae HNH endonuclease
-K27327	K27327; Autographiviridae HNH endonuclease
-K27328	K27328; Acinetobacter phage HNH endonuclease
+K27326	K27326; Drexlerviridae DNA primase
+K27327	K27327; Hafunaviridae DNA primase
+K27328	K27328; Bacillus phage primase
 K27329	K27329; Autographiviridae HNH endonuclease
-K27330	K27330; Autographiviridae HNH endonuclease
-K27331	K27331; Yersinia phage HNH endonuclease
-K27332	K27332; Pectobacterium phage HNH endonuclease
+K27330	K27330; Crassvirales DNA primase
+K27331	K27331; Megaviricetes DNA primase
+K27332	K27332; Peduoviridae DNA primase
 K27333	K27333; Autographiviridae HNH endonuclease
-K27334	K27334; Pectobacterium phage HNH endonuclease
-K27335	K27335; Acinetobacter phage HNH endonuclease
-K27336	K27336; Pectobacterium phage HNH family homing endonuclease
+K27334	K27334; Peduoviridae DNA primase
+K27335	K27335; Chlorovirus DNA primase
+K27336	K27336; Zierdtviridae DNA primase
 K27337	K27337; Acinetobacter phage putative DNA exonuclease
 K27338	K27338; Autographiviridae putative HNH endonuclease
 K27339	UQCC4; ubiquinol-cytochrome c reductase complex assembly factor 4
 K27340	UQCC5, SMIM4; ubiquinol-cytochrome c reductase complex assembly factor 5
 K27341	UQCC6; ubiquinol-cytochrome c reductase complex assembly factor 6
 K27342	TMEM223; transmembrane protein 223
-K27343	tmcAL; tRNA(Met) cytidine acetate ligase [EC:6.3.4.-]
+K27343	tmcAL; tRNAmet cytidine acetate ligase [EC:6.3.1.22]
 K27344	ldmS; L-aspartate-L-methionine ligase [EC:6.3.2.-]
 K27345	PRND, PrPLP, DPL; prion like protein doppel
 K27346	SPRN, SHO; shadow of prion protein
@@ -26702,8 +26702,8 @@ K27373	K27373; Chaseviridae HNH endonuclease
 K27374	T5p150; Demerecviridae putative endonuclease [EC:3.1.-.-]
 K27375	K27375; Vibrio phage exodeoxyribonuclease VIII
 K27376	D15; Demerecviridae flap endonuclease [EC:3.1.11.- 3.1.11.3]
-K27377	K27377; Tequintavirus HNH endonuclease
-K27378	K27378; Salmonella phage HNH endonuclease
+K27377	K27377; Schitoviridae DNA primase
+K27378	K27378; Mesyanzhinovviridae DNA primase
 K27379	K27379; Demerecviridae HNH endonuclease
 K27380	K27380; Demerecviridae HNH endonuclease
 K27381	XIRP; xin actin-binding repeat-containing protein
@@ -26726,8 +26726,8 @@ K27397	PHF14; PHD finger protein 14
 K27398	CWC2; pre-mRNA-splicing factor CWC2
 K27399	K27399; Demerecviridae HNH endonuclease
 K27400	K27400; Demerecviridae HNH endonuclease
-K27401	K27401; Vibrio phage HNH endonuclease
-K27402	K27402; Demerecviridae HNH homing endonuclease
+K27401	K27401; Kyanoviridae phosphoribosylaminoimidazole synthetase
+K27402	K27402; Kyanoviridae phosphoribosylaminoimidazole-succinocarboxamide synthase
 K27403	K27403; Demerecviridae homing endonuclease
 K27404	K27404; Demerecviridae homing endonuclease
 K27405	K27405; Epseptimavirus homing endonuclease
@@ -26742,20 +26742,20 @@ K27413	ASK1_3_5; shaggy-related protein kinase [EC:2.7.11.1]
 K27414	ASK2_8; shaggy-related protein kinase [EC:2.7.11.1]
 K27415	ABP; auxin-binding protein
 K27416	U70; Roseolovirus alkaline exonuclease
-K27417	K27417; Demerecviridae putative HNH endonuclease
+K27417	K27417; Synechococcus phage phosphoribosylformylglycinamidine synthase
 K27418	K27418; Demerecviridae HNH homing endonuclease
-K27419	K27419; Epseptimavirus putative HNH homing endonuclease
+K27419	K27419; Kyanoviridae/Schitoviridae thymidylate synthase
 K27420	K27420; Demerecviridae putative homing endonuclease
 K27421	ORF142, T5p149; Demerecviridae nicking endonuclease [EC:3.1.21.-]
 K27422	D12; Demerecviridae probable exonuclease subunit 1 [EC:3.1.11.-]
 K27423	D13; Demerecviridae probable exonuclease subunit 2 [EC:3.1.11.-]
 K27424	K27424; Drexlerviridae DNA repair exonuclease
 K27425	K27425; Drexlerviridae exonuclease VIII
-K27426	K27426; Escherichia phage HNH endonuclease
-K27427	K27427; Escherichia phage HNH endonuclease
+K27426	K27426; Mimiviridae bifunctional dihydrofolate reductase-thymidylate synthase
+K27427	K27427; Paramecium bursaria Chlorella virus chitin synthase
 K27428	K27428; Drexlerviridae HNH endonuclease
-K27429	K27429; Tunavirus HNH endonuclease
-K27430	gp02; Rogunavirus HNH endonuclease
+K27429	K27429; Chlorovirus homospermidine synthase
+K27430	K27430; Chlorovirus hyaluronan synthase
 K27431	K27431; Fuselloviridae nuclease
 K27432	K27432; Hafunaviridae ERCC4-type nuclease
 K27433	K27433; Haloferacalesvirus exonuclease
@@ -26775,17 +26775,17 @@ K27446	K27446; Wphvirus HNH endonuclease
 K27447	K27447; Staphylococcus phage HNH endonuclease
 K27448	IRF2BP2; interferon regulatory factor 2-binding protein 2
 K27449	PRY; PTPN13-like protein, Y-linked
-K27450	K27450; Bacillus phage HNH endonuclease
+K27450	K27450; Chlorovirus NAD synthetase
 K27451	K27451; Staphylococcus phage HNH endonuclease
-K27452	K27452; Bacillus phage HNH endonuclease
+K27452	K27452; Chlorovirus tRNA(Ile)-lysidine synthase
 K27453	K27453; Staphylococcus phage HNH endonuclease
 K27454	K27454; Lactobacillus phage HNH endonuclease
 K27455	K27455; Staphylococcus phage HNH endonuclease
-K27456	K27456; Staphylococcus phage HNH endonuclease
-K27457	K27457; Bacillus phage HNH endonuclease
+K27456	K27456; Schitoviridae thymidylate synthase
+K27457	K27457; Straboviridae glutathionylspermidine synthase
 K27458	K27458; Staphylococcus phage HNH endonuclease
 K27459	K27459; Bacillus phage HNH endonuclease
-K27460	K27460; Enterococcus phage HNH endonuclease
+K27460	K27460; Acinetobacter phage histidyl tRNA synthetase
 K27461	K27461; Staphylococcus phage HNH endonuclease
 K27462	K27462; Staphylococcus phage homing endonuclease with GIY-YIG motif
 K27463	K27463; Staphylococcus phage intron encoded nuclease
@@ -26838,9 +26838,9 @@ K27509	K27509; Synechococcus phage DNA endonuclease V
 K27510	K27510; Kyanoviridae endonuclease
 K27511	K27511; Kyanoviridae endonuclease VII
 K27512	K27512; Kyanoviridae exonuclease
-K27513	K27513; Kyanoviridae HNH endonuclease
+K27513	K27513; Straboviridae thymidylate synthase
 K27514	K27514; Kyanoviridae HNH endonuclease
-K27515	K27515; Synechococcus phage HNH endonuclease
+K27515	K27515; Mimiviridae/Phycodnaviridae asparagine synthetase
 K27516	K27516; Kyanoviridae NAD synthetase
 K27517	K27517; Kyanoviridae restriction endonuclease II
 K27518	K27518; Kyanoviridae ribonuclease H
@@ -26876,8 +26876,8 @@ K27547	K27547; Yersinia phage exonuclease
 K27548	K27548; Yersinia phage terminase, endonuclease subunit
 K27549	K27549; Prasinovirus endonuclease
 K27550	K27550; Prasinovirus endonuclease VII
-K27551	K27551; Prasinovirus exonuclease
-K27552	K27552; Chlorovirus exonuclease
+K27551	K27551; Mesyanzhinovviridae/Herelleviridae thymidylate synthase
+K27552	K27552; Phycodnaviridae exonuclease
 K27553	K27553; Chlorovirus GIY-YIG catalytic domain-containing endonuclease
 K27554	K27554; Chlorovirus GIY-YIG catalytic domain-containing endonuclease
 K27555	K27555; Paramecium bursaria Chlorella virus GIY-YIG catalytic domain-containing endonuclease
@@ -26900,13 +26900,13 @@ K27571	SAMD7; sterile alpha motif domain-containing protein 7
 K27572	K27572; Schitoviridae HNH endonuclease
 K27573	K27573; Gamaleyavirus HNH endonuclease
 K27574	K27574; Schitoviridae HNH endonuclease
-K27575	K27575; Vibrio phage HNH endonuclease
+K27575	K27574; Vibrio phage HNH endonuclease
 K27576	K27576; Schitoviridae HNH endonuclease
 K27577	K27577; Steigviridae PD-(D/E)XK superfamily exonuclease
 K27578	K27578; Steigviridae putative HKD family nuclease
 K27579	K27579; Straboviridae anti-restriction nuclease
 K27580	K27580; Straboviridae anti-restriction nuclease
-K27581	K27581; Schitoviridae HNH endonuclease
+K27581	N; Pneumoviridae nucleoprotein
 K27582	SAMD11; sterile alpha motif domain-containing protein 11
 K27583	CENPV; centromere protein V
 K27584	K27584; Straboviridae anti-restriction nuclease
@@ -26997,7 +26997,7 @@ K27668	K27668; Straboviridae homing endonuclease
 K27669	K27669; Tequatrovirus homing endonuclease
 K27670	K27670; Straboviridae homing endonuclease
 K27671	K27671; Straboviridae homing endonuclease
-K27672	ChcAa; cyclohexane-1-carboxylate hydroxylase
+K27672	chcAa; cyclohexane-1-carboxylate 4-trans-hydroxylase [EC:1.14.15.40]
 K27673	chcB1; trans-4-hydroxycyclohexanecarboxylate dehydrogenase [EC:1.1.1.226]
 K27674	chcC2; 4-oxocyclohex-2-ene-1-carboxylate desaturase
 K27675	redI; 4-hydroxy-2,2'-bipyrrole-5-carbaldehyde O-methyltransferase [EC:2.1.1.-]
@@ -27067,4 +27067,140 @@ K27738	K27738; Zierdtviridae exonuclease
 K27739	K27739; Zierdtviridae HNH endonuclease
 K27740	AFB2_3; protein auxin signaling F-box 2/3
 K27741	GRH1, AFB1; GRR1-like protein 1
+K27742	SCR; protein SCARECROW
+K27743	SHR; protein SHORT-ROOT
+K27744	NSP1; protein nodulation signaling pathway 1
+K27745	NSP2; protein nodulation signaling pathway 2
+K27746	LAS, SCL18; protein lateral suppressor
+K27747	HAM; protein hairy meristem
+K27748	PAT; scarecrow-like transcription factor PAT
+K27749	DLT; protein DWARF and LOW-TILLERING
+K27750	RAM1; GRAS family protein RAM1
 K27751	ACBD6; acyl-CoA-binding domain-containing protein 6
+K27752	RAD1; GRAS family protein RAD1
+K27753	LISCL; GRAS family protein LISCL
+K27754	FASTKD1; FAST kinase domain-containing protein 1
+K27755	FASTKD3; FAST kinase domain-containing protein 3
+K27756	TBRG4, FASTKD4; FAST kinase domain-containing protein 4
+K27757	FASTKD5; FAST kinase domain-containing protein 5
+K27758	GIMAP1_3_5; GTPase IMAP family member 1/3/5
+K27759	MTNAP1; mitochondrial nucleoid-associated protein 1
+K27760	GIMAP2; GTPase IMAP family member 2
+K27761	GIMAP4; GTPase IMAP family member 4
+K27762	GIMAP6; GTPase IMAP family member 6
+K27763	K27763; Ackermannviridae head maturation protease
+K27764	K27764; Casjensviridae head maturation protease
+K27765	K27765; Ranavirus putative capsid maturation protease
+K27766	K27766; Chaseviridae head maturation protease
+K27767	K27767; Demerecviridae ATP-dependent protease
+K27768	T5.150; Demerecviridae prohead protease [EC:3.4.21.-]
+K27769	K27769; Drexlerviridae head maturation protease
+K27770	K27770; Haloferacalesvirus head maturation protease
+K27771	K27771; Herelleviridae head maturation protease
+K27772	K27772; Crassvirales protease
+K27773	GIMAP7; GTPase IMAP family member 7
+K27774	CPAMD8; C3 and PZP-like alpha-2-macroglobulin domain-containing protein 8
+K27775	lcp1, lcpA; cell wall biosynthesis protein
+K27776	SBE2; polyneuridine aldehyde synthase [EC:1.14.19.81]
+K27777	VR; vomilenine reductase [EC:1.5.1.32]
+K27778	DHVR; 1,2-dihydrovomilenine reductase [EC:1.3.1.73]
+K27779	NNMT; norajmaline N-methyltransferase [EC:2.1.1.392]
+K27780	GO; (19E)-geissoschizine oxidase [EC:1.14.19.80]
+K27781	NS; norfluorocurarine synthase
+K27782	NO; norfluorocurarine oxidase
+K27783	WS; Wieland-Gumlich aldehyde synthase
+K27784	AT; Wieland-Gumlich aldehyde malonyltransferase
+K27785	AT; Wieland-Gumlich aldehyde acetyltransferase
+K27786	10H; strychnine 10-hydroxylase
+K27787	OMT; strychnine O-methyltransferase
+K27788	11H; strychnine 11-hydroxylase
+K27789	REDOX1; 3,17-didehydrostemmadenine reductase [EC:1.5.1.56]
+K27790	REDOX2; 17-dehydrostemmadenine reductase [EC:1.1.1.439]
+K27791	SAT; stemmadenine O-acetyltransferase [EC:2.3.1.323]
+K27792	PAS; precondylocarpine acetate synthase [EC:1.21.3.11]
+K27793	DPAS; dihydroprecondylocarpine acetate synthase [EC:1.3.1.128]
+K27794	CS; catharanthine synthase [EC:5.5.1.37]
+K27795	TS; tabersonine synthase [EC:5.5.1.38]
+K27796	PRX1; peroxidase PRX1
+K27797	MCSA; 2-methylcitrate synthase [EC:2.3.3.5]
+K27798	HAVgp1; Hepatovirus genome polyprotein
+K27799	HEVgp01; Hepeviridae non-structural polyprotein pORF1
+K27800	HEVgp10; Hepeviridae capsid protein
+K27801	HDAg; Deltavirus delta antigen
+K27802	acnA; aconitate hydratase A / 2-methylisocitrate dehydratase [EC:4.2.1.3 4.2.1.99]
+K27803	HROB; homologous recombination OB-fold protein
+K27804	FRY; furry protein family
+K27805	POU2AF1; POU domain class 2-associating factor 1
+K27806	POU2AF2_3; POU domain class 2-associating factor 2/3
+K27807	SRS, STY; short internodes/stylish family transcription factor
+K27808	FLC; MADS-box protein FLC/MAF
+K27809	FES1; protein FRIGIDA-ESSENTIAL 1
+K27810	SUF4; protein suppressor of FRI 4
+K27811	FLX, FLL; protein FLX/FLXL
+K27812	FRL1_2; FRIGIDA-like protein 1/2
+K27813	CAVIN2, SDPR; caveolae-associated protein 2
+K27814	CAVIN3; caveolae-associated protein 3
+K27815	CAVIN4, MURC; caveolae-associated protein 4
+K27816	FIBCD1; fibrinogen C domain-containing protein 1
+K27817	RAP1GDS1; Rap1 GTPase-GDP dissociation stimulator 1
+K27818	RIC8; synembryn
+K27819	NCDN; neurochondrin
+K27820	K27820; Vilmaviridae head maturation protease
+K27821	K27821; Kyanoviridae head maturation protease
+K27822	K27822; Prasinovirus head maturation protease
+K27823	K27823; Betaentomopoxvirus metalloprotease (Cop-G1L)
+K27824	K27824; Betaentomopoxvirus virion core cysteine protease
+K27825	K27825; Rudiviridae protease
+K27826	K27826; Schitoviridae ATP-dependent protease
+K27827	K27827; Schitoviridae CLP protease
+K27828	K27828; Vibrio phage ATP-dependent protease
+K27829	K27829; Gordonia phage head maturation protease
+K27830	K27830; Mycobacterium phage ClpP-like protease
+K27831	K27831; Vilmaviridae head maturation protease
+K27832	MLIP; muscular LMNA-interacting protein
+K27833	ZNHIT6; box C/D snoRNA protein 1
+K27834	MIF4GD, SLIP1; MIF4G domain-containing protein
+K27835	GATD3, ES1; glutamine amidotransferase-like class 1 domain-containing protein 3, mitochondrial
+K27836	ELM1; mitochondrial fission protein ELM1
+K27837	cdhC; 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase [EC:2.3.1.317]
+K27838	E2.3.1.319; 3,5-dioxohexanoate:acetyl-CoA acetone transferase [EC:2.3.1.319]
+K27839	AKS1; akuammiline synthase 1 [EC:2.3.1.322]
+K27840	AKS2; akuammiline synthase 2 [EC:2.3.1.322]
+K27841	GFSA, GFSB, GFSC; beta-galactofuranoside beta-1,5-galactofuranosyltransferase [EC:2.4.1.398]
+K27842	E3.1.3.111; decaprenylphosphoryl-5-phosphoribose phosphatase [EC:3.1.3.111]
+K27843	oxsA; 4'-phosphooxetanocin A phosphatase [EC:3.1.3.112]
+K27844	ANMT; ajmaline N-methyltransferase [EC:2.1.1.393]
+K27845	BEND4; BEN domain-containing protein 4
+K27846	BEND2; BEN domain-containing protein 2
+K27847	BEND6; BEN domain-containing protein 6
+K27848	E2.3.1.318; 3-oxoadipate:acetyl-CoA acetyltransferase [EC:2.3.1.318]
+K27849	BAPT; taxoid C-13 O-(3-amino-3-phenylpropanoyl)transferase [EC:2.3.1.320]
+K27850	DBTNBT; 3'-N-debenzoyltaxol N-benzoyltransferase [EC:2.3.1.321]
+K27851	K27851; Zierdtviridae head maturation protease
+K27852	K27852; Steigviridae aspartyl protease
+K27853	wcaG; UDP-N-acetyl-alpha-D-glucosaminuronate decarboxylase [EC:4.1.1.128]
+K27855	cndG; 1'-carboxy-chondrochloren decarboxylase [EC:4.1.1.129]
+K27856	LRRC23; leucine-rich repeat-containing protein 23
+K27857	CGS1; plant cystathionine gamma-synthase [EC:2.5.1.160]
+K27858	VR2; vomilenine 19,20-reductase [EC:1.3.1.127]
+K27859	RHS; rhazimal synthase [EC:1.14.14.187]
+K27860	RHR; rhazimal reductase [EC:1.1.1.440]
+K27861	ZNF469; zinc finger protein 469
+K27862	lanM, procM; class II lanthipeptide synthase [EC:3.13.2.4]
+K27863	lanL, venL; class IV lanthipeptide synthase [EC:3.13.2.4]
+K27864	BANP; protein BANP
+K27865	BEND3; BEN domain-containing protein 3
+K27866	CRWN, LINC; protein CROWDED NUCLEI
+K27867	WIT; WPP domain-interacting tail-anchored protein
+K27868	WPP; WPP domain-containing protein
+K27869	WIP; WPP domain-interacting protein
+K27870	TGOLN; trans-Golgi network integral membrane protein
+K27871	bpsA, indC; indigoidine synthase [EC:4.3.3.9]
+K27872	oxsB; 4'-phospho-dehydrooxetanocin synthase [EC:5.3.99.13]
+K27873	ADO, cso; 4-vinylguaiacol dioxygenase [EC:1.13.11.94]
+K27874	srdA; selenate reductase (quinol) subunit A [EC:1.97.1.14]
+K27875	srdB; selenate reductase (quinol) subunit B [EC:1.97.1.14]
+K27876	srdC; selenate reductase (quinol) subunit C [EC:1.97.1.14]
+K27877	pbfD; 2-(methylaminoethyl)phosphonate oxidase [EC:1.5.3.27]
+K27878	wor5; aliphatic sulfonate oxidoreductase catalytic subunit [EC:1.97.1.13]
+K27879	wor5-S; aliphatic sulfonate oxidoreductase iron-sulfur subunit

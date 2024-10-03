@@ -21,3 +21,4 @@ openpyxl
 pyproject-toml>=0.0.10
 statsmodels
 seaborn>=0.13.2
+numba>=0.60.0
