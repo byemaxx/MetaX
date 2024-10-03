@@ -4,7 +4,8 @@ import logging
 import pandas as pd
 import numpy as np
 from numba import njit
-from joblib import Parallel, delayed
+import multiprocessing
+import os
 
 LOGGER = logging.getLogger(__name__)
 
@@ -536,7 +537,7 @@ def get_list_of_tuple_w_protein_profiles_and_shifted_peptides(
             quant_id,
         )
     else:
-        list_of_tuple_w_protein_profiles_and_shifted_peptides = get_list_with_joblib(
+        list_of_tuple_w_protein_profiles_and_shifted_peptides = get_list_with_multiprocessing(
             input_specification_tuplelist,
             num_cores,
             log_processed_proteins,
@@ -604,15 +605,16 @@ def get_list_with_sequential_processing(
         for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
     ]
 
-def get_list_with_joblib(
+def get_list_with_multiprocessing(
     input_specification_tuplelist,
     num_cores,
     log_processed_proteins,
     protein_id,
     quant_id,
 ):
-    results = Parallel(n_jobs=num_cores)(
-        delayed(calculate_peptide_and_protein_intensities)(
+    pool = multiprocessing.Pool(num_cores)
+    args = [
+        (
             idx,
             peptide_intensity_df,
             num_samples_quadratic,
@@ -622,7 +624,10 @@ def get_list_with_joblib(
             quant_id,
         )
         for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
-    )
+    ]
+    results = pool.starmap(calculate_peptide_and_protein_intensities, args)
+    pool.close()
+    pool.join()
     return results
 
 def calculate_peptide_and_protein_intensities(
@@ -851,16 +856,15 @@ def run_lfq(
     return protein_df, ion_df
 
 if __name__ == "__main__":
+    multiprocessing.set_start_method('spawn', force=True)
+    multiprocessing.freeze_support()
     import os
     import time
     t1 = time.time()
-        
+    
     current_dir = os.path.dirname(os.path.realpath(__file__))
     df_path = os.path.join(current_dir, "../../../local_tests/peptide_for_protein.tsv")
     df = pd.read_csv(df_path, sep="\t")
-    
-    # norm_df = run_norm(df, protein_id="Proteins", quant_id="Sequence")
-    # print(norm_df.head())
     
     protein_df, ion_df = run_lfq(
         df,
@@ -869,6 +873,7 @@ if __name__ == "__main__":
         min_nonan=1,
         number_of_quadratic_samples=50,
         maximum_number_of_quadratic_ions_to_use_per_protein=10,
+        num_cores=None,
     )
     print(protein_df.head())
     t2 = time.time()
