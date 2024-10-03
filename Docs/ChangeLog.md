@@ -1,8 +1,13 @@
+# Version: 1.115.1
+## Date: 2024-10-03
+### Changes:
+- New: added multiprocessing option for LFQ.
+
+
 # Version: 1.115.0
 ## Date: 2024-10-02
 ### Changes:
 - New: added DriectLFQ algorithm option for quantification.
-
 
 # Version: 1.114.5
 ## Date: 2024-09-23

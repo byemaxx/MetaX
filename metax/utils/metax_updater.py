@@ -213,8 +213,9 @@ class Updater:
             change_log_str = "No change log."
 
         if self.current_api != self.remote_api:
-            self.display_message_in_text_browser("Update", f"MetaX new version is available with a new API.\n\nPlease download the new version manually.\n\n\
-            current version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}")
+            self.display_message_in_text_browser("Update", f"MetaX new version is available with a new API.\
+                \n\nPlease download the new version manually from: https://github.com/byemaxx/MetaX\
+                \n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}\n\nChange log:\n{change_log_str}")
             return
 
         reply = self.display_message_in_text_browser("Update", f"MetaX new version is available. Do you want to update?\

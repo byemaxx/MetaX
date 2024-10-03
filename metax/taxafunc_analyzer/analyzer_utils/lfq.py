@@ -1,17 +1,17 @@
-# lfq.py
-
 import logging
 import pandas as pd
 import numpy as np
 from numba import njit
-from joblib import Parallel, delayed
+import multiprocessing
+import os
 
+# Setup logging
 LOGGER = logging.getLogger(__name__)
 
 def setup_logging():
     logging.basicConfig(
         level=logging.INFO,
-        format="LFQ Quantify: %(message)s",
+        format="LFQ: %(message)s",
     )
 
 setup_logging()
@@ -25,6 +25,7 @@ def check_whether_to_copy_numpy_arrays_derived_from_pandas():
         return True
 
 def _manipulate_numpy_array_without_copy():
+    # Test whether numpy arrays derived from pandas are views or copies
     protein_profile_df = pd.DataFrame(
         {
             "ProteinA": [10, 20, 30, 40],
@@ -33,10 +34,8 @@ def _manipulate_numpy_array_without_copy():
         },
         index=["Sample1", "Sample2", "Sample3", "Sample4"],
     )
-
     protein_profile_df = protein_profile_df.iloc[1:3]
     protein_profile_numpy = protein_profile_df.to_numpy(copy=False)
-
     protein_profile_numpy[0] = protein_profile_numpy[0] + 2
 
 def sort_input_df_by_protein_id(data_df, protein_id):
@@ -51,7 +50,6 @@ def remove_potential_quant_id_duplicates(data_df: pd.DataFrame, quant_id):
         LOGGER.warning(
             f"Duplicate quant_ids detected. {entries_removed} rows removed from input df."
         )
-
     return data_df
 
 def index_and_log_transform_input_df(data_df, protein_id, quant_id):
@@ -61,57 +59,42 @@ def index_and_log_transform_input_df(data_df, protein_id, quant_id):
 def remove_allnan_rows_input_df(data_df):
     return data_df.dropna(axis=0, how="all")
 
+# NormalizationManager and related classes
 class NormalizationManager:
     def __init__(self, complete_dataframe, num_samples_quadratic=100):
         self.complete_dataframe = complete_dataframe
         self._num_samples_quadratic = num_samples_quadratic
-        self._rows_sorted_by_number_valid_values = None
-        self._quadratic_subset_rows = None
-        self._linear_subset_rows = None
-        self._merged_reference_sample = None
-        self.normalization_function = None
+        self._run_normalization()
 
     def _run_normalization(self):
-        self._check_that_there_are_no_duplicate_rows()
+        self._check_no_duplicate_rows()
         if len(self.complete_dataframe.index) <= self._num_samples_quadratic:
-            self._normalize_complete_input_quadratic()
+            self.complete_dataframe = self.normalization_function(self.complete_dataframe)
         else:
-            self._normalize_quadratic_and_linear()
+            self._normalize_large_dataset()
 
-    def _check_that_there_are_no_duplicate_rows(self):
+    def _check_no_duplicate_rows(self):
         if self.complete_dataframe.index.duplicated().any():
             raise ValueError(
                 "There are duplicate rows in the input dataframe. Ensure that there are no duplicate quant_id/ion values."
             )
 
-    def _normalize_complete_input_quadratic(self):
-        self.complete_dataframe = self.normalization_function(self.complete_dataframe)
-
-    def _normalize_quadratic_and_linear(self):
+    def _normalize_large_dataset(self):
         self._determine_subset_rows()
-        self._normalize_quadratic_selection()
+        self._normalize_quadratic_subset()
         self._create_reference_sample()
-        self._shift_remaining_dataframe_to_reference_sample()
+        self._shift_remaining_rows()
 
     def _determine_subset_rows(self):
-        self._determine_sorted_rows()
-        self._quadratic_subset_rows = self._rows_sorted_by_number_valid_values[: self._num_samples_quadratic]
-        self._linear_subset_rows = [
-            x
-            for x in self.complete_dataframe.index
-            if x not in self._quadratic_subset_rows
+        self._sorted_rows = self.complete_dataframe.index[
+            np.argsort(self.complete_dataframe.isna().sum(axis=1))
         ]
-
-    def _determine_sorted_rows(self):
-        rows = self.complete_dataframe.index
-        self._rows_sorted_by_number_valid_values = sorted(
-            rows,
-            key=lambda idx: self._get_num_nas_in_row(
-                self.complete_dataframe.loc[idx, :].to_numpy()
-            ),
+        self._quadratic_subset_rows = self._sorted_rows[: self._num_samples_quadratic]
+        self._linear_subset_rows = self.complete_dataframe.index.difference(
+            self._quadratic_subset_rows
         )
 
-    def _normalize_quadratic_selection(self):
+    def _normalize_quadratic_subset(self):
         quadratic_subset_dataframe = self.complete_dataframe.loc[self._quadratic_subset_rows]
         self.complete_dataframe.loc[self._quadratic_subset_rows, :] = self.normalization_function(quadratic_subset_dataframe)
 
@@ -119,21 +102,12 @@ class NormalizationManager:
         quadratic_subset_dataframe = self.complete_dataframe.loc[self._quadratic_subset_rows]
         self._merged_reference_sample = quadratic_subset_dataframe.median(axis=0)
 
-    def _shift_remaining_dataframe_to_reference_sample(self):
+    def _shift_remaining_rows(self):
         linear_subset_dataframe = self.complete_dataframe.loc[self._linear_subset_rows]
         linear_shifted_dataframe = SampleShifterLinear(
             linear_subset_dataframe, self._merged_reference_sample
         ).ion_dataframe
         self.complete_dataframe.loc[self._linear_subset_rows, :] = linear_shifted_dataframe
-
-    @staticmethod
-    @njit
-    def _get_num_nas_in_row(row):
-        sum = 0
-        isnans = np.isnan(row)
-        for is_nan in isnans:
-            sum += is_nan
-        return sum
 
 class NormalizationManagerSamplesOnSelectedProteins(NormalizationManager):
     def __init__(
@@ -144,22 +118,25 @@ class NormalizationManagerSamplesOnSelectedProteins(NormalizationManager):
         copy_numpy_arrays=False,
     ):
         complete_dataframe = complete_dataframe.T
-        super().__init__(complete_dataframe, num_samples_quadratic)
         self.normalization_function = self._normalization_function
         self._selected_proteins_file = selected_proteins_file
         self._selected_protein_groups = None
         self._copy_numpy_arrays = copy_numpy_arrays
-        self._adapt_selected_proteins_to_protein_groups()
-        self._run_normalization()
+        self._adapt_selected_proteins_to_protein_groups(complete_dataframe)
+        super().__init__(complete_dataframe, num_samples_quadratic)
         self.complete_dataframe = self.complete_dataframe.T
 
-    def _adapt_selected_proteins_to_protein_groups(self):
+    def _adapt_selected_proteins_to_protein_groups(self, df):
         if self._selected_proteins_file is not None:
             LOGGER.info("Normalizing only selected proteins")
             selected_proteins = pd.read_csv(
                 self._selected_proteins_file, header=None, sep="\t"
             )[0].to_list()
-            protein2proteingroup_mapping = self._get_protein2proteingroup_mapping()
+            protein2proteingroup_mapping = {
+                protein: protein_group
+                for protein_group in df.columns.get_level_values(0).to_list()
+                for protein in protein_group.split(";")
+            }
             existing_selected_proteins = [
                 protein
                 for protein in selected_proteins
@@ -169,15 +146,6 @@ class NormalizationManagerSamplesOnSelectedProteins(NormalizationManager):
                 protein2proteingroup_mapping[protein]
                 for protein in existing_selected_proteins
             ]
-
-    def _get_protein2proteingroup_mapping(self):
-        protein_groups = self.complete_dataframe.columns.get_level_values(0).to_list()
-        protein2proteingroup_mapping = {
-            protein: protein_group
-            for protein_group in protein_groups
-            for protein in protein_group.split(";")
-        }
-        return protein2proteingroup_mapping
 
     def _normalization_function(self, ion_dataframe):
         if self._selected_protein_groups is not None:
@@ -198,42 +166,16 @@ class NormalizationManagerSamplesOnSelectedProteins(NormalizationManager):
         )
         return df_c_normed
 
-    def _create_reference_sample(self):
-        if self._selected_protein_groups is not None:
-            quadratic_subset_dataframe = self.complete_dataframe.loc[
-                self._quadratic_subset_rows, self._selected_protein_groups
-            ]
-        else:
-            quadratic_subset_dataframe = self.complete_dataframe.loc[
-                self._quadratic_subset_rows, :
-            ]
-        self._merged_reference_sample = quadratic_subset_dataframe.median(axis=0)
-
-    def _shift_remaining_dataframe_to_reference_sample(self):
-        linear_subset_dataframe = self.complete_dataframe.loc[
-            self._linear_subset_rows
-        ]
-        linear_shifted_dataframe = SampleShifterLinear(
-            linear_subset_dataframe,
-            self._merged_reference_sample,
-            protein_subset=self._selected_protein_groups,
-        ).ion_dataframe
-        self.complete_dataframe.loc[self._linear_subset_rows, :] = linear_shifted_dataframe
-
 def drop_nas_if_possible(df):
     df_nonans = df.dropna(axis=1)
-    fraction_nonans = calculate_fraction_with_no_NAs(df, df_nonans)
-    num_nonans = len(df_nonans.columns)
-    if num_nonans < 1000 or fraction_nonans < 0.001:
+    fraction_nonans = len(df_nonans.columns) / len(df.columns)
+    if len(df_nonans.columns) < 1000 or fraction_nonans < 0.001:
         LOGGER.info(
             "Too few values for normalization without missing values. Including missing values"
         )
         return df
     else:
         return df_nonans
-
-def calculate_fraction_with_no_NAs(df, df_nonnans):
-    return len(df_nonnans.columns) / len(df.columns)
 
 def get_normfacts(samples):
     set_samples_with_only_single_intensity_to_nan(samples)
@@ -344,9 +286,6 @@ def calc_distance(metric, samples_1, samples_2):
     if metric == "variance":
         fcdist = get_fcdistrib(samples_1, samples_2)
         res = calc_nanvar(fcdist)
-    if metric == "overlap":
-        fcdist = get_fcdistrib(samples_1, samples_2)
-        res = sum(~np.isnan(fcdist))
     if res is None:
         raise Exception(f"Distance metric {metric} not implemented")
     if np.isnan(res):
@@ -438,32 +377,18 @@ def get_total_shift(sampleidx2anchoridx, sample2shift, sample_idx):
     return total_shift
 
 class SampleShifterLinear:
-    def __init__(self, ion_dataframe, reference_intensities, protein_subset=None):
+    def __init__(self, ion_dataframe, reference_intensities):
         self.ion_dataframe = ion_dataframe
-        self._protein_subset = protein_subset
-        self._ion_dataframe_values = None
         self._reference_intensities = reference_intensities.to_numpy()
-        self._define_ion_dataframe_values()
         self._shift_columns_to_reference_sample()
 
-    def _define_ion_dataframe_values(self):
-        if self._protein_subset is not None:
-            self._ion_dataframe_values = self.ion_dataframe.loc[
-                :, self._protein_subset
-            ].to_numpy()
-        else:
-            self._ion_dataframe_values = self.ion_dataframe.to_numpy()
-
     def _shift_columns_to_reference_sample(self):
-        num_rows = self._ion_dataframe_values.shape[0]
+        num_rows = self.ion_dataframe.shape[0]
         for row_idx in range(num_rows):
-            self._shift_to_reference_sample(row_idx)
-
-    def _shift_to_reference_sample(self, row_idx):
-        distance_to_reference = self._calc_distance(
-            samples_1=self._reference_intensities, samples_2=self._ion_dataframe_values[row_idx, :]
-        )
-        self.ion_dataframe.iloc[row_idx, :] += distance_to_reference
+            distance_to_reference = self._calc_distance(
+                samples_1=self._reference_intensities, samples_2=self.ion_dataframe.iloc[row_idx, :].to_numpy()
+            )
+            self.ion_dataframe.iloc[row_idx, :] += distance_to_reference
 
     @staticmethod
     def _calc_distance(samples_1, samples_2):
@@ -485,7 +410,7 @@ def estimate_protein_intensities(
     quant_id,
 ):
     allprots = list(normed_df.index.get_level_values(0).unique())
-    LOGGER.info(f"{len(allprots)} lfq-groups total")
+    LOGGER.info(f"{len(allprots)} LFQ-Objects total")
 
     list_of_tuple_w_protein_profiles_and_shifted_peptides = get_list_of_tuple_w_protein_profiles_and_shifted_peptides(
         normed_df,
@@ -493,10 +418,9 @@ def estimate_protein_intensities(
         min_nonan,
         num_cores,
         log_processed_proteins,
-        compile_normalized_ion_table,
-        protein_id,
-        quant_id,
+
     )
+
     protein_df = get_protein_dataframe_from_list_of_protein_profiles(
         list_of_tuple_w_protein_profiles_and_shifted_peptides=list_of_tuple_w_protein_profiles_and_shifted_peptides,
         normed_df=normed_df,
@@ -520,30 +444,43 @@ def get_list_of_tuple_w_protein_profiles_and_shifted_peptides(
     min_nonan,
     num_cores,
     log_processed_proteins,
-    compile_normalized_ion_table,
-    protein_id,
-    quant_id,
+
 ):
     input_specification_tuplelist = get_input_specification_tuplelist_idx__df__num_samples_quadratic__min_nonan(
         normed_df, num_samples_quadratic, min_nonan
     )
 
-    if num_cores is not None and num_cores <= 1:
-        list_of_tuple_w_protein_profiles_and_shifted_peptides = get_list_with_sequential_processing(
-            input_specification_tuplelist,
-            log_processed_proteins,
-            protein_id,
-            quant_id,
-        )
+    if num_cores is not None and num_cores > 1:
+        # Use multiprocessing
+        pool = multiprocessing.Pool(num_cores)
+        args = [
+            (
+                idx,
+                peptide_intensity_df,
+                num_samples_quadratic,
+                min_nonan,
+                log_processed_proteins
+            )
+            for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
+        ]
+        results = pool.starmap(calculate_peptide_and_protein_intensities, args)
+        pool.close()
+        pool.join()
     else:
-        list_of_tuple_w_protein_profiles_and_shifted_peptides = get_list_with_joblib(
-            input_specification_tuplelist,
-            num_cores,
-            log_processed_proteins,
-            protein_id,
-            quant_id,
-        )
-    return list_of_tuple_w_protein_profiles_and_shifted_peptides
+        # Process sequentially
+        results = [
+            calculate_peptide_and_protein_intensities(
+                idx,
+                peptide_intensity_df,
+                num_samples_quadratic,
+                min_nonan,
+                log_processed_proteins,
+
+            )
+            for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
+        ]
+
+    return results
 
 def get_input_specification_tuplelist_idx__df__num_samples_quadratic__min_nonan(
     normed_df, num_samples_quadratic, min_nonan
@@ -560,7 +497,7 @@ def get_normed_dfs(normed_df):
     normed_array = normed_df.to_numpy()
     indices_of_proteinname_switch = find_nameswitch_indices(protein_names)
     results_list = [
-        get_subdf(normed_array, indices_of_proteinname_switch, idx, protein_names, ion_names)
+        get_subdf(normed_array, indices_of_proteinname_switch, idx, protein_names, ion_names, normed_df.columns)
         for idx in range(len(indices_of_proteinname_switch) - 1)
     ]
 
@@ -575,7 +512,7 @@ def find_nameswitch_indices(arr):
 
     return start_indices
 
-def get_subdf(normed_array, indices_of_proteinname_switch, idx, protein_names, ion_names):
+def get_subdf(normed_array, indices_of_proteinname_switch, idx, protein_names, ion_names, columns):
     start_switch = indices_of_proteinname_switch[idx]
     end_switch = indices_of_proteinname_switch[idx + 1]
     sub_array = normed_array[start_switch:end_switch]
@@ -583,47 +520,7 @@ def get_subdf(normed_array, indices_of_proteinname_switch, idx, protein_names, i
         [protein_names[start_switch:end_switch], ion_names[start_switch:end_switch]],
         names=["protein_id", "quant_id"],
     )
-    return pd.DataFrame(sub_array, index=index_sub_array)
-
-def get_list_with_sequential_processing(
-    input_specification_tuplelist,
-    log_processed_proteins,
-    protein_id,
-    quant_id,
-):
-    return [
-        calculate_peptide_and_protein_intensities(
-            idx,
-            peptide_intensity_df,
-            num_samples_quadratic,
-            min_nonan,
-            log_processed_proteins,
-            protein_id,
-            quant_id,
-        )
-        for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
-    ]
-
-def get_list_with_joblib(
-    input_specification_tuplelist,
-    num_cores,
-    log_processed_proteins,
-    protein_id,
-    quant_id,
-):
-    results = Parallel(n_jobs=num_cores)(
-        delayed(calculate_peptide_and_protein_intensities)(
-            idx,
-            peptide_intensity_df,
-            num_samples_quadratic,
-            min_nonan,
-            log_processed_proteins,
-            protein_id,
-            quant_id,
-        )
-        for idx, peptide_intensity_df, num_samples_quadratic, min_nonan in input_specification_tuplelist
-    )
-    return results
+    return pd.DataFrame(sub_array, index=index_sub_array, columns=columns)
 
 def calculate_peptide_and_protein_intensities(
     idx,
@@ -631,16 +528,16 @@ def calculate_peptide_and_protein_intensities(
     num_samples_quadratic,
     min_nonan,
     log_processed_proteins,
-    protein_id,
-    quant_id,
+
 ):
+    if (idx % 100 == 0) and log_processed_proteins:
+        LOGGER.info(f"Processing LFQ object {idx}")
+
     if len(peptide_intensity_df.index) > 1:
         peptide_intensity_df = ProtvalCutter(
             peptide_intensity_df, maximum_df_length=100
         ).get_dataframe()
 
-    if (idx % 100 == 0) and log_processed_proteins:
-        LOGGER.info(f"LFQ object {idx}")
     summed_pepint = np.nansum(2 ** peptide_intensity_df)
 
     if peptide_intensity_df.shape[1] < 2:
@@ -660,47 +557,18 @@ class ProtvalCutter:
     def __init__(self, protvals_df, maximum_df_length=100):
         self._protvals_df = protvals_df
         self._maximum_df_length = maximum_df_length
-        self._dataframe_too_long = None
-        self._sorted_idx = None
-        self._check_if_df_too_long_and_sort_index_if_so()
-
-    def _check_if_df_too_long_and_sort_index_if_so(self):
-        self._dataframe_too_long = len(self._protvals_df.index) > self._maximum_df_length
-        if self._dataframe_too_long:
-            self._determine_nansorted_df_index()
-
-    def _determine_nansorted_df_index(self):
-        idxs = self._protvals_df.index
-        self._sorted_idx = sorted(
-            idxs,
-            key=lambda idx: self._get_num_nas_in_row(self._protvals_df.loc[idx].to_numpy()),
-        )
-
-    @staticmethod
-    @njit
-    def _get_num_nas_in_row(row):
-        sum = 0
-        isnans = np.isnan(row)
-        for is_nan in isnans:
-            sum += is_nan
-        return sum
 
     def get_dataframe(self):
-        if self._dataframe_too_long:
-            return self._get_shortened_dataframe()
+        if len(self._protvals_df.index) > self._maximum_df_length:
+            sorted_idx = self._protvals_df.isna().sum(axis=1).sort_values().index[: self._maximum_df_length]
+            return self._protvals_df.loc[sorted_idx]
         else:
             return self._protvals_df
 
-    def _get_shortened_dataframe(self):
-        shortened_index = self._sorted_idx[: self._maximum_df_length]
-        return self._protvals_df.loc[shortened_index]
-
 class NormalizationManagerProtein(NormalizationManager):
     def __init__(self, complete_dataframe, num_samples_quadratic):
-        super().__init__(complete_dataframe, num_samples_quadratic)
         self.normalization_function = normalize_ion_profiles
-        self._rows_sorted_by_number_valid_values = None
-        self._run_normalization()
+        super().__init__(complete_dataframe, num_samples_quadratic)
 
 def normalize_ion_profiles(protein_profile_df):
     protein_profile_numpy = protein_profile_df.to_numpy()
@@ -713,18 +581,6 @@ def normalize_ion_profiles(protein_profile_df):
     return df_normed
 
 def get_protein_profile_from_shifted_peptides(normalized_peptide_profile_df, summed_pepints, min_nonan):
-    intens_vec = get_list_with_protein_value_for_each_sample(
-        normalized_peptide_profile_df, min_nonan
-    )
-    intens_vec = np.array(intens_vec)
-    summed_intensity = np.nansum(2 ** intens_vec)
-    if summed_intensity == 0:
-        return None
-    intens_conversion_factor = summed_pepints / summed_intensity
-    scaled_vec = intens_vec + np.log2(intens_conversion_factor)
-    return scaled_vec
-
-def get_list_with_protein_value_for_each_sample(normalized_peptide_profile_df, min_nonan):
     intens_vec = []
     for sample in normalized_peptide_profile_df.columns:
         reps = normalized_peptide_profile_df.loc[:, sample].to_numpy()
@@ -733,7 +589,13 @@ def get_list_with_protein_value_for_each_sample(normalized_peptide_profile_df, m
             intens_vec.append(np.nanmedian(reps))
         else:
             intens_vec.append(np.nan)
-    return intens_vec
+    intens_vec = np.array(intens_vec)
+    summed_intensity = np.nansum(2 ** intens_vec)
+    if summed_intensity == 0:
+        return None
+    intens_conversion_factor = summed_pepints / summed_intensity
+    scaled_vec = intens_vec + np.log2(intens_conversion_factor)
+    return scaled_vec
 
 def get_protein_dataframe_from_list_of_protein_profiles(
     list_of_tuple_w_protein_profiles_and_shifted_peptides, normed_df, protein_id
@@ -781,32 +643,6 @@ def get_ion_intensity_dataframe_from_list_of_shifted_peptides(
     ion_df = ion_df.set_index([protein_id, quant_id])
     return ion_df
 
-def run_norm(
-    input_df,
-    protein_id: str = "protein",
-    quant_id: str = "ion",
-    number_of_quadratic_samples: int = 50,
-):
-    copy_numpy_arrays = check_whether_to_copy_numpy_arrays_derived_from_pandas()
-    input_df = sort_input_df_by_protein_id(input_df, protein_id)
-    input_df = remove_potential_quant_id_duplicates(input_df, quant_id)
-    input_df = index_and_log_transform_input_df(input_df, protein_id, quant_id)
-    input_df = remove_allnan_rows_input_df(input_df)
-    LOGGER.info(f"Starting LFQ analysis for [{protein_id}].")
-    LOGGER.info("Performing sample normalization.")
-    input_df = NormalizationManagerSamplesOnSelectedProteins(
-        input_df,
-        num_samples_quadratic=number_of_quadratic_samples,
-        selected_proteins_file=None,
-        copy_numpy_arrays=copy_numpy_arrays,
-    ).complete_dataframe
-    # resotre log2 values
-    input_df = 2 ** input_df
-
-    # fill NaN with 0
-    input_df = input_df.fillna(0)
-    LOGGER.info(f'Normalizing data for [{protein_id}] completed.')
-    return input_df
 
 def run_lfq(
     input_df,
@@ -817,7 +653,8 @@ def run_lfq(
     maximum_number_of_quadratic_ions_to_use_per_protein: int = 10,
     log_processed_proteins: bool = True,
     compile_normalized_ion_table: bool = True,
-    num_cores: int = None,
+    num_cores: int|None = None,
+    use_multiprocessing: bool = False,
 ):
     copy_numpy_arrays = check_whether_to_copy_numpy_arrays_derived_from_pandas()
 
@@ -835,6 +672,13 @@ def run_lfq(
     ).complete_dataframe
 
     LOGGER.info("Estimating LFQ intensities.")
+    if use_multiprocessing and num_cores is None:
+        num_cores = os.cpu_count()
+        LOGGER.info(f"{num_cores} cores for multiprocessing.")
+    elif not use_multiprocessing:
+        LOGGER.info("Multiprocessing disabled.")
+        num_cores = 1
+
     protein_df, ion_df = estimate_protein_intensities(
         input_df,
         min_nonan=min_nonan,
@@ -845,22 +689,16 @@ def run_lfq(
         protein_id=protein_id,
         quant_id=quant_id,
     )
-    
     LOGGER.info(f'LFQ analysis for [{protein_id}] completed.')
-
     return protein_df, ion_df
 
 if __name__ == "__main__":
-    import os
     import time
     t1 = time.time()
-        
     current_dir = os.path.dirname(os.path.realpath(__file__))
     df_path = os.path.join(current_dir, "../../../local_tests/peptide_for_protein.tsv")
     df = pd.read_csv(df_path, sep="\t")
-    
-    # norm_df = run_norm(df, protein_id="Proteins", quant_id="Sequence")
-    # print(norm_df.head())
+
     
     protein_df, ion_df = run_lfq(
         df,
@@ -869,7 +707,10 @@ if __name__ == "__main__":
         min_nonan=1,
         number_of_quadratic_samples=50,
         maximum_number_of_quadratic_ions_to_use_per_protein=10,
+        num_cores=None,
+        use_multiprocessing=True
     )
+    print(protein_df.shape)
     print(protein_df.head())
     t2 = time.time()
     print(f"Time: {t2-t1:.4f} s")

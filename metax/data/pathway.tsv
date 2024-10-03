@@ -9,6 +9,7 @@ map01232	Nucleotide metabolism
 map01250	Biosynthesis of nucleotide sugars
 map01240	Biosynthesis of cofactors
 map01220	Degradation of aromatic compounds
+map01310	Nitrogen cycle
 map00010	Glycolysis / Gluconeogenesis
 map00020	Citrate cycle (TCA cycle)
 map00030	Pentose phosphate pathway
@@ -27,8 +28,8 @@ map00562	Inositol phosphate metabolism
 map00190	Oxidative phosphorylation
 map00195	Photosynthesis
 map00196	Photosynthesis - antenna proteins
-map00710	Carbon fixation in photosynthetic organisms
-map00720	Carbon fixation pathways in prokaryotes
+map00710	Carbon fixation by Calvin cycle
+map00720	Other carbon fixation pathways
 map00680	Methane metabolism
 map00910	Nitrogen metabolism
 map00920	Sulfur metabolism
@@ -36,6 +37,7 @@ map00061	Fatty acid biosynthesis
 map00062	Fatty acid elongation
 map00071	Fatty acid degradation
 map00073	Cutin, suberine and wax biosynthesis
+map00074	Mycolic acid biosynthesis
 map00100	Steroid biosynthesis
 map00120	Primary bile acid biosynthesis
 map00121	Secondary bile acid biosynthesis
@@ -220,7 +222,8 @@ map03262	Virion - Coronavirus
 map03261	Virion - Influenza virus
 map03263	Virion - Enterovirus
 map03264	Virion - Flavivirus
-map03265	Virion - Ebolavirus and Lyssavirus
+map03265	Virion - Ebolavirus, Lyssavirus and Morbillivirus
+map03272	Virion - Hepatitis viruses
 map03266	Virion - Herpesvirus
 map03268	Virion - Orthopoxvirus
 map03267	Virion - Adenovirus
@@ -581,6 +584,7 @@ ko01232	Nucleotide metabolism
 ko01250	Biosynthesis of nucleotide sugars
 ko01240	Biosynthesis of cofactors
 ko01220	Degradation of aromatic compounds
+ko01310	Nitrogen cycle
 ko00010	Glycolysis / Gluconeogenesis
 ko00020	Citrate cycle (TCA cycle)
 ko00030	Pentose phosphate pathway
@@ -599,8 +603,8 @@ ko00562	Inositol phosphate metabolism
 ko00190	Oxidative phosphorylation
 ko00195	Photosynthesis
 ko00196	Photosynthesis - antenna proteins
-ko00710	Carbon fixation in photosynthetic organisms
-ko00720	Carbon fixation pathways in prokaryotes
+ko00710	Carbon fixation by Calvin cycle
+ko00720	Other carbon fixation pathways
 ko00680	Methane metabolism
 ko00910	Nitrogen metabolism
 ko00920	Sulfur metabolism
@@ -608,6 +612,7 @@ ko00061	Fatty acid biosynthesis
 ko00062	Fatty acid elongation
 ko00071	Fatty acid degradation
 ko00073	Cutin, suberine and wax biosynthesis
+ko00074	Mycolic acid biosynthesis
 ko00100	Steroid biosynthesis
 ko00120	Primary bile acid biosynthesis
 ko00121	Secondary bile acid biosynthesis
@@ -783,7 +788,8 @@ ko03262	Virion - Coronavirus
 ko03261	Virion - Influenza virus
 ko03263	Virion - Enterovirus
 ko03264	Virion - Flavivirus
-ko03265	Virion - Ebolavirus and Lyssavirus
+ko03265	Virion - Ebolavirus, Lyssavirus and Morbillivirus
+ko03272	Virion - Hepatitis viruses
 ko03266	Virion - Herpesvirus
 ko03268	Virion - Orthopoxvirus
 ko03267	Virion - Adenovirus
