@@ -4881,12 +4881,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                table_names = []
+                table_names = [] # reset table_names as empty list
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
                     p_value = round(p_value, 4)
+                    p_type = self.comboBox_top_heatmap_p_type.currentText()
                     
-                    ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
+                    ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition, "p_type": p_type}
                     self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_ttest, **ttest_sig_tf_params)
                     
                 

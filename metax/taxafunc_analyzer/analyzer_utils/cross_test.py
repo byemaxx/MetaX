@@ -598,7 +598,7 @@ class CrossTest:
                                      condition:list|None =None, p_type: str = 'padj'
                                      ) -> tuple:
         p_col_name = 'pvalue' if p_type == 'pvalue' else 'padj'
-        
+        print(f"Using [{p_col_name}] for filtering")
         # calculate the test result if not given
         if taxa_res_df is None or func_res_df is None or taxa_func_res_df is None:
             print("No test result given, calculating the test result first")

@@ -1,5 +1,10 @@
+# Version: 1.115.3
+## Date: 2024-10-04
+### Changes:
+- Fix: Fixed the filter of pvalue or padj option not work for functional redundancy analysis in T-Test part.
+
 # Version: 1.115.2
-## Date: 2024-10-03
+## Date: 2024-10-04
 ### Changes:
 - New: added a new Normalization method: "Trace Shifting" for the data preprossing.
 
