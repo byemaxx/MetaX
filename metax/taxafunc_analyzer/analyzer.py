@@ -688,12 +688,31 @@ class TaxaFuncAnalyzer:
         df_taxa_func = df_taxa_func.set_index(['Taxon', self.func_name], drop=True)
         
         return df_taxa_func
+    
+    def update_data_preprocess_parameters(self, data_preprocess_params, peptide_num_threshold):
+        data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
+        
+        normalize_method = data_preprocess_params['normalize_method']
+        transform_method = data_preprocess_params['transform_method']
+        processing_order = data_preprocess_params['processing_order']
+        
+        if 'trace_shift' == normalize_method and transform_method not in ['None', None]:
+            print(f'Warning: [Trace Shifting] and {transform_method} are both set, Normalize will be prior to Transform.')
+            # move 'normalize' to the first
+            processing_order = ['normalize'] + [i for i in processing_order if i != 'normalize']
+            print(f'Data Preprocessing order: {processing_order}')
+        
+        data_preprocess_params['processing_order'] = processing_order
+                
+        
+        return data_preprocess_params
+        
             
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                          outlier_params: dict = {'detect_method': None, 'handle_method': None,
                                                  "detection_by_group" : None, "handle_by_group": None},
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
-                                                            'batch_meta': None, 'processing_order': None},
+                                                            'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
                           peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
                           sum_protein:bool = False, sum_protein_params: dict = {'method': 'razor',
                                                                                 'by_sample': False,
@@ -731,8 +750,8 @@ class TaxaFuncAnalyzer:
             return
 
         #! fllowing code is for the normal mode
-        # add 'peptide_num_threshold' to 'data_preprocess_params
-        data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
+        # Update 'data_preprocess_params'
+        data_preprocess_params = self.update_data_preprocess_parameters(data_preprocess_params, peptide_num_threshold)
         
         #2. sum the protein intensity
         if sum_protein:
@@ -1009,15 +1028,15 @@ if __name__ == '__main__':
                         outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
                             "detection_by_group" : 'Individual', "handle_by_group": None},
                         data_preprocess_params = {
-                                                'normalize_method': None, 
+                                                'normalize_method': 'trace_shift', 
                                                 'transform_method': "log2",
                                                 'batch_meta': 'None', 
-                                                'processing_order': None},
+                                                'processing_order': ['transform', 'normalize', 'batch']},
                     peptide_num_threshold = {'taxa': 2, 'func': 2, 'taxa_func': 2},
                     keep_unknow_func=False, sum_protein=False, 
                     sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False},
-                    taxa_and_func_only_from_otf=False, quant_method='lfq'
+                    taxa_and_func_only_from_otf=False, quant_method='sum'
                     )
 
     sw.check_attributes()

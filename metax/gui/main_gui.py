@@ -2619,6 +2619,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 }
                 normalize_dict = {
                     "None": None,
+                    "Trace Shifting": "trace_shift",
                     "Mean centering": "mean",
                     "Standard Scaling (Z-Score)": "zscore",
                     "Min-Max Scaling": "minmax",

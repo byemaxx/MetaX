@@ -2,7 +2,6 @@ import logging
 import pandas as pd
 import numpy as np
 from numba import njit
-import multiprocessing
 import os
 
 # Setup logging
@@ -11,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 def setup_logging():
     logging.basicConfig(
         level=logging.INFO,
-        format="LFQ: %(message)s",
+        format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
 setup_logging()
@@ -451,7 +450,7 @@ def get_list_of_tuple_w_protein_profiles_and_shifted_peptides(
     )
 
     if num_cores is not None and num_cores > 1:
-        # Use multiprocessing
+        import multiprocessing
         pool = multiprocessing.Pool(num_cores)
         args = [
             (
@@ -644,12 +643,53 @@ def get_ion_intensity_dataframe_from_list_of_shifted_peptides(
     return ion_df
 
 
+def is_numeric_matrix(df):
+    # mark non-numeric values as NaN
+    numeric_df = df.apply(pd.to_numeric, errors='coerce')
+    # check if nan values are present
+    return numeric_df.notna().all().all()
+
+
+def run_normalization(
+            input_df: pd.DataFrame,
+            number_of_quadratic_samples: int = 100
+       ):
+    '''
+    Normalize the input DataFrame.
+    Args:
+        input_df (pd.DataFrame): A matrix of intensities.Columns are samples, index is items to be normalized.
+        number_of_quadratic_samples (int, optional): How many samples are used to create the anchor intensity trace. Increasing might marginally increase performance at the cost of runtime
+    Returns:
+        pd.DataFrame: The normalized DataFrame.
+    '''
+    # chcek if only numbers are in the dataframe
+    if not is_numeric_matrix(input_df):
+        raise ValueError("Input DataFrame contains non-numeric values. Make sure to the items column is set as index.")
+    
+    copy_numpy_arrays = check_whether_to_copy_numpy_arrays_derived_from_pandas()
+    input_df = np.log2(input_df.replace(0, np.nan)) # type: ignore
+    input_df = input_df.dropna(axis=0, how="all")
+    
+    LOGGER.info("Performing sample normalization.")
+    input_df = NormalizationManagerSamplesOnSelectedProteins(
+        input_df,
+        num_samples_quadratic=number_of_quadratic_samples,
+        selected_proteins_file=None,
+        copy_numpy_arrays=copy_numpy_arrays,
+    ).complete_dataframe
+    # restore log2 values
+    input_df = 2 ** input_df
+    # fill NaNs with 0
+    input_df = input_df.fillna(0)
+    
+    return input_df
+
 def run_lfq(
     input_df,
     protein_id: str = "protein",
     quant_id: str = "ion",
     min_nonan: int = 1,
-    number_of_quadratic_samples: int = 50,
+    number_of_quadratic_samples: int = 100,
     maximum_number_of_quadratic_ions_to_use_per_protein: int = 10,
     log_processed_proteins: bool = True,
     compile_normalized_ion_table: bool = True,
@@ -699,17 +739,22 @@ if __name__ == "__main__":
     df_path = os.path.join(current_dir, "../../../local_tests/peptide_for_protein.tsv")
     df = pd.read_csv(df_path, sep="\t")
 
+    # protein_df = df.drop(columns=["Proteins"])
+    # protein_df.set_index("Sequence", inplace=True)
+    # print(protein_df.head())
+    # df1 = run_normalization(protein_df)
     
     protein_df, ion_df = run_lfq(
         df,
         protein_id="Proteins",
         quant_id="Sequence",
         min_nonan=1,
-        number_of_quadratic_samples=50,
+        number_of_quadratic_samples=500,
         maximum_number_of_quadratic_ions_to_use_per_protein=10,
         num_cores=None,
         use_multiprocessing=True
     )
+    
     print(protein_df.shape)
     print(protein_df.head())
     t2 = time.time()

@@ -1,8 +1,12 @@
+# Version: 1.115.2
+## Date: 2024-10-03
+### Changes:
+- New: added a new Normalization method: "Trace Shifting" for the data preprossing.
+
 # Version: 1.115.1
 ## Date: 2024-10-03
 ### Changes:
 - New: added multiprocessing option for LFQ.
-
 
 # Version: 1.115.0
 ## Date: 2024-10-02
