@@ -1,3 +1,8 @@
+# Version: 1.115.4
+## Date: 2024-10-07
+### Changes:
+- TODO: use the peptide number for 'self.peptide_num_used' after filtering the minimum peptide number
+
 # Version: 1.115.3
 ## Date: 2024-10-04
 ### Changes:

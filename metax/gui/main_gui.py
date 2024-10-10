@@ -1857,7 +1857,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             msg = f"""<html>
             <body>
             <p>Custom data is ready!</p>
-            <p>{nan_stats_str}</p>
             <p>Number of items: [{num_item}]</p>
             </body>
             </html>
@@ -1890,7 +1889,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 <table>
                     <tr>
                         <th>Category</th>
-                        <th>Number</th>
+                        <th>Number (After Filtering)</th>
                         <th>Used Peptides</th>
                         <th>% of All Peptides</th>
                     </tr>

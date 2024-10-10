@@ -614,7 +614,7 @@ class DataPreprocessing:
     def data_preprocess(self, df: pd.DataFrame, normalize_method: str|None = None, 
                          transform_method: str|None = None, batch_meta: str|None =None,
                          processing_order:list|None =None,
-                         df_name:str = "None", peptide_num_threshold:dict[str, int] ={'taxa': 1, 'func': 1, 'taxa_func': 1}
+                         df_name:str = "None"
                          ) -> pd.DataFrame:
         """
         ## `data_preprocess` Method
@@ -662,11 +662,7 @@ class DataPreprocessing:
             - `taxa_func`
             - `protein`
             - `custom`
-        - `peptide_num_threshold` (`dict`, optional):
-        The threshold for the number of peptides in each DataFrame. Default values are:
-        - `taxa`: 3
-        - `func`: 3
-        - `taxa_func`: 3
+
         
         ### Returns:
 
@@ -677,12 +673,7 @@ class DataPreprocessing:
         
         df = df.copy()
         
-        # remove items with peptide number less than threshold
-        if df_name in ['taxa', 'func', 'taxa_func']:
-            print(f'{df_name.upper()} number before removing: {df.shape[0]}')
-            df = df[df['peptide_num'] >= peptide_num_threshold[df_name]]
-            print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
-           
+
         if processing_order is None:
             processing_order = ['transform', 'normalize', 'batch']
         else:

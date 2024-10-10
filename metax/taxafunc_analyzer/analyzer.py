@@ -689,8 +689,7 @@ class TaxaFuncAnalyzer:
         
         return df_taxa_func
     
-    def update_data_preprocess_parameters(self, data_preprocess_params, peptide_num_threshold):
-        data_preprocess_params['peptide_num_threshold'] = peptide_num_threshold
+    def update_data_preprocess_parameters(self, data_preprocess_params):
         
         normalize_method = data_preprocess_params['normalize_method']
         transform_method = data_preprocess_params['transform_method']
@@ -706,7 +705,67 @@ class TaxaFuncAnalyzer:
                 
         
         return data_preprocess_params
+
+    def filter_peptides_num_for_splited_func(self, df, peptide_num_threshold, df_type, distinct_threshold_mode=False):
+        '''
+        Only for the splited func table or taxa_func table
+        - df: the splited func table or taxa_func table which has been grouped, index is the func or taxa_func
+        - peptide_num_threshold: the threshold of peptide number for each func or taxa_func
+        - df_type: 'func' or 'taxa_func'
+        - distinct_threshold_mode: TODO
+        '''
         
+        valid_df_types = ['func', 'taxa_func']
+        if df_type not in valid_df_types:
+            raise ValueError(f"df_type must be one of {valid_df_types}, your input is [{df_type}]")
+        
+        peptide_num= peptide_num_threshold[df_type]
+        df_original_len = len(df)
+        
+        df = df[df['peptide_num'] >= peptide_num]
+        print(f"Removed [{df_original_len - len(df)} {df_type}] with less than [{peptide_num}] peptides.")
+        return df    
+    
+
+        
+        
+    def filter_peptides_num(self, df, peptide_num_threshold, df_type, distinct_threshold_mode=False):
+        '''
+        Filter the peptides based on the peptide number threshold
+        - df: the original df including peptides, taxa, and functions, etc.
+        - peptide_num_threshold: the threshold of peptide number for each taxa or func
+        - df_type: 'taxa', 'func', or 'taxa_func'
+        - distinct_threshold_mode: TODO
+        '''
+        valid_df_types = ['taxa', 'func', 'taxa_func']
+        if df_type not in valid_df_types:
+            raise ValueError(f"df_type must be one of {valid_df_types}, your input is [{df_type}]")
+        
+        peptide_num= peptide_num_threshold[df_type]
+        df_original_len = len(df)
+
+        if df_type == 'taxa_func':
+            item_col = 'taxa_func'
+            df['taxa_func'] = df['Taxon'] + '&&&&' + df[self.func_name]
+        else:
+            item_col = 'Taxon' if df_type == 'taxa' else self.func_name
+
+        # Group by item_col and filter based on peptide number
+        dict_item_pep_num = df.groupby(item_col).size().to_dict()
+        remove_list = [k for k, v in dict_item_pep_num.items() if v < peptide_num]
+
+        # Remove rows based on peptide number threshold
+        df = df[~df[item_col].isin(remove_list)]
+
+        if df_type == 'taxa_func':
+            df = df.drop('taxa_func', axis=1)
+
+        self.peptide_num_used[df_type] = len(df)
+        print(f"Removed [{len(remove_list)} {df_type}] from [{df_original_len - len(df)} Peptides] with less than [{peptide_num}] peptides.")
+
+        return df
+
+
             
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                          outlier_params: dict = {'detect_method': None, 'handle_method': None,
@@ -751,7 +810,7 @@ class TaxaFuncAnalyzer:
 
         #! fllowing code is for the normal mode
         # Update 'data_preprocess_params'
-        data_preprocess_params = self.update_data_preprocess_parameters(data_preprocess_params, peptide_num_threshold)
+        data_preprocess_params = self.update_data_preprocess_parameters(data_preprocess_params)
         
         #2. sum the protein intensity
         if sum_protein:
@@ -821,10 +880,15 @@ class TaxaFuncAnalyzer:
         
         if not taxa_and_func_only_from_otf:
             # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
-            df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list]
+            df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list] # type: ignore
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
             df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
-            self.peptide_num_used['taxa'] = len(df_taxa_pep)
+            #TODO: use the peptide number after filtering the minimum peptide number 
+            # statastic the peptide number of each taxa
+            df_taxa_pep = self.filter_peptides_num(df=df_taxa_pep, peptide_num_threshold=peptide_num_threshold, df_type='taxa')
+            
+            
+            # self.peptide_num_used['taxa'] = len(df_taxa_pep)
             # add column 'peptide_num' to df_taxa as 1
             df_taxa_pep['peptide_num'] = 1
             
@@ -844,7 +908,8 @@ class TaxaFuncAnalyzer:
             df_func_pep = df_func_pep[[self.peptide_col_name, self.func_name] + self.sample_list]
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
             df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
-            self.peptide_num_used['func'] = len(df_func_pep)
+            if not split_func:
+                df_func_pep = self.filter_peptides_num(df=df_func_pep, peptide_num_threshold=peptide_num_threshold, df_type='func')
             df_func_pep['peptide_num'] = 1
             
             if quant_method == 'lfq':
@@ -853,8 +918,10 @@ class TaxaFuncAnalyzer:
                 df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
             
             if split_func:
+                self.peptide_num_used['func'] = len(df_func_pep)
                 df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func')
-                
+                df_func = self.filter_peptides_num_for_splited_func(df=df_func, peptide_num_threshold=peptide_num_threshold, df_type='func')
+
             df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
             self.func_df = df_func
             #-----Func Table End-----
@@ -887,6 +954,8 @@ class TaxaFuncAnalyzer:
         # ----- create taxa_func table -----
         df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
         df_taxa_func['peptide_num'] = 1
+        if not split_func:
+            df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')
         
         for key in ['taxa_func', 'taxa', 'func']:
             self.peptide_num_used[key] = len(df_taxa_func) if self.peptide_num_used[key] == 0 else self.peptide_num_used[key]
@@ -899,6 +968,9 @@ class TaxaFuncAnalyzer:
         # split the function before data preprocess
         if split_func:
             df_taxa_func = self.split_func( df=df_taxa_func, split_func_params=split_func_params, df_type='taxa_func')
+            df_taxa_func = self.filter_peptides_num_for_splited_func(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, 
+                                                                     df_type='taxa_func')
+            
             
         print("\n-----Starting to perform data pre-processing for [Taxa-Function] table...-----")
         df_taxa_func_all_processed = self.data_preprocess(df=df_taxa_func
@@ -1025,14 +1097,14 @@ if __name__ == '__main__':
     sw.set_func('KEGG_Pathway_name')
     sw.set_group('Individual')
     sw.set_multi_tables(level='s', 
-                        outlier_params = {'detect_method': 'zero-dominant', 'handle_method': 'original',
+                        outlier_params = {'detect_method': 'None', 'handle_method': 'original',
                             "detection_by_group" : 'Individual', "handle_by_group": None},
                         data_preprocess_params = {
-                                                'normalize_method': 'trace_shift', 
+                                                'normalize_method': 'None', 
                                                 'transform_method': "log2",
                                                 'batch_meta': 'None', 
                                                 'processing_order': ['transform', 'normalize', 'batch']},
-                    peptide_num_threshold = {'taxa': 2, 'func': 2, 'taxa_func': 2},
+                    peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
                     keep_unknow_func=False, sum_protein=False, 
                     sum_protein_params = {'method': 'razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False},
