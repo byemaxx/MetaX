@@ -101,6 +101,10 @@ class DataPreprocessing:
 
     
     def _data_normalization(self, df: pd.DataFrame, normalize_method: str|None = None) -> pd.DataFrame:
+        def trace_shift(x):
+            from .lfq import run_normalization
+            return run_normalization(x)
+
         if normalize_method is None:
             print('normalize_method is not set, data normalization did not perform.')
         else:
@@ -117,7 +121,8 @@ class DataPreprocessing:
                 'sum': lambda x: x / (x.sum() + epsilon),
                 'minmax': lambda x: (x - x.min()) / (x.max() - x.min()),
                 'zscore': lambda x: (x - x.mean()) / (x.std() + epsilon),
-                'pareto': lambda x: (x - x.mean()) / (np.sqrt(x.std() + epsilon))
+                'pareto': lambda x: (x - x.mean()) / (np.sqrt(x.std() + epsilon)),
+                'trace_shift': lambda x: trace_shift(x)
             }
 
             if normalize_method in normalize_operations:
@@ -609,7 +614,7 @@ class DataPreprocessing:
     def data_preprocess(self, df: pd.DataFrame, normalize_method: str|None = None, 
                          transform_method: str|None = None, batch_meta: str|None =None,
                          processing_order:list|None =None,
-                         df_name:str = "None", peptide_num_threshold:dict[str, int] ={'taxa': 1, 'func': 1, 'taxa_func': 1}
+                         df_name:str = "None"
                          ) -> pd.DataFrame:
         """
         ## `data_preprocess` Method
@@ -624,6 +629,7 @@ class DataPreprocessing:
         - `normalize_method` (`str`, optional):  
         Method used for data normalization. Options include:
             - `None`: No normalization.
+            - `trace_shift`: Trace shift normalization inspired by DirectLFQ.
             - `mean`: Mean normalization.
             - `sum`: Sum normalization.
             - `minmax`: Min-max normalization.
@@ -656,11 +662,7 @@ class DataPreprocessing:
             - `taxa_func`
             - `protein`
             - `custom`
-        - `peptide_num_threshold` (`dict`, optional):
-        The threshold for the number of peptides in each DataFrame. Default values are:
-        - `taxa`: 3
-        - `func`: 3
-        - `taxa_func`: 3
+
         
         ### Returns:
 
@@ -671,12 +673,7 @@ class DataPreprocessing:
         
         df = df.copy()
         
-        # remove items with peptide number less than threshold
-        if df_name in ['taxa', 'func', 'taxa_func']:
-            print(f'{df_name.upper()} number before removing: {df.shape[0]}')
-            df = df[df['peptide_num'] >= peptide_num_threshold[df_name]]
-            print(f'{df_name.upper()} number with peptide_num >= [{peptide_num_threshold[df_name]}]: {df.shape[0]}')
-           
+
         if processing_order is None:
             processing_order = ['transform', 'normalize', 'batch']
         else:

@@ -1,8 +1,23 @@
+# Version: 1.115.4
+## Date: 2024-10-07
+### Changes:
+- Fix: Fixed the bug of when use Anydata moed, the report will raise error.
+- Change: changed the approche of filter the minimum number of peptides threshold for the protein.(Avaliable for Razor and Anti-Razor method)
+
+# Version: 1.115.3
+## Date: 2024-10-04
+### Changes:
+- Fix: Fixed the filter of pvalue or padj option not work for functional redundancy analysis in T-Test part.
+
+# Version: 1.115.2
+## Date: 2024-10-04
+### Changes:
+- New: added a new Normalization method: "Trace Shifting" for the data preprossing.
+
 # Version: 1.115.1
 ## Date: 2024-10-03
 ### Changes:
 - New: added multiprocessing option for LFQ.
-
 
 # Version: 1.115.0
 ## Date: 2024-10-02

@@ -993,10 +993,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.checkBox_infrence_protein_by_sample.setChecked(True)
             self.checkBox_infrence_protein_by_sample.setEnabled(False)
             self.comboBox_protein_ranking_method.setEnabled(False)
+            # enable the peptide_num_threshold
+            self.spinBox_peptide_num_threshold_protein.setEnabled(True)
         else: # method is ["rank"]
             self.checkBox_infrence_protein_by_sample.setEnabled(True)
             self.comboBox_protein_ranking_method.setEnabled(True)
             self.checkBox_infrence_protein_by_sample.setChecked(False)
+            # disable the peptide_num_threshold
+            self.spinBox_peptide_num_threshold_protein.setEnabled(False)
     
     
 
@@ -1853,12 +1857,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # Final message
         if self.tfa.any_df_mode:
-            num_item = self.tfa.custom_df.shape[0]
+            original_num_peptide = self.tfa.custom_df.shape[0]
             msg = f"""<html>
             <body>
             <p>Custom data is ready!</p>
-            <p>{nan_stats_str}</p>
-            <p>Number of items: [{num_item}]</p>
+            <p>Number of items: [{original_num_peptide}]</p>
             </body>
             </html>
             """
@@ -1890,7 +1893,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 <table>
                     <tr>
                         <th>Category</th>
-                        <th>Number</th>
+                        <th>Number (After Filtering)</th>
                         <th>Used Peptides</th>
                         <th>% of All Peptides</th>
                     </tr>
@@ -2619,6 +2622,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 }
                 normalize_dict = {
                     "None": None,
+                    "Trace Shifting": "trace_shift",
                     "Mean centering": "mean",
                     "Standard Scaling (Z-Score)": "zscore",
                     "Min-Max Scaling": "minmax",
@@ -4880,12 +4884,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                table_names = []
+                table_names = [] # reset table_names as empty list
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
                     p_value = round(p_value, 4)
+                    p_type = self.comboBox_top_heatmap_p_type.currentText()
                     
-                    ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition}
+                    ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition, "p_type": p_type}
                     self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_ttest, **ttest_sig_tf_params)
                     
                 

@@ -69,7 +69,7 @@ class SumProteinIntensity:
         greedy_method: str, default 'heap'. only used for `razor` method
             options: ['greedy', 'heap']
         peptide_num_threshold: int, default None
-            the protein must have at least 3 peptides to be considered as a target
+            the protein must have at least number peptides to be considered as a target
         quant_method: str, default 'sum'
             options: ['sum', 'lfq']
         '''
@@ -82,23 +82,10 @@ class SumProteinIntensity:
         if peptide_num_threshold is not None:
             self.peptide_num_threshold = peptide_num_threshold
         
-        # remove the protein with less than the threshold of peptides
-        # use teh methood in RazorSum
-        razor_integrator = RazorSum(df=self.df, 
-                                    column_map={
-                                                'peptide': self.tfa.peptide_col_name,
-                                                'target': self.tfa.protein_col_name,
-                                                'sample_list': self.tfa.sample_list,
-                                            }, 
-                                    peptide_num_threshold=self.peptide_num_threshold, 
-                                    share_intensity=self.share_intensity, 
-                                    greedy_method=greedy_method,
-                                    protein_separator= self.protein_separator)
-        
         self.rank_method = rank_method
         self.check_protein_col()
         
-        self.df = razor_integrator.remove_protein_less_than_threshold()
+        #innitialize the peptide number used as the total number of peptides
         self.tfa.peptide_num_used['protein'] = len(self.df)
         
         if method == 'rank':
@@ -121,8 +108,19 @@ class SumProteinIntensity:
                     self._sum_protein_rank(sample, by_sample)
         elif method == 'razor':
             print('start to sum protein intensity using method: [razor]')
+            # use teh methood in RazorSum
+            razor_integrator = RazorSum(df=self.df, 
+                                        column_map={
+                                                    'peptide': self.tfa.peptide_col_name,
+                                                    'target': self.tfa.protein_col_name,
+                                                    'sample_list': self.tfa.sample_list,
+                                                }, 
+                                        peptide_num_threshold=self.peptide_num_threshold, 
+                                        share_intensity=self.share_intensity, 
+                                        greedy_method=greedy_method,
+                                        protein_separator= self.protein_separator)
             if quant_method == 'sum':
-                razor_integrator.peptide_num_threshold = 1 # set the threshold to 1, to avoid run filter again
+                # razor_integrator.peptide_num_threshold = 1 # set the threshold to 1, to avoid run filter again
                 res_df = razor_integrator.sum_protein_intensity(greedy_method=greedy_method)
             elif quant_method == 'lfq':
                 from .lfq import run_lfq
@@ -137,10 +135,13 @@ class SumProteinIntensity:
                 # move teh 2 columns to the front
                 res_df = res_df[['peptides', 'peptide_num'] + [col for col in res_df.columns if col not in ['peptides', 'peptide_num']]]
                 
+            self.tfa.peptide_num_used['protein'] = len(razor_integrator.df)
             return res_df       
         
         elif method == 'anti-razor':
             print(f"\n-------------Start to sum protein intensity using method: [{method}]  by_sample: [True] rank_method: [Shared]-------------")
+            #calculate the peptide number for each protein
+            self.filter_protein_by_peptide_num()
             for sample in self.tfa.sample_list:
                 self._sum_protein_anti_razor(sample)
         
@@ -161,6 +162,30 @@ class SumProteinIntensity:
         
         return res_df
 
+
+    def filter_protein_by_peptide_num(self):
+        if self.peptide_num_threshold < 2:
+            return self.df
+        else:
+            peptide_col_name = self.tfa.peptide_col_name
+            protein_col_name = self.tfa.protein_col_name
+            df= self.df.copy()
+            target_to_peptides = defaultdict(set)
+            for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Creating target to peptides mapping"):
+                sequence = row[peptide_col_name]
+                targets = row[protein_col_name].split(self.protein_separator)
+                for target in targets:
+                    target_to_peptides[target].add(sequence)
+            proteins_less_than_threshold = [target for target, peps in target_to_peptides.items() if len(peps) < self.peptide_num_threshold]
+            print(f'Number of proteins with less than {self.peptide_num_threshold} peptides: {len(proteins_less_than_threshold)}')
+            # remove the proteins with less than 3 peptides from the protein column of the df
+            df[protein_col_name] = df[protein_col_name].apply(lambda x: ';'.join([protein for protein in x.split(self.protein_separator) if protein not in proteins_less_than_threshold]))
+            self.df[protein_col_name] = df[protein_col_name]
+            # remove the row with empty protein
+            self.df = self.df[self.df[protein_col_name].str.strip() != '']
+            self.tfa.peptide_num_used['protein'] = len(self.df)
+            return self.df
+    
     # razor method
     def find_minimum_protein_set(self, peptides, protein_to_peptides):
         protein_to_peptides_copy = protein_to_peptides.copy()

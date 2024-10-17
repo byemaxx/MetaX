@@ -339,7 +339,11 @@ There are several methods for detecting and handling outliers.
 
 - **Data Normalization:**
 
+  - **Trace Shifting:** Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).
+    - Note: If <u>both</u> trace shifting and transformation are applied, *<u>normalization will be done before transformation.</u>*
+  
   - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by sum.
+  
 
 <u>If you use [Z-Score, Mean centring and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.</u>
 
