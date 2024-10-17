@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -245,8 +245,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>391</width>
-                 <height>80</height>
+                 <width>528</width>
+                 <height>534</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1476,7 +1476,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>280</height>
+                    <height>300</height>
                    </size>
                   </property>
                   <property name="title">
@@ -1505,7 +1505,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>660</width>
+                        <width>1016</width>
                         <height>232</height>
                        </rect>
                       </property>
@@ -2759,7 +2759,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>280</height>
+                    <height>300</height>
                    </size>
                   </property>
                   <property name="title">
@@ -2776,7 +2776,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>621</width>
+                        <width>999</width>
                         <height>150</height>
                        </rect>
                       </property>
@@ -3750,7 +3750,7 @@
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>240</height>
+                   <height>280</height>
                   </size>
                  </property>
                  <property name="title">
@@ -3779,7 +3779,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>878</width>
+                       <width>1020</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -4801,7 +4801,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>3</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5144,7 +5144,7 @@
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="1" colspan="2">
+                <item row="10" column="1">
                  <widget class="QPushButton" name="pushButton_dunnett_test">
                   <property name="enabled">
                    <bool>false</bool>
@@ -5239,63 +5239,10 @@
                   </item>
                  </layout>
                 </item>
-                <item row="9" column="1" colspan="2">
-                 <widget class="Line" name="line_26">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="11" column="1" colspan="2">
-                 <widget class="QPushButton" name="pushButton_multi_deseq2">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Run Deseq2</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="4" column="1" colspan="2">
                  <layout class="QGridLayout" name="gridLayout_72">
-                  <item row="1" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_dunnett_group"/>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_114">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Groups (Default all)</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="0">
                    <widget class="QComboBox" name="comboBox_dunnett_control_group"/>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_115">
-                    <property name="text">
-                     <string>Control Group</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_comparing_group_control_in_condition">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Comparing in Each Condition</string>
-                    </property>
-                   </widget>
                   </item>
                   <item row="2" column="1">
                    <layout class="QHBoxLayout" name="horizontalLayout_24">
@@ -5321,7 +5268,60 @@
                     </item>
                    </layout>
                   </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_comparing_group_control_in_condition">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Comparing in Each Condition</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_dunnett_group"/>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_114">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Groups (Default all)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_115">
+                    <property name="text">
+                     <string>Control Group</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
+                </item>
+                <item row="9" column="1" colspan="2">
+                 <widget class="Line" name="line_26">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="2">
+                 <widget class="QPushButton" name="pushButton_multi_deseq2">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Run Deseq2</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -6207,7 +6207,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>220</height>
+                    <height>240</height>
                    </size>
                   </property>
                   <property name="title">
@@ -7437,7 +7437,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>220</height>
+                    <height>240</height>
                    </size>
                   </property>
                   <property name="title">
@@ -7454,8 +7454,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>620</width>
-                        <height>65</height>
+                        <width>1016</width>
+                        <height>105</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -7819,7 +7819,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -8146,7 +8146,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>220</height>
+                    <height>240</height>
                    </size>
                   </property>
                   <property name="title">
@@ -9258,7 +9258,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>220</height>
+                    <height>240</height>
                    </size>
                   </property>
                   <property name="title">
@@ -9275,8 +9275,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>383</width>
-                        <height>68</height>
+                        <width>1016</width>
+                        <height>141</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">

@@ -130,7 +130,8 @@ class RazorSum:
         self.greedy_method = greedy_method
         print('Start to get minimum target set using method: [razor]')
         # only extract the peptide and target columns
-        extract_cols = [self.column_map['peptide'], self.column_map['target']] + self.column_map['sample_list'] if self.column_map['sample_list'] else []
+        extract_cols = [self.column_map['peptide'], self.column_map['target']]
+        extract_cols = extract_cols + self.column_map['sample_list'] if self.column_map['sample_list'] else extract_cols
         # if NA in target column, or '', raise error
         if self.df[self.column_map['target']].isna().any() or '' in self.df[self.column_map['target']].values:
             raise ValueError(f'NA or empty value in target column: {self.column_map["target"]}')

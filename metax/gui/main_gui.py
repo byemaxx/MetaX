@@ -993,10 +993,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.checkBox_infrence_protein_by_sample.setChecked(True)
             self.checkBox_infrence_protein_by_sample.setEnabled(False)
             self.comboBox_protein_ranking_method.setEnabled(False)
+            # enable the peptide_num_threshold
+            self.spinBox_peptide_num_threshold_protein.setEnabled(True)
         else: # method is ["rank"]
             self.checkBox_infrence_protein_by_sample.setEnabled(True)
             self.comboBox_protein_ranking_method.setEnabled(True)
             self.checkBox_infrence_protein_by_sample.setChecked(False)
+            # disable the peptide_num_threshold
+            self.spinBox_peptide_num_threshold_protein.setEnabled(False)
     
     
 
@@ -1853,11 +1857,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # Final message
         if self.tfa.any_df_mode:
-            num_item = self.tfa.custom_df.shape[0]
+            original_num_peptide = self.tfa.custom_df.shape[0]
             msg = f"""<html>
             <body>
             <p>Custom data is ready!</p>
-            <p>Number of items: [{num_item}]</p>
+            <p>Number of items: [{original_num_peptide}]</p>
             </body>
             </html>
             """
