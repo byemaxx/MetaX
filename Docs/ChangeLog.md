@@ -1,3 +1,8 @@
+# Version: 1.115.5
+## Date: 2024-10-16
+### Changes:
+- Change: changed the setting of the basic plot part, set show label by default.
+
 # Version: 1.115.4
 ## Date: 2024-10-07
 ### Changes:

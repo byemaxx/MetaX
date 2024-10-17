@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -147,7 +147,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 534))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 391, 80))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -907,6 +907,7 @@ class Ui_metaX_main(object):
         sizePolicy.setHeightForWidth(self.checkBox_pca_if_show_lable.sizePolicy().hasHeightForWidth())
         self.checkBox_pca_if_show_lable.setSizePolicy(sizePolicy)
         self.checkBox_pca_if_show_lable.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.checkBox_pca_if_show_lable.setChecked(True)
         self.checkBox_pca_if_show_lable.setObjectName("checkBox_pca_if_show_lable")
         self.horizontalLayout_34.addWidget(self.checkBox_pca_if_show_lable)
         self.gridLayout_34.addLayout(self.horizontalLayout_34, 1, 2, 1, 1)
@@ -3837,7 +3838,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollArea_5.setObjectName("scrollArea_5")
         self.scrollAreaWidgetContents_6 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 105))
+        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 620, 65))
         self.scrollAreaWidgetContents_6.setObjectName("scrollAreaWidgetContents_6")
         self.gridLayout_57 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName("gridLayout_57")
@@ -4846,7 +4847,7 @@ class Ui_metaX_main(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollArea_7.setObjectName("scrollArea_7")
         self.scrollAreaWidgetContents_8 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 1016, 141))
+        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 383, 68))
         self.scrollAreaWidgetContents_8.setObjectName("scrollAreaWidgetContents_8")
         self.gridLayout_66 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_8)
         self.gridLayout_66.setObjectName("gridLayout_66")
@@ -5357,7 +5358,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -5417,9 +5418,9 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(4)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
         self.toolBox_2.setCurrentIndex(0)
-        self.tabWidget_4.setCurrentIndex(1)
+        self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(2)
         self.tabWidget.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(1)
