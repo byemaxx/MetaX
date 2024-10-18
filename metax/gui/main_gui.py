@@ -796,7 +796,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         groupbox_list = ["groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
                          "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
                          "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
-                         "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings"
+                         "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
+                         "groupBox_peptide_annotator_settings"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -2049,6 +2050,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         final_peptide_path = f'''{self.lineEdit_final_peptide_path.text()}'''
         peptide2taxafunc_outpath = f'''{self.lineEdit_peptide2taxafunc_outpath.text()}'''
         threshold = float(self.doubleSpinBox_LCA_threshold.value())
+        genome_mode = self.checkBox_annotator_genome_mode.isChecked()
+        protein_separator = self.lineEdit_annotator_protein_separator.text()
+        protein_genome_separator = self.lineEdit_annotator_genome_separator.text()
+        peptide_col = self.lineEdit_annotator_peptide_col_name.text()
+        protein_col = self.lineEdit_annotator_protein_col_name.text()
+        sample_col_prefix = self.lineEdit_annotator_sample_col_prefix.text()
+        distinct_genome_threshold = self.spinBox_annotator_distinct_num_threshold.value()
+        exclude_protein_contains = self.lineEdit_annotator_exclude_protein_contains.text()
 
         if db_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select database!')
@@ -2065,6 +2074,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         peptide_path = final_peptide_path,
                         output_path = peptide2taxafunc_outpath,
                         threshold=threshold,
+                        genome_mode=genome_mode,
+                        protein_separator=protein_separator,
+                        protein_genome_separator=protein_genome_separator,
+                        protein_col=protein_col,
+                        peptide_col=peptide_col,
+                        sample_col_prefix=sample_col_prefix,
+                        distinct_genome_threshold=distinct_genome_threshold,
+                        exclude_protein_contains = exclude_protein_contains
+                        
                     )
                     return instance.run_annotate()
                 self.run_in_new_window(peptide2taxafunc_main_wrapper, show_msg=True)

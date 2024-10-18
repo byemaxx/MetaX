@@ -1,3 +1,9 @@
+# Version: 1.116.0
+## Date: 2024-10-18
+### Changes:
+- New: 1. Added Advanced Parameters for Peptide Annotator 2. Add [Fill Zero] method for handling missing values in the data preprossing part.
+
+
 # Version: 1.115.5
 ## Date: 2024-10-16
 ### Changes:

@@ -395,6 +395,7 @@ class DataPreprocessing:
         - `regression`: Use regression imputation.
         - `multiple`: Use multiple imputation.
         - `original`: Keep the original data unchanged.
+        - `fillzero`: Fill missing values with 0.
 
         - **by_group** (`str`, optional):  
         The column name for grouping samples during missing value handling. If not specified, the default group list from `tfa` is used.
@@ -529,6 +530,10 @@ class DataPreprocessing:
             elif method == 'drop':
                 print('NO HANDLING FOR MISSING VALUE, DROP ROWS WITH MISSING VALUE')
                 df = df.dropna(subset=self.tfa.sample_list)
+            elif method == 'fillzero':
+                print('Fill NA with 0...')
+                df[self.tfa.sample_list] = df[self.tfa.sample_list].fillna(0)    
+            
             else:
                 raise ValueError(f'Invalid method: {method}')
 
@@ -594,6 +599,7 @@ class DataPreprocessing:
             - `regression`: Regression imputation.
             - `multiple`: Multiple imputation.
             - `original`: Keep original data unchanged.
+            - `fillzero`: Fill with 0.
 
         - `detect_by_group` (`str`, optional):  
         Column name for grouping samples for outlier detection.
