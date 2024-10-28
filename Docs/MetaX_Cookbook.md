@@ -13,7 +13,7 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 
 # Project Page
 
-Visit **Github** to get more information:
+Visit **GitHub** to get more information:
 
 [https://github.com/byemaxx/MetaX](https://github.com/byemaxx/MetaX)
 
@@ -35,144 +35,17 @@ Visit **Github** to get more information:
 
 <br>
 
-# Preparing Your Data
-
-## Module 1. Database Builder
-
-**Note:** The results from **MetaLab v2.3** MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.
-
-- Build the database for the **first time** using the <u>Database Builder</u>.
-
-  **Option 1: Build Database Using MGnify Data**
-
-  Ensure you download the correct database type corresponding to your data.
-
-  ![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
-
-  **Option 2: Build Database Using Own Data**
-
-  1. **Annotation Table:** A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.
-
-  ![dbbuilder_own](./MetaX_Cookbook.assets/dbbuilder_own.png)
-
-  2. **Taxa Table:** A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.
-
-  **Example Annotation Table:**
-
-  | Query               | Preferred_name | EC                | KEGG_ko             |
-  | ------------------- | -------------- | ----------------- | ------------------- |
-  | MGYG000000001_00696 | mfd            | -                 | ko:K03723           |
-  | MGYG000000001_02838 | hxlR           | -                 | -                   |
-  | MGYG000000001_01674 | ispG           | 1.17.7.1,1.17.7.3 | ko:K03526           |
-  | MGYG000000001_02710 | glsA           | 3.5.1.2           | ko:K01425           |
-  | MGYG000000001_01356 | mutS2          | -                 | ko:K07456           |
-  | MGYG000000001_02630 | -              | -                 | -                   |
-  | MGYG000000001_02418 | ackA           | 2.7.2.1           | ko:K00925           |
-  | MGYG000000001_00728 | atpA           | 3.6.3.14          | ko:K02111           |
-  | MGYG000000001_00695 | pth            | 3.1.1.29          | ko:K01056           |
-  | MGYG000000001_02907 | -              | -                 | ko:K03086           |
-  | MGYG000000001_02592 | rplC           | -                 | ko:K02906           |
-  | MGYG000000001_00137 | -              | -                 | ko:K03480,ko:K03488 |
-
-  **Example Taxa Table:**
-
-  | Genome        | Lineage                                                      |
-  | ------------- | ------------------------------------------------------------ |
-  | MGYG000000001 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_GCA-900066495;s_GCA-900066495 sp902362365 |
-  | MGYG000000002 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae;g_Blautia_A;s_Blautia_A faecis |
-  | MGYG000000003 | d_Bacteria;p_Bacteroidota;c_Bacteroidia;o_Bacteroidales;f_Rikenellaceae;g_Alistipes;s_Alistipes shahii |
-  | MGYG000000004 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Oscillospirales;f_Ruminococcaceae;g_Anaerotruncus;s_Anaerotruncus colihominis |
-  | MGYG000000005 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_Terrisporobacter;s_Terrisporobacter glycolicus_A |
-  | MGYG000000006 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Staphylococcales;f_Staphylococcaceae;g_Staphylococcus;s_Staphylococcus xylosus |
-  | MGYG000000007 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus intestinalis |
-  | MGYG000000008 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus johnsonii |
-  | MGYG000000009 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Ligilactobacillus;s_Ligilactobacillus murinus |
-
-## Module 2. Database Updater
-
-The **Database Updater** allows updating the database built by the **Database Builder** or adding more annotations. This step is **<u>optional</u>**.
-
-- Update the built database and extend annotations.
-
-  ![db_updater](./MetaX_Cookbook.assets/db_updater.png)
-
-  **Option 1: Built-in Mode**
-
-  We recommend some extended databases, such as [dbCAN_seq](https://bcb.unl.edu/dbCAN_seq).
-
-  **Option 2: TSV Table**
-
-  Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.
-
-  **Example:**
-
-  | Protein ID          | COG        | KEGG       | ...  |
-  | ------------------- | ---------- | ---------- | ---- |
-  | MGYG000000001_02630 | Function 1 | Function 1 | ...  |
-  | MGYG000000001_01475 | Function 2 | Function 1 | ...  |
-  | MGYG000000001_01539 | Function 3 | Function 1 | ...  |
-
-## Module 3. Peptide Annotator
-
-### 1. Results from MAG Workflow
-
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
-
-- Annotate the peptide to Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
-
-  ![peptide2taxafunc](./MetaX_Cookbook.assets/peptide2taxafunc.png)
-
-  **Required:**
-
-  - **Database**: The database created by <u>Database Builder</u>
-
-  - **Peptide Table**:
-
-    - *Option 1*: From MetaLab-MAG results (final_peptides.tsv)
-
-    - *Option 2*: Create it manually, with the first column as the ID (e.g., peptide sequence) and the second column as the proteins ID of MGnify (e.g., MGYG000003683_00301; MGYG000001490_01143) or your database, and other columns as the intensity of each sample.
-
-    **Example:**
-
-    | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
-    | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
-    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
-    | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
-    | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
-    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
-    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
-
-  - **Output Save Path**: The location to save the result table.
-
-  - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).
-
-    ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
-
-### 2. Results from MaxQuant Workflow
-
-The peptide results from **MetaLab 2.3** MaxQuant workflow.
-
-- Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
-
-  ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png)
-
-- The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
-
-  - Select **OTFs Save To** to set the location to save the result table.
-
-  ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png)
-
-<br>
-
 # Exploring Data with MetaX
 
-## Module 4. OTF Analyzer
+See the **<u>[Preparing Your Data](#Preparing-Your-Data)</u>** section to build the database and annotate peptides to OTFs before starting. 
 
-After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**Peptide Annotator**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
+## Module 1. OTF Analyzer
+
+After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**[Peptide Annotator](##Module-4.-Peptide-Annotator)**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
 
 ## 1. Data Preparation
 
-**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>Peptide Annotator</u> module.
+**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>[Peptide Annotator](##Module-4.-Peptide-Annotator)</u> module.
 
 **Meta Table:** The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.
 
@@ -781,6 +654,137 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.
 - Also, we can export the current MetaX to a file and reload it again.
   - <img src="MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" style="zoom:;" />
+
+
+
+# Preparing Your Data
+
+## Module 2. Database Builder
+
+**Note:** The results from **MetaLab v2.3** MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.
+
+- Build the database for the **first time** using the <u>Database Builder</u>.
+
+  **Option 1: Build Database Using MGnify Data**
+
+  Ensure you download the correct database type corresponding to your data.
+
+  ![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
+
+  **Option 2: Build Database Using Own Data**
+
+  1. **Annotation Table:** A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.
+
+  ![dbbuilder_own](./MetaX_Cookbook.assets/dbbuilder_own.png)
+
+  2. **Taxa Table:** A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.
+
+  **Example Annotation Table:**
+
+  | Query               | Preferred_name | EC                | KEGG_ko             |
+  | ------------------- | -------------- | ----------------- | ------------------- |
+  | MGYG000000001_00696 | mfd            | -                 | ko:K03723           |
+  | MGYG000000001_02838 | hxlR           | -                 | -                   |
+  | MGYG000000001_01674 | ispG           | 1.17.7.1,1.17.7.3 | ko:K03526           |
+  | MGYG000000001_02710 | glsA           | 3.5.1.2           | ko:K01425           |
+  | MGYG000000001_01356 | mutS2          | -                 | ko:K07456           |
+  | MGYG000000001_02630 | -              | -                 | -                   |
+  | MGYG000000001_02418 | ackA           | 2.7.2.1           | ko:K00925           |
+  | MGYG000000001_00728 | atpA           | 3.6.3.14          | ko:K02111           |
+  | MGYG000000001_00695 | pth            | 3.1.1.29          | ko:K01056           |
+  | MGYG000000001_02907 | -              | -                 | ko:K03086           |
+  | MGYG000000001_02592 | rplC           | -                 | ko:K02906           |
+  | MGYG000000001_00137 | -              | -                 | ko:K03480,ko:K03488 |
+
+  **Example Taxa Table:**
+
+  | Genome        | Lineage                                                      |
+  | ------------- | ------------------------------------------------------------ |
+  | MGYG000000001 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_GCA-900066495;s_GCA-900066495 sp902362365 |
+  | MGYG000000002 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae;g_Blautia_A;s_Blautia_A faecis |
+  | MGYG000000003 | d_Bacteria;p_Bacteroidota;c_Bacteroidia;o_Bacteroidales;f_Rikenellaceae;g_Alistipes;s_Alistipes shahii |
+  | MGYG000000004 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Oscillospirales;f_Ruminococcaceae;g_Anaerotruncus;s_Anaerotruncus colihominis |
+  | MGYG000000005 | d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_Terrisporobacter;s_Terrisporobacter glycolicus_A |
+  | MGYG000000006 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Staphylococcales;f_Staphylococcaceae;g_Staphylococcus;s_Staphylococcus xylosus |
+  | MGYG000000007 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus intestinalis |
+  | MGYG000000008 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus johnsonii |
+  | MGYG000000009 | d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Ligilactobacillus;s_Ligilactobacillus murinus |
+
+## Module 3. Database Updater
+
+The **Database Updater** allows updating the database built by the **Database Builder** or adding more annotations. This step is **<u>optional</u>**.
+
+- Update the built database and extend annotations.
+
+  ![db_updater](./MetaX_Cookbook.assets/db_updater.png)
+
+  **Option 1: Built-in Mode**
+
+  We recommend some extended databases, such as [dbCAN_seq](https://bcb.unl.edu/dbCAN_seq).
+
+  **Option 2: TSV Table**
+
+  Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.
+
+  **Example:**
+
+  | Protein ID          | COG        | KEGG       | ...  |
+  | ------------------- | ---------- | ---------- | ---- |
+  | MGYG000000001_02630 | Function 1 | Function 1 | ...  |
+  | MGYG000000001_01475 | Function 2 | Function 1 | ...  |
+  | MGYG000000001_01539 | Function 3 | Function 1 | ...  |
+
+## Module 4. Peptide Annotator
+
+### 1. Results from MAG Workflow
+
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
+
+- Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
+
+  ![peptide2taxafunc](./MetaX_Cookbook.assets/peptide2taxafunc.png)
+
+  **Required:**
+
+  - **Database**: The database created by <u>[Database Builder](##Module-2.-Database-Builder)</u>
+
+  - **Peptide Table**:
+
+    - *Option 1*: From MetaLab-MAG results (final_peptides.tsv)
+
+    - *Option 2*: Create it manually, with the first column as the ID (e.g., peptide sequence) and the second column as the proteins ID of MGnify (e.g., MGYG000003683_00301; MGYG000001490_01143) or your database, and other columns as the intensity of each sample.
+
+    **Example:**
+
+    | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
+    | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
+    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
+    | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
+    | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
+    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
+    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
+
+  - **Output Save Path**: The location to save the result table.
+
+  - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).
+
+    ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
+
+### 2. Results from MaxQuant Workflow
+
+The peptide results from **MetaLab 2.3** MaxQuant workflow.
+
+- Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
+
+  ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png)
+
+- The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
+
+  - Select **OTFs Save To** to set the location to save the result table.
+
+  ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png)
+
+<br>
 
 
 
