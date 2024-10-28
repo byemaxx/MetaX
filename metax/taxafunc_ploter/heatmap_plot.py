@@ -93,6 +93,7 @@ class HeatmapPlot:
                 
 
         cmap = type_map.get(value_type, "None")[1] if cmap is None else cmap
+        value_col_name = type_map.get(value_type, "None")[0]
 
 
 
@@ -110,7 +111,7 @@ class HeatmapPlot:
             if rename_taxa:
                 df_top['Taxon'] = df_top['Taxon'].apply(lambda x: x.split('|')[-1])
                 # df_top = self.rename_taxa(df_top)
-            df_top = df_top.pivot(index=func_name, columns='Taxon', values=p_type)
+            df_top = df_top.pivot(index=func_name, columns='Taxon', values=value_col_name)
             print(f"Top [{top_number}] significant: Taxa ({df_top.shape[1]}), Functions ({df_top.shape[0]})")
             df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             
@@ -154,11 +155,11 @@ class HeatmapPlot:
             fig.ax_heatmap.set_xlabel("Taxa")
             fig.ax_heatmap.set_ylabel("Functions")
             
-            scale_title = f"scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
+            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             if title == "":
-                title = f"Significant Differences in Taxa-Function (Top {top_number} sorted by {plot_type}, filtered by {p_type}, {scale_title})"
+                title = f"Significant Differences in Taxa-Function (Top {top_number} sorted by {plot_type}, filtered by {p_type}{scale_title})"
             else:
-                title = f"{title} (Top {top_number} sorted by {plot_type}, filtered by {p_type}, {scale_title})"
+                title = f"{title} (Top {top_number} sorted by {plot_type}, filtered by {p_type}{scale_title})"
                 
             plt.suptitle(title)
 
@@ -321,9 +322,9 @@ class HeatmapPlot:
                 va = self.get_y_labels_va()
             )
 
-            scale_title = f"scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
+            scale_title = f", scaled by {scale}" if scale in ['row', 'column', 'all'] else ''
             plt.suptitle(
-                f"The intensity of Significant differences (top {len(mat)} sorted by {sort_by.split('(')[0]}, filtered by {p_type}, {scale_title})"
+                f"The intensity of Significant differences (top {len(mat)} sorted by {sort_by.split('(')[0]}, filtered by {p_type}{scale_title})"
             )
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label("Intensity", rotation=90, labelpad=1)

@@ -17,7 +17,8 @@ else:
 class PeptideAnnotator:
     def __init__(self, db_path:str, peptide_path: str, output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
-                 protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity_'):
+                 protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity_',
+                 distinct_genome_threshold:int=0, exclude_protein_contains:str='REV_'):
 
         self.db_path = db_path
         self.peptide_path = peptide_path
@@ -30,6 +31,8 @@ class PeptideAnnotator:
         self.protein_col = protein_col
         self.peptide_col = peptide_col
         self.sample_col_prefix = sample_col_prefix
+        self.distinct_genome_threshold = distinct_genome_threshold
+        self.exclude_protein_contains = exclude_protein_contains
         
         self.thread_local = threading.local()
         
@@ -93,6 +96,7 @@ class PeptideAnnotator:
     def run_2_result(self, df):
         tqdm.pandas()
         df_t = df.copy()
+        df_t.rename(columns={self.peptide_col: 'Sequence'}, inplace=True)
         print('Running proteins_to_taxa_func...')
         
         with ThreadPoolExecutor() as executor:
@@ -122,6 +126,9 @@ class PeptideAnnotator:
 
     def save_result(self, df):
         dir_path = os.path.dirname(self.output_path)
+        if dir_path == '':
+            dir_path = '.'
+            
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
             print(f'Output directory did not exist, created: {dir_path}')
@@ -144,17 +151,56 @@ class PeptideAnnotator:
         print(f'Output shape: {df.shape}')
 
 
-    def remove_reversed(self, df):
-        print('Removing reversed proteins...')
-        print(f'Original shape: {df.shape}')
+    def exclude_proteins(self, df):
+        print(f'Removing reversed proteins containing [{self.exclude_protein_contains}]...')
         try:
-            df = df[~df[self.protein_col].str.contains('REV_')]
+            df = df[~df[self.protein_col].str.contains(self.exclude_protein_contains)]
             print(f'After removing reversed proteins: {df.shape}')
         except Exception as e:
             print('Error: removing reversed proteins failed!')
             print(e)
             
         return df
+    
+    def extract_genome_from_protein(self, protein:str):
+        pro_list = protein.split(self.protein_separator)
+        genome_list = [pro.split(self.protein_genome_separator)[0] for pro in pro_list]
+        genome = set(genome_list)
+        genome = ';'.join(genome)
+        return genome
+    
+    def get_genome_list_by_distinct_pep_num(self, df):
+        print('Calculating distinct peptides number for each genome...')
+        df_t = df[[self.peptide_col, self.protein_col]].copy()
+        df_t['genome'] = df_t[self.protein_col].apply(self.extract_genome_from_protein)
+        df_t['genome_count'] = df_t['genome'].apply(lambda x: len(x.split(';')))
+        df_distinct = df_t.loc[df_t['genome_count'] == 1, ['genome', 'genome_count']]
+        df_distinct = df_distinct.groupby('genome').count().reset_index()
+        genome_list = df_distinct.loc[df_distinct['genome_count'] >= self.distinct_genome_threshold, 'genome'].tolist()
+        print(f'Total genomes: {df_distinct.shape[0]}, genomes with distinct peptides >= {self.distinct_genome_threshold}: [{len(genome_list)}]')
+        return genome_list
+    
+    def remove_proteins_not_in_genome_list(self, protein_str, genome_list):
+        pro_list = protein_str.split(self.protein_separator)
+        pro_list = [pro for pro in pro_list if pro.split(self.protein_genome_separator)[0] in genome_list]
+        return ';'.join(pro_list)
+    
+    def filter_genome_with_distinct_pep_num(self, df):
+        if self.distinct_genome_threshold < 1:
+            return df
+        
+        print(f'Filtering genomes less than [{self.distinct_genome_threshold}] distinct peptides...')
+        original_num = df.shape[0]
+        genome_list = self.get_genome_list_by_distinct_pep_num(df)
+        df[self.protein_col] = df[self.protein_col].apply(lambda x: self.remove_proteins_not_in_genome_list(x, genome_list))
+        # remove rows with empty proteins
+        df = df[df[self.protein_col].str.len() > 0]
+        print(f'Peptides number: from [{original_num}] -> [{df.shape[0]}] after filtering genomes with distinct peptides')
+        return df
+        
+        
+        
+        
 
     def run_annotate(self):
         print('Start running Peptide Annotator...')
@@ -177,7 +223,9 @@ class PeptideAnnotator:
         
         print(f'After filtering Intensity 0 in all samples and removing other columns: {df.shape}')
         
-        df = self.remove_reversed(df)
+        df = self.exclude_proteins(df)
+        
+        df = self.filter_genome_with_distinct_pep_num(df)
         
         df_res = self.run_2_result(df)
         
@@ -186,8 +234,11 @@ class PeptideAnnotator:
         return df_res
 
 if __name__ == '__main__':
-    db_path = 'UHGP.db'
-    final_peptides_path = 'peptide.tsv'
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    # db_path = 'UHGP.db'
+    db_path = os.path.join(current_path, '../../local_tests/UHGP.db')
+    # final_peptides_path = 'peptide.tsv'
+    final_peptides_path = os.path.join(current_path, '../data/example_data/Example_final_peptide.tsv')
     output_path = 'OTF.tsv'
     threshold = 1
     t0 = time.time()
@@ -200,9 +251,10 @@ if __name__ == '__main__':
         genome_mode=True,
         protein_separator=';',
         protein_genome_separator = '_',
-        protein_col='final_proteins',
+        protein_col='Proteins',
         peptide_col='Sequence',
-        sample_col_prefix='CHFL'
+        sample_col_prefix='Intensity',
+        distinct_genome_threshold=3,
         
     )
     annotator.run_annotate()

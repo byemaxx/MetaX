@@ -1,3 +1,14 @@
+# Version: 1.116.1
+## Date: 2024-10-28
+### Changes:
+- Fix: Fixed the bug of when plot the heatmap of taxa-funcs with t-ststistic and f-statistic, the value still selected as p-value.
+- Change: Updated the cookbook.
+
+# Version: 1.116.0
+## Date: 2024-10-18
+### Changes:
+- New: 1. Added Advanced Parameters for Peptide Annotator 2. Add [Fill Zero] method for handling missing values in the data preprossing part.
+
 # Version: 1.115.5
 ## Date: 2024-10-16
 ### Changes:

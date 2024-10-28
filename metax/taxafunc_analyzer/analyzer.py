@@ -94,6 +94,7 @@ class TaxaFuncAnalyzer:
 
         self._set_original_df(df_path)
         self._set_meta(meta_path)
+        self._check_if_intensity_cols_numberic()
         self._remove_all_zero_row()
         self.get_func_list_in_df()
         # self.set_func('eggNOG_Description')
@@ -167,7 +168,7 @@ class TaxaFuncAnalyzer:
 
 
             check_result = self.check_meta_match_df()
-            if check_result[0] == False:
+            if not check_result[0]:
                 raise ValueError(f"The meta data does not match the TaxaFunc data, Please check! \n\n{check_result[1]}")
         
         # check if there is NA in the original_df[self.sample_list]
@@ -176,6 +177,12 @@ class TaxaFuncAnalyzer:
             print("[NaN] exists in the original_df!")
         else:
             self.has_na_in_original_df = False
+
+
+    def _check_if_intensity_cols_numberic(self):
+        if not self.original_df[self.sample_list].apply(pd.to_numeric, errors='coerce').notnull().all().all():
+            raise ValueError("The sample columns must contain only numeric values!")
+
 
     def update_meta(self, meta_df: pd.DataFrame) -> None:
         self.meta_df = meta_df
