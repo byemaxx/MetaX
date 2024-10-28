@@ -37,7 +37,7 @@ The desktop version comes fully set up and ready to use, including all required 
 <br>
 
 ### `Command-line version`:
-Clone the repository to your local machine and install the required dependencies.
+Use [PyPi](https://pypi.org/project/MetaXTools/) to install, then type `metax` in the terminal to launch the GUI.
   ```bash
   python -m pip install MetaXTools
   ```
@@ -45,7 +45,7 @@ Clone the repository to your local machine and install the required dependencies
 
 ## Getting Started
 - `Desktop Version(desktop)`:
-  - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX wtih the graphical user interface.
+  - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX with the graphical user interface.
   <br>
 - `Command-line version`:
   - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for detailed instructions and examples.
