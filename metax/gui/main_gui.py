@@ -5170,15 +5170,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         elif plot_type == 'network':   
             try:
                 self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-                pic = NetworkPlot(self.tfa,
+                pic, corr_df = NetworkPlot(self.tfa,
                                 show_labels=show_labels,
                                 rename_taxa=rename_taxa,
                                 font_size=font_size,
                                 theme=self.html_theme,
                                 **self.tf_link_net_params_dict
                                 ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
-                                                                    corr_threshold=corr_threshold, sample_list=sample_list, width=width, height=height, focus_list=focus_list, plot_list_only=plot_list_only)
+                                                                    corr_threshold=corr_threshold, sample_list=sample_list,
+                                                                    width=width, height=height, focus_list=focus_list,
+                                                                    plot_list_only=plot_list_only)
                 self.save_and_show_js_plot(pic, 'co-expression network')
+                self.update_table_dict(f'co-expression_network({df_type})', corr_df)
+                
             except ValueError as e:
                 if 'sample_list should have at least 2' in str(e):
                     QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
@@ -5409,7 +5413,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('Plotting network...')
             list_only_no_link = self.checkBox_tf_link_net_plot_list_only_no_link.isChecked()
-            pic = NetworkPlot(
+            pic, network_df = NetworkPlot(
                 self.tfa,
                 show_labels=show_labels,
                 rename_taxa=rename_taxa,
@@ -5425,6 +5429,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 list_only_no_link=list_only_no_link,
             )
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
+            self.update_table_dict('taxa-func_network', network_df)
+            
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_network error: {error_message}', 'e')

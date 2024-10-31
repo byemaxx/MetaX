@@ -1,6 +1,8 @@
 from pyecharts import options as opts
 from pyecharts.charts import Graph
 import pandas as pd
+import numpy as np
+from typing import Tuple
 
 class NetworkPlot:
     def __init__(self, tfobj, 
@@ -60,7 +62,7 @@ class NetworkPlot:
         self.show_sub_title = show_sub_title
         
 
-    def modify_focus_list(self, focus_list):
+    def modify_focus_list(self, focus_list, return_taxa_functions_separately = True):
         '''
         Split the taxa-func item into taxa and function if it's in the focus_list
         '''
@@ -71,8 +73,12 @@ class NetworkPlot:
                     taxa = i.split(' <')[0].split('|')[-1]
                     func = i.split(' <')[1][:-1]
                     # i = taxa.split('|')[-1] + ' <' + func + '>'
-                    new_focus_list.append(taxa)
-                    new_focus_list.append(func)
+                    if return_taxa_functions_separately:
+                        new_focus_list.append(taxa)
+                        new_focus_list.append(func)
+                    else:
+                        taxa_func = taxa + ' <' + func + '>'
+                        new_focus_list.append(taxa_func)
                 else: # taxa item
                     i = i.split('|')[-1]
                     new_focus_list.append(i)
@@ -99,12 +105,13 @@ class NetworkPlot:
         - sample_list (list, optional): Specifies which samples to include. If None, all samples are used.
         - focus_list (list, optional): List of taxa and functions to highlight in the network.
         - plot_list_only (bool, optional): If True, only items and theri linked items in focus_list are plotted.
-        - strict_list (bool, optional): If True, only items in focus_list are plotted.
+        - list_only_no_link (bool, optional): If True, only items in focus_list are plotted,  not including the links of the focus items.
 
         Returns:
         - nodes (list): Information about each node for the graph, including name and size.
         - links (list): Information about links between nodes.
         - categories (list): Categories for nodes, used for coloring in the graph.
+        - cytoscape_df (DataFrame): DataFrame containing nodes and links for Cytoscape export.
         """
         df = self.tfa.taxa_func_df.copy()
         if self.rename_taxa:
@@ -120,6 +127,16 @@ class NetworkPlot:
             print("No sample list provided, using all samples")
 
         df = df.loc[~(df==0).all(axis=1)]
+        
+        # create network_df for export to cytoscape
+        network_df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+        network_df['sum'] = network_df.sum(axis=1)
+        network_df.reset_index(inplace=True)
+        network_df.columns = ['taxa', 'function'] + network_df.columns.tolist()[2:]
+        network_df['focus_taxa'] = network_df['taxa'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        network_df['focus_func'] = network_df['function'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        # Done creating network_df
+        
         df['sum'] = df.sum(axis=1)
         df.reset_index(inplace=True)
         colname = df.columns.tolist()
@@ -143,8 +160,7 @@ class NetworkPlot:
                 df_func['taxa'] = "" 
                 # concatenate the uncovered taxa and functions
                 df = pd.concat([df_coverd, df_taxa, df_func])
-                
-                
+            
             else:
                 df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
             print(f"New df shape: {df.shape}")
@@ -190,7 +206,6 @@ class NetworkPlot:
                 {"name": "Focus_Function", "itemStyle": {"normal": {"color": self.func_focus_color}}},
             ]
 
-            return nodes, links, categories
 
         else:
             nodes = [{"name": taxon, "category": 0, "symbolSize": normalize(taxa_sum[taxon]), "value": taxa_sum[taxon], "symbol": self.taxa_shape} for taxon in taxa] + \
@@ -202,7 +217,7 @@ class NetworkPlot:
                 {"name": "Function", "itemStyle": {"normal": {"color": self.func_color}}},
             ]
 
-        return nodes, links, categories
+        return nodes, links, categories, network_df
 
     def plot_tflink_network(
         self,
@@ -212,7 +227,7 @@ class NetworkPlot:
         focus_list: list = None,
         plot_list_only: bool = False,
         list_only_no_link: bool = False,
-    ):
+    ) -> Tuple[Graph, pd.DataFrame]:
         """
         Creates a network graph of taxa and functions using Pyecharts.
 
@@ -224,10 +239,11 @@ class NetworkPlot:
         - height (int, optional): Height of the graph in pixels.
         - focus_list (list, optional): List of taxa and functions to highlight.
         - plot_list_only (bool, optional): If True, only plots items in focus_list and their linked items.
-        - strict_list_only (bool, optional): If True, only plots items in focus_list.
+        - list_only_no_link (bool, optional): If True, only plots items in focus_list, not including the links of the focus items.
 
         Returns:
         - A Pyecharts Graph object that can be displayed in Jupyter notebooks or web pages.
+        - A DataFrame containing nodes and links for export to Cytoscape.
         """
 
         # preprocess focus_list
@@ -244,10 +260,13 @@ class NetworkPlot:
                     new_list.extend((taxon, func))
                 else:
                     print(f"Warning: {i} is not in taxa or function list")
-            nodes, links, categories = self.create_nodes_links(sample_list, new_list,plot_list_only, list_only_no_link)
+            nodes, links, categories, network_df = self.create_nodes_links(sample_list=sample_list, 
+                                                                           focus_list = new_list,
+                                                                           plot_list_only = plot_list_only, 
+                                                                           list_only_no_link=list_only_no_link)
         else:
             focus_list = []
-            nodes, links, categories = self.create_nodes_links(sample_list)
+            nodes, links, categories, network_df = self.create_nodes_links(sample_list = sample_list)
 
 
         c = (
@@ -317,13 +336,20 @@ class NetworkPlot:
         )
 
 
-        return c
+        return c , network_df
     
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
                                 corr_threshold:float=0.5, sample_list:list[str]|None = None, 
                                 width:int = 12, height:int = 8, focus_list:list[str] = [], plot_list_only:bool = False,
-                                ):
+                                ) -> Tuple[Graph, pd.DataFrame]:
+        """
+        Plots a co-expression network based on the correlation matrix of the specified data type.
+        Returns:
+        --------
+        Tuple[Graph, pd.DataFrame]
+            A tuple containing the network plot (Graph) and the network data frame (pd.DataFrame).
+        """
         from matplotlib import colormaps
         #check sample_list length
         if sample_list and len(sample_list) < 2:
@@ -341,7 +367,7 @@ class NetworkPlot:
             print("Renaming taxa to last level")
             df = self.tfa.rename_taxa(df)
             # modify the focus_list to the last level taxa
-            focus_list = self.modify_focus_list(focus_list)
+            focus_list = self.modify_focus_list(focus_list, return_taxa_functions_separately=False)
                         
         if extra_cols := sample_list:
             print(f"Using sample list provided {extra_cols}")
@@ -358,6 +384,18 @@ class NetworkPlot:
             correlation_matrix = df.corr(method='spearman')
         else:
             raise ValueError(f"corr_method should be pearson or spearman, but got {corr_method}")
+        
+        # cerate network_df for export to cytoscape from the correlation matrix
+        mask = np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool)
+        network_df = network_df = correlation_matrix.where(mask)
+        # set index name and header name as item1 and item2
+        network_df.index.name = f'{df_type}1'
+        network_df.columns.name = f'{df_type}2'
+        network_df = network_df.stack().reset_index()
+        network_df.columns = [ f'{df_type}1', f'{df_type}2', 'correlation']
+        network_df['item1_focus'] = network_df[f'{df_type}1'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        network_df['item2_focus'] = network_df[f'{df_type}2'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        # Done creating network_df
             
         node_sizes = correlation_matrix.apply(lambda x: (x > corr_threshold).sum(), axis=1)
         max_node_size = node_sizes.max()
@@ -491,7 +529,7 @@ class NetworkPlot:
                 ),
             )
         )
-        return pic
+        return pic, network_df
 
         
 

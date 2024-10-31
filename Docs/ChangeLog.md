@@ -1,8 +1,7 @@
-# Version: 1.116.1
-## Date: 2024-10-28
+# Version: 1.117.0
+## Date: 2024-10-31
 ### Changes:
-- Fix: Fixed the bug of when plot the heatmap of taxa-funcs with t-ststistic and f-statistic, the value still selected as p-value.
-- Change: Updated the cookbook.
+- New: added result Table after plotting the network of Taxa-Functions and Co-Expression.
 
 # Version: 1.116.0
 ## Date: 2024-10-18
