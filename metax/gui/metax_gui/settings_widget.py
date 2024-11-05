@@ -9,6 +9,7 @@ class SettingsWidget(QWidget):
     tf_link_net_params_dict_changed = pyqtSignal(dict)
     html_theme_changed = pyqtSignal(str)
     protein_infer_method_changed = pyqtSignal(str)
+    stat_mean_by_zero_dominant_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True, QSettings=None):
         super().__init__(parent)
@@ -64,6 +65,9 @@ class SettingsWidget(QWidget):
         
         # Protein inference method
         self.ui.comboBox_protein_infer_greedy_mode.currentTextChanged.connect(self.handle_protein_infer_method_changed)
+        
+        # stat_mean_by_zero_dominant
+        self.ui.checkBox_stat_mean_by_zero_dominant.stateChanged.connect(self.handle_stat_mean_by_zero_dominant_changed)
         
         
     def init_ui(self, update_mode, auto_check_update, QSettings=None):
@@ -142,6 +146,10 @@ class SettingsWidget(QWidget):
             'fast': 'heap',
         }
         self.protein_infer_method_changed.emit(method[protein_infer_greedy_mode])
+        
+    def handle_stat_mean_by_zero_dominant_changed(self):
+        checked = self.ui.checkBox_stat_mean_by_zero_dominant.isChecked()
+        self.stat_mean_by_zero_dominant_changed.emit(checked)
          
 if __name__ == "__main__":
     import sys

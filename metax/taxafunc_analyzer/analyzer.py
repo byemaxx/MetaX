@@ -83,6 +83,8 @@ class TaxaFuncAnalyzer:
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
+        
+        self.stat_mean_by_zero_dominant:bool = False # only for BasicStats.get_stats_mean_df_by_group()
 
         # load function
         self.BasicStats = BasicStats(self)

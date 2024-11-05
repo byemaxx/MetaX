@@ -631,18 +631,28 @@ class CrossTest:
         if p_value < 0 or p_value > 1:
             raise ValueError("p_value must be between 0 and 1")
         # 获取pvalue大于0.05的Taxon items
-        not_significant_taxa = df_taxa_test_res[df_taxa_test_res[p_col_name] >= p_value].index.get_level_values('Taxon').tolist()
+        not_significant_taxa_list = df_taxa_test_res[df_taxa_test_res[p_col_name] >= p_value].index.get_level_values('Taxon').tolist()
+        significant_taxa_list = df_taxa_test_res[df_taxa_test_res[p_col_name] < p_value].index.get_level_values('Taxon').tolist()
         print(f"Under {p_col_name} = {p_value}: \n \
-              Significant Taxa: [{len(df_taxa_test_res) - len(not_significant_taxa)}], Not Significant Taxa: [{len(not_significant_taxa)}]")
+              Significant Taxa: [{len(significant_taxa_list)}], Not Significant Taxa: [{len(not_significant_taxa_list)}]")
         # 获取pvalue小于0.05的Function items
-        not_significant_func = df_func_test_res[df_func_test_res[p_col_name] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
+        not_significant_func_list = df_func_test_res[df_func_test_res[p_col_name] >= p_value].index.get_level_values(self.tfa.func_name).tolist()
+        significant_func_list = df_func_test_res[df_func_test_res[p_col_name] < p_value].index.get_level_values(self.tfa.func_name).tolist()
         print(f"Under {p_col_name} = {p_value}: \n \
-                Significant Function: [{len(df_func_test_res) - len(not_significant_func)}], Not Significant Function: [{len(not_significant_func)}]")
+                Significant Function: [{len(significant_func_list)}], Not Significant Function: [{len(not_significant_func_list)}]")
 
         # 选择这些Taxon在df_taxa_func_test_res中的行 and pvalue < 0.05
-        df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa) & (df_taxa_func_test_res[p_col_name] < p_value)]
+        df_filtered_taxa_not_significant = df_taxa_func_test_res.loc[
+            df_taxa_func_test_res.index.get_level_values('Taxon').isin(not_significant_taxa_list) & 
+            (df_taxa_func_test_res[p_col_name] < p_value) & 
+            (df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(significant_func_list))
+                                                                     ]
         print(f"Taxa not significant but related function significant with {p_col_name} < {p_value}: [{len(df_filtered_taxa_not_significant)}]")
-        df_filtered_func_not_significant = df_taxa_func_test_res.loc[df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func) & (df_taxa_func_test_res[p_col_name] < p_value)]
+        df_filtered_func_not_significant = df_taxa_func_test_res.loc[
+            df_taxa_func_test_res.index.get_level_values(self.tfa.func_name).isin(not_significant_func_list) & 
+            (df_taxa_func_test_res[p_col_name] < p_value) &
+            (df_taxa_func_test_res.index.get_level_values('Taxon').isin(significant_taxa_list))
+            ]
         # reset_index for df_filtered_func_not_significant
         df_filtered_func_not_significant = df_filtered_func_not_significant.swaplevel(0, 1).sort_index()
         print(f"Function not significant but related taxa significant with {p_col_name} < {p_value}: [{len(df_filtered_func_not_significant)}]")

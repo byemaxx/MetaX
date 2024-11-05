@@ -7,7 +7,46 @@ class BasicStats:
         self.tfa = tfa
         
     # get a mean df by group
-    def get_stats_mean_df_by_group(self, df: pd.DataFrame = None, condition: list = None) -> pd.DataFrame:
+    def get_stats_mean_df_by_group(self, df: pd.DataFrame, condition: list|None = None, zero_dominant: bool|None = None) -> pd.DataFrame:
+        """
+        Calculate the mean values of groups of samples in a DataFrame, optionally considering only non-zero values.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing the sample data. Defaults to None.
+            condition (list, optional): A list of conditions to filter the samples. Defaults to None.eg. ['V1', 'PBS']
+            zero_domainant (bool, optional): If True, calculate the mean of non-zero values in each group if the number of zero values is less than half of the total number of values; otherwise, return 0. Defaults to False.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the mean values of the groups.
+        """
+
+        def get_mean_by_zero_dominant(df: pd.DataFrame) -> pd.Series:
+            """
+            Optimized function to calculate the mean of non-zero values in each row if the number of zero values
+            is less than half of the total values; otherwise, return 0.
+            
+            Args:
+                df (pd.DataFrame): Input DataFrame.
+
+            Returns:
+                pd.Series: A Series with mean values based on the zero-dominant condition.
+            """
+            # 计算每行的零值数量
+            zero_counts = (df == 0).sum(axis=1)
+            # 判断每行零值是否超过一半，超过的行直接设为0
+            mean_series = pd.Series(0, index=df.index)
+            non_zero_rows = zero_counts <= (df.shape[1] / 2)
+            # 对非零主导的行计算非零均值
+            mean_series[non_zero_rows] = df[non_zero_rows].replace(0, pd.NA).mean(axis=1, skipna=True)
+            return mean_series
+        
+        if zero_dominant is None:
+            zero_dominant = self.tfa.stat_mean_by_zero_dominant
+        print(f"Caculating mean by zero_dominant: [{zero_dominant}]")
+        
+        mean_method = get_mean_by_zero_dominant if zero_dominant else lambda x: x.mean(axis=1)
+
+        
         data = df.copy()
         # extract samples that are in the data only
         columns_list = data.columns.tolist()
@@ -18,6 +57,7 @@ class BasicStats:
         
         group_order = list(OrderedDict.fromkeys(self.tfa.get_group_of_a_sample(sample) for sample in data.columns))
         print("input group order:", group_order)
+        
         samples_used =[]
         group_means = pd.DataFrame()
         for group in group_order:
@@ -30,11 +70,14 @@ class BasicStats:
             samples_used.extend(valid_samples)
             group_data = data[valid_samples]
             # calculate the mean of the samples in the group
-            group_mean = group_data.mean(axis=1)
+            group_mean = mean_method(group_data)
+            
             # add the group mean to the group_means dataframe
             group_means[group] = group_mean
         group_means = group_means[group_order]
-        print("samples used:", samples_used)
+        # convert to float
+        group_means = group_means.astype(float)
+        # print("samples used:", samples_used)
         return group_means
 
     def get_stats_peptide_num_in_taxa(self) -> pd.DataFrame:

@@ -78,14 +78,14 @@
        <string>Plotting</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_21">
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>HTML Global</string>
+          <string>Taxa-Functions Link Network</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="3">
+       <item row="4" column="3">
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="0" column="0">
           <widget class="QLabel" name="label_11">
@@ -325,32 +325,7 @@
          </item>
         </layout>
        </item>
-       <item row="2" column="3">
-        <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_22">
-           <property name="text">
-            <string>Theme</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_html_theme">
-           <item>
-            <property name="text">
-             <string>white</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>dark</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="3">
+       <item row="5" column="3">
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="0" column="0">
           <widget class="QLabel" name="label_5">
@@ -516,10 +491,10 @@
          </item>
         </layout>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_4">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_21">
          <property name="text">
-          <string>Taxa-Functions Link Network</string>
+          <string>HTML Global</string>
          </property>
         </widget>
        </item>
@@ -699,12 +674,44 @@
          </item>
         </layout>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_20">
          <property name="text">
           <string>Network Global</string>
          </property>
         </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>Plot Mean</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Theme</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_html_theme">
+           <item>
+            <property name="text">
+             <string>white</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>dark</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label">
@@ -712,6 +719,17 @@
           <string>HeatMap</string>
          </property>
         </widget>
+       </item>
+       <item row="2" column="3">
+        <layout class="QGridLayout" name="gridLayout_12">
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="checkBox_stat_mean_by_zero_dominant">
+           <property name="text">
+            <string>Calculate Non-Zero Mean (Return 0 if Zeros &gt; 50%) for Each Group</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

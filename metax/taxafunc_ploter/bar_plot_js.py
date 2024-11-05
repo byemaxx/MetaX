@@ -1,9 +1,10 @@
 from pyecharts import options as opts
 from pyecharts.charts import Bar
 from .get_distinct_colors import GetDistinctColors
+from matplotlib import pyplot as plt
 
 
-class BarPlot_js:
+class BarPlot:
     def __init__(self, tfobj, theme='white'):
         self.tfa =  tfobj
         self.get_distinct_colors = GetDistinctColors().get_distinct_colors
@@ -41,18 +42,20 @@ class BarPlot_js:
         df.columns = new_col_names
         return df
     
-    
-    def plot_intensity_bar(self, taxon_name:str|None=None, sample_list:list|None = None, 
-                           func_name:str|None =None, peptide_seq=None, 
-                           width:int=1200, height:int=800, df= None, 
-                           title:str|None =None, rename_taxa:bool=False, 
-                           show_legend:bool=True, font_size:int=10,
-                           rename_sample:bool=True, plot_mean:bool=False,
-                           plot_percent:bool=False, sub_meta:str="None",
-                           show_all_labels:tuple = (False, False), use_3d:bool=False
-                           ):
+    def _get_modfied_df(self, df= None, 
+                        taxon_name:str|None=None, sample_list:list|None = None, 
+                        func_name:str|None =None, peptide_seq=None, 
+                        rename_taxa:bool=False, rename_sample:bool=True, 
+                        plot_mean:bool=False, sub_meta:str="None", plot_percent:bool=False):
+        """
+        Get modified df for plotting
+        Returns:
+        - df: pd.DataFrame
+        - rename_sample: bool
+        """
         if df is None:
-            df = self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, peptide_seq=peptide_seq, sample_list= sample_list)
+            df = self.tfa.GetMatrix.get_intensity_matrix(taxon_name=taxon_name, func_name=func_name, 
+                                                         peptide_seq=peptide_seq, sample_list= sample_list)
             if df.empty:
                 raise ValueError('No data to plot')
         
@@ -63,25 +66,69 @@ class BarPlot_js:
                 df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
                 
             rename_sample = False
-            
-        if use_3d:
-            if sub_meta == "None":
-                use_3d = False
-                print('sub_meta must be provided for 3D bar plot, use 2D bar plot instead')
-            
+
         # rename taxa
         if rename_taxa:
             df = self.rename_taxa(df)
         #rename columns (sample name)
         if rename_sample and sub_meta == "None":
             df = self._add_group_name_to_sample(df)
-        
-        col_num = len(df)
-        
+
         if plot_percent:
             # transform to percentage of each column
             df = df.div(df.sum(axis=0), axis=1) * 100
             
+        return df, rename_sample
+        
+    
+    def plot_intensity_bar_sns(self, taxon_name:str|None=None, sample_list:list|None = None, 
+                           func_name:str|None =None, peptide_seq=None, 
+                           width:int=12, height:int=8, df= None, 
+                           title:str|None =None, rename_taxa:bool=False, 
+                           show_legend:bool=True, font_size:int=10,
+                           rename_sample:bool=True, plot_mean:bool=False,
+                           plot_percent:bool=False, sub_meta:str="None", **kwargs):
+        
+        df, _ = self._get_modfied_df(df, taxon_name, sample_list, func_name, peptide_seq, 
+                                                 rename_taxa, rename_sample, plot_mean, sub_meta, plot_percent)
+        colormap = GetDistinctColors().get_distinct_colors(len(df.index))
+        fig, ax = plt.subplots(figsize=(width, height))
+        df.T.plot(kind='bar', stacked=True, ax=ax, color=colormap)
+
+        ax.set_title(title, fontsize=font_size)
+        ax.set_xlabel('Group' if plot_mean else 'Sample', fontsize=font_size)
+        ax.set_ylabel('Percentage' if plot_percent else 'Intensity', fontsize=font_size)
+        ax.tick_params(axis='both', which='major', labelsize=font_size)
+        if show_legend:            
+            ax.legend(title='Taxa' if rename_taxa else 'Sample', title_fontsize=font_size, fontsize=font_size, loc='center left', bbox_to_anchor=(1, 0.5))
+        else:
+            ax.get_legend().remove()
+            
+        plt.tight_layout()
+        plt.show()
+        
+        return fig
+    
+    
+    
+    def plot_intensity_bar_js(self, taxon_name:str|None=None, sample_list:list|None = None, 
+                           func_name:str|None =None, peptide_seq=None, 
+                           width:int=1200, height:int=800, df= None, 
+                           title:str|None =None, rename_taxa:bool=False, 
+                           show_legend:bool=True, font_size:int=10,
+                           rename_sample:bool=True, plot_mean:bool=False,
+                           plot_percent:bool=False, sub_meta:str="None",
+                           show_all_labels:tuple = (False, False), use_3d:bool=False
+                           ):
+        df, rename_sample = self._get_modfied_df(df, taxon_name, sample_list, func_name, peptide_seq,
+                                                 rename_taxa, rename_sample, plot_mean, sub_meta, plot_percent)
+
+        if use_3d:
+            if sub_meta == "None":
+                use_3d = False
+                print('sub_meta must be provided for 3D bar plot, use 2D bar plot instead')
+            
+        col_num = len(df)
             
         # Create title
         if title is None:
