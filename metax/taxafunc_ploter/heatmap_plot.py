@@ -357,10 +357,17 @@ class HeatmapPlot:
         '''
         
         if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
-            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
             print('Plot the mean of the data, set rename_sample to False')
             rename_sample = False
             
+            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            # remove all 0 rows
+            row_num = len(df)
+            df = df.loc[~(df==0).all(axis=1)] if row_cluster else df
+            # remove all 0 columns
+            col_num = len(df.columns)
+            df = df.loc[:, (df != 0).any(axis=0)] if col_cluster else df
+            print(f"Remove all 0 rows and columns after calculating the mean of the data:\n{row_num - len(df)} rows are removed\n{col_num - len(df.columns)} columns are removed")
         
         if len(df) < 2:
             row_cluster = False

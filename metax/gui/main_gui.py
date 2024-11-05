@@ -67,7 +67,7 @@ if __name__ == '__main__':
     from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
     from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
     from metax.taxafunc_ploter.tukey_plot import TukeyPlot
-    from metax.taxafunc_ploter.bar_plot_js import BarPlot_js
+    from metax.taxafunc_ploter.bar_plot_js import BarPlot
     from metax.taxafunc_ploter.sankey_plot import SankeyPlot
     from metax.taxafunc_ploter.network_plot import NetworkPlot
     from metax.taxafunc_ploter.trends_plot import TrendsPlot
@@ -110,7 +110,7 @@ else:
     from ..taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
     from ..taxafunc_ploter.volcano_plot import VolcanoPlot
     from ..taxafunc_ploter.tukey_plot import TukeyPlot
-    from ..taxafunc_ploter.bar_plot_js import BarPlot_js
+    from ..taxafunc_ploter.bar_plot_js import BarPlot
     from ..taxafunc_ploter.sankey_plot import SankeyPlot
     from ..taxafunc_ploter.network_plot import NetworkPlot
     from ..taxafunc_ploter.trends_plot import TrendsPlot
@@ -733,6 +733,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             settings_widget.heatmap_params_dict_changed.connect(self.on_heatmap_params_changed)
             settings_widget.tf_link_net_params_dict_changed.connect(self.on_tf_link_net_params_changed)
             settings_widget.html_theme_changed.connect(self.on_html_theme_changed)
+            settings_widget.stat_mean_by_zero_dominant_changed.connect(self.on_stat_mean_by_zero_dominant_changed)
             # Other settings
             settings_widget.protein_infer_method_changed.connect(self.on_protein_infer_method_changed)
             
@@ -764,6 +765,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def on_html_theme_changed(self, theme):
         self.html_theme = theme
         print(f"HTML theme changed to: {theme}")
+    
+    def on_stat_mean_by_zero_dominant_changed(self, mode):
+        # chcek if self.tfa exists
+        if not hasattr(self, 'tfa'):
+            print("Please load the data first.")
+            return
+        
+        self.tfa.stat_mean_by_zero_dominant = mode
+        print(f"Stat mean by zero dominant changed to: {mode}")
         
     def on_protein_infer_method_changed(self, method):
         #save to settings
@@ -3639,9 +3649,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 plot_percent = self.checkBox_basic_bar_plot_percent.isChecked()
                 sub_meta = self.comboBox_3dbar_sub_meta.currentText()
                 use_3d_for_sub_meta = self.checkBox_basic_bar_3d_for_sub_meta.isChecked()
+                js_bar = self.checkBox_basic_bar_interactive_js.isChecked()
                 
-                width = width*100
-                height = height*100
                 df = df.loc[(df!=0).any(axis=1)]
                 if len(df) > 100:
                     reply = QMessageBox.question(self.MainWindow, 'Warning', 
@@ -3650,14 +3659,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     if reply == QMessageBox.No:
                         return None
                 self.show_message(f'Plotting {plot_type}...')
-                pic = BarPlot_js(self.tfa, theme=self.html_theme).plot_intensity_bar(df = df, width=width, height=height, 
-                                                              title= '', rename_taxa=rename_taxa, 
-                                                              show_legend=show_legend, font_size=font_size,
-                                                              rename_sample=rename_sample, plot_mean = plot_mean,
-                                                              plot_percent = plot_percent, sub_meta = sub_meta,
-                                                              show_all_labels = show_all_labels, use_3d = use_3d_for_sub_meta)
-                                                              
-                self.save_and_show_js_plot(pic, title)
+                if js_bar:
+                    width = width*100
+                    height = height*100
+                    pic = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_js(df = df, width=width, height=height, 
+                                                                title= '', rename_taxa=rename_taxa, 
+                                                                show_legend=show_legend, font_size=font_size,
+                                                                rename_sample=rename_sample, plot_mean = plot_mean,
+                                                                plot_percent = plot_percent, sub_meta = sub_meta,
+                                                                show_all_labels = show_all_labels, use_3d = use_3d_for_sub_meta)
+                                                                
+                    self.save_and_show_js_plot(pic, title)
+                else:
+                    ax = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns(df = df, width=width, height=height, 
+                                                                title= '', rename_taxa=rename_taxa, 
+                                                                show_legend=show_legend, font_size=font_size,
+                                                                rename_sample=rename_sample, plot_mean = plot_mean,
+                                                                plot_percent = plot_percent, sub_meta = sub_meta)
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
@@ -5413,7 +5431,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('Plotting network...')
             list_only_no_link = self.checkBox_tf_link_net_plot_list_only_no_link.isChecked()
-            pic, network_df = NetworkPlot(
+            pic, network_df, attributes_df  = NetworkPlot(
                 self.tfa,
                 show_labels=show_labels,
                 rename_taxa=rename_taxa,
@@ -5430,6 +5448,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
             self.update_table_dict('taxa-func_network', network_df)
+            self.update_table_dict('taxa-func_network_attributes', attributes_df)
             
         except Exception as e:
             error_message = traceback.format_exc()
@@ -5682,7 +5701,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             params['sub_meta'] = sub_meta
             
             self.show_message('Plotting bar plot, please wait...')
-            pic = BarPlot_js(self.tfa, theme=self.html_theme).plot_intensity_bar(**params)
+            pic = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_js(**params)
             self.save_and_show_js_plot(pic, 'Intensity Bar Plot')
 
 

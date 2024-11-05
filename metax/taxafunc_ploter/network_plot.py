@@ -130,20 +130,43 @@ class NetworkPlot:
         
         # create network_df for export to cytoscape
         network_df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
-        network_df['sum'] = network_df.sum(axis=1)
         network_df.reset_index(inplace=True)
         network_df.columns = ['taxa', 'function'] + network_df.columns.tolist()[2:]
+        taxa_dict = network_df.drop('function', axis=1).groupby('taxa').sum().to_dict()
+        func_dict = network_df.drop('taxa', axis=1).groupby('function').sum().to_dict()
         network_df['focus_taxa'] = network_df['taxa'].apply(lambda x: 'Y' if x in focus_list else 'N')
         network_df['focus_func'] = network_df['function'].apply(lambda x: 'Y' if x in focus_list else 'N')
-        # Done creating network_df
+        # cerate attributes_df
+        attributes_taxa_df = pd.DataFrame(network_df[['taxa']])
+        attributes_taxa_df.drop_duplicates(inplace=True)
+        attributes_taxa_df['focus'] = attributes_taxa_df['taxa'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        attributes_taxa_df.columns = ['node', 'focus']
+        attributes_taxa_df['type'] = 'taxa'
+        # add the intensity columns to the attributes_df
+        for col in taxa_dict.keys():
+            attributes_taxa_df[col] = attributes_taxa_df['node'].map(taxa_dict[col])
         
-        df['sum'] = df.sum(axis=1)
+        attributes_func_df = pd.DataFrame(network_df[['function']])
+        attributes_func_df.drop_duplicates(inplace=True)
+        attributes_func_df['focus'] = attributes_func_df['function'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        attributes_func_df.columns = ['node', 'focus']
+        attributes_func_df['type'] = 'function'
+        # add the intensity columns to the attributes_df
+        for col in func_dict.keys():
+            attributes_func_df[col] = attributes_func_df['node'].map(func_dict[col])
+            
+        # concatenate the taxa and function attributes_df
+        attributes_df = pd.concat([attributes_taxa_df, attributes_func_df])
+        attributes_df['mean'] = attributes_df.drop(['node', 'focus', 'type'], axis=1).mean(axis=1)
+        # Done creating network_df and attributes_df for export to cytoscape
+        
+        df['mean'] = df.mean(axis=1)
         df.reset_index(inplace=True)
         colname = df.columns.tolist()
         colname[0] = 'taxa'
         colname[1] = 'function'
         df.columns = colname
-        df = df[['taxa', 'function', 'sum']]
+        df = df[['taxa', 'function', 'mean']]
 
         if plot_list_only:
             print("Plotting only the list provided in focus_list")
@@ -165,8 +188,8 @@ class NetworkPlot:
                 df = df.loc[df['taxa'].isin(focus_list) | df['function'].isin(focus_list)]
             print(f"New df shape: {df.shape}")
             
-        taxa_sum = df[df['taxa'] != ""].groupby('taxa')['sum'].sum().to_dict()
-        function_sum = df[df['function'] != ""].groupby('function')['sum'].sum().to_dict()
+        taxa_sum = df[df['taxa'] != ""].groupby('taxa')['mean'].sum().to_dict()
+        function_sum = df[df['function'] != ""].groupby('function')['mean'].sum().to_dict()
         
         sum_dict = {**taxa_sum, **function_sum}
         min_value = min(sum_dict.values())
@@ -217,7 +240,7 @@ class NetworkPlot:
                 {"name": "Function", "itemStyle": {"normal": {"color": self.func_color}}},
             ]
 
-        return nodes, links, categories, network_df
+        return nodes, links, categories, network_df, attributes_df
 
     def plot_tflink_network(
         self,
@@ -244,6 +267,7 @@ class NetworkPlot:
         Returns:
         - A Pyecharts Graph object that can be displayed in Jupyter notebooks or web pages.
         - A DataFrame containing nodes and links for export to Cytoscape.
+        - A DataFrame containing attributes of the nodes for export to Cytoscape.
         """
 
         # preprocess focus_list
@@ -260,13 +284,13 @@ class NetworkPlot:
                     new_list.extend((taxon, func))
                 else:
                     print(f"Warning: {i} is not in taxa or function list")
-            nodes, links, categories, network_df = self.create_nodes_links(sample_list=sample_list, 
+            nodes, links, categories, network_df, attributes_df = self.create_nodes_links(sample_list=sample_list, 
                                                                            focus_list = new_list,
                                                                            plot_list_only = plot_list_only, 
                                                                            list_only_no_link=list_only_no_link)
         else:
             focus_list = []
-            nodes, links, categories, network_df = self.create_nodes_links(sample_list = sample_list)
+            nodes, links, categories, network_df, attributes_df  = self.create_nodes_links(sample_list = sample_list)
 
 
         c = (
@@ -336,7 +360,7 @@ class NetworkPlot:
         )
 
 
-        return c , network_df
+        return c , network_df, attributes_df
     
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 

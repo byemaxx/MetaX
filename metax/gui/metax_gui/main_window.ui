@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1122</width>
-    <height>755</height>
+    <height>816</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -245,8 +245,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>528</width>
-                 <height>534</height>
+                 <width>391</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1882,7 +1882,7 @@
                             <string>Show Labels</string>
                            </property>
                            <property name="checked">
-                            <bool>true</bool>
+                            <bool>false</bool>
                            </property>
                           </widget>
                          </item>
@@ -2789,8 +2789,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>621</width>
-                        <height>150</height>
+                        <width>1016</width>
+                        <height>184</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -3001,22 +3001,6 @@
                            </property>
                            <property name="text">
                             <string>General</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="4" column="1">
-                          <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Show Legend</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
                            </property>
                           </widget>
                          </item>
@@ -3279,6 +3263,36 @@
                             <string>3D for Sub Meta</string>
                            </property>
                           </widget>
+                         </item>
+                         <item row="4" column="1">
+                          <layout class="QHBoxLayout" name="horizontalLayout_104">
+                           <item>
+                            <widget class="QCheckBox" name="checkBox_basic_bar_interactive_js">
+                             <property name="text">
+                              <string>Interactive Bar</string>
+                             </property>
+                             <property name="checked">
+                              <bool>true</bool>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QCheckBox" name="checkBox_basic_bar_show_legend">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Show Legend</string>
+                             </property>
+                             <property name="checked">
+                              <bool>true</bool>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
                         </layout>
                        </item>
@@ -3792,7 +3806,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>1020</width>
+                       <width>878</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -7467,8 +7481,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1016</width>
-                        <height>105</height>
+                        <width>620</width>
+                        <height>65</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9288,8 +9302,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1016</width>
-                        <height>141</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -9785,8 +9799,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1044</width>
-                    <height>493</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">

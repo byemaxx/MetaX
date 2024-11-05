@@ -1,3 +1,10 @@
+# Version: 1.117.1
+## Date: 2024-11-5
+### Changes:
+- New: 1. Added an option to calculate the mean by the domainat value in eache group for plot_mean parameter in DEV Settings. 2. Added a statistics bar plot for basic plot part. 3. Added a attributes table of Taxa-Function result.
+- Fix: Fixed the bug of calculating the Functional Redundancy in the T-Test and ANOVA part.
+
+
 # Version: 1.117.0
 ## Date: 2024-10-31
 ### Changes:
