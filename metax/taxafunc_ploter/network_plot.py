@@ -113,6 +113,12 @@ class NetworkPlot:
         - categories (list): Categories for nodes, used for coloring in the graph.
         - cytoscape_df (DataFrame): DataFrame containing nodes and links for Cytoscape export.
         """
+        def update_focus(row):
+            focus_taxa = 'Y' if row['taxa'] in focus_list else 'N'
+            focus_func = 'Y' if row['function'] in focus_list else 'N'
+            focus = 'Y' if focus_taxa == 'Y' or focus_func == 'Y' else 'N'
+            return pd.Series([focus_taxa, focus_func, focus])
+        
         df = self.tfa.taxa_func_df.copy()
         if self.rename_taxa:
             print("Renaming taxa to last level")
@@ -134,8 +140,10 @@ class NetworkPlot:
         network_df.columns = ['taxa', 'function'] + network_df.columns.tolist()[2:]
         taxa_dict = network_df.drop('function', axis=1).groupby('taxa').sum().to_dict()
         func_dict = network_df.drop('taxa', axis=1).groupby('function').sum().to_dict()
-        network_df['focus_taxa'] = network_df['taxa'].apply(lambda x: 'Y' if x in focus_list else 'N')
-        network_df['focus_func'] = network_df['function'].apply(lambda x: 'Y' if x in focus_list else 'N')
+        
+        network_df[['focus_taxa', 'focus_func', 'focus']] = network_df.apply(update_focus, axis=1)
+
+        
         # cerate attributes_df
         attributes_taxa_df = pd.DataFrame(network_df[['taxa']])
         attributes_taxa_df.drop_duplicates(inplace=True)
@@ -157,7 +165,7 @@ class NetworkPlot:
             
         # concatenate the taxa and function attributes_df
         attributes_df = pd.concat([attributes_taxa_df, attributes_func_df])
-        attributes_df['mean'] = attributes_df.drop(['node', 'focus', 'type'], axis=1).mean(axis=1)
+        attributes_df['mean_value'] = attributes_df.drop(['node', 'focus', 'type'], axis=1).mean(axis=1)
         # Done creating network_df and attributes_df for export to cytoscape
         
         df['mean'] = df.mean(axis=1)

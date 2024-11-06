@@ -1,3 +1,9 @@
+# Version: 1.117.2
+## Date: 2024-11-5
+### Changes:
+- Change: add a column of focus list to the taxa-function network table.
+
+
 # Version: 1.117.1
 ## Date: 2024-11-5
 ### Changes:
