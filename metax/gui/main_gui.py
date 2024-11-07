@@ -86,6 +86,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.extended_combo_box import ExtendedComboBox
     from metax.gui.metax_gui.show_plt import ExportablePlotDialog
     from metax.gui.metax_gui.input_window import InputWindow
+    from metax.gui.metax_gui.command_window import CommandWindow
     from metax.gui.metax_gui.user_agreement_dialog import UserAgreementDialog
     from metax.gui.metax_gui.settings_widget import SettingsWidget
     from metax.gui.metax_gui.cmap_combo_box import CmapComboBox
@@ -129,6 +130,7 @@ else:
     from .metax_gui.extended_combo_box import ExtendedComboBox
     from .metax_gui.show_plt import ExportablePlotDialog
     from .metax_gui.input_window import InputWindow
+    from .metax_gui.command_window import CommandWindow
     from .metax_gui.user_agreement_dialog import UserAgreementDialog
     from .metax_gui.settings_widget import SettingsWidget
     from .metax_gui.cmap_combo_box import CmapComboBox
@@ -234,6 +236,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
+        self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
         self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
@@ -251,6 +254,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
+        self.actionDebug_Console.triggered.connect(self.show_command_line_window)
         self.actionAny_Table_Mode.triggered.connect(self.set_any_table_mode)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
@@ -713,6 +717,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
 
     def show_settings_window(self):
+        def get_stat_mean_by_zero_dominant():
+            if hasattr(self, 'tfa.stat_mean_by_zero_dominant'):
+                return self.tfa.stat_mean_by_zero_dominant
+            elif self.settings.contains("stat_mean_by_zero_dominant") and self.settings.value("stat_mean_by_zero_dominant", type=bool):
+                return True
+            else:
+                return False
+            
         if self.settings_dialog is None:
             self.settings_dialog = QDialog(self.MainWindow)
             self.settings_dialog.setWindowTitle("Settings")
@@ -725,6 +737,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 parent=self.settings_dialog,
                 update_branch=self.update_branch,
                 auto_check_update=self.auto_check_update,
+                stat_mean_by_zero_dominant = get_stat_mean_by_zero_dominant(),
                 QSettings=self.settings,
             )
             settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
@@ -741,7 +754,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.settings_dialog.setLayout(layout)
         
         self.settings_dialog.show()
-
+        
+    def show_command_line_window(self):
+        self.command_window = CommandWindow(self.MainWindow, main_gui=self)
+        self.command_window.show()
             
     # handle the update mode changed from settings window
     def on_update_mode_changed(self, mode):
@@ -768,11 +784,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def on_stat_mean_by_zero_dominant_changed(self, mode):
         # chcek if self.tfa exists
-        if not hasattr(self, 'tfa'):
+        if not hasattr(self.tfa, 'stat_mean_by_zero_dominant'):
             print("Please load the data first.")
             return
-        
-        self.tfa.stat_mean_by_zero_dominant = mode
+        self.tfa.stat_mean_by_zero_dominant = mode 
+        self.settings.setValue("stat_mean_by_zero_dominant", mode)
         print(f"Stat mean by zero dominant changed to: {mode}")
         
     def on_protein_infer_method_changed(self, method):
@@ -1798,8 +1814,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         # add "protein" "Custom" to comboBoxs to plot
         self.add_or_remove_protein_custom_label()
-
         
+        #set stat_mean_by_zero_dominant mode by QSettings
+        if self.settings.contains("stat_mean_by_zero_dominant"):
+            self.tfa.stat_mean_by_zero_dominant = self.settings.value("stat_mean_by_zero_dominant", type=bool)
+
         # add tables to table dict
         if self.table_dict == {}:
             if self.tfa.any_df_mode:
@@ -3616,10 +3635,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df = dft
             else:
                 df = dft.loc[self.basic_heatmap_list]
-
+        # Done for creating the dataframe for the heatmap #
 
         try:
             if plot_type == 'heatmap':
+                df, sample_to_group_dict = self.tfa.BasicStats.get_df_by_mean_and_submeta(df = df,
+                                                                                          sub_meta = sub_meta, 
+                                                                                          plot_mean = plot_mean)
                 if row_cluster or (scale =='row'):
                     df = self.delete_zero_rows(df)
                 if col_cluster or (scale =='col'):
@@ -3634,14 +3656,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         return
                     else:
                         pass
-                
+
                 # plot heatmap
                 self.show_message(f'Plotting {plot_type}...')
                 HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
-                                                         show_all_labels=show_all_labels, rename_sample=rename_sample,
-                                                         plot_mean = plot_mean, sub_meta = sub_meta, return_type = 'fig')
+                                                         show_all_labels=show_all_labels,  return_type = 'fig',
+                                                         sample_to_group_dict = sample_to_group_dict)
                                                          
             
             elif plot_type == 'bar':
@@ -5586,7 +5608,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
             return None
 
-
+        df, sample_to_group_dict = self.tfa.BasicStats.get_df_by_mean_and_submeta(df = df,
+                                                                                    sub_meta = sub_meta, 
+                                                                                    plot_mean = plot_mean)
         if row_cluster or (scale == 'row'):
             df = self.delete_zero_rows(df)
 
@@ -5598,8 +5622,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             fig_res = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
-                                  rename_sample=rename_sample,  sub_meta=sub_meta,
-                                  plot_mean=plot_mean, return_type = return_type
+                                  return_type = return_type, sample_to_group_dict = sample_to_group_dict
                                   )
             
             if return_type == 'table':
@@ -5632,8 +5655,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         zero_columns = dataframe.columns[(dataframe == 0).all(axis=0)]
         if not zero_columns.empty:
             dataframe = dataframe.drop(zero_columns, axis=1)
-            # add group name to zero_columns
-            zero_columns = [f'{i} ({self.tfa.get_group_of_a_sample(i)})' for i in zero_columns]
+            # show the message with group name
+            try:  # add group name to zero_columns if possible
+                zero_columns = [f'{i} ({self.tfa.get_group_of_a_sample(i)})' for i in zero_columns]
+            except Exception:
+                print('The column name is not a sample name, Skip adding group name to the column name!')
             col_str = '\n'.join(zero_columns)
             if len(zero_columns) > 10:
                 # use InputWindow to show the deleted rows

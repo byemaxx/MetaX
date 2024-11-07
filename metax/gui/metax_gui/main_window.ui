@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -245,8 +245,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>391</width>
-                 <height>80</height>
+                 <width>528</width>
+                 <height>595</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2789,8 +2789,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1016</width>
-                        <height>184</height>
+                        <width>621</width>
+                        <height>152</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -3806,7 +3806,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>878</width>
+                       <width>1020</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -4495,10 +4495,10 @@
                              </size>
                             </property>
                             <property name="decimals">
-                             <number>3</number>
+                             <number>1</number>
                             </property>
                             <property name="value">
-                             <double>30.000000000000000</double>
+                             <double>99.000000000000000</double>
                             </property>
                            </widget>
                           </item>
@@ -4828,7 +4828,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>3</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5700,8 +5700,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>535</width>
-                           <height>94</height>
+                           <width>996</width>
+                           <height>164</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -5906,7 +5906,7 @@
                                <number>1</number>
                               </property>
                               <property name="value">
-                               <double>20.000000000000000</double>
+                               <double>99.000000000000000</double>
                               </property>
                              </widget>
                             </item>
@@ -7481,8 +7481,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>620</width>
-                        <height>65</height>
+                        <width>1016</width>
+                        <height>166</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9302,8 +9302,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>383</width>
-                        <height>68</height>
+                        <width>1016</width>
+                        <height>179</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10470,8 +10470,12 @@
      <string>Dev</string>
     </property>
     <addaction name="actionExport_Log_File"/>
+    <addaction name="separator"/>
     <addaction name="actionHide_Show_Console"/>
+    <addaction name="actionDebug_Console"/>
+    <addaction name="separator"/>
     <addaction name="actionAny_Table_Mode"/>
+    <addaction name="separator"/>
     <addaction name="actionSettings"/>
    </widget>
    <addaction name="menuTools"/>
@@ -10547,6 +10551,11 @@
   <action name="actionTutorial">
    <property name="text">
     <string>Tutorial</string>
+   </property>
+  </action>
+  <action name="actionDebug_Console">
+   <property name="text">
+    <string>Debug Console</string>
    </property>
   </action>
  </widget>

@@ -726,7 +726,8 @@ class CrossTest:
         return dft
     
     # return a dict of 3 dataframe: df_all, df_no_na, df_same_trends
-    def extrcat_significant_fc_from_all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj', df_type:str='deseq2') -> dict:
+    def extrcat_significant_fc_from_all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=99,
+                                                 p_type='padj', df_type:str='deseq2') -> dict:
             def filter_rows(group):
                 # 保留所有值都为正或者都为负的行
                 return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
@@ -751,6 +752,7 @@ class CrossTest:
             df_swapped = df_swapped.sort_index(axis=1)
             print(f"\nTotal number of all_siginificant: [{df_swapped.shape[0]}]")
             res_df_dict['all_sig'] = df_swapped
+            #TODO extract half of the columns in each group has no na and same trends
             
             df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
             df_no_na = df_no_na.droplevel(1, axis=1)

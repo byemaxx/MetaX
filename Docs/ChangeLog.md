@@ -1,3 +1,10 @@
+# Version: 1.118.0
+## Date: 2024-11-7
+### Changes:
+- New: added a debug console to run any python code in the MetaX to modify the object (FOR DEVELOPER ONLY).
+- Change: Load the some Setting from last profile when open the MetaX so that the user doesn't need to set the setting every time.
+- Fix: Fixed the bug of when plot mean of heatmap while selcect the sub meta, the mean calculation was not correct.
+
 # Version: 1.117.2
 ## Date: 2024-11-5
 ### Changes:
