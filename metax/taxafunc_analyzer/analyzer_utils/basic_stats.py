@@ -6,7 +6,7 @@ class BasicStats:
     def __init__(self, tfa):
         self.tfa = tfa
         
-    def get_mean_by_zero_dominant(self, df: pd.DataFrame) -> pd.Series:
+    def _get_mean_by_zero_dominant(self, df: pd.DataFrame) -> pd.Series:
         """
         Optimized function to calculate the mean of non-zero values in each row if the number of zero values
         is less than half of the total values; otherwise, return 0.
@@ -45,7 +45,7 @@ class BasicStats:
             zero_dominant = self.tfa.stat_mean_by_zero_dominant
         print(f"Caculating mean by zero_dominant: [{zero_dominant}]")
         
-        mean_method = self.get_mean_by_zero_dominant if zero_dominant else lambda x: x.mean(axis=1)
+        mean_method = self._get_mean_by_zero_dominant if zero_dominant else lambda x: x.mean(axis=1)
 
         
         data = df.copy()
@@ -214,7 +214,7 @@ class BasicStats:
             print(f"Caculating mean by zero_dominant: [{zero_dominant}]")
             
             if zero_dominant:
-                grouped_data = df.T.groupby([sample_groups, sub_groups]).apply(lambda x: self.get_mean_by_zero_dominant(x.T)).T
+                grouped_data = df.T.groupby([sample_groups, sub_groups]).apply(lambda x: self._get_mean_by_zero_dominant(x.T)).T
             else:
                 grouped_data = df.T.groupby([sample_groups, sub_groups]).mean().T
             
