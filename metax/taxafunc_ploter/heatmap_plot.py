@@ -480,7 +480,7 @@ class HeatmapPlot:
             - return_type (str): The type of the return value. Default is 'fig'. options: 'fig', 'table'
             - res_df_type (str): The type of the result DataFrame. Default is 'deseq2'.
             - p_type (str): The type of pvalue. Default is 'padj'. options: 'pvalue', 'padj'
-            - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'same_trends'
+            - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'half_same_trnds', 'same_trends'
             - show_col_colors (bool): Whether to show column colors. Default is True.
             - remove_zero_col (bool): Whether to remove zero columns. Default is True.
 

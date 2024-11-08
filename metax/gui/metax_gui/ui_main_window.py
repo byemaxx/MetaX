@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -147,7 +147,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 595))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 591))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -2309,6 +2309,7 @@ class Ui_metaX_main(object):
         self.comboBox_cross_3_level_plot_df_type.addItem("")
         self.comboBox_cross_3_level_plot_df_type.addItem("")
         self.comboBox_cross_3_level_plot_df_type.addItem("")
+        self.comboBox_cross_3_level_plot_df_type.addItem("")
         self.gridLayout_51.addWidget(self.comboBox_cross_3_level_plot_df_type, 3, 4, 1, 1)
         self.checkBox_cross_3_level_plot_remove_zero_col = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -2901,7 +2902,7 @@ class Ui_metaX_main(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollArea_3.setObjectName("scrollArea_3")
         self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 164))
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 160))
         self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
         self.gridLayout_68 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName("gridLayout_68")
@@ -3847,7 +3848,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollArea_5.setObjectName("scrollArea_5")
         self.scrollAreaWidgetContents_6 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 166))
+        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 162))
         self.scrollAreaWidgetContents_6.setObjectName("scrollAreaWidgetContents_6")
         self.gridLayout_57 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName("gridLayout_57")
@@ -4856,7 +4857,7 @@ class Ui_metaX_main(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollArea_7.setObjectName("scrollArea_7")
         self.scrollAreaWidgetContents_8 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 1016, 179))
+        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 1016, 177))
         self.scrollAreaWidgetContents_8.setObjectName("scrollAreaWidgetContents_8")
         self.gridLayout_66 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_8)
         self.gridLayout_66.setObjectName("gridLayout_66")
@@ -5425,7 +5426,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -5871,9 +5872,15 @@ class Ui_metaX_main(object):
         self.label_139.setText(_translate("metaX_main", "To"))
         self.label_58.setText(_translate("metaX_main", "Top Number"))
         self.label_141.setText(_translate("metaX_main", "Plot Type"))
+        self.comboBox_cross_3_level_plot_df_type.setToolTip(_translate("metaX_main", "- \'all_sig\': DataFrame containing all significant rows across all groups, Non-significant values are replaced with NA.\n"
+"- \'half_same_trends\': DataFrame containing rows where each group has the same trend (all positive or all negative non-NA values) and at least 50% of the values are non-NA.\n"
+"- \'no_na\': DataFrame containing rows with no NA values in each group.\n"
+"- \'same_trends\': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).\n"
+""))
         self.comboBox_cross_3_level_plot_df_type.setItemText(0, _translate("metaX_main", "all_sig"))
         self.comboBox_cross_3_level_plot_df_type.setItemText(1, _translate("metaX_main", "no_na"))
-        self.comboBox_cross_3_level_plot_df_type.setItemText(2, _translate("metaX_main", "same_trends"))
+        self.comboBox_cross_3_level_plot_df_type.setItemText(2, _translate("metaX_main", "half_same_trends"))
+        self.comboBox_cross_3_level_plot_df_type.setItemText(3, _translate("metaX_main", "same_trends"))
         self.checkBox_cross_3_level_plot_remove_zero_col.setText(_translate("metaX_main", "Remove Zero Col"))
         self.label_30.setText(_translate("metaX_main", "with"))
         self.comboBox_top_heatmap_scale_method.setItemText(0, _translate("metaX_main", "maxmin"))

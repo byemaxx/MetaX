@@ -1,3 +1,10 @@
+# Version: 1.118.1
+## Date: 2024-11-7
+### Changes:
+- New: added 'half_same_trends' optional to extract the table of each group has the same trend (all positive or all negative non-NA values) and at  east 50% of the values are non-NA of the result of group-control in condition.
+- Change: refined the layout of the setting window.
+
+
 # Version: 1.118.0
 ## Date: 2024-11-7
 ### Changes:

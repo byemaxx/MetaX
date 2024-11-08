@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>528</width>
-                 <height>595</height>
+                 <height>591</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -4602,6 +4602,13 @@
                             <height>16777215</height>
                            </size>
                           </property>
+                          <property name="toolTip">
+                           <string>- 'all_sig': DataFrame containing all significant rows across all groups, Non-significant values are replaced with NA.
+- 'half_same_trends': DataFrame containing rows where each group has the same trend (all positive or all negative non-NA values) and at least 50% of the values are non-NA.
+- 'no_na': DataFrame containing rows with no NA values in each group.
+- 'same_trends': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).
+</string>
+                          </property>
                           <item>
                            <property name="text">
                             <string>all_sig</string>
@@ -4610,6 +4617,11 @@
                           <item>
                            <property name="text">
                             <string>no_na</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>half_same_trends</string>
                            </property>
                           </item>
                           <item>
@@ -5701,7 +5713,7 @@
                            <x>0</x>
                            <y>0</y>
                            <width>996</width>
-                           <height>164</height>
+                           <height>160</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -7482,7 +7494,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>166</height>
+                        <height>162</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9303,7 +9315,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>179</height>
+                        <height>177</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10437,7 +10449,7 @@
      <x>0</x>
      <y>0</y>
      <width>1122</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
