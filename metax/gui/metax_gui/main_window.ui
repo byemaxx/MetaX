@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>528</width>
-                 <height>591</height>
+                 <height>595</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -976,7 +976,7 @@
                 </item>
                 <item>
                  <property name="text">
-                  <string>Normalization by sum</string>
+                  <string>Percentages Scaling</string>
                  </property>
                 </item>
                </widget>
@@ -5713,7 +5713,7 @@
                            <x>0</x>
                            <y>0</y>
                            <width>996</width>
-                           <height>160</height>
+                           <height>164</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -7494,7 +7494,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>162</height>
+                        <height>166</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9315,7 +9315,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>1016</width>
-                        <height>177</height>
+                        <height>179</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10449,7 +10449,7 @@
      <x>0</x>
      <y>0</y>
      <width>1122</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

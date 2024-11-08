@@ -1,3 +1,9 @@
+# Version: 1.118.2
+## Date: 2024-11-8
+### Changes:
+- Change: changed the "Sum normalization" to "Percentages Scaling" in the data preprossing part to avoid the confusion with the normalization method.
+
+
 # Version: 1.118.1
 ## Date: 2024-11-7
 ### Changes:

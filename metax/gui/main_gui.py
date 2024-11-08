@@ -2674,7 +2674,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "Standard Scaling (Z-Score)": "zscore",
                     "Min-Max Scaling": "minmax",
                     "Pareto Scaling": "pareto",
-                    "Normalization by sum": "sum",
+                    "Percentages Scaling": "percentage",
                 }
                 normalize_method = normalize_dict[normalize_method]
                 transform_method = transform_dict[transform_method]

@@ -118,7 +118,7 @@ class DataPreprocessing:
             normalize_operations = {
                 'None': lambda x: x,
                 'mean': lambda x: x - x.mean(),
-                'sum': lambda x: x / (x.sum() + epsilon),
+                'percentage': lambda x: x / (x.sum() + epsilon) * 100,
                 'minmax': lambda x: (x - x.min()) / (x.max() - x.min()),
                 'zscore': lambda x: (x - x.mean()) / (x.std() + epsilon),
                 'pareto': lambda x: (x - x.mean()) / (np.sqrt(x.std() + epsilon)),
@@ -143,7 +143,7 @@ class DataPreprocessing:
 
                 print(f'Data normalized by [{normalize_method}]')
             else:
-                raise ValueError('normalize_method must be in [None, mean, sum, minmax, zscore, pareto]')
+                raise ValueError(f'normalize_method must be in {list(normalize_operations.keys())}')
 
             # move the data to positive
             df_mat = df_mat - df_mat.min()
@@ -637,7 +637,7 @@ class DataPreprocessing:
             - `None`: No normalization.
             - `trace_shift`: Trace shift normalization inspired by DirectLFQ.
             - `mean`: Mean normalization.
-            - `sum`: Sum normalization.
+            - `percentage`: Percentage normalization, then *100.
             - `minmax`: Min-max normalization.
             - `zscore`: Z-score normalization.
             - `pareto`: Pareto scaling.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -147,7 +147,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 591))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 528, 595))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -2902,7 +2902,7 @@ class Ui_metaX_main(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollArea_3.setObjectName("scrollArea_3")
         self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 160))
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 996, 164))
         self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
         self.gridLayout_68 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName("gridLayout_68")
@@ -3848,7 +3848,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollArea_5.setObjectName("scrollArea_5")
         self.scrollAreaWidgetContents_6 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 162))
+        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 1016, 166))
         self.scrollAreaWidgetContents_6.setObjectName("scrollAreaWidgetContents_6")
         self.gridLayout_57 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName("gridLayout_57")
@@ -4857,7 +4857,7 @@ class Ui_metaX_main(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollArea_7.setObjectName("scrollArea_7")
         self.scrollAreaWidgetContents_8 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 1016, 177))
+        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 1016, 179))
         self.scrollAreaWidgetContents_8.setObjectName("scrollAreaWidgetContents_8")
         self.gridLayout_66 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_8)
         self.gridLayout_66.setObjectName("gridLayout_66")
@@ -5426,7 +5426,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 23))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1122, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -5492,7 +5492,7 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(4)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(2)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(3)
@@ -5639,7 +5639,7 @@ class Ui_metaX_main(object):
         self.comboBox_set_data_normalization.setItemText(3, _translate("metaX_main", "Min-Max Scaling"))
         self.comboBox_set_data_normalization.setItemText(4, _translate("metaX_main", "Pareto Scaling"))
         self.comboBox_set_data_normalization.setItemText(5, _translate("metaX_main", "Mean centering"))
-        self.comboBox_set_data_normalization.setItemText(6, _translate("metaX_main", "Normalization by sum"))
+        self.comboBox_set_data_normalization.setItemText(6, _translate("metaX_main", "Percentages Scaling"))
         self.comboBox_remove_batch_effect.setItemText(0, _translate("metaX_main", "None"))
         self.label_41.setText(_translate("metaX_main", "Data Normalization"))
         self.label_43.setText(_translate("metaX_main", "Batch Effect Correction"))
