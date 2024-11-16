@@ -2,7 +2,7 @@
 .vscode/
 .idea/
 .trunk/
-local_tests/
+.local_tests/
 *.pyc
 *.db
 .gitignore
