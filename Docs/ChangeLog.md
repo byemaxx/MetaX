@@ -1,3 +1,29 @@
+# Version: 1.118.2
+## Date: 2024-11-8
+### Changes:
+- Change: changed the "Sum normalization" to "Percentages Scaling" in the data preprossing part to avoid the confusion with the normalization method.
+
+
+# Version: 1.118.1
+## Date: 2024-11-7
+### Changes:
+- New: added 'half_same_trends' optional to extract the table of each group has the same trend (all positive or all negative non-NA values) and at  east 50% of the values are non-NA of the result of group-control in condition.
+- Change: refined the layout of the setting window.
+
+
+# Version: 1.118.0
+## Date: 2024-11-7
+### Changes:
+- New: added a debug console to run any python code in the MetaX to modify the object (FOR DEVELOPER ONLY).
+- Change: Load the some Setting from last profile when open the MetaX so that the user doesn't need to set the setting every time.
+- Fix: Fixed the bug of when plot mean of heatmap while selcect the sub meta, the mean calculation was not correct.
+
+# Version: 1.117.2
+## Date: 2024-11-5
+### Changes:
+- Change: add a column of focus list to the taxa-function network table.
+
+
 # Version: 1.117.1
 ## Date: 2024-11-5
 ### Changes:

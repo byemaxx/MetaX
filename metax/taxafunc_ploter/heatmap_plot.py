@@ -349,18 +349,11 @@ class HeatmapPlot:
     def plot_basic_heatmap(self,  df, title = 'Heatmap',fig_size:tuple|None = None, 
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
-                    show_all_labels:tuple = (False, False), rename_sample:bool = True, plot_mean:bool = False,
-                    sub_meta: str = "None", scale_method:str = 'maxmin', return_type:str = 'fig'
-                    ):
-        '''
-        sub_meta is higher plot_mean, if sub_meta provided, plot_mean is False
-        '''
+                    show_all_labels:tuple = (False, False), scale_method:str = 'maxmin', return_type:str = 'fig',
+                    sample_to_group_dict:dict|None = None):
         
-        if plot_mean and sub_meta == 'None': # if sub_meta is not None, plot_mean is False
-            print('Plot the mean of the data, set rename_sample to False')
-            rename_sample = False
-            
-            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+        # check if any row or column is all 0
+        if (df == 0).all().any():
             # remove all 0 rows
             row_num = len(df)
             df = df.loc[~(df==0).all(axis=1)] if row_cluster else df
@@ -375,19 +368,12 @@ class HeatmapPlot:
             col_cluster = False
         
 
-        mat = df.copy()
-        mat = self.scale_data(df = mat, scale_by = scale, method = scale_method)
+        df = self.scale_data(df = df, scale_by = scale, method = scale_method)
 
         # if index is Taxon, rename index
         if rename_taxa:
-            mat = self.rename_taxa(mat)
+            df = self.rename_taxa(df)
 
-        mat, group_list = self.tfa.BasicStats.get_combined_sub_meta_df(df=mat, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
-        
-        # if only one column, remove col_cluster, set scale to None
-        if len(mat.columns) < 2:
-            col_cluster = False
-            # scale = None
         
         if return_type == 'table':
             sns_params = {
@@ -396,16 +382,16 @@ class HeatmapPlot:
                 "method": self.linkage_method,
                 "metric": self.distance_metric,
             }
-            fig = sns.clustermap(mat, **sns_params)
+            fig = sns.clustermap(df, **sns_params)
             # get the sorted dataframe
             if row_cluster and not col_cluster:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, :]
+                sorted_df = df.iloc[fig.dendrogram_row.reordered_ind, :]
             elif col_cluster and not row_cluster:
-                sorted_df = mat.iloc[:, fig.dendrogram_col.reordered_ind]
+                sorted_df = df.iloc[:, fig.dendrogram_col.reordered_ind]
             elif row_cluster and col_cluster:
-                sorted_df = mat.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
+                sorted_df = df.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
             else:
-                sorted_df = mat
+                sorted_df = df
             plt.close(fig.figure)
             return sorted_df
         
@@ -414,8 +400,12 @@ class HeatmapPlot:
             cmap = 'YlOrRd'
         if fig_size is None:
             fig_size = (30,30)
+        if sample_to_group_dict is not None:
+            group_list = [sample_to_group_dict.get(i, i) for i in df.columns]
+            color_list = self.assign_colors(group_list)
+        else:
+            color_list = None
             
-        color_list = self.assign_colors(group_list)
         sns_params = {
             # "center": 0,
             "cmap": cmap,
@@ -428,11 +418,11 @@ class HeatmapPlot:
             "row_cluster": row_cluster,
             "method": self.linkage_method,
             "metric": self.distance_metric,
-            "col_colors": color_list if not plot_mean else None,
+            "col_colors": color_list,
             "xticklabels": True if show_all_labels[0] else "auto",
             "yticklabels": True if show_all_labels[1] else "auto",
         }
-        fig = sns.clustermap(mat, **sns_params)
+        fig = sns.clustermap(df, **sns_params)
 
         fig.ax_heatmap.set_xticklabels(
             fig.ax_heatmap.get_xmajorticklabels(),
@@ -490,7 +480,7 @@ class HeatmapPlot:
             - return_type (str): The type of the return value. Default is 'fig'. options: 'fig', 'table'
             - res_df_type (str): The type of the result DataFrame. Default is 'deseq2'.
             - p_type (str): The type of pvalue. Default is 'padj'. options: 'pvalue', 'padj'
-            - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'same_trends'
+            - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'half_same_trnds', 'same_trends'
             - show_col_colors (bool): Whether to show column colors. Default is True.
             - remove_zero_col (bool): Whether to remove zero columns. Default is True.
 

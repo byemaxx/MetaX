@@ -1,5 +1,6 @@
 # T-Test , ANOVA, Tukey HSD, Deseq2
 import pandas as pd
+import numpy as np
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from scipy.stats import f_oneway
 from scipy.stats import ttest_ind
@@ -726,43 +727,94 @@ class CrossTest:
         return dft
     
     # return a dict of 3 dataframe: df_all, df_no_na, df_same_trends
-    def extrcat_significant_fc_from_all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=30, p_type='padj', df_type:str='deseq2') -> dict:
-            def filter_rows(group):
-                # 保留所有值都为正或者都为负的行
-                return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
+    def extrcat_significant_fc_from_all_3_levels(self, df, p_value=0.05, log2fc_min=1, log2fc_max=99,
+                                                 p_type='padj', df_type:str='deseq2') -> dict:
+        """
+        Extracts significant fold change data from a multi-level DataFrame and categorizes it based on different filtering criteria.
+        
+        Parameters:
+        -----------
+        df : pd.DataFrame
+            A multi-level DataFrame containing statistical data for different groups.
+        
+        p_value : float, optional, default=0.05
+            The threshold for significance based on p-values. Only rows with p-values below this threshold will be considered significant.
+        
+        log2fc_min : float, optional, default=1
+            The minimum log2 fold change to consider a row significant.
+        
+        log2fc_max : float, optional, default=99
+            The maximum log2 fold change to consider a row significant.
+        
+        p_type : str, optional, default='padj'
+            The type of p-value to use for filtering. Typically 'padj' or 'pvalue'.
+        
+        df_type : str, optional, default='deseq2'
+            Specifies the type of statistical method used. Must be either 'dunnett' or 'deseq2'.
+        
+        Returns:
+        --------
+        dict
+            A dictionary containing three DataFrames:
+            - 'all_sig': DataFrame containing all significant rows across all groups, Non-significant values are replaced with NA.
+            - 'half_same_trends': DataFrame containing rows where each group has the same trend (all positive or all negative non-NA values) 
+            and at least 50% of the values are non-NA.
+            - 'no_na': DataFrame containing rows with no NA values in each group.
+            - 'same_trends': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).
+        """
+        def filter_rows_with_same_trends_and_half_na(group):
+            # 筛选出所有非NA值都为正或都为负的行
+            filtered = group[group.apply(lambda row: (row.dropna() > 0).all() or (row.dropna() < 0).all(), axis=1)]
+            # 检查每行非NA的值是否超过一半，若非NA值少于一半则将该行置为NA
+            filtered = filtered.apply(lambda x: x if x.notna().sum() > len(x) / 2 else pd.Series([np.nan] * len(x), index=x.index), axis=1)
+            return filtered
             
-            res_df_dict = {}
+        def filter_rows(group):
+            # 保留所有值都为正或者都为负的行, 且不包含NA
+            return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
+        
+        res_df_dict = {}
+        
+        first_level_values = df.columns.get_level_values(0).unique()
+        res_dict = {}
+        for value in first_level_values: # iterate over first level values
+            sub_df = df[value]
+            print(f"\nExtracting significant Stats from '{value}':")
+            if df_type == 'dunnett':
+                dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value, p_type=p_type)
+            elif df_type == 'deseq2':
+                dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
+            else:
+                raise ValueError("df_type must be in ['dunnett', 'deseq2']")
             
-            first_level_values = df.columns.get_level_values(0).unique()
-            res_dict = {}
-            for value in first_level_values: # iterate over first level values
-                sub_df = df[value]
-                print(f"\nExtracting significant Stats from '{value}':")
-                if df_type == 'dunnett':
-                    dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value, p_type=p_type)
-                elif df_type == 'deseq2':
-                    dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
-                else:
-                    raise ValueError("df_type must be in ['dunnett', 'deseq2']")
-                
-                res_dict[value] = dft
-            df = pd.concat(res_dict, axis=1)
-            df_swapped = df.swaplevel(axis=1)
-            df_swapped = df_swapped.sort_index(axis=1)
-            print(f"\nTotal number of all_siginificant: [{df_swapped.shape[0]}]")
-            res_df_dict['all_sig'] = df_swapped
-            
-            df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
-            df_no_na = df_no_na.droplevel(1, axis=1)
-            print(f"Total number of no_na_in_one_group: [{df_no_na.shape[0]}]")
-            res_df_dict['no_na'] = df_no_na
+            res_dict[value] = dft
+        df = pd.concat(res_dict, axis=1)
+        df_swapped = df.swaplevel(axis=1)
+        df_swapped = df_swapped.sort_index(axis=1)
+        print(f"\nTotal number of all_siginificant: [{df_swapped.shape[0]}]")
+        res_df_dict['all_sig'] = df_swapped
+        #TODO extract half of the columns in each group has no na and same trends
+        
 
-            # Only keep rows that have all values positive or all values negative
-            df_same_trends = df_no_na.groupby(level=0, axis=1).apply(filter_rows)
-            # dropna level 0 index
-            df_same_trends.columns = df_same_trends.columns.droplevel(1)
-            print(f"Total number of same_trends_in_one_group: [{df_same_trends.shape[0]}]")
-            res_df_dict['same_trends'] = df_same_trends
-            
-            
-            return res_df_dict
+        # 按groupby(level=0)分组，过滤每组符合条件的行
+        df_half = pd.concat([filter_rows_with_same_trends_and_half_na(group) for _, group in df_swapped.groupby(level=0, axis=1)], axis=1)
+        # df_half.columns = df_half.columns.droplevel(1)  # 删除多余的层级
+        df_half = df_half.dropna(how='all')  # 删除所有值都为NA的行
+        print(f"Total number of half_same_trends: [{df_half.shape[0]}]")
+        res_df_dict['half_same_trends'] = df_half
+
+        
+        df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
+        df_no_na = df_no_na.droplevel(1, axis=1)
+        print(f"Total number of no_na: [{df_no_na.shape[0]}]")
+        res_df_dict['no_na'] = df_no_na
+
+        # Only keep rows that have all values positive or all values negative
+        df_same_trends = df_no_na.groupby(level=0, axis=1).apply(filter_rows)
+        # dropna level 0 index
+        df_same_trends.columns = df_same_trends.columns.droplevel(1)
+        print(f"Total number of same_trends: [{df_same_trends.shape[0]}]")
+        res_df_dict['same_trends'] = df_same_trends
+        
+        
+        return res_df_dict

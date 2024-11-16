@@ -11,7 +11,7 @@ class SettingsWidget(QWidget):
     protein_infer_method_changed = pyqtSignal(str)
     stat_mean_by_zero_dominant_changed = pyqtSignal(bool)
 
-    def __init__(self, parent=None, update_branch="main", auto_check_update=True, QSettings=None):
+    def __init__(self, parent=None, update_branch="main", auto_check_update=True, stat_mean_by_zero_dominant=False, QSettings=None):
         super().__init__(parent)
         self.update_mode = update_branch
         self.auto_check_update = auto_check_update
@@ -22,7 +22,7 @@ class SettingsWidget(QWidget):
         self.ui = Ui_Settings()
         self.ui.setupUi(self)
         
-        self.init_ui(self.update_mode, self.auto_check_update, QSettings)
+        self.init_ui(self.update_mode, self.auto_check_update, stat_mean_by_zero_dominant, QSettings)
         # resize the window, 800 as default
         self.resize(800, 400)
         
@@ -70,12 +70,15 @@ class SettingsWidget(QWidget):
         self.ui.checkBox_stat_mean_by_zero_dominant.stateChanged.connect(self.handle_stat_mean_by_zero_dominant_changed)
         
         
-    def init_ui(self, update_mode, auto_check_update, QSettings=None):
+    def init_ui(self, update_mode, auto_check_update, stat_mean_by_zero_dominant, QSettings=None,):
         if update_mode == "main":
             self.ui.radioButton_update_stable.setChecked(True)
         elif update_mode == "dev":
             self.ui.radioButton_update_beta.setChecked(True)
         self.ui.checkBox_auto_check_update.setChecked(auto_check_update)
+        
+        # set the default values for stat_mean_by_zero_dominant
+        self.ui.checkBox_stat_mean_by_zero_dominant.setChecked(stat_mean_by_zero_dominant)
         
         if QSettings:
             method = QSettings.value('protein_infer_greedy_mode', 'fast')

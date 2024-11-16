@@ -44,6 +44,9 @@ class SankeyPlot:
         df_dict = {}
         # add all samples to the dict
         df['sum'] = df.sum(axis=1)
+        df = df[df['sum'] != 0]
+        if len(df) == 0:
+            raise ValueError('\n\nAll values are 0!\n\nDo you calculate mean values for each group by Zero-Domainat methods?\n\nPlease check the settings.')
         df_dict['All'] = self.df_to_sankey_df(df, value_col='sum')
         # add samples for each group to the dict
         for group, samples in group_dict.items():
@@ -55,9 +58,10 @@ class SankeyPlot:
             df_temp['sum'] = df_temp.sum(axis=1)
             # remove values that are 0
             df_temp = df_temp[df_temp['sum'] != 0]
+            if len(df_temp) == 0:
+                continue
             df_temp = self.df_to_sankey_df(df_temp, value_col='sum')
             df_dict[group] = df_temp
-            
         return df_dict
             
 

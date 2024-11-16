@@ -6,6 +6,26 @@ class BasicStats:
     def __init__(self, tfa):
         self.tfa = tfa
         
+    def _get_mean_by_zero_dominant(self, df: pd.DataFrame) -> pd.Series:
+        """
+        Optimized function to calculate the mean of non-zero values in each row if the number of zero values
+        is less than half of the total values; otherwise, return 0.
+        
+        Args:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.Series: A Series with mean values based on the zero-dominant condition.
+        """
+        # 计算每行的零值数量
+        zero_counts = (df == 0).sum(axis=1)
+        # 判断每行零值是否超过一半，超过的行直接设为0
+        mean_series = pd.Series(0, index=df.index)
+        non_zero_rows = zero_counts <= (df.shape[1] / 2)
+        # 对非零主导的行计算非零均值
+        mean_series[non_zero_rows] = df[non_zero_rows].replace(0, pd.NA).mean(axis=1, skipna=True)
+        return mean_series
+    
     # get a mean df by group
     def get_stats_mean_df_by_group(self, df: pd.DataFrame, condition: list|None = None, zero_dominant: bool|None = None) -> pd.DataFrame:
         """
@@ -20,31 +40,12 @@ class BasicStats:
             pd.DataFrame: A DataFrame containing the mean values of the groups.
         """
 
-        def get_mean_by_zero_dominant(df: pd.DataFrame) -> pd.Series:
-            """
-            Optimized function to calculate the mean of non-zero values in each row if the number of zero values
-            is less than half of the total values; otherwise, return 0.
-            
-            Args:
-                df (pd.DataFrame): Input DataFrame.
-
-            Returns:
-                pd.Series: A Series with mean values based on the zero-dominant condition.
-            """
-            # 计算每行的零值数量
-            zero_counts = (df == 0).sum(axis=1)
-            # 判断每行零值是否超过一半，超过的行直接设为0
-            mean_series = pd.Series(0, index=df.index)
-            non_zero_rows = zero_counts <= (df.shape[1] / 2)
-            # 对非零主导的行计算非零均值
-            mean_series[non_zero_rows] = df[non_zero_rows].replace(0, pd.NA).mean(axis=1, skipna=True)
-            return mean_series
         
         if zero_dominant is None:
             zero_dominant = self.tfa.stat_mean_by_zero_dominant
         print(f"Caculating mean by zero_dominant: [{zero_dominant}]")
         
-        mean_method = get_mean_by_zero_dominant if zero_dominant else lambda x: x.mean(axis=1)
+        mean_method = self._get_mean_by_zero_dominant if zero_dominant else lambda x: x.mean(axis=1)
 
         
         data = df.copy()
@@ -187,7 +188,8 @@ class BasicStats:
         sub_meta: str,
         rename_sample: bool = False,
         plot_mean: bool = False,
-    ) -> tuple[pd.DataFrame, list[str]]:
+        zero_dominant: bool|None = None
+    ) -> tuple[pd.DataFrame, dict[str, str]]:
         """
         Combines the sub-meta information with the main meta information in the given DataFrame and returns the combined DataFrame and a list of sub-meta groups.
 
@@ -196,9 +198,10 @@ class BasicStats:
             sub_meta (str): The sub-meta information to be combined with the main meta information.
             rename_sample (bool, optional): Whether to rename the samples in the DataFrame. Defaults to False.
             plot_mean (bool, optional): Whether to plot the mean values. Defaults to False.
+            zero_dominant (bool, optional): Whether to calculate the mean of non-zero values in each group(return 0 if the >50% values are zero). Defaults to None.
 
         Returns:
-            tuple[pd.DataFrame, list[str]]: A tuple containing the combined DataFrame and a list of sub-meta groups.
+            tuple[pd.DataFrame, Dict[str, str]]: A tuple containing the combined DataFrame and a dictionary with the sample names as keys and the group names as values.
         """
         if sub_meta != 'None':
 
@@ -206,7 +209,14 @@ class BasicStats:
             sub_groups = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in df.columns}
 
             # Combine samples with the same meta and sub-meta, and calculate the mean value
-            grouped_data = df.T.groupby([sample_groups, sub_groups]).mean().T
+            if zero_dominant is None:
+                zero_dominant = self.tfa.stat_mean_by_zero_dominant
+            print(f"Caculating mean by zero_dominant: [{zero_dominant}]")
+            
+            if zero_dominant:
+                grouped_data = df.T.groupby([sample_groups, sub_groups]).apply(lambda x: self._get_mean_by_zero_dominant(x.T)).T
+            else:
+                grouped_data = df.T.groupby([sample_groups, sub_groups]).mean().T
             
             # group_list is the sub-meta group
             group_list = [i[1] for i in grouped_data.columns] if not plot_mean else grouped_data.columns.tolist()
@@ -222,7 +232,10 @@ class BasicStats:
             else:
                 group_list = [self.tfa.get_group_of_a_sample(i) for i in df.columns] if not plot_mean else df.columns.tolist()
         
-        return df, group_list
+        # create a group_dict, key is column name, value is the group name bsed on the group_list
+        sample_to_group_dict = {col: group_list[i] for i, col in enumerate(df.columns)}      
+        
+        return df, sample_to_group_dict
     
     # Shapiro-Wilk Test
     def shapiro_test(self, df: pd.DataFrame, alpha=0.05) :
@@ -246,3 +259,24 @@ class BasicStats:
             shapiro_results[sample] = {'p_value': p, 'is_normal': p > alpha}
             
         return shapiro_results
+
+
+
+    def get_df_by_mean_and_submeta(self, df, sub_meta:str = 'None', rename_sample:bool = True, plot_mean:bool = False):
+        """
+        Prepares a DataFrame for baisc heatmap plotting.
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing the sample data.
+        sub_meta (str): The sub-metadata to be used for grouping. Default is 'None'.
+        rename_sample (bool): Whether to rename the samples. Default is True.
+        plot_mean (bool): Whether to plot the mean values. Default is False.
+        Returns:
+        tuple: A tuple containing the processed DataFrame and the group list for each column.
+        """
+        if plot_mean and sub_meta == 'None': #! if sub_meta is not None, plot_mean will be set to False
+            df = self.tfa.BasicStats.get_stats_mean_df_by_group(df)
+            sample_to_group_dict = {col: col for col in df.columns}
+        else:
+            df, sample_to_group_dict = self.tfa.BasicStats.get_combined_sub_meta_df(df=df, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
+
+        return df, sample_to_group_dict
