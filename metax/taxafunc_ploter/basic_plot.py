@@ -78,7 +78,7 @@ class BasicPlot:
             a.set_text(f'{count[i]}')
 
 
-        plt.title('Number of identified peptides in different taxa level', fontsize=font_size+2, loc='center', fontweight='bold')
+        plt.title('Number of identified peptides at different levels', fontsize=font_size+2, loc='center', fontweight='bold')
         plt.setp(autotexts, size=font_size,  color="white")
         plt.setp(texts, size=font_size)
 
@@ -112,8 +112,8 @@ class BasicPlot:
             # set the label of the bar, and fontsize
             ax.bar_label(i, fontsize=font_size)
 
-        ax.set_title(f'Number of taxa in different taxa level (Peptide number >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
-        ax.set_xlabel('Taxa level', fontsize=font_size+2)
+        ax.set_title(f'Number of taxa at different levels (Peptide number >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
+        ax.set_xlabel('Taxonomic level', fontsize=font_size+2)
         ax.set_ylabel('Number of taxa', fontsize=font_size+2)
         # set font size of xtikcs and yticks
         ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
