@@ -13,6 +13,12 @@ MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for ana
 
 ![OTF_Structure](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/OTF_Structure.png)
 
+## OTF Analyzer
+
+The Tools in OTF Analyzer
+
+![compostion](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/composition.png)
+
 ## OTFs Network
 
 Linking Taxa and Functions in different levels of the hierarchy, and different functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc.

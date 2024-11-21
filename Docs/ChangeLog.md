@@ -1,3 +1,9 @@
+# Version: 1.118.3
+## Date: 2024-11-19
+### Changes:
+- Change: changed the title of the figure of the basic plot part to make the title more clear.
+
+
 # Version: 1.118.2
 ## Date: 2024-11-8
 ### Changes:
