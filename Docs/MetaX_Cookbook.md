@@ -138,12 +138,11 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
     1. Build the rank of proteins.
     2. Choose the protein with a higher rank for the shared peptide.
     
-    
-    - **Methods to Build Protein Rank:**
-      - unique_counts: Use the counts of proteins inferred by unique peptides.
-      - all_count: Use the counts of all proteins.
-      - unique_intensity: Use the intensity of proteins inferred by unique peptides.
-      - shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
+    >Methods to Build Protein Rank:
+    >- unique_counts: Use the counts of proteins inferred by unique peptides.
+    >- all_count: Use the counts of all proteins.
+    >- unique_intensity: Use the intensity of proteins inferred by unique peptides.
+    >- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
     
 
 ### Data preprocessing
@@ -215,7 +214,7 @@ There are several methods for detecting and handling outliers.
   - **Trace Shifting:** Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).
     - Note: If <u>both</u> trace shifting and transformation are applied, *<u>normalization will be done before transformation.</u>*
   
-  - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by sum.
+  - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by Precentage.
   
 
 <u>If you use [Z-Score, Mean centring and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.</u>
