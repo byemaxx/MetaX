@@ -552,7 +552,7 @@ class HeatmapPlot:
                 dft = self.scale_data(df = dft, scale_by = scale, method = scale_method)
             
             if cmap is None:
-                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30)
+                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30) # type: ignore
             
             # 标准化颜色映射以使 0 处为白色
             from matplotlib.colors import TwoSlopeNorm
@@ -695,7 +695,7 @@ class HeatmapPlot:
                 
             
             if cmap is None:
-                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30)
+                cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30) # type: ignore
 
             col_colors = self.get_distinct_colors(len(dft.columns))
             # 标准化颜色映射以使 0 处为白色
@@ -868,7 +868,7 @@ class HeatmapPlot:
             else:  # 'maxmin'
                 if scale_by == 'row':
                     max_val = df.abs().max(axis=1)
-                    df = pd.DataFrame([row / max_val.loc[index] if max_val.loc[index] != 0 else row for index, row in df.iterrows()], index=df.index, columns=df.columns)
+                    df = pd.DataFrame([row / max_val.loc[index] if max_val.loc[index] != 0 else row for index, row in df.iterrows()], index=df.index, columns=df.columns) # type: ignore
                 elif scale_by == 'col':
                     max_val = df.abs().max()
                     for col in df.columns:
