@@ -41,7 +41,7 @@ jobs:
 
       - name: Convert Markdown to HTML
         run: |
-          python <<EOF
+            python <<EOF
             import markdown
             from jinja2 import Template
             import re
@@ -279,7 +279,7 @@ jobs:
 
             print("HTML file has been generated successfully.")
 
-          EOF
+            EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
