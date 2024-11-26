@@ -608,15 +608,15 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select some groups (Default all) to get **the intensity of each taxon of this function**
 
-    <img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" alt="image-20230728152953911"  />
+    <img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png">
 
-<img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="image-20230728151451213"  />
+<img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png">
 
 - Plot **peptides** in <u>one Function of a Taxon</u>
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" alt="taxa_func_link_pep_heatmap"  />
+  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png">
 
-  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" alt="taxa_func_link_pep_bar"  />
+  <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png">
 
 - Switch Bar to Stacked or not ( Line)
 
