@@ -19,37 +19,51 @@ The Tools in OTF Analyzer
 
 ![compostion](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/composition.png)
 
-## OTFs Network
+## OTFs Examples
 
-Linking Taxa and Functions in different levels of the hierarchy, and different functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc.
+Linking Taxa and Functions in different levels of the hierarchy, and various functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc. Lots of visualization tools can be selected.
 
-- ![OTF](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net.png)
+**Network**
 
+**Dots** represent <u>taxa</u> and **squares** represent <u>functions</u> in the network.
 
-
-e.g. The **KEGG Pathways** linked to ***Roseburia hominis***
-
-- ![tf_link_net_2](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net_2.png)
+- <img src="https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/tf_link_net.png" alt="OTF" style="zoom: 50%;" />
 
 
 
-## Download
-### `Desktop Version(Recommended)`:
-The desktop version comes fully set up and ready to use, including all required dependencies and a graphical user interface.
+**Heatmap**
 
-<a href="https://shiny2.imetalab.ca/shiny/rstudio/metax_download/" target="_blank">Download MetaX Desktop Version</a>
+Show all Taxa of a function.
 
+- <img src="https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/taxa_func_link_heatmap.png" alt="tf_link_heatmap" style="zoom:50%;" />
+
+**Bar**
+
+Show all functions of a taxon
+
+- <img src="https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="tf_link_bar" style="zoom:50%;" />
+
+
+
+## Download & Installation
+- **Desktop Version** (Recommended)
+
+  > The desktop version comes fully set up and ready to use, including all required dependencies and a graphical user interface.
+  >
+  > <a href="https://shiny2.imetalab.ca/shiny/rstudio/metax_download/" target="_blank">Download the MetaX Desktop Version</a>
 
 <br>
 
-### `Command-line version`:
-Use [PyPi](https://pypi.org/project/MetaXTools/) to install, then type `metax` in the terminal to launch the GUI.
-  ```bash
-  python -m pip install MetaXTools
-  ```
+- **Command-line version**
+
+    > Use [PyPi](https://pypi.org/project/MetaXTools/) to install, then type `metax` in the terminal to launch the GUI.
+    >
+    > `python -m pip install MetaXTools`
 
 
-## Getting Started
+
+## Guidebook
+
 - `Desktop Version(desktop)`:
   - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX with the graphical user interface.
   <br>
@@ -57,7 +71,8 @@ Use [PyPi](https://pypi.org/project/MetaXTools/) to install, then type `metax` i
   - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for detailed instructions and examples.
 
 
-## Citing MetaX
-- If you use MetaX in your research, please cite the following publication:
-  - **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI:  <a href="https://doi.org/10.1101/2024.04.19.590315" target="_blank">10.1101/2024.04.19.590315</a>.
+## Citing
+If you use MetaX in your research, please cite the following publication:
+
+> **MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)**. *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2024).  bioRxiv. DOI:  <a href="https://doi.org/10.1101/2024.04.19.590315" target="_blank">10.1101/2024.04.19.590315</a>.
 
