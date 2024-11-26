@@ -1,3 +1,10 @@
+# Version: 1.118.4
+## Date: 2024-11-26
+### Changes:
+- Fix: Resolved an issue where the option to rename sample names did not work when plotting the heatmap.
+- Change: Refactored the code to comply with PEP standards.
+
+
 # Version: 1.118.3
 ## Date: 2024-11-19
 ### Changes:

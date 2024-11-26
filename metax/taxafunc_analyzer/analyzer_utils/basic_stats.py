@@ -262,7 +262,7 @@ class BasicStats:
 
 
 
-    def get_df_by_mean_and_submeta(self, df, sub_meta:str = 'None', rename_sample:bool = True, plot_mean:bool = False):
+    def prepare_dataframe_for_heatmap(self, df, sub_meta:str = 'None', rename_sample:bool = True, plot_mean:bool = False):
         """
         Prepares a DataFrame for baisc heatmap plotting.
         Parameters:

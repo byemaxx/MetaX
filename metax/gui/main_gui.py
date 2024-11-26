@@ -38,11 +38,10 @@ import matplotlib.pyplot as plt
 # import pyqt5 scripts
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
-from PyQt5.QtWidgets import    QApplication, QDesktopWidget, QListWidget, QListWidgetItem,QPushButton
+from PyQt5.QtWidgets import    QApplication, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
-from PyQt5.QtWidgets import QToolBox, QGroupBox
 
 import qtawesome as qta
 # from qt_material import apply_stylesheet
@@ -579,7 +578,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             dft = self.tfa.replace_if_two_index(dft)
         return dft
     
-    def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list|None:
+    def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list:
         '''
         return the list of df_type, ignore capital case
         df_type: str, one of ['taxa', 'functions', 'taxa-functions', 'peptides', 'proteins', 'custom']
@@ -705,7 +704,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     getattr(self, group_name).unselectAll() # unselect all items
                     # select 1st item
                     getattr(self, group_name).select_first()
-                except:
+                except Exception:
                     pass
             except Exception as e:
                 print(e)
@@ -1761,7 +1760,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             parm_kwargs = {'save_path': save_path, 'db_type': db_type, 'meta_path': meta_path, 'mgyg_dir': mgyg_dir, 'db_name': db_name}
             self.run_in_new_window(download_and_build_database, show_msg=True, **parm_kwargs)
 
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
 
@@ -2019,7 +2018,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 parm_kwargs = {'anno_path': anno_path, 'taxa_path': taxa_path, 'db_path': save_path}
                 self.run_in_new_window(build_db, show_msg=True,**parm_kwargs)
                 
-            except Exception as e:
+            except Exception:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
@@ -2064,7 +2063,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             self.run_in_new_window(run_db_update, show_msg=True,**parm_kwargs)
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'Error when run_db_updater: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -2138,7 +2137,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return instance.main()            
             
             self.run_in_new_window(metalab_main_wrapper, show_msg=True)
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'Error when run_metalab_maxq_annotate: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -2359,7 +2358,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.callback_after_set_taxafunc(self.tfa, True)
             
             
-        except:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
             if "The OTF data must have Taxon_prop column!" in error_message:
@@ -2550,7 +2549,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             # go to original table tab
             self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(1)
-        except:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'update_after_tfobj error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -2760,7 +2759,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # callback_after_set_multi_tables()
 
 
-            except Exception as e:
+            except Exception:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'set_multi_table: {str(error_message)}', 'e')
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
@@ -2886,7 +2885,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         for layout, combobox_name in combobox_layout_dict.items():
             try:
                 layout.itemAt(0).widget().deleteLater()
-            except Exception as e:
+            except Exception:
                 pass
             new_combobox = CheckableComboBox()
             setattr(self, combobox_name, new_combobox)
@@ -2921,7 +2920,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
-        if meta_name == None:
+        if meta_name is None:
             meta_name = self.tfa.meta_df.columns.tolist()[1]
         
         # set group list
@@ -2966,7 +2965,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for layout, combobox_name in group_layout_dict.items():
                 try:
                     layout.itemAt(0).widget().deleteLater()
-                except Exception as e:
+                except Exception:
                     pass
                 new_combobox = CheckableComboBox()
                 setattr(self, combobox_name, new_combobox)  # Assign to the attribute
@@ -2977,7 +2976,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for layout, combobox_name in sample_layout_dict.items():
                 try:
                     layout.itemAt(0).widget().deleteLater()
-                except Exception as e:
+                except Exception:
                     pass
                 new_combobox = CheckableComboBox(meta_df = self.tfa.meta_df)
                 setattr(self, combobox_name, new_combobox)  # Assign to the attribute
@@ -3500,13 +3499,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if str_selected == '':
                 return None
             elif str_selected not in self.get_list_by_df_type(df_type):
-                QMessageBox.warning(self.MainWindow, 'Warning', f'Please select a valid item!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
             elif str_selected not in self.co_expr_focus_list:
                 self.co_expr_focus_list.append(str_selected)
                 self.listWidget_co_expr_focus_list.clear()
                 self.listWidget_co_expr_focus_list.addItems(self.co_expr_focus_list) 
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', f'This item has been added!')
+                QMessageBox.warning(self.MainWindow, 'Warning', 'This item has been added!')
         elif str_list is not None and str_selected is None:
             for i in str_list:
                 if i not in self.co_expr_focus_list:
@@ -3639,8 +3638,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             if plot_type == 'heatmap':
-                df, sample_to_group_dict = self.tfa.BasicStats.get_df_by_mean_and_submeta(df = df,
+                df, sample_to_group_dict = self.tfa.BasicStats.prepare_dataframe_for_heatmap(df = df,
                                                                                           sub_meta = sub_meta, 
+                                                                                          rename_sample = rename_sample,
                                                                                           plot_mean = plot_mean)
                 if row_cluster or (scale =='row'):
                     df = self.delete_zero_rows(df)
@@ -3693,7 +3693,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 
                     self.save_and_show_js_plot(pic, title)
                 else:
-                    ax = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns(df = df, width=width, height=height, 
+                    ax = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns(df = df, width=width, height=height,  # noqa: F841
                                                                 title= '', rename_taxa=rename_taxa, 
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
@@ -3735,7 +3735,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
                 
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_list error: {error_message}', 'e')
             self.logger.write_log(f'plot_basic_list: plot_type: {plot_type}, table_name: {table_name}, sample_list: {sample_list}, width: {width}, height: {height}, scale: {scale}, cmap: {cmap}, row_cluster: {row_cluster}, col_cluster: {col_cluster}, rename_taxa: {rename_taxa}', 'e')
@@ -3946,7 +3946,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_trends_get_trends_table.setEnabled(True)
             self.pushButton_trends_plot_interactive_line.setEnabled(True)
                 
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_trends_cluster error: {error_message}', 'e')
             self.logger.write_log(f'plot_trends_cluster: table_name: {table_name}, num_cluster: {num_cluster}, width: {width}, height: {height}, title: {title}, sample_list: {sample_list}, group_list: {group_list}, df: {df.shape}', 'e')
@@ -3974,9 +3974,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             df = self.table_dict[save_table_name].copy()
             df = df[df['Cluster'] == cluster_num].drop('Cluster', axis=1)
-            self.show_message(f'Plotting interactive line plot...')
-        except:
-            QMessageBox.warning(self.MainWindow, 'Error', f'Please plot trends cluster first!')
+            self.show_message('Plotting interactive line plot...')
+        except Exception:
+            QMessageBox.warning(self.MainWindow, 'Error', 'Please plot trends cluster first!')
             return None
         
         if plot_samples  or get_intensity:
@@ -4005,19 +4005,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     extract_row = df.index.tolist()
                     # extract_col = df.columns.tolist()
                     extract_col = sample_list
-                    df = dft.loc[extract_row, extract_col]
+                    df = dft.loc[extract_row, extract_col] # type: ignore
                 else:
                     dft = self.tfa.BasicStats.get_stats_mean_df_by_group(dft, condition=condition)
                     extract_row = df.index.tolist()
                     # extract_col = df.columns.tolist()
                     extract_col = group_list
-                    df = dft.loc[extract_row, extract_col]
+                    df = dft.loc[extract_row, extract_col] # type: ignore
             else: # plot_samples and not get_intensity
                 dft = dft[sample_list]
                 extract_row = df.index.tolist()
                 # extract_col = df.columns.tolist()
                 extract_col = sample_list
-                df = dft.loc[extract_row, extract_col]
+                df = dft.loc[extract_row, extract_col] # type: ignore
                 
             
         try:
@@ -4025,7 +4025,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          rename_taxa=rename_taxa, show_legend=show_legend, 
                                                          add_group_name = plot_samples, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_trends_interactive_line error: {error_message}', 'e')
             self.logger.write_log(f'plot_trends_interactive_line: cluster_num: {cluster_num}, width: {width}, height: {height}, table_name: {table_name}, title: {title}, get_intensity: {get_intensity}, show_legend: {show_legend}, rename_taxa: {rename_taxa}, plot_samples: {plot_samples}', 'e')
@@ -4046,8 +4046,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             df_cluster = self.table_dict[save_table_name].copy()
             df_cluster = df_cluster[df_cluster['Cluster'] == cluster_num].drop('Cluster', axis=1)
-        except:
-            QMessageBox.warning(self.MainWindow, 'Error', f'Please plot trends cluster first!')
+        except Exception:
+            QMessageBox.warning(self.MainWindow, 'Error', 'Please plot trends cluster first!')
             return None
         
         if get_intensity:
@@ -4104,7 +4104,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.web_list.append(web)
             web.show()
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'save_and_show_js_plot error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -4432,7 +4432,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     show_label = show_label, rename_sample = rename_sample, 
                                                     legend_col_num=legend_col_num, sub_meta = sub_meta)
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -4471,7 +4471,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             width = int(width)
             length = int(length)
-        except:
+        except Exception:
             width = None
             length = None
 
@@ -4566,7 +4566,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
             self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
-            if 'No significant' in error_message:
+            if 'No significant' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results. \n\n{error_message}')
             else:
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
@@ -4644,11 +4644,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(
                 f"get_top_cross_table: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, pvalue: {pvalue}, sort_by: {sort_by}", "e",
             )
-            if "No significant" in error_message:
+            if "No significant" in str(e):
                 QMessageBox.warning(
                     self.MainWindow,
                     "Warning",
-                    f"No significant results.\n\n{error_message}",
+                    f"No significant results.\n\n{e}",
                 )
             else:
                 QMessageBox.warning(self.MainWindow, "Error", f"{error_message}")
@@ -4662,7 +4662,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             else:      
                 self.update_table_dict(f'Cross_Test[{table_name}]', df_top_cross)
                 self.show_table(df_top_cross, title=f'Cross_Test[{table_name}]')
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Erro', error_message)
             return None
@@ -4702,7 +4702,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 anova_params = {'group_list': group_list, 'df_type': df_type, 'condition': condition}
                 self.run_in_new_window(self.tfa.CrossTest.get_stats_anova, callback= self.callback_after_anova_test, **anova_params)
                 
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'anova_test error: {error_message}', 'e')
             self.logger.write_log(f'anova_test: group_list: {group_list}, df_type: {df_type}', 'e')
@@ -4719,7 +4719,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         if success:    
             
-            if type(result) == pd.DataFrame:
+            if type(result) is pd.DataFrame:
                 df_anova = result
                 
                 self.show_table(df_anova, title=f'anova_test({df_type})')
@@ -4727,7 +4727,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 table_names = [table_name]
                 self.update_table_dict(table_name, df_anova)
                 
-            elif type(result) == tuple:
+            elif type(result) is tuple:
                 df_tuple = result
                 table_name_1 = 'NonSigTaxa_SigFuncs(taxa-functions)'
                 self.show_table(df_tuple[0], title=table_name_1)
@@ -4897,7 +4897,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_tukey_test.setEnabled(False)
             self.run_in_new_window(self.tfa.CrossTest.get_stats_tukey_test, callback= self.callback_after_tukey_test, taxon_name=taxa, func_name=func, sum_all=sum_all, condition=condition)
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'tukey_test error: {error_message}', 'e')
             self.logger.write_log(f'tukey_test: taxa: {taxa}, func: {func}', 'e')
@@ -4942,7 +4942,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_ttest.setEnabled(False)
                 group_list = [group1, group2]
-                table_names = [] # reset table_names as empty list
+                table_names = [] # reset table_names as empty list  # noqa: F841
                 if df_type == 'Significant Taxa-Func'.lower():
                     p_value = self.doubleSpinBox_top_heatmap_pvalue.value()
                     p_value = round(p_value, 4)
@@ -4962,7 +4962,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 if str(e) == 'sample size must be more than 1 for t-test':
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The sample size of each group must be more than 1 for T-TEST!')
                     return None
-            except Exception as e:
+            except Exception:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f't_test error: {error_message}', 'e')
                 self.logger.write_log(f't_test: group_list: {group_list}, df_type: {df_type}', 'e')
@@ -5110,7 +5110,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if log2fc_min > log2fc_max:
                 QMessageBox.warning(self.MainWindow, 'Error', 'log2fc_min must be less than log2fc_max!')
                 return None
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
             self.logger.write_log(f'plot_deseq2_volcano: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, pvalue: {pvalue}, width: {width}, height: {height}, group1: {group1}, group2: {group2}, title_name: {title_name}', 'e')
@@ -5134,7 +5134,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     width=width, height=height, dot_size=dot_size,
                                                     theme = theme)
 
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
             self.logger.write_log(f'plot_deseq2_volcano: table_name: {table_name}, log2fc_min: {log2fc_min}, log2fc_max: {log2fc_max}, pvalue: {pvalue}, width: {width}, height: {height}, group1: {group1}, group2: {group2}, title_name: {title_name}', 'e')
@@ -5199,7 +5199,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                 show_all_labels=show_all_labels
                                                 )
                                                         
-            except Exception as e:
+            except Exception:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_co_expr_heatmap error: {error_message}', 'e')
                 self.logger.write_log(f'plot_co_expr_heatmap: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
@@ -5226,7 +5226,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             except ValueError as e:
                 if 'sample_list should have at least 2' in str(e):
                     QMessageBox.warning(self.MainWindow, 'Error', "At least 2 samples are required!")
-            except Exception as e:
+            except Exception:
                 error_message = traceback.format_exc()
                 self.logger.write_log(f'plot_co_expr_network error: {error_message}', 'e')
                 self.logger.write_log(f'plot_co_expr_network: df_type: {df_type}, corr_method: {corr_method}, corr_threshold: {corr_threshold}, width: {width}, height: {height}, focus_list: {focus_list}', 'e')
@@ -5472,7 +5472,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.update_table_dict('taxa-func_network', network_df)
             self.update_table_dict('taxa-func_network_attributes', attributes_df)
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_network error: {error_message}', 'e')
             self.logger.write_log(f'plot_network: sample_list:{sample_list}, focus_list:{focus_list}, plot_list_only:{plot_list_only}', 'e')
@@ -5497,11 +5497,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 sample_list = selected_samples
         return sample_list
     
-    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list | None = None, type:str = 'taxa', silent:bool = False) -> list[str] | None:
+    def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list, type:str = 'taxa', silent:bool = False) -> list[str]:
         # keep taxa and func only in the taxa_func_linked_dict and remove others
-        if check_list is None:
-            print(f'check_list is {check_list}, return None')
-            return None
 
         if type == 'taxa' or type == 'functions':
             if type == 'taxa':
@@ -5608,9 +5605,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'No data!, please reselect!')
             return None
 
-        df, sample_to_group_dict = self.tfa.BasicStats.get_df_by_mean_and_submeta(df = df,
-                                                                                    sub_meta = sub_meta, 
-                                                                                    plot_mean = plot_mean)
+        df, sample_to_group_dict = self.tfa.BasicStats.prepare_dataframe_for_heatmap(df = df,
+                                                                                  sub_meta = sub_meta, 
+                                                                                  rename_sample = rename_sample,
+                                                                                  plot_mean = plot_mean)
         if row_cluster or (scale == 'row'):
             df = self.delete_zero_rows(df)
 
@@ -5628,7 +5626,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if return_type == 'table':
                 self.show_table(fig_res, title=title.replace('\n', '-'))
             
-        except Exception as e:
+        except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_others_heatmap error: {error_message}', 'e')
             self.logger.write_log(f'plot_others_heatmap: {params}', 'e')

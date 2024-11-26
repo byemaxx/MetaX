@@ -258,7 +258,7 @@ class NetworkPlot:
         focus_list: list = None,
         plot_list_only: bool = False,
         list_only_no_link: bool = False,
-    ) -> Tuple[Graph, pd.DataFrame]:
+    ) -> Tuple[Graph, pd.DataFrame, pd.DataFrame]:
         """
         Creates a network graph of taxa and functions using Pyecharts.
 
