@@ -393,6 +393,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
         self.pushButton_basic_heatmap_get_table.clicked.connect(lambda: self.plot_basic_list('get_table'))
         self.pushButton_basic_heatmap_sankey_plot.clicked.connect(lambda: self.plot_basic_list('sankey'))
+        self.pushButton_basic_heatmap_plot_upset.clicked.connect(lambda: self.plot_basic_list('upset'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
         self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
         self.comboBox_basic_table.currentIndexChanged.connect(self.change_event_comboBox_basic_heatmap_table)
@@ -3110,6 +3111,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_plot,
         self.pushButton_basic_bar_plot,
         self.pushButton_basic_heatmap_get_table,
+        self.pushButton_basic_heatmap_plot_upset,
         self.pushButton_basic_heatmap_sankey_plot,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
@@ -3736,7 +3738,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
-                
+            
+            elif plot_type == 'upset':
+                show_percentages = self.checkBox_basic_heatmap_plot_upset_show_percentage.isChecked()
+                min_subset_size = self.spinBox_basic_heatmap_plot_upset_min_subset.value()
+                max_subset_rank = self.spinBox_basic_heatmap_plot_upset_max_rank.value()
+                BasicPlot(self.tfa).plot_upset(df = df, title_name = table_name, show_label = True,
+                                width=width, height=height, font_size=font_size,
+                                plot_sample = False, sub_meta = sub_meta,
+                                rename_sample = rename_sample, show_percentages = show_percentages,
+                                min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+        except IndexError:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
+            
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_list error: {error_message}', 'e')

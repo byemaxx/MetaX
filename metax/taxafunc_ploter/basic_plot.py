@@ -649,8 +649,11 @@ class BasicPlot:
             # Plot UpSet
             fig = plt.figure(figsize=(width, height))
             plt.rcParams.update({'font.size': font_size})
-            upset_plot(upset_data, fig = fig, show_counts=show_label, show_percentages=show_percentages if show_label else False,
-                    element_size=None, min_subset_size=min_subset_size, max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+            upset_plot(upset_data, fig = fig, show_counts=show_label,
+                       show_percentages=show_percentages if show_label else False,
+                    element_size=None, 
+                    min_subset_size=min_subset_size if min_subset_size != 0 else None,
+                    max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
 
             plt.suptitle(f"UpSet of {title_name}", fontsize=font_size + 2, fontweight='bold')
             plt.tight_layout()

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>991</width>
-    <height>746</height>
+    <height>773</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>462</width>
-                 <height>521</height>
+                 <height>552</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1447,7 +1447,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -2503,7 +2503,7 @@
                          <item>
                           <widget class="QSpinBox" name="spinBox_basic_plot_upset_min_subset">
                            <property name="minimum">
-                            <number>1</number>
+                            <number>0</number>
                            </property>
                            <property name="maximum">
                             <number>99999</number>
@@ -2677,6 +2677,20 @@
                 <string>Heatmap and Bar</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_23">
+                <item row="5" column="0">
+                 <widget class="QLabel" name="label_32">
+                  <property name="text">
+                   <string>Select for plotting</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="4">
+                 <widget class="Line" name="line_8">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="0" colspan="2">
                  <layout class="QHBoxLayout" name="horizontalLayout_28">
                   <item>
@@ -2769,30 +2783,6 @@
                   </item>
                  </layout>
                 </item>
-                <item row="5" column="0">
-                 <widget class="QLabel" name="label_32">
-                  <property name="text">
-                   <string>Select for plotting</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="0" colspan="2">
-                 <widget class="QCheckBox" name="checkBox">
-                  <property name="text">
-                   <string>Show Plotting Parameter</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QRadioButton" name="radioButton_basic_heatmap_group">
-                  <property name="text">
-                   <string>Group</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
                 <item row="2" column="1">
                  <layout class="QHBoxLayout" name="horizontalLayout_26">
                   <item>
@@ -2834,8 +2824,136 @@
                   </item>
                  </layout>
                 </item>
-                <item row="5" column="3">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
+                <item row="7" column="1" rowspan="2" colspan="3">
+                 <widget class="QListWidget" name="listWidget_list_for_ploting">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_29">
+                  <item>
+                   <widget class="QLabel" name="label_67">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Select Top</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="spinBox_basic_heatmap_top_num">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>99999</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_68">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Sort by</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_basic_heatmap_top_by">
+                    <item>
+                     <property name="text">
+                      <string>Total Intensity</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Frequency in Samples</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Number of links</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>ANOVA(p-value)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>ANOVA(f-statistic)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>T-TEST(p-value)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>T-TEST(t-statistic)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-up(p-value)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-down(p-value)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-up(log2FC)</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2-down(log2FC)</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_basic_heatmap_top_filtered">
+                    <property name="text">
+                     <string>Filter with threshold</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="6" column="3">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_add_top">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -2846,12 +2964,94 @@
                    </sizepolicy>
                   </property>
                   <property name="toolTip">
-                   <string>Add selected item to the drawing box</string>
+                   <string>Add conditionally filtered items to the drawing box</string>
                   </property>
                   <property name="text">
-                   <string>Add to List</string>
+                   <string>Add Top to List</string>
                   </property>
                  </widget>
+                </item>
+                <item row="4" column="0" colspan="4">
+                 <widget class="Line" name="line_12">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QRadioButton" name="radioButton_basic_heatmap_group">
+                  <property name="text">
+                   <string>Group</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1" colspan="2">
+                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0" rowspan="2">
+                 <layout class="QVBoxLayout" name="verticalLayout">
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_drop_item">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Drop Item</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Clean List</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_add_a_list">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Add a list to the drawing box, make sure there is one item per line.</string>
+                    </property>
+                    <property name="text">
+                     <string>Add A List</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item row="11" column="0" colspan="4">
                  <widget class="QGroupBox" name="groupBox_basic_heatmap_plot_settings">
@@ -2875,8 +3075,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>621</width>
-                        <height>152</height>
+                        <width>885</width>
+                        <height>170</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -3079,6 +3279,12 @@
                          </item>
                          <item row="0" column="0">
                           <widget class="QLabel" name="label_183">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="font">
                             <font>
                              <weight>75</weight>
@@ -3380,6 +3586,106 @@
                            </item>
                           </layout>
                          </item>
+                         <item row="5" column="2" colspan="2">
+                          <layout class="QHBoxLayout" name="horizontalLayout_110">
+                           <item>
+                            <widget class="QLabel" name="label_heatmap_upset">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="font">
+                              <font>
+                               <weight>50</weight>
+                               <bold>false</bold>
+                              </font>
+                             </property>
+                             <property name="text">
+                              <string>UpSet</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QLabel" name="label_211">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Min Subset Size</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_basic_heatmap_plot_upset_min_subset">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimum">
+                              <number>0</number>
+                             </property>
+                             <property name="maximum">
+                              <number>99999</number>
+                             </property>
+                             <property name="singleStep">
+                              <number>1</number>
+                             </property>
+                             <property name="value">
+                              <number>1</number>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QLabel" name="label_212">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Max Rank</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QSpinBox" name="spinBox_basic_heatmap_plot_upset_max_rank">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="maximum">
+                              <number>999</number>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QCheckBox" name="checkBox_basic_heatmap_plot_upset_show_percentage">
+                             <property name="enabled">
+                              <bool>true</bool>
+                             </property>
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Show Percentages</string>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
                         </layout>
                        </item>
                       </layout>
@@ -3387,6 +3693,35 @@
                     </widget>
                    </item>
                   </layout>
+                 </widget>
+                </item>
+                <item row="2" column="2" colspan="2">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
+                </item>
+                <item row="5" column="3">
+                 <widget class="QPushButton" name="pushButton_basic_heatmap_add">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>Add selected item to the drawing box</string>
+                  </property>
+                  <property name="text">
+                   <string>Add to List</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0" colspan="2">
+                 <widget class="QCheckBox" name="checkBox">
+                  <property name="text">
+                   <string>Show Plotting Parameter</string>
+                  </property>
                  </widget>
                 </item>
                 <item row="6" column="0">
@@ -3402,231 +3737,20 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="3">
-                 <widget class="QPushButton" name="pushButton_basic_heatmap_add_top">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="toolTip">
-                   <string>Add conditionally filtered items to the drawing box</string>
-                  </property>
+                <item row="3" column="0">
+                 <widget class="QRadioButton" name="radioButton_basic_heatmap_sample">
                   <property name="text">
-                   <string>Add Top to List</string>
+                   <string>Sample</string>
                   </property>
                  </widget>
                 </item>
-                <item row="7" column="0" rowspan="2">
-                 <layout class="QVBoxLayout" name="verticalLayout">
-                  <item>
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_drop_item">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Drop Item</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_clean_list">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Clean List</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_add_a_list">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="toolTip">
-                     <string>Add a list to the drawing box, make sure there is one item per line.</string>
-                    </property>
-                    <property name="text">
-                     <string>Add A List</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="5" column="1" colspan="2">
-                 <widget class="QComboBox" name="comboBox_basic_heatmap_selection_list">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="2" colspan="2">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_group"/>
-                </item>
-                <item row="6" column="1" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_29">
-                  <item>
-                   <widget class="QLabel" name="label_67">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Select Top</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="spinBox_basic_heatmap_top_num">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>99999</number>
-                    </property>
-                    <property name="value">
-                     <number>10</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_68">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Sort by</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_basic_heatmap_top_by">
-                    <item>
-                     <property name="text">
-                      <string>Total Intensity</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Frequency in Samples</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Number of links</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>ANOVA(p-value)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>ANOVA(f-statistic)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>T-TEST(p-value)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>T-TEST(t-statistic)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Deseq2-up(p-value)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Deseq2-down(p-value)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Deseq2-up(log2FC)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>Deseq2-down(log2FC)</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_basic_heatmap_top_filtered">
-                    <property name="text">
-                     <string>Filter with threshold</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                <item row="3" column="1" colspan="3">
+                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_sample"/>
                 </item>
                 <item row="9" column="0" colspan="4">
-                 <layout class="QGridLayout" name="gridLayout_39">
-                  <item row="2" column="1">
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_get_table">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Get Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_sankey_plot">
+                 <layout class="QHBoxLayout" name="horizontalLayout_107">
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
@@ -3637,11 +3761,17 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Plot  Sankey</string>
+                     <string>Plot Heatmap</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
+                    <property name="flat">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
+                  <item>
                    <widget class="QPushButton" name="pushButton_basic_bar_plot">
                     <property name="enabled">
                      <bool>false</bool>
@@ -3657,8 +3787,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QPushButton" name="pushButton_basic_heatmap_plot">
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_plot_upset">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
@@ -3669,45 +3799,43 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Plot Heatmap</string>
+                     <string>UpSet</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_sankey_plot">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Plot  Sankey</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_basic_heatmap_get_table">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Get Table</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
-                </item>
-                <item row="3" column="1" colspan="3">
-                 <layout class="QVBoxLayout" name="verticalLayout_basic_heatmap_sample"/>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QRadioButton" name="radioButton_basic_heatmap_sample">
-                  <property name="text">
-                   <string>Sample</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0" colspan="4">
-                 <widget class="Line" name="line_12">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0" colspan="4">
-                 <widget class="Line" name="line_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="1" rowspan="2" colspan="3">
-                 <widget class="QListWidget" name="listWidget_list_for_ploting">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </widget>
@@ -3892,7 +4020,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>872</width>
+                       <width>889</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -5799,7 +5927,7 @@
                            <x>0</x>
                            <y>0</y>
                            <width>865</width>
-                           <height>95</height>
+                           <height>121</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -7580,7 +7708,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>92</height>
+                        <height>123</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9401,7 +9529,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>128</height>
+                        <height>158</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10535,7 +10663,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -10677,12 +10805,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>102</x>
-     <y>95</y>
+     <x>534</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>111</x>
-     <y>95</y>
+     <x>630</x>
+     <y>116</y>
     </hint>
    </hints>
   </connection>
@@ -10693,12 +10821,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>102</x>
-     <y>95</y>
+     <x>534</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>96</y>
+     <x>813</x>
+     <y>116</y>
     </hint>
    </hints>
   </connection>
@@ -10741,12 +10869,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
-     <y>115</y>
+     <x>229</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>159</x>
-     <y>115</y>
+     <x>346</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -10757,12 +10885,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
-     <y>115</y>
+     <x>229</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>159</x>
-     <y>115</y>
+     <x>473</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -10837,12 +10965,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>76</x>
-     <y>131</y>
+     <x>159</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>83</x>
-     <y>131</y>
+     <x>253</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -10853,12 +10981,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>76</x>
-     <y>131</y>
+     <x>159</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>90</x>
-     <y>131</y>
+     <x>358</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -10870,11 +10998,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>190</x>
-     <y>168</y>
+     <y>167</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
-     <y>170</y>
+     <y>169</y>
     </hint>
    </hints>
   </connection>
@@ -10917,12 +11045,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>109</y>
+     <x>96</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>109</y>
+     <x>108</x>
+     <y>94</y>
     </hint>
    </hints>
   </connection>
@@ -10933,12 +11061,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>109</y>
+     <x>96</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>109</y>
+     <x>119</x>
+     <y>95</y>
     </hint>
    </hints>
   </connection>
@@ -10950,11 +11078,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>490</y>
+     <y>489</y>
     </hint>
     <hint type="destinationlabel">
-     <x>359</x>
-     <y>527</y>
+     <x>383</x>
+     <y>526</y>
     </hint>
    </hints>
   </connection>
@@ -10966,11 +11094,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>490</y>
+     <y>489</y>
     </hint>
     <hint type="destinationlabel">
-     <x>359</x>
-     <y>661</y>
+     <x>383</x>
+     <y>660</y>
     </hint>
    </hints>
   </connection>
@@ -10982,11 +11110,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>490</y>
+     <y>489</y>
     </hint>
     <hint type="destinationlabel">
-     <x>747</x>
-     <y>529</y>
+     <x>731</x>
+     <y>528</y>
     </hint>
    </hints>
   </connection>
@@ -10998,11 +11126,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>190</x>
-     <y>168</y>
+     <y>167</y>
     </hint>
     <hint type="destinationlabel">
      <x>522</x>
-     <y>170</y>
+     <y>169</y>
     </hint>
    </hints>
   </connection>
@@ -11013,12 +11141,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>332</x>
-     <y>140</y>
+     <x>608</x>
+     <y>582</y>
     </hint>
     <hint type="destinationlabel">
-     <x>332</x>
-     <y>140</y>
+     <x>825</x>
+     <y>582</y>
     </hint>
    </hints>
   </connection>
@@ -11029,12 +11157,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>149</x>
-     <y>156</y>
+     <x>232</x>
+     <y>569</y>
     </hint>
     <hint type="destinationlabel">
-     <x>89</x>
-     <y>126</y>
+     <x>400</x>
+     <y>115</y>
     </hint>
    </hints>
   </connection>
@@ -11065,8 +11193,8 @@
      <y>99</y>
     </hint>
     <hint type="destinationlabel">
-     <x>209</x>
-     <y>114</y>
+     <x>227</x>
+     <y>100</y>
     </hint>
    </hints>
   </connection>
@@ -11077,12 +11205,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>114</y>
+     <x>212</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>156</x>
-     <y>114</y>
+     <x>329</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -11093,12 +11221,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>114</y>
+     <x>212</x>
+     <y>151</y>
     </hint>
     <hint type="destinationlabel">
-     <x>156</x>
-     <y>114</y>
+     <x>490</x>
+     <y>153</y>
     </hint>
    </hints>
   </connection>
@@ -11109,8 +11237,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>87</x>
-     <y>404</y>
+     <x>100</x>
+     <y>403</y>
     </hint>
     <hint type="destinationlabel">
      <x>132</x>
@@ -11125,12 +11253,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>77</x>
-     <y>114</y>
+     <x>90</x>
+     <y>528</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>116</y>
+     <x>134</x>
+     <y>604</y>
     </hint>
    </hints>
   </connection>
@@ -11141,12 +11269,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>99</x>
-     <y>110</y>
+     <x>121</x>
+     <y>512</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>110</y>
+     <x>149</x>
+     <y>606</y>
     </hint>
    </hints>
   </connection>
@@ -11157,12 +11285,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>88</x>
-     <y>127</y>
+     <x>111</x>
+     <y>271</y>
     </hint>
     <hint type="destinationlabel">
-     <x>111</x>
-     <y>114</y>
+     <x>134</x>
+     <y>351</y>
     </hint>
    </hints>
   </connection>
@@ -11173,12 +11301,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>75</x>
-     <y>98</y>
+     <x>77</x>
+     <y>112</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>100</y>
+     <x>121</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -11189,12 +11317,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>75</x>
-     <y>129</y>
+     <x>89</x>
+     <y>543</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>101</y>
+     <x>132</x>
+     <y>604</y>
     </hint>
    </hints>
   </connection>
@@ -11209,8 +11337,8 @@
      <y>117</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>100</y>
+     <x>121</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -11221,12 +11349,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>98</y>
+     <x>66</x>
+     <y>491</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>100</y>
+     <x>132</x>
+     <y>568</y>
     </hint>
    </hints>
   </connection>
@@ -11237,12 +11365,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>104</y>
+     <x>800</x>
+     <y>139</y>
     </hint>
     <hint type="destinationlabel">
-     <x>78</x>
-     <y>104</y>
+     <x>856</x>
+     <y>140</y>
     </hint>
    </hints>
   </connection>
@@ -11253,12 +11381,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>104</y>
+     <x>800</x>
+     <y>139</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>104</y>
+     <x>957</x>
+     <y>139</y>
     </hint>
    </hints>
   </connection>
@@ -11269,8 +11397,8 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>147</x>
-     <y>140</y>
+     <x>815</x>
+     <y>167</y>
     </hint>
     <hint type="destinationlabel">
      <x>98</x>
@@ -11285,12 +11413,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>77</x>
-     <y>52</y>
+     <x>95</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
-     <x>99</x>
-     <y>55</y>
+     <x>117</x>
+     <y>73</y>
     </hint>
    </hints>
   </connection>
@@ -11305,8 +11433,8 @@
      <y>487</y>
     </hint>
     <hint type="destinationlabel">
-     <x>825</x>
-     <y>575</y>
+     <x>690</x>
+     <y>582</y>
     </hint>
    </hints>
   </connection>

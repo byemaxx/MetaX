@@ -1,3 +1,9 @@
+# Version: 1.119.1
+## Date: 2024-11-29
+### Changes:
+- New: Added UpSet plot for basic selection plot part.
+
+
 # Version: 1.119.0
 ## Date: 2024-11-28
 ### Changes:
