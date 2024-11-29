@@ -1,3 +1,10 @@
+# Version: 1.119.0
+## Date: 2024-11-28
+### Changes:
+- Change: API updated to 4 
+- New: Added an option to plot the upset plot.
+
+
 # Version: 1.118.4
 ## Date: 2024-11-26
 ### Changes:

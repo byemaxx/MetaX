@@ -377,6 +377,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_basic_treemap.clicked.connect(lambda: self.plot_basic_info_sns('treemap'))
         self.pushButton_plot_basic_sankey.clicked.connect(lambda: self.plot_basic_info_sns('sankey'))
         self.pushButton_basic_plot_number_bar.clicked.connect(lambda: self.plot_basic_info_sns('num_bar'))
+        self.pushButton_basic_plot_upset.clicked.connect(lambda: self.plot_basic_info_sns('upset'))
         
         # change event for checkBox_pca_if_show_lable
         self.comboBox_table4pca.currentIndexChanged.connect(self.change_event_checkBox_basic_plot_table)
@@ -3082,6 +3083,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         list_button = [
         self.pushButton_plot_pca_sns,
         self.pushButton_basic_plot_number_bar,
+        self.pushButton_basic_plot_upset,
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
@@ -4261,6 +4263,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
+        """
+        Plot basic information using seaborn based on the specified method.
+        Parameters:
+        method (str): The method to use for plotting. Options include:
+            - 'pca': Principal Component Analysis (PCA) plot.
+            - 'pca_3d': 3D PCA plot.
+            - 'box': Box plot.
+            - 'corr': Correlation plot.
+            - 'alpha_div': Alpha diversity plot.
+            - 'beta_div': Beta diversity plot.
+            - 'sunburst': Sunburst chart.
+            - 'treemap': Treemap chart.
+            - 'sankey': Sankey diagram.
+            - 'num_bar': Number bar plot.
+            - 'upset': Upset plot.
+        Returns:
+        None
+        """
         def get_title_by_table_name(self, table_name):
             taxa = (self.tfa.taxa_level or 'Taxa').capitalize()
             func = self.tfa.func_name or 'Functions'
@@ -4432,10 +4452,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     show_label = show_label, rename_sample = rename_sample, 
                                                     legend_col_num=legend_col_num, sub_meta = sub_meta)
             
+            elif method == 'upset':
+                plot_sample = self.checkBox_basic_plot_number_plot_sample.isChecked()
+                show_percentages = self.checkBox_basic_plot_upset_show_percentage.isChecked()
+                min_subset_size = self.spinBox_basic_plot_upset_min_subset.value()
+                max_subset_rank = self.spinBox_basic_plot_upset_max_rank.value()
+                BasicPlot(self.tfa).plot_upset(df = df, title_name = title_name, show_label = show_label,
+                                               width=width, height=height, font_size=font_size,
+                                               plot_sample = plot_sample, sub_meta = sub_meta,
+                                               rename_sample = rename_sample, show_percentages = show_percentages,
+                                               min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+        except IndexError:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
+            
         except Exception:
             error_message = traceback.format_exc()
+            simplified_message = "An unexpected error occurred. Please check the logs for details."
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            QMessageBox.warning(self.MainWindow, 'Error', simplified_message)
             
 
     # differential analysis
