@@ -156,7 +156,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
 
         self.MainWindow.setWindowIcon(QIcon(icon_path))
-        self.MainWindow.resize(1440, 900)
+        self.MainWindow.resize(1200, 800)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
         
         self.logger = LoggerManager()
@@ -402,7 +402,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_co_expr_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('co_expr_group'))
         self.comboBox_trends_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('trends_group'))
         self.comboBox_tflink_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('tflink_group'))
-        self.comboBox_radioButton_network_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('tfnet_group'))
+        self.comboBox_network_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('tfnet_group'))
         
         ### Peptide Qeruy
         self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
@@ -690,7 +690,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             'tflink_group': {"current_text": 'comboBox_tflink_group_sample',
                                     "group_layout": ['horizontalLayout_78', 'gridLayout_tflink_group'],
                                     "sample_layout":  ['gridLayout_tflink_sample']},
-            'tfnet_group': {"current_text": 'comboBox_radioButton_network_group_sample',
+            'tfnet_group': {"current_text": 'comboBox_network_group_sample',
                                     "group_layout": ['horizontalLayout_55', 'gridLayout_network_group'],
                                     "sample_layout":  ['gridLayout_network_sample']},
         }
@@ -3640,7 +3640,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         top_num = self.spinBox_co_expr_top_num.value()
         filtered = self.checkBox_co_expr_top_filtered.isChecked()
         # get sample list
-        if self.radioButton_co_expr_bygroup.isChecked(): # select by group
+        if self.comboBox_co_expr_group_sample.currentText() == 'Group':
             group_list = self.comboBox_co_expr_group.getCheckedItems()
             in_condition = (
                 [self.comboBox_co_expression_condition_meta.currentText(), self.comboBox_co_expression_condition_group.getCheckedItems()]
@@ -3968,7 +3968,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
         
         # get sample list
-        # if self.radioButton_trends_group.isChecked(): # select by group
         if self.comboBox_trends_group_sample.currentText() == 'Group':
             sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
             
@@ -4002,7 +4001,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
 
         # get sample list and check if the sample list at least has 2 groups
-        if self.radioButton_trends_group.isChecked():
+        if self.comboBox_trends_group_sample.currentText() == 'Group':
             condition = [self.comboBox_trends_condition_meta.currentText(),
                             self.comboBox_trends_condition_group.getCheckedItems()]\
                                 if self.checkBox_trends_in_condition.isChecked() else None
@@ -4121,14 +4120,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
             # get sample list
-            if self.radioButton_trends_group.isChecked():
+            if self.comboBox_trends_group_sample.currentText() == 'Group':
                 group_list = self.comboBox_trends_group.getCheckedItems()
                 group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
                 sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=condition)
                 if sample_list is None:
                     return None
                 
-            else: # self.radioButton_trends_sample.isChecked()
+            else: # select by sample
                 sample_list = self.comboBox_trends_sample.getCheckedItems()
                 if sample_list == []:
                     sample_list = self.tfa.sample_list
@@ -4447,7 +4446,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         title_name = get_title_by_table_name(self, table_name)
         
         # get sample list when plot by group
-        # if self.radioButton_basic_pca_group.isChecked():
         if self.comboBox_basic_pca_group_sample.currentText() == 'Group':
             condition = [self.comboBox_basic_condition_meta.currentText(), 
                          self.comboBox_basic_condition_group.getCheckedItems()] \
@@ -5340,7 +5338,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             else:
                 sample_list = slected_list
                 # print(f'Plot with selected samples:{sample_list}')
-        # elif self.radioButton_co_expr_bygroup.isChecked():
         elif self.comboBox_co_expr_group_sample.currentText() == 'Group':
             condition = [self.comboBox_co_expression_condition_meta.currentText(), 
                          self.comboBox_co_expression_condition_group.getCheckedItems()] \
@@ -5523,8 +5520,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         df_type = self.comboBox_tfnet_table.currentText()
         filtered = self.checkBox_tfnet_top_filtered.isChecked()
         
-        # if self.radioButton_network_bysample.isChecked(): # by sample
-        if self.comboBox_radioButton_network_group_sample.currentText() == 'Sample':
+        if self.comboBox_network_group_sample.currentText() == 'Sample':
             slected_list = self.comboBox_network_sample.getCheckedItems()
             if slected_list:
                 sample_list = slected_list
@@ -5613,7 +5609,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         rename_taxa = self.checkBox_tf_link_net_rename_taxa.isChecked()
         font_size = self.spinBox_network_font_size.value()
         
-        if self.radioButton_network_bysample.isChecked(): # by sample
+        if self.comboBox_network_group_sample.currentText() == 'Sample':
             slected_list = self.comboBox_network_sample.getCheckedItems()
             if slected_list:
                 sample_list = slected_list
@@ -5659,7 +5655,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
     def get_sample_list_tflink(self):
         # get sample list
-        # if self.radioButton_tflink_group.isChecked(): # by group
         if self.comboBox_tflink_group_sample.currentText() == 'Group':
             in_condition = (
                 [self.comboBox_tflink_condition_meta.currentText(), self.comboBox_tflink_condition_group.getCheckedItems()]

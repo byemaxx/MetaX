@@ -1,3 +1,8 @@
+# Version: 1.119.5
+## Date: 2024-12-3
+### Changes:
+- Fix: add top error when in co-expression part and trends part.
+
 # Version: 1.119.4
 ## Date: 2024-12-3
 ### Changes:
