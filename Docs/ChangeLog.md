@@ -1,8 +1,12 @@
+# Version: 1.119.3
+## Date: 2024-12-3
+### Changes:
+- Fix: Fixed the bug of Logger.
+
 # Version: 1.119.2
 ## Date: 2024-12-3
 ### Changes:
 - Change: Change the layout of selection group or sample group in the basic plot part to make the layout more clear.
-
 
 # Version: 1.119.1
 ## Date: 2024-11-29

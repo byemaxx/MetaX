@@ -5934,36 +5934,63 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 ###############   Class LoggerManager Begin   ###############
 class LoggerManager:
-    def __init__(self):
-        self.setup_logging()
+    def __init__(self, log_level=logging.DEBUG):
+        self.setup_logging(log_level)
         self.write_log(f'------------------------------ MetaX Started Version {__version__} ------------------------------', 'i')
-        
-    def setup_logging(self):
+
+    def setup_logging(self, log_level=logging.DEBUG):
         """
-        Configure logging settings.
+        Configure logging settings for LoggerManager.
         """
+        self.logger = logging.getLogger('MetaXLogger')
+        self.logger.setLevel(log_level)
+
         # Disable matplotlib logging for warnings
         matplotlib_logger = logging.getLogger('matplotlib')
         matplotlib_logger.setLevel(logging.WARNING)
-        
+
+        # Create log directory if not exists
         home_path = os.path.expanduser("~")
         metax_path = os.path.join(home_path, 'MetaX')
-        if not os.path.exists(metax_path):
-            os.makedirs(metax_path)
-        log_path = os.path.join(metax_path, 'MetaX.log')
-        log_format = '%(asctime)s - %(levelname)s - %(message)s'
-        logging.basicConfig(filename=log_path, level=logging.DEBUG, format=log_format)
+        try:
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+        except Exception as e:
+            print(f"Error creating log directory: {metax_path}. {e}")
+            metax_path = home_path  # Fallback to home directory
 
-    def write_log(self, msg:str, level:str='i'):
+        log_path = os.path.join(metax_path, 'MetaX.log')
+
+        # Define formatter and handlers
+        log_format = '%(asctime)s - %(levelname)s - %(message)s'
+        formatter = logging.Formatter(log_format)
+
+        # File handler
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+        # Stream handler (optional, for console logging)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        self.logger.addHandler(stream_handler)
+
+    def write_log(self, msg: str, level: str = 'i'):
+        """
+        Write a log message with the specified logging level.
+        Args:
+            msg (str): The log message.
+            level (str): The log level ('d', 'i', 'w', 'e', 'c').
+        """
         level_dict = {
-            'd': logging.debug, 
-            'i': logging.info, 
-            'w': logging.warning, 
-            'e': logging.error, 
-            'c': logging.critical
+            'd': self.logger.debug,
+            'i': self.logger.info,
+            'w': self.logger.warning,
+            'e': self.logger.error,
+            'c': self.logger.critical,
         }
         msg = msg.replace('\n', ' ').replace('\r', '')
-        log_func = level_dict.get(level, logging.info)
+        log_func = level_dict.get(level, self.logger.info)
         log_func(msg)
 
         
