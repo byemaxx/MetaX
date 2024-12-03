@@ -257,7 +257,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select **Sub Meta**  to plot with two meta
 
-    - <img src="MetaX_Cookbook.assets/sub_meta.png" alt="sub_meta"  />
+    - <img src="MetaX_Cookbook.assets/sub_meta.png" >
 
   - Change settings in the **PLOT PARAMETER** tab
 
@@ -269,11 +269,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     **e.g. :** Select PBS, BAS and others groups **only in** <u>Individual</u> <u>V1</u> 
 
-    - <img src="MetaX_Cookbook.assets/group_in_condition.png" alt="group_in_condition"  />
+    - <img src="MetaX_Cookbook.assets/group_in_condition.png">
 
   - Select **specific Samples** to Analysis
 
-    - <img src="./MetaX_Cookbook.assets/pca_setting.png" alt="image-20230728113359732"  />
+    - <img src="./MetaX_Cookbook.assets/pca_setting.png" >
 
       
 
@@ -309,7 +309,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Heatmap and Bar Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" alt="basic_stats_heatmap"  />
+<img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" >
 
 - **Select items(Taxa, Function, Taxa-Func and Peptide ) to plot:**
   - Add **All Taxa**, or select one we are interested in.
@@ -340,17 +340,10 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - **Rename Samples**: Add group info to each sample name
   - **Rename Taxa**: Only keep the last taxonomic level to reduce to name
   - **Plot Mean**: calculate the mean of each group before plotting
-    
+  
   - **Sub Meta:** select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
-    - **<u>For Heatmap</u>**
-      - **Theme**: The theme of the heatmap
-      - **scale**: Scale method of the heatmap
-      - **Show All Labels:** if show all labels in the heatmap
-    - **<u>For Bar</u>**
-      - **Bar Ldg**: Show the legend when plotting Bar
-      - **Bar %:**  Transfer each col to percent when plotting Bar
-      - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" alt="basic_stats_heatmap_seeting"  />
-    
+    - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" >
+  
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
     - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">

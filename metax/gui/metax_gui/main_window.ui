@@ -246,7 +246,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>462</width>
-                 <height>527</height>
+                 <height>531</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1447,7 +1447,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1831,7 +1831,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>237</height>
+                        <height>239</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_34">
@@ -2098,19 +2098,6 @@
                          </property>
                         </widget>
                        </item>
-                       <item row="6" column="2">
-                        <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="text">
-                          <string>show Fliers</string>
-                         </property>
-                        </widget>
-                       </item>
                        <item row="0" column="0">
                         <widget class="QLabel" name="label_122">
                          <property name="font">
@@ -2121,19 +2108,6 @@
                          </property>
                          <property name="text">
                           <string>general</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="6" column="1">
-                        <widget class="QCheckBox" name="checkBox_box_plot_samples">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="text">
-                          <string>Plot Samples</string>
                          </property>
                         </widget>
                        </item>
@@ -2607,6 +2581,50 @@
                          </item>
                         </layout>
                        </item>
+                       <item row="6" column="1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_108">
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_box_plot_samples">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Plot Samples</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_box_if_show_fliers">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>show Fliers</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QCheckBox" name="checkBox_box_log_scale">
+                           <property name="text">
+                            <string>Log Scale</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                       <item row="6" column="2">
+                        <widget class="QCheckBox" name="checkBox_box_violinplot">
+                         <property name="text">
+                          <string>Plot as Violinplot</string>
+                         </property>
+                        </widget>
+                       </item>
                       </layout>
                      </widget>
                     </widget>
@@ -2687,6 +2705,12 @@
                <layout class="QGridLayout" name="gridLayout_23">
                 <item row="5" column="0">
                  <widget class="QLabel" name="label_32">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>Select for plotting</string>
                   </property>
@@ -2724,7 +2748,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -2740,7 +2764,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -2756,7 +2780,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -2899,7 +2923,7 @@
                 <item row="6" column="0">
                  <widget class="QLabel" name="label_34">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -3162,7 +3186,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>187</height>
+                        <height>170</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -5989,8 +6013,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>865</width>
-                           <height>117</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6533,7 +6557,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -6549,7 +6573,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -6565,7 +6589,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -6717,7 +6741,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>168</height>
+                        <height>170</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7133,13 +7157,13 @@
                 <item row="5" column="0">
                  <widget class="QLabel" name="label_72">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Focus List</string>
+                   <string>Select Focus</string>
                   </property>
                  </widget>
                 </item>
@@ -7359,19 +7383,6 @@
                   </item>
                  </layout>
                 </item>
-                <item row="6" column="0">
-                 <widget class="QLabel" name="label_98">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>List for Plotting</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="0" colspan="5">
                  <widget class="Line" name="line_18">
                   <property name="orientation">
@@ -7384,7 +7395,7 @@
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>260</height>
+                    <height>250</height>
                    </size>
                   </property>
                   <property name="title">
@@ -7402,7 +7413,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>119</height>
+                        <height>123</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -7630,7 +7641,7 @@
                 <item row="6" column="1" rowspan="2" colspan="4">
                  <widget class="QListWidget" name="listWidget_trends_list_for_ploting">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -7828,61 +7839,6 @@
                   </item>
                  </layout>
                 </item>
-                <item row="7" column="0">
-                 <layout class="QVBoxLayout" name="verticalLayout_3">
-                  <item>
-                   <widget class="QPushButton" name="pushButton_trends_drop_item">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Drop Item</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_trends_clean_list">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Clean List</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButton_trends_add_a_list">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="toolTip">
-                     <string>Add a list to the drawing box, make sure there is one item per line.</string>
-                    </property>
-                    <property name="text">
-                     <string>Add A list</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
                 <item row="3" column="0" colspan="5">
                  <widget class="Line" name="line_19">
                   <property name="orientation">
@@ -7892,6 +7848,12 @@
                 </item>
                 <item row="4" column="0">
                  <widget class="QLabel" name="label_100">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>Select for plotting</string>
                   </property>
@@ -8121,6 +8083,61 @@
                   </property>
                  </widget>
                 </item>
+                <item row="6" column="0" rowspan="2">
+                 <layout class="QVBoxLayout" name="verticalLayout_3">
+                  <item>
+                   <widget class="QPushButton" name="pushButton_trends_drop_item">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Drop Item</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_trends_clean_list">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Clean List</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_trends_add_a_list">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Add a list to the drawing box, make sure there is one item per line.</string>
+                    </property>
+                    <property name="text">
+                     <string>Add A list</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
                </layout>
               </widget>
              </widget>
@@ -8141,7 +8158,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -9537,7 +9554,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>166</height>
+                        <height>158</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10738,7 +10755,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

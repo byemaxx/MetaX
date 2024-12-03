@@ -1,3 +1,8 @@
+# Version: 1.119.4
+## Date: 2024-12-3
+### Changes:
+- New: added an option to plot violin plot to replace the box plot in the basic plot part.
+
 # Version: 1.119.3
 ## Date: 2024-12-3
 ### Changes:

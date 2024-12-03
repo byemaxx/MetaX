@@ -251,42 +251,41 @@ class BasicPlot:
             plt.close('all')
             raise e
 
-
-    def plot_box_sns(self, df, title_name = 'Table', show_fliers = False, width=10, height=8,
-                     font_size = 10, theme:str|None = None, rename_sample:bool = False,
-                     plot_samples:bool = False, legend_col_num: int | None = None, sub_meta:str|None = 'None'):
+    def plot_box_sns(self, df, title_name='Table', show_fliers=False, width=10, height=8,
+                    font_size=10, theme: str | None = None, rename_sample: bool = False,
+                    plot_samples: bool = False, legend_col_num: int | None = None,
+                    sub_meta: str | None = 'None', violinplot: bool = False, log_scale: bool = False):
         
-        def create_df(self, df, sub_meta:str|None = 'None', plot_samples:bool = False):
+        def create_df(self, df, sub_meta: str | None = 'None', plot_samples: bool = False):
             df = df.copy()
-            # replace 0 with nan due to optimization of boxplot
+            # Replace 0 with NaN to optimize boxplot/violinplot visualization
             df = df.replace(0, np.nan)
-            
+
             sample_list = df.columns
-            
+
             group_list = [self.tfa.get_group_of_a_sample(sample) for sample in sample_list]
-            # get unique groups, and keep the order
+            # Get unique groups while preserving order
             group_order = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
-            
+
             group_map = {sample: self.tfa.get_group_of_a_sample(sample) for sample in sample_list}
-            
+
             df = df.melt(var_name='Sample', value_name='Intensity')
             df['Group'] = df['Sample'].map(group_map)
-            
+
             if plot_samples:
-                # resort the by sample_list
+                # Sort by sample_list
                 df = df.sort_values(by='Sample', key=lambda x: x.map({v: i for i, v in enumerate(sample_list)}))
             else:
                 if sub_meta not in ['None', None]:
                     sub_group_map = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in sample_list}
                     df['SubGroup'] = df['Sample'].map(sub_group_map)
                 else:
-                    df['SubGroup'] = df['Group'] # copy the group to sub group, avoid error
-                # resort the by group
+                    df['SubGroup'] = df['Group']  # Copy group to SubGroup to avoid errors
+                # Sort by group
                 df = df.sort_values(by='Group', key=lambda x: x.map({v: i for i, v in enumerate(group_order)}))
-            
+
             return df
-        
-        
+
         df = create_df(self, df, sub_meta, plot_samples)
         unique_groups = df['Group'].unique() if plot_samples else df['SubGroup'].unique()
 
@@ -295,28 +294,43 @@ class BasicPlot:
             distinct_colors = self.get_distinct_colors(len(unique_groups))
             color_palette = dict(zip(unique_groups, distinct_colors))
         else:
-            # color_palette = dict(zip(unique_groups, sns.color_palette("deep", len(unique_groups))))
             color_palette = None
 
-        # set style
+        # Set style
         if theme is not None and theme != 'Auto':
             plt.style.use(theme)
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
 
-        # set size
+        # Set size
         plt.figure(figsize=(width, height))
-        ax = sns.boxplot(
-            data=df,
-            x="Sample" if plot_samples else "Group",
-            y="Intensity",
-            hue="Group" if sub_meta in ["None", None] or plot_samples else "SubGroup",
-            palette=color_palette,
-            showfliers=show_fliers,
-            legend=True,
-        )
-        # set x label
+        plot_func = sns.violinplot if violinplot else sns.boxplot  # Determine plot type
+        
+        # Prepare specific kwargs for violinplot
+        plot_kwargs = {
+            "data": df,
+            "x": "Sample" if plot_samples else "Group",
+            "y": "Intensity",
+            "hue": "Group" if sub_meta in ["None", None] or plot_samples else "SubGroup",
+            "palette": color_palette,
+            "legend": True,
+            "log_scale": log_scale,
+        }
+        if violinplot:
+            plot_kwargs.update({
+                "cut": 0,
+                "linewidth": 1,
+            })
+        else: # Boxplot
+            plot_kwargs.update({
+                "showfliers": show_fliers,
+            })
+
+        # Plot
+        ax = plot_func(**plot_kwargs)
+
+        # Set x-axis labels
         x_labels = ax.get_xticklabels()
         if rename_sample and plot_samples:
             for label in x_labels:
@@ -326,34 +340,33 @@ class BasicPlot:
 
         ax.set_xticklabels(x_labels, rotation=90, horizontalalignment='right', fontsize=font_size)
         ax.set_xlabel('Sample' if plot_samples else 'Group',
-                      fontsize=font_size+2)
+                    fontsize=font_size + 2)
 
-        ax.set_ylabel('Intensity', fontsize=font_size+2)
-        ax.set_title(f'Boxplot of Intensity of {title_name}',
-                     fontsize=font_size+2, fontweight='bold')
-        
+        ax.set_ylabel('Intensity', fontsize=font_size + 2)
+        plot_title = 'Violinplot' if violinplot else 'Boxplot'
+        ax.set_title(f'{plot_title} of Intensity of {title_name}',
+                    fontsize=font_size + 2, fontweight='bold')
+
         if legend_col_num != 0:
-            # set legend for group, out of the box
-            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., 
-                               fontsize=font_size+2, ncol= (len(unique_groups)//30 + 1 ) if legend_col_num is None else legend_col_num)
-            
+            # Set legend for groups outside the plot
+            plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.,
+                    fontsize=font_size + 2, ncol=(len(unique_groups) // 30 + 1) if legend_col_num is None else legend_col_num)
         else:
-            #hide the legend
-            ax.legend([],[], frameon=False)
-        
-        # set line if sub_meta is not None
+            # Hide legend
+            ax.legend([], [], frameon=False)
+
+        # Add vertical lines to separate groups if sub_meta is not None
         if sub_meta not in ['None', None] and not plot_samples:
             for i, group in enumerate(df['Group'].unique()):
                 if i != 0:
                     ax.axvline(i - 0.5, linestyle='--', linewidth=1, color='grey', alpha=0.8)
-        
-        # set grid line for y axis is visible
+
+        # Set grid line for y-axis
         ax.grid(True, axis='y')
-        # move the botton up
+        # Adjust layout
         plt.subplots_adjust(bottom=0.2)
         plt.tight_layout()
         plt.show()
-        # plt.close()
         return ax
 
     def plot_corr_sns(
