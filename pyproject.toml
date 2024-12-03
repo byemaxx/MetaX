@@ -42,7 +42,7 @@ dependencies = [
     "statsmodels",
     "seaborn>=0.13.2",
     "numba>=0.60.0",
-    "UpSetPlot>=0.9.0
+    "UpSetPlot>=0.9.0"
 ]
 
 [project.scripts]
