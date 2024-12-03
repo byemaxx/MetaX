@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from adjustText import adjust_text
-
+from upsetplot import plot as upset_plot
 from .get_distinct_colors import GetDistinctColors
 
 class BasicPlot:
@@ -599,11 +599,70 @@ class BasicPlot:
         # plt.close()
         return ax
 
-    def plot_distribution_sns(self, df, title_name = 'Table', width=10, height=8, font_size = 10,
-                                theme:str = 'Auto', plot_sample = False, show_label = True,
-                                rename_sample:bool = False, legend_col_num: int | None = None,
-                                sub_meta:str|None = 'None', bins:int = 10):
-        pass
+    def plot_upset(self, df, title_name='Table', width=12, height=6,  font_size=10,
+                plot_sample=False, sub_meta: str | None = 'None', show_label=True,
+                rename_sample: bool = False, show_percentages: bool = False, 
+                min_subset_size = None, max_subset_rank = None):
+        """
+        Plot an UpSet plot for the input dataframe, following the correct input format.
+        """
+
+        df = df.copy()
+
+        if plot_sample:
+            # Create a binary matrix (boolean format) with samples as groups
+            df_binary = (df > 0).astype(bool)
+            df_binary['id'] = df_binary.index  # Add an 'id' column for items
+
+            if rename_sample:
+                renamed_columns = {}
+                for sample in df.columns:
+                    group = self.tfa.get_group_of_a_sample(sample)
+                    renamed_columns[sample] = f"{sample} ({group})"
+                df_binary.rename(columns=renamed_columns, inplace=True)
+
+        else:
+            # Group the samples by group or subgroup
+            group_dict = {}
+            for sample in df.columns:
+                group = self.tfa.get_group_of_a_sample(sample)
+                if sub_meta not in ['None', None]:
+                    subgroup = self.tfa.get_group_of_a_sample(sample, sub_meta)
+                    group = f"{group} ({subgroup})"
+
+                if group not in group_dict:
+                    group_dict[group] = []
+                group_dict[group].append(sample)
+
+            # Create a binary matrix for the groups
+            group_values = {
+                group: (df[samples].sum(axis=1) > 0).astype(bool)
+                for group, samples in group_dict.items()
+            }
+            df_binary = pd.DataFrame(group_values)
+            df_binary['id'] = df_binary.index  # Add an 'id' column for items
+
+        try:
+            # Set the groups as index and ensure boolean values
+            upset_data = df_binary.set_index([col for col in df_binary.columns if col != 'id'])
+
+            # Plot UpSet
+            fig = plt.figure(figsize=(width, height))
+            plt.rcParams.update({'font.size': font_size})
+            upset_plot(upset_data, fig = fig, show_counts=show_label,
+                       show_percentages=show_percentages if show_label else False,
+                    element_size=None, 
+                    min_subset_size=min_subset_size if min_subset_size != 0 else None,
+                    max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+
+            plt.suptitle(f"UpSet of {title_name}", fontsize=font_size + 2, fontweight='bold')
+            plt.tight_layout()
+            plt.show()
+            
+        except Exception as e:
+            plt.close('all')
+            raise e
+
 
     def plot_items_corr_heatmap(
         self,

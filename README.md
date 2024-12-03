@@ -19,7 +19,7 @@ The Tools in OTF Analyzer
 
 ![compostion](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/composition.png)
 
-## OTFs Examples
+## OTF Examples
 
 Linking Taxa and Functions in different levels of the hierarchy, and various functional categories. e.g., **Species-KO**, **Genus-CAZy**, **Phylum-EC**, etc. Lots of visualization tools can be selected.
 

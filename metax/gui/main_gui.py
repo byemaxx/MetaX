@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtWidgets import    QApplication, QListWidget, QListWidgetItem,QPushButton
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
 
@@ -377,6 +377,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_basic_treemap.clicked.connect(lambda: self.plot_basic_info_sns('treemap'))
         self.pushButton_plot_basic_sankey.clicked.connect(lambda: self.plot_basic_info_sns('sankey'))
         self.pushButton_basic_plot_number_bar.clicked.connect(lambda: self.plot_basic_info_sns('num_bar'))
+        self.pushButton_basic_plot_upset.clicked.connect(lambda: self.plot_basic_info_sns('upset'))
         
         # change event for checkBox_pca_if_show_lable
         self.comboBox_table4pca.currentIndexChanged.connect(self.change_event_checkBox_basic_plot_table)
@@ -392,9 +393,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
         self.pushButton_basic_heatmap_get_table.clicked.connect(lambda: self.plot_basic_list('get_table'))
         self.pushButton_basic_heatmap_sankey_plot.clicked.connect(lambda: self.plot_basic_list('sankey'))
+        self.pushButton_basic_heatmap_plot_upset.clicked.connect(lambda: self.plot_basic_list('upset'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
         self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
         self.comboBox_basic_table.currentIndexChanged.connect(self.change_event_comboBox_basic_heatmap_table)
+        self.comboBox_basic_pca_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('basic_pca_group'))
+        self.comboBox_basic_heatmap_group_or_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('basic_heatmap_group'))
+        self.comboBox_co_expr_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('co_expr_group'))
+        self.comboBox_trends_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('trends_group'))
+        self.comboBox_tflink_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('tflink_group'))
+        self.comboBox_radioButton_network_group_sample.currentIndexChanged.connect(lambda:self.change_event_comboBox_group_or_sample('tfnet_group'))
         
         ### Peptide Qeruy
         self.pushButton_basic_peptide_query.clicked.connect(self.peptide_query)
@@ -637,6 +645,78 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(True)
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
+
+    
+    def hide_or_show_all_items_in_layout(self, layout, hide: bool):
+        """
+        Recursively hide or show all items in the given layout, including nested layouts.
+
+        Args:
+            layout (QLayout): The layout to process.
+            hide (bool): True to hide all items, False to show all items.
+        """
+        # check if the layout is a QLayout
+        if not isinstance(layout, QLayout):
+            # set the visibility of the widget
+            layout.setVisible(not hide)
+        else:
+            # iterate over all items in the layout
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                if item is not None:
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.setVisible(not hide)
+                    elif isinstance(item, QLayout):
+                        # If the item is a nested layout, recurse into it
+                        self.hide_or_show_all_items_in_layout(item, hide)
+
+
+        
+    def change_event_comboBox_group_or_sample(self, position):
+        position_dict = {
+            'basic_pca_group': {"current_text": 'comboBox_basic_pca_group_sample',
+                                    "group_layout": ['horizontalLayout_111', 'verticalLayout_basic_pca_group'],
+                                    "sample_layout":  ['verticalLayout_basic_pca_sample']},
+            'basic_heatmap_group': {"current_text": 'comboBox_basic_heatmap_group_or_sample',
+                                    "group_layout": ['verticalLayout_basic_heatmap_group', 'horizontalLayout_112'],
+                                    "sample_layout":  ['verticalLayout_basic_heatmap_sample']},
+            'co_expr_group': {"current_text": 'comboBox_co_expr_group_sample',
+                                    "group_layout": ['gridLayout_co_expr_group', 'horizontalLayout_42'],
+                                    "sample_layout":  ['gridLayout_co_expr_sample']},
+            'trends_group': {"current_text": 'comboBox_trends_group_sample',
+                                    "group_layout": ['horizontalLayout_45', 'verticalLayout_trends_group'],
+                                    "sample_layout":  ['verticalLayout_trends_sample']},
+            'tflink_group': {"current_text": 'comboBox_tflink_group_sample',
+                                    "group_layout": ['horizontalLayout_78', 'gridLayout_tflink_group'],
+                                    "sample_layout":  ['gridLayout_tflink_sample']},
+            'tfnet_group': {"current_text": 'comboBox_radioButton_network_group_sample',
+                                    "group_layout": ['horizontalLayout_55', 'gridLayout_network_group'],
+                                    "sample_layout":  ['gridLayout_network_sample']},
+        }
+        
+
+        # current_text = self.comboBox_basic_heatmap_group_or_sample.currentText()
+        current_combo = position_dict[position]["current_text"]
+        current_text = getattr(self, current_combo).currentText()
+        if current_text == 'Group':
+            # hide all in sample_layout
+            for layout in position_dict[position]["sample_layout"]:
+                self.hide_or_show_all_items_in_layout(getattr(self, layout), hide=True)            
+            # show all in  group_layout
+            for layout in position_dict[position]["group_layout"]:
+                self.hide_or_show_all_items_in_layout(getattr(self, layout), hide=False)  
+                         
+            self.update_in_condition_layout_state()
+        else:
+            # hide all in group_layout
+            for layout in position_dict[position]["group_layout"]:
+                self.hide_or_show_all_items_in_layout(getattr(self, layout), hide=True)            
+            # show all in  sample_layout
+            for layout in position_dict[position]["sample_layout"]:
+                self.hide_or_show_all_items_in_layout(getattr(self, layout), hide=False)
+                
+
     
     def change_event_checkBox_comparing_group_control_in_condition(self):
         if self.checkBox_comparing_group_control_in_condition.isChecked():
@@ -1977,7 +2057,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         '''
         
         print(f'\n----Multi Table Result----\n{msg_for_print}\n---------------------------\n')
-        self.logger.write_log(msg_for_print.replace('\n', ''))
+        self.logger.write_log(msg_for_print.strip())
         QMessageBox.information(self.MainWindow, 'Result', msg)
         print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
         # go to basic analysis tab and the first tab
@@ -2723,7 +2803,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             try:
                 print("\n---------------------------------- Set Multi Table ----------------------------------\n")
-                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_meta}, processing_order: {processing_order}')
                 self.tfa.set_func(function)
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
@@ -2744,6 +2823,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'split_func': split_func, 'split_func_params': split_func_params,
                                         'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf,
                                         'quant_method': quant_method}
+                
+                self.logger.write_log(f"set_multi_table_params: {set_multi_table_params} \
+                    \n\nOutlier_params: {outlier_params} \n\nData_preprocess_params: {data_preprocess_params}", 'i')
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
@@ -2862,62 +2944,96 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
         self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
         self.add_basic_heatmap_list()
-        
 
+            
+    def update_in_condition_layout_state(self,):
+        signal_slot_dict = {
+            "checkBox_basic_in_condtion": "horizontalLayout_36",
+            "checkBox_basic_heatmap_in_condition": "horizontalLayout_26",
+            "checkBox_ttest_in_condition": "horizontalLayout_70",
+            "checkBox_anova_in_condition": "horizontalLayout_71",
+            "checkBox_group_control_in_condition": "horizontalLayout_73",
+            "checkBox_deseq2_comparing_in_condition": "horizontalLayout_75",
+            "checkBox_tukey_in_condition": "horizontalLayout_72",
+            "checkBox_co_expression_in_condition": "horizontalLayout_74",
+            "checkBox_trends_in_condition": "horizontalLayout_76",
+            "checkBox_tflink_in_condition": "horizontalLayout_77",
+            "checkBox_tfnetwork_in_condition": "horizontalLayout_80",
+        }
+        for checkbox_name, layout_name in signal_slot_dict.items():
+            checkbox = getattr(self, checkbox_name)
+            self.hide_or_show_all_items_in_layout(getattr(self, layout_name), not checkbox.isChecked())
+        
+     
     def update_in_condition_combobox(self):
-        '''
-        Update condition_group comboBox to enable multi condition selection
-        '''
+        """
+        Update condition_group to enable multi-condition selection based on QCheckBox state.
+        """
+        signal_slot_dict = {
+            "checkBox_basic_in_condtion": "horizontalLayout_36",
+            "checkBox_basic_heatmap_in_condition": "horizontalLayout_26",
+            "checkBox_ttest_in_condition": "horizontalLayout_70",
+            "checkBox_anova_in_condition": "horizontalLayout_71",
+            "checkBox_group_control_in_condition": "horizontalLayout_73",
+            "checkBox_deseq2_comparing_in_condition": "horizontalLayout_75",
+            "checkBox_tukey_in_condition": "horizontalLayout_72",
+            "checkBox_co_expression_in_condition": "horizontalLayout_74",
+            "checkBox_trends_in_condition": "horizontalLayout_76",
+            "checkBox_tflink_in_condition": "horizontalLayout_77",
+            "checkBox_tfnetwork_in_condition": "horizontalLayout_80",
+        }
+
         combobox_layout_dict = {
-            self.horizontalLayout_68: 'comboBox_basic_condition_group',
-            self.horizontalLayout_67: 'comboBox_basic_heatmap_condition_group',
+            self.horizontalLayout_36: 'comboBox_basic_condition_group',
+            self.horizontalLayout_26: 'comboBox_basic_heatmap_condition_group',
             self.horizontalLayout_70: 'comboBox_ttest_condition_group',
             self.horizontalLayout_71: 'comboBox_anova_condition_group',
-            self.horizontalLayout_72: 'comboBox_tukey_condition_group',
             self.horizontalLayout_73: 'comboBox_group_control_condition_group',
-            self.horizontalLayout_74: 'comboBox_co_expression_condition_group',
             self.horizontalLayout_75: 'comboBox_deseq2_condition_group',
+            self.horizontalLayout_72: 'comboBox_tukey_condition_group',
+            self.horizontalLayout_74: 'comboBox_co_expression_condition_group',
             self.horizontalLayout_76: 'comboBox_trends_condition_group',
             self.horizontalLayout_77: 'comboBox_tflink_condition_group',
             self.horizontalLayout_80: 'comboBox_tfnetwork_condition_group',
         }
         
+        # Iterate over layouts and replace only the target QComboBox
         for layout, combobox_name in combobox_layout_dict.items():
-            try:
-                layout.itemAt(0).widget().deleteLater()
-            except Exception:
-                pass
-            new_combobox = CheckableComboBox()
-            setattr(self, combobox_name, new_combobox)
-            layout.addWidget(new_combobox)
-            # set as disabled
-            new_combobox.setEnabled(False)
+            # Locate the original combobox
+            for i in range(layout.count()):
+                widget = layout.itemAt(i).widget()
+                if isinstance(widget, QtWidgets.QComboBox) and widget.objectName() == combobox_name:
+                    # Replace the widget
+                    widget.deleteLater()
+                    new_combobox = CheckableComboBox()
+                    new_combobox.setObjectName(combobox_name)
+                    new_combobox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+                    layout.insertWidget(i, new_combobox)
+                    setattr(self, combobox_name, new_combobox)
+                    break
 
-        # reconnect the signal and slot
-        signnal_slot_dict = {
-            self.checkBox_basic_in_condtion: 'comboBox_basic_condition_group',
-            self.checkBox_basic_heatmap_in_condition: 'comboBox_basic_heatmap_condition_group',
-            self.checkBox_ttest_in_condition: 'comboBox_ttest_condition_group',
-            self.checkBox_anova_in_condition: 'comboBox_anova_condition_group',
-            self.checkBox_tukey_in_condition: 'comboBox_tukey_condition_group',
-            self.checkBox_group_control_in_condition: 'comboBox_group_control_condition_group',
-            self.checkBox_co_expression_in_condition: 'comboBox_co_expression_condition_group',
-            self.checkBox_deseq2_comparing_in_condition: 'comboBox_deseq2_condition_group',
-            self.checkBox_trends_in_condition: 'comboBox_trends_condition_group',
-            self.checkBox_tflink_in_condition: 'comboBox_tflink_condition_group',
-            self.checkBox_tfnetwork_in_condition: 'comboBox_tfnetwork_condition_group',
-        }
 
-        # when checkBox is checked, enable the comboBox
-        def enable_combobox_by_checkbox(checkbox, combobox_name):
-            if checkbox.isChecked():
-                getattr(self, combobox_name).setEnabled(True)
-            else:
-                getattr(self, combobox_name).setEnabled(False)
+        # Function to handle checkbox state change
+        def show_layout_by_checkbox(checked, layout_name):
+            """
+            Show or hide the layout based on checkbox state.
+            Args:
+                checked (bool): True if the checkbox is checked, False otherwise.
+                layout_name (str): Name of the layout to show or hide.
+            """
+            self.hide_or_show_all_items_in_layout(getattr(self, layout_name), not checked)
 
-        for checkbox, combobox_name in signnal_slot_dict.items():
-            checkbox.stateChanged.connect(lambda state, cb=checkbox, cmb_name=combobox_name: enable_combobox_by_checkbox(cb, cmb_name))
-        
+        # Connect each checkbox to the corresponding layout
+        for checkbox_name, layout_name in signal_slot_dict.items():
+            checkbox = getattr(self, checkbox_name)
+            checkbox.toggled.connect(
+                lambda checked, ln=layout_name: show_layout_by_checkbox(checked, ln)
+            )
+
+        # Hide or show all items in layout based on checkbox state
+        self.update_in_condition_layout_state()
+
+
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
         if meta_name is None:
@@ -2970,6 +3086,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 new_combobox = CheckableComboBox()
                 setattr(self, combobox_name, new_combobox)  # Assign to the attribute
                 layout.addWidget(new_combobox)
+                # set horizontal policy as Expanding
+                new_combobox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 for group in group_list:
                     new_combobox.addItem(group)
         if update_sample_list:       
@@ -2983,6 +3101,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 layout.addWidget(new_combobox)
                 for sample in sample_list:
                     new_combobox.addItem(sample)
+                # set new_combobox as invisible
+                new_combobox.setVisible(False)
         
 
     def update_func_taxa_group_to_combobox(self):
@@ -3082,6 +3202,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         list_button = [
         self.pushButton_plot_pca_sns,
         self.pushButton_basic_plot_number_bar,
+        self.pushButton_basic_plot_upset,
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
@@ -3108,6 +3229,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_plot,
         self.pushButton_basic_bar_plot,
         self.pushButton_basic_heatmap_get_table,
+        self.pushButton_basic_heatmap_plot_upset,
         self.pushButton_basic_heatmap_sankey_plot,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
@@ -3449,7 +3571,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if self.checkBox_basic_heatmap_in_condition.isChecked() else None
         )    
         # get sample list
-        if self.radioButton_basic_heatmap_group.isChecked(): # select by group
+        if self.comboBox_basic_heatmap_group_or_sample.currentText() == 'Group':
             group_list = self.comboBox_basic_group.getCheckedItems()
             sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
                 
@@ -3561,7 +3683,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             cmap = None            
             
         # get sample list
-        if self.radioButton_basic_heatmap_group.isChecked():
+        if self.comboBox_basic_heatmap_group_or_sample.currentText() == 'Group':
             condition = [self.comboBox_basic_heatmap_condition_meta.currentText(),
                          self.comboBox_basic_heatmap_condition_group.getCheckedItems()]\
                              if self.checkBox_basic_heatmap_in_condition.isChecked() else None
@@ -3734,7 +3856,22 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
+            
+            elif plot_type == 'upset':
+                show_percentages = self.checkBox_basic_heatmap_plot_upset_show_percentage.isChecked()
+                min_subset_size = self.spinBox_basic_heatmap_plot_upset_min_subset.value()
+                max_subset_rank = self.spinBox_basic_heatmap_plot_upset_max_rank.value()
+                BasicPlot(self.tfa).plot_upset(df = df, title_name = table_name, show_label = True,
+                                width=width, height=height, font_size=font_size,
+                                plot_sample = False, sub_meta = sub_meta,
+                                rename_sample = rename_sample, show_percentages = show_percentages,
+                                min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
                 
+        except (IndexError, AttributeError):
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
+            
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_list error: {error_message}', 'e')
@@ -3831,10 +3968,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
         
         # get sample list
-        if self.radioButton_trends_group.isChecked(): # select by group
+        # if self.radioButton_trends_group.isChecked(): # select by group
+        if self.comboBox_trends_group_sample.currentText() == 'Group':
             sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
             
-        elif self.radioButton_trends_sample.isChecked(): # select by sample
+        elif self.comboBox_trends_group_sample.currentText() == 'Sample':
             selected_samples = self.comboBox_trends_sample.getCheckedItems()
             if selected_samples:
                 sample_list = selected_samples
@@ -4261,6 +4399,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     
     def plot_basic_info_sns(self, method:str ='pca'):
+        """
+        Plot basic information using seaborn based on the specified method.
+        Parameters:
+        method (str): The method to use for plotting. Options include:
+            - 'pca': Principal Component Analysis (PCA) plot.
+            - 'pca_3d': 3D PCA plot.
+            - 'box': Box plot.
+            - 'corr': Correlation plot.
+            - 'alpha_div': Alpha diversity plot.
+            - 'beta_div': Beta diversity plot.
+            - 'sunburst': Sunburst chart.
+            - 'treemap': Treemap chart.
+            - 'sankey': Sankey diagram.
+            - 'num_bar': Number bar plot.
+            - 'upset': Upset plot.
+        Returns:
+        None
+        """
         def get_title_by_table_name(self, table_name):
             taxa = (self.tfa.taxa_level or 'Taxa').capitalize()
             func = self.tfa.func_name or 'Functions'
@@ -4291,7 +4447,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         title_name = get_title_by_table_name(self, table_name)
         
         # get sample list when plot by group
-        if self.radioButton_basic_pca_group.isChecked():
+        # if self.radioButton_basic_pca_group.isChecked():
+        if self.comboBox_basic_pca_group_sample.currentText() == 'Group':
             condition = [self.comboBox_basic_condition_meta.currentText(), 
                          self.comboBox_basic_condition_group.getCheckedItems()] \
                             if self.checkBox_basic_in_condtion.isChecked() else None
@@ -4432,10 +4589,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     show_label = show_label, rename_sample = rename_sample, 
                                                     legend_col_num=legend_col_num, sub_meta = sub_meta)
             
-        except Exception:
+            elif method == 'upset':
+                plot_sample = self.checkBox_basic_plot_number_plot_sample.isChecked()
+                show_percentages = self.checkBox_basic_plot_upset_show_percentage.isChecked()
+                min_subset_size = self.spinBox_basic_plot_upset_min_subset.value()
+                max_subset_rank = self.spinBox_basic_plot_upset_max_rank.value()
+                BasicPlot(self.tfa).plot_upset(df = df, title_name = title_name, show_label = show_label,
+                                               width=width, height=height, font_size=font_size,
+                                               plot_sample = plot_sample, sub_meta = sub_meta,
+                                               rename_sample = rename_sample, show_percentages = show_percentages,
+                                               min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+        except (IndexError, AttributeError):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
+            QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
+            
+        except Exception:
+            error_message = traceback.format_exc()
+            simplified_message = "An unexpected error occurred. Please check the logs for details."
+            self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', simplified_message)
             
 
     # differential analysis
@@ -5157,14 +5330,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         font_size = self.spinBox_co_expr_font_size.value()
         
         sample_list = self.tfa.sample_list
-        if self.radioButton_co_expr_bysample.isChecked():
+        if self.comboBox_co_expr_group_sample.currentText() == 'Sample':
             slected_list = self.comboBox_co_expr_sample.getCheckedItems()
             if len(slected_list) == 0:
                 print('Did not select any group!, plot all samples')
             else:
                 sample_list = slected_list
                 # print(f'Plot with selected samples:{sample_list}')
-        elif self.radioButton_co_expr_bygroup.isChecked():
+        # elif self.radioButton_co_expr_bygroup.isChecked():
+        elif self.comboBox_co_expr_group_sample.currentText() == 'Group':
             condition = [self.comboBox_co_expression_condition_meta.currentText(), 
                          self.comboBox_co_expression_condition_group.getCheckedItems()] \
                 if self.checkBox_co_expression_in_condition.isChecked() else None
@@ -5346,7 +5520,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         df_type = self.comboBox_tfnet_table.currentText()
         filtered = self.checkBox_tfnet_top_filtered.isChecked()
         
-        if self.radioButton_network_bysample.isChecked(): # by sample
+        # if self.radioButton_network_bysample.isChecked(): # by sample
+        if self.comboBox_radioButton_network_group_sample.currentText() == 'Sample':
             slected_list = self.comboBox_network_sample.getCheckedItems()
             if slected_list:
                 sample_list = slected_list
@@ -5481,7 +5656,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
     def get_sample_list_tflink(self):
         # get sample list
-        if self.radioButton_tflink_group.isChecked(): # by group
+        # if self.radioButton_tflink_group.isChecked(): # by group
+        if self.comboBox_tflink_group_sample.currentText() == 'Group':
             in_condition = (
                 [self.comboBox_tflink_condition_meta.currentText(), self.comboBox_tflink_condition_group.getCheckedItems()]
                 if self.checkBox_tflink_in_condition.isChecked() else None
@@ -5489,7 +5665,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             group_list = self.comboBox_tflink_group.getCheckedItems()
             sample_list = self.get_sample_list_for_group_list_in_condition(group_list, condition=in_condition)
             
-        elif self.radioButton_tflink_sample.isChecked(): # by sample
+        elif self.comboBox_tflink_group_sample.currentText() == 'Sample':
             selected_samples = self.comboBox_tflink_sample.getCheckedItems()
             if not selected_samples:
                 sample_list = self.tfa.sample_list
@@ -5760,36 +5936,63 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 ###############   Class LoggerManager Begin   ###############
 class LoggerManager:
-    def __init__(self):
-        self.setup_logging()
+    def __init__(self, log_level=logging.DEBUG):
+        self.setup_logging(log_level)
         self.write_log(f'------------------------------ MetaX Started Version {__version__} ------------------------------', 'i')
-        
-    def setup_logging(self):
+
+    def setup_logging(self, log_level=logging.DEBUG):
         """
-        Configure logging settings.
+        Configure logging settings for LoggerManager.
         """
+        self.logger = logging.getLogger('MetaXLogger')
+        self.logger.setLevel(log_level)
+
         # Disable matplotlib logging for warnings
         matplotlib_logger = logging.getLogger('matplotlib')
         matplotlib_logger.setLevel(logging.WARNING)
-        
+
+        # Create log directory if not exists
         home_path = os.path.expanduser("~")
         metax_path = os.path.join(home_path, 'MetaX')
-        if not os.path.exists(metax_path):
-            os.makedirs(metax_path)
-        log_path = os.path.join(metax_path, 'MetaX.log')
-        log_format = '%(asctime)s - %(levelname)s - %(message)s'
-        logging.basicConfig(filename=log_path, level=logging.DEBUG, format=log_format)
+        try:
+            if not os.path.exists(metax_path):
+                os.makedirs(metax_path)
+        except Exception as e:
+            print(f"Error creating log directory: {metax_path}. {e}")
+            metax_path = home_path  # Fallback to home directory
 
-    def write_log(self, msg:str, level:str='i'):
+        log_path = os.path.join(metax_path, 'MetaX.log')
+
+        # Define formatter and handlers
+        log_format = '%(asctime)s - %(levelname)s - %(message)s'
+        formatter = logging.Formatter(log_format)
+
+        # File handler
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+        # Stream handler (optional, for console logging)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        self.logger.addHandler(stream_handler)
+
+    def write_log(self, msg: str, level: str = 'i'):
+        """
+        Write a log message with the specified logging level.
+        Args:
+            msg (str): The log message.
+            level (str): The log level ('d', 'i', 'w', 'e', 'c').
+        """
         level_dict = {
-            'd': logging.debug, 
-            'i': logging.info, 
-            'w': logging.warning, 
-            'e': logging.error, 
-            'c': logging.critical
+            'd': self.logger.debug,
+            'i': self.logger.info,
+            'w': self.logger.warning,
+            'e': self.logger.error,
+            'c': self.logger.critical,
         }
         msg = msg.replace('\n', ' ').replace('\r', '')
-        log_func = level_dict.get(level, logging.info)
+        log_func = level_dict.get(level, self.logger.info)
         log_func(msg)
 
         
