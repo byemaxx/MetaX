@@ -2057,7 +2057,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         '''
         
         print(f'\n----Multi Table Result----\n{msg_for_print}\n---------------------------\n')
-        self.logger.write_log(msg_for_print.replace('\n', ''))
+        self.logger.write_log(msg_for_print.strip())
         QMessageBox.information(self.MainWindow, 'Result', msg)
         print("\n---------------------------------- Set Multi Table End ----------------------------------\n")
         # go to basic analysis tab and the first tab
@@ -2803,7 +2803,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             try:
                 print("\n---------------------------------- Set Multi Table ----------------------------------\n")
-                self.logger.write_log(f'set_multi_table: function: {function}, taxa_level: {taxa_level}, func_threshold: {func_threshold}, outlier_detect_method: {outlier_detect_method}, outlier_handle_method: {outlier_handle_method}, outlier_handle_by_group: {outlier_handle_by_group}, normalize_method: {normalize_method}, transform_method: {transform_method}, batch_group: {batch_meta}, processing_order: {processing_order}')
                 self.tfa.set_func(function)
                 # update group and sample in comboBox
                 # self.update_group_and_sample_combobox() # No longer need due to self.change_event_meta_name_combobox_plot_part()
@@ -2824,6 +2823,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'split_func': split_func, 'split_func_params': split_func_params,
                                         'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf,
                                         'quant_method': quant_method}
+                
+                self.logger.write_log(f"set_multi_table_params: {set_multi_table_params} \
+                    \n\nOutlier_params: {outlier_params} \n\nData_preprocess_params: {data_preprocess_params}", 'i')
                             
                 def callback_after_set_multi_tables(result, success):
                     if success:
