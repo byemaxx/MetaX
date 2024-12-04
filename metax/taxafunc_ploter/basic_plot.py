@@ -381,6 +381,7 @@ class BasicPlot:
         theme: str = None,
         cmap: str = "Auto",
         rename_sample: bool = False,
+        corr_method: str = "pearson",
     ):
         dft= df.copy()
         if rename_sample:
@@ -394,7 +395,12 @@ class BasicPlot:
             cmap = cmap
 
         color_list = self.assign_colors(group_list)
-        corr = dft.corr()
+        
+        # check if the correlation method is valid
+        if corr_method not in ['pearson', 'spearman', 'kendall']:
+            raise ValueError(f"Invalid correlation method: {corr_method}. Please choose from 'pearson', 'spearman', or 'kendall'.")
+        
+        corr = dft.corr(method=corr_method)
         # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
@@ -430,7 +436,8 @@ class BasicPlot:
             fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
-            cbar.set_label('Intensity', rotation=90, labelpad=1)
+            cbar.set_label('correlation',
+                           rotation=90, labelpad=1)
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
             plt.subplots_adjust(left=0.03, bottom=0.095, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
