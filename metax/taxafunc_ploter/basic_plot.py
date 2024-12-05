@@ -647,6 +647,8 @@ class BasicPlot:
         """
 
         df = df.copy()
+        # remove all zero rows
+        df = df.loc[(df != 0).any(axis=1)]
 
         if plot_sample:
             # Create a binary matrix (boolean format) with samples as groups

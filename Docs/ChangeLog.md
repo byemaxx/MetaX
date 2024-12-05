@@ -1,3 +1,8 @@
+# Version: 1.119.9
+## Date: 2024-12-5
+### Changes:
+- Fix: Fixed the bug of when plot upset plot with slecetion, the items with zero value was not removed.
+
 
 # Version: 1.119.8
 ## Date: 2024-12-5
