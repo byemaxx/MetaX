@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -186,7 +186,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label_26">
               <property name="text">
-               <string>Operational Taxa-Functions (OTF) Table (head 200)</string>
+               <string>Operational Taxon-Function (OTF) Table (head 200)</string>
               </property>
              </widget>
             </item>
@@ -205,6 +205,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="1" column="0">
@@ -214,6 +217,15 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="showGrid">
+               <bool>true</bool>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="wordWrap">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -246,7 +258,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>462</width>
-                 <height>531</height>
+                 <height>527</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3248,8 +3260,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>170</height>
+                        <width>665</width>
+                        <height>157</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -6810,7 +6822,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>170</height>
+                        <height>168</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7664,8 +7676,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>123</height>
+                        <width>620</width>
+                        <height>65</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -9600,7 +9612,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>158</height>
+                        <height>155</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10869,7 +10881,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

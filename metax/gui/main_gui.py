@@ -1045,7 +1045,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     padding: 5px;
                     margin: 2px;
                     height: 20px;
-                }}
+                    }}
 
                     '''
         current_app = QtWidgets.QApplication.instance()
@@ -4070,7 +4070,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                width=width, height=height, title=title
                                                                , font_size=font_size, num_col=num_col)
             # create a dialog to show the figure
-            # plt_dialog = PltDialog(self.MainWindow, fig)
+            # plt_dialog = PltDialog(self.MainWindow, fig) #obsolete
             plt_size= (width*50, int(height*num_cluster*50/num_col) )
             plt_dialog = ExportablePlotDialog(self.MainWindow,fig, plt_size)
             #set title
@@ -4348,9 +4348,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             # BasicPlot(self.tfa).plot_taxa_stats()
             theme = self.comboBox_data_overiew_theme.currentText()
-            pic = BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme)
+            pic = BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme, font_size=8, width=5, height=4)
             # Add the new MatplotlibWidget
-            self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
+            self.mat_widget_plot_peptide_num = MatplotlibWidget(pic, width = 5, height = 4)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
@@ -4369,9 +4369,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
             theme = self.comboBox_data_overiew_theme.currentText()
-            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme).get_figure()
+            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme, font_size = 8, width = 5,height = 4
+                                                       ).get_figure()
 
-            self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
+            self.mat_widget_plot_taxa_num = MatplotlibWidget(pic, width = 5, height = 4)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
@@ -4399,9 +4400,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_message('Plotting peptide number in function...')
             BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show', font_size = font_size)
         else:
-            pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme)
+            pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, font_size = 8, width=5, height=4)
             
-            self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
+            self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure(), width = 5, height = 4)
             self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
 
     

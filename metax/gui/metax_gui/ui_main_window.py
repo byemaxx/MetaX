@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Qing\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\max\OneDrive - University of Ottawa\code\TaxaFunc\MetaX\metax\gui\metax_gui\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -133,6 +133,8 @@ class Ui_metaX_main(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tableWidget_taxa_func_view.sizePolicy().hasHeightForWidth())
         self.tableWidget_taxa_func_view.setSizePolicy(sizePolicy)
+        self.tableWidget_taxa_func_view.setShowGrid(True)
+        self.tableWidget_taxa_func_view.setWordWrap(False)
         self.tableWidget_taxa_func_view.setObjectName("tableWidget_taxa_func_view")
         self.tableWidget_taxa_func_view.setColumnCount(0)
         self.tableWidget_taxa_func_view.setRowCount(0)
@@ -147,7 +149,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QtCore.QSize(1677, 16777215))
         self.toolBox_2.setObjectName("toolBox_2")
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 462, 531))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 462, 527))
         self.page_2.setObjectName("page_2")
         self.gridLayout_27 = QtWidgets.QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName("gridLayout_27")
@@ -1652,7 +1654,7 @@ class Ui_metaX_main(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollArea_2.setObjectName("scrollArea_2")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 885, 170))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 665, 157))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_50 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_50.setObjectName("gridLayout_50")
@@ -3524,7 +3526,7 @@ class Ui_metaX_main(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollArea_4.setObjectName("scrollArea_4")
         self.scrollAreaWidgetContents_5 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_5.setGeometry(QtCore.QRect(0, 0, 885, 170))
+        self.scrollAreaWidgetContents_5.setGeometry(QtCore.QRect(0, 0, 885, 168))
         self.scrollAreaWidgetContents_5.setObjectName("scrollAreaWidgetContents_5")
         self.gridLayout_49 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_49.setObjectName("gridLayout_49")
@@ -3986,7 +3988,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollArea_5.setObjectName("scrollArea_5")
         self.scrollAreaWidgetContents_6 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 885, 123))
+        self.scrollAreaWidgetContents_6.setGeometry(QtCore.QRect(0, 0, 620, 65))
         self.scrollAreaWidgetContents_6.setObjectName("scrollAreaWidgetContents_6")
         self.gridLayout_57 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName("gridLayout_57")
@@ -5029,7 +5031,7 @@ class Ui_metaX_main(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollArea_7.setObjectName("scrollArea_7")
         self.scrollAreaWidgetContents_8 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 885, 158))
+        self.scrollAreaWidgetContents_8.setGeometry(QtCore.QRect(0, 0, 885, 155))
         self.scrollAreaWidgetContents_8.setObjectName("scrollAreaWidgetContents_8")
         self.gridLayout_66 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_8)
         self.gridLayout_66.setObjectName("gridLayout_66")
@@ -5683,7 +5685,7 @@ class Ui_metaX_main(object):
         self.statusbar.setObjectName("statusbar")
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QtWidgets.QMenuBar(metaX_main)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 991, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 991, 23))
         self.menuBar.setObjectName("menuBar")
         self.menuTools = QtWidgets.QMenu(self.menuBar)
         self.menuTools.setObjectName("menuTools")
@@ -5749,7 +5751,7 @@ class Ui_metaX_main(object):
 
         self.retranslateUi(metaX_main)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(3)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(1)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(3)
@@ -5802,8 +5804,10 @@ class Ui_metaX_main(object):
         self.pushButton_load_example_for_analyzer.setText(_translate("metaX_main", "Load Example Data"))
         self.label_46.setText(_translate("metaX_main", "Operational Taxa-Functions (OTF) Analyzer"))
         self.tabWidget_TaxaFuncAnalyzer.setTabText(self.tabWidget_TaxaFuncAnalyzer.indexOf(self.tab), _translate("metaX_main", "Data Import"))
-        self.label_26.setText(_translate("metaX_main", "Operational Taxa-Functions (OTF) Table (head 200)"))
+        self.label_26.setText(_translate("metaX_main", "Operational Taxon-Function (OTF) Table (head 200)"))
         self.label_25.setText(_translate("metaX_main", "Meta Table"))
+        self.tableWidget_meta_view.setSortingEnabled(True)
+        self.tableWidget_taxa_func_view.setSortingEnabled(True)
         self.pushButton_overview_tax_plot_new_window.setText(_translate("metaX_main", "Plot taxa stats in new window"))
         self.pushButton_overview_peptide_plot_new_window.setText(_translate("metaX_main", "Plot peptide stats in new window"))
         self.label_154.setText(_translate("metaX_main", "Theme"))
