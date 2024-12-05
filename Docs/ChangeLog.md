@@ -1,3 +1,15 @@
+
+# Version: 1.119.7
+## Date: 2024-12-5
+### Changes:
+- Change: Optimized the Data Overview section to make the layout more clear.
+- Update README.md
+  
+# Version: 1.119.6
+## Date: 2024-12-5
+### Changes:
+- Change: Optimized the correlation heatmap plot.
+
 # Version: 1.119.5
 ## Date: 2024-12-3
 ### Changes:

@@ -43,7 +43,11 @@ Show all functions of a taxon
 
 - <img src="https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/taxa_func_link_bar.png" alt="tf_link_bar" style="zoom:50%;" />
 
+**OTF Heatmap**
 
+Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
+
+<img src="https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/otf_heatmap.png" alt="otf_heatmap" style="zoom:50%;" />
 
 ## Download & Installation
 - **Desktop Version** (Recommended)

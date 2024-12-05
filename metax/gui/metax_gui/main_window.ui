@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>1</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -186,7 +186,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label_26">
               <property name="text">
-               <string>Operational Taxa-Functions (OTF) Table (head 200)</string>
+               <string>Operational Taxon-Function (OTF) Table (head 200)</string>
               </property>
              </widget>
             </item>
@@ -205,6 +205,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="1" column="0">
@@ -214,6 +217,15 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="showGrid">
+               <bool>true</bool>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="wordWrap">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -246,7 +258,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>462</width>
-                 <height>531</height>
+                 <height>527</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1447,7 +1459,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1830,7 +1842,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>799</width>
+                        <width>885</width>
                         <height>239</height>
                        </rect>
                       </property>
@@ -2406,6 +2418,12 @@
                         <layout class="QHBoxLayout" name="horizontalLayout_5">
                          <item>
                           <widget class="QLabel" name="label_129">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="text">
                             <string>Show All Labels</string>
                            </property>
@@ -2413,6 +2431,12 @@
                          </item>
                          <item>
                           <widget class="QCheckBox" name="checkBox_corr_show_all_labels_x">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="text">
                             <string>X</string>
                            </property>
@@ -2420,10 +2444,32 @@
                          </item>
                          <item>
                           <widget class="QCheckBox" name="checkBox_corr_show_all_labels_y">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
                            <property name="text">
                             <string>Y</string>
                            </property>
                           </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="label_192">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string>Theme</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="comboBox_basic_corr_cmap"/>
                          </item>
                         </layout>
                        </item>
@@ -2472,6 +2518,13 @@
                        <item row="4" column="1">
                         <layout class="QHBoxLayout" name="horizontalLayout_3">
                          <item>
+                          <widget class="QCheckBox" name="checkBox_corr_plot_samples">
+                           <property name="text">
+                            <string>Plot Samples</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
                           <widget class="QCheckBox" name="checkBox_corr_cluster">
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -2488,20 +2541,42 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="label_192">
+                          <widget class="QLabel" name="label_98">
                            <property name="sizePolicy">
-                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                              <horstretch>0</horstretch>
                              <verstretch>0</verstretch>
                             </sizepolicy>
                            </property>
                            <property name="text">
-                            <string>Theme</string>
+                            <string>Method</string>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_basic_corr_cmap"/>
+                          <widget class="QComboBox" name="comboBox_basic_corr_method">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <item>
+                            <property name="text">
+                             <string>pearson</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>spearman</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>kendall</string>
+                            </property>
+                           </item>
+                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -3185,8 +3260,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>170</height>
+                        <width>665</width>
+                        <height>157</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -6532,7 +6607,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_5">
                <attribute name="title">
@@ -6747,7 +6822,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>170</height>
+                        <height>168</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -6838,6 +6913,11 @@
                              <item>
                               <property name="text">
                                <string>spearman</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>kendall</string>
                               </property>
                              </item>
                             </widget>
@@ -7131,7 +7211,7 @@
                      <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Plot Co-Expression Heatmap</string>
+                     <string>Plot Correlation Heatmap</string>
                     </property>
                    </widget>
                   </item>
@@ -7596,8 +7676,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>123</height>
+                        <width>620</width>
+                        <height>65</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -8350,8 +8430,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>225</height>
+                        <width>775</width>
+                        <height>102</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_69">
@@ -9532,7 +9612,7 @@
                         <x>0</x>
                         <y>0</y>
                         <width>885</width>
-                        <height>158</height>
+                        <height>155</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10801,7 +10881,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

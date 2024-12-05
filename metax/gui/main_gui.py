@@ -365,6 +365,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_method_of_protein_inference.currentIndexChanged.connect(self.update_method_of_protein_inference)
         self.comboBox_3dbar_sub_meta.currentIndexChanged.connect(self.change_event_comboBox_3dbar_sub_meta)
         self.comboBox_tflink_sub_meta.currentIndexChanged.connect(self.change_event_comboBox_tflink_sub_meta)
+        self.comboBox_sub_meta_pca.currentIndexChanged.connect(self.change_event_comboBox_sub_meta_pca)
 
         ## Basic Stat
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
@@ -889,6 +890,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         #     self.comboBox_3dbar_sub_meta.setEnabled(False)
         # else:
         #     self.comboBox_3dbar_sub_meta.setEnabled(True)
+        
+    def change_event_comboBox_sub_meta_pca(self):
+        if self.comboBox_sub_meta_pca.currentText() != 'None':
+            self.checkBox_corr_plot_samples.setEnabled(False)
+        else:
+            self.checkBox_corr_plot_samples.setEnabled(True)
+        
     def change_event_comboBox_tflink_sub_meta(self):
         # when the sub_meta comboBox is not None, the mean plot is not available
         if self.comboBox_tflink_sub_meta.currentText() != 'None':
@@ -1037,7 +1045,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     padding: 5px;
                     margin: 2px;
                     height: 20px;
-                }}
+                    }}
 
                     '''
         current_app = QtWidgets.QApplication.instance()
@@ -4062,7 +4070,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                width=width, height=height, title=title
                                                                , font_size=font_size, num_col=num_col)
             # create a dialog to show the figure
-            # plt_dialog = PltDialog(self.MainWindow, fig)
+            # plt_dialog = PltDialog(self.MainWindow, fig) #obsolete
             plt_size= (width*50, int(height*num_cluster*50/num_col) )
             plt_dialog = ExportablePlotDialog(self.MainWindow,fig, plt_size)
             #set title
@@ -4340,9 +4348,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             # BasicPlot(self.tfa).plot_taxa_stats()
             theme = self.comboBox_data_overiew_theme.currentText()
-            pic = BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme)
+            pic = BasicPlot(self.tfa).plot_taxa_stats_pie(theme=theme, font_size=8, width=5, height=4)
             # Add the new MatplotlibWidget
-            self.mat_widget_plot_peptide_num = MatplotlibWidget(pic)
+            self.mat_widget_plot_peptide_num = MatplotlibWidget(pic, width = 5, height = 4)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
@@ -4361,9 +4369,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
             theme = self.comboBox_data_overiew_theme.currentText()
-            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme).get_figure()
+            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme, font_size = 8, width = 5,height = 4
+                                                       ).get_figure()
 
-            self.mat_widget_plot_taxa_num = MatplotlibWidget(pic)
+            self.mat_widget_plot_taxa_num = MatplotlibWidget(pic, width = 5, height = 4)
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
@@ -4391,9 +4400,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_message('Plotting peptide number in function...')
             BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, res_type='show', font_size = font_size)
         else:
-            pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme)
+            pic = BasicPlot(self.tfa).plot_prop_stats(func_name, theme=theme, font_size = 8, width=5, height=4)
             
-            self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure())
+            self.mat_widget_plot_peptide_num_in_func = MatplotlibWidget(pic.get_figure(), width = 5, height = 4)
             self.verticalLayout_overview_func.addWidget(self.mat_widget_plot_peptide_num_in_func)
 
     
@@ -4509,6 +4518,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 cluster = self.checkBox_corr_cluster.isChecked()
                 show_all_labels = (self.checkBox_corr_show_all_labels_x.isChecked(), self.checkBox_corr_show_all_labels_y.isChecked())
                 cmap = self.comboBox_basic_corr_cmap.currentText()
+                corr_method = self.comboBox_basic_corr_method.currentText()
+                plot_mean = False if self.checkBox_corr_plot_samples.isChecked() else True
                 # checek if the dataframe has at least 2 rows and 2 columns
                 if df.shape[0] < 2 or df.shape[1] < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows or columns is less than 2, correlation cannot be plotted!')
@@ -4520,7 +4531,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 BasicPlot(self.tfa, **self.heatmap_params_dict).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
                                                 width=width, height=height, font_size=font_size, 
                                                 show_all_labels=show_all_labels, theme=theme, cmap=cmap,
-                                                rename_sample = rename_sample)
+                                                rename_sample = rename_sample, corr_method=corr_method, 
+                                                plot_mean = plot_mean, sub_meta = sub_meta)
 
             elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
@@ -5355,9 +5367,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_message('Co-expression heatmap is plotting...\n\n It may take a long time! Please wait...')
             try:
                 print(f'Calculate correlation with {corr_method} method...')
-                df = self.tfa.BasicStats.get_correlation(df_type = df_type, sample_list = sample_list, focus_list = focus_list, plot_list_only = plot_list_only, rename_taxa = rename_taxa, method=corr_method)
+                df = self.tfa.BasicStats.get_correlation(df_type = df_type, sample_list = sample_list,
+                                                         focus_list = focus_list, plot_list_only = plot_list_only,
+                                                         rename_taxa = rename_taxa, method=corr_method)
                 # save df to table_dict
-                self.update_table_dict(f'expression correlation heatmap({df_type})', df)
+                self.update_table_dict(f'{corr_method} correlation heatmap({df_type})', df)
 
                 show_all_labels = (
                     self.checkBox_corr_hetatmap_show_all_labels_x.isChecked(),
@@ -5365,12 +5379,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 )
                 cmap = self.comboBox_corr_hetatmap_cmap.currentText()
                 BasicPlot(self.tfa, **self.heatmap_params_dict).plot_items_corr_heatmap(df=df,
-                                                title_name=f'Expression Correlation Heatmap({df_type})',
+                                                title_name=f'{corr_method.capitalize()} Correlation of {df_type}',
                                                 cluster=True,
                                                 cmap=cmap,
                                                 width=width, height=height, 
                                                 font_size=font_size, 
-                                                show_all_labels=show_all_labels
+                                                show_all_labels=show_all_labels,
                                                 )
                                                         
             except Exception:

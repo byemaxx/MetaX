@@ -11,15 +11,20 @@ class GetDistinctColors:
         pass
     
     def assign_colors(self, groups_list: list) -> list:
-        '''
-        Assign colors of the number of unique groups in the list
+        """
+        Assign colors to the number of unique groups in the list
         - return a list of colors in hex format
-        '''
-        colors = self.get_distinct_colors(len(set(groups_list)))
-        result = []
-        for group in groups_list:
-            index = sorted(set(groups_list)).index(group)
-            result.append(colors[index])
+        """
+        # Get unique sorted groups and their indices
+        unique_groups = sorted(set(groups_list))
+        group_to_index = {group: idx for idx, group in enumerate(unique_groups)}
+        
+        # Generate distinct colors based on the number of unique groups
+        colors = self.get_distinct_colors(len(unique_groups))
+        print(f'Assigned colors for {len(unique_groups)} groups')
+        
+        # Map groups to colors using the precomputed index
+        result = [colors[group_to_index[group]] for group in groups_list]
         return result
     
     def adjust_color(self, color, sat_factor=0.7, light_factor=1.2):
