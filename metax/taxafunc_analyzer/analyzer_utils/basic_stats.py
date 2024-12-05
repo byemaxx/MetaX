@@ -166,7 +166,7 @@ class BasicStats:
         `df_type`: str: 'taxa', 'func', 'taxa_func', 'func_taxa', 'custom'
         `sample_list`: a list of samples to calculate correlation
         `plot_list_only`: bool: if True, only return the list of samples that can be plotted
-        `method`: str: 'pearson', 'spearman'
+        `method`: str: 'pearson', 'spearman', 'kendall'
         '''
         df = self.tfa.get_df(df_type)
         df = self.tfa.replace_if_two_index(df)
@@ -204,7 +204,7 @@ class BasicStats:
             tuple[pd.DataFrame, Dict[str, str]]: A tuple containing the combined DataFrame and a dictionary with the sample names as keys and the group names as values.
         """
         if sub_meta != 'None':
-
+            plot_mean = False # if sub_meta is not None, the mean will be calculated based on the meta and sub_meta automatically
             sample_groups = {sample: self.tfa.get_group_of_a_sample(sample, self.tfa.meta_name) for sample in df.columns}
             sub_groups = {sample: self.tfa.get_group_of_a_sample(sample, sub_meta) for sample in df.columns}
 
@@ -218,8 +218,8 @@ class BasicStats:
             else:
                 grouped_data = df.T.groupby([sample_groups, sub_groups]).mean().T
             
-            # group_list is the sub-meta group
-            group_list = [i[1] for i in grouped_data.columns] if not plot_mean else grouped_data.columns.tolist()
+            # group_list is the meta group:i[0], set i[1] if want to show sub_meta group
+            group_list = [i[0] for i in grouped_data.columns]
             
             # Convert multi-index to single index
             grouped_data.columns = ['_'.join(col).strip() for col in grouped_data.columns.values]

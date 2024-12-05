@@ -27,7 +27,7 @@ class BasicPlot:
         sns.set_theme()
 
 
-    def plot_taxa_stats_pie(self, theme:str = 'Auto', res_type = 'pic', font_size = 12):
+    def plot_taxa_stats_pie(self, theme:str = 'Auto', res_type = 'pic', font_size = 10, width = None, height = None):
         df = self.tfa.BasicStats.get_stats_peptide_num_in_taxa()
 
         # if 'not_found' is 0, then remove it
@@ -51,17 +51,20 @@ class BasicPlot:
             # set color palette
             colors = sns.color_palette("deep")
 
-        # set figure size base on font size
-        if font_size <= 10:
-            fig_size = (8, 6)
-        elif font_size <= 12:
-            fig_size = (10, 8)
-        elif font_size <= 14:
-            fig_size = (12, 10)
-        elif font_size <= 16:
-            fig_size = (14, 12)
+        # set figure size base on font size if not specified
+        if width is None and height is None:
+            if font_size <= 10:
+                fig_size = (8, 6)
+            elif font_size <= 12:
+                fig_size = (10, 8)
+            elif font_size <= 14:
+                fig_size = (12, 10)
+            elif font_size <= 16:
+                fig_size = (14, 12)
+            else:
+                fig_size = (16, 14)
         else:
-            fig_size = (16, 14)
+            fig_size = (width, height)
 
 
         fig = plt.figure(figsize=fig_size) if res_type == 'show' else plt.figure()
@@ -91,7 +94,7 @@ class BasicPlot:
         return fig
 
     # input: self.get_stats_taxa_level()
-    def plot_taxa_number(self, peptide_num = 1, theme:str = 'Auto', res_type = 'pic', font_size = 10):
+    def plot_taxa_number(self, peptide_num = 1, theme:str = 'Auto', res_type = 'pic', font_size = 10, width = None, height = None):
         df = self.tfa.BasicStats.get_stats_taxa_level(peptide_num)
 
         # if genome in taxa_level and count of species == count of genome, then remove genome, and rename species to species (genome)
@@ -106,7 +109,12 @@ class BasicPlot:
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
-        plt.figure(figsize=(10, 8)) if res_type == 'show' else plt.figure()
+        # plt.figure(figsize=(10, 8)) if res_type == 'show' else plt.figure()
+        if width is None and height is None:
+            plt.figure(figsize=(10, 8)) if res_type == 'show' else plt.figure()
+        else:
+            plt.figure(figsize=(width, height)) if res_type == 'show' else plt.figure()
+            
         ax = sns.barplot(data=df, x='taxa_level', y='count',dodge=False, hue='taxa_level')
         for i in ax.containers:
             # set the label of the bar, and fontsize
@@ -129,7 +137,7 @@ class BasicPlot:
         return ax
 
     # input: self.get_stats_func_prop()
-    def plot_prop_stats(self, func_name = 'eggNOG_OGs', theme:str = 'Auto', res_type = 'pic', font_size = 10):
+    def plot_prop_stats(self, func_name = 'eggNOG_OGs', theme:str = 'Auto', res_type = 'pic', font_size = 10, width = None, height = None):
         df = self.tfa.BasicStats.get_stats_func_prop(func_name)
         # #dodge=False to make the bar wider
         # plt.figure(figsize=(8, 6))
@@ -138,8 +146,10 @@ class BasicPlot:
         else:
             custom_params = {"axes.spines.right": False, "axes.spines.top": False}
             sns.set_theme(style="ticks", rc=custom_params)
-
-        plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        if width is None and height is None:
+            plt.figure(figsize=(8, 6)) if res_type == 'show' else plt.figure()
+        else:
+            plt.figure(figsize=(width, height)) if res_type == 'show' else plt.figure()
 
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
@@ -382,18 +392,24 @@ class BasicPlot:
         cmap: str = "Auto",
         rename_sample: bool = False,
         corr_method: str = "pearson",
+        sub_meta: str | None = 'None',
+        plot_mean: bool = False,
     ):
-        dft= df.copy()
-        if rename_sample:
-            dft, group_list = self.tfa.add_group_name_for_sample(dft)
-        else:
-            group_list = [self.tfa.get_group_of_a_sample(i) for i in dft.columns]
+        dft, group_dict = self.tfa.BasicStats.prepare_dataframe_for_heatmap(df = df, sub_meta = sub_meta, 
+                                                           rename_sample = rename_sample,
+                                                           plot_mean = plot_mean)
+        
+        # if rename_sample:
+        #     _, group_list = self.tfa.add_group_name_for_sample(dft)
+        # else:
+        #     group_list = [self.tfa.get_group_of_a_sample(i) for i in dft.columns]
 
         if cmap == 'Auto':
             cmap = 'RdYlBu_r'
         else:
             cmap = cmap
-
+            
+        group_list = [group_dict[i] for i in dft.columns]
         color_list = self.assign_colors(group_list)
         
         # check if the correlation method is valid
@@ -413,9 +429,12 @@ class BasicPlot:
                             'row_cluster':True if cluster else False,
                             'method':self.linkage_method,
                             'metric':self.distance_metric,
-                            "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),"col_colors":color_list,
+                            "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
+                            "col_colors": color_list,
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
-                            "yticklabels":True if show_all_labels[1] else 'auto'}
+                            "yticklabels":True if show_all_labels[1] else 'auto',
+                            "center":0, "vmin":-1, "vmax":1
+                            }
             fig = sns.clustermap(corr, **sns_params)
             ax = fig.ax_heatmap
             
@@ -433,7 +452,7 @@ class BasicPlot:
                 va = self.get_y_labels_va()
             )
             
-            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
+            fig.ax_col_dendrogram.set_title(f'{corr_method.capitalize()} Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
 
             cbar = fig.ax_heatmap.collections[0].colorbar
             cbar.set_label('correlation',
@@ -711,12 +730,14 @@ class BasicPlot:
                             'metric':self.distance_metric,
                             "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
-                            "yticklabels":True if show_all_labels[1] else 'auto'}
+                            "yticklabels":True if show_all_labels[1] else 'auto',
+                            "center":0, "vmin":-1, "vmax":1
+                            }
             fig = sns.clustermap(corr, **sns_params)
             ax = fig.ax_heatmap
             
             
-            fig.ax_col_dendrogram.set_title(f'Correlation of {title_name}', fontsize=font_size+2, fontweight='bold')
+            fig.ax_col_dendrogram.set_title(f'{title_name}', fontsize=font_size+2, fontweight='bold')
             fig.ax_heatmap.set_xticklabels(
                 fig.ax_heatmap.get_xmajorticklabels(),
                 fontsize=font_size,
