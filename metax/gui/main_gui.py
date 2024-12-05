@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtWidgets import    QApplication, QListWidget, QListWidgetItem,QPushButton
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout
 from PyQt5.QtGui import QIcon, QCursor
-from PyQt5.QtCore import Qt, QTimer, QDir, QSettings
+from PyQt5.QtCore import Qt, QTimer, QDir, QSettings, QSize
 
 import qtawesome as qta
 # from qt_material import apply_stylesheet
@@ -92,6 +92,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.ui_lca_help import UiLcaHelpDialog
     from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from metax.gui.metax_gui.generic_thread import FunctionExecutor
+    from metax.gui.metax_gui.resources import icon_rc
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -136,7 +137,8 @@ else:
     from .metax_gui.ui_lca_help import UiLcaHelpDialog
     from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from .metax_gui.generic_thread import FunctionExecutor
-
+    from .metax.gui.metax_gui.resources import icon_rc
+    
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
 
@@ -153,9 +155,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         MainWindow.closeEvent = self.closeEvent
         self.setupUi(MainWindow)
         self.MainWindow = MainWindow
-        icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+        # icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")        
+        # self.MainWindow.setWindowIcon(QIcon(icon_path))
+        self.MainWindow.setWindowIcon(QIcon(":/icon/logo.png"))
 
-        self.MainWindow.setWindowIcon(QIcon(icon_path))
         self.MainWindow.resize(1200, 800)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
         
@@ -951,6 +954,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             theme = "light_blue"
             print(f"Loading default theme {theme}...")
         self.change_theme(theme, silent=True)
+        
+        # restore the window size
+        if self.settings.contains("window_size"):
+            size = self.settings.value("window_size", type=QSize)
+            # check if the size is smaller than the screen size
+            if size.width() < self.screen_width and size.height() < self.screen_height:
+                print(f"Restoring window size to {size}...")
+                self.MainWindow.resize(size)
+            else:
+                print("Restoring window size to default because the saved size is larger than the screen size.")
+                
             
 
     def change_theme(self, theme, silent=False):
@@ -1271,7 +1285,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         #save theme
         if self.settings.contains("theme"):
             self.settings.setValue("theme", self.settings.value("theme", type=str))
-        
+            
+        # save current window size
+        self.settings.setValue("window_size", self.MainWindow.size())
 
 
     def save_set_multi_table_settings(self):

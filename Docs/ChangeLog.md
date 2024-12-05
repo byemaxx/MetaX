@@ -1,4 +1,9 @@
 
+# Version: 1.119.8
+## Date: 2024-12-5
+### Changes:
+- New: restore window size when open the MetaX.
+
 # Version: 1.119.7
 ## Date: 2024-12-5
 ### Changes:
