@@ -3885,11 +3885,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 show_percentages = self.checkBox_basic_heatmap_plot_upset_show_percentage.isChecked()
                 min_subset_size = self.spinBox_basic_heatmap_plot_upset_min_subset.value()
                 max_subset_rank = self.spinBox_basic_heatmap_plot_upset_max_rank.value()
-                BasicPlot(self.tfa).plot_upset(df = df, title_name = table_name, show_label = True,
+                upset_df = BasicPlot(self.tfa).plot_upset(df = df, title_name = table_name, show_label = True,
                                 width=width, height=height, font_size=font_size,
                                 plot_sample = False, sub_meta = sub_meta,
                                 rename_sample = rename_sample, show_percentages = show_percentages,
                                 min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+                # update the table_dict
+                self.update_table_dict(table_name = f'upset_selected({table_name})', df = upset_df)
                 
         except (IndexError, AttributeError):
             error_message = traceback.format_exc()
@@ -4623,11 +4625,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 show_percentages = self.checkBox_basic_plot_upset_show_percentage.isChecked()
                 min_subset_size = self.spinBox_basic_plot_upset_min_subset.value()
                 max_subset_rank = self.spinBox_basic_plot_upset_max_rank.value()
-                BasicPlot(self.tfa).plot_upset(df = df, title_name = title_name, show_label = show_label,
+                upset_df = BasicPlot(self.tfa).plot_upset(df = df, title_name = title_name, show_label = show_label,
                                                width=width, height=height, font_size=font_size,
                                                plot_sample = plot_sample, sub_meta = sub_meta,
                                                rename_sample = rename_sample, show_percentages = show_percentages,
                                                min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+                self.update_table_dict(f'upset_all({title_name})', upset_df)
+                
         except (IndexError, AttributeError):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')

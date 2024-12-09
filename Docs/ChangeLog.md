@@ -1,3 +1,8 @@
+# Version: 1.119.10
+## Date: 2024-12-9
+### Changes:
+- New: Added table result for upset plot.
+
 # Version: 1.119.9
 ## Date: 2024-12-5
 ### Changes:

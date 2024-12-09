@@ -700,6 +700,8 @@ class BasicPlot:
             plt.tight_layout()
             plt.show()
             
+            return df_binary.drop(columns='id')
+            
         except Exception as e:
             plt.close('all')
             raise e
