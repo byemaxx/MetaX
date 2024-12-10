@@ -3839,11 +3839,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 
                     self.save_and_show_js_plot(pic, title)
                 else:
+                    plt_theme = self.comboBox_basic_theme.currentText()
                     ax = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns(df = df, width=width, height=height,  # noqa: F841
                                                                 title= '', rename_taxa=rename_taxa, 
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
-                                                                plot_percent = plot_percent, sub_meta = sub_meta)
+                                                                plot_percent = plot_percent, sub_meta = sub_meta, plt_theme = plt_theme)
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
