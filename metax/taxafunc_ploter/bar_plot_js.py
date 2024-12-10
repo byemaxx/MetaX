@@ -87,13 +87,21 @@ class BarPlot:
                            title:str|None =None, rename_taxa:bool=False, 
                            show_legend:bool=True, font_size:int=10,
                            rename_sample:bool=True, plot_mean:bool=False,
-                           plot_percent:bool=False, sub_meta:str="None", **kwargs):
+                           plot_percent:bool=False, sub_meta:str="None", plt_theme:str='Auto'):
         
-        df, _ = self._get_modfied_df(df, taxon_name, sample_list, func_name, peptide_seq, 
+        df, rename_sample = self._get_modfied_df(df, taxon_name, sample_list, func_name, peptide_seq, 
                                                  rename_taxa, rename_sample, plot_mean, sub_meta, plot_percent)
+        if sub_meta != "None":
+            df, _ = self.tfa.BasicStats.get_combined_sub_meta_df(df=df, sub_meta=sub_meta, rename_sample=rename_sample, plot_mean=plot_mean)
+        
         colormap = GetDistinctColors().get_distinct_colors(len(df.index))
+        if plt_theme == 'Auto':
+            plt.style.use('default')
+        else:
+            plt.style.use(plt_theme)
+            
         fig, ax = plt.subplots(figsize=(width, height))
-        df.T.plot(kind='bar', stacked=True, ax=ax, color=colormap)
+        df.T.plot(kind='bar', stacked=True, ax=ax, color=colormap, width=0.95)
 
         ax.set_title(title, fontsize=font_size)
         ax.set_xlabel('Group' if plot_mean else 'Sample', fontsize=font_size)

@@ -1,3 +1,13 @@
+# Version: 1.119.11
+## Date: 2024-12-10
+### Changes:
+- Fix: when plot non-interactive bar at the basic plot part, the sub meta was not work.
+
+# Version: 1.119.10
+## Date: 2024-12-9
+### Changes:
+- New: Added table result for upset plot.
+
 # Version: 1.119.9
 ## Date: 2024-12-5
 ### Changes:
