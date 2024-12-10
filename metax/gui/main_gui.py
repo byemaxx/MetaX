@@ -3897,7 +3897,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
-            
+        except ValueError as e:
+            if "At least two groups are required for the UpSet plot." in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'At least two groups are required for the UpSet plot!')
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_list error: {error_message}', 'e')
@@ -4636,7 +4638,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_basic_info_sns error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', 'The index is out of range! Please check the settings.')
-            
+        except ValueError as e:
+            if "At least two groups are required for the UpSet plot." in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'At least two groups are required for the UpSet plot!')
         except Exception:
             error_message = traceback.format_exc()
             simplified_message = "An unexpected error occurred. Please check the logs for details."

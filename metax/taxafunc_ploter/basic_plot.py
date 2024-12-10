@@ -674,7 +674,9 @@ class BasicPlot:
                 if group not in group_dict:
                     group_dict[group] = []
                 group_dict[group].append(sample)
-
+            # check if at laeast 2 groups
+            if len(group_dict) < 2:
+                raise ValueError("At least two groups are required for the UpSet plot.")
             # Create a binary matrix for the groups
             group_values = {
                 group: (df[samples].sum(axis=1) > 0).astype(bool)
@@ -692,7 +694,7 @@ class BasicPlot:
             plt.rcParams.update({'font.size': font_size})
             upset_plot(upset_data, fig = fig, show_counts=show_label,
                        show_percentages=show_percentages if show_label else False,
-                    element_size=None, 
+                    element_size=None, sort_categories_by ='input', 
                     min_subset_size=min_subset_size if min_subset_size != 0 else None,
                     max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
 
