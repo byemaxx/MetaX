@@ -1,3 +1,8 @@
+# Version: 1.120.1
+## Date: 2024-12-16
+### Changes:
+- Fix: font size change was not work for some widgets.
+
 # Version: 1.120.0
 ## Date: 2024-12-15
 ### Changes:

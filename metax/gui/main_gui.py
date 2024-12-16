@@ -137,7 +137,7 @@ else:
     from .metax_gui.ui_lca_help import UiLcaHelpDialog
     from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from .metax_gui.generic_thread import FunctionExecutor
-    from .metax.gui.metax_gui.resources import icon_rc
+    from .metax_gui.resources import icon_rc # noqa: F401
     
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -1015,7 +1015,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     def change_theme(self, theme, silent=False, is_load_font_size_from_settings=True):
         if not silent:
-            text = f"Changing...\n\nTheme: {theme}\nFont size: {self.font_size}"
+            text = f"Changing theme to {theme}...\n\nTheme: {theme}\nFont size: {self.font_size}"
             self.show_message(text)
         # save the theme to settings
         self.settings.setValue("theme", theme)
@@ -1122,6 +1122,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     margin: 2px;
                     height: setted_height;
                     }}
+                    QTabBar {{
+                    font-size: setted_font_size;
+                    }}
+                    QMenuBar {{
+                    font-size: setted_font_size;
+                    }}
+                    QMenuBar::item {{
+                    font-size: setted_font_size;
+                    }}
+                    QTextBrowser {{
+                    font-size: setted_font_size;
+                    }}
+                    QTableWidget {{
+                    font-size: setted_font_size;
+                    }}
+                    QHeaderView::section {{
+                    font-size: setted_font_size;
+                    }}
          
                     '''.replace('setted_font_size', f'{font_size}px').replace('setted_height', f'{height}px')
         current_app = QtWidgets.QApplication.instance()
@@ -1132,10 +1150,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # Apply the selected theme
         if "light" in theme:
-            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
+            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: setted_font_size;} QMessageBox{background-color: white;}".replace('setted_font_size', f'{font_size}px')
             apply_stylesheet(current_app, theme=theme, invert_secondary=True, extra=extra)
         else:
-            self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: 12px;} QMessageBox{background-color: #333;}"
+            self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: setted_font_size;} QMessageBox{background-color: #333;}".replace('setted_font_size', f'{font_size}px')
             # set text color to white of QComboBox , QSpinBox and QDoubleSpinBox , lineEdit
             custom_css += '''
                         QComboBox {{
@@ -1820,8 +1838,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         self.msg.setWindowModality(Qt.NonModal)
         self.msg.setWindowTitle(title)
-        if not hasattr(self, 'msgbox_style'):
-            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
         self.msg.setStyleSheet(self.msgbox_style)
         self.msg.setText(message)
         

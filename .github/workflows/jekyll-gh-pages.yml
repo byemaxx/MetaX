@@ -61,7 +61,7 @@ jobs:
             for heading in headings:
                 level = len(heading[0])
                 title = heading[1]
-                anchor = re.sub(r'\W+', '-', title.lower()).strip('-')
+                anchor = re.sub(r'[^a-zA-Z0-9]+', '-', title.strip()).lower().strip('-')
                 toc_items.append((level, title, anchor))
 
             # Convert markdown to HTML
@@ -71,7 +71,11 @@ jobs:
             html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 60%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
             html_content = re.sub(r'<table>', r'<div class="table-responsive"><table class="table table-striped table-bordered">', html_content)
             html_content = re.sub(r'</table>', r'</table></div>', html_content)
-
+            html_content = re.sub(
+                r'href="##([^"]+)"',  # 匹配类似 ##Module-4.-Peptide-Annotator 的链接
+                lambda match: f'href="#{re.sub(r"[^a-zA-Z0-9]+", "-", match.group(1).strip()).lower().strip("-")}"',
+                html_content
+            )
             # Jinja2 template for HTML output
             template = Template('''
             <!DOCTYPE html>
