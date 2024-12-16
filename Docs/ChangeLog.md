@@ -1,3 +1,8 @@
+# Version: 1.120.0
+## Date: 2024-12-15
+### Changes:
+- New: 1.Using dynamic font size for lables of GUI by the scaling DPI of the screen. 2. New option in Theme menue to set the font size of the GUI.
+
 # Version: 1.119.11
 ## Date: 2024-12-10
 ### Changes:
