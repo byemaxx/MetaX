@@ -44,6 +44,7 @@ class TaxaFuncAnalyzer:
         meta_path=None,
         peptide_col_name="Sequence",
         protein_col_name="Proteins",
+        sample_col_prefix='Intensity',
         any_df_mode=False,
         custom_col_name="Custom",
     ):
@@ -54,6 +55,7 @@ class TaxaFuncAnalyzer:
 
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
+        self.sample_col_prefix = sample_col_prefix.strip() #remove the space
         self.protein_separator = ';'
         self.custom_col_name = custom_col_name
         self.sample_list: Optional[List[str]] = None
@@ -130,15 +132,27 @@ class TaxaFuncAnalyzer:
         col_names = self.original_df.columns.tolist()
         # replace space with _
         col_names = [i.replace(' ', '_') for i in col_names]
-        intensity_col_names = [i for i in col_names if i.startswith('Intensity_')]
+        intensity_col_names = [i for i in col_names if i.startswith(self.sample_col_prefix)]
+        # remove the prefix itself, for the case that the "Intensity" is a column showing the total intensity of all samples
+        intensity_col_names = [i for i in intensity_col_names if i != self.sample_col_prefix] 
+        
         if len(intensity_col_names) > 0:
-            intensity_col_names = [i.replace('Intensity_', '') for i in intensity_col_names]
+            # add a _ to the prefix if the prefix is not ended with "_" but the intensity columns are started with "prefix_"
+            if f'{self.sample_col_prefix}_' in intensity_col_names[0]:
+                self.sample_col_prefix = f'{self.sample_col_prefix}_'
+                
+            intensity_col_names = [i.replace(self.sample_col_prefix, '') for i in intensity_col_names]
             self.sample_list = intensity_col_names
+        else:
+            raise ValueError(f"The OTF data must have Intensity columns: with prefix [{self.sample_col_prefix}]")
         ####
 
-        # replace space with _ and remove Intensity_
-        self.original_df.columns = self.original_df.columns.str.replace(
-            ' ', '_').str.replace('Intensity_', '')
+        # replace space with _ and remove Intensity_ of original_df columns
+        original_col_names = self.original_df.columns.tolist()
+        original_col_names = [i.replace(' ', '_') for i in original_col_names]
+        original_col_names = [i.replace(self.sample_col_prefix, '') for i in original_col_names]
+        self.original_df.columns = original_col_names
+
 
     def _set_meta(self, meta_path=None) -> None:
         if meta_path is None:
