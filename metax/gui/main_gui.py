@@ -137,7 +137,7 @@ else:
     from .metax_gui.ui_lca_help import UiLcaHelpDialog
     from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from .metax_gui.generic_thread import FunctionExecutor
-    from .metax.gui.metax_gui.resources import icon_rc
+    from .metax_gui.resources import icon_rc # noqa: F401
     
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -161,6 +161,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         self.MainWindow.resize(1200, 800)
         self.MainWindow.setWindowTitle("MetaX v" + __version__)
+        self.font_size = 12
+        self.current_theme = 'light_blue'
         
         self.logger = LoggerManager()
 
@@ -261,7 +263,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
-        self.screen = self.screen = QApplication.screenAt(QCursor.pos()).geometry()
+        self.screen = QApplication.screenAt(QCursor.pos()).geometry()
 
         self.screen_width = self.screen.width()
         self.screen_height = self.screen.height()
@@ -922,37 +924,81 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         
     ###############   basic function End   ###############
-    
-    
-    
+
     def init_theme_menu(self):
         # Create a menu for themes
         theme_menu = QMenu("Themes", self.MainWindow)
         
         # Fetch all available themes
         themes = list_themes()
-        # replace the .xml suffix
+        # Replace the .xml suffix
         themes = [theme.replace('.xml', '') for theme in themes]
-        # reordering the themes , light theme first
+        # Reorder the themes, light themes first
         light_themes = [theme for theme in themes if "light_" in theme]
         dark_themes = [theme for theme in themes if "dark_" in theme]
         themes = light_themes + dark_themes
         
+        # Add themes to the menu
         for theme in themes:
             theme_action = QAction(theme, self.MainWindow)
-            theme_action.triggered.connect(lambda checked, theme=theme: self.change_theme(theme))
+            theme_action.triggered.connect(lambda checked, theme=theme: self.change_theme(theme, silent=False, is_load_font_size_from_settings=False))
             theme_menu.addAction(theme_action)
         
-        # Add theme menu to menu bar
+        # Add a font size submenu
+        font_size_menu = QMenu("Font Size", self.MainWindow)
+        
+        # Predefined font size options
+        predefined_sizes = [10, 12, 14, 16, 18, 20]
+        
+        for size in predefined_sizes:
+            size_action = QAction(f"{size} pt", self.MainWindow)
+            size_action.triggered.connect(lambda checked, size=size: self.set_font_size(size))
+            font_size_menu.addAction(size_action)
+        
+        # Add an option for custom font size
+        custom_size_action = QAction("Custom...", self.MainWindow)
+        custom_size_action.triggered.connect(self.set_custom_font_size)
+        font_size_menu.addAction(custom_size_action)
+        
+        # Add the font size menu to the theme menu
+        theme_menu.addMenu(font_size_menu)
+        
+        # Add theme menu to the menu bar
         self.MainWindow.menuBar().addMenu(theme_menu)
+
+    def set_font_size(self, size):
+        """
+        Set the font size and apply the current theme.
+        """
+        self.font_size = size
+        self.change_theme(self.current_theme, silent=False, is_load_font_size_from_settings=False)
+
+    def set_custom_font_size(self):
+        """
+        Open a dialog for the user to input a custom font size.
+        """
+        from PyQt5.QtWidgets import QInputDialog
+
+        size, ok = QInputDialog.getInt(
+            self.MainWindow, 
+            "Custom Font Size", 
+            "Enter font size (pt):", 
+            value=self.font_size, 
+            min=8, 
+            max=72
+        )
+        if ok:
+            self.set_font_size(size)
+        
     
     def init_theme(self):
         if self.settings.contains("theme"):
             theme = self.settings.value("theme", type=str)
-            print(f"Loading theme {theme}...")
+            theme = theme if theme != "" else "light_blue"
         else:
             theme = "light_blue"
             print(f"Loading default theme {theme}...")
+        self.current_theme = theme
         self.change_theme(theme, silent=True)
         
         # restore the window size
@@ -967,11 +1013,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
             
 
-    def change_theme(self, theme, silent=False):
+    def change_theme(self, theme, silent=False, is_load_font_size_from_settings=True):
         if not silent:
-            self.show_message(f"Changing theme to {theme}...")
+            text = f"Changing theme to {theme}...\n\nTheme: {theme}\nFont size: {self.font_size}"
+            self.show_message(text)
         # save the theme to settings
         self.settings.setValue("theme", theme)
+        self.current_theme = theme
         
         #! Deprecated, switch to manual change in Settings
         ## save the theme mode to GUI attribute (dark or light)
@@ -1000,8 +1048,22 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             combobox = getattr(self, attribute_name)
             combobox.clear()
         ############### avoid the window size change when change theme ###############
-        
-        
+        if is_load_font_size_from_settings:
+            screen = QApplication.screenAt(QCursor.pos())
+            logical_dpi = screen.logicalDotsPerInch()
+            scaling_factor = logical_dpi / 96.0
+            # read if setting has font size and height
+            if self.settings.contains("font_size"):
+                self.font_size = self.settings.value("font_size", type=int)
+                print(f"Reading font size from settings file: {self.font_size}")
+            else:
+                self.font_size = int(12 * scaling_factor)
+                print(f"Setting default font size: {self.font_size}")
+            
+            
+        font_size = self.font_size
+        height = self.font_size + 8
+
         custom_css = '''
                     QGroupBox {{
                     text-transform: none;
@@ -1017,36 +1079,36 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     text-transform: none;
                     }}
                     QLineEdit {{
-                    font-size: 12px;
+                    font-size: setted_font_size;
                     }}
                     QLabel {{
-                    font-size: 12px;
+                    font-size: setted_font_size;
                     }}
                     QComboBox {{
-                    font-size: 12px;
-                    height: 20px;
+                    font-size: setted_font_size;
+                    height: setted_height;
                     }}
                     QSpinBox {{
-                    font-size: 12px;
-                    height: 20px;
+                    font-size: setted_font_size;
+                    height: setted_height;
                     }}
                     QListWidget {{
-                    font-size: 12px;
+                    font-size: setted_font_size;
                     }}
                     QDoubleSpinBox {{
-                    font-size: 12px;
-                    height: 20px;
+                    font-size: setted_font_size;
+                    height: setted_height;
                     }}
                     QCheckBox {{
-                    font-size: 12px;
-                    height: 20px;
+                    font-size: setted_font_size;
+                    height: setted_height;
                     }}
                     QRadioButton {{
-                    font-size: 12px;
-                    height: 20px;
+                    font-size: setted_font_size;
+                    height: setted_height;
                     }}
                     QToolBox {{
-                    font-size: 12px;
+                    font-size: setted_font_size;
                     font-weight: bold;
                     }}
                     QPushButton {{
@@ -1055,13 +1117,31 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     background-color: {QTMATERIAL_SECONDARYCOLOR};
                     border: 1px solid {QTMATERIAL_PRIMARYCOLOR};
                     border-radius: 2px;
-                    font-size: 12px;
+                    font-size: setted_font_size;
                     padding: 5px;
                     margin: 2px;
-                    height: 20px;
+                    height: setted_height;
                     }}
-
-                    '''
+                    QTabBar {{
+                    font-size: setted_font_size;
+                    }}
+                    QMenuBar {{
+                    font-size: setted_font_size;
+                    }}
+                    QMenuBar::item {{
+                    font-size: setted_font_size;
+                    }}
+                    QTextBrowser {{
+                    font-size: setted_font_size;
+                    }}
+                    QTableWidget {{
+                    font-size: setted_font_size;
+                    }}
+                    QHeaderView::section {{
+                    font-size: setted_font_size;
+                    }}
+         
+                    '''.replace('setted_font_size', f'{font_size}px').replace('setted_height', f'{height}px')
         current_app = QtWidgets.QApplication.instance()
 
         extra = {
@@ -1070,10 +1150,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # Apply the selected theme
         if "light" in theme:
-            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
+            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: setted_font_size;} QMessageBox{background-color: white;}".replace('setted_font_size', f'{font_size}px')
             apply_stylesheet(current_app, theme=theme, invert_secondary=True, extra=extra)
         else:
-            self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: 12px;} QMessageBox{background-color: #333;}"
+            self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: setted_font_size;} QMessageBox{background-color: #333;}".replace('setted_font_size', f'{font_size}px')
             # set text color to white of QComboBox , QSpinBox and QDoubleSpinBox , lineEdit
             custom_css += '''
                         QComboBox {{
@@ -1288,6 +1368,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
         # save current window size
         self.settings.setValue("window_size", self.MainWindow.size())
+        
+        # save font_size
+        self.settings.setValue("font_size", self.font_size)
 
 
     def save_set_multi_table_settings(self):
@@ -1519,8 +1602,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
         reply = msgBox.exec()
         
-        if reply == 0 or reply == 1:
+        if reply == 0 or reply == 1: # 0 is save and close, 1 is close without saving
             try:
+
                 if reply == 0:
                     self.show_message("Saving settings...", "Closing...")
                     if getattr(self, 'tfa', None) is None:
@@ -1528,7 +1612,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         self.save_basic_settings()
                     else:
                         self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
-                    
+                else: # close without saving
+                    # save settings.ini only
+                    self.save_basic_settings()
+
                 # 关闭 self.web_list 中的所有窗口
                 for web_window in self.web_list:
                     web_window.close()
@@ -1751,8 +1838,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         self.msg.setWindowModality(Qt.NonModal)
         self.msg.setWindowTitle(title)
-        if not hasattr(self, 'msgbox_style'):
-            self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: 12px;} QMessageBox{background-color: white;}"
         self.msg.setStyleSheet(self.msgbox_style)
         self.msg.setText(message)
         
