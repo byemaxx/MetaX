@@ -1,3 +1,8 @@
+# Version: 1.120.2
+## Date: 2024-12-16
+### Changes:
+- Fix: the colnames of OTF may be not correct when Annotator with custom data.
+
 # Version: 1.120.1
 ## Date: 2024-12-16
 ### Changes:

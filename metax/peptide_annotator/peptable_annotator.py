@@ -17,7 +17,7 @@ else:
 class PeptideAnnotator:
     def __init__(self, db_path:str, peptide_path: str, output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
-                 protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity_',
+                 protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_contains:str='REV_'):
 
         self.db_path = db_path
@@ -30,7 +30,7 @@ class PeptideAnnotator:
         self.protein_genome_separator = protein_genome_separator # the separator between protein and genome in each protein ID
         self.protein_col = protein_col
         self.peptide_col = peptide_col
-        self.sample_col_prefix = sample_col_prefix
+        self.sample_col_prefix = sample_col_prefix.strip()
         self.distinct_genome_threshold = distinct_genome_threshold
         self.exclude_protein_contains = exclude_protein_contains
         
@@ -198,9 +198,17 @@ class PeptideAnnotator:
         print(f'Peptides number: from [{original_num}] -> [{df.shape[0]}] after filtering genomes with distinct peptides')
         return df
         
-        
-        
-        
+    def rename_columns(self, df):
+        # remove the prefix of the peptide, protein and sample prefix columns
+        # to standardize the column names avoiding the error in the OTF Analyzer
+        cols = df.columns.tolist()
+        cols = [col.replace(self.peptide_col, 'Sequence') for col in cols]
+        cols = [col.replace(self.protein_col, 'Proteins') for col in cols]
+        cols = [col.replace(self.sample_col_prefix, 'Intensity_') for col in cols]
+        # replace the "Intensity__" to "Intensity_" if there are any
+        cols = [col.replace('Intensity__', 'Intensity_') for col in cols]
+        df.columns = cols
+        return df
 
     def run_annotate(self):
         print('Start running Peptide Annotator...')
@@ -218,8 +226,11 @@ class PeptideAnnotator:
         df.columns = [col.replace(' ', '_') for col in df.columns]
         
         print(f'Original shape: {df.shape}')
-        # exxtract the peptide sequence, protein accessions and sample columns from the dataframe
-        df = df.loc[:, [self.peptide_col, self.protein_col] + [col for col in df.columns if col.startswith(self.sample_col_prefix)]]
+        # extract the peptide sequence, protein accessions and sample columns from the dataframe
+        intensity_cols = [col for col in df.columns if col.startswith(self.sample_col_prefix)]
+        # remove the columns only containing self.sample_col_prefix, rather than starting with self.sample_col_prefix
+        intensity_cols = [col for col in intensity_cols if col != self.sample_col_prefix]
+        df = df.loc[:, [self.peptide_col, self.protein_col] + intensity_cols]
         
         print(f'After filtering Intensity 0 in all samples and removing other columns: {df.shape}')
         
@@ -228,6 +239,8 @@ class PeptideAnnotator:
         df = self.filter_genome_with_distinct_pep_num(df)
         
         df_res = self.run_2_result(df)
+        
+        df_res = self.rename_columns(df_res)
         
         self.save_result(df_res)
         
