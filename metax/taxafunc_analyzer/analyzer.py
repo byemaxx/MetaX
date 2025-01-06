@@ -40,13 +40,13 @@ warnings.filterwarnings('ignore')
 class TaxaFuncAnalyzer:
     def __init__(
         self,
-        df_path,
-        meta_path=None,
-        peptide_col_name="Sequence",
-        protein_col_name="Proteins",
-        sample_col_prefix='Intensity',
-        any_df_mode=False,
-        custom_col_name="Custom",
+        df_path:str,
+        meta_path:str|None=None,
+        peptide_col_name:str="Sequence",
+        protein_col_name:str="Proteins",
+        sample_col_prefix:str='Intensity',
+        any_df_mode:bool=False,
+        custom_col_name:str="Custom", # for any_df_mode
     ):
         self.original_row_num = 0
         self.original_df: Optional[pd.DataFrame] = None
