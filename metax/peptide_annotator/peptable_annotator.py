@@ -15,11 +15,30 @@ else:
     
     
 class PeptideAnnotator:
+    """
+    A class to annotate peptides with taxonomic and functional information.
+    Attributes:
+        db_path (str): Path to the database file.
+        peptide_path (str): Path to the input peptide file.
+        output_path (str): Path to the output file.
+        threshold (float): Threshold value for annotation.
+        genome_mode (bool): Flag to indicate genome mode.
+        protein_separator (str): Separator between proteins in the proteins group column.
+        protein_genome_separator (str): Separator between protein and genome in each protein ID.
+        protein_col (str): Column name for proteins.
+        peptide_col (str): Column name for peptides.
+        sample_col_prefix (str): Prefix for sample columns.
+        distinct_genome_threshold (int): Threshold for distinct genome count.
+        exclude_protein_startwith (str): Prefix for proteins to exclude.
+
+    Methods:
+        run_annotate():
+            Runs the entire annotation process and returns the annotated dataframe.
+    """
     def __init__(self, db_path:str, peptide_path: str, output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
-                 distinct_genome_threshold:int=0, exclude_protein_contains:str='REV_'):
-
+                 distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_'):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.output_path = output_path
@@ -32,7 +51,7 @@ class PeptideAnnotator:
         self.peptide_col = peptide_col
         self.sample_col_prefix = sample_col_prefix.strip()
         self.distinct_genome_threshold = distinct_genome_threshold
-        self.exclude_protein_contains = exclude_protein_contains
+        self.exclude_protein_startwith = exclude_protein_startwith
         
         self.thread_local = threading.local()
         
@@ -152,12 +171,21 @@ class PeptideAnnotator:
 
 
     def exclude_proteins(self, df):
-        print(f'Removing reversed proteins containing [{self.exclude_protein_contains}]...')
+        print(f'Removing proteins name satart with [{self.exclude_protein_startwith}]...')
         try:
-            df = df[~df[self.protein_col].str.contains(self.exclude_protein_contains)]
-            print(f'After removing reversed proteins: {df.shape}')
+            exclude_list = self.exclude_protein_startwith.split(';')
+            exclude_list = [excl.strip() for excl in exclude_list]
+            exclude_list = [excl for excl in exclude_list if excl != '']
+            
+            if len(exclude_list) == 0:
+                print('No proteins to exclude.')
+                return df
+            
+            for exclude_str in exclude_list:
+                df = df[~df[self.protein_col].str.startswith(exclude_str)]
+            print(f'After removing exclude proteins: {df.shape}')
         except Exception as e:
-            print('Error: removing reversed proteins failed!')
+            print('Error: removing exclude proteins failed!')
             print(e)
             
         return df
@@ -249,7 +277,7 @@ class PeptideAnnotator:
 if __name__ == '__main__':
     current_path = os.path.dirname(os.path.abspath(__file__))
     # db_path = 'UHGP.db'
-    db_path = os.path.join(current_path, '../../local_tests/UHGP.db')
+    db_path = os.path.join(current_path, '../../.local_tests/UHGP.db')
     # final_peptides_path = 'peptide.tsv'
     final_peptides_path = os.path.join(current_path, '../data/example_data/Example_final_peptide.tsv')
     output_path = 'OTF.tsv'
@@ -268,6 +296,7 @@ if __name__ == '__main__':
         peptide_col='Sequence',
         sample_col_prefix='Intensity',
         distinct_genome_threshold=3,
+        exclude_protein_startwith='REV_;XXX_' # separated by ';'
         
     )
     annotator.run_annotate()

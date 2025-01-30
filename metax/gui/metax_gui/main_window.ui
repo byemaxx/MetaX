@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -257,8 +257,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>462</width>
-                 <height>527</height>
+                 <width>391</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1842,7 +1842,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
+                        <width>801</width>
                         <height>239</height>
                        </rect>
                       </property>
@@ -4157,7 +4157,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>889</width>
+                       <width>872</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -6088,8 +6088,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>865</width>
-                           <height>95</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6821,8 +6821,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>168</height>
+                        <width>493</width>
+                        <height>128</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -9611,8 +9611,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>155</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10129,17 +10129,17 @@
                     <item row="3" column="2">
                      <widget class="QLabel" name="label_205">
                       <property name="text">
-                       <string>Exclude Protein with</string>
+                       <string>Prefix for Proteins to Exclude</string>
                       </property>
                      </widget>
                     </item>
                     <item row="3" column="3">
-                     <widget class="QLineEdit" name="lineEdit_annotator_exclude_protein_contains">
+                     <widget class="QLineEdit" name="lineEdit_annotator_exclude_protein_startwith">
                       <property name="toolTip">
-                       <string>Remove the peptides which annoate to exclude proteins</string>
+                       <string>Remove the peptides which annoate to exclude proteins, Separated by ';' if multiple.(e.g.: REV_;Human_)</string>
                       </property>
                       <property name="text">
-                       <string>REV_</string>
+                       <string>REV_;</string>
                       </property>
                      </widget>
                     </item>
@@ -10243,8 +10243,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
-                    <height>41</height>
+                    <width>913</width>
+                    <height>490</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -10881,7 +10881,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

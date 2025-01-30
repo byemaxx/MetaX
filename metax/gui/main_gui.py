@@ -2274,7 +2274,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         protein_col = self.lineEdit_annotator_protein_col_name.text()
         sample_col_prefix = self.lineEdit_annotator_sample_col_prefix.text()
         distinct_genome_threshold = self.spinBox_annotator_distinct_num_threshold.value()
-        exclude_protein_contains = self.lineEdit_annotator_exclude_protein_contains.text()
+        exclude_protein_startwith = self.lineEdit_annotator_exclude_protein_startwith.text()
 
         if db_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select database!')
@@ -2298,7 +2298,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         peptide_col=peptide_col,
                         sample_col_prefix=sample_col_prefix,
                         distinct_genome_threshold=distinct_genome_threshold,
-                        exclude_protein_contains = exclude_protein_contains
+                        exclude_protein_startwith = exclude_protein_startwith
                         
                     )
                     return instance.run_annotate()
