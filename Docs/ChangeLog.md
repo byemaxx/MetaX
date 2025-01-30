@@ -1,3 +1,8 @@
+# Version: 1.120.3
+## Date: 2025-01-30
+### Changes:
+- Change: Pepetide Annatator now can remove proteins with multiple prefix.
+
 # Version: 1.120.2
 ## Date: 2024-12-16
 ### Changes:
