@@ -1,3 +1,9 @@
+# Version: 1.120.4
+## Date: 2025-02-04
+### Changes:
+- Fix the bug in Any Data Mode: wrong res table when the custom col name conflicts with the default KeyWords name.
+
+
 # Version: 1.120.3
 ## Date: 2025-01-30
 ### Changes:
