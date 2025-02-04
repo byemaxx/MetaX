@@ -107,7 +107,15 @@ class TaxaFuncAnalyzer:
         self.original_df = pd.read_csv(df_path, sep='\t')
 
         if self.any_df_mode:
-            self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
+            # self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
+            if self.custom_col_name == 'Custom':
+                potential_col_name = self.original_df.columns.tolist()[0]
+                # suffix _custom to the column name if the column name is in the default list
+                while potential_col_name in ['LCA_level', 'Taxon', 'Taxon_prop', 'Not_Applicable', 'Not_Applicable_prop', 'Sequence']:
+                    potential_col_name += '_custom'
+                self.custom_col_name = potential_col_name
+                self.original_df.rename(columns={self.original_df.columns[0]: self.custom_col_name}, inplace=True)
+
             self.sample_list = self.original_df.columns.tolist()[1:]
             #create a column 'LCA_level' with 'life' for other_df
             self.original_df['LCA_level'] = 'life'
