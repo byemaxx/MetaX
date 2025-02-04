@@ -74,22 +74,19 @@ class GenomeRank:
         return df_peptide_counts
 
     def _calculate_genome_coverage(self, genome_rank_list, target_to_peptides):
-        # 初始化一个空集合，用于追踪已统计的peptides
         unique_peptides = set()
         cumulative_counts = []
         new_counts = []
 
-        # 逐个取出target并统计新增peptide数量
         for target in genome_rank_list:
             peptides = target_to_peptides[target]
-            # 使用集合运算计算新增的peptides数量
+            # Calculate new peptides that are not in the unique_peptides set
             new_peptides = peptides - unique_peptides
             unique_peptides.update(new_peptides)
-            # 记录累积的peptide数量和新增的peptide数量
+            # Append counts
             cumulative_counts.append(len(unique_peptides))
             new_counts.append(len(new_peptides))
 
-        # 创建 DataFrame
         df_results_by_rank = pd.DataFrame({
             self.genome_column: genome_rank_list,
             'cumulative_peptides': cumulative_counts,
@@ -101,7 +98,6 @@ class GenomeRank:
 
     def _calculate_turning_point(self, df_results_by_rank, window_size = 20, std_threshold = 1):
         rolling_std = df_results_by_rank['cumulative_peptides'].rolling(window=window_size).std()
-        # 寻找标准差显著下降的位置
         std_threshold = rolling_std.mean() * std_threshold
         # print(f"Threshold: {std_threshold}")
         turning_point_idx = (rolling_std[rolling_std < std_threshold].index[0]
