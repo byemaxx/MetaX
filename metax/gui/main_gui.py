@@ -241,7 +241,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
-        self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
         self.actionTutorial.setIcon(qta.icon('mdi6.book-open-page-variant-outline'))
@@ -259,7 +258,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
         self.actionDebug_Console.triggered.connect(self.show_command_line_window)
-        self.actionAny_Table_Mode.triggered.connect(self.set_any_table_mode)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
@@ -915,7 +913,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
                          "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
                          "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
-                         "groupBox_peptide_annotator_settings"
+                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -1261,17 +1259,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             else:
                 windll.user32.ShowWindow(hwnd, 1)
                 self.console_visible = True
-
-    def set_any_table_mode(self):
-        if  self.any_table_mode is False:
-            self.label_12.setText('Custom Table')
-            self.any_table_mode = True
-            QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [enabled].\n\nYou can use any table as input.")
-        
-        else: # any_table_mode currently is True
-            self.label_12.setText('OTF Table')
-            self.any_table_mode = False
-            QMessageBox.information(self.MainWindow, "OTF Table Mode", "Any Table Mode is [disabled].\n\nYou can only use the table from Peptide Annotator as input.")
 
     def init_QSettings(self):
         settings_path =self.metax_home_path
@@ -2500,6 +2487,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             taxafunc_path = self.lineEdit_taxafunc_path.text()
             meta_path = self.lineEdit_meta_path.text()
+            peptide_col_name = self.lineEdit_otf_analyzer_peptide_col_name.text()
+            protein_col_name = self.lineEdit_otf_analyzer_protein_col_name.text()
+            sample_col_prefix = self.lineEdit_otf_analyzer_sample_col_prefix.text()
+            any_df_mode = self.checkBox_otf_analyzer_any_data_mode.isChecked()
+            custom_col_name = self.lineEdit_otf_analyzer_custom_col_name.text()
             
             # check if taxafunc_path selected and exists
             if not taxafunc_path:
@@ -2510,13 +2502,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'OTF table file not found!')
                     return
                 
-            # check if in any_df_mode
-            any_df_mode = self.any_table_mode
             if any_df_mode:
                 # ask if continue in any_df_mode
-                reply = QMessageBox.question(self.MainWindow, 'Warning', 'You are in custom mode, continue?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                msg = 'You are in custom mode, continue?'
+                if custom_col_name:
+                    msg += f'\n\nThe items column name is [{custom_col_name}]'
+                else:
+                    msg += '\n\nThe items column name is not set, the first column will be used as items'
+                    
+                if sample_col_prefix:
+                    msg += f'\n\nThe sample columns prefix is [{sample_col_prefix}]'
+                else:
+                    msg += '\n\nThe sample columns prefix is not set, the 2nd to last column will be used as samples'
+                    
+                    
+                reply = QMessageBox.question(self.MainWindow, 'Warning', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.No:
                     return
+                
                 
                 
             # check if meta_path selected and exists
@@ -2524,8 +2527,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # check if "Intensity" in taxafunc fisrt row
                 with open(taxafunc_path, 'r') as f:
                     first_line = f.readline()
-                    if 'Intensity' not in first_line and any_df_mode is False:
-                        QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Meta table!')
+                    if sample_col_prefix not in first_line and any_df_mode is False:
+                        QMessageBox.warning(self.MainWindow, 'Warning', f'Please select Meta table or check your OTF table!\n\n[{sample_col_prefix}] not found in the first row of OTF table!')
                         return
                     
                 # ask if continue without meta table
@@ -2542,18 +2545,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             self.show_message('Operational Taxa-Functions (OTF) Analyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}, Any_df_mode: {any_df_mode}')
-            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode}
+            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode, 
+                               'peptide_col_name': peptide_col_name, 'protein_col_name': protein_col_name,
+                               'sample_col_prefix': sample_col_prefix, 'custom_col_name': custom_col_name}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
             self.callback_after_set_taxafunc(self.tfa, True)
             
             
-        except Exception:
+        except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
             if "The OTF data must have Taxon_prop column!" in error_message:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Your OTF table looks like not correct, please check!')
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
             
         finally:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)

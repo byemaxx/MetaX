@@ -1,3 +1,8 @@
+# Version: 1.121.0
+## Date: 2025-02-04
+### Changes:
+- New: Added Advanced Parameters for OTF Analyzer.
+
 # Version: 1.120.4
 ## Date: 2025-02-04
 ### Changes:

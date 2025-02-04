@@ -53,6 +53,8 @@ class TaxaFuncAnalyzer:
         self.has_na_in_original_df = False
         self.genome_mode = True
 
+        self.df_path = df_path
+        self.meta_path = meta_path
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
         self.sample_col_prefix = sample_col_prefix.strip() #remove the space
@@ -107,16 +109,35 @@ class TaxaFuncAnalyzer:
         self.original_df = pd.read_csv(df_path, sep='\t')
 
         if self.any_df_mode:
-            # self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
-            if self.custom_col_name == 'Custom':
-                potential_col_name = self.original_df.columns.tolist()[0]
-                # suffix _custom to the column name if the column name is in the default list
-                while potential_col_name in ['LCA_level', 'Taxon', 'Taxon_prop', 'Not_Applicable', 'Not_Applicable_prop', 'Sequence']:
-                    potential_col_name += '_custom'
-                self.custom_col_name = potential_col_name
-                self.original_df.rename(columns={self.original_df.columns[0]: self.custom_col_name}, inplace=True)
-
-            self.sample_list = self.original_df.columns.tolist()[1:]
+            if self.custom_col_name == '': # if the custom_col_name is not provided, use the first column name
+                items_col_name = self.original_df.columns.tolist()[0]
+            else:
+                # check if the custom_col_name is in the original_df.columns
+                if self.custom_col_name not in self.original_df.columns:
+                    raise ValueError(f"The Items column with [{self.custom_col_name}] is not in the Original table!")
+                items_col_name = self.custom_col_name
+                
+            # suffix _custom to the column name if the column name is in the default list
+            if items_col_name in ['LCA_level', 'Taxon', 'Taxon_prop', 'Not_Applicable', 'Not_Applicable_prop', 'Sequence']:
+                new_col_name = f'{items_col_name}_custom'
+                self.original_df.rename(columns={items_col_name: new_col_name}, inplace=True)
+                self.custom_col_name = new_col_name
+                
+            if self.sample_col_prefix == '': # if the prefix_col_name is not provided, use the first column name
+                sample_list = self.original_df.columns.tolist()
+                sample_list.remove(self.custom_col_name)
+                self.sample_list = sample_list
+            else:
+                # check if the prefix_col_name is in the original_df.columns
+                table_col_list = self.original_df.columns.tolist()
+                if [i for i in table_col_list if i.startswith(self.sample_col_prefix)] == []:
+                    if self.meta_path is None:
+                        raise ValueError(f"The Sample columns with prefix [{self.sample_col_prefix}] is not in the Original table!")
+                    sample_list = None
+                else:
+                    sample_list = [i for i in self.original_df.columns.tolist() if i.startswith(self.sample_col_prefix)]
+                self.sample_list = sample_list
+                
             #create a column 'LCA_level' with 'life' for other_df
             self.original_df['LCA_level'] = 'life'
             self.original_df['Taxon'] = 'd__Bacteria'
@@ -152,7 +173,7 @@ class TaxaFuncAnalyzer:
             intensity_col_names = [i.replace(self.sample_col_prefix, '') for i in intensity_col_names]
             self.sample_list = intensity_col_names
         else:
-            raise ValueError(f"The OTF data must have Intensity columns: with prefix [{self.sample_col_prefix}]")
+            raise ValueError(f"Can not find the sample columns with prefix [{self.sample_col_prefix}] in the Original table!")
         ####
 
         # replace space with _ and remove Intensity_ of original_df columns
@@ -167,7 +188,7 @@ class TaxaFuncAnalyzer:
             if self.sample_list is None:
                 raise ValueError("Please provide the meta data!")
             else:
-                print('Meta data is not provided, sample_list is created by Intensity_* columns.')
+                print(f'Meta data is not provided, sample_list is created by [{self.sample_col_prefix}]')
                 meta = pd.DataFrame({'Sample': self.sample_list, 'Group_NA': 'NA', 'Sample_Name': self.sample_list})
                 self.meta_df = meta
         else:
@@ -177,8 +198,8 @@ class TaxaFuncAnalyzer:
             # rename the first column to Sample
             meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
             # replace space with _ and remove Intensity_
-            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_').replace('Intensity_', ''))
-            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_').replace(f'{self.sample_col_prefix}_', ''))
+            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x) # type: ignore
             # remove duplicate rows if exists
             if meta.duplicated().any():
                 # print the duplicated rows
