@@ -46,7 +46,7 @@ class FunctionExecutor(QMainWindow):
         # set the size of the window as 1/3 of the screen
         size = QApplication.primaryScreen().size()
         
-        self.resize(int(size.width() // 2.5), int(size.height() // 3.5))
+        self.resize(int(size.width() // 2.2), int(size.height() // 3.5))
 
         # set flag as the window size can be changed
         # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
