@@ -12,6 +12,7 @@ import sqlite3
 import json
 import pandas as pd
 from tqdm import tqdm
+
 if __name__ == "__main__":
     from get_genome_rank import GenomeRank
     from peptable_annotator import PeptideAnnotator
@@ -62,8 +63,9 @@ class peptideProteinsMapper:
                  table_separator='\t',
                  peptide_col='Sequence', 
                  intensity_col_prefix='Intensity',
-                 peptide_coverage_cutoff=0.95,
-                 output_path=None
+                 genome_peptide_coverage_cutoff=0.95,
+                 protein_peptide_coverage_cutoff=0.95,
+                 output_path=None,
                  ):
 
         self.peptide_table_path = peptide_table_path
@@ -71,7 +73,8 @@ class peptideProteinsMapper:
         self.table_separator = table_separator
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
-        self.peptide_coverage_cutoff = peptide_coverage_cutoff
+        self.genome_peptide_coverage_cutoff = genome_peptide_coverage_cutoff
+        self.protein_peptide_coverage_cutoff = protein_peptide_coverage_cutoff
         self.output_path = output_path
         
         self.has_intensity = False
@@ -135,40 +138,75 @@ class peptideProteinsMapper:
                                  peptide_column = self.peptide_col,
                                  genome_column = 'Genomes',
                                  genome_separator = ';')
-        df_results_rank_by_distinct = gr.get_rank_covre_df(genome_rank_method='combined', 
+        df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
                                                            weight_distinct=0.9, weight_peptide=0.1)
-        self.genome_ranked_table = df_results_rank_by_distinct
+        self.genome_ranked_table = df_results_rank
         # cutoff indes is  "coverage_ratio" > peptide_coverage_cutoff
-        cutoff_index = df_results_rank_by_distinct[df_results_rank_by_distinct['coverage_ratio'] >= self.peptide_coverage_cutoff].index[0]
-        selected_genomes = df_results_rank_by_distinct.loc[:cutoff_index]
+        cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]
+        selected_genomes = df_results_rank.loc[:cutoff_index]
         selected_genomes_list = selected_genomes['Genomes'].tolist()
-        print(f"The number of selected genomes: {len(selected_genomes_list)}.\nThe last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}")
+        print(f'Original genomes: [{df_results_rank.shape[0]}]')
+        print(f"The number of selected genomes: [{len(selected_genomes_list)}].\nThe last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}")
         return selected_genomes_list
     
-    def reduce_proteins(self, df, selected_genomes_list):
-        # remove prteins that are not in the keep_genomes of "proteins" in df
-        def filter_proteins(proteins, keep_genomes):
-            if proteins == '':
-                return ''
-            proteins = proteins.split(';')
-            proteins = [protein for protein in proteins if protein.split('_')[0] in keep_genomes]
-            return ';'.join(proteins)
-        print("filtering proteins by selected genomes")
+    def calculate_protein_list(self, df):
+        print("reducing proteins by genome ranking")
+        gr = GenomeRank(df = df,
+                                    peptide_column = self.peptide_col,
+                                    genome_column = 'Proteins',
+                                    genome_separator = ';')
+        df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
+                                                        weight_distinct=0.9, weight_peptide=0.1)
+        self.protein_ranked_table = df_results_rank
+        cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.protein_peptide_coverage_cutoff].index[0]
+        selected_proteins = df_results_rank.loc[:cutoff_index]
+        selected_proteins_list = selected_proteins['Proteins'].tolist()
+        print(f'Original proteins: [{df_results_rank.shape[0]}]')
+        print(f"The number of selected proteins: [{len(selected_proteins_list)}].\nThe last protein with coverage_ratio: {selected_proteins.iloc[-1]['coverage_ratio']}")
+        return selected_proteins_list
+
+    def reduce_proteins_by_genome(self, df, selected_genomes_list):
+        print("Filtering proteins by selected genomes")
         original_peptides = df.shape[0]
-        df['Proteins'] = df['Proteins'].apply(filter_proteins, args=(selected_genomes_list,))
+
+        selected_genomes_set = set(selected_genomes_list)
+        df['Proteins'] = df['Proteins'].astype(str).str.split(';')
+        df['Proteins'] = df['Proteins'].apply(lambda proteins: ';'.join([p for p in proteins if p.split('_')[0] in selected_genomes_set]))
+        
         df = df[df['Proteins'] != '']
-        print(f"original peptides: {original_peptides}, after filtering: {df.shape[0]}")
+        
+        print(f"Original peptides: {original_peptides}, after filtering: {df.shape[0]}")
         print(f"Removed peptides: {original_peptides - df.shape[0]}, due to no protein left after filtering by selected genomes")
-        # remove the genome column
-        df = df.drop(columns=['Genomes'])
+        print("-" * 20)
+
+        if 'Genomes' in df.columns:
+            df = df.drop(columns=['Genomes'])
+
         return df
     
-    
+    def reduce_proteins_by_mini_proteins_list(self, df, selected_proteins_list):
+        print("Filtering proteins by selected proteins")
+        original_peptides = df.shape[0]
+
+        selected_proteins_set = set(selected_proteins_list)  
+        df['Proteins'] = df['Proteins'].astype(str).str.split(';')
+        df['Proteins'] = df['Proteins'].apply(lambda proteins: ';'.join([p for p in proteins if p in selected_proteins_set]))
+
+        df = df[df['Proteins'] != '']
+        
+        print(f"Original peptides: {original_peptides}, after filtering: {df.shape[0]}")
+        print("-" * 20)
+        
+        return df
+
+
     def process_peptides_to_proteins(self):# main function workflow
         self.annotate_peptides()
         self.extract_genome_col(self.peptide_table)
         selected_genomes_list = self.calculate_genome_list(self.peptide_table)
-        self.final_peptide_table = self.reduce_proteins(self.peptide_table, selected_genomes_list)
+        self.final_peptide_table = self.reduce_proteins_by_genome(self.peptide_table, selected_genomes_list)
+        selected_proteins_list = self.calculate_protein_list(self.final_peptide_table)
+        self.final_peptide_table = self.reduce_proteins_by_mini_proteins_list(self.final_peptide_table, selected_proteins_list)
         return self.final_peptide_table
 
 
@@ -204,21 +242,23 @@ class peptideProteinsMapper:
         
         
 if __name__ == "__main__":
-    peptide_table_path = "/report.pr_matrix.tsv"
-    db_path = "peptide_to_protein.db"
+    peptide_table_path = "C:/Users/Qing/Desktop/test/report.pr_matrix _test.tsv"
+    db_path = "C:/Users/Qing/OneDrive - University of Ottawa/Projects/UHGP_digested_db/peptide_to_protein.db"
     
     ## test process_peptides_to_proteins
-    # output_path = "anntated_report.pr_matrix.tsv"
-    # peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-    #                                        peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t')
-    # peptide_mapper.process_peptides_to_proteins()
-    # peptide_mapper.final_peptide_table.to_csv(output_path, sep='\t', index=False)
-    # print("peptide annotation finished")
+    output_path = "anntated_report.pr_matrix.tsv"
+    peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
+                                           peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
+                                             genome_peptide_coverage_cutoff=0.98, protein_peptide_coverage_cutoff=1)
+    peptide_mapper.process_peptides_to_proteins()
+    peptide_mapper.final_peptide_table.to_csv(output_path, sep='\t', index=False)
+    print("peptide annotation finished")
     
     # # test all_in_one
-    taxafunc_anno_db_path = "MetaX-human-gut_20231211.db"
-    output_path = "all_in_one_report.pr_matrix.tsv"
-    peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-                                           peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t')
-    peptide_mapper.all_in_one(taxafunc_anno_db_path=taxafunc_anno_db_path)
-    print("all in one finished")
+    # taxafunc_anno_db_path = "C:/Users/Qing/Desktop/MetaX_Suite/metaX_dev_files/MetaX_db_protein_to_TaxaFunc.db"
+    # output_path = "C:/Users/Qing/Desktop/test/all_in_one_report.pr_matrix.tsv"
+    # peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
+    #                                        peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
+    #                                        genome_peptide_coverage_cutoff=0.95, protein_peptide_coverage_cutoff=0.98)
+    # peptide_mapper.all_in_one(taxafunc_anno_db_path=taxafunc_anno_db_path)
+    # print("all in one finished")

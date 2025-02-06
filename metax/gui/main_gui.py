@@ -925,7 +925,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
                          "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
                          "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
-                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings"
+                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
+                         "groupBox_pep_direct_to_otf"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -2373,7 +2374,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         table_separator = self.lineEdit_pep_direct_to_otf_pep_table_sep.text()
         peptide_col = self.lineEdit_pep_direct_to_otf_peptide_col_name.text()
         intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text()
-        peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_coverage_cutoff.value(), 3)
+        genome_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.value(), 3)
+        protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text()
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
@@ -2384,6 +2386,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             or table_separator == '' or peptide_col == '' or intensity_col_prefix == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
             return None
+        # check if the file exists in the path
+        for file in [peptide_table_path, digested_pep_db_path, taxafunc_anno_db_path]:
+            if not os.path.exists(file):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
+                return None
+                
         try:
             self.logger.write_log(f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} digested_pep_db_path:{digested_pep_db_path} output_path:{output_path} taxafunc_anno_db_path:{taxafunc_anno_db_path}')
             def pep_direct_to_otf_main_wrapper():
@@ -2393,8 +2401,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     table_separator=table_separator,
                     peptide_col=peptide_col,
                     intensity_col_prefix=intensity_col_prefix,
-                    peptide_coverage_cutoff=peptide_coverage_cutoff,
-                    output_path=output_path)
+                    genome_peptide_coverage_cutoff= genome_peptide_coverage_cutoff,
+                    protein_peptide_coverage_cutoff= protein_peptide_coverage_cutoff,
+                    output_path=output_path
+                    )
                 return instance.all_in_one(
                     taxafunc_anno_db_path = taxafunc_anno_db_path,
                     lca_threshold = lca_threshold,

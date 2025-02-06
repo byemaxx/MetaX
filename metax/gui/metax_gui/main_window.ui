@@ -355,8 +355,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>391</width>
-                 <height>80</height>
+                 <width>462</width>
+                 <height>531</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1940,7 +1940,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>801</width>
+                        <width>885</width>
                         <height>239</height>
                        </rect>
                       </property>
@@ -4255,7 +4255,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>872</width>
+                       <width>889</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -6186,8 +6186,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>535</width>
-                           <height>94</height>
+                           <width>865</width>
+                           <height>95</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6919,8 +6919,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>493</width>
-                        <height>128</height>
+                        <width>885</width>
+                        <height>170</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -9709,8 +9709,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>383</width>
-                        <height>68</height>
+                        <width>885</width>
+                        <height>158</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10341,8 +10341,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
-                    <height>41</height>
+                    <width>913</width>
+                    <height>490</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -10482,93 +10482,25 @@
                <string>Pepetide Direct to OTFs (Beta)</string>
               </attribute>
               <layout class="QGridLayout" name="gridLayout_74">
-               <item row="2" column="3">
-                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path">
-                 <property name="text">
-                  <string>Open</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0">
+               <item row="5" column="0">
                 <widget class="QCheckBox" name="checkBox_8">
                  <property name="text">
-                  <string>Parameters</string>
+                  <string>Show Advanced Settings</string>
                  </property>
                  <property name="checked">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0" colspan="2">
-                <widget class="QLabel" name="label_222">
-                 <property name="text">
-                  <string>Digested Pepetide Database</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_digestied_pep_db_path">
-                 <property name="text">
-                  <string>Open</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_digestied_pep_db_path"/>
-               </item>
-               <item row="2" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pro2taxafunc_db_path"/>
-               </item>
-               <item row="3" column="0" colspan="2">
-                <widget class="QLabel" name="label_224">
-                 <property name="text">
-                  <string>OTFs Save To</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
-                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_peptide_path">
-                 <property name="text">
-                  <string>Open</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0" colspan="2">
-                <widget class="QLabel" name="label_223">
-                 <property name="text">
-                  <string>Protein to TaxaFunc Database</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_output_path"/>
-               </item>
-               <item row="0" column="0" colspan="2">
-                <widget class="QLabel" name="label_220">
-                 <property name="text">
-                  <string>Peptide Table</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="0" colspan="4">
+               <item row="7" column="0" colspan="4">
                 <widget class="QPushButton" name="pushButton_run_pep_direct_to_otf">
                  <property name="text">
                   <string>GO</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_path"/>
-               </item>
-               <item row="3" column="3">
-                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_output_path">
-                 <property name="text">
-                  <string>Open</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0" colspan="4">
-                <widget class="QGroupBox" name="groupBox_2">
+               <item row="6" column="0" colspan="4">
+                <widget class="QGroupBox" name="groupBox_pep_direct_to_otf">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                    <horstretch>0</horstretch>
@@ -10581,13 +10513,6 @@
                  <layout class="QGridLayout" name="gridLayout_77">
                   <item row="0" column="0">
                    <layout class="QGridLayout" name="gridLayout_76">
-                    <item row="0" column="2">
-                     <widget class="QLabel" name="label_225">
-                      <property name="text">
-                       <string>Separator of Peptide Table</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="4" column="3">
                      <widget class="QSpinBox" name="spinBox_pep_direct_to_otf_distinct_num_threshold">
                       <property name="maximum">
@@ -10612,27 +10537,10 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="1" column="0">
-                     <widget class="QLabel" name="label_227">
-                      <property name="text">
-                       <string>Prefix of Intensity Column</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="2" column="0">
                      <widget class="QLabel" name="label_231">
                       <property name="text">
                        <string>Peptide Coverage Cutoff for Genome Selection</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_sample_col_prefix">
-                      <property name="toolTip">
-                       <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
-                      </property>
-                      <property name="text">
-                       <string>Intensity</string>
                       </property>
                      </widget>
                     </item>
@@ -10659,13 +10567,6 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_col_name">
-                      <property name="text">
-                       <string>Stripped.Sequence</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="4" column="0">
                      <widget class="QLabel" name="label_230">
                       <property name="text">
@@ -10674,9 +10575,12 @@
                      </widget>
                     </item>
                     <item row="2" column="1">
-                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pep_direct_to_otf_coverage_cutoff">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff">
                       <property name="decimals">
                        <number>3</number>
+                      </property>
+                      <property name="minimum">
+                       <double>0.001000000000000</double>
                       </property>
                       <property name="maximum">
                        <double>1.000000000000000</double>
@@ -10689,20 +10593,6 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="0">
-                     <widget class="QLabel" name="label_226">
-                      <property name="text">
-                       <string>Peptide Column Name</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="3">
-                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pep_table_sep">
-                      <property name="text">
-                       <string>\t</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="3" column="0" colspan="4">
                      <widget class="Line" name="line_34">
                       <property name="orientation">
@@ -10710,10 +10600,159 @@
                       </property>
                      </widget>
                     </item>
+                    <item row="2" column="2">
+                     <widget class="QLabel" name="label_232">
+                      <property name="text">
+                       <string>Peptide Coverage Cutoff for Protein Selection</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="3">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff">
+                      <property name="decimals">
+                       <number>3</number>
+                      </property>
+                      <property name="minimum">
+                       <double>0.001000000000000</double>
+                      </property>
+                      <property name="maximum">
+                       <double>1.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.010000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>1.000000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_225">
+                      <property name="text">
+                       <string>Separator of Peptide Table</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pep_table_sep">
+                      <property name="text">
+                       <string>\t</string>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </item>
                  </layout>
                 </widget>
+               </item>
+               <item row="2" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_digestied_pep_db_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_peptide_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_path"/>
+               </item>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="label_220">
+                 <property name="text">
+                  <string>Peptide Table</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_digestied_pep_db_path"/>
+               </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QLabel" name="label_222">
+                 <property name="text">
+                  <string>Digested Pepetide Database</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pro2taxafunc_db_path"/>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QLabel" name="label_223">
+                 <property name="text">
+                  <string>Protein to TaxaFunc Database</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_output_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_output_path"/>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <widget class="QLabel" name="label_224">
+                 <property name="text">
+                  <string>OTFs Save To</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1" colspan="2">
+                <layout class="QGridLayout" name="gridLayout_78">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_226">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>Peptide Column Name</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="label_227">
+                   <property name="text">
+                    <string>Prefix of Intensity Column</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_col_name">
+                   <property name="text">
+                    <string>Stripped.Sequence</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_sample_col_prefix">
+                   <property name="toolTip">
+                    <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
+                   </property>
+                   <property name="text">
+                    <string>Intensity</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
               </layout>
              </widget>
@@ -11219,7 +11258,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -11739,7 +11778,7 @@
   <connection>
    <sender>checkBox_8</sender>
    <signal>toggled(bool)</signal>
-   <receiver>groupBox_2</receiver>
+   <receiver>groupBox_pep_direct_to_otf</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">

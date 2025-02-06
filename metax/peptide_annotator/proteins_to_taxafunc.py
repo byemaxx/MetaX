@@ -87,6 +87,10 @@ class Pep2TaxaFunc:
     # return a list of taxonomic levels of each protein
     def query_taxon_from_db(self, protein_list, genome_mode = True):
         c = self.conn.cursor()
+        # check if the id2taxa table exist
+        c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="id2taxa"')
+        if not c.fetchone():
+            raise ValueError('The table "id2taxa" does not exist in the database')
         taxa = []
         sql = 'SELECT Taxa from id2taxa where ID = ?'
         for i in protein_list:

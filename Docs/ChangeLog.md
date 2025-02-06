@@ -1,3 +1,9 @@
+# Version: 1.121.3
+## Date: 2025-02-06
+### Changes:
+- New: Add coverage selcection for protein of the Direct Peptide Annotation.
+
+
 # Version: 1.121.2
 ## Date: 2025-02-05
 ### Changes:

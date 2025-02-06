@@ -151,15 +151,15 @@ class GenomeRank:
         else:
             raise ValueError("Invalid genome_rank_method")
         
-        print("1st round for genome coverage")
+        print(f"1st round for {self.genome_column} coverage...")
         df_results_by_rank = self._calculate_genome_coverage(genome_rank_list, target_to_peptides)
         # use "add_peptides" as the rank
-        print("2nd round for genome coverage")
+        print(f"2nd round for {self.genome_column} coverage...")
         df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
         new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
         df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
         # again use "add_peptides" as the rank
-        print("3rd round for genome coverage")
+        print(f"3rd round for {self.genome_column} coverage...")
         df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
         new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
         df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
