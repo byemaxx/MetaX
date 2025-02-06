@@ -1,3 +1,15 @@
+# Version: 1.121.2
+## Date: 2025-02-05
+### Changes:
+- New: Add Direct Annotation function for the Peptide Annotator.
+- Fix: Some bugs.
+
+# Version: 1.121.1
+## Date: 2025-02-05
+### Changes:
+- Fix: Fix the bug of Any Data Mode: the prefix of the custom was not replaced correctly.
+
+
 # Version: 1.121.0
 ## Date: 2025-02-04
 ### Changes:

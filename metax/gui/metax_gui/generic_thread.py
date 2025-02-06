@@ -105,19 +105,21 @@ class FunctionExecutor(QMainWindow):
             self.thread.quit()
 
     def update_progress(self, text):
-        # if the text is a progress text, update the progress text
+        scroll_bar = self.text_browser.verticalScrollBar()
+        at_bottom = scroll_bar.value() == scroll_bar.maximum()
+
         if self.progress_regex.search(text):
             all_lines = self.text_browser.toPlainText().split('\n')
             if all_lines:
-                all_lines[-1] = text.strip()  # 如果之前有文本，则更新最后一行
+                all_lines[-1] = text.strip()
             else:
-                all_lines.append(text.strip())  # 如果之前没有文本，则添加新行
-            self.text_browser.setText('\n'.join(all_lines))  # 重新设置文本浏览器的文本
+                all_lines.append(text.strip())
+            self.text_browser.setText('\n'.join(all_lines))
         else:
-            self.text_browser.append(text)  # 对于非进度条文本，正常追加
+            self.text_browser.append(text)
 
-        # 自动滚动到 QTextBrowser 的底部
-        self.text_browser.verticalScrollBar().setValue(self.text_browser.verticalScrollBar().maximum())
+        if at_bottom:
+            scroll_bar.setValue(scroll_bar.maximum())
 
 
     def thread_finished(self):

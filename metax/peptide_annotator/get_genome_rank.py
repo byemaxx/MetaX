@@ -46,22 +46,22 @@ class GenomeRank:
 
 
     def _get_distinct_genomes(self, df, genome_column, genome_separator) -> pd.DataFrame:
-        # 先计算当前具有 distinct peptide 的 genome 频数
+        # count distinct peptides for each genome
         dft = df.loc[:, [genome_column]]
         dft['count'] = dft[genome_column].apply(lambda x: len(x.split(genome_separator)))
         df_genome_distinct = dft[[genome_column, 'count']].astype({'count': 'int'})
         df_genome_distinct = df_genome_distinct[df_genome_distinct['count'] == 1]
         df_genome_distinct = df_genome_distinct.groupby(genome_column).size().sort_values(ascending=False).reset_index(name='distinct_count')
         
-        # 获取所有 genome，并补全没有 distinct peptide 的 genome，count 设置为 0
+        # set 0 for genomes with no distinct peptides
         all_genomes = set(df[genome_column].str.split(genome_separator).explode().unique())
         distinct_genomes = set(df_genome_distinct[genome_column])
         missing_genomes = all_genomes - distinct_genomes
         
-        # 创建一个 DataFrame 来补全缺失的 genome
+        # create a DataFrame for missing genomes
         df_missing = pd.DataFrame({genome_column: list(missing_genomes), 'distinct_count': 0})
         
-        # 将原有的 df_genome_distinct 和 df_missing 合并，确保包含所有 genome
+        # concatenate the two DataFrames
         df_genome_distinct = pd.concat([df_genome_distinct, df_missing], ignore_index=True)
         return df_genome_distinct
 
@@ -154,15 +154,15 @@ class GenomeRank:
         print("1st round for genome coverage")
         df_results_by_rank = self._calculate_genome_coverage(genome_rank_list, target_to_peptides)
         # use "add_peptides" as the rank
+        print("2nd round for genome coverage")
         df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
         new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
         df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
-        print("2nd round")
         # again use "add_peptides" as the rank
+        print("3rd round for genome coverage")
         df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
         new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
         df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
-        print("3rd round")
         self.df_results_by_rank = df_results_by_rank
         return df_results_by_rank
     

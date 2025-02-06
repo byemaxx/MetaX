@@ -130,13 +130,23 @@ class TaxaFuncAnalyzer:
             else:
                 # check if the prefix_col_name is in the original_df.columns
                 table_col_list = self.original_df.columns.tolist()
-                if [i for i in table_col_list if i.startswith(self.sample_col_prefix)] == []:
-                    if self.meta_path is None:
-                        raise ValueError(f"The Sample columns with prefix [{self.sample_col_prefix}] is not in the Original table!")
-                    sample_list = None
-                else:
-                    sample_list = [i for i in self.original_df.columns.tolist() if i.startswith(self.sample_col_prefix)]
+                if [
+                    i for i in table_col_list if i.startswith(self.sample_col_prefix)
+                ] == []:
+                    raise ValueError(
+                        f"The prefix [{self.sample_col_prefix}] does match any column in the Original table!\
+                        \nKeep it empty if you want to use the 2nd to the last column as the sample columns."
+                    )
+                    
+                sample_list = [i for i in self.original_df.columns.tolist() if i.startswith(self.sample_col_prefix)]
+                sample_list = [i.replace(self.sample_col_prefix, '') for i in sample_list]
+                sample_list = [i[1:] if i.startswith('_') else i for i in sample_list]
                 self.sample_list = sample_list
+                self.original_df.columns = [i.replace(self.sample_col_prefix, '') for i in self.original_df.columns]
+                self.original_df.columns = [i.strip().replace(' ', '_') for i in self.original_df.columns]
+                # remove "_" if the column name is started with "_" of sample_list and original_df.columns
+                self.original_df.columns = [i[1:] if i.startswith('_') else i for i in self.original_df.columns]
+                
                 
             #create a column 'LCA_level' with 'life' for other_df
             self.original_df['LCA_level'] = 'life'
@@ -147,7 +157,12 @@ class TaxaFuncAnalyzer:
             self.original_df['Not_Applicable_prop'] = 1
             # create a fake peptide column
             self.original_df['Sequence'] = 'Not_Exist'
+            return
+        
         else: # for normal mode
+            if self.sample_col_prefix == '': # if the prefix_col_name is not provided, use the first column name
+                raise ValueError("Prefix column name must be provided to indicate the sample columns, e.g. 'Intensity'")
+            
             if 'Taxon_prop' not in self.original_df.columns:
                 raise ValueError("The TaxaFunc data must have Taxon_prop column!")
 
@@ -197,9 +212,14 @@ class TaxaFuncAnalyzer:
             # sample name must be in the first column
             # rename the first column to Sample
             meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
-            # replace space with _ and remove Intensity_
-            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_').replace(f'{self.sample_col_prefix}_', ''))
+            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_'))
+            if self.sample_col_prefix != '': # if the prefix_col_name is not provided, use the first column name
+                meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.replace(self.sample_col_prefix, ''))
+            # replace space with _
             meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x) # type: ignore
+            # remove the "_" if the sample name is started with "_"
+            meta['Sample'] = meta['Sample'].apply(lambda x: x[1:] if x.startswith('_') else x)
+            
             # remove duplicate rows if exists
             if meta.duplicated().any():
                 # print the duplicated rows
@@ -210,7 +230,6 @@ class TaxaFuncAnalyzer:
 
             self.sample_list = meta['Sample'].tolist()
             self.meta_df = meta
-
 
             check_result = self.check_meta_match_df()
             if not check_result[0]:
@@ -225,8 +244,8 @@ class TaxaFuncAnalyzer:
 
 
     def _check_if_intensity_cols_numberic(self):
-        if not self.original_df[self.sample_list].apply(pd.to_numeric, errors='coerce').notnull().all().all():
-            raise ValueError("The sample columns must contain only numeric values!")
+        if not self.original_df[self.sample_list].applymap(lambda x: pd.isna(x) or isinstance(x, (int, float))).all().all():
+            raise ValueError("The sample columns must contain only numeric values or empty (NaN) values!")
 
 
     def update_meta(self, meta_df: pd.DataFrame) -> None:
@@ -268,11 +287,14 @@ class TaxaFuncAnalyzer:
 
     def check_meta_match_df(self) -> tuple:
         meta_list = self.meta_df['Sample'].tolist()
-        try:
-            self.original_df[meta_list]
-            return True, "Meta data matches the TaxaFunc data."
-        except Exception as e:
-            return False, str(e)
+        original_list = self.original_df.columns.tolist()
+        #  check if meta_list is a subset of original_list
+        diff_list = list(set(meta_list) - set(original_list))
+        if len(diff_list) > 0:
+            return (False, f"Samples in meta data are not in the TaxaFunc data:\n{diff_list}")
+        else:
+            return (True, "Meta data matches the TaxaFunc data!")
+
 
 
     def _remove_all_zero_row(self):

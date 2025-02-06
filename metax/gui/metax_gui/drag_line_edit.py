@@ -30,8 +30,9 @@ class FileDragDropLineEdit(QLineEdit):
                     # if url is a file, append default file name to its parent folder
                     elif os.path.isfile(url):
                         url = os.path.join(os.path.dirname(url), self.default_filename)
-                    
-
+            
+            # normalize path,e.g. repalce '\\' with '/'
+            url = os.path.normpath(url)
             self.setText(url)
             event.acceptProposedAction()
         else:

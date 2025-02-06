@@ -355,8 +355,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>462</width>
-                 <height>531</height>
+                 <width>391</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1940,7 +1940,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
+                        <width>801</width>
                         <height>239</height>
                        </rect>
                       </property>
@@ -4255,7 +4255,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>889</width>
+                       <width>872</width>
                        <height>128</height>
                       </rect>
                      </property>
@@ -6186,8 +6186,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>865</width>
-                           <height>95</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6919,8 +6919,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>170</height>
+                        <width>493</width>
+                        <height>128</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -9709,8 +9709,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>158</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10203,7 +10203,7 @@
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_204">
                       <property name="text">
-                       <string>Filter Genome with Distinct peptide Number</string>
+                       <string>Filter Genome with Min Distinct peptide Number</string>
                       </property>
                      </widget>
                     </item>
@@ -10341,8 +10341,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>913</width>
-                    <height>490</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -10473,6 +10473,246 @@
                    </item>
                   </layout>
                  </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_6">
+              <attribute name="title">
+               <string>Pepetide Direct to OTFs (Beta)</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_74">
+               <item row="2" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QCheckBox" name="checkBox_8">
+                 <property name="text">
+                  <string>Parameters</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QLabel" name="label_222">
+                 <property name="text">
+                  <string>Digested Pepetide Database</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_digestied_pep_db_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_digestied_pep_db_path"/>
+               </item>
+               <item row="2" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pro2taxafunc_db_path"/>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <widget class="QLabel" name="label_224">
+                 <property name="text">
+                  <string>OTFs Save To</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_peptide_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QLabel" name="label_223">
+                 <property name="text">
+                  <string>Protein to TaxaFunc Database</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_output_path"/>
+               </item>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="label_220">
+                 <property name="text">
+                  <string>Peptide Table</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0" colspan="4">
+                <widget class="QPushButton" name="pushButton_run_pep_direct_to_otf">
+                 <property name="text">
+                  <string>GO</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_path"/>
+               </item>
+               <item row="3" column="3">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_output_path">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0" colspan="4">
+                <widget class="QGroupBox" name="groupBox_2">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="title">
+                  <string>Annotating Settings</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_77">
+                  <item row="0" column="0">
+                   <layout class="QGridLayout" name="gridLayout_76">
+                    <item row="0" column="2">
+                     <widget class="QLabel" name="label_225">
+                      <property name="text">
+                       <string>Separator of Peptide Table</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="3">
+                     <widget class="QSpinBox" name="spinBox_pep_direct_to_otf_distinct_num_threshold">
+                      <property name="maximum">
+                       <number>9999</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="2">
+                     <widget class="QLabel" name="label_228">
+                      <property name="text">
+                       <string>Filter Genome with Min Distinct peptide Number</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="3">
+                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_genome_separator">
+                      <property name="toolTip">
+                       <string>The separator in protein ID to split the genome ID. e.g. &quot;_&quot; in MGYG000003683_00301</string>
+                      </property>
+                      <property name="text">
+                       <string>_</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_227">
+                      <property name="text">
+                       <string>Prefix of Intensity Column</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="QLabel" name="label_231">
+                      <property name="text">
+                       <string>Peptide Coverage Cutoff for Genome Selection</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_sample_col_prefix">
+                      <property name="toolTip">
+                       <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
+                      </property>
+                      <property name="text">
+                       <string>Intensity</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="1">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pep_direct_to_otf_LCA_threshold">
+                      <property name="decimals">
+                       <number>3</number>
+                      </property>
+                      <property name="maximum">
+                       <double>1.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.050000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>1.000000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="QLabel" name="label_229">
+                      <property name="text">
+                       <string>Genome Separator in Protein ID</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_col_name">
+                      <property name="text">
+                       <string>Stripped.Sequence</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="4" column="0">
+                     <widget class="QLabel" name="label_230">
+                      <property name="text">
+                       <string>LCA Threshold</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pep_direct_to_otf_coverage_cutoff">
+                      <property name="decimals">
+                       <number>3</number>
+                      </property>
+                      <property name="maximum">
+                       <double>1.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.010000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>0.950000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_226">
+                      <property name="text">
+                       <string>Peptide Column Name</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="3">
+                     <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pep_table_sep">
+                      <property name="text">
+                       <string>\t</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="0" colspan="4">
+                     <widget class="Line" name="line_34">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -10979,7 +11219,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -11119,12 +11359,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>139</x>
-     <y>123</y>
+     <x>106</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel">
-     <x>139</x>
-     <y>123</y>
+     <x>113</x>
+     <y>95</y>
     </hint>
    </hints>
   </connection>
@@ -11135,12 +11375,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>139</x>
-     <y>123</y>
+     <x>106</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel">
-     <x>139</x>
-     <y>123</y>
+     <x>119</x>
+     <y>95</y>
     </hint>
    </hints>
   </connection>
@@ -11215,12 +11455,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>149</x>
-     <y>153</y>
+     <x>214</x>
+     <y>193</y>
     </hint>
     <hint type="destinationlabel">
-     <x>139</x>
-     <y>124</y>
+     <x>76</x>
+     <y>95</y>
     </hint>
    </hints>
   </connection>
@@ -11311,8 +11551,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>102</x>
-     <y>141</y>
+     <x>52</x>
+     <y>118</y>
     </hint>
     <hint type="destinationlabel">
      <x>121</x>
@@ -11327,8 +11567,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>90</x>
-     <y>142</y>
+     <x>77</x>
+     <y>117</y>
     </hint>
     <hint type="destinationlabel">
      <x>121</x>
@@ -11391,12 +11631,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>149</x>
-     <y>154</y>
+     <x>815</x>
+     <y>167</y>
     </hint>
     <hint type="destinationlabel">
-     <x>183</x>
-     <y>124</y>
+     <x>98</x>
+     <y>95</y>
     </hint>
    </hints>
   </connection>
@@ -11493,6 +11733,22 @@
     <hint type="destinationlabel">
      <x>670</x>
      <y>488</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_8</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>groupBox_2</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>93</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>189</x>
+     <y>313</y>
     </hint>
    </hints>
   </connection>
