@@ -1,3 +1,9 @@
+# Version: 1.121.4
+## Date: 2025-02-18
+### Changes:
+- Fix: the error was raised when the get protein table for downstream analysis.
+- Fix: tabble empty after the data normalization when the data has only one row.
+
 # Version: 1.121.3
 ## Date: 2025-02-06
 ### Changes:

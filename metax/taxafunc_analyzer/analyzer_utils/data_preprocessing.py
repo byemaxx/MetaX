@@ -105,8 +105,14 @@ class DataPreprocessing:
             from .lfq import run_normalization
             return run_normalization(x)
 
-        if normalize_method is None:
+        if normalize_method in [None, 'None']:
             print('normalize_method is not set, data normalization did not perform.')
+            return df
+        
+        if len(df) == 1:
+            print('Warning: DataFrame only has one row, skipping normalization.')
+            return df
+
         else:
             df = df.copy()
             df_mat = df[self.tfa.sample_list]
@@ -146,7 +152,9 @@ class DataPreprocessing:
                 raise ValueError(f'normalize_method must be in {list(normalize_operations.keys())}')
 
             # move the data to positive
-            df_mat = df_mat - df_mat.min()
+            if df_mat.min().min() < 0:
+                print('Warning: Negative values exist after data normalization. Move the data to positive...')
+                df_mat = df_mat - df_mat.min()
 
             df[self.tfa.sample_list] = df_mat
 

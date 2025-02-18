@@ -941,10 +941,6 @@ class TaxaFuncAnalyzer:
             if level != level_sign:
                 df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
 
-            # When seclected level is 's'
-            # remove the cases like: "d__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__|m__MGYG000001780"
-            # the genome iws identified but the species name is empty like "s__"
-            # So remove the taxon column with endswith "|s__" or other level
             print(f"Remove the peptides with '{level}__'in Taxon column...")
             orignial_taxa_num = df_t.shape[0]
             df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
@@ -1323,10 +1319,10 @@ class TaxaFuncAnalyzer:
         dft = getattr(self, name_dict[table_name])
         # remove peptide_num column if exists
         if "peptide_num" in dft.columns:
-            dft = dft.drop(columns="peptide_num")
+            dft = dft.drop(columns="peptide_num", errors='ignore')
         
         if table_name in ['protein', 'proteins']:
-            dft = dft.drop(columns='peptides')
+            dft = dft.drop(columns='peptides', errors='ignore')
             
         return dft
 
