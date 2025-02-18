@@ -66,6 +66,14 @@ You can load example data by **clicking the button**.
 
 Then, click **Go** to start the analysis.
 
+- **Advanced Settings**
+  - ![ad_settings_otf_analyzer](./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png)
+  - **Peptide Column Name:** Specifies the column in the OTF table that contains peptide information.
+  - **Protein Column Name:** Specifies the column in the OTF table that contains protein information (only required if protein summation is performed in downstream analysis).
+  - **Sample Column Prefix:** Identifies the prefix of sample columns to determine intensity columns in the OTF table.
+  - **Any Data Mode:** Allows analysis of any table using MetaX, not limited to OTF tables (only partial tool functionality is available).
+    - **Customized Table Item Column Name:** Specifies the column containing item names in any data mode. If left empty, the first column will be selected by default.
+
 ## 2. Data Overview
 
 The Data Overview provides basic information about your data, such as the number of taxa, functions, and proportions.
@@ -792,11 +800,7 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
   - <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console"  />
 
-- **Any Table Mode**
-
-  - <u>Any Table Mode</u> enables us to use **any matrix** for basic statistical analysis in MetaX.
-
-  - ![](MetaX_Cookbook.assets/any_table_mode.png)
+  
 
 - Settings
 

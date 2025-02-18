@@ -1,3 +1,38 @@
+# Version: 1.121.4
+## Date: 2025-02-18
+### Changes:
+- Fix: the error was raised when the get protein table for downstream analysis.
+- Fix: tabble empty after the data normalization when the data has only one row.
+
+# Version: 1.121.3
+## Date: 2025-02-06
+### Changes:
+- New: Add coverage selcection for protein of the Direct Peptide Annotation.
+
+
+# Version: 1.121.2
+## Date: 2025-02-05
+### Changes:
+- New: Add Direct Annotation function for the Peptide Annotator.
+- Fix: Some bugs.
+
+# Version: 1.121.1
+## Date: 2025-02-05
+### Changes:
+- Fix: Fix the bug of Any Data Mode: the prefix of the custom was not replaced correctly.
+
+
+# Version: 1.121.0
+## Date: 2025-02-04
+### Changes:
+- New: Added Advanced Parameters for OTF Analyzer.
+
+# Version: 1.120.4
+## Date: 2025-02-04
+### Changes:
+- Fix the bug in Any Data Mode: wrong res table when the custom col name conflicts with the default KeyWords name.
+
+
 # Version: 1.120.3
 ## Date: 2025-01-30
 ### Changes:

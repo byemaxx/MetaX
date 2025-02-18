@@ -6,6 +6,12 @@ from tqdm import tqdm
 class RazorSum:
     def __init__(self, df, column_map, peptide_num_threshold=1,
                  greedy_method = 'greedy', share_intensity=False, protein_separator=';'):
+        '''
+        column_map: dict
+            A dictionary mapping column names to the corresponding columns in the input dataframe.
+            e.g. {'peptide': 'Sequence', 'target': 'Proteins', 'sample_list': ['Sample1', 'Sample2', 'Sample3']}
+            sample_list can be None or empty list if only need to get the minimum target set by get_mini_target_set()
+        '''
         self.df = df
         self.column_map = column_map
         self.greedy_method = greedy_method  

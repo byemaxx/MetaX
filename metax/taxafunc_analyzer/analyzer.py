@@ -53,6 +53,8 @@ class TaxaFuncAnalyzer:
         self.has_na_in_original_df = False
         self.genome_mode = True
 
+        self.df_path = df_path
+        self.meta_path = meta_path
         self.peptide_col_name = peptide_col_name
         self.protein_col_name = protein_col_name
         self.sample_col_prefix = sample_col_prefix.strip() #remove the space
@@ -107,8 +109,45 @@ class TaxaFuncAnalyzer:
         self.original_df = pd.read_csv(df_path, sep='\t')
 
         if self.any_df_mode:
-            self.custom_col_name = self.original_df.columns.tolist()[0] if self.custom_col_name == 'Custom' else self.custom_col_name
-            self.sample_list = self.original_df.columns.tolist()[1:]
+            if self.custom_col_name == '': # if the custom_col_name is not provided, use the first column name
+                items_col_name = self.original_df.columns.tolist()[0]
+            else:
+                # check if the custom_col_name is in the original_df.columns
+                if self.custom_col_name not in self.original_df.columns:
+                    raise ValueError(f"The Items column with [{self.custom_col_name}] is not in the Original table!")
+                items_col_name = self.custom_col_name
+                
+            # suffix _custom to the column name if the column name is in the default list
+            if items_col_name in ['LCA_level', 'Taxon', 'Taxon_prop', 'Not_Applicable', 'Not_Applicable_prop', 'Sequence']:
+                new_col_name = f'{items_col_name}_custom'
+                self.original_df.rename(columns={items_col_name: new_col_name}, inplace=True)
+                self.custom_col_name = new_col_name
+                
+            if self.sample_col_prefix == '': # if the prefix_col_name is not provided, use the first column name
+                sample_list = self.original_df.columns.tolist()
+                sample_list.remove(self.custom_col_name)
+                self.sample_list = sample_list
+            else:
+                # check if the prefix_col_name is in the original_df.columns
+                table_col_list = self.original_df.columns.tolist()
+                if [
+                    i for i in table_col_list if i.startswith(self.sample_col_prefix)
+                ] == []:
+                    raise ValueError(
+                        f"The prefix [{self.sample_col_prefix}] does match any column in the Original table!\
+                        \nKeep it empty if you want to use the 2nd to the last column as the sample columns."
+                    )
+                    
+                sample_list = [i for i in self.original_df.columns.tolist() if i.startswith(self.sample_col_prefix)]
+                sample_list = [i.replace(self.sample_col_prefix, '') for i in sample_list]
+                sample_list = [i[1:] if i.startswith('_') else i for i in sample_list]
+                self.sample_list = sample_list
+                self.original_df.columns = [i.replace(self.sample_col_prefix, '') for i in self.original_df.columns]
+                self.original_df.columns = [i.strip().replace(' ', '_') for i in self.original_df.columns]
+                # remove "_" if the column name is started with "_" of sample_list and original_df.columns
+                self.original_df.columns = [i[1:] if i.startswith('_') else i for i in self.original_df.columns]
+                
+                
             #create a column 'LCA_level' with 'life' for other_df
             self.original_df['LCA_level'] = 'life'
             self.original_df['Taxon'] = 'd__Bacteria'
@@ -118,7 +157,12 @@ class TaxaFuncAnalyzer:
             self.original_df['Not_Applicable_prop'] = 1
             # create a fake peptide column
             self.original_df['Sequence'] = 'Not_Exist'
+            return
+        
         else: # for normal mode
+            if self.sample_col_prefix == '': # if the prefix_col_name is not provided, use the first column name
+                raise ValueError("Prefix column name must be provided to indicate the sample columns, e.g. 'Intensity'")
+            
             if 'Taxon_prop' not in self.original_df.columns:
                 raise ValueError("The TaxaFunc data must have Taxon_prop column!")
 
@@ -144,7 +188,7 @@ class TaxaFuncAnalyzer:
             intensity_col_names = [i.replace(self.sample_col_prefix, '') for i in intensity_col_names]
             self.sample_list = intensity_col_names
         else:
-            raise ValueError(f"The OTF data must have Intensity columns: with prefix [{self.sample_col_prefix}]")
+            raise ValueError(f"Can not find the sample columns with prefix [{self.sample_col_prefix}] in the Original table!")
         ####
 
         # replace space with _ and remove Intensity_ of original_df columns
@@ -159,7 +203,7 @@ class TaxaFuncAnalyzer:
             if self.sample_list is None:
                 raise ValueError("Please provide the meta data!")
             else:
-                print('Meta data is not provided, sample_list is created by Intensity_* columns.')
+                print(f'Meta data is not provided, sample_list is created by [{self.sample_col_prefix}]')
                 meta = pd.DataFrame({'Sample': self.sample_list, 'Group_NA': 'NA', 'Sample_Name': self.sample_list})
                 self.meta_df = meta
         else:
@@ -168,9 +212,14 @@ class TaxaFuncAnalyzer:
             # sample name must be in the first column
             # rename the first column to Sample
             meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
-            # replace space with _ and remove Intensity_
-            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_').replace('Intensity_', ''))
-            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_'))
+            if self.sample_col_prefix != '': # if the prefix_col_name is not provided, use the first column name
+                meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.replace(self.sample_col_prefix, ''))
+            # replace space with _
+            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x) # type: ignore
+            # remove the "_" if the sample name is started with "_"
+            meta['Sample'] = meta['Sample'].apply(lambda x: x[1:] if x.startswith('_') else x)
+            
             # remove duplicate rows if exists
             if meta.duplicated().any():
                 # print the duplicated rows
@@ -181,7 +230,6 @@ class TaxaFuncAnalyzer:
 
             self.sample_list = meta['Sample'].tolist()
             self.meta_df = meta
-
 
             check_result = self.check_meta_match_df()
             if not check_result[0]:
@@ -196,8 +244,8 @@ class TaxaFuncAnalyzer:
 
 
     def _check_if_intensity_cols_numberic(self):
-        if not self.original_df[self.sample_list].apply(pd.to_numeric, errors='coerce').notnull().all().all():
-            raise ValueError("The sample columns must contain only numeric values!")
+        if not self.original_df[self.sample_list].applymap(lambda x: pd.isna(x) or isinstance(x, (int, float))).all().all():
+            raise ValueError("The sample columns must contain only numeric values or empty (NaN) values!")
 
 
     def update_meta(self, meta_df: pd.DataFrame) -> None:
@@ -239,11 +287,14 @@ class TaxaFuncAnalyzer:
 
     def check_meta_match_df(self) -> tuple:
         meta_list = self.meta_df['Sample'].tolist()
-        try:
-            self.original_df[meta_list]
-            return True, "Meta data matches the TaxaFunc data."
-        except Exception as e:
-            return False, str(e)
+        original_list = self.original_df.columns.tolist()
+        #  check if meta_list is a subset of original_list
+        diff_list = list(set(meta_list) - set(original_list))
+        if len(diff_list) > 0:
+            return (False, f"Samples in meta data are not in the TaxaFunc data:\n{diff_list}")
+        else:
+            return (True, "Meta data matches the TaxaFunc data!")
+
 
 
     def _remove_all_zero_row(self):
@@ -559,7 +610,8 @@ class TaxaFuncAnalyzer:
         print("Custom df is set!\nWaiting for further analysis...")
     
 
-    def split_func(self, df, split_func_params: dict = {'split_by': ',', 'share_intensity': False}, df_type: str = 'taxa_func'):
+    def split_func(self, df, split_func_params: dict = {'split_by': ',', 'share_intensity': False}, 
+                   df_type: str = 'taxa_func', func_name: str = None):
         """
         Splits the function column in the given DataFrame based on the specified parameters.
         Parameters:
@@ -578,7 +630,7 @@ class TaxaFuncAnalyzer:
         print(f'Start splitting function for {df_type} by [ {split_by} ], share_intensity={share_intensity}, it may take a while...')
         
         df = df.reset_index()
-        func_col = self.func_name
+        func_col = self.func_name if func_name is None else func_name
         sample_list = self.sample_list
         taxon_col = 'Taxon' if df_type == 'taxa_func' else None
         
@@ -661,7 +713,7 @@ class TaxaFuncAnalyzer:
         return self.peptides_linked_dict
 
 
-    def filter_peptides_by_taxa_func(self, df, func_threshold, keep_unknow_func, filter_taxa):
+    def filter_peptides_by_taxa_func(self, df, func_threshold, keep_unknow_func, filter_taxa, func_name: str = None):
         """
         Filters the DataFrame based on functional and taxonomic criteria.
 
@@ -670,25 +722,28 @@ class TaxaFuncAnalyzer:
         func_threshold (float): The threshold for the functional proportion.
         keep_unknow_func (bool): If True, keeps rows with 'unknown' functional names.
         filter_taxa (bool): If True, filters out rows with 'not_found' taxa.
+        func_name (str): The name of the function column. Defaults to None, and uses the self.func_name attribute.
 
         Returns:
         pd.DataFrame: The filtered DataFrame.
         """
+        if func_name is None:
+            func_name = self.func_name
+            
         filter_conditions = (
-            (df[f'{self.func_name}_prop'] >= func_threshold) &
-            df[self.func_name].notnull() &
-            (df[self.func_name] != 'not_found') &
-            (df[self.func_name] != '-') &
-            (df[self.func_name] != 'NaN') 
+            (df[f'{func_name}_prop'] >= func_threshold) &
+            df[func_name].notnull() &
+            (df[func_name] != 'not_found') &
+            (df[func_name] != '-') &
+            (df[func_name] != 'NaN') 
         )
         if not keep_unknow_func:
-            filter_conditions = filter_conditions & (df[self.func_name] != 'unknown')
+            filter_conditions = filter_conditions & (df[func_name] != 'unknown')
         if filter_taxa:
             filter_conditions = filter_conditions & (df['Taxon'] != 'not_found')
         return df[filter_conditions]
     
-    def run_lfq_for_taxa_or_func(self, df, df_type: str):
-        target_col = 'Taxon' if df_type == 'taxa' else self.func_name
+    def run_lfq_for_taxa_or_func(self, df, target_col: str):
         target_pep_num_dict = df.groupby(target_col).size().to_dict()
         df.drop(['peptide_num'], axis=1, inplace=True)
         df, _ = run_lfq(df, protein_id=target_col, quant_id=self.peptide_col_name)
@@ -765,7 +820,7 @@ class TaxaFuncAnalyzer:
 
         
         
-    def filter_peptides_num(self, df, peptide_num_threshold, df_type, distinct_threshold_mode=False):
+    def filter_peptides_num(self, df, peptide_num_threshold, df_type, func_name: str = None):
         '''
         Filter the peptides based on the peptide number threshold
         - df: the original df including peptides, taxa, and functions, etc.
@@ -780,11 +835,14 @@ class TaxaFuncAnalyzer:
         peptide_num= peptide_num_threshold[df_type]
         df_original_len = len(df)
 
+        if func_name is None:
+            func_name = self.func_name
+        
         if df_type == 'taxa_func':
             item_col = 'taxa_func'
-            df['taxa_func'] = df['Taxon'] + '&&&&' + df[self.func_name]
+            df['taxa_func'] = df['Taxon'] + '&&&&' + df[func_name]
         else:
-            item_col = 'Taxon' if df_type == 'taxa' else self.func_name
+            item_col = 'Taxon' if df_type == 'taxa' else func_name
 
         # # if True: #! Need to be implemented
         # if distinct_threshold_mode:
@@ -844,8 +902,127 @@ class TaxaFuncAnalyzer:
 
         return df
 
+    def _create_taxa_table_only_from_otf(self, level: str = 's',
+                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                                                 "detection_by_group" : None, "handle_by_group": None},
+                         data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
+                                                            'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
+                        peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
+                          quant_method: str = 'sum', **kwargs):
+        # if **kwargs is not empty, print the warning
+        if kwargs:
+            print(f"Warning: The following parameters are not used in 'CREATE TAXA TABLE' function: {kwargs.keys()}")
+                
+        data_preprocess_params = self.update_data_preprocess_parameters(data_preprocess_params)
+        print("Starting to set Taxa table...")
+        # select taxa level and create dfc (df clean)
+        def strip_taxa(x, level):
+            '''
+            Strip the taxa name to the selected level
+            '''
+            level_dict = {'m': 8 , 's': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
+            return "|".join(x.split('|')[:level_dict[level]])
+
+        level_mapping = {
+            'm': ['genome'],
+            's': ['species', 'genome'],
+            'g': ['genus', 'species', 'genome'],
+            'f': ['family', 'genus', 'species', 'genome'],
+            'o': ['order', 'family', 'genus', 'species', 'genome'],
+            'c': ['class', 'order', 'family', 'genus', 'species', 'genome'],
+            'p': ['phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome']
+        }
+
+        if level in level_mapping:
+            df_t = self.original_df.loc[self.original_df['LCA_level'].isin(level_mapping[level])]
+            level_sign = 'm' if self.genome_mode else 's'
+            if level != level_sign:
+                df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
+
+            print(f"Remove the peptides with '{level}__'in Taxon column...")
+            orignial_taxa_num = df_t.shape[0]
+            df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
+            new_taxa_num = df_t.shape[0]
+            print(f"Rmoved: [{orignial_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
+
+            df_filtered_peptides = df_t
+            # df_filtered_peptides is a df with all cols, which filtered by the selected taxa level
+        else:
+            raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
+
+        
+        # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
+        df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list] # type: ignore
+        print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
+        df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
+        #TODO: use the peptide number after filtering the minimum peptide number 
+        # statastic the peptide number of each taxa
+        df_taxa_pep = self.filter_peptides_num(df=df_taxa_pep, peptide_num_threshold=peptide_num_threshold, 
+                                               df_type='taxa', func_name=None)
+        
+        
+        # self.peptide_num_used['taxa'] = len(df_taxa_pep)
+        # add column 'peptide_num' to df_taxa as 1
+        df_taxa_pep['peptide_num'] = 1
+        
+        if quant_method == 'lfq':
+            df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, target_col='Taxon')
+        else: # sum
+            df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
+            
+        print("\n-----Starting to perform data pre-processing for Taxa table...-----")
+        df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
+        print(f"Taxa table created successfully! Number of taxa: {len(df_taxa)}")
+        return df_taxa
 
             
+    def _create_func_table_only_from_otf(self,  func_name:str = None,func_threshold:float = 1.00,
+                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                                                 "detection_by_group" : None, "handle_by_group": None},
+                         data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
+                                                            'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
+                          peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
+                          keep_unknow_func: bool = False, 
+                          split_func: bool = False, split_func_params: dict = {'split_by': '|', 'share_intensity': False},
+                          quant_method: str = 'sum', **kwargs):
+        # if **kwargs is not empty, print the warning
+        if kwargs:
+            print(f"Warning: The following parameters are not used in 'CREATE FUNC TABLE' function: {kwargs.keys()}")
+        # create func table
+        if func_name is None:
+            func_name = self.func_name
+        else:
+            # check if the func_name is in func_list
+            if func_name not in self.func_list: # type: ignore
+                raise ValueError(f"The input func_name [{func_name}] is not in the function list.")
+            
+        df_func_pep = self.filter_peptides_by_taxa_func(df= self.original_df, func_threshold=func_threshold,
+                                    keep_unknow_func=keep_unknow_func, filter_taxa=False, func_name=func_name)
+        df_func_pep = df_func_pep[[self.peptide_col_name, func_name] + self.sample_list] # type: ignore
+        print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
+        df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
+        if not split_func:
+            df_func_pep = self.filter_peptides_num(df=df_func_pep, peptide_num_threshold=peptide_num_threshold,
+                                                   df_type='func', func_name=func_name)
+        df_func_pep['peptide_num'] = 1
+        
+        if quant_method == 'lfq':
+            df_func = self.run_lfq_for_taxa_or_func(df_func_pep, target_col=func_name)
+        else: # sum
+            df_func = df_func_pep.groupby(func_name).sum(numeric_only=True)
+        
+        if split_func:
+            self.peptide_num_used['func'] = len(df_func_pep)
+            df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func', func_name=func_name)
+            df_func = self.filter_peptides_num_for_splited_func(df=df_func, peptide_num_threshold=peptide_num_threshold, df_type='func')
+
+        df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
+        print(f"Function table created successfully! Number of functions: {len(df_func)}")
+        return df_func
+        
+        
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
                          outlier_params: dict = {'detect_method': None, 'handle_method': None,
                                                  "detection_by_group" : None, "handle_by_group": None},
@@ -975,7 +1152,7 @@ class TaxaFuncAnalyzer:
             df_taxa_pep['peptide_num'] = 1
             
             if quant_method == 'lfq':
-                df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, df_type='taxa')
+                df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, target_col='Taxon')
             else: # sum
                 df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
                 
@@ -985,33 +1162,16 @@ class TaxaFuncAnalyzer:
             #-----Taxa Table End-----
             
             # create func table
-            df_func_pep = self.filter_peptides_by_taxa_func(df= self.original_df, func_threshold=func_threshold,
-                                       keep_unknow_func=keep_unknow_func, filter_taxa=False)
-            df_func_pep = df_func_pep[[self.peptide_col_name, self.func_name] + self.sample_list]
-            print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
-            df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
-            if not split_func:
-                df_func_pep = self.filter_peptides_num(df=df_func_pep, peptide_num_threshold=peptide_num_threshold, df_type='func')
-            df_func_pep['peptide_num'] = 1
-            
-            if quant_method == 'lfq':
-                df_func = self.run_lfq_for_taxa_or_func(df_func_pep, df_type='func')
-            else: # sum
-                df_func = df_func_pep.groupby(self.func_name).sum(numeric_only=True)
-            
-            if split_func:
-                self.peptide_num_used['func'] = len(df_func_pep)
-                df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func')
-                df_func = self.filter_peptides_num_for_splited_func(df=df_func, peptide_num_threshold=peptide_num_threshold, df_type='func')
-
-            df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
-            self.func_df = df_func
+            self.func_df = self._create_func_table_only_from_otf(func_threshold=func_threshold,
+                                                            outlier_params=outlier_params, data_preprocess_params=data_preprocess_params,
+                                                            peptide_num_threshold=peptide_num_threshold, keep_unknow_func=keep_unknow_func,
+                                                            split_func=split_func, split_func_params=split_func_params, quant_method=quant_method)
             #-----Func Table End-----
 
         #ELSE: build the df_taxa and df_fuun from df_taxa_func 
         #* df_filtered_peptides now is the peptides table with selected taxa level and filtered by func_threshold
         df_filtered_peptides = self.filter_peptides_by_taxa_func(df= df_filtered_peptides, func_threshold=func_threshold,
-                                        keep_unknow_func=keep_unknow_func, filter_taxa=True)
+                                        keep_unknow_func=keep_unknow_func, filter_taxa=True, func_name=self.func_name)
         
         # do outlier detection and handling for the df_filtered_peptides table
         print("\n-----Starting to perform outlier detection and handling for [Peptide (filtered by taxa level and func_threshold)] table...-----")
@@ -1034,7 +1194,7 @@ class TaxaFuncAnalyzer:
 
 
         # ----- create taxa_func table -----
-        df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list]
+        df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list] # type: ignore
         df_taxa_func['peptide_num'] = 1
         if not split_func:
             df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')
@@ -1159,10 +1319,10 @@ class TaxaFuncAnalyzer:
         dft = getattr(self, name_dict[table_name])
         # remove peptide_num column if exists
         if "peptide_num" in dft.columns:
-            dft = dft.drop(columns="peptide_num")
+            dft = dft.drop(columns="peptide_num", errors='ignore')
         
         if table_name in ['protein', 'proteins']:
-            dft = dft.drop(columns='peptides')
+            dft = dft.drop(columns='peptides', errors='ignore')
             
         return dft
 
@@ -1178,6 +1338,8 @@ if __name__ == '__main__':
     # sw.set_func('None')
     sw.set_func('KEGG_Pathway_name')
     sw.set_group('Individual')
+
+    #### TEST FOR set_multi_tables
     sw.set_multi_tables(level='s', 
                         outlier_params = {'detect_method': 'None', 'handle_method': 'original',
                             "detection_by_group" : 'Individual', "handle_by_group": None},
@@ -1191,7 +1353,40 @@ if __name__ == '__main__':
                     sum_protein=True, 
                     sum_protein_params = {'method': 'anti-razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=False, split_func_params = {'split_by': '|', 'share_intensity': False},
-                    taxa_and_func_only_from_otf=False, quant_method='sum'
+                    taxa_and_func_only_from_otf=False, quant_method='sum', func_threshold=1.00
                     )
-
+    
+    #### TEST FOR _create_taxa_table_only_from_otf
+    # taxa_res = {}
+    # for i in ['m','s','g', 'f', 'o', 'c', 'p', 'd', 'l']:
+    #     df_temp_taxa = sw._create_taxa_table_only_from_otf(level=i, 
+    #                         outlier_params = {'detect_method': 'None', 'handle_method': 'original',
+    #                             "detection_by_group" : 'Individual', "handle_by_group": None},
+    #                         data_preprocess_params = {
+    #                                                 'normalize_method': 'None', 
+    #                                                 'transform_method': "log2",
+    #                                                 'batch_meta': 'None', 
+    #                                                 'processing_order': ['transform', 'normalize', 'batch']},
+    #                     peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
+    #                     quant_method='sum'
+    #                     )
+    #     taxa_res[i] = df_temp_taxa
+        
+    #### TEST FOR _create_func_table_only_from_otf
+    # func_res = {}
+    # for func_name in sw.func_list: # type: ignore
+    #     df_temp_func = sw._create_func_table_only_from_otf(func_name=func_name, func_threshold=1.00,
+    #                     outlier_params = {'detect_method': 'None', 'handle_method': 'original',
+    #                         "detection_by_group" : 'Individual', "handle_by_group": None},
+    #                     data_preprocess_params = {
+    #                                             'normalize_method': 'None', 
+    #                                             'transform_method': "log2",
+    #                                             'batch_meta': 'None', 
+    #                                             'processing_order': ['transform', 'normalize', 'batch']},
+    #                 peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
+    #                 keep_unknow_func=False,
+    #                 split_func=True, split_func_params = {'split_by': '|', 'share_intensity': False},
+    #                 quant_method='sum'
+    #                 )
+    #     func_res[func_name] = df_temp_func
     sw.check_attributes()

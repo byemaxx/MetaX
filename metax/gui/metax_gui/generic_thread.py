@@ -2,6 +2,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser, QVBoxLayout, QWidget, QMessageBox
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QTextCursor
 
 import sys
 import re
@@ -45,7 +46,7 @@ class FunctionExecutor(QMainWindow):
         # set the size of the window as 1/3 of the screen
         size = QApplication.primaryScreen().size()
         
-        self.resize(int(size.width() // 2.5), int(size.height() // 3.5))
+        self.resize(int(size.width() // 2.2), int(size.height() // 3.5))
 
         # set flag as the window size can be changed
         # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -104,20 +105,22 @@ class FunctionExecutor(QMainWindow):
             self.finished.emit(self.result, success)
             self.thread.quit()
 
-    def update_progress(self, text):
-        # if the text is a progress text, update the progress text
-        if self.progress_regex.search(text):
-            all_lines = self.text_browser.toPlainText().split('\n')
-            if all_lines:
-                all_lines[-1] = text.strip()  # 如果之前有文本，则更新最后一行
-            else:
-                all_lines.append(text.strip())  # 如果之前没有文本，则添加新行
-            self.text_browser.setText('\n'.join(all_lines))  # 重新设置文本浏览器的文本
-        else:
-            self.text_browser.append(text)  # 对于非进度条文本，正常追加
 
-        # 自动滚动到 QTextBrowser 的底部
-        self.text_browser.verticalScrollBar().setValue(self.text_browser.verticalScrollBar().maximum())
+    def update_progress(self, text):
+        scroll_bar = self.text_browser.verticalScrollBar()
+        at_bottom = scroll_bar.value() == scroll_bar.maximum()
+
+        if self.progress_regex.search(text):
+            cursor = self.text_browser.textCursor()
+            cursor.movePosition(QTextCursor.End)
+            cursor.select(QTextCursor.LineUnderCursor)
+            cursor.removeSelectedText()
+            cursor.insertText(text.strip())
+        else:
+            self.text_browser.append(text)
+        
+        if at_bottom:
+            scroll_bar.setValue(scroll_bar.maximum())
 
 
     def thread_finished(self):

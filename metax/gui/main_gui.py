@@ -96,6 +96,7 @@ if __name__ == '__main__':
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
+    from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
 
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
@@ -141,6 +142,7 @@ else:
     
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
+    from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
 
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
@@ -241,7 +243,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
         self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
-        self.actionAny_Table_Mode.setIcon(qta.icon('mdi.table'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
         self.actionTutorial.setIcon(qta.icon('mdi6.book-open-page-variant-outline'))
@@ -259,7 +260,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.console_visible = False
         self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
         self.actionDebug_Console.triggered.connect(self.show_command_line_window)
-        self.actionAny_Table_Mode.triggered.connect(self.set_any_table_mode)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
@@ -296,6 +296,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_metalab_anno_built_in_taxa = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_built_in_taxa, 'file')
         self.lineEdit_metalab_anno_functions = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_functions, 'file')
         self.lineEdit_metalab_anno_otf_save_path = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_otf_save_path, 'folder', 'OTF.tsv')
+        self.lineEdit_pep_direct_to_otf_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_peptide_path, 'file')
+        self.lineEdit_pep_direct_to_otf_digestied_pep_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_pep_db_path, 'file')
+        self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 'file')
+        self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_dreict_anno.tsv')
 
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
@@ -324,6 +328,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_open_metalab_anno_functions.clicked.connect(self.set_lineEdit_metalab_anno_functions_path)
         self.pushButton_open_metalab_anno_otf_save_path.clicked.connect(self.set_lineEdit_metalab_anno_otf_save_path)
         self.pushButton_run_metalab_maxq_annotate.clicked.connect(self.run_metalab_maxq_annotate)
+        # peptideAnnotator Pep Direct to OTF
+        self.pushButton_open_pep_direct_to_otf_peptide_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_peptide_path)
+        self.pushButton_open_pep_direct_to_otf_digestied_pep_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_digestied_pep_db_path)
+        self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path)
+        self.pushButton_open_pep_direct_to_otf_output_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_output_path)
+        self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
 
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -915,7 +925,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
                          "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
                          "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
-                         "groupBox_peptide_annotator_settings"
+                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
+                         "groupBox_pep_direct_to_otf"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -1262,17 +1273,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 windll.user32.ShowWindow(hwnd, 1)
                 self.console_visible = True
 
-    def set_any_table_mode(self):
-        if  self.any_table_mode is False:
-            self.label_12.setText('Custom Table')
-            self.any_table_mode = True
-            QMessageBox.information(self.MainWindow, "Any Table Mode", "Any Table Mode is [enabled].\n\nYou can use any table as input.")
-        
-        else: # any_table_mode currently is True
-            self.label_12.setText('OTF Table')
-            self.any_table_mode = False
-            QMessageBox.information(self.MainWindow, "OTF Table Mode", "Any Table Mode is [disabled].\n\nYou can only use the table from Peptide Annotator as input.")
-
     def init_QSettings(self):
         settings_path =self.metax_home_path
         if not os.path.exists(settings_path):
@@ -1305,7 +1305,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         Load Parameters: `last_path`, `like_times` \n
 
         """
-        line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+        line_edit_names = [
+            "lineEdit_taxafunc_path",
+            "lineEdit_meta_path",
+            "lineEdit_db_path",
+            "lineEdit_pep_direct_to_otf_digestied_pep_db_path",
+            "lineEdit_pep_direct_to_otf_pro2taxafunc_db_path",
+        ]
         for name in line_edit_names:
             widget = getattr(self, name, None)
             if widget and isinstance(widget, QtWidgets.QLineEdit):
@@ -1342,7 +1348,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         '''
         if line_edit_name is None:
-            line_edit_names = ["lineEdit_taxafunc_path", "lineEdit_meta_path", "lineEdit_db_path"]
+            # some line edit widgets to save by default
+            line_edit_names = [
+            "lineEdit_taxafunc_path",
+            "lineEdit_meta_path",
+            "lineEdit_db_path",
+            "lineEdit_pep_direct_to_otf_digestied_pep_db_path",
+            "lineEdit_pep_direct_to_otf_pro2taxafunc_db_path",
+        ]
         else:
             line_edit_names = [line_edit_name]
         for name in line_edit_names:
@@ -1851,18 +1864,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_db_path(self):
         db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Database', self.last_path, 'sqlite3 (*.db)')[0]
         self.last_path = os.path.dirname(db_path)
+        db_path = os.path.normpath(db_path)
         self.lineEdit_db_path.setText(db_path)
 
     
     def set_lineEdit_final_peptide_path(self):
         final_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Final Peptide Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
         self.last_path = os.path.dirname(final_peptide_path)
+        final_peptide_path = os.path.normpath(final_peptide_path)
         self.lineEdit_final_peptide_path.setText(final_peptide_path)
     
     def set_lineEdit_peptide2taxafunc_outpath(self):
         # set default file name as 'OTF.tsv'
         peptide2taxafunc_outpath = QFileDialog.getSaveFileName(self.MainWindow, 'Save Operational Taxa-Functions (OTF) Table', os.path.join(self.last_path, 'OTF.tsv'), 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(peptide2taxafunc_outpath)
+        peptide2taxafunc_outpath = os.path.normpath(peptide2taxafunc_outpath)
         self.lineEdit_peptide2taxafunc_outpath.setText(peptide2taxafunc_outpath)
     ## peptideAnnotator MAG tab end
     
@@ -1880,6 +1896,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return
             
         # set the path to lineEdit
+        # normalize the path first
+        metalab_res_folder = os.path.normpath(metalab_res_folder)
+        peptide_file = os.path.normpath(peptide_file)
+        pepTaxa_file = os.path.normpath(pepTaxa_file)
+        functions_file = os.path.normpath(functions_file)            
         self.lineEdit_metalab_res_folder.setText(metalab_res_folder)
         self.lineEdit_metalab_anno_peptides_report.setText(peptide_file)
         self.lineEdit_metalab_anno_built_in_taxa.setText(pepTaxa_file)
@@ -1890,24 +1911,56 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_metalab_anno_peptides_report_path(self):
         metalab_anno_peptides_report_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Peptides Report', self.last_path, 'txt (*.txt);;All Files (*)')[0]
         self.last_path = os.path.dirname(metalab_anno_peptides_report_path)
+        metalab_anno_peptides_report_path = os.path.normpath(metalab_anno_peptides_report_path)
         self.lineEdit_metalab_anno_peptides_report.setText(metalab_anno_peptides_report_path)
     
     def set_lineEdit_metalab_anno_built_in_taxa_path(self):
         metalab_anno_built_in_taxa_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Built-in Taxa', self.last_path, 'CSV Files (*.csv);;All Files (*)')[0]
         self.lineEdit_metalab_anno_built_in_taxa.setText(metalab_anno_built_in_taxa_path)
+        metalab_anno_built_in_taxa_path = os.path.normpath(metalab_anno_built_in_taxa_path)
         self.last_path = os.path.dirname(metalab_anno_built_in_taxa_path)
     
     def set_lineEdit_metalab_anno_functions_path(self):
         metalab_anno_functions_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select MetaLab Annotated Functions', self.last_path, 'TSV Files (*.tsv);;All Files (*)')[0]
         self.lineEdit_metalab_anno_functions.setText(metalab_anno_functions_path)
+        metalab_anno_functions_path = os.path.normpath(metalab_anno_functions_path)
         self.last_path = os.path.dirname(metalab_anno_functions_path)
         
     def set_lineEdit_metalab_anno_otf_save_path(self):
         metalab_anno_otf_save_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save MetaLab Annotated OTF Table', os.path.join(self.last_path, 'OTF.tsv'), 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(metalab_anno_otf_save_path)
+        metalab_anno_otf_save_path = os.path.normpath(metalab_anno_otf_save_path)
         self.lineEdit_metalab_anno_otf_save_path.setText(metalab_anno_otf_save_path)
         
     ## peptideAnnotator MetaLab2.3 tab end
+    
+    ## peptideAnnotator peptide direct annotation tab
+    def set_lineEdit_pep_direct_to_otf_peptide_path(self):
+        pep_direct_to_otf_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Peptide Table', self.last_path, 'tsv (*.tsv *.txt *.csv)')[0]
+        self.last_path = os.path.dirname(pep_direct_to_otf_peptide_path)
+        pep_direct_to_otf_peptide_path = os.path.normpath(pep_direct_to_otf_peptide_path)
+        self.lineEdit_pep_direct_to_otf_peptide_path.setText(pep_direct_to_otf_peptide_path)
+        
+    def set_lineEdit_pep_direct_to_otf_digestied_pep_db_path(self):
+        digestied_pep_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Digestied Peptide Database', self.last_path, 'sqlite3 (*.db)')[0]
+        self.last_path = os.path.dirname(digestied_pep_db_path)
+        digestied_pep_db_path = os.path.normpath(digestied_pep_db_path)
+        self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setText(digestied_pep_db_path)
+    
+    def set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path(self):
+        pro2taxafunc_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Protein to Taxa-Functions Database', self.last_path, 'sqlite3 (*.db)')[0]
+        self.last_path = os.path.dirname(pro2taxafunc_db_path)
+        pro2taxafunc_db_path = os.path.normpath(pro2taxafunc_db_path)
+        self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setText(pro2taxafunc_db_path)
+        
+    def set_lineEdit_pep_direct_to_otf_output_path(self):
+        pep_direct_to_otf_output_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save OTF Table', os.path.join(self.last_path, 'OTF_dreict_anno.tsv'), 'tsv (*.tsv)')[0]
+        self.last_path = os.path.dirname(pep_direct_to_otf_output_path)
+        pep_direct_to_otf_output_path = os.path.normpath(pep_direct_to_otf_output_path)
+        self.lineEdit_pep_direct_to_otf_output_path.setText(pep_direct_to_otf_output_path)
+    
+    
+    ## peptideAnnotator peptide direct annotation tab end
 
     def load_example_for_analyzer(self):
         current_path = os.path.dirname(os.path.abspath(__file__))
@@ -1916,10 +1969,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         example_taxafunc_path = os.path.join(test_data_dir, 'Example_OTF.tsv').replace('\\', '/')
         example_meta_path = os.path.join(test_data_dir, 'Example_Meta.tsv').replace('\\', '/')
         if os.path.exists(example_taxafunc_path):
+            example_taxafunc_path = os.path.normpath(example_taxafunc_path)
             self.lineEdit_taxafunc_path.setText(example_taxafunc_path)
         else:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Example OTF table not found.')
         if os.path.exists(example_meta_path):
+            example_meta_path = os.path.normpath(example_meta_path)
             self.lineEdit_meta_path.setText(example_meta_path)
         else:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Example Meta table not found.')
@@ -2183,14 +2238,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_db_own_anno_path(self):
         own_anno_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Annotation Table', self.last_path, 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(own_anno_path)
+        own_anno_path = os.path.normpath(own_anno_path)
         self.lineEdit_db_own_anno_path.setText(own_anno_path)
     def set_lineEdit_db_own_taxa_path(self):
         own_taxa_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Taxa Table', self.last_path, 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(own_taxa_path)
+        own_taxa_path = os.path.normpath(own_taxa_path)
         self.lineEdit_db_own_taxa_path.setText(own_taxa_path)
     def set_lineEdit_db_own_db_save_path(self):
         own_db_save_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save Database', self.last_path, 'sqlite3 (*.db)')[0]
         self.last_path = os.path.dirname(own_db_save_path)
+        own_db_save_path = os.path.normpath(own_db_save_path)
         self.lineEdit_db_own_db_save_path.setText(own_db_save_path)
     def run_db_builder_own_table(self):
         anno_path = f'''{self.lineEdit_db_own_anno_path.text()}'''
@@ -2217,16 +2275,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_db_update_tsv_path(self):
         tsv_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Database Update TSV', self.last_path, 'tsv (*.tsv *)')[0]
         self.last_path = os.path.dirname(tsv_path)
+        tsv_path = os.path.normpath(tsv_path)
         self.lineEdit_db_update_tsv_path.setText(tsv_path)
     
     def set_lineEdit_db_update_old_db_path(self):
         old_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Old Database', self.last_path, 'sqlite3 (*.db)')[0]
         self.last_path = os.path.dirname(old_db_path)
+        old_db_path = os.path.normpath(old_db_path)
         self.lineEdit_db_update_old_db_path.setText(old_db_path)
     
     def set_lineEdit_db_update_new_db_path(self):
         new_db_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save New Database', self.last_path, 'sqlite3 (*.db)')[0]
         self.last_path = os.path.dirname(new_db_path)
+        new_db_path = os.path.normpath(new_db_path)
         self.lineEdit_db_update_new_db_path.setText(new_db_path)
     
     def run_db_updater(self):
@@ -2330,6 +2391,54 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             self.logger.write_log(f'Error when run_metalab_maxq_annotate: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
+            
+    def run_pep_dircet_to_otf(self):
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text()
+        digested_pep_db_path = self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.text()
+        table_separator = self.lineEdit_pep_direct_to_otf_pep_table_sep.text()
+        peptide_col = self.lineEdit_pep_direct_to_otf_peptide_col_name.text()
+        intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text()
+        genome_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.value(), 3)
+        protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
+        output_path = self.lineEdit_pep_direct_to_otf_output_path.text()
+        taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text()
+        lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
+        distinct_genome_threshold = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
+        protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
+        
+        if peptide_table_path == '' or digested_pep_db_path == '' or output_path == '' or taxafunc_anno_db_path == ''\
+            or table_separator == '' or peptide_col == '' or intensity_col_prefix == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
+            return None
+        # check if the file exists in the path
+        for file in [peptide_table_path, digested_pep_db_path, taxafunc_anno_db_path]:
+            if not os.path.exists(file):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
+                return None
+                
+        try:
+            self.logger.write_log(f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} digested_pep_db_path:{digested_pep_db_path} output_path:{output_path} taxafunc_anno_db_path:{taxafunc_anno_db_path}')
+            def pep_direct_to_otf_main_wrapper():
+                instance = peptideProteinsMapper(
+                    peptide_table_path=peptide_table_path, 
+                    db_path=digested_pep_db_path,
+                    table_separator=table_separator,
+                    peptide_col=peptide_col,
+                    intensity_col_prefix=intensity_col_prefix,
+                    genome_peptide_coverage_cutoff= genome_peptide_coverage_cutoff,
+                    protein_peptide_coverage_cutoff= protein_peptide_coverage_cutoff,
+                    output_path=output_path
+                    )
+                return instance.all_in_one(
+                    taxafunc_anno_db_path = taxafunc_anno_db_path,
+                    lca_threshold = lca_threshold,
+                    distinct_genome_threshold = distinct_genome_threshold,
+                    protein_genome_separator = protein_genome_separator
+                )
+            self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
+        except Exception as e:
+            self.logger.write_log(f'run_pep_dircet_to_otf error: {e}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
     
     #### TaxaFuncAnalyzer ####
 
@@ -2386,11 +2495,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_taxafunc_path(self):
         taxafunc_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select OTF Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
         self.last_path = os.path.dirname(taxafunc_path)
+        taxafunc_path = os.path.normpath(taxafunc_path)
         self.lineEdit_taxafunc_path.setText(taxafunc_path)
     
     def set_lineEdit_meta_path(self):
         meta_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Meta Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
         self.last_path = os.path.dirname(meta_path)
+        meta_path = os.path.normpath(meta_path)
         self.lineEdit_meta_path.setText(meta_path)
     #### Basic Function End ####
 
@@ -2500,6 +2611,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             taxafunc_path = self.lineEdit_taxafunc_path.text()
             meta_path = self.lineEdit_meta_path.text()
+            peptide_col_name = self.lineEdit_otf_analyzer_peptide_col_name.text()
+            protein_col_name = self.lineEdit_otf_analyzer_protein_col_name.text()
+            sample_col_prefix = self.lineEdit_otf_analyzer_sample_col_prefix.text()
+            any_df_mode = self.checkBox_otf_analyzer_any_data_mode.isChecked()
+            custom_col_name = self.lineEdit_otf_analyzer_custom_col_name.text()
             
             # check if taxafunc_path selected and exists
             if not taxafunc_path:
@@ -2510,13 +2626,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'OTF table file not found!')
                     return
                 
-            # check if in any_df_mode
-            any_df_mode = self.any_table_mode
             if any_df_mode:
                 # ask if continue in any_df_mode
-                reply = QMessageBox.question(self.MainWindow, 'Warning', 'You are in custom mode, continue?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                msg = 'You are in custom mode, continue?'
+                if custom_col_name:
+                    msg += f'\n\nThe items column name is [{custom_col_name}]'
+                else:
+                    msg += '\n\nThe items column name is not set, the first column will be used as items'
+                    
+                if sample_col_prefix:
+                    msg += f'\n\nThe sample columns prefix is [{sample_col_prefix}]'
+                else:
+                    msg += '\n\nThe sample columns prefix is not set, the 2nd to last column will be used as samples'
+                    
+                    
+                reply = QMessageBox.question(self.MainWindow, 'Warning', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.No:
                     return
+                
                 
                 
             # check if meta_path selected and exists
@@ -2524,8 +2651,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 # check if "Intensity" in taxafunc fisrt row
                 with open(taxafunc_path, 'r') as f:
                     first_line = f.readline()
-                    if 'Intensity' not in first_line and any_df_mode is False:
-                        QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Meta table!')
+                    if sample_col_prefix not in first_line and any_df_mode is False:
+                        QMessageBox.warning(self.MainWindow, 'Warning', f'Please select Meta table or check your OTF table!\n\n[{sample_col_prefix}] not found in the first row of OTF table!')
                         return
                     
                 # ask if continue without meta table
@@ -2542,18 +2669,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             self.show_message('Operational Taxa-Functions (OTF) Analyzer is running, please wait...')
             self.logger.write_log(f'set_taxaFuncAnalyzer: {taxafunc_path}, {meta_path}, Any_df_mode: {any_df_mode}')
-            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode}
+            taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode, 
+                               'peptide_col_name': peptide_col_name, 'protein_col_name': protein_col_name,
+                               'sample_col_prefix': sample_col_prefix, 'custom_col_name': custom_col_name}
             self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
             self.callback_after_set_taxafunc(self.tfa, True)
             
             
-        except Exception:
+        except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'set_taxaFuncAnalyzer error: {error_message}', 'e')
             if "The OTF data must have Taxon_prop column!" in error_message:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Your OTF table looks like not correct, please check!')
             else:
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + error_message)
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please check your Files!\n\n' + str(e))
             
         finally:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(True)
@@ -6042,16 +6171,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_db_all_meta_path(self):
         db_all_meta_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select All Meta Table', self.last_path, 'tsv (*.tsv)')[0]
         self.last_path = os.path.dirname(db_all_meta_path)
+        db_all_meta_path = os.path.normpath(db_all_meta_path)
         self.lineEdit_db_all_meta_path.setText(db_all_meta_path)
     
     def set_lineEdit_db_anno_folder(self):
         db_anno_folder = QFileDialog.getExistingDirectory(self.MainWindow, 'Select Annotation Folder', self.last_path)
         self.last_path = db_anno_folder
+        db_anno_folder = os.path.normpath(db_anno_folder)
         self.lineEdit_db_anno_folder.setText(db_anno_folder)
 
     def set_lineEdit_db_save_path(self):
         db_save_path = QFileDialog.getExistingDirectory(self.MainWindow, 'Select Save Folder for MetaX-DataBase.db', self.last_path)
         self.last_path = db_save_path
+        db_save_path = os.path.normpath(db_save_path)
         self.lineEdit_db_save_path.setText(db_save_path)
 ###############   Class MetaXGUI End   ###############
 

@@ -7,10 +7,10 @@ import os
 import threading
 import sqlite3
 if __name__ == '__main__':
-    from pep_to_taxafunc import Pep2TaxaFunc
+    from proteins_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
 else:
-    from .pep_to_taxafunc import Pep2TaxaFunc
+    from .proteins_to_taxafunc import Pep2TaxaFunc
     from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
     
     
@@ -35,12 +35,14 @@ class PeptideAnnotator:
         run_annotate():
             Runs the entire annotation process and returns the annotated dataframe.
     """
-    def __init__(self, db_path:str, peptide_path: str, output_path: str,
+    def __init__(self, db_path:str,  output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
-                 distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_'):
+                 distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
+                 peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None):
         self.db_path = db_path
         self.peptide_path = peptide_path
+        self.peptide_df = peptide_df
         self.output_path = output_path
         
         self.threshold = round(float(threshold), 4)
@@ -171,25 +173,27 @@ class PeptideAnnotator:
 
 
     def exclude_proteins(self, df):
-        print(f'Removing proteins name satart with [{self.exclude_protein_startwith}]...')
+        if not self.exclude_protein_startwith:
+            return df
+        print(f'Removing proteins name start with [{self.exclude_protein_startwith}]...')
         try:
-            exclude_list = self.exclude_protein_startwith.split(';')
-            exclude_list = [excl.strip() for excl in exclude_list]
-            exclude_list = [excl for excl in exclude_list if excl != '']
-            
-            if len(exclude_list) == 0:
+            exclude_list = [excl.strip() for excl in self.exclude_protein_startwith.split(';') if excl.strip()]
+            if not exclude_list:
                 print('No proteins to exclude.')
                 return df
             
-            for exclude_str in exclude_list:
-                df = df[~df[self.protein_col].str.startswith(exclude_str)]
+            # check each protein in the string separated by protein_separator
+            mask = df[self.protein_col].str.split(self.protein_separator).apply(
+                lambda proteins: any(p.strip().startswith(tuple(exclude_list)) for p in proteins)
+            )
+            df = df[~mask]
             print(f'After removing exclude proteins: {df.shape}')
         except Exception as e:
             print('Error: removing exclude proteins failed!')
             print(e)
             
         return df
-    
+
     def extract_genome_from_protein(self, protein:str):
         pro_list = protein.split(self.protein_separator)
         genome_list = [pro.split(self.protein_genome_separator)[0] for pro in pro_list]
@@ -232,7 +236,15 @@ class PeptideAnnotator:
         cols = df.columns.tolist()
         cols = [col.replace(self.peptide_col, 'Sequence') for col in cols]
         cols = [col.replace(self.protein_col, 'Proteins') for col in cols]
-        cols = [col.replace(self.sample_col_prefix, 'Intensity_') for col in cols]
+
+        # replace the prefix of the sample columns to "Intensity" if there are not
+        if not self.sample_col_prefix.lower().startswith('intensity'):
+            cols = [
+                f"Intensity_{col}"
+                if col.startswith(self.sample_col_prefix) and not col.lower().startswith('intensity')
+                else col
+                for col in cols
+            ]
         # replace the "Intensity__" to "Intensity_" if there are any
         cols = [col.replace('Intensity__', 'Intensity_') for col in cols]
         df.columns = cols
@@ -240,27 +252,41 @@ class PeptideAnnotator:
 
     def run_annotate(self):
         print('Start running Peptide Annotator...')
-        print(f'Input file: {self.peptide_path}')
+        if self.peptide_df is not None:
+            print(f'Peptide Table was provided with shape: {self.peptide_df.shape}')
+        else:
+            print(f'Input file: {self.peptide_path}')
         print(f'Database: {self.db_path}')
         print(f'Threshold: {self.threshold}')
         print(f'Genome mode: {self.genome_mode}')
         print(f'Output file: {self.output_path}')
         print('-----------------------------------')
         
-        if not os.path.exists(self.peptide_path):
-            raise FileNotFoundError(f'Input file not found: {self.peptide_path}')
-        
-        df = pd.read_csv(self.peptide_path, sep='\t')
-        df.columns = [col.replace(' ', '_') for col in df.columns]
-        
-        print(f'Original shape: {df.shape}')
+        if self.peptide_df is not None:
+            print('Using provided peptide table...')
+            df = self.peptide_df
+        else:
+            print('Reading peptide table from file...')
+            if not os.path.exists(self.peptide_path):
+                raise FileNotFoundError(f'Input file not found: {self.peptide_path}')
+            
+            df = pd.read_csv(self.peptide_path, sep='\t')
+            df.columns = [col.replace(' ', '_') for col in df.columns]
+            print(f'Original peptide table shape: {df.shape}')
+            
+        print(f"Removing columns only containing [{self.sample_col_prefix}] rather than starting with [{self.sample_col_prefix}]...")
         # extract the peptide sequence, protein accessions and sample columns from the dataframe
         intensity_cols = [col for col in df.columns if col.startswith(self.sample_col_prefix)]
         # remove the columns only containing self.sample_col_prefix, rather than starting with self.sample_col_prefix
         intensity_cols = [col for col in intensity_cols if col != self.sample_col_prefix]
         df = df.loc[:, [self.peptide_col, self.protein_col] + intensity_cols]
+        # remove the rows with empty protein column
+        print("Removing rows with empty protein column if there are...")
+        df = df[df[self.protein_col].str.len() > 0]
+        print("Removing rows with 0 or NaN in all samples...")
+        df = df.loc[df[intensity_cols].sum(axis=1) > 0]
         
-        print(f'After filtering Intensity 0 in all samples and removing other columns: {df.shape}')
+        print(f'After filtering columns and rows, the peptide table shape: {df.shape}')
         
         df = self.exclude_proteins(df)
         
