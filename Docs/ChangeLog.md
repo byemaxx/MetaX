@@ -1,3 +1,8 @@
+# Version: 1.121.5
+## Date: 2025-02-20
+### Changes:
+- Change: Changed the default setting of the "Set TaxaFunc" tab of the OTF Analyzer to make more clear for the user.
+
 # Version: 1.121.4
 ## Date: 2025-02-18
 ### Changes:

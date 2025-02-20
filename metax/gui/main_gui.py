@@ -1243,6 +1243,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
             self.comboBox_outlier_handling_method2.setEnabled(False)
             self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
+            
+        elif self.comboBox_outlier_detection.currentText() == "Missing-Value":
+            self.comboBox_outlier_handling_method1.setEnabled(True)
+            self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
+            self.comboBox_outlier_handling_method2.setEnabled(False)
+            self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
         else:
             self.comboBox_outlier_handling_method1.setEnabled(True)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(True)
@@ -1251,7 +1257,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def update_outlier_handling_method1(self):
         method1 = self.comboBox_outlier_handling_method1.currentText()
         method2_enabled = method1 in ["mean", "median"]
-        group_or_sample_enabled = method1 not in ["Drop", "Original"]
+        group_or_sample_enabled = method1 not in ["Drop", "Original", "FillZero"]
 
         self.comboBox_outlier_handling_method2.setEnabled(method2_enabled)
         self.comboBox_outlier_handling_group_or_sample.setEnabled(group_or_sample_enabled)
@@ -4603,8 +4609,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
+            peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
             theme = self.comboBox_data_overiew_theme.currentText()
-            pic = BasicPlot(self.tfa).plot_taxa_number(theme = theme, font_size = 8, width = 5,height = 4
+            pic = BasicPlot(self.tfa).plot_taxa_number(peptide_num=peptide_num,theme = theme, font_size = 8, width = 5,height = 4
                                                        ).get_figure()
 
             self.mat_widget_plot_taxa_num = MatplotlibWidget(pic, width = 5, height = 4)
