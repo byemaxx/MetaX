@@ -1,7 +1,7 @@
 # Version: 1.121.5
 ## Date: 2025-02-20
 ### Changes:
-- Change: Changed the default setting of the "Set TaxaFunc" tab of the OTF Analyzer to make more clear for the user.
+- Change: Changed the default setting of the "Peptide threshold" in OTF Analyzer as 3. The default setting of the "Outlier detection" and "Outlier Handling" in "Set TaxaFunc" to "Missing-Value" and "FillZero" respectively. to make more clear for the user.
 
 # Version: 1.121.4
 ## Date: 2025-02-18
