@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -464,6 +464,9 @@
                       <property name="maximum">
                        <number>9999</number>
                       </property>
+                      <property name="value">
+                       <number>3</number>
+                      </property>
                      </widget>
                     </item>
                    </layout>
@@ -793,7 +796,7 @@
                 <item>
                  <widget class="QComboBox" name="comboBox_outlier_handling_method1">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -801,6 +804,20 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="toolTip">
+                   <string>The method to fill the outlier values</string>
+                  </property>
+                  <property name="editable">
+                   <bool>false</bool>
+                  </property>
+                  <property name="currentText">
+                   <string>FillZero</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>FillZero</string>
+                   </property>
+                  </item>
                   <item>
                    <property name="text">
                     <string>Drop</string>
@@ -836,25 +853,26 @@
                     <string>multiple</string>
                    </property>
                   </item>
-                  <item>
-                   <property name="text">
-                    <string>FillZero</string>
-                   </property>
-                  </item>
                  </widget>
                 </item>
                </layout>
               </item>
               <item row="4" column="1">
                <widget class="QComboBox" name="comboBox_outlier_detection">
+                <property name="toolTip">
+                 <string>The method to mark value as outlier</string>
+                </property>
+                <property name="currentText">
+                 <string>Missing-Value</string>
+                </property>
                 <item>
                  <property name="text">
-                  <string>None</string>
+                  <string>Missing-Value</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Missing-Value</string>
+                  <string>None</string>
                  </property>
                 </item>
                 <item>
@@ -996,6 +1014,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                   <string>The method to fill outlier values if they still exist after primary handling</string>
                   </property>
                   <item>
                    <property name="text">
@@ -1479,6 +1500,9 @@
                   <property name="maximum">
                    <number>999</number>
                   </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -1499,6 +1523,9 @@
                   <property name="maximum">
                    <number>999</number>
                   </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -1518,6 +1545,9 @@
                   </property>
                   <property name="maximum">
                    <number>999</number>
+                  </property>
+                  <property name="value">
+                   <number>3</number>
                   </property>
                  </widget>
                 </item>
@@ -10341,8 +10371,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>913</width>
-                    <height>490</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">
