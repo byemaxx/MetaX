@@ -8,6 +8,11 @@
 # 3. reduce proteins by genome ranking
 # 4. save the annotated peptide_table or transfer to OTF annotator
 
+#TODO:
+# 1. add mutiple prefix options for intensity columns
+# 2. add refine samples name function. e.g. D:/path/to/file/xxx.raw -> xxx
+
+
 import sqlite3
 import json
 import pandas as pd

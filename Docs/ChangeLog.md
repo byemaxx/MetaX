@@ -1,3 +1,8 @@
+# Version: 1.121.6
+## Date: 2025-02-24
+### Changes:
+- Fix: Fix update fail when the MetaX start up.
+
 # Version: 1.121.5
 ## Date: 2025-02-20
 ### Changes:

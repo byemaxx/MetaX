@@ -1,3 +1,6 @@
+# Description: Calculate genome rank based on peptide coverage.
+# TODO: Add intensity sum for weighted genome rank calculation.
+
 import pandas as pd
 from tqdm import tqdm
 from collections import defaultdict

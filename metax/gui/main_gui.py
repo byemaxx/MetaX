@@ -1857,7 +1857,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         self.msg.setWindowModality(Qt.NonModal)
         self.msg.setWindowTitle(title)
-        self.msg.setStyleSheet(self.msgbox_style)
+        if hasattr(self, 'msgbox_style'):
+            self.msg.setStyleSheet(self.msgbox_style)
         self.msg.setText(message)
         
         self.msg.setStandardButtons(QMessageBox.NoButton)
