@@ -1,3 +1,8 @@
+# Version: 1.121.7
+## Date: 2025-02-26
+### Changes:
+- Change: Keep Genome rank when annotate peptides to OTF Dricetly.
+
 # Version: 1.121.6
 ## Date: 2025-02-24
 ### Changes:
