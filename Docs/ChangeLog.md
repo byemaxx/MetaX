@@ -1,3 +1,9 @@
+# Version: 1.122.0
+## Date: 2025-03-04
+### Changes:
+- New: Add a function to export the meta table for editing in Data Overview part of OTF Analyzer (convinient for user especially for the go without the meta file at the beginning).
+- Optimize the message of the OTF Analyzer when select the outlier handle method.
+
 # Version: 1.121.8
 ## Date: 2025-03-03
 ### Changes:
