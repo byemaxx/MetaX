@@ -106,6 +106,15 @@ class TaxaFuncAnalyzer:
         # self.set_func('eggNOG_Description')
 
     def _set_original_df(self, df_path: str) -> None:
+        # check if there are duplicated columns
+        with open(df_path, 'r', encoding='utf-8') as f:
+            header_line = f.readline().strip() 
+        original_columns = header_line.split('\t')
+        duplicated_cols = [col for col in set(original_columns) if original_columns.count(col) > 1]
+        if duplicated_cols:
+            raise ValueError(f"Duplicate columns found in {df_path}:\n{duplicated_cols}")
+        
+        # read the table
         self.original_df = pd.read_csv(df_path, sep='\t')
 
         if self.any_df_mode:
@@ -1341,7 +1350,7 @@ if __name__ == '__main__':
 
     #### TEST FOR set_multi_tables
     sw.set_multi_tables(level='s', 
-                        outlier_params = {'detect_method': 'None', 'handle_method': 'original',
+                        outlier_params = {'detect_method': 'missing-value', 'handle_method': 'fillzero',
                             "detection_by_group" : 'Individual', "handle_by_group": None},
                         data_preprocess_params = {
                                                 'normalize_method': 'None', 
@@ -1350,7 +1359,7 @@ if __name__ == '__main__':
                                                 'processing_order': ['transform', 'normalize', 'batch']},
                     peptide_num_threshold = {'taxa': 3, 'func': 3, 'taxa_func': 3},
                     keep_unknow_func=False,
-                    sum_protein=True, 
+                    sum_protein=False, 
                     sum_protein_params = {'method': 'anti-razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=False, split_func_params = {'split_by': '|', 'share_intensity': False},
                     taxa_and_func_only_from_otf=False, quant_method='sum', func_threshold=1.00

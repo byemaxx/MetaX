@@ -1,6 +1,24 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of MetaX
 
+import platform
+# Hide console window on Windows
+def hide_console_on_startup():
+    if platform.system() == 'Windows':
+        try:
+            from ctypes import windll
+            import time
+            hwnd = windll.kernel32.GetConsoleWindow()
+            if hwnd:
+                print("Starting MetaX...")
+                time.sleep(0.5) # To make sure the print saw by user before hide the console
+                windll.user32.ShowWindow(hwnd, 0)  # 0 = SW_HIDE
+        except Exception as e:
+            print(f"Failed to hide console: {e}")
+
+# Hide console window on Windows
+hide_console_on_startup()
+
 from PyQt5.QtCore import QCoreApplication, Qt
 
 # Set the attribute before creating the QApplication
