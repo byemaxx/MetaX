@@ -145,6 +145,8 @@ class peptideProteinsMapper:
                                  genome_separator = ';')
         df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
                                                            weight_distinct=0.9, weight_peptide=0.1)
+        # svaing the genome ranking table
+        df_results_rank.to_csv(f'{self.output_path.replace(".tsv", "_genome_ranked.tsv")}', sep='\t', index=False)
         self.genome_ranked_table = df_results_rank
         # cutoff indes is  "coverage_ratio" > peptide_coverage_cutoff
         cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]

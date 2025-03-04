@@ -1,3 +1,15 @@
+# Version: 1.121.8
+## Date: 2025-03-03
+### Changes:
+- Change: Change the Lancher to C program to avoid it detected as virus by some anti-virus software.
+- New: Add a check if the OTF table has duplicated columns when read to OTF Analyzer.
+
+
+# Version: 1.121.7
+## Date: 2025-02-26
+### Changes:
+- Change: Keep Genome rank when annotate peptides to OTF Dricetly.
+
 # Version: 1.121.6
 ## Date: 2025-02-24
 ### Changes:
