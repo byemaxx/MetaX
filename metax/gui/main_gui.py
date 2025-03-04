@@ -387,7 +387,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_overview_clear_select.clicked.connect(self.overview_filter_deselect_all)
         self.pushButton_overview_run_filter.clicked.connect(self.overview_filter_run)
         self.pushButton_overview_tax_plot_new_window.clicked.connect(self.plot_taxa_number_new_window)
-        self.pushButton_overview_peptide_plot_new_window.clicked.connect(self.plot_taxa_stats_new_window)     
+        self.pushButton_overview_peptide_plot_new_window.clicked.connect(self.plot_taxa_stats_new_window)
+        self.pushButton_data_overview_export_meta_table.clicked.connect(self.export_meta_table)
 
         # set multi table
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
@@ -2901,6 +2902,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # self.update_table_dict('original', self.tfa.original_df)
         # self.update_table_dict('meta', self.tfa.meta_df)
     
+    def export_meta_table(self):
+        # check if meta_df exists
+        if not hasattr(self.tfa, 'meta_df'):
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please Load Data First!')
+            return
+        try:
+            save_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save Meta Table', os.path.join(self.last_path, 'meta_table.tsv'), 'tsv (*.tsv)')[0]
+            if save_path:
+                meta_df = self.tfa.meta_df
+                # add prefix to sample columns
+                if self.tfa.sample_col_prefix:
+                    meta_df['Sample'] = meta_df['Sample'].apply(lambda x: f'{self.tfa.sample_col_prefix}{x}')
+                meta_df.to_csv(save_path, sep='\t', index=False)
+                QMessageBox.information(self.MainWindow, 'Info', 'Meta table exported successfully!')
+        except Exception as e:
+            self.logger.write_log(f'export_meta_table error: {e}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', str(e))
+    
     def enable_basic_button(self):
 
         self.pushButton_set_multi_table.setEnabled(True)
@@ -2987,7 +3006,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 if msg_box.exec_() == QMessageBox.No:
                     return None
                 
-            if outlier_handle_method1 != 'Drop' or outlier_handle_method2 != 'Drop':
+            if outlier_handle_method1 not in ['Drop', 'Original', 'FillZero'] \
+                or outlier_handle_method2 not in ['Drop', 'Original', 'FillZero']:
                 # messagebox to confirm and warning
                 msg_box = QMessageBox(parent=self.MainWindow)
                 msg_box.setWindowTitle('Warning')
