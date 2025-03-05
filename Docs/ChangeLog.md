@@ -1,3 +1,8 @@
+# Version: 1.122.1
+## Date: 2025-03-04
+### Changes:
+- Fix: Fixed the bug of Peptide Dricetly Annotation, the duplicated peptides were ignored. Now added a function sum the duplicated peptides in table.
+
 # Version: 1.122.0
 ## Date: 2025-03-04
 ### Changes:

@@ -98,11 +98,43 @@ class peptideProteinsMapper:
         if any([col.startswith(self.intensity_col_prefix) for col in self.peptide_table.columns]):
             self.has_intensity = True
             print("Intensity columns found, will be kept in the output and used for genome ranking")
+            self.sum_duplicates_peptides()
         else:
             print("Warning: Intensity columns not found")
             raise ValueError(f"The intensity columns you specified:[{self.intensity_col_prefix}] are not in the peptide_table, please check!")
         return self.peptide_table
     
+    def sum_duplicates_peptides(self):
+        # check if the peptides are unique, if not, combine the intensity columns, sum them up, if na , consider as 0
+        # Get all intensity columns
+        intensity_cols = [col for col in self.peptide_table.columns if col.startswith(self.intensity_col_prefix)]
+        print(f"Found {len(intensity_cols)} intensity columns")
+
+        # Check if peptides are unique
+        duplicated_peptides = self.peptide_table[self.peptide_col].duplicated().sum()
+        if duplicated_peptides > 0:
+            print(f"Found {duplicated_peptides} duplicate peptide entries, combining their intensities")
+            
+            # Fill NA values with 0 in intensity columns
+            self.peptide_table[intensity_cols] = self.peptide_table[intensity_cols].fillna(0)
+            
+            # Group by peptide and sum the intensity columns
+            grouped_table = self.peptide_table.groupby(self.peptide_col)[intensity_cols].sum().reset_index()            
+            
+            # Get non-intensity columns
+            non_intensity_cols = [col for col in self.peptide_table.columns 
+                                    if not col.startswith(self.intensity_col_prefix) and col != self.peptide_col]
+            
+            # Keep the first occurrence of each peptide for other columns
+            first_occurrence = self.peptide_table.drop_duplicates(subset=[self.peptide_col])[
+                [self.peptide_col] + non_intensity_cols]
+            
+            # Merge back together
+            self.peptide_table = pd.merge(grouped_table, first_occurrence, on=self.peptide_col)
+            
+            print(f"After combining duplicates: {len(self.peptide_table)} unique peptides")
+        else:
+            print("All peptides are unique, no combining needed")
 
     def annotate_peptides(self):
         """ Annotate peptides with proteins by querying the database. """
@@ -255,7 +287,7 @@ if __name__ == "__main__":
     ## test process_peptides_to_proteins
     output_path = "anntated_report.pr_matrix.tsv"
     peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-                                           peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
+                                           peptide_col='Stripped.Sequence', intensity_col_prefix="Intensity_", table_separator='\t',
                                              genome_peptide_coverage_cutoff=0.98, protein_peptide_coverage_cutoff=1)
     peptide_mapper.process_peptides_to_proteins()
     peptide_mapper.final_peptide_table.to_csv(output_path, sep='\t', index=False)
