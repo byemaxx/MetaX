@@ -41,7 +41,7 @@ if __name__ == '__main__':
     from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
 
 else:
-    from ..utils.version import __version__
+    from .version import __version__
     from ..taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
     from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
     from ..taxafunc_ploter.basic_plot import BasicPlot
@@ -169,7 +169,7 @@ class OTFAnalysisWorkflow:
             df_temp_taxa = self.tfa._create_taxa_table_only_from_otf(level=i, **self.data_preprocess_params)
             # remove "peptide_num" column if it exists
             df_temp_taxa = df_temp_taxa.drop(columns=['peptide_num'], errors='ignore')
-            df_temp_taxa.to_csv(os.path.join(taxa_dir, f"taxa_table_{i}.tsv"), sep='\t', index=False)
+            df_temp_taxa.to_csv(os.path.join(taxa_dir, f"taxa_table_{i}.tsv"), sep='\t', index=True)
             logging.info(f"Taxa table {i} created.")
         logging.info("All taxa tables created.")
     

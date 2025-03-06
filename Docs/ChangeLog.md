@@ -1,3 +1,16 @@
+# Version: 1.122.2
+## Date: 2025-03-06
+### Changes:
+- Change: Changed the separator of group in plot from _ to ~ to avoid conflict if the group name contains _.
+- Fix: Fixed the bug of when plot the cross-test in each comparison, the valid check for group selection was not correct in some cases.
+- Optimize: Optimized the code of the OTF Analyzer to speed up the process of the OTF table loading.
+
+
+# Version: 1.122.1
+## Date: 2025-03-04
+### Changes:
+- Fix: Fixed the bug of Peptide Dricetly Annotation, the duplicated peptides were ignored. Now added a function sum the duplicated peptides in table.
+
 # Version: 1.122.0
 ## Date: 2025-03-04
 ### Changes:

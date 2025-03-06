@@ -509,11 +509,11 @@ class HeatmapPlot:
                                                                             p_type=p_type, df_type = res_df_type)
             dft = df_dict[three_levels_df_type].copy()
             # set level 1 index as the column color
-            dft.columns = ['_'.join(col) for col in dft.columns]
+            dft.columns = ['~'.join(col) for col in dft.columns]
             sample_list = dft.columns.tolist()
             group_list = []
             for i in sample_list:
-                group_name = i.split('_')[0]
+                group_name = i.split('~')[0]
                 group_list.append(group_name)
             color_list = self.assign_colors(group_list)
                     
