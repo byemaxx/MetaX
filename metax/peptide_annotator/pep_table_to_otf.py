@@ -177,6 +177,8 @@ class peptideProteinsMapper:
                                  genome_separator = ';')
         df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
                                                            weight_distinct=0.9, weight_peptide=0.1)
+        df_weights = gr.df_combined
+        df_results_rank = df_results_rank.merge(df_weights, on='Genomes', how='left')
         # svaing the genome ranking table
         df_results_rank.to_csv(f'{self.output_path.replace(".tsv", "_genome_ranked.tsv")}', sep='\t', index=False)
         self.genome_ranked_table = df_results_rank

@@ -253,8 +253,36 @@ class TaxaFuncAnalyzer:
 
 
     def _check_if_intensity_cols_numberic(self):
-        if not self.original_df[self.sample_list].applymap(lambda x: pd.isna(x) or isinstance(x, (int, float))).all().all():
-            raise ValueError("The sample columns must contain only numeric values or empty (NaN) values!")
+        """
+        Check if all intensity columns contain only numeric values or NaN values.
+        Only checks the first 1000 rows of each column to avoid long processing times.
+        """
+        # Select only the sample columns
+        sample_cols = self.original_df[self.sample_list]
+        
+        try:
+            # For each sample column, check a subset of rows
+            sample_size = min(1000, len(sample_cols))
+            for col in sample_cols.columns:
+                # Get non-NaN values
+                non_nan_values = sample_cols[col].head(sample_size).dropna()
+                if len(non_nan_values) > 0:
+                    # Try to convert non-NaN values to numeric
+                    # If any conversion fails, this will raise ValueError
+                    pd.to_numeric(non_nan_values, errors='raise')
+            
+            # For all columns, ensure they have numeric dtype (except NaN)
+            for col in sample_cols.columns:
+                if not pd.api.types.is_numeric_dtype(sample_cols[col]):
+                    # Convert to numeric, keeping NaN values
+                    self.original_df[col] = pd.to_numeric(self.original_df[col], errors='coerce')
+                    
+            # Print a message if we had to convert columns
+            if not all(pd.api.types.is_numeric_dtype(sample_cols[col]) for col in sample_cols.columns):
+                print("Note: Some intensity columns were automatically converted to numeric type while preserving NaN values.")
+        
+        except ValueError:
+            raise ValueError("The sample columns must contain only numeric values or NaN values! Found non-numeric, non-NaN values.")
 
 
     def update_meta(self, meta_df: pd.DataFrame) -> None:

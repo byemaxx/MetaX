@@ -222,7 +222,7 @@ class BasicStats:
             group_list = [i[0] for i in grouped_data.columns]
             
             # Convert multi-index to single index
-            grouped_data.columns = ['_'.join(col).strip() for col in grouped_data.columns.values]
+            grouped_data.columns = ['~'.join(col).strip() for col in grouped_data.columns.values]
             
             df = grouped_data
             

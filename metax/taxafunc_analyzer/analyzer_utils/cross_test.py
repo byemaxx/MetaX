@@ -175,7 +175,7 @@ class CrossTest:
         df_type = self.convert_df_name_to_simple_name(df_type)
         
         meta_df = self.tfa.meta_df.copy()
-        self.tfa.check_if_condition_valid(condition)
+        self.tfa.check_if_condition_valid(condition_meta=condition,  current_group_list=group_list)
         condition_list = meta_df[condition].unique()
         print(f'------------------ Start Comparisons Dunnett with Condition [{condition}]------------------')
         print(f'Condition List: {condition_list}')
@@ -330,7 +330,7 @@ class CrossTest:
 
         meta_df = self.tfa.meta_df.copy()
 
-        self.tfa.check_if_condition_valid(condition)
+        self.tfa.check_if_condition_valid(condition_meta=condition,  current_group_list=group_list)
 
         condition_list = meta_df[condition].unique()
         print(f'------------------ Start Comparisons Deseq2 with Condition [{condition}]------------------')
