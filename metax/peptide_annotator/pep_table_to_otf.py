@@ -17,6 +17,7 @@ import sqlite3
 import json
 import pandas as pd
 from tqdm import tqdm
+import pathlib
 
 if __name__ == "__main__":
     from get_genome_rank import GenomeRank
@@ -71,6 +72,10 @@ class peptideProteinsMapper:
                  genome_peptide_coverage_cutoff=0.95,
                  protein_peptide_coverage_cutoff=0.95,
                  output_path=None,
+                 temp_dir=None,
+                 stop_after_genome_ranking=False,
+                 continue_base_on_annotaied_peptide_table=False, # use genome annotated peptide table to continue the process, skip querying proteins
+                 turn_point_method='auto' # not use percentage cutoff for genome ranking
                  ):
 
         self.peptide_table_path = peptide_table_path
@@ -81,20 +86,38 @@ class peptideProteinsMapper:
         self.genome_peptide_coverage_cutoff = genome_peptide_coverage_cutoff
         self.protein_peptide_coverage_cutoff = protein_peptide_coverage_cutoff
         self.output_path = output_path
+        self.temp_dir = None
+        self.stop_after_genome_ranking = stop_after_genome_ranking
+        self.continue_base_on_annotaied_peptide_table = continue_base_on_annotaied_peptide_table
+        self.turn_point_method = turn_point_method # auto or coverage
         
         self.has_intensity = False
-        
-        self.peptide_table = self.load_peptide_table()
+        self.protein_ranked_table = None
         self.genome_ranked_table = None
         self.final_peptide_table = None
         
-        
-    def load_peptide_table(self):
-        # load peptide_table
-        self.peptide_table = pd.read_csv(self.peptide_table_path, sep=self.table_separator)
-        # check if peptide_col and intensity_col_prefix are in the peptide_table
-        if self.peptide_col not in self.peptide_table.columns:
-            raise ValueError(f"The peptide column you specified:[{self.peptide_col}] is not in the peptide_table, please check!")
+        self.set_temp_dir(temp_dir)
+        self.peptide_table = self.load_peptide_table()
+    
+    def __check_input_pram(self):
+        if self.continue_base_on_annotaied_peptide_table:
+            print("Continue base on annotated peptide table")
+            print(f"Check if all the necessary columns are in the peptide table\
+                \nPeptide column: [{self.peptide_col}]\
+                \nIntensity columns prefix: [{self.intensity_col_prefix}]\
+                \nGenomes column: [Genomes]\
+                \nProteins column: [Proteins]")
+            for col in [self.peptide_col, 'Genomes', 'Proteins']:
+                if col not in self.peptide_table.columns:
+                    raise ValueError(f"The peptide table should have a column named '{col}'")
+        else:
+            print(f"Check if all the necessary columns are in the peptide table\
+                \nPeptide column: [{self.peptide_col}]\
+                \nIntensity columns prefix: [{self.intensity_col_prefix}]")
+            for col in [self.peptide_col]:
+                if col not in self.peptide_table.columns:
+                    raise ValueError(f"The peptide column you specified:[{self.peptide_col}] is not in the peptide_table, please check!")
+
         if any([col.startswith(self.intensity_col_prefix) for col in self.peptide_table.columns]):
             self.has_intensity = True
             print("Intensity columns found, will be kept in the output and used for genome ranking")
@@ -102,7 +125,29 @@ class peptideProteinsMapper:
         else:
             print("Warning: Intensity columns not found")
             raise ValueError(f"The intensity columns you specified:[{self.intensity_col_prefix}] are not in the peptide_table, please check!")
+
+    def load_peptide_table(self):
+        print("Loading peptide table...")
+        # load peptide_table
+        self.peptide_table = pd.read_csv(self.peptide_table_path, sep=self.table_separator)
+        # check if peptide_col and intensity_col_prefix are in the peptide_table
+        self.__check_input_pram()
+        
         return self.peptide_table
+    
+    def set_temp_dir(self, temp_dir):
+        if temp_dir:
+            # check if the temp dir valid
+            temp_dir = pathlib.Path(temp_dir)
+            if not temp_dir.is_dir():
+                raise ValueError(f"Invalid temp dir path: {temp_dir}")
+            self.temp_dir = temp_dir
+            
+        else:
+            # create a temp dir in output path
+            temp_dir = pathlib.Path(self.output_path).parent / 'temp'
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            self.temp_dir = temp_dir
     
     def sum_duplicates_peptides(self):
         # check if the peptides are unique, if not, combine the intensity columns, sum them up, if na , consider as 0
@@ -170,7 +215,7 @@ class peptideProteinsMapper:
         df['Genomes'] = df['Proteins'].apply(extract_genome)
         return df
         
-    def calculate_genome_list(self, df):
+    def calculate_genome_list(self, df, turn_point_method="auto"):
         gr = GenomeRank(df = df, 
                                  peptide_column = self.peptide_col,
                                  genome_column = 'Genomes',
@@ -179,11 +224,23 @@ class peptideProteinsMapper:
                                                            weight_distinct=0.9, weight_peptide=0.1)
         df_weights = gr.df_combined
         df_results_rank = df_results_rank.merge(df_weights, on='Genomes', how='left')
-        # svaing the genome ranking table
-        df_results_rank.to_csv(f'{self.output_path.replace(".tsv", "_genome_ranked.tsv")}', sep='\t', index=False)
+        # svaing the genome ranking table to temp dir
+        # df_results_rank.to_csv(f'{self.output_path.replace(".tsv", "_genome_ranked.tsv")}', sep='\t', index=False)
+        df_results_rank.to_csv(f'{self.temp_dir}/genome_ranked.tsv', sep='\t', index=False)
         self.genome_ranked_table = df_results_rank
-        # cutoff indes is  "coverage_ratio" > peptide_coverage_cutoff
-        cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]
+        
+        if turn_point_method.lower() == 'auto':
+            window_size = 20
+            std_threshold = 1
+            print(f"Calculating turning point by rolling window: window_size={window_size}, std_threshold={std_threshold}")
+            cutoff_index = gr._calculate_turning_point(df_results_rank, window_size, std_threshold)
+        elif turn_point_method.lower() == 'coverage':
+            print(f"Calculating turning point by percentage cutoff: {self.genome_peptide_coverage_cutoff}")
+            # cutoff indes is  "coverage_ratio" > peptide_coverage_cutoff
+            cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]
+        else:
+            raise ValueError(f"Invalid turn_point_method: {turn_point_method}, should be 'Auto' or 'Coverage'")
+        
         selected_genomes = df_results_rank.loc[:cutoff_index]
         selected_genomes_list = selected_genomes['Genomes'].tolist()
         print(f'Original genomes: [{df_results_rank.shape[0]}]')
@@ -242,9 +299,30 @@ class peptideProteinsMapper:
 
 
     def process_peptides_to_proteins(self):# main function workflow
+        if self.continue_base_on_annotaied_peptide_table:
+            self.run_base_on_annotaied_peptide_table()
+            return
+
         self.annotate_peptides()
         self.extract_genome_col(self.peptide_table)
-        selected_genomes_list = self.calculate_genome_list(self.peptide_table)
+        
+        if self.stop_after_genome_ranking:
+            print("Stopped after genome ranking")
+            self.final_peptide_table = self.peptide_table
+            self.calculate_genome_list(self.peptide_table, 
+                                    turn_point_method=self.turn_point_method)
+            #save the annotated peptide table to output path
+            self.peptide_table.to_csv(self.output_path, sep='\t', index=False)
+            return
+        else:
+            #save the annotated peptide table to temp dir
+            self.peptide_table.to_csv(f'{self.temp_dir}/annotated_peptide_table.tsv', sep='\t', index=False)
+            self.run_base_on_annotaied_peptide_table()
+
+
+    def run_base_on_annotaied_peptide_table(self):
+        selected_genomes_list = self.calculate_genome_list(self.peptide_table, 
+                                                           turn_point_method=self.turn_point_method)
         self.final_peptide_table = self.reduce_proteins_by_genome(self.peptide_table, selected_genomes_list)
         selected_proteins_list = self.calculate_protein_list(self.final_peptide_table)
         self.final_peptide_table = self.reduce_proteins_by_mini_proteins_list(self.final_peptide_table, selected_proteins_list)
@@ -259,7 +337,11 @@ class peptideProteinsMapper:
                    exclude_protein_startwith = None, #Usually 'REV_;XXX_' 
                    protein_genome_separator = '_'
                    ): # run peptide to OTF
-        self.process_peptides_to_proteins()
+        
+        if self.continue_base_on_annotaied_peptide_table:
+            self.run_base_on_annotaied_peptide_table()
+        else:
+            self.process_peptides_to_proteins()
         
 
         annotator = PeptideAnnotator(
@@ -283,14 +365,17 @@ class peptideProteinsMapper:
         
         
 if __name__ == "__main__":
-    peptide_table_path = "C:/Users/Qing/Desktop/test/report.pr_matrix _test.tsv"
+    peptide_table_path = "C:/Users/Qing/Desktop/test/report.pr_matrix_test.tsv"
+    # peptide_table_path = "temp/annotated_peptide_table.tsv"
     db_path = "C:/Users/Qing/OneDrive - University of Ottawa/Projects/UHGP_digested_db/peptide_to_protein.db"
     
     ## test process_peptides_to_proteins
     output_path = "anntated_report.pr_matrix.tsv"
     peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-                                           peptide_col='Stripped.Sequence', intensity_col_prefix="Intensity_", table_separator='\t',
-                                             genome_peptide_coverage_cutoff=0.98, protein_peptide_coverage_cutoff=1)
+                                           peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
+                                             genome_peptide_coverage_cutoff=0.98, protein_peptide_coverage_cutoff=1,
+                                             stop_after_genome_ranking=True, turn_point_method="Coverage",
+                                             continue_base_on_annotaied_peptide_table=False)
     peptide_mapper.process_peptides_to_proteins()
     peptide_mapper.final_peptide_table.to_csv(output_path, sep='\t', index=False)
     print("peptide annotation finished")

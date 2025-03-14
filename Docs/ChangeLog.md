@@ -1,3 +1,9 @@
+# Version: 1.122.3
+## Date: 2025-03-14
+### Changes:
+- New: Added a function to stop and restart the OTF directly Annotation after Ranking the genome.
+
+
 # Version: 1.122.2
 ## Date: 2025-03-06
 ### Changes:

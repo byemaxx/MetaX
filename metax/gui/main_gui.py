@@ -352,7 +352,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path)
         self.pushButton_open_pep_direct_to_otf_output_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_output_path)
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
-
+        self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking)
+        self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides)
+        
+        
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
         self.toolButton__final_peptide_help.clicked.connect(self.show_toolButton_final_peptide_help)
@@ -2431,13 +2434,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
         distinct_genome_threshold = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
+        stop_after_genome_ranking = self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked()
+        continue_base_on_annotaied_peptide_table = self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked()
+        turn_point_method = "auto" if self.checkBox_pep_direct_to_otfgenome_auto_cutoff.isChecked() else "coverage"
         
-        if peptide_table_path == '' or digested_pep_db_path == '' or output_path == '' or taxafunc_anno_db_path == ''\
-            or table_separator == '' or peptide_col == '' or intensity_col_prefix == '':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
-            return None
+        
+        for value in [peptide_table_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
+            if value == '':
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
+                return None
+            
         # check if the file exists in the path
-        for file in [peptide_table_path, digested_pep_db_path, taxafunc_anno_db_path]:
+        check_files = [peptide_table_path]
+        if not continue_base_on_annotaied_peptide_table:
+            check_files.append(digested_pep_db_path)
+        if not stop_after_genome_ranking:
+            check_files.append(taxafunc_anno_db_path)
+
+        for file in check_files:
             if not os.path.exists(file):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
                 return None
@@ -2453,18 +2467,54 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     intensity_col_prefix=intensity_col_prefix,
                     genome_peptide_coverage_cutoff= genome_peptide_coverage_cutoff,
                     protein_peptide_coverage_cutoff= protein_peptide_coverage_cutoff,
-                    output_path=output_path
+                    output_path=output_path,
+                    stop_after_genome_ranking=stop_after_genome_ranking,
+                    continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
+                    turn_point_method=turn_point_method
                     )
-                return instance.all_in_one(
-                    taxafunc_anno_db_path = taxafunc_anno_db_path,
-                    lca_threshold = lca_threshold,
-                    distinct_genome_threshold = distinct_genome_threshold,
-                    protein_genome_separator = protein_genome_separator
-                )
+                if stop_after_genome_ranking:
+                    return instance.process_peptides_to_proteins()
+                else:
+                    return instance.all_in_one(
+                        taxafunc_anno_db_path = taxafunc_anno_db_path,
+                        lca_threshold = lca_threshold,
+                        distinct_genome_threshold = distinct_genome_threshold,
+                        protein_genome_separator = protein_genome_separator
+                    )
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
         except Exception as e:
             self.logger.write_log(f'run_pep_dircet_to_otf error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
+    
+    def change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking(self):
+        if self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked():
+            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(False)
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(False)
+            self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.setChecked(False)
+            self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides()
+            # cahnge text of label_224
+            self.label_224.setText('Annotated Peptide Table Save To')
+        else:
+            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(True)
+            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(True)
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
+            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(True)
+            self.label_224.setText('OTFs Save To')
+
+    
+    def change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides(self):
+        if self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked():
+            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(False)
+            self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.setChecked(False)
+            self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking()
+            self.label_220.setText('Annotated Peptide Table')
+        else:
+            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(True)
+            self.label_220.setText('Peptide Table')
+    
+    
     
     #### TaxaFuncAnalyzer ####
 
@@ -2884,7 +2934,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.enable_multi_button(False)
             
             # checek if the genome_mode is True, then update taxa_level_list
-            taxa_level_list = ['Genome', 'Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life']
+            taxa_level_list = ['Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life','Genome']
             if not self.tfa.genome_mode:
                 taxa_level_list.remove('Genome')
  
