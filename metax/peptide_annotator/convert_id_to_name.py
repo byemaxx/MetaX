@@ -293,7 +293,8 @@ def query_kegg_items(id_str: str, id_to_name_dict: dict, split_char: str = ',', 
             else:
                 id_part = kegg_id
             name = id_to_name_dict.get(id_part, '-')
-            name_set.add(f'{id_part}:{name}')
+            if name != '-':
+                name_set.add(f'{id_part}:{name}')
         except ValueError:
             name_set.add('-')
     
