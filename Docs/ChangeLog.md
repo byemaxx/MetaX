@@ -1,3 +1,9 @@
+# Version: 1.122.4
+## Date: 2025-03-1
+### Changes:
+- New: Added KEGG_Module_name to the OTF table.
+- Optimize: Optimized the code of the coonvert id to name.
+
 # Version: 1.122.3
 ## Date: 2025-03-14
 ### Changes:

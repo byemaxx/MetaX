@@ -10,6 +10,7 @@ map01250	Biosynthesis of nucleotide sugars
 map01240	Biosynthesis of cofactors
 map01220	Degradation of aromatic compounds
 map01310	Nitrogen cycle
+map01320	Sulfur cycle
 map00010	Glycolysis / Gluconeogenesis
 map00020	Citrate cycle (TCA cycle)
 map00030	Pentose phosphate pathway
@@ -18,7 +19,6 @@ map00051	Fructose and mannose metabolism
 map00052	Galactose metabolism
 map00053	Ascorbate and aldarate metabolism
 map00500	Starch and sucrose metabolism
-map00520	Amino sugar and nucleotide sugar metabolism
 map00620	Pyruvate metabolism
 map00630	Glyoxylate and dicarboxylate metabolism
 map00640	Propanoate metabolism
@@ -73,6 +73,8 @@ map00450	Selenocompound metabolism
 map00460	Cyanoamino acid metabolism
 map00470	D-Amino acid metabolism
 map00480	Glutathione metabolism
+map00520	Amino sugar and nucleotide sugar metabolism
+map00541	Biosynthesis of various nucleotide sugars
 map00510	N-Glycan biosynthesis
 map00513	Various types of N-glycan biosynthesis
 map00512	Mucin type O-glycan biosynthesis
@@ -89,7 +91,6 @@ map00604	Glycosphingolipid biosynthesis - ganglio series
 map00511	Other glycan degradation
 map00540	Lipopolysaccharide biosynthesis
 map00542	O-Antigen repeat unit biosynthesis
-map00541	O-Antigen nucleotide sugar biosynthesis
 map00550	Peptidoglycan biosynthesis
 map00552	Teichoic acid biosynthesis
 map00571	Lipoarabinomannan (LAM) biosynthesis
@@ -221,8 +222,9 @@ map03271	Virion - Rotavirus
 map03262	Virion - Coronavirus
 map03261	Virion - Influenza virus
 map03263	Virion - Enterovirus
-map03264	Virion - Flavivirus
+map03264	Virion - Flavivirus and Alphavirus
 map03265	Virion - Ebolavirus, Lyssavirus and Morbillivirus
+map03273	Virion - Lassa virus and SFTS virus
 map03272	Virion - Hepatitis viruses
 map03266	Virion - Herpesvirus
 map03268	Virion - Orthopoxvirus
@@ -266,6 +268,7 @@ map04152	AMPK signaling pathway
 map04150	mTOR signaling pathway
 map04075	Plant hormone signal transduction
 map04080	Neuroactive ligand-receptor interaction
+map04081	Hormone signaling
 map04060	Cytokine-cytokine receptor interaction
 map04061	Viral protein interaction with cytokine and cytokine receptor
 map04512	ECM-receptor interaction
@@ -363,6 +366,7 @@ map04974	Protein digestion and absorption
 map04975	Fat digestion and absorption
 map04979	Cholesterol metabolism
 map04977	Vitamin digestion and absorption
+map04981	Folate transport and metabolism
 map04980	Cobalamin transport and metabolism
 map04978	Mineral absorption
 map04962	Vasopressin-regulated water reabsorption
@@ -585,6 +589,7 @@ ko01250	Biosynthesis of nucleotide sugars
 ko01240	Biosynthesis of cofactors
 ko01220	Degradation of aromatic compounds
 ko01310	Nitrogen cycle
+ko01320	Sulfur cycle
 ko00010	Glycolysis / Gluconeogenesis
 ko00020	Citrate cycle (TCA cycle)
 ko00030	Pentose phosphate pathway
@@ -593,7 +598,6 @@ ko00051	Fructose and mannose metabolism
 ko00052	Galactose metabolism
 ko00053	Ascorbate and aldarate metabolism
 ko00500	Starch and sucrose metabolism
-ko00520	Amino sugar and nucleotide sugar metabolism
 ko00620	Pyruvate metabolism
 ko00630	Glyoxylate and dicarboxylate metabolism
 ko00640	Propanoate metabolism
@@ -648,6 +652,8 @@ ko00450	Selenocompound metabolism
 ko00460	Cyanoamino acid metabolism
 ko00470	D-Amino acid metabolism
 ko00480	Glutathione metabolism
+ko00520	Amino sugar and nucleotide sugar metabolism
+ko00541	Biosynthesis of various nucleotide sugars
 ko00510	N-Glycan biosynthesis
 ko00513	Various types of N-glycan biosynthesis
 ko00512	Mucin type O-glycan biosynthesis
@@ -664,7 +670,6 @@ ko00604	Glycosphingolipid biosynthesis - ganglio series
 ko00511	Other glycan degradation
 ko00540	Lipopolysaccharide biosynthesis
 ko00542	O-Antigen repeat unit biosynthesis
-ko00541	O-Antigen nucleotide sugar biosynthesis
 ko00550	Peptidoglycan biosynthesis
 ko00552	Teichoic acid biosynthesis
 ko00571	Lipoarabinomannan (LAM) biosynthesis
@@ -787,8 +792,9 @@ ko03271	Virion - Rotavirus
 ko03262	Virion - Coronavirus
 ko03261	Virion - Influenza virus
 ko03263	Virion - Enterovirus
-ko03264	Virion - Flavivirus
+ko03264	Virion - Flavivirus and Alphavirus
 ko03265	Virion - Ebolavirus, Lyssavirus and Morbillivirus
+ko03273	Virion - Lassa virus and SFTS virus
 ko03272	Virion - Hepatitis viruses
 ko03266	Virion - Herpesvirus
 ko03268	Virion - Orthopoxvirus
@@ -832,6 +838,7 @@ ko04152	AMPK signaling pathway
 ko04150	mTOR signaling pathway
 ko04075	Plant hormone signal transduction
 ko04080	Neuroactive ligand-receptor interaction
+ko04081	Hormone signaling
 ko04060	Cytokine-cytokine receptor interaction
 ko04061	Viral protein interaction with cytokine and cytokine receptor
 ko04512	ECM-receptor interaction
@@ -929,6 +936,7 @@ ko04974	Protein digestion and absorption
 ko04975	Fat digestion and absorption
 ko04979	Cholesterol metabolism
 ko04977	Vitamin digestion and absorption
+ko04981	Folate transport and metabolism
 ko04980	Cobalamin transport and metabolism
 ko04978	Mineral absorption
 ko04962	Vasopressin-regulated water reabsorption
