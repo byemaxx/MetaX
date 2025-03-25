@@ -1,3 +1,8 @@
+# Version: 1.123.1
+## Date: 2025-03-25
+### Changes:
+- New: Added regx support for the x-axis and y-axis filter for the heatmap plot in cross-test part.
+
 # Version: 1.123.0
 ## Date: 2025-03-24
 ### Changes:

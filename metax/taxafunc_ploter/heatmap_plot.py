@@ -1,7 +1,7 @@
 
 # for scaling data
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+import re
 import numpy as np
 # for heatmap plot
 import seaborn as sns
@@ -59,14 +59,34 @@ class HeatmapPlot:
             df.index = new_index_list
         return df
 
-    # For taxa-func table
+
+    def filter_data_by_x_y(self, df, x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
+        if x_filter_list:
+            if filter_by_regex:
+                cols = [col for col in df.columns if any(re.search(x, col) for x in x_filter_list)]
+            else:
+                cols = [col for col in df.columns if any(x in col for x in x_filter_list)]
+            df = df[cols]
+        if y_filter_list:
+            if filter_by_regex:
+                rows = [row for row in df.index if any(re.search(y, row) for y in y_filter_list)]
+            else:
+                rows = [row for row in df.index if any(y in row for y in y_filter_list)]
+            df = df.loc[rows]
+        if df.empty:
+            raise ValueError(f"The dataframe is empty after filter with X-Aixs filter: {x_filter_list} and Y-Axis filter: {y_filter_list}")
+        
+        return df
+    
+    
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:int|str= 100, 
                                         value_type:str = 'p', fig_size:tuple|None = None, pvalue:float = 0.05, 
                                          col_cluster:bool = True, row_cluster:bool = True,
                                         cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
                                         show_all_labels:tuple = (False, False), return_type:str = 'fig', scale = None, 
                                         scale_method:str = 'maxmin', p_type:str = 'padj',
-                                        x_filter_list: list = [], y_filter_list: list = []):
+                                        x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False):
 
         func_name = self.tfa.func_name
         dft = df.copy()
@@ -115,16 +135,7 @@ class HeatmapPlot:
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=value_col_name)
             print(f"Top [{top_number}] significant: Taxa ({df_top.shape[1]}), Functions ({df_top.shape[0]})")
             
-            if x_filter_list:
-                # select the columns names that contain the x_filter_list
-                cols = [col for col in df_top.columns if any([True for x in x_filter_list if x in col])]
-                df_top = df_top[cols]
-            if y_filter_list:
-                # select the rows names that contain the y_filter_list
-                rows = [row for row in df_top.index if any([True for y in y_filter_list if y in row])]
-                df_top = df_top.loc[rows]
-            if df_top.empty:
-                raise ValueError(f"No significant differences between groups in {func_name}-Function after filter with X-Aixs filter: {x_filter_list} and Y-Axis filter: {y_filter_list}")
+            df_top = self.filter_data_by_x_y(df_top, x_filter_list, y_filter_list, filter_by_regex)
             
             df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
@@ -215,7 +226,8 @@ class HeatmapPlot:
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True,
                                        sort_by:str = 'padj', scale_method:str = 'maxmin', return_type:str = 'fig',
-                                       p_type:str = 'padj', x_filter_list: list = [], y_filter_list: list = []):
+                                       p_type:str = 'padj', x_filter_list: list = [], y_filter_list: list = [],
+                                       filter_by_regex:bool = False):
 
         dft = df.copy()
         
@@ -254,15 +266,9 @@ class HeatmapPlot:
         else:
             raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
         
-        if x_filter_list:
-            # select the columns names that contain the x_filter_list
-            cols = [col for col in mat.columns if any([True for x in x_filter_list if x in col])]
-            mat = mat[cols]
-        if y_filter_list:
-            # select the rows names that contain the y_filter_list
-            rows = [row for row in mat.index if any([True for y in y_filter_list if y in row])]
-            mat = mat.loc[rows]
 
+        mat = self.filter_data_by_x_y(mat, x_filter_list, y_filter_list, filter_by_regex)
+        
         # if mat is empty, raise error
         if mat.empty:
             erro_msg = f"No significant differences between groups in {plot_type} <= [{pvalue}]"
@@ -372,19 +378,11 @@ class HeatmapPlot:
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), scale_method:str = 'maxmin', return_type:str = 'fig',
-                    sample_to_group_dict:dict|None = None, x_filter_list: list = [], y_filter_list: list = []):
+                    sample_to_group_dict:dict|None = None, x_filter_list: list = [], y_filter_list: list = [],
+                    filter_by_regex:bool = False):
         
-        if x_filter_list:
-            # select the columns names that contain the x_filter_list
-            cols = [col for col in df.columns if any([True for x in x_filter_list if x in col])]
-            df = df[cols]
-        if y_filter_list:
-            # select the rows names that contain the y_filter_list
-            rows = [row for row in df.index if any([True for y in y_filter_list if y in row])]
-            df = df.loc[rows]
-        if df.empty:
-            raise ValueError("The dataframe is empty after filter with X-Aixs filter and Y-Axis filter")
-        
+
+        df = self.filter_data_by_x_y(df, x_filter_list, y_filter_list, filter_by_regex)
         # check if any row or column is all 0
         if (df == 0).all().any():
             # remove all 0 rows
@@ -494,7 +492,7 @@ class HeatmapPlot:
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
                                        show_col_colors:bool = True, remove_zero_col:bool = True, scale_method:str = 'maxmin',
-                                       x_filter_list: list = [], y_filter_list: list = []):
+                                       x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
         """
         Plot a heatmap of all condition results.
 
@@ -554,14 +552,8 @@ class HeatmapPlot:
                 group_list.append(group_name)
             color_list = self.assign_colors(group_list)
         
-        if x_filter_list:
-            # select the columns names that contain the x_filter_list
-            cols = [col for col in dft.columns if any([True for x in x_filter_list if x in col])]
-            dft = dft[cols]
-        if y_filter_list:
-            # select the rows names that contain the y_filter_list
-            rows = [row for row in dft.index if any([True for y in y_filter_list if y in row])]
-            dft = dft.loc[rows]
+
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
                     
         if dft.empty or dft is None:
             if res_df_type == 'deseq2':
@@ -702,7 +694,8 @@ class HeatmapPlot:
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False),  show_col_colors:bool = False,
                                        scale_method:str = 'maxmin', p_type:str = 'padj',
-                                       x_filter_list: list = [], y_filter_list: list = []
+                                       x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False
                                        ):
         #! 只画t-statistic的heatmap, 用p_type来判断: 'padj' or 'pvalue'
         
@@ -718,14 +711,7 @@ class HeatmapPlot:
         
         dft = self.tfa.replace_if_two_index(dft)
         
-        if x_filter_list:
-            # select the columns names that contain the x_filter_list
-            cols = [col for col in dft.columns if any([True for x in x_filter_list if x in col])]
-            dft = dft[cols]
-        if y_filter_list:
-            # select the rows names that contain the y_filter_list
-            rows = [row for row in dft.index if any([True for y in y_filter_list if y in row])]
-            dft = dft.loc[rows]
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
 
         if len(dft) < 2:
             row_cluster = False
@@ -813,7 +799,8 @@ class HeatmapPlot:
     def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
                                         col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True,
                                         scale_method:str = 'maxmin', p_type:str = 'padj',
-                                        x_filter_list: list = [], y_filter_list: list = []):
+                                        x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False):
 
         
         dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
@@ -826,14 +813,7 @@ class HeatmapPlot:
         
         dft = self.tfa.replace_if_two_index(dft)
         
-        if x_filter_list:
-            # select the columns names that contain the x_filter_list
-            cols = [col for col in dft.columns if any([True for x in x_filter_list if x in col])]
-            dft = dft[cols]
-        if y_filter_list:
-            # select the rows names that contain the y_filter_list
-            rows = [row for row in dft.index if any([True for y in y_filter_list if y in row])]
-            dft = dft.loc[rows]
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
             
 
         if len(dft) < 2:

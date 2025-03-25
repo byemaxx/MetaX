@@ -4981,6 +4981,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         p_type = self.comboBox_top_heatmap_p_type.currentText()
         x_axis_filter_text = self.lineEdit_top_heatmap_filter_x_axis.text().strip() if self.checkBox_top_heatmap_filter_x_axis.isChecked() else None
         y_axis_filter_text = self.lineEdit_top_heatmap_filter_y_axis.text().strip() if self.checkBox_top_heatmap_filter_y_axis.isChecked() else None
+        filter_by_regex = self.checkBox_top_heatmap_filter_with_regx.isChecked()
         
         if cmap == 'Auto':
             cmap = None
@@ -5004,12 +5005,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # print(df.columns)
         try:
             if x_axis_filter_text:
-                x_filter_list = [i.strip() for i in x_axis_filter_text.split("//")]
+                x_filter_list = [i.strip() for i in x_axis_filter_text.split("##")]
             else:
                 x_filter_list = None
             
             if y_axis_filter_text:
-                y_filter_list = [i.strip() for i in y_axis_filter_text.split("//")]
+                y_filter_list = [i.strip() for i in y_axis_filter_text.split("##")]
             else:
                 y_filter_list = None
                 
@@ -5021,7 +5022,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels, 
                                                                                scale_method = scale_method, p_type = p_type,
-                                                                               x_filter_list = x_filter_list, y_filter_list = y_filter_list)
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
+                                                                               )
             elif table_name.startswith('deseq2all'):
                 
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
@@ -5034,7 +5038,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
                                                                                three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
-                                                                               scale_method = scale_method, x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                                                                               scale_method = scale_method, 
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
                                                                                 )
 
                 # if fig is a tuple
@@ -5053,7 +5060,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig',
                                                                                three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
-                                                                               scale_method = scale_method, p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                                                                               scale_method = scale_method, p_type = p_type, 
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
                                                                                )
 
                 # if fig is a tuple
@@ -5086,7 +5096,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
                             show_all_labels = show_all_labels, scale = scale, scale_method = scale_method, p_type = p_type,
-                            x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                            x_filter_list = x_filter_list, y_filter_list = y_filter_list,
+                            filter_by_regex = filter_by_regex
                             )
             else:
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(
@@ -5095,7 +5106,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     row_cluster=row_luster, cmap=cmap, rename_taxa=rename_taxa,
                     font_size=font_size, show_all_labels=show_all_labels, rename_sample=rename_sample,
                     sort_by=sort_by, scale_method=scale_method, return_type="fig",
-                    p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                    p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list,
+                    filter_by_regex = filter_by_regex
                 )
 
         except Exception as e:
@@ -5122,6 +5134,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         p_type = self.comboBox_top_heatmap_p_type.currentText()
         x_axis_filter_text = self.lineEdit_top_heatmap_filter_x_axis.text().strip() if self.checkBox_top_heatmap_filter_x_axis.isChecked() else None
         y_axis_filter_text = self.lineEdit_top_heatmap_filter_y_axis.text().strip() if self.checkBox_top_heatmap_filter_y_axis.isChecked() else None
+        filter_by_regex = self.checkBox_top_heatmap_filter_with_regx.isChecked()
         
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'padj': 'padj', 'pvalue': 'pvalue'}
@@ -5133,12 +5146,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             if x_axis_filter_text:
-                x_filter_list = [i.strip() for i in x_axis_filter_text.split("//")]
+                x_filter_list = [i.strip() for i in x_axis_filter_text.split("##")]
             else:
                 x_filter_list = None
             
             if y_axis_filter_text:
-                y_filter_list = [i.strip() for i in y_axis_filter_text.split("//")]
+                y_filter_list = [i.strip() for i in y_axis_filter_text.split("##")]
             else:
                 y_filter_list = None
                 
@@ -5147,7 +5160,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
                                                                                       rename_taxa=rename_taxa, scale_method = scale_method,
-                                                                                      p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list)
+                                                                                      p_type = p_type, 
+                                                                                      x_filter_list = x_filter_list, 
+                                                                                      y_filter_list = y_filter_list,
+                                                                                      filter_by_regex = filter_by_regex)
             elif 'deseq2all' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
@@ -5158,7 +5174,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    rename_taxa=rename_taxa, return_type = 'table', p_type = p_type,
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method,
-                                                                                      x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                                                                                      x_filter_list = x_filter_list, 
+                                                                                      y_filter_list = y_filter_list,
+                                                                                      filter_by_regex = filter_by_regex
                                                                                    )
             elif 'dunnettAllCondtion' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
@@ -5167,7 +5185,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
                                                                                     remove_zero_col = remove_zero_col, scale_method = scale_method, p_type = p_type,
-                                                                                        x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                                                                                    x_filter_list = x_filter_list, 
+                                                                                    y_filter_list = y_filter_list,
+                                                                                    filter_by_regex = filter_by_regex
                                                                                    )
 
             
@@ -5177,7 +5197,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         df=df, top_number=top_num, col_cluster=col_luster, row_cluster=row_luster,
                         value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa,
                         scale=scale, scale_method=scale_method, return_type="table",
-                        p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                        p_type = p_type, 
+                        x_filter_list = x_filter_list, 
+                        y_filter_list = y_filter_list,
+                        filter_by_regex = filter_by_regex
                     )
                 else:  # get result of test and anova of [taxa, functions, peptides and custom table]
                     # get the intensity of the result items which are significant
@@ -5186,7 +5209,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         scale=scale, col_cluster=col_luster, row_cluster=row_luster,
                         rename_taxa=rename_taxa, sort_by=sort_by,
                         scale_method=scale_method, return_type="table",
-                        p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list
+                        p_type = p_type, 
+                        x_filter_list = x_filter_list, 
+                        y_filter_list = y_filter_list,
+                        filter_by_regex = filter_by_regex
                     )
 
         except Exception as e:
