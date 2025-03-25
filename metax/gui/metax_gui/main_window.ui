@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>991</width>
-    <height>752</height>
+    <height>842</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>462</width>
-                 <height>531</height>
+                 <width>391</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1977,7 +1977,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
+                        <width>801</width>
                         <height>239</height>
                        </rect>
                       </property>
@@ -4263,7 +4263,7 @@
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>300</height>
+                   <height>320</height>
                   </size>
                  </property>
                  <property name="title">
@@ -4293,16 +4293,53 @@
                        <x>0</x>
                        <y>0</y>
                        <width>889</width>
-                       <height>128</height>
+                       <height>154</height>
                       </rect>
                      </property>
                      <layout class="QGridLayout" name="gridLayout_38">
                       <item row="0" column="0">
                        <layout class="QGridLayout" name="gridLayout_51">
-                        <item row="0" column="5">
-                         <widget class="QLabel" name="label_131">
+                        <item row="1" column="2">
+                         <layout class="QHBoxLayout" name="horizontalLayout_48">
+                          <item>
+                           <widget class="QLabel" name="label_30">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>with</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QComboBox" name="comboBox_top_heatmap_scale_method">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <item>
+                             <property name="text">
+                              <string>maxmin</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>zscore</string>
+                             </property>
+                            </item>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="2" column="4">
+                         <widget class="QComboBox" name="comboBox_top_heatmap_sort_type">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
@@ -4319,15 +4356,92 @@
                             <height>16777215</height>
                            </size>
                           </property>
-                          <property name="text">
-                           <string>Show All Labels</string>
-                          </property>
+                          <item>
+                           <property name="text">
+                            <string>padj</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>f-statistic (ANOVA)</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>t-statistic (T-Test)</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>pvalue</string>
+                           </property>
+                          </item>
                          </widget>
                         </item>
-                        <item row="1" column="6">
-                         <layout class="QHBoxLayout" name="horizontalLayout_17">
+                        <item row="0" column="4">
+                         <layout class="QHBoxLayout" name="horizontalLayout_84">
                           <item>
-                           <widget class="QCheckBox" name="checkBox_top_heatmap_rename_taxa">
+                           <widget class="QCheckBox" name="checkBox_cross_heatmap_row_cluster">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Row Cluster</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QCheckBox" name="checkBox_cross_heatmap_col_cluster">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Col Cluster</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="0" column="6">
+                         <layout class="QHBoxLayout" name="horizontalLayout_15">
+                          <item>
+                           <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_x">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -4338,15 +4452,12 @@
                              <enum>Qt::LeftToRight</enum>
                             </property>
                             <property name="text">
-                             <string> Taxa</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
+                             <string>X</string>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QCheckBox" name="checkBox_top_heatmap_rename_sample">
+                           <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_y">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -4357,44 +4468,30 @@
                              <enum>Qt::LeftToRight</enum>
                             </property>
                             <property name="text">
-                             <string>Sample</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
+                             <string>Y</string>
                             </property>
                            </widget>
                           </item>
                          </layout>
                         </item>
-                        <item row="1" column="1">
-                         <layout class="QHBoxLayout" name="horizontalLayout_19">
+                        <item row="2" column="6">
+                         <layout class="QHBoxLayout" name="horizontalLayout_102">
                           <item>
-                           <widget class="QLabel" name="label_62">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string>Scale By</string>
-                            </property>
+                           <widget class="QComboBox" name="comboBox_top_heatmap_p_type">
+                            <item>
+                             <property name="text">
+                              <string>padj</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>pvalue</string>
+                             </property>
+                            </item>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QComboBox" name="comboBox_top_heatmap_scale">
+                           <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -4413,107 +4510,102 @@
                               <height>16777215</height>
                              </size>
                             </property>
-                            <item>
-                             <property name="text">
-                              <string>row</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>column</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>all</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>None</string>
-                             </property>
-                            </item>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="1" column="5">
-                         <widget class="QLabel" name="label_153">
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>Rename</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item row="0" column="3">
-                         <layout class="QHBoxLayout" name="horizontalLayout_23">
-                          <item>
-                           <widget class="QLabel" name="label_109">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string>Font Size</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QSpinBox" name="spinBox_top_heatmap_label_font_size">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="minimum">
-                             <number>1</number>
+                            <property name="decimals">
+                             <number>4</number>
                             </property>
                             <property name="maximum">
-                             <number>999</number>
+                             <double>1.000000000000000</double>
                             </property>
                             <property name="singleStep">
+                             <double>0.010000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>0.050000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item row="3" column="2">
+                         <layout class="QHBoxLayout" name="horizontalLayout_12">
+                          <item>
+                           <widget class="QDoubleSpinBox" name="doubleSpinBox_mini_log2fc_heatmap">
+                            <property name="enabled">
+                             <bool>false</bool>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="showGroupSeparator" stdset="0">
+                             <bool>false</bool>
+                            </property>
+                            <property name="decimals">
+                             <number>3</number>
+                            </property>
+                            <property name="minimum">
+                             <double>0.000000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>1.000000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QLabel" name="label_139">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>To</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QDoubleSpinBox" name="doubleSpinBox_max_log2fc_heatmap">
+                            <property name="enabled">
+                             <bool>false</bool>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="decimals">
                              <number>1</number>
                             </property>
                             <property name="value">
-                             <number>10</number>
+                             <double>99.000000000000000</double>
                             </property>
                            </widget>
                           </item>
@@ -4579,41 +4671,33 @@
                           </item>
                          </layout>
                         </item>
-                        <item row="0" column="6">
-                         <layout class="QHBoxLayout" name="horizontalLayout_15">
-                          <item>
-                           <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_x">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
-                            </property>
-                            <property name="text">
-                             <string>X</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="checkBox_top_heatmap_show_all_labels_y">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
-                            </property>
-                            <property name="text">
-                             <string>Y</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
+                        <item row="3" column="5">
+                         <widget class="QCheckBox" name="checkBox_cross_3_level_plot_remove_zero_col">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Remove Zero Col</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
                         </item>
                         <item row="3" column="0">
                          <widget class="QLabel" name="label_181">
@@ -4646,8 +4730,11 @@
                           </property>
                          </widget>
                         </item>
-                        <item row="0" column="0">
-                         <widget class="QLabel" name="label_182">
+                        <item row="3" column="4">
+                         <widget class="QComboBox" name="comboBox_cross_3_level_plot_df_type">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -4660,16 +4747,97 @@
                             <height>16777215</height>
                            </size>
                           </property>
-                          <property name="font">
-                           <font>
-                            <weight>75</weight>
-                            <bold>true</bold>
-                           </font>
+                          <property name="toolTip">
+                           <string>- 'all_sig': DataFrame containing all significant rows across all groups, Non-significant values are replaced with NA.
+- 'half_same_trends': DataFrame containing rows where each group has the same trend (all positive or all negative non-NA values) and at least 50% of the values are non-NA.
+- 'no_na': DataFrame containing rows with no NA values in each group.
+- 'same_trends': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).
+</string>
                           </property>
-                          <property name="text">
-                           <string>General</string>
-                          </property>
+                          <item>
+                           <property name="text">
+                            <string>all_sig</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>no_na</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>half_same_trends</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>same_trends</string>
+                           </property>
+                          </item>
                          </widget>
+                        </item>
+                        <item row="0" column="3">
+                         <layout class="QHBoxLayout" name="horizontalLayout_23">
+                          <item>
+                           <widget class="QLabel" name="label_109">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Font Size</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QSpinBox" name="spinBox_top_heatmap_label_font_size">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>16777215</width>
+                              <height>16777215</height>
+                             </size>
+                            </property>
+                            <property name="minimum">
+                             <number>1</number>
+                            </property>
+                            <property name="maximum">
+                             <number>999</number>
+                            </property>
+                            <property name="singleStep">
+                             <number>1</number>
+                            </property>
+                            <property name="value">
+                             <number>10</number>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
                         </item>
                         <item row="0" column="1">
                          <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -4789,6 +4957,80 @@
                           </item>
                          </layout>
                         </item>
+                        <item row="2" column="5">
+                         <widget class="QLabel" name="label_197">
+                          <property name="text">
+                           <string>Cutoff</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="3">
+                         <widget class="QLabel" name="label_57">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Sort By</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="6">
+                         <layout class="QHBoxLayout" name="horizontalLayout_17">
+                          <item>
+                           <widget class="QCheckBox" name="checkBox_top_heatmap_rename_taxa">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="layoutDirection">
+                             <enum>Qt::LeftToRight</enum>
+                            </property>
+                            <property name="text">
+                             <string> Taxa</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QCheckBox" name="checkBox_top_heatmap_rename_sample">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="layoutDirection">
+                             <enum>Qt::LeftToRight</enum>
+                            </property>
+                            <property name="text">
+                             <string>Sample</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
                         <item row="2" column="0">
                          <widget class="QLabel" name="label_180">
                           <property name="sizePolicy">
@@ -4820,12 +5062,12 @@
                           </property>
                          </widget>
                         </item>
-                        <item row="0" column="4">
-                         <layout class="QHBoxLayout" name="horizontalLayout_84">
+                        <item row="1" column="1">
+                         <layout class="QHBoxLayout" name="horizontalLayout_19">
                           <item>
-                           <widget class="QCheckBox" name="checkBox_cross_heatmap_row_cluster">
+                           <widget class="QLabel" name="label_62">
                             <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                               <horstretch>0</horstretch>
                               <verstretch>0</verstretch>
                              </sizepolicy>
@@ -4843,15 +5085,12 @@
                              </size>
                             </property>
                             <property name="text">
-                             <string>Row Cluster</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
+                             <string>Scale By</string>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QCheckBox" name="checkBox_cross_heatmap_col_cluster">
+                           <widget class="QComboBox" name="comboBox_top_heatmap_scale">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -4870,18 +5109,32 @@
                               <height>16777215</height>
                              </size>
                             </property>
-                            <property name="text">
-                             <string>Col Cluster</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
+                            <item>
+                             <property name="text">
+                              <string>row</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>column</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>all</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>None</string>
+                             </property>
+                            </item>
                            </widget>
                           </item>
                          </layout>
                         </item>
-                        <item row="3" column="1">
-                         <widget class="QLabel" name="label_138">
+                        <item row="0" column="5">
+                         <widget class="QLabel" name="label_131">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                             <horstretch>0</horstretch>
@@ -4901,123 +5154,7 @@
                            </size>
                           </property>
                           <property name="text">
-                           <string>Log2FC</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item row="3" column="2">
-                         <layout class="QHBoxLayout" name="horizontalLayout_12">
-                          <item>
-                           <widget class="QDoubleSpinBox" name="doubleSpinBox_mini_log2fc_heatmap">
-                            <property name="enabled">
-                             <bool>false</bool>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="showGroupSeparator" stdset="0">
-                             <bool>false</bool>
-                            </property>
-                            <property name="decimals">
-                             <number>3</number>
-                            </property>
-                            <property name="minimum">
-                             <double>0.000000000000000</double>
-                            </property>
-                            <property name="value">
-                             <double>1.000000000000000</double>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_139">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string>To</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QDoubleSpinBox" name="doubleSpinBox_max_log2fc_heatmap">
-                            <property name="enabled">
-                             <bool>false</bool>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="decimals">
-                             <number>1</number>
-                            </property>
-                            <property name="value">
-                             <double>99.000000000000000</double>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="2" column="2">
-                         <widget class="QSpinBox" name="spinBox_top_heatmap_number">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="minimum">
-                           <number>1</number>
-                          </property>
-                          <property name="maximum">
-                           <number>9999</number>
-                          </property>
-                          <property name="value">
-                           <number>100</number>
+                           <string>Show All Labels</string>
                           </property>
                          </widget>
                         </item>
@@ -5071,241 +5208,169 @@
                           </property>
                          </widget>
                         </item>
-                        <item row="3" column="4">
-                         <widget class="QComboBox" name="comboBox_cross_3_level_plot_df_type">
+                        <item row="0" column="0">
+                         <widget class="QLabel" name="label_182">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="font">
+                           <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>General</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="2">
+                         <widget class="QSpinBox" name="spinBox_top_heatmap_number">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="minimum">
+                           <number>1</number>
+                          </property>
+                          <property name="maximum">
+                           <number>9999</number>
+                          </property>
+                          <property name="value">
+                           <number>100</number>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="1">
+                         <widget class="QLabel" name="label_138">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Log2FC</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="5">
+                         <widget class="QLabel" name="label_153">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Rename</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="4" column="2">
+                         <widget class="QLineEdit" name="lineEdit_top_heatmap_filter_x_axis">
                           <property name="enabled">
                            <bool>false</bool>
                           </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
+                          <property name="statusTip">
+                           <string>Use // to separate multiple items</string>
                           </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="toolTip">
-                           <string>- 'all_sig': DataFrame containing all significant rows across all groups, Non-significant values are replaced with NA.
-- 'half_same_trends': DataFrame containing rows where each group has the same trend (all positive or all negative non-NA values) and at least 50% of the values are non-NA.
-- 'no_na': DataFrame containing rows with no NA values in each group.
-- 'same_trends': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).
-</string>
-                          </property>
-                          <item>
-                           <property name="text">
-                            <string>all_sig</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>no_na</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>half_same_trends</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>same_trends</string>
-                           </property>
-                          </item>
                          </widget>
                         </item>
-                        <item row="3" column="5">
-                         <widget class="QCheckBox" name="checkBox_cross_3_level_plot_remove_zero_col">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
+                        <item row="4" column="1">
+                         <widget class="QCheckBox" name="checkBox_top_heatmap_filter_x_axis">
+                          <property name="font">
+                           <font>
+                            <weight>50</weight>
+                            <bold>false</bold>
+                           </font>
                           </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>Remove Zero Col</string>
-                          </property>
-                          <property name="checked">
+                          <property name="mouseTracking">
                            <bool>true</bool>
                           </property>
-                         </widget>
-                        </item>
-                        <item row="1" column="2">
-                         <layout class="QHBoxLayout" name="horizontalLayout_48">
-                          <item>
-                           <widget class="QLabel" name="label_30">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="text">
-                             <string>with</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QComboBox" name="comboBox_top_heatmap_scale_method">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <item>
-                             <property name="text">
-                              <string>maxmin</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>zscore</string>
-                             </property>
-                            </item>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="2" column="6">
-                         <layout class="QHBoxLayout" name="horizontalLayout_102">
-                          <item>
-                           <widget class="QComboBox" name="comboBox_top_heatmap_p_type">
-                            <item>
-                             <property name="text">
-                              <string>padj</string>
-                             </property>
-                            </item>
-                            <item>
-                             <property name="text">
-                              <string>pvalue</string>
-                             </property>
-                            </item>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QDoubleSpinBox" name="doubleSpinBox_top_heatmap_pvalue">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>0</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>16777215</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="decimals">
-                             <number>4</number>
-                            </property>
-                            <property name="maximum">
-                             <double>1.000000000000000</double>
-                            </property>
-                            <property name="singleStep">
-                             <double>0.010000000000000</double>
-                            </property>
-                            <property name="value">
-                             <double>0.050000000000000</double>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item row="2" column="5">
-                         <widget class="QLabel" name="label_197">
-                          <property name="text">
-                           <string>Filter By</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item row="2" column="3">
-                         <widget class="QLabel" name="label_57">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
+                          <property name="layoutDirection">
+                           <enum>Qt::LeftToRight</enum>
                           </property>
                           <property name="text">
-                           <string>Sort By</string>
+                           <string>X-Axis</string>
                           </property>
                          </widget>
                         </item>
-                        <item row="2" column="4">
-                         <widget class="QComboBox" name="comboBox_top_heatmap_sort_type">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
+                        <item row="4" column="0">
+                         <widget class="QLabel" name="label_233">
+                          <property name="font">
+                           <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                           </font>
                           </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
+                          <property name="text">
+                           <string>Filter Res</string>
                           </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>16777215</width>
-                            <height>16777215</height>
-                           </size>
+                         </widget>
+                        </item>
+                        <item row="4" column="3">
+                         <widget class="QCheckBox" name="checkBox_top_heatmap_filter_y_axis">
+                          <property name="font">
+                           <font>
+                            <weight>50</weight>
+                            <bold>false</bold>
+                           </font>
                           </property>
-                          <item>
-                           <property name="text">
-                            <string>padj</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>f-statistic (ANOVA)</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>t-statistic (T-Test)</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>pvalue</string>
-                           </property>
-                          </item>
+                          <property name="text">
+                           <string>Y-Axis</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="4" column="4" colspan="3">
+                         <widget class="QLineEdit" name="lineEdit_top_heatmap_filter_y_axis">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="statusTip">
+                           <string>Use // to separate multiple items</string>
+                          </property>
                          </widget>
                         </item>
                        </layout>
@@ -5332,7 +5397,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>3</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5703,7 +5768,7 @@
                   <item>
                    <widget class="QLabel" name="label_112">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -5740,7 +5805,7 @@
                   <item>
                    <widget class="QLabel" name="label_113">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -6223,8 +6288,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>865</width>
-                           <height>95</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6956,8 +7021,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>170</height>
+                        <width>493</width>
+                        <height>128</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -9746,8 +9811,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>158</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10378,8 +10443,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>913</width>
-                    <height>490</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -11316,7 +11381,7 @@
      <x>0</x>
      <y>0</y>
      <width>991</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -11457,11 +11522,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>106</x>
-     <y>94</y>
+     <y>96</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
-     <y>95</y>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11473,11 +11538,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>106</x>
-     <y>94</y>
+     <y>96</y>
     </hint>
     <hint type="destinationlabel">
      <x>119</x>
-     <y>95</y>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11489,11 +11554,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>493</y>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
-     <x>407</x>
-     <y>530</y>
+     <x>431</x>
+     <y>558</y>
     </hint>
    </hints>
   </connection>
@@ -11505,11 +11570,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>493</y>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
-     <x>407</x>
-     <y>666</y>
+     <x>431</x>
+     <y>694</y>
     </hint>
    </hints>
   </connection>
@@ -11521,11 +11586,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>493</y>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
      <x>731</x>
-     <y>532</y>
+     <y>560</y>
     </hint>
    </hints>
   </connection>
@@ -11537,11 +11602,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>708</x>
-     <y>569</y>
+     <y>587</y>
     </hint>
     <hint type="destinationlabel">
      <x>925</x>
-     <y>569</y>
+     <y>587</y>
     </hint>
    </hints>
   </connection>
@@ -11557,7 +11622,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>76</x>
-     <y>95</y>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11568,8 +11633,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>113</x>
-     <y>407</y>
+     <x>126</x>
+     <y>435</y>
     </hint>
     <hint type="destinationlabel">
      <x>132</x>
@@ -11585,11 +11650,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>77</x>
-     <y>110</y>
+     <y>112</y>
     </hint>
     <hint type="destinationlabel">
      <x>121</x>
-     <y>113</y>
+     <y>115</y>
     </hint>
    </hints>
   </connection>
@@ -11600,8 +11665,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>143</x>
-     <y>517</y>
+     <x>165</x>
+     <y>543</y>
     </hint>
     <hint type="destinationlabel">
      <x>149</x>
@@ -11649,11 +11714,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>52</x>
-     <y>118</y>
+     <y>120</y>
     </hint>
     <hint type="destinationlabel">
      <x>121</x>
-     <y>113</y>
+     <y>115</y>
     </hint>
    </hints>
   </connection>
@@ -11665,11 +11730,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>77</x>
-     <y>117</y>
+     <y>119</y>
     </hint>
     <hint type="destinationlabel">
      <x>121</x>
-     <y>114</y>
+     <y>116</y>
     </hint>
    </hints>
   </connection>
@@ -11733,7 +11798,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>98</x>
-     <y>95</y>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11744,12 +11809,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>124</x>
-     <y>248</y>
+     <x>95</x>
+     <y>72</y>
     </hint>
     <hint type="destinationlabel">
-     <x>146</x>
-     <y>304</y>
+     <x>117</x>
+     <y>75</y>
     </hint>
    </hints>
   </connection>
@@ -11761,11 +11826,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>925</x>
-     <y>493</y>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
      <x>690</x>
-     <y>586</y>
+     <y>614</y>
     </hint>
    </hints>
   </connection>
@@ -11776,12 +11841,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>250</x>
-     <y>544</y>
+     <x>399</x>
+     <y>571</y>
     </hint>
     <hint type="destinationlabel">
-     <x>708</x>
-     <y>544</y>
+     <x>948</x>
+     <y>573</y>
     </hint>
    </hints>
   </connection>
@@ -11792,12 +11857,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>112</x>
-     <y>388</y>
+     <x>123</x>
+     <y>414</y>
     </hint>
     <hint type="destinationlabel">
-     <x>138</x>
-     <y>469</y>
+     <x>149</x>
+     <y>584</y>
     </hint>
    </hints>
   </connection>
@@ -11808,12 +11873,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>202</x>
-     <y>541</y>
+     <x>351</x>
+     <y>571</y>
     </hint>
     <hint type="destinationlabel">
-     <x>183</x>
-     <y>497</y>
+     <x>332</x>
+     <y>521</y>
     </hint>
    </hints>
   </connection>
@@ -11824,12 +11889,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>253</x>
-     <y>541</y>
+     <x>402</x>
+     <y>571</y>
     </hint>
     <hint type="destinationlabel">
-     <x>670</x>
-     <y>488</y>
+     <x>948</x>
+     <y>521</y>
     </hint>
    </hints>
   </connection>
@@ -11840,12 +11905,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>122</x>
-     <y>517</y>
+     <x>57</x>
+     <y>74</y>
     </hint>
     <hint type="destinationlabel">
-     <x>218</x>
-     <y>662</y>
+     <x>118</x>
+     <y>76</y>
     </hint>
    </hints>
   </connection>
@@ -11856,12 +11921,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>137</x>
-     <y>607</y>
+     <x>57</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
-     <x>333</x>
-     <y>586</y>
+     <x>74</x>
+     <y>99</y>
     </hint>
    </hints>
   </connection>
@@ -11872,12 +11937,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>610</y>
+     <x>91</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
-     <x>271</x>
-     <y>192</y>
+     <x>90</x>
+     <y>66</y>
     </hint>
    </hints>
   </connection>
@@ -11888,12 +11953,44 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>764</x>
-     <y>606</y>
+     <x>107</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
-     <x>444</x>
-     <y>164</y>
+     <x>90</x>
+     <y>63</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_top_heatmap_filter_x_axis</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lineEdit_top_heatmap_filter_x_axis</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>174</x>
+     <y>683</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>298</x>
+     <y>696</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_top_heatmap_filter_y_axis</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lineEdit_top_heatmap_filter_y_axis</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>425</x>
+     <y>684</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>588</x>
+     <y>689</y>
     </hint>
    </hints>
   </connection>

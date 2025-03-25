@@ -1,5 +1,10 @@
+# Version: 1.123.0
+## Date: 2025-03-24
+### Changes:
+- New: Added x-axis and y-axis filter for the heatmap plot in cross-test part.
+
 # Version: 1.122.4
-## Date: 2025-03-1
+## Date: 2025-03-18
 ### Changes:
 - New: Added KEGG_Module_name to the OTF table.
 - Optimize: Optimized the code of the coonvert id to name.
