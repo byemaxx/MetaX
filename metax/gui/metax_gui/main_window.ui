@@ -4150,7 +4150,7 @@
             <string>Cross Test</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_9">
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QGroupBox" name="groupBox_cross_heatmap_plot">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -5398,7 +5398,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_3">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -5407,13 +5407,29 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
                 <string>T-TEST</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_13">
+                <item row="8" column="0" colspan="2">
+                 <widget class="QPushButton" name="pushButton_ttest">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Run T-Test</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="2" column="0" colspan="2">
                  <layout class="QHBoxLayout" name="horizontalLayout_38">
                   <item>
@@ -5520,29 +5536,6 @@
                   </item>
                  </layout>
                 </item>
-                <item row="9" column="0" colspan="2">
-                 <widget class="QPushButton" name="pushButton_ttest">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Run T-Test</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="0" colspan="2">
-                 <widget class="Line" name="line_22">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
                 <item row="3" column="0" colspan="2">
                  <widget class="Line" name="line_21">
                   <property name="orientation">
@@ -5607,29 +5600,6 @@
                 <string>ANOVA TEST</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_11">
-                <item row="8" column="0" colspan="2">
-                 <widget class="QPushButton" name="pushButton_anova_test">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Run ANOVA Test</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0" colspan="2">
-                 <widget class="Line" name="line_24">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="0" colspan="2">
                  <layout class="QHBoxLayout" name="horizontalLayout_37">
                   <item>
@@ -5736,6 +5706,22 @@
                   </property>
                  </widget>
                 </item>
+                <item row="7" column="0" colspan="2">
+                 <widget class="QPushButton" name="pushButton_anova_test">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Run ANOVA Test</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="2" column="0" colspan="2">
                  <widget class="Line" name="line_23">
                   <property name="orientation">
@@ -5750,10 +5736,13 @@
                 <string>Group-Control TEST </string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_33">
-                <item row="3" column="1" colspan="2">
-                 <widget class="Line" name="line_25">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                <item row="10" column="2">
+                 <widget class="QPushButton" name="pushButton_multi_deseq2">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Run Deseq2</string>
                   </property>
                  </widget>
                 </item>
@@ -5770,6 +5759,80 @@
                   </property>
                   <property name="text">
                    <string>Run Dunnett's TEST</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1" colspan="2">
+                 <layout class="QGridLayout" name="gridLayout_72">
+                  <item row="1" column="0">
+                   <widget class="QComboBox" name="comboBox_dunnett_control_group"/>
+                  </item>
+                  <item row="2" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_24">
+                    <item>
+                     <widget class="QLabel" name="label_140">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string> By:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_group_control_comparing_each_condition_meta">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_comparing_group_control_in_condition">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Comparing in Each Condition</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_dunnett_group"/>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_114">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Groups (Default all)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_115">
+                    <property name="text">
+                     <string>Control Group</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="3" column="1" colspan="2">
+                 <widget class="Line" name="line_25">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -5858,73 +5921,6 @@
                   </item>
                  </layout>
                 </item>
-                <item row="4" column="1" colspan="2">
-                 <layout class="QGridLayout" name="gridLayout_72">
-                  <item row="1" column="0">
-                   <widget class="QComboBox" name="comboBox_dunnett_control_group"/>
-                  </item>
-                  <item row="2" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_24">
-                    <item>
-                     <widget class="QLabel" name="label_140">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string> By:</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="comboBox_group_control_comparing_each_condition_meta">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_comparing_group_control_in_condition">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Comparing in Each Condition</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_dunnett_group"/>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_114">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Groups (Default all)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_115">
-                    <property name="text">
-                     <string>Control Group</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
                 <item row="9" column="1" colspan="2">
                  <widget class="Line" name="line_26">
                   <property name="sizePolicy">
@@ -5935,16 +5931,6 @@
                   </property>
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="2">
-                 <widget class="QPushButton" name="pushButton_multi_deseq2">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Run Deseq2</string>
                   </property>
                  </widget>
                 </item>
@@ -6298,8 +6284,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>535</width>
-                           <height>94</height>
+                           <width>865</width>
+                           <height>95</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6802,6 +6788,19 @@
                 </item>
                </layout>
               </widget>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="Line" name="line_22">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
              </widget>
             </item>
            </layout>
@@ -11563,12 +11562,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>925</x>
-     <y>521</y>
+     <x>546</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>431</x>
-     <y>558</y>
+     <x>271</x>
+     <y>199</y>
     </hint>
    </hints>
   </connection>
@@ -11579,12 +11578,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>925</x>
-     <y>521</y>
+     <x>546</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>431</x>
-     <y>694</y>
+     <x>271</x>
+     <y>336</y>
     </hint>
    </hints>
   </connection>
@@ -11595,12 +11594,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>925</x>
-     <y>521</y>
+     <x>546</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>731</x>
-     <y>560</y>
+     <x>546</x>
+     <y>199</y>
     </hint>
    </hints>
   </connection>
@@ -11611,12 +11610,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>708</x>
-     <y>587</y>
+     <x>332</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
-     <x>925</x>
-     <y>587</y>
+     <x>332</x>
+     <y>137</y>
     </hint>
    </hints>
   </connection>
@@ -11627,8 +11626,8 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>214</x>
-     <y>193</y>
+     <x>147</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
      <x>76</x>
@@ -11643,12 +11642,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>126</x>
-     <y>435</y>
+     <x>61</x>
+     <y>91</y>
     </hint>
     <hint type="destinationlabel">
-     <x>132</x>
-     <y>477</y>
+     <x>119</x>
+     <y>94</y>
     </hint>
    </hints>
   </connection>
@@ -11659,12 +11658,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>77</x>
-     <y>112</y>
+     <x>75</x>
+     <y>94</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>115</y>
+     <x>119</x>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11675,8 +11674,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>165</x>
-     <y>543</y>
+     <x>187</x>
+     <y>581</y>
     </hint>
     <hint type="destinationlabel">
      <x>149</x>
@@ -11707,12 +11706,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>90</x>
-     <y>472</y>
+     <x>75</x>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>504</y>
+     <x>119</x>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11727,8 +11726,8 @@
      <y>120</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>115</y>
+     <x>119</x>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11743,8 +11742,8 @@
      <y>119</y>
     </hint>
     <hint type="destinationlabel">
-     <x>121</x>
-     <y>116</y>
+     <x>119</x>
+     <y>98</y>
     </hint>
    </hints>
   </connection>
@@ -11755,12 +11754,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>79</x>
-     <y>471</y>
+     <x>53</x>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel">
-     <x>132</x>
-     <y>568</y>
+     <x>119</x>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -11771,12 +11770,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>800</x>
-     <y>139</y>
+     <x>128</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>856</x>
-     <y>140</y>
+     <x>78</x>
+     <y>102</y>
     </hint>
    </hints>
   </connection>
@@ -11787,12 +11786,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>800</x>
-     <y>139</y>
+     <x>128</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>957</x>
-     <y>139</y>
+     <x>128</x>
+     <y>102</y>
     </hint>
    </hints>
   </connection>
@@ -11803,8 +11802,8 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>815</x>
-     <y>167</y>
+     <x>147</x>
+     <y>138</y>
     </hint>
     <hint type="destinationlabel">
      <x>98</x>
@@ -11819,12 +11818,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>95</x>
-     <y>72</y>
+     <x>77</x>
+     <y>50</y>
     </hint>
     <hint type="destinationlabel">
-     <x>117</x>
-     <y>75</y>
+     <x>99</x>
+     <y>53</y>
     </hint>
    </hints>
   </connection>
@@ -11835,12 +11834,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>925</x>
-     <y>521</y>
+     <x>546</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>690</x>
-     <y>614</y>
+     <x>546</x>
+     <y>255</y>
     </hint>
    </hints>
   </connection>
@@ -11851,12 +11850,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>399</x>
-     <y>571</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
     <hint type="destinationlabel">
-     <x>948</x>
-     <y>573</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
    </hints>
   </connection>
@@ -11867,12 +11866,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>414</y>
+     <x>88</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
-     <x>149</x>
-     <y>584</y>
+     <x>110</x>
+     <y>83</y>
     </hint>
    </hints>
   </connection>
@@ -11883,12 +11882,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>351</x>
-     <y>571</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
     <hint type="destinationlabel">
-     <x>332</x>
-     <y>521</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
    </hints>
   </connection>
@@ -11899,12 +11898,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>402</x>
-     <y>571</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
     <hint type="destinationlabel">
-     <x>948</x>
-     <y>521</y>
+     <x>128</x>
+     <y>113</y>
     </hint>
    </hints>
   </connection>
@@ -11915,12 +11914,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>57</x>
-     <y>74</y>
+     <x>39</x>
+     <y>52</y>
     </hint>
     <hint type="destinationlabel">
-     <x>118</x>
-     <y>76</y>
+     <x>100</x>
+     <y>54</y>
     </hint>
    </hints>
   </connection>
@@ -11931,12 +11930,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>57</x>
-     <y>101</y>
+     <x>66</x>
+     <y>84</y>
     </hint>
     <hint type="destinationlabel">
-     <x>74</x>
-     <y>99</y>
+     <x>83</x>
+     <y>84</y>
     </hint>
    </hints>
   </connection>
@@ -11947,12 +11946,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>91</x>
-     <y>101</y>
+     <x>100</x>
+     <y>84</y>
     </hint>
     <hint type="destinationlabel">
-     <x>90</x>
-     <y>66</y>
+     <x>72</x>
+     <y>44</y>
     </hint>
    </hints>
   </connection>
@@ -11963,12 +11962,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>107</x>
-     <y>101</y>
+     <x>116</x>
+     <y>84</y>
     </hint>
     <hint type="destinationlabel">
-     <x>90</x>
-     <y>63</y>
+     <x>72</x>
+     <y>41</y>
     </hint>
    </hints>
   </connection>
@@ -11979,12 +11978,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>174</x>
-     <y>683</y>
+     <x>252</x>
+     <y>757</y>
     </hint>
     <hint type="destinationlabel">
-     <x>298</x>
-     <y>696</y>
+     <x>405</x>
+     <y>759</y>
     </hint>
    </hints>
   </connection>
@@ -11995,12 +11994,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>425</x>
-     <y>684</y>
+     <x>520</x>
+     <y>757</y>
     </hint>
     <hint type="destinationlabel">
-     <x>588</x>
-     <y>689</y>
+     <x>801</x>
+     <y>759</y>
     </hint>
    </hints>
   </connection>

@@ -405,6 +405,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_sub_meta_pca.currentIndexChanged.connect(self.change_event_comboBox_sub_meta_pca)
 
         ## Basic Stat
+        self.line_22.setVisible(False)
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
         self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
         self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
@@ -1762,8 +1763,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def cross_test_tab_change(self, index):        
         if index in [3, 4]: # TUKEY Test or DESeq2 Test
             self.groupBox_cross_heatmap_plot.setVisible(False)
+            self.line_22.setVisible(True)
         else:
             self.groupBox_cross_heatmap_plot.setVisible(True)
+            self.line_22.setVisible(False)
             
     def change_event_comboBox_top_heatmap_scale(self):
         if self.comboBox_top_heatmap_scale.currentText() == 'None':
