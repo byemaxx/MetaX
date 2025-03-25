@@ -763,21 +763,23 @@ class CrossTest:
             - 'same_trends': DataFrame containing rows with no NA values, and all values in each group follow the same trend (all positive or all negative).
         """
         def filter_rows_with_same_trends_and_half_na(group):
-            # 筛选出所有非NA值都为正或都为负的行
-            filtered = group[group.apply(lambda row: (row.dropna() > 0).all() or (row.dropna() < 0).all(), axis=1)]
-            # 检查每行非NA的值是否超过一半，若非NA值少于一半则将该行置为NA
-            filtered = filtered.apply(lambda x: x if x.notna().sum() > len(x) / 2 else pd.Series([np.nan] * len(x), index=x.index), axis=1)
-            return filtered
+            non_na_count = group.notna().sum(axis=1)
+            threshold = group.shape[1] / 2.0
+            row_min = group.min(axis=1)
+            row_max = group.max(axis=1)
+            same_trend = (row_min > 0) | (row_max < 0)
+            mask = same_trend & (non_na_count > threshold)
+            return group[mask]
             
+        # 筛选每行无NA且所有值同向的行
         def filter_rows(group):
-            # 保留所有值都为正或者都为负的行, 且不包含NA
-            return group[(group > 0).all(axis=1) | (group < 0).all(axis=1)]
+            return group[((group > 0).all(axis=1)) | ((group < 0).all(axis=1))]
         
         res_df_dict = {}
         
         first_level_values = df.columns.get_level_values(0).unique()
         res_dict = {}
-        for value in first_level_values: # iterate over first level values
+        for value in first_level_values:  # iterate over first level values
             sub_df = df[value]
             print(f"\nExtracting significant Stats from '{value}':")
             if df_type == 'dunnett':
@@ -788,33 +790,26 @@ class CrossTest:
                 raise ValueError("df_type must be in ['dunnett', 'deseq2']")
             
             res_dict[value] = dft
-        df = pd.concat(res_dict, axis=1)
-        df_swapped = df.swaplevel(axis=1)
+        df_combined = pd.concat(res_dict, axis=1)
+        df_swapped = df_combined.swaplevel(axis=1)
         df_swapped = df_swapped.sort_index(axis=1)
         print(f"\nTotal number of all_siginificant: [{df_swapped.shape[0]}]")
         res_df_dict['all_sig'] = df_swapped
-        #TODO extract half of the columns in each group has no na and same trends
-        
-
-        # 按groupby(level=0)分组，过滤每组符合条件的行
-        df_half = pd.concat([filter_rows_with_same_trends_and_half_na(group) for _, group in df_swapped.groupby(level=0, axis=1)], axis=1)
-        # df_half.columns = df_half.columns.droplevel(1)  # 删除多余的层级
-        df_half = df_half.dropna(how='all')  # 删除所有值都为NA的行
+         
+        df_half = pd.concat([filter_rows_with_same_trends_and_half_na(group) 
+                             for _, group in df_swapped.groupby(level=0, axis=1)], axis=1)
+        df_half = df_half.dropna(how='all')
         print(f"Total number of half_same_trends: [{df_half.shape[0]}]")
         res_df_dict['half_same_trends'] = df_half
-
         
         df_no_na = df_swapped.groupby(level=0, axis=1).apply(lambda x: x.dropna())
         df_no_na = df_no_na.droplevel(1, axis=1)
         print(f"Total number of no_na: [{df_no_na.shape[0]}]")
         res_df_dict['no_na'] = df_no_na
 
-        # Only keep rows that have all values positive or all values negative
         df_same_trends = df_no_na.groupby(level=0, axis=1).apply(filter_rows)
-        # dropna level 0 index
         df_same_trends.columns = df_same_trends.columns.droplevel(1)
         print(f"Total number of same_trends: [{df_same_trends.shape[0]}]")
         res_df_dict['same_trends'] = df_same_trends
-        
         
         return res_df_dict

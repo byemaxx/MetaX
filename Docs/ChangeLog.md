@@ -1,3 +1,8 @@
+# Version: 1.123.2
+## Date: 2025-03-25
+### Changes:
+- Optimize: Optimized the code to speed up the run time of extracting the result table of the group-control test.
+
 # Version: 1.123.1
 ## Date: 2025-03-25
 ### Changes:

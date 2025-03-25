@@ -5148,6 +5148,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
         try:
+            self.show_message(f'Creating Table of heatmap for {table_name}...')
             if x_axis_filter_text:
                 x_filter_list = [i.strip() for i in x_axis_filter_text.split("##")]
             else:
