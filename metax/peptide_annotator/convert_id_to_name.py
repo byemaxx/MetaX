@@ -46,6 +46,14 @@ def download_ko_files(save_path):
         print('Error: download ko.tsv failed!')
         print(e)
     
+def download_go_files(save_path):
+    url = "https://purl.obolibrary.org/obo/go/go-basic.obo"
+    try:
+        urllib.request.urlretrieve(url, os.path.join(save_path, 'go-basic.obo'))
+        print(f'go-basic.obo downloaded to {save_path}')
+    except Exception as e:
+        print('Error: download go-basic.obo failed!')
+        print(e)
 
 def parse_dat_file(file_path):
     if not os.path.exists(file_path):
@@ -174,6 +182,94 @@ def lookup_and_join_for_EC(ec_nums: list, ec_dict:dict, column_name: str) -> str
     values = list(dict.fromkeys(val for val in values if val != '-'))
     return ' | '.join(values)
 
+def get_go_dict():
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    go_path = os.path.join(script_path, '../data/go-basic.obo')
+    if not os.path.exists(go_path):
+        print(f'{go_path} does not exist!\nTry to download the file from https://purl.obolibrary.org/obo/go/go-basic.obo')
+        download_go_files(os.path.dirname(go_path))
+    go_dict = {}
+    with open(go_path, 'r') as f:
+        current_id = None
+        current_name = None
+        current_namespace = None
+        for line in f:
+            line = line.strip()
+            if line.startswith('id:'):
+                current_id = line.split(': ')[1]
+            elif line.startswith('name:'):
+                current_name = line.split(': ')[1]
+            elif line.startswith('namespace:'):
+                current_namespace = line.split(': ')[1]
+            elif line == '[Term]':
+                if current_id and current_name and current_namespace:
+                    go_dict[current_id] = (current_name, current_namespace)
+                    current_id = None
+                    current_name = None
+                    current_namespace = None
+    return go_dict
+    
+
+def add_go_name_to_df(df: pd.DataFrame, split_char: str = ',') -> pd.DataFrame:
+    """
+    Add GO name columns to dataframe by converting GO IDs to their corresponding names and namespaces.
+
+    Args:
+        df (pd.DataFrame): Input dataframe containing GO IDs.
+        split_char (str): Separator for splitting multiple GO IDs in a single cell.
+
+    Returns:
+        pd.DataFrame: DataFrame with added GO name and namespace columns.
+    """
+    # Check if 'GOs' column exists
+    if 'GOs' not in df.columns:
+        print('GOs column does not exist!, return the original dataframe')
+        return df
+    print('Adding GO_name and GO_namespace to df...')
+
+    # Get GO dictionary
+    go_dict = get_go_dict()
+
+    # Helper function to query GO names and namespaces
+    def query_go_names(go_str):
+        if not go_str or not isinstance(go_str, str):
+            return '-', '-'
+        
+        go_ids = go_str.split(split_char)
+        names = []
+        namespaces = []
+        
+        for go_id in go_ids:
+            if go_id in go_dict:
+                name, namespace = go_dict[go_id]
+                names.append(name)
+                namespaces.append(namespace)
+            else:
+                names.append('-')
+                namespaces.append('-')
+        
+        # Remove duplicates and join with '|'
+        names = '|'.join(dict.fromkeys(names))
+        namespaces = '|'.join(dict.fromkeys(namespaces))
+        # repale "|-" of the end if exists
+        if names.endswith('|-'):
+            names = names[:-2]
+        if namespaces.endswith('|-'):
+            namespaces = namespaces[:-2]
+        return names, namespaces
+
+    # Apply the helper function to the 'GOs' column
+    df[['GO_name', 'GO_namespace']] = df['GOs'].apply(
+        lambda x: pd.Series(query_go_names(x))
+    )
+
+    # Handle 'GOs_prop' column if it exists
+    if 'GOs_prop' in df.columns:
+        df['GO_name_prop'] = df['GOs_prop']
+        df['GO_namespace_prop'] = df['GOs_prop']
+
+    print("Add GO_name and GO_namespace to df successfully!")
+    return df
 
 def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -359,4 +455,5 @@ def add_kegg_module_to_df(df: pd.DataFrame) -> pd.DataFrame:
 #     df = add_ec_name_to_df(df)
 #     df = add_ko_name_to_df(df)
 #     df = add_kegg_module_to_df(df)
+#     df = add_go_name_to_df(df, split_char=',')
 #     df.to_csv("11.tsv", sep='\t', index=False)
