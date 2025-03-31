@@ -1,29 +1,9 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of MetaX
-
-import platform
-# Hide console window on Windows
-def hide_console_on_startup():
-    if platform.system() == 'Windows':
-        try:
-            from ctypes import windll
-            import time
-            hwnd = windll.kernel32.GetConsoleWindow()
-            if hwnd:
-                print("Starting MetaX...")
-                time.sleep(0.5) # To make sure the print saw by user before hide the console
-                windll.user32.ShowWindow(hwnd, 0)  # 0 = SW_HIDE
-        except Exception as e:
-            print(f"Failed to hide console: {e}")
-
-# Hide console window on Windows
-hide_console_on_startup()
-
 from PyQt5.QtCore import QCoreApplication, Qt
 
 # Set the attribute before creating the QApplication
 QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-
 # import the necessary PyQt5 modules to show the splash screen
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QSplashScreen
@@ -111,6 +91,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from metax.gui.metax_gui.generic_thread import FunctionExecutor
     from metax.gui.metax_gui.resources import icon_rc
+    from metax.gui.metax_gui.console_window import ConsoleOutputWindow
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -157,7 +138,8 @@ else:
     from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from .metax_gui.generic_thread import FunctionExecutor
     from .metax_gui.resources import icon_rc # noqa: F401
-    
+    from .metax_gui.console_window import ConsoleOutputWindow
+
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
     from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
@@ -259,7 +241,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionRestore_From.setIcon(qta.icon('mdi.restore'))
         self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
-        self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
+        self.action_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
@@ -275,8 +257,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
-        self.console_visible = False
-        self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
+        self.console_window = ConsoleOutputWindow(self.MainWindow)
+        self.action_Show_Console.triggered.connect(self.console_window.show)
         self.actionDebug_Console.triggered.connect(self.show_command_line_window)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
@@ -1285,22 +1267,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_outlier_handling_method2.setEnabled(method2_enabled)
         self.comboBox_outlier_handling_group_or_sample.setEnabled(group_or_sample_enabled)
 
-            
-    
-    def show_hide_console(self):
-        from ctypes import windll
-        hwnd = windll.kernel32.GetConsoleWindow()
-        style = windll.user32.GetWindowLongW(hwnd, -16)  # GWL_STYLE = -16
-        style &= ~0x00080000
-        windll.user32.SetWindowLongW(hwnd, -16, style)
 
-        if hwnd:
-            if self.console_visible:
-                windll.user32.ShowWindow(hwnd, 0)
-                self.console_visible = False
-            else:
-                windll.user32.ShowWindow(hwnd, 1)
-                self.console_visible = True
 
     def init_QSettings(self):
         settings_path =self.metax_home_path
@@ -1670,10 +1637,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 # 关闭 plt.show() 出来的窗口
                 plt.close('all')
-                
-                # 关闭控制台窗口
-                if self.console_visible:
-                    self.show_hide_console()
                     
                 # 关闭所有子进程
                 for executor in self.executors:
@@ -6425,11 +6388,10 @@ def global_exception_handler(type, value, tb):
 
 
 def runGUI():
+    app = QtWidgets.QApplication(sys.argv)
     sys.excepthook = global_exception_handler
-
     MainWindow = QtWidgets.QMainWindow()
     ui = MetaXGUI(MainWindow)
-    
     if not ui.update_required:
         MainWindow.show()
         splash.finish(MainWindow)

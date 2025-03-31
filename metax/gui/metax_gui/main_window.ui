@@ -6284,8 +6284,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>865</width>
-                           <height>95</height>
+                           <width>535</width>
+                           <height>94</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -11424,7 +11424,7 @@
     </property>
     <addaction name="actionExport_Log_File"/>
     <addaction name="separator"/>
-    <addaction name="actionHide_Show_Console"/>
+    <addaction name="action_Show_Console"/>
     <addaction name="actionDebug_Console"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
@@ -11469,9 +11469,9 @@
     <string>Export Log File</string>
    </property>
   </action>
-  <action name="actionHide_Show_Console">
+  <action name="action_Show_Console">
    <property name="text">
-    <string>Show/Hide Console</string>
+    <string>Show Console</string>
    </property>
   </action>
   <action name="actionCheck_Update">
