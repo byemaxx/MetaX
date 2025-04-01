@@ -1,3 +1,8 @@
+# Version: 1.123.3
+## Date: 2025-03-31
+### Changes:
+- Change: use window to repalce the console to show the log message to improve the compatibility.
+
 # Version: 1.123.2
 ## Date: 2025-03-25
 ### Changes:

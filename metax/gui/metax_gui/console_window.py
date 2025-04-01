@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QColor, QTextCharFormat
 import sys
 import io
+import re
 
 class Emitter(QObject):
-    text_written = pyqtSignal(str)
+    text_written = pyqtSignal(str, bool)
 
-    def write(self, text):
-        self.text_written.emit(text)
+    def write(self, text, is_error=False):
+        self.text_written.emit(text, is_error)
 
     def flush(self):
         pass
@@ -26,7 +28,8 @@ class ConsoleCapture:
 
     def write(self, text):
         self.buffer.write(text)
-        self.emitter.text_written.emit(text)
+        is_error = bool(re.search(r'ERROR|Error|error', text))
+        self.emitter.text_written.emit(text, is_error)
 
     def flush(self):
         pass
@@ -65,9 +68,20 @@ class ConsoleOutputWindow(QDialog):
         self.close_button.clicked.connect(self.close)
         console_capture.emitter.text_written.connect(self.append_text)
 
-    @pyqtSlot(str)
-    def append_text(self, text):
-        self.text_edit.moveCursor(self.text_edit.textCursor().End)
+    @pyqtSlot(str, bool)
+    def append_text(self, text, is_error=False):
+        cursor = self.text_edit.textCursor()
+        cursor.movePosition(cursor.End)
+        
+        fmt = QTextCharFormat()
+        
+        if is_error:
+            fmt.setForeground(QColor("red"))
+        else:
+            fmt.setForeground(QColor("black"))
+        
+        cursor.setCharFormat(fmt)
+        self.text_edit.setTextCursor(cursor)
         self.text_edit.insertPlainText(text)
         self.text_edit.ensureCursorVisible()
 

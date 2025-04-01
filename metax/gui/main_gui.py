@@ -2033,7 +2033,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
         callback = kwargs.pop('callback', None)
 
-        executor = FunctionExecutor(func, *args, **kwargs)
+        executor = FunctionExecutor(func, *args,logger=self.logger,**kwargs)
         executor.finished.connect(handle_finished) #connect the signal to the slot
         self.executors.append(executor)
         executor.show()
@@ -2263,6 +2263,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             except Exception:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
+                self.logger.write_log(f'Error when run_db_builder_own_table: {error_message}', 'e')
     
     
     
@@ -6374,9 +6375,9 @@ class LoggerManager:
 def global_exception_handler(type, value, tb):
     # Format the traceback information
     error_msg = "".join(traceback.format_exception(type, value, tb))
-    print("Uncaught exception:", error_msg)
+    print("Uncaught exception at golbal level:", error_msg)
     LoggerManager().write_log(error_msg, 'c')  # Using an instance to call write_log
-
+    print("Uncaught exception:", error_msg)
     # Display a general error message in a GUI dialog without the traceback
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
@@ -6388,7 +6389,6 @@ def global_exception_handler(type, value, tb):
 
 
 def runGUI():
-    app = QtWidgets.QApplication(sys.argv)
     sys.excepthook = global_exception_handler
     MainWindow = QtWidgets.QMainWindow()
     ui = MetaXGUI(MainWindow)
