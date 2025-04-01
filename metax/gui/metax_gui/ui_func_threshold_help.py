@@ -1,8 +1,8 @@
 
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import Qt
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QDialog
+from PySide6.QtCore import Qt
 import os
 
 

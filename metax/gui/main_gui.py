@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of MetaX
-from PyQt5.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, Qt
 
 # Set the attribute before creating the QApplication
 QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-# import the necessary PyQt5 modules to show the splash screen
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QSplashScreen
-from PyQt5.QtGui import QPixmap
+# import the necessary PySide6 modules to show the splash screen
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QSplashScreen
+from PySide6.QtGui import QPixmap
 import os
 import sys
 
@@ -33,19 +33,18 @@ import re
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# import pyqt5 scripts
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
-from PyQt5.QtWidgets import    QApplication, QListWidget, QListWidgetItem,QPushButton
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout
-from PyQt5.QtGui import QIcon, QCursor
-from PyQt5.QtCore import Qt, QTimer, QDir, QSettings, QSize
-
+# import PySide6 modules
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QListWidget, QListWidgetItem, QPushButton
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout
+from PySide6.QtGui import QIcon, QCursor
+from PySide6.QtCore import Qt, QTimer, QDir, QSettings, QSize
 import qtawesome as qta
-# from qt_material import apply_stylesheet
 
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
-from PyQt5.QtWidgets import QAction, QMenu
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMenu
 
 # if not run as script, import the necessary MetaX modules by absolute path
 if __name__ == '__main__':
@@ -994,15 +993,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         """
         Open a dialog for the user to input a custom font size.
         """
-        from PyQt5.QtWidgets import QInputDialog
+        from PySide6.QtWidgets import QInputDialog
 
         size, ok = QInputDialog.getInt(
             self.MainWindow, 
             "Custom Font Size", 
             "Enter font size (pt):", 
             value=self.font_size, 
-            min=8, 
-            max=72
+            minValue=8, 
+            maxValue=72
         )
         if ok:
             self.set_font_size(size)
@@ -1775,8 +1774,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
     def open_tutorial(self):
         # use default browser to open the tutorial link
-        from PyQt5.QtGui import QDesktopServices
-        from PyQt5.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtCore import QUrl
 
         url = QUrl("https://byemaxx.github.io/MetaX/")
         QDesktopServices.openUrl(url)
@@ -4369,7 +4368,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                width=width, height=height, title=title
                                                                , font_size=font_size, num_col=num_col)
             # create a dialog to show the figure
-            # plt_dialog = PltDialog(self.MainWindow, fig) #obsolete
             plt_size= (width*50, int(height*num_cluster*50/num_col) )
             plt_dialog = ExportablePlotDialog(self.MainWindow,fig, plt_size)
             #set title

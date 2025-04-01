@@ -1,6 +1,6 @@
-from PyQt5 import QtWidgets, QtCore
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from PySide6 import QtWidgets, QtCore
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar # type: ignore ADD THE TOOLBAR
 from matplotlib.figure import Figure
 
 
@@ -51,6 +51,6 @@ if __name__ == "__main__":
     ax.plot([1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
 
     app = QtWidgets.QApplication([])
-    window = ExportablePlotDialog(fig)
+    window = ExportablePlotDialog(fig=fig)
     window.show()
     app.exec_()

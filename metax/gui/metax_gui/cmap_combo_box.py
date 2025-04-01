@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QComboBox, QMenu, QMainWindow
+from PySide6.QtWidgets import QApplication, QComboBox, QMenu, QMainWindow
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ class CmapComboBox(QComboBox):
         plt.show()
 
     def plotLegends(self):
-        cmap_names = [name for name in plt.colormaps() if not name.endswith("_r")]
+        cmap_names = [name for name in plt.colormaps() if not name.endswith("_r")]        
 
         self.plot_colormaps(cmap_names)
 

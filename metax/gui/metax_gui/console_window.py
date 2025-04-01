@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton, QHBoxLayout
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QTextCharFormat
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton, QHBoxLayout
+from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 import sys
 import io
 import re
 
 class Emitter(QObject):
-    text_written = pyqtSignal(str, bool)
+    text_written = Signal(str, bool)
 
     def write(self, text, is_error=False):
         self.text_written.emit(text, is_error)
@@ -68,10 +68,10 @@ class ConsoleOutputWindow(QDialog):
         self.close_button.clicked.connect(self.close)
         console_capture.emitter.text_written.connect(self.append_text)
 
-    @pyqtSlot(str, bool)
+    @Slot(str, bool)
     def append_text(self, text, is_error=False):
         cursor = self.text_edit.textCursor()
-        cursor.movePosition(cursor.End)
+        cursor.movePosition(QTextCursor.End)
         
         fmt = QTextCharFormat()
         

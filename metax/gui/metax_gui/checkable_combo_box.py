@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui
 
 class CheckableComboBox(QtWidgets.QComboBox):
     def __init__(self, parent=None, meta_df = None):

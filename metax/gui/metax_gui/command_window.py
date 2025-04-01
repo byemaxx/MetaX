@@ -1,9 +1,9 @@
 import sys
 import io
 from contextlib import redirect_stdout
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget, QPushButton
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QTextCursor
+from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget, QPushButton
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QTextCursor
 
 class PlainTextEditor(QTextEdit):
     def insertFromMimeData(self, source):

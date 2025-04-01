@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QTextBrowser, QDialogButtonBox, QMessageBox
-from PyQt5.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QTextBrowser, QDialogButtonBox, QMessageBox
+from PySide6.QtCore import QTimer
 
 class UserAgreementDialog(QDialog):
     def __init__(self, parent=None):
@@ -98,13 +98,13 @@ class UserAgreementDialog(QDialog):
             self.buttonBox.button(QDialogButtonBox.Yes).setEnabled(True)
         else:
             self.buttonBox.button(QDialogButtonBox.Yes).setEnabled(False)
-# Example usage within a main window or other parts of a PyQt application:
+# Example usage within a main window or other parts of a PySide6 application:
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     main_window = QDialog()  # This would be your main application window
     agreement_dialog = UserAgreementDialog(main_window)
-    result = agreement_dialog.exec_()  # Show the dialog and block until closed
+    result = agreement_dialog.exec()  # Show the dialog and block until closed
 
     if result == QDialog.Accepted:
         print("User agreed.")

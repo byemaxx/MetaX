@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QPushButton, QDialog, QSizePolicy, QGridLayout, QTextEdit, QDesktopWidget, QRadioButton, QButtonGroup
-
+from PySide6.QtWidgets import (QSizePolicy, QGridLayout, QRadioButton, QButtonGroup, 
+                               QTextEdit, QPushButton, QDialog)
+from PySide6.QtGui import QGuiApplication
 class InputWindow(QDialog):
     """
     A dialog window for inputting text.
@@ -57,9 +58,10 @@ class InputWindow(QDialog):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.setWindowTitle('Input List')
-        self.screen = QDesktopWidget().screenGeometry()
-        self.resize(int(self.screen.width() / 1.8), int(self.screen.height() / 1.8))
-
+        screen_geometry = QGuiApplication.primaryScreen().geometry()
+        self.resize(int(screen_geometry.width() / 1.8), int(screen_geometry.height() / 1.8))
+        
+        
     def get_selected_mode(self):
         """
         Get the selected match mode.
@@ -76,7 +78,7 @@ class InputWindow(QDialog):
 
 if __name__ == '__main__':
     import sys
-    from PyQt5.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     app = QApplication(sys.argv)
     input_window = InputWindow(input_mode=True)  # 设置input_mode=True以显示单选按钮
     input_window.show()

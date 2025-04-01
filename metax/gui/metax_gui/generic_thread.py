@@ -1,8 +1,8 @@
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser, QVBoxLayout, QWidget, QMessageBox
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QTextCursor
+from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtWidgets import QApplication, QMainWindow, QTextBrowser, QVBoxLayout, QWidget, QMessageBox
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QIcon
+from PySide6.QtGui import QTextCursor
 
 import sys
 import re
@@ -10,7 +10,7 @@ import os
 import logging
 
 class EmittingStream(QObject):
-    text_written = pyqtSignal(str)
+    text_written = Signal(str)
 
     def __init__(self, original):
         super().__init__()
@@ -35,7 +35,7 @@ class LoggingHandler(logging.Handler):
 
 
 class FunctionExecutor(QMainWindow):
-    finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
+    finished = Signal(object, bool)  # to emit the result and whether the function was successful
 
     def __init__(self, function, *args, logger=None, **kwargs):
         super().__init__()

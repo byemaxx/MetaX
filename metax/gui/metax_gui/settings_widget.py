@@ -1,15 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QToolBox
-from PyQt5.QtCore import pyqtSignal
+from PySide6.QtWidgets import QWidget, QToolBox
+from PySide6.QtCore import Signal
 from .ui_setting_window import Ui_Settings
 
 class SettingsWidget(QWidget):
-    update_mode_changed = pyqtSignal(str)
-    auto_check_update_changed = pyqtSignal(bool)
-    heatmap_params_dict_changed = pyqtSignal(dict)
-    tf_link_net_params_dict_changed = pyqtSignal(dict)
-    html_theme_changed = pyqtSignal(str)
-    protein_infer_method_changed = pyqtSignal(str)
-    stat_mean_by_zero_dominant_changed = pyqtSignal(bool)
+    update_mode_changed = Signal(str)
+    auto_check_update_changed = Signal(bool)
+    heatmap_params_dict_changed = Signal(dict)
+    tf_link_net_params_dict_changed = Signal(dict)
+    html_theme_changed = Signal(str)
+    protein_infer_method_changed = Signal(str)
+    stat_mean_by_zero_dominant_changed = Signal(bool)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True, stat_mean_by_zero_dominant=False, QSettings=None):
         super().__init__(parent)
@@ -87,6 +87,7 @@ class SettingsWidget(QWidget):
             self.ui.comboBox_protein_infer_greedy_mode.setCurrentText(selected_method)
             
 
+
     def handle_checkbox_state_changed(self):
         self.auto_check_update = self.ui.checkBox_auto_check_update.isChecked()
         self.auto_check_update_changed.emit(self.auto_check_update)
@@ -156,7 +157,7 @@ class SettingsWidget(QWidget):
          
 if __name__ == "__main__":
     import sys
-    from PyQt5.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     app = QApplication(sys.argv)
     widget = SettingsWidget(parent=None, update_branch="dev", auto_check_update=False)
     widget.show()

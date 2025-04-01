@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtGui import QDragEnterEvent, QDropEvent
 import os
 
 class FileDragDropLineEdit(QLineEdit):

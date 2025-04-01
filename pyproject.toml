@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MetaXTools"
-version = "1.124.0"
+version = "1.124.1"
 description = "MetaXTools is a novel tool for linking peptide sequences with taxonomic and functional information in Metaproteomics."
 readme = "README_PyPi.md"
 license = { text = "NorthOmics" }
@@ -24,11 +24,7 @@ dependencies = [
     "pandas>=2.0.3",
     "pydeseq2==0.4.11",
     "pyecharts>=2.0.6",
-    "PyQt5>=5.15.9",
-    "PyQt5-Qt5>=5.15.2",
-    "PyQt5-sip>=12.12.1",
-    "PyQtWebEngine>=5.15.6",
-    "PyQtWebEngine-Qt5>=5.15.2",
+    "PySide6",
     "python-dateutil>=2.8.2",
     "qt-material>=2.14",
     "QtAwesome>=1.2.3",

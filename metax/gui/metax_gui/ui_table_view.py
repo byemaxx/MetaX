@@ -1,7 +1,7 @@
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMenu
-from PyQt5.QtCore import  Qt, QDir
-from PyQt5.QtGui import QIcon
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QMenu
+from PySide6.QtCore import Qt, QDir, Signal
+from PySide6.QtGui import QIcon
 import pandas as pd
 
 import os
@@ -11,7 +11,7 @@ import sys
 import subprocess
 
 class Ui_Table_view(QtWidgets.QDialog):
-    last_path_updated = QtCore.pyqtSignal(str) # signal to update last_path in main window
+    last_path_updated = Signal(str) # signal to update last_path in main window
 
     def __init__(self, df=None, parent=None, title='Table View', last_path=None):
         super().__init__(parent)  
@@ -185,7 +185,7 @@ class Ui_Table_view(QtWidgets.QDialog):
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 if sys.platform == "win32":
-                    os.startfile(export_path, 'open') # open the file with default application
+                    os.startfile(export_path) # open the file with default application
                 else:
                     # use default application to open the file
                     opener = "open" if sys.platform == "darwin" else "xdg-open"

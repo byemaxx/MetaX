@@ -1,9 +1,9 @@
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QTimer, pyqtSignal
-from PyQt5.QtWidgets import QCompleter, QComboBox, QMenu, QAction
-
+from PySide6.QtCore import Qt, QSortFilterProxyModel, QTimer, Signal
+from PySide6.QtWidgets import QCompleter, QComboBox, QMenu
+from PySide6.QtGui import QAction
 class ExtendedComboBox(QComboBox):
     # Define a custom signal for returning all searched items
-    add_all_searched = pyqtSignal(list)
+    add_all_searched = Signal(list)
 
     def __init__(self, parent=None):
         super(ExtendedComboBox, self).__init__(parent)
@@ -52,8 +52,8 @@ class ExtendedComboBox(QComboBox):
         if text:
             index = self.findText(text)
             self.setCurrentIndex(index)
-            self.activated[str].emit(self.itemText(index))
-
+            self.activated.emit(index)
+            
     # on model change, update the models of the filter and completer as well
     def setModel(self, model):
         super(ExtendedComboBox, self).setModel(model)

@@ -1,11 +1,11 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QPushButton, QFileDialog, QSizePolicy, QSlider, QHBoxLayout,QMessageBox
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt
-from PyQt5.QtGui import QIcon
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QPushButton, QFileDialog, QSizePolicy, QSlider, QHBoxLayout, QMessageBox
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtCore import QUrl, Qt
+from PySide6.QtGui import QIcon
 
 import sys 
 import os
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 class WebDialog(QDialog):
     def __init__(self, html_path=None, parent=None, theme="white"):
@@ -21,7 +21,12 @@ class WebDialog(QDialog):
         self.exportButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.webEngineView = QWebEngineView(self)
         self.html_path = html_path
-        
+        #! temp fix for webengineview not showing up
+        #todo: embed echats.js to html file
+        from PySide6.QtWebEngineCore import QWebEngineSettings
+        self.webEngineView.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+        self.webEngineView.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+        self.webEngineView.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
         self.init_background_color(theme)
 
         layout = QVBoxLayout(self)
@@ -46,7 +51,7 @@ class WebDialog(QDialog):
     def init_background_color(self, theme_mode):
         if theme_mode == "dark":
             # set background color to #100c2a
-            from PyQt5.QtGui import QColor
+            from PySide6.QtGui import QColor
             self.webEngineView.page().setBackgroundColor(QColor("#100c2a"))
     
     def zoom(self, value):
@@ -81,6 +86,6 @@ class WebDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dialog = WebDialog(html_path="C:/Users/Qing/MetaX/html/Bar_of_Functions.html", theme="dark")
+    dialog = WebDialog(html_path="C:/Users/Qing/MetaX/html/Treemap_of_Taxa.html", theme="dark")
     dialog.show()
     sys.exit(app.exec_())
