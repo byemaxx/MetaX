@@ -389,6 +389,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         ## Basic Stat
         self.line_22.setVisible(False)
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
+        self.pushButton_plot_tsne.clicked.connect(lambda: self.plot_basic_info_sns('tsne'))
         self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
         self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
         self.pushButton_plot_pca_js.clicked.connect(lambda: self.plot_basic_info_sns('pca_3d'))
@@ -3501,6 +3502,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def enable_multi_button(self, state=True):
         list_button = [
         self.pushButton_plot_pca_sns,
+        self.pushButton_plot_tsne,
         self.pushButton_basic_plot_number_bar,
         self.pushButton_basic_plot_upset,
         self.pushButton_plot_corr,
@@ -4720,6 +4722,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             - 'sankey': Sankey diagram.
             - 'num_bar': Number bar plot.
             - 'upset': Upset plot.
+            - 'tsne': t-SNE plot.
         Returns:
         None
         """
@@ -4802,6 +4805,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
 
+            elif method == 'tsne':
+                row_num = df.shape[0]
+                if row_num < 2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, t-SNE cannot be plotted!')
+                    return None
+                self.show_message('t-SNE is running, please wait...')
+                # def plot_tsne_sns(self, df, title_name='Table', show_label=True, perplexity=30, n_iter=1000,
+                #                 width=10, height=8, font_size=10, rename_sample:bool=False,
+                #                 font_transparency=0.6, adjust_label:bool=False, theme:str|None=None,
+                #                 sub_meta:str='None', legend_col_num:int|None=None, dot_size:float|None=None,
+                #                 early_exaggeration=12.0, learning_rate='auto', random_state=None):
+                perplexity = self.doubleSpinBox_basic_tsne_perplexity.value()
+                n_iter = self.spinBox_basic_tsne_n_iter.value()
+                early_exaggeration = self.doubleSpinBox_basic_tsne_early_exaggeration.value()
+                # check if the perplexity more than half of the sample size
+                if perplexity > len(sample_list)/2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 
+                                        f'The perplexity should be less than half of the sample size ({len(sample_list)/2}), please reset it!')
+                    return None
+                BasicPlot(self.tfa).plot_tsne_sns(df=df, title_name=title_name, show_label=show_label, perplexity=perplexity, n_iter=n_iter,
+                                        width=width, height=height, font_size=font_size, rename_sample = rename_sample,
+                                        font_transparency=font_transparency, adjust_label=adjust_label, theme=theme,
+                                        sub_meta = sub_meta, legend_col_num=legend_col_num, dot_size=dot_size,
+                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=None)
+
+                        
             elif method == 'box':
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
                 violinplot = self.checkBox_box_violinplot.isChecked()

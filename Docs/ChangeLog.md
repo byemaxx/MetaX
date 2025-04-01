@@ -1,4 +1,9 @@
-# Version: 1.123.3
+# Version: 1.124.0
+## Date: 2025-03-31
+### Changes:
+- New: Added t-SNE plot for the basic plot part.
+
+# Version: 1.124.0
 ## Date: 2025-03-31
 ### Changes:
 - Change: use window to repalce the console to show the log message to improve the compatibility.
