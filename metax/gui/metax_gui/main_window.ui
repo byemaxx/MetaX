@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>991</width>
+    <width>1081</width>
     <height>825</height>
    </rect>
   </property>
@@ -40,13 +40,13 @@
            </sizepolicy>
           </property>
           <property name="contextMenuPolicy">
-           <enum>Qt::NoContextMenu</enum>
+           <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
           </property>
           <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
+           <enum>Qt::LayoutDirection::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -141,18 +141,17 @@
                <font>
                 <family>Arial</family>
                 <pointsize>22</pointsize>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
               <property name="layoutDirection">
-               <enum>Qt::LeftToRight</enum>
+               <enum>Qt::LayoutDirection::LeftToRight</enum>
               </property>
               <property name="text">
                <string>Operational Taxa-Functions (OTF) Analyzer</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -362,8 +361,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>462</width>
-                 <height>600</height>
+                 <width>507</width>
+                 <height>576</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -487,8 +486,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>311</width>
-                 <height>49</height>
+                 <width>329</width>
+                 <height>50</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -532,7 +531,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>261</width>
-                 <height>75</height>
+                 <height>78</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -731,7 +730,6 @@
               <property name="font">
                <font>
                 <pointsize>14</pointsize>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -759,7 +757,7 @@
             <item row="5" column="0">
              <widget class="Line" name="line_9">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -774,7 +772,6 @@
               <property name="font">
                <font>
                 <pointsize>14</pointsize>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -929,7 +926,7 @@
               <item row="6" column="1" colspan="3">
                <widget class="QComboBox" name="comboBox_set_data_transformation">
                 <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                 </property>
                 <item>
                  <property name="text">
@@ -979,13 +976,13 @@
                  </sizepolicy>
                 </property>
                 <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                 </property>
                 <property name="text">
                  <string>Drag to change the processing order</string>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignCenter</set>
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
                 </property>
                </widget>
               </item>
@@ -1080,7 +1077,7 @@
               <item row="7" column="1" colspan="3">
                <widget class="QComboBox" name="comboBox_set_data_normalization">
                 <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                 </property>
                 <item>
                  <property name="text">
@@ -1163,10 +1160,10 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Batch Effect Correction</string>
+                 <string>Batch Effect Combat</string>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                 <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                 </property>
                </widget>
               </item>
@@ -1191,7 +1188,7 @@
                  </size>
                 </property>
                 <property name="dragDropMode">
-                 <enum>QAbstractItemView::InternalMove</enum>
+                 <enum>QAbstractItemView::DragDropMode::InternalMove</enum>
                 </property>
                 <item>
                  <property name="text">
@@ -1267,7 +1264,6 @@
               <property name="font">
                <font>
                 <pointsize>14</pointsize>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -1279,7 +1275,7 @@
             <item row="2" column="0">
              <widget class="Line" name="line_4">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -1354,7 +1350,7 @@
               <item row="1" column="1">
                <widget class="QComboBox" name="comboBox_taxa_level_to_stast">
                 <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                 </property>
                 <property name="currentText">
                  <string>Species</string>
@@ -1415,7 +1411,7 @@
                  </sizepolicy>
                 </property>
                 <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                 </property>
                </widget>
               </item>
@@ -1468,7 +1464,7 @@
                    <string>;</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignCenter</set>
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -1495,7 +1491,7 @@
                    <string>Taxa</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignCenter</set>
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -1518,7 +1514,7 @@
                    <string>Func</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignCenter</set>
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -1541,7 +1537,7 @@
                    <string>Taxa-Func</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignCenter</set>
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -1588,10 +1584,10 @@
             <item row="1" column="0">
              <widget class="QTabWidget" name="tabWidget_4">
               <property name="tabPosition">
-               <enum>QTabWidget::North</enum>
+               <enum>QTabWidget::TabPosition::North</enum>
               </property>
               <property name="tabShape">
-               <enum>QTabWidget::Triangular</enum>
+               <enum>QTabWidget::TabShape::Triangular</enum>
               </property>
               <property name="currentIndex">
                <number>0</number>
@@ -1798,7 +1794,7 @@
                 <item row="1" column="0" colspan="3">
                  <widget class="Line" name="line_7">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -1826,7 +1822,7 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                     <enum>Qt::LayoutDirection::LeftToRight</enum>
                     </property>
                     <property name="text">
                      <string>Table</string>
@@ -1875,7 +1871,7 @@
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -1901,7 +1897,7 @@
                      <string>Sub Meta </string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -1991,8 +1987,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>868</width>
-                        <height>267</height>
+                        <width>975</width>
+                        <height>297</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_34">
@@ -2000,7 +1996,6 @@
                         <widget class="QLabel" name="label_169">
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2096,7 +2091,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2109,7 +2103,6 @@
                         <widget class="QLabel" name="label_179">
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2158,7 +2151,7 @@
                        <item row="2" column="1" colspan="2">
                         <widget class="Line" name="line_15">
                          <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
+                          <enum>Qt::Orientation::Horizontal</enum>
                          </property>
                         </widget>
                        </item>
@@ -2172,7 +2165,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2195,7 +2187,7 @@
                             <string>Beta Diversity</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2276,7 +2268,6 @@
                         <widget class="QLabel" name="label_137">
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2289,7 +2280,6 @@
                         <widget class="QLabel" name="label_122">
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2315,7 +2305,7 @@
                             <string>Font Size</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2390,7 +2380,7 @@
                             <string>Show label text in diagram</string>
                            </property>
                            <property name="layoutDirection">
-                            <enum>Qt::LeftToRight</enum>
+                            <enum>Qt::LayoutDirection::LeftToRight</enum>
                            </property>
                            <property name="text">
                             <string>Show Labels</string>
@@ -2419,7 +2409,7 @@
                             <string>Transparency</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2454,7 +2444,7 @@
                             <string>Dot Size</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2493,7 +2483,7 @@
                             <string>Legend Cols</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2519,7 +2509,7 @@
                             <string>Theme</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2707,7 +2697,6 @@
                          </property>
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2795,7 +2784,7 @@
                             <string>Width</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2827,7 +2816,7 @@
                             <string>Height</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -2853,7 +2842,6 @@
                         <widget class="QLabel" name="label_234">
                          <property name="font">
                           <font>
-                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2976,7 +2964,7 @@
                 <item row="3" column="0" colspan="3">
                  <widget class="Line" name="line_10">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -3060,7 +3048,7 @@
                 <item row="1" column="0" colspan="4">
                  <widget class="Line" name="line_8">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -3139,7 +3127,7 @@
                 <item row="4" column="0" colspan="4">
                  <widget class="Line" name="line_12">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -3157,7 +3145,7 @@
                      <string>Select Top</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -3526,8 +3514,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>665</width>
-                        <height>157</height>
+                        <width>975</width>
+                        <height>209</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -3547,7 +3535,7 @@
                               <string>Width</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -3582,7 +3570,7 @@
                               <string>Height</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -3611,7 +3599,6 @@
                           <widget class="QLabel" name="label_185">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -3624,7 +3611,6 @@
                           <widget class="QLabel" name="label_186">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -3687,7 +3673,7 @@
                               </sizepolicy>
                              </property>
                              <property name="layoutDirection">
-                              <enum>Qt::LeftToRight</enum>
+                              <enum>Qt::LayoutDirection::LeftToRight</enum>
                              </property>
                              <property name="locale">
                               <locale language="Chinese" country="China"/>
@@ -3696,7 +3682,7 @@
                               <string>Theme</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -3738,7 +3724,6 @@
                            </property>
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -3764,7 +3749,6 @@
                           <widget class="QLabel" name="label_184">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -3805,7 +3789,7 @@
                          <item row="2" column="1" colspan="3">
                           <widget class="Line" name="line_13">
                            <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
+                            <enum>Qt::Orientation::Horizontal</enum>
                            </property>
                           </widget>
                          </item>
@@ -3975,7 +3959,7 @@
                               <string>Label Font Size</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -4049,7 +4033,6 @@
                              </property>
                              <property name="font">
                               <font>
-                               <weight>50</weight>
                                <bold>false</bold>
                               </font>
                              </property>
@@ -4423,8 +4406,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>889</width>
-                       <height>154</height>
+                       <width>1009</width>
+                       <height>170</height>
                       </rect>
                      </property>
                      <layout class="QGridLayout" name="gridLayout_38">
@@ -4580,7 +4563,7 @@
                              </sizepolicy>
                             </property>
                             <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
+                             <enum>Qt::LayoutDirection::LeftToRight</enum>
                             </property>
                             <property name="text">
                              <string>X</string>
@@ -4596,7 +4579,7 @@
                              </sizepolicy>
                             </property>
                             <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
+                             <enum>Qt::LayoutDirection::LeftToRight</enum>
                             </property>
                             <property name="text">
                              <string>Y</string>
@@ -4852,7 +4835,6 @@
                           </property>
                           <property name="font">
                            <font>
-                            <weight>75</weight>
                             <bold>true</bold>
                            </font>
                           </property>
@@ -5131,7 +5113,7 @@
                              </sizepolicy>
                             </property>
                             <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
+                             <enum>Qt::LayoutDirection::LeftToRight</enum>
                             </property>
                             <property name="text">
                              <string> Taxa</string>
@@ -5150,7 +5132,7 @@
                              </sizepolicy>
                             </property>
                             <property name="layoutDirection">
-                             <enum>Qt::LeftToRight</enum>
+                             <enum>Qt::LayoutDirection::LeftToRight</enum>
                             </property>
                             <property name="text">
                              <string>Sample</string>
@@ -5184,7 +5166,6 @@
                           </property>
                           <property name="font">
                            <font>
-                            <weight>75</weight>
                             <bold>true</bold>
                            </font>
                           </property>
@@ -5355,7 +5336,6 @@
                           </property>
                           <property name="font">
                            <font>
-                            <weight>75</weight>
                             <bold>true</bold>
                            </font>
                           </property>
@@ -5453,7 +5433,6 @@
                          <widget class="QCheckBox" name="checkBox_top_heatmap_filter_x_axis">
                           <property name="font">
                            <font>
-                            <weight>50</weight>
                             <bold>false</bold>
                            </font>
                           </property>
@@ -5461,7 +5440,7 @@
                            <bool>true</bool>
                           </property>
                           <property name="layoutDirection">
-                           <enum>Qt::LeftToRight</enum>
+                           <enum>Qt::LayoutDirection::LeftToRight</enum>
                           </property>
                           <property name="text">
                            <string>X-Axis</string>
@@ -5472,7 +5451,6 @@
                          <widget class="QLabel" name="label_233">
                           <property name="font">
                            <font>
-                            <weight>75</weight>
                             <bold>true</bold>
                            </font>
                           </property>
@@ -5485,7 +5463,6 @@
                          <widget class="QCheckBox" name="checkBox_top_heatmap_filter_y_axis">
                           <property name="font">
                            <font>
-                            <weight>50</weight>
                             <bold>false</bold>
                            </font>
                           </property>
@@ -5535,7 +5512,7 @@
                </sizepolicy>
               </property>
               <property name="tabShape">
-               <enum>QTabWidget::Triangular</enum>
+               <enum>QTabWidget::TabShape::Triangular</enum>
               </property>
               <property name="currentIndex">
                <number>0</number>
@@ -5617,7 +5594,7 @@
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -5640,7 +5617,7 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
+                     <enum>Qt::LayoutDirection::RightToLeft</enum>
                     </property>
                     <property name="text">
                      <string>In Condition</string>
@@ -5670,7 +5647,7 @@
                 <item row="3" column="0" colspan="2">
                  <widget class="Line" name="line_21">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -5794,7 +5771,7 @@
                   <item>
                    <widget class="QCheckBox" name="checkBox_anova_in_condition">
                     <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
+                     <enum>Qt::LayoutDirection::RightToLeft</enum>
                     </property>
                     <property name="text">
                      <string>In Condition</string>
@@ -5856,7 +5833,7 @@
                 <item row="2" column="0" colspan="2">
                  <widget class="Line" name="line_23">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -5963,7 +5940,7 @@
                 <item row="3" column="1" colspan="2">
                  <widget class="Line" name="line_25">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6025,7 +6002,7 @@
                   <item>
                    <widget class="QCheckBox" name="checkBox_group_control_in_condition">
                     <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
+                     <enum>Qt::LayoutDirection::RightToLeft</enum>
                     </property>
                     <property name="text">
                      <string>In Condition</string>
@@ -6061,7 +6038,7 @@
                    </sizepolicy>
                   </property>
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6124,7 +6101,7 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
+                     <enum>Qt::LayoutDirection::RightToLeft</enum>
                     </property>
                     <property name="text">
                      <string>In Condition</string>
@@ -6216,7 +6193,7 @@
                 <item row="4" column="0" colspan="3">
                  <widget class="Line" name="line_14">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6264,7 +6241,7 @@
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -6283,7 +6260,7 @@
                 <item row="1" column="0" colspan="3">
                  <widget class="Line" name="line">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6377,7 +6354,7 @@
                         <string>Tables</string>
                        </property>
                        <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                        </property>
                       </widget>
                      </item>
@@ -6415,8 +6392,8 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>535</width>
-                           <height>94</height>
+                           <width>701</width>
+                           <height>104</height>
                           </rect>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_68">
@@ -6466,7 +6443,7 @@
                                <string>Mini Log2FC</string>
                               </property>
                               <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                               </property>
                              </widget>
                             </item>
@@ -6481,13 +6458,13 @@
                                  </sizepolicy>
                                 </property>
                                 <property name="layoutDirection">
-                                 <enum>Qt::LeftToRight</enum>
+                                 <enum>Qt::LayoutDirection::LeftToRight</enum>
                                 </property>
                                 <property name="text">
                                  <string>Width</string>
                                 </property>
                                 <property name="alignment">
-                                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                                 </property>
                                </widget>
                               </item>
@@ -6519,7 +6496,7 @@
                                  <string>Height</string>
                                 </property>
                                 <property name="alignment">
-                                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                                 </property>
                                </widget>
                               </item>
@@ -6579,7 +6556,7 @@
                                <string>Threshold</string>
                               </property>
                               <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                               </property>
                              </widget>
                             </item>
@@ -6631,7 +6608,7 @@
                                <string>Font Size</string>
                               </property>
                               <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                               </property>
                              </widget>
                             </item>
@@ -6713,7 +6690,7 @@
                 <item row="5" column="0" colspan="4">
                  <widget class="Line" name="line_2">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6865,7 +6842,7 @@
                 <item row="1" column="0" colspan="4">
                  <widget class="Line" name="line_16">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -6890,7 +6867,7 @@
                   <item>
                    <widget class="QCheckBox" name="checkBox_tukey_in_condition">
                     <property name="layoutDirection">
-                     <enum>Qt::RightToLeft</enum>
+                     <enum>Qt::LayoutDirection::RightToLeft</enum>
                     </property>
                     <property name="text">
                      <string>In Condition</string>
@@ -6930,7 +6907,7 @@
                </sizepolicy>
               </property>
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -6944,7 +6921,7 @@
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget">
               <property name="tabShape">
-               <enum>QTabWidget::Triangular</enum>
+               <enum>QTabWidget::TabShape::Triangular</enum>
               </property>
               <property name="currentIndex">
                <number>0</number>
@@ -6957,7 +6934,7 @@
                 <item row="4" column="0" colspan="4">
                  <widget class="Line" name="line_17">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -7161,8 +7138,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>205</height>
+                        <width>975</width>
+                        <height>190</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7224,7 +7201,7 @@
                             <string>Threshold for Plot</string>
                            </property>
                            <property name="alignment">
-                            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                            </property>
                           </widget>
                          </item>
@@ -7433,7 +7410,6 @@
                           <widget class="QLabel" name="label_189">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -7446,7 +7422,6 @@
                           <widget class="QLabel" name="label_187">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -7459,7 +7434,6 @@
                           <widget class="QLabel" name="label_188">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -7481,7 +7455,7 @@
                          <item row="2" column="1" colspan="3">
                           <widget class="Line" name="line_30">
                            <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
+                            <enum>Qt::Orientation::Horizontal</enum>
                            </property>
                           </widget>
                          </item>
@@ -7497,7 +7471,7 @@
                 <item row="1" column="0" colspan="4">
                  <widget class="Line" name="line_11">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -7570,7 +7544,7 @@
                 <item row="8" column="0" colspan="4">
                  <widget class="Line" name="line_5">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -7620,7 +7594,7 @@
                      <string>Sort by</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -7759,13 +7733,13 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                     <enum>Qt::LayoutDirection::LeftToRight</enum>
                     </property>
                     <property name="text">
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -7843,7 +7817,6 @@
                    <widget class="QLabel" name="label_165">
                     <property name="font">
                      <font>
-                      <weight>75</weight>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -7858,7 +7831,7 @@
                   <item row="1" column="1" colspan="4">
                    <widget class="Line" name="line_20">
                     <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
+                     <enum>Qt::Orientation::Horizontal</enum>
                     </property>
                    </widget>
                   </item>
@@ -7915,7 +7888,6 @@
                    <widget class="QLabel" name="label_145">
                     <property name="font">
                      <font>
-                      <weight>75</weight>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -7946,7 +7918,7 @@
                        </sizepolicy>
                       </property>
                       <property name="layoutDirection">
-                       <enum>Qt::LeftToRight</enum>
+                       <enum>Qt::LayoutDirection::LeftToRight</enum>
                       </property>
                       <property name="text">
                        <string>In Condition</string>
@@ -7990,7 +7962,7 @@
                 <item row="1" column="0" colspan="5">
                  <widget class="Line" name="line_18">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -8016,8 +7988,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>620</width>
-                        <height>65</height>
+                        <width>740</width>
+                        <height>72</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -8056,7 +8028,6 @@
                           <widget class="QLabel" name="label_174">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -8069,7 +8040,6 @@
                           <widget class="QLabel" name="label_175">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -8220,7 +8190,7 @@
                               <string>Number of Col for Cluster Plot</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -8245,7 +8215,7 @@
                 <item row="3" column="0" colspan="5">
                  <widget class="Line" name="line_19">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -8369,7 +8339,7 @@
                      <string>Select Top</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -8476,7 +8446,7 @@
                 <item row="8" column="0" colspan="5">
                  <widget class="Line" name="line_31">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -8522,13 +8492,13 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                     <enum>Qt::LayoutDirection::LeftToRight</enum>
                     </property>
                     <property name="text">
                      <string>Table</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -8575,7 +8545,7 @@
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -8601,7 +8571,7 @@
                <bool>true</bool>
               </property>
               <property name="tabShape">
-               <enum>QTabWidget::Triangular</enum>
+               <enum>QTabWidget::TabShape::Triangular</enum>
               </property>
               <property name="currentIndex">
                <number>1</number>
@@ -8770,8 +8740,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>775</width>
-                        <height>102</height>
+                        <width>936</width>
+                        <height>111</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_69">
@@ -8781,7 +8751,6 @@
                           <widget class="QLabel" name="label_178">
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -8799,7 +8768,7 @@
                             </sizepolicy>
                            </property>
                            <property name="layoutDirection">
-                            <enum>Qt::LeftToRight</enum>
+                            <enum>Qt::LayoutDirection::LeftToRight</enum>
                            </property>
                            <property name="text">
                             <string>Col Cluster</string>
@@ -8823,7 +8792,7 @@
                             </font>
                            </property>
                            <property name="layoutDirection">
-                            <enum>Qt::LeftToRight</enum>
+                            <enum>Qt::LayoutDirection::LeftToRight</enum>
                            </property>
                            <property name="text">
                             <string>Bar Percent</string>
@@ -8840,7 +8809,6 @@
                            </property>
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -8863,7 +8831,7 @@
                               <string>Label Font Size</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -8898,7 +8866,7 @@
                               <string>Show All Labels</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -8944,7 +8912,7 @@
                               <string>Rename</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -8996,7 +8964,6 @@
                            </property>
                            <property name="font">
                             <font>
-                             <weight>75</weight>
                              <bold>true</bold>
                             </font>
                            </property>
@@ -9129,13 +9096,13 @@
                               </sizepolicy>
                              </property>
                              <property name="layoutDirection">
-                              <enum>Qt::LeftToRight</enum>
+                              <enum>Qt::LayoutDirection::LeftToRight</enum>
                              </property>
                              <property name="text">
                               <string>Scale</string>
                              </property>
                              <property name="alignment">
-                              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                              </property>
                             </widget>
                            </item>
@@ -9197,7 +9164,7 @@
                          <item row="1" column="1" colspan="4">
                           <widget class="Line" name="line_29">
                            <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
+                            <enum>Qt::Orientation::Horizontal</enum>
                            </property>
                           </widget>
                          </item>
@@ -9251,21 +9218,21 @@
                 <item row="7" column="0" colspan="4">
                  <widget class="Line" name="line_32">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
                 <item row="1" column="0" colspan="4">
                  <widget class="Line" name="line_3">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
                 <item row="3" column="0" colspan="4">
                  <widget class="Line" name="line_6">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -9387,7 +9354,7 @@
                      <string>By</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -9497,7 +9464,7 @@
                        </sizepolicy>
                       </property>
                       <property name="layoutDirection">
-                       <enum>Qt::LeftToRight</enum>
+                       <enum>Qt::LayoutDirection::LeftToRight</enum>
                       </property>
                       <property name="text">
                        <string>In Condition</string>
@@ -9578,7 +9545,7 @@
                      </sizepolicy>
                     </property>
                     <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
+                     <enum>Qt::LayoutDirection::LeftToRight</enum>
                     </property>
                    </widget>
                   </item>
@@ -9637,7 +9604,7 @@
                      <string>Sort by</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -9718,7 +9685,7 @@
                 <item row="8" column="0" colspan="4">
                  <widget class="Line" name="line_33">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -9820,7 +9787,7 @@
                    </sizepolicy>
                   </property>
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -9951,8 +9918,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>885</width>
-                        <height>192</height>
+                        <width>975</width>
+                        <height>178</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10127,7 +10094,7 @@
                 <item row="1" column="0" colspan="3">
                  <widget class="Line" name="line_27">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                  </widget>
                 </item>
@@ -10144,7 +10111,7 @@
                        </sizepolicy>
                       </property>
                       <property name="layoutDirection">
-                       <enum>Qt::RightToLeft</enum>
+                       <enum>Qt::LayoutDirection::RightToLeft</enum>
                       </property>
                       <property name="text">
                        <string>In Condition</string>
@@ -10250,7 +10217,7 @@
                      <string>Meta</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -10583,8 +10550,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
-                    <height>41</height>
+                    <width>319</width>
+                    <height>42</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -10625,8 +10592,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>259</width>
-                    <height>128</height>
+                    <width>260</width>
+                    <height>132</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -10815,7 +10782,7 @@
                     <item row="4" column="0" colspan="4">
                      <widget class="Line" name="line_34">
                       <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
+                       <enum>Qt::Orientation::Horizontal</enum>
                       </property>
                      </widget>
                     </item>
@@ -11033,7 +11000,6 @@
               <font>
                <family>Arial</family>
                <pointsize>22</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -11041,7 +11007,7 @@
               <string>Peptide Annotator</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -11070,7 +11036,6 @@
               <font>
                <family>Arial</family>
                <pointsize>22</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -11078,7 +11043,7 @@
               <string>Database Builder</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -11496,7 +11461,6 @@
            <font>
             <family>Arial</family>
             <pointsize>22</pointsize>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -11504,7 +11468,7 @@
            <string>Database Updater</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -11520,8 +11484,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>991</width>
-     <height>23</height>
+     <width>1081</width>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
