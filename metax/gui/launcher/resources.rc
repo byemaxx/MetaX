@@ -1,0 +1,4 @@
+#include <windows.h>
+
+// Application icon (ID = 1)
+1 ICON "logo.ico"

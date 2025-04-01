@@ -24,7 +24,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     char basePath[MAX_PATH];
     char pythonPath[MAX_PATH];
     char scriptPath[MAX_PATH];
-    char commandLine[MAX_PATH*2];
+    char cmdExePath[MAX_PATH];
+    char commandLine[MAX_PATH*3]; // Increased size for longer command
     
     // Get base path
     GetModuleFileName(NULL, basePath, MAX_PATH);
@@ -34,72 +35,52 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     snprintf(pythonPath, MAX_PATH, "%s\\pyenv\\python.exe", basePath);
     snprintf(scriptPath, MAX_PATH, "%s\\metax\\metax\\gui\\main_gui.py", basePath);
     
-    snprintf(commandLine, MAX_PATH*2, "\"%s\" \"%s\"", pythonPath, scriptPath);
+    // Get system directory for cmd.exe
+    GetSystemDirectory(cmdExePath, MAX_PATH);
+    snprintf(cmdExePath, MAX_PATH, "%s\\cmd.exe", cmdExePath);
+    
+    // Create command line to use cmd.exe to start python
+    // /C means execute command and terminate
+    // /S allows string with quotes after /C
+    // We use start /B to run without creating a new window
+    snprintf(commandLine, MAX_PATH*3, 
+             "\"%s\" /S /C \"start /B \"\" \"%s\" \"%s\"\"", 
+             cmdExePath, pythonPath, scriptPath);
     
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE; // Hide cmd.exe window
     
-    // Create Python process
-    if (CreateProcess(NULL, commandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
-        DWORD procId = pi.dwProcessId;
-        HWND consoleWindow = NULL;
-        BOOL windowFound = FALSE;
-        
-        // Use a smarter waiting strategy
-        const int MAX_WAIT_TIME = 5000;  // Wait up to 5 seconds
-        const int CHECK_INTERVAL = 50;   // Check every 50ms
-        int totalWaitTime = 0;
-        
-        while (totalWaitTime < MAX_WAIT_TIME) {
-            // Try to find the console window
-            DWORD tempProcId = procId;
-            EnumWindows(EnumWindowsProc, (LPARAM)&tempProcId);
-            
-            // If window found
-            if (tempProcId != procId) {
-                consoleWindow = (HWND)tempProcId;
-                
-                // Additional verification to ensure we have the right window
-                DWORD verifyProcessId = 0;
-                GetWindowThreadProcessId(consoleWindow, &verifyProcessId);
-                
-                if (verifyProcessId == procId) {
-                    windowFound = TRUE;
-                    
-                    // Hide the found window
-                    ShowWindow(consoleWindow, SW_HIDE);
-                    break;
-                }
-            }
-            
-            // Brief sleep then retry
-            Sleep(CHECK_INTERVAL);
-            totalWaitTime += CHECK_INTERVAL;
-            
-            // Check if Python process is still running
-            DWORD exitCode;
-            if (GetExitCodeProcess(pi.hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
-                // Python process has ended, exit the loop
-                break;
-            }
-        }
-        
-        // If window not found but process is still running
-        if (!windowFound) {
-            // Can add logging or other handling logic
-            // But don't block program from continuing
-        }
-        
-        // Don't close process handle, let Python process continue running
+    // Create cmd process which will start Python
+    if (CreateProcess(NULL, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        // Don't need to wait for cmd.exe - it will exit after starting python
+        // Close process handles
+        CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
+        
+        // We don't need to hide Python's window because start /B runs it without a window
     }
     else {
-        // If process creation failed, try ShellExecute
-        ShellExecute(NULL, "open", pythonPath, scriptPath, NULL, SW_SHOW);
+        // Try direct launch as fallback
+        snprintf(commandLine, MAX_PATH*2, "\"%s\" \"%s\"", pythonPath, scriptPath);
+        
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        
+        // Try with CREATE_NO_WINDOW flag
+        if (CreateProcess(NULL, commandLine, NULL, NULL, FALSE, 
+                         CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+        else {
+            // Last resort: Call Python directly with specific working directory
+            ShellExecute(NULL, "open", pythonPath, scriptPath, basePath, SW_SHOW);
+        }
     }
     
     return 0;
