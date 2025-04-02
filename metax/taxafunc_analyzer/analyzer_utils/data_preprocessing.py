@@ -174,7 +174,7 @@ class DataPreprocessing:
     # set outlier to nan
     def _outlier_detection(self, df: pd.DataFrame, method: str|None = None, by_group:str|None = None) -> pd.DataFrame:
         '''
-        ### \_outlier_detection
+        ### _outlier_detection
 
         Detects outliers in the data using a specified method and marks them as NaN.
         Then removes rows that contain `only NaN or 0 values`.
@@ -383,7 +383,7 @@ class DataPreprocessing:
     def _handle_missing_value(self, df: pd.DataFrame, method: str |None= 'drop+drop', by_group:str|None = None,
                               df_original: pd.DataFrame|None = None) -> pd.DataFrame:
         '''
-        ### \_handle_missing_value
+        ### _handle_missing_value
 
         Handles missing values in the data using specified methods and fills or removes them as required.
         - If after the first method, there are still missing values, the second method is applied.

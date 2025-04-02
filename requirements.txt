@@ -2,7 +2,7 @@ distinctipy>=1.2.2
 matplotlib>=3.7.2
 numpy>=1.25.1
 pandas>=2.0.3
-pydeseq2>=0.4.10
+pydeseq2==0.4.12
 pyecharts>=2.0.6
 python-dateutil>=2.8.2
 qt-material>=2.14
@@ -18,3 +18,4 @@ statsmodels
 seaborn>=0.13.2
 numba>=0.60.0
 UpSetPlot>=0.9.0
+PySide6

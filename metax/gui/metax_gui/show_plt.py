@@ -10,8 +10,8 @@ class ExportablePlotDialog(QtWidgets.QDialog):
 
         # Use the provided figure (if any) or a new one
         self.fig = fig if fig else Figure()
-        self.canvas = FigureCanvas(self.fig)
-        
+        self.canvas = ScrollableCanvas(self.fig, None)
+
         #resize window
         self.resize(1000,800)
 
@@ -28,6 +28,7 @@ class ExportablePlotDialog(QtWidgets.QDialog):
         scrollArea = QtWidgets.QScrollArea()
         scrollArea.setWidget(self.canvas)
         scrollArea.setWidgetResizable(False)
+        self.canvas.scroll_area = scrollArea
 
         # Create layout
         layout = QtWidgets.QVBoxLayout()
@@ -43,6 +44,16 @@ class ExportablePlotDialog(QtWidgets.QDialog):
     def tight_layout(self):
         self.fig.tight_layout()
         self.canvas.draw()
+        
+        
+class ScrollableCanvas(FigureCanvas):
+    def __init__(self, figure, scroll_area):
+        super().__init__(figure)
+        self.scroll_area = scroll_area
+
+    def wheelEvent(self, event):
+        # Manually send wheel event to scroll area
+        QtWidgets.QApplication.sendEvent(self.scroll_area.verticalScrollBar(), event)
 
 # Usage:
 if __name__ == "__main__":

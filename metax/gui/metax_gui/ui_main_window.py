@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowBQXYzC.ui'
+## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.8.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -29,7 +29,7 @@ class Ui_metaX_main(object):
     def setupUi(self, metaX_main):
         if not metaX_main.objectName():
             metaX_main.setObjectName(u"metaX_main")
-        metaX_main.resize(1081, 825)
+        metaX_main.resize(1199, 734)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -75,7 +75,15 @@ class Ui_metaX_main(object):
         self.page_analyzer.setObjectName(u"page_analyzer")
         self.gridLayout_7 = QGridLayout(self.page_analyzer)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.tabWidget_TaxaFuncAnalyzer = QTabWidget(self.page_analyzer)
+        self.scrollArea_9 = QScrollArea(self.page_analyzer)
+        self.scrollArea_9.setObjectName(u"scrollArea_9")
+        self.scrollArea_9.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_11 = QWidget()
+        self.scrollAreaWidgetContents_11.setObjectName(u"scrollAreaWidgetContents_11")
+        self.scrollAreaWidgetContents_11.setGeometry(QRect(0, 0, 1181, 663))
+        self.gridLayout_80 = QGridLayout(self.scrollAreaWidgetContents_11)
+        self.gridLayout_80.setObjectName(u"gridLayout_80")
+        self.tabWidget_TaxaFuncAnalyzer = QTabWidget(self.scrollAreaWidgetContents_11)
         self.tabWidget_TaxaFuncAnalyzer.setObjectName(u"tabWidget_TaxaFuncAnalyzer")
         self.tabWidget_TaxaFuncAnalyzer.setEnabled(True)
         sizePolicy.setHeightForWidth(self.tabWidget_TaxaFuncAnalyzer.sizePolicy().hasHeightForWidth())
@@ -287,7 +295,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.setMaximumSize(QSize(1677, 16777215))
         self.page_2 = QWidget()
         self.page_2.setObjectName(u"page_2")
-        self.page_2.setGeometry(QRect(0, 0, 507, 576))
+        self.page_2.setGeometry(QRect(0, 0, 566, 487))
         self.gridLayout_27 = QGridLayout(self.page_2)
         self.gridLayout_27.setObjectName(u"gridLayout_27")
         self.verticalLayout_overview_plot = QVBoxLayout()
@@ -376,7 +384,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.addItem(self.page_2, u"\u25cf Taxa statistics")
         self.page_5 = QWidget()
         self.page_5.setObjectName(u"page_5")
-        self.page_5.setGeometry(QRect(0, 0, 329, 50))
+        self.page_5.setGeometry(QRect(0, 0, 365, 50))
         self.gridLayout_20 = QGridLayout(self.page_5)
         self.gridLayout_20.setObjectName(u"gridLayout_20")
         self.comboBox_overview_func_list = QComboBox(self.page_5)
@@ -408,7 +416,7 @@ class Ui_metaX_main(object):
         self.toolBox_2.addItem(self.page_5, u"\u25cf Function statistics")
         self.page = QWidget()
         self.page.setObjectName(u"page")
-        self.page.setGeometry(QRect(0, 0, 261, 78))
+        self.page.setGeometry(QRect(0, 0, 261, 80))
         self.gridLayout_29 = QGridLayout(self.page)
         self.gridLayout_29.setObjectName(u"gridLayout_29")
         self.label_82 = QLabel(self.page)
@@ -1188,7 +1196,7 @@ class Ui_metaX_main(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 975, 297))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 1081, 293))
         self.gridLayout_34 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_34.setObjectName(u"gridLayout_34")
         self.label_169 = QLabel(self.scrollAreaWidgetContents)
@@ -2033,7 +2041,7 @@ class Ui_metaX_main(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 975, 209))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 850, 171))
         self.gridLayout_50 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_50.setObjectName(u"gridLayout_50")
         self.gridLayout_70 = QGridLayout()
@@ -2549,7 +2557,7 @@ class Ui_metaX_main(object):
         self.scrollArea_cross_heatmap_settings.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 1009, 170))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 1118, 167))
         self.gridLayout_38 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_38.setObjectName(u"gridLayout_38")
         self.gridLayout_51 = QGridLayout()
@@ -3576,7 +3584,7 @@ class Ui_metaX_main(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 701, 104))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 752, 104))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_53 = QGridLayout()
@@ -4045,7 +4053,7 @@ class Ui_metaX_main(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 975, 190))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 1081, 141))
         self.gridLayout_49 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_49.setObjectName(u"gridLayout_49")
         self.gridLayout_58 = QGridLayout()
@@ -4554,7 +4562,7 @@ class Ui_metaX_main(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 740, 72))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 936, 79))
         self.gridLayout_57 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_57.setObjectName(u"gridLayout_57")
         self.gridLayout_59 = QGridLayout()
@@ -4978,7 +4986,7 @@ class Ui_metaX_main(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 936, 111))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 987, 111))
         self.gridLayout_69 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_69.setObjectName(u"gridLayout_69")
         self.gridLayout_67 = QGridLayout()
@@ -5638,7 +5646,7 @@ class Ui_metaX_main(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_8 = QWidget()
         self.scrollAreaWidgetContents_8.setObjectName(u"scrollAreaWidgetContents_8")
-        self.scrollAreaWidgetContents_8.setGeometry(QRect(0, 0, 975, 178))
+        self.scrollAreaWidgetContents_8.setGeometry(QRect(0, 0, 1093, 111))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_8)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.horizontalLayout_56 = QHBoxLayout()
@@ -5868,7 +5876,11 @@ class Ui_metaX_main(object):
 
         self.tabWidget_TaxaFuncAnalyzer.addTab(self.tab_table_review, "")
 
-        self.gridLayout_7.addWidget(self.tabWidget_TaxaFuncAnalyzer, 0, 0, 1, 1)
+        self.gridLayout_80.addWidget(self.tabWidget_TaxaFuncAnalyzer, 0, 0, 1, 1)
+
+        self.scrollArea_9.setWidget(self.scrollAreaWidgetContents_11)
+
+        self.gridLayout_7.addWidget(self.scrollArea_9, 0, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.page_analyzer)
         self.page_pep_to_taxafunc = QWidget()
@@ -5879,7 +5891,15 @@ class Ui_metaX_main(object):
         self.widget_Peptide2taxafunc.setObjectName(u"widget_Peptide2taxafunc")
         self.gridLayout_3 = QGridLayout(self.widget_Peptide2taxafunc)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.tabWidget_6 = QTabWidget(self.widget_Peptide2taxafunc)
+        self.scrollArea_8 = QScrollArea(self.widget_Peptide2taxafunc)
+        self.scrollArea_8.setObjectName(u"scrollArea_8")
+        self.scrollArea_8.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_10 = QWidget()
+        self.scrollAreaWidgetContents_10.setObjectName(u"scrollAreaWidgetContents_10")
+        self.scrollAreaWidgetContents_10.setGeometry(QRect(0, 0, 1143, 586))
+        self.gridLayout_79 = QGridLayout(self.scrollAreaWidgetContents_10)
+        self.gridLayout_79.setObjectName(u"gridLayout_79")
+        self.tabWidget_6 = QTabWidget(self.scrollAreaWidgetContents_10)
         self.tabWidget_6.setObjectName(u"tabWidget_6")
         self.tab_17 = QWidget()
         self.tab_17.setObjectName(u"tab_17")
@@ -5909,11 +5929,6 @@ class Ui_metaX_main(object):
         self.toolButton_lca_threshould_help.setObjectName(u"toolButton_lca_threshould_help")
 
         self.gridLayout_42.addWidget(self.toolButton_lca_threshould_help, 3, 1, 1, 1)
-
-        self.pushButton_run_peptide2taxafunc = QPushButton(self.tab_17)
-        self.pushButton_run_peptide2taxafunc.setObjectName(u"pushButton_run_peptide2taxafunc")
-
-        self.gridLayout_42.addWidget(self.pushButton_run_peptide2taxafunc, 6, 0, 1, 4)
 
         self.groupBox_peptide_annotator_settings = QGroupBox(self.tab_17)
         self.groupBox_peptide_annotator_settings.setObjectName(u"groupBox_peptide_annotator_settings")
@@ -6034,15 +6049,6 @@ class Ui_metaX_main(object):
 
         self.gridLayout_42.addWidget(self.pushButton_get_taxafunc_save_path, 2, 3, 1, 1)
 
-        self.doubleSpinBox_LCA_threshold = QDoubleSpinBox(self.tab_17)
-        self.doubleSpinBox_LCA_threshold.setObjectName(u"doubleSpinBox_LCA_threshold")
-        self.doubleSpinBox_LCA_threshold.setDecimals(3)
-        self.doubleSpinBox_LCA_threshold.setMaximum(1.000000000000000)
-        self.doubleSpinBox_LCA_threshold.setSingleStep(0.050000000000000)
-        self.doubleSpinBox_LCA_threshold.setValue(1.000000000000000)
-
-        self.gridLayout_42.addWidget(self.doubleSpinBox_LCA_threshold, 3, 2, 1, 2)
-
         self.lineEdit_final_peptide_path = QLineEdit(self.tab_17)
         self.lineEdit_final_peptide_path.setObjectName(u"lineEdit_final_peptide_path")
 
@@ -6058,6 +6064,20 @@ class Ui_metaX_main(object):
 
         self.gridLayout_42.addWidget(self.checkBox_show_advanced_annotator_settings, 4, 0, 1, 3)
 
+        self.pushButton_run_peptide2taxafunc = QPushButton(self.tab_17)
+        self.pushButton_run_peptide2taxafunc.setObjectName(u"pushButton_run_peptide2taxafunc")
+
+        self.gridLayout_42.addWidget(self.pushButton_run_peptide2taxafunc, 6, 0, 1, 4)
+
+        self.doubleSpinBox_LCA_threshold = QDoubleSpinBox(self.tab_17)
+        self.doubleSpinBox_LCA_threshold.setObjectName(u"doubleSpinBox_LCA_threshold")
+        self.doubleSpinBox_LCA_threshold.setDecimals(3)
+        self.doubleSpinBox_LCA_threshold.setMaximum(1.000000000000000)
+        self.doubleSpinBox_LCA_threshold.setSingleStep(0.050000000000000)
+        self.doubleSpinBox_LCA_threshold.setValue(1.000000000000000)
+
+        self.gridLayout_42.addWidget(self.doubleSpinBox_LCA_threshold, 3, 2, 1, 2)
+
         self.tabWidget_6.addTab(self.tab_17, "")
         self.tab_18 = QWidget()
         self.tab_18.setObjectName(u"tab_18")
@@ -6072,7 +6092,7 @@ class Ui_metaX_main(object):
         self.toolBox_metalab_res_anno.setObjectName(u"toolBox_metalab_res_anno")
         self.page_3 = QWidget()
         self.page_3.setObjectName(u"page_3")
-        self.page_3.setGeometry(QRect(0, 0, 319, 42))
+        self.page_3.setGeometry(QRect(0, 0, 1101, 432))
         self.gridLayout_45 = QGridLayout(self.page_3)
         self.gridLayout_45.setObjectName(u"gridLayout_45")
         self.pushButton_open_metalab_res_folder = QPushButton(self.page_3)
@@ -6098,7 +6118,7 @@ class Ui_metaX_main(object):
         self.toolBox_metalab_res_anno.addItem(self.page_3, u"Set Rsults Folder")
         self.page_4 = QWidget()
         self.page_4.setObjectName(u"page_4")
-        self.page_4.setGeometry(QRect(0, 0, 260, 132))
+        self.page_4.setGeometry(QRect(0, 0, 261, 132))
         self.gridLayout_44 = QGridLayout(self.page_4)
         self.gridLayout_44.setObjectName(u"gridLayout_44")
         self.label_metalab_anno_built_in_taxa = QLabel(self.page_4)
@@ -6381,7 +6401,11 @@ class Ui_metaX_main(object):
 
         self.tabWidget_6.addTab(self.tab_6, "")
 
-        self.gridLayout_3.addWidget(self.tabWidget_6, 1, 0, 1, 1)
+        self.gridLayout_79.addWidget(self.tabWidget_6, 0, 0, 1, 1)
+
+        self.scrollArea_8.setWidget(self.scrollAreaWidgetContents_10)
+
+        self.gridLayout_3.addWidget(self.scrollArea_8, 1, 0, 1, 1)
 
         self.label_47 = QLabel(self.widget_Peptide2taxafunc)
         self.label_47.setObjectName(u"label_47")
@@ -6684,7 +6708,7 @@ class Ui_metaX_main(object):
 
         self.stackedWidget.addWidget(self.page_db_update)
 
-        self.gridLayout_2.addWidget(self.stackedWidget, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.stackedWidget, 1, 0, 1, 1)
 
         metaX_main.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(metaX_main)
@@ -6692,7 +6716,7 @@ class Ui_metaX_main(object):
         metaX_main.setStatusBar(self.statusbar)
         self.menuBar = QMenuBar(metaX_main)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1081, 33))
+        self.menuBar.setGeometry(QRect(0, 0, 1199, 33))
         self.menuTools = QMenu(self.menuBar)
         self.menuTools.setObjectName(u"menuTools")
         self.menuHelp = QMenu(self.menuBar)
@@ -6765,7 +6789,7 @@ class Ui_metaX_main(object):
         self.checkBox_top_heatmap_filter_y_axis.toggled.connect(self.lineEdit_top_heatmap_filter_y_axis.setEnabled)
 
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(2)
+        self.tabWidget_TaxaFuncAnalyzer.setCurrentIndex(0)
         self.pushButton_run_taxaFuncAnalyzer.setDefault(False)
         self.toolBox_2.setCurrentIndex(0)
         self.tabWidget_4.setCurrentIndex(0)
@@ -7630,7 +7654,6 @@ class Ui_metaX_main(object):
         self.pushButton_get_final_peptide_path.setText(QCoreApplication.translate("metaX_main", u"Open", None))
         self.toolButton__final_peptide_help.setText(QCoreApplication.translate("metaX_main", u"?", None))
         self.toolButton_lca_threshould_help.setText(QCoreApplication.translate("metaX_main", u"?", None))
-        self.pushButton_run_peptide2taxafunc.setText(QCoreApplication.translate("metaX_main", u"GO", None))
         self.groupBox_peptide_annotator_settings.setTitle(QCoreApplication.translate("metaX_main", u"Annotating Settings", None))
         self.lineEdit_annotator_protein_col_name.setText(QCoreApplication.translate("metaX_main", u"Proteins", None))
         self.label_200.setText(QCoreApplication.translate("metaX_main", u"Peptide Column Name", None))
@@ -7665,6 +7688,7 @@ class Ui_metaX_main(object):
         self.pushButton_get_taxafunc_save_path.setText(QCoreApplication.translate("metaX_main", u"Open", None))
         self.label_7.setText(QCoreApplication.translate("metaX_main", u"OTFs Save To", None))
         self.checkBox_show_advanced_annotator_settings.setText(QCoreApplication.translate("metaX_main", u"Show Advanced Settings", None))
+        self.pushButton_run_peptide2taxafunc.setText(QCoreApplication.translate("metaX_main", u"GO", None))
         self.tabWidget_6.setTabText(self.tabWidget_6.indexOf(self.tab_17), QCoreApplication.translate("metaX_main", u"MAG", None))
         self.pushButton_run_metalab_maxq_annotate.setText(QCoreApplication.translate("metaX_main", u"GO", None))
         self.pushButton_open_metalab_res_folder.setText(QCoreApplication.translate("metaX_main", u"Open", None))

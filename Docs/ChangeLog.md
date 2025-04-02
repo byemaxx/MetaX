@@ -1,3 +1,8 @@
+# Version: 1.124.2
+## Date: 2025-04-01
+### Changes:
+- Change: Change the GUI backend to PySide6 for better compatibility and maintenance.
+
 # Version: 1.124.0
 ## Date: 2025-03-31
 ### Changes:

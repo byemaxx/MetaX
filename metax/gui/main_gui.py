@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
+
+# disable HIDPI for PySide6
+import os
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
+os.environ["QT_SCREEN_SCALE_FACTORS"] = "1"
+
 # This script is used to build the GUI of MetaX
 from PySide6.QtCore import QCoreApplication, Qt
-
 # Set the attribute before creating the QApplication
 QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 # import the necessary PySide6 modules to show the splash screen
@@ -15,7 +21,11 @@ import sys
 app = QtWidgets.QApplication(sys.argv)
 splash = QSplashScreen()
 icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-splash.setPixmap(QPixmap(icon_path))
+pixmap = QPixmap(icon_path)
+scaled_pixmap = pixmap.scaled(pixmap.width() // 2, 
+                              pixmap.height() // 2, 
+                              Qt.KeepAspectRatio, Qt.SmoothTransformation)
+splash.setPixmap(scaled_pixmap)
 splash.show()
 app.processEvents()
 
@@ -32,19 +42,17 @@ import re
 # import third-party modules
 import pandas as pd
 import matplotlib.pyplot as plt
-
 # import PySide6 modules
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
-from PySide6.QtWidgets import QApplication, QListWidget, QListWidgetItem, QPushButton
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout
+from PySide6.QtWidgets import( QFileDialog, QMessageBox, QTableWidgetItem, QMenu,
+                                QApplication, QListWidget, QListWidgetItem, QPushButton,
+                                QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLayout)
 from PySide6.QtGui import QIcon, QCursor
 from PySide6.QtCore import Qt, QTimer, QDir, QSettings, QSize
 import qtawesome as qta
 
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu
 
 # if not run as script, import the necessary MetaX modules by absolute path
 if __name__ == '__main__':
@@ -153,7 +161,7 @@ else:
 class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def __init__(self, MainWindow):
         super().__init__()
-        MainWindow.closeEvent = self.closeEvent
+        MainWindow.closeEvent = self.handle_close_event  
         self.setupUi(MainWindow)
         self.MainWindow = MainWindow
         # icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")        
@@ -1065,14 +1073,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             combobox.clear()
         ############### avoid the window size change when change theme ###############
         if is_load_font_size_from_settings:
-            screen = QApplication.screenAt(QCursor.pos())
-            logical_dpi = screen.logicalDotsPerInch()
-            scaling_factor = logical_dpi / 96.0
             # read if setting has font size and height
             if self.settings.contains("font_size"):
                 self.font_size = self.settings.value("font_size", type=int)
                 print(f"Reading font size from settings file: {self.font_size}")
             else:
+                screen = QApplication.screenAt(QCursor.pos())
+                logical_dpi = screen.logicalDotsPerInch()
+                scaling_factor = logical_dpi / 96.0
                 self.font_size = int(12 * scaling_factor)
                 print(f"Setting default font size: {self.font_size}")
             
@@ -1596,7 +1604,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f"Saved MetaX object to {file_path}.")
         
 
-    def closeEvent(self, event):
+    def handle_close_event(self, event):
         # reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
         
@@ -1609,12 +1617,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msgBox.addButton(save_and_close_button, QMessageBox.YesRole)
         msgBox.addButton(direct_close_button, QMessageBox.NoRole)
         msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
-        reply = msgBox.exec()
+        msgBox.exec()
+        clicked_btn = msgBox.clickedButton()
         
-        if reply == 0 or reply == 1: # 0 is save and close, 1 is close without saving
+        if clicked_btn in [save_and_close_button, direct_close_button]:
             try:
-
-                if reply == 0:
+                if clicked_btn == save_and_close_button:
                     self.show_message("Saving settings...", "Closing...")
                     if getattr(self, 'tfa', None) is None:
                         # save settings.ini only
@@ -6398,7 +6406,17 @@ class LoggerManager:
 
         
 ###############   Class LoggerManager End   ###############
-    
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.gui = MetaXGUI(self)
+
+    def closeEvent(self, event):  
+        self.gui.closeEvent(event)
+        super().closeEvent(event)
+
 def global_exception_handler(type, value, tb):
     # Format the traceback information
     error_msg = "".join(traceback.format_exception(type, value, tb))
