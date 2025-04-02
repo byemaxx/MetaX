@@ -1,3 +1,8 @@
+# Version: 1.124.3
+## Date: 2025-04-02
+### Changes:
+- New: Added a function to add GO term to the OTF table if available.
+
 # Version: 1.124.2
 ## Date: 2025-04-02
 ### Changes:
