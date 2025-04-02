@@ -14,8 +14,8 @@ import sys
 # Show the splash screen as early as possible
 app = QtWidgets.QApplication(sys.argv)
 splash = QSplashScreen()
-icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-pixmap = QPixmap(icon_path)
+logo_png_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+pixmap = QPixmap(logo_png_path)
 scaled_pixmap = pixmap.scaled(pixmap.width() // 2, 
                               pixmap.height() // 2, 
                               Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -1070,14 +1070,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             combobox.clear()
         ############### avoid the window size change when change theme ###############
         if is_load_font_size_from_settings:
-            screen = QApplication.screenAt(QCursor.pos())
-            logical_dpi = screen.logicalDotsPerInch()
-            scaling_factor = logical_dpi / 96.0
             # read if setting has font size and height
             if self.settings.contains("font_size"):
                 self.font_size = self.settings.value("font_size", type=int)
                 print(f"Reading font size from settings file: {self.font_size}")
             else:
+                screen = QApplication.screenAt(QCursor.pos())
+                logical_dpi = screen.logicalDotsPerInch()
+                scaling_factor = logical_dpi / 96.0
                 self.font_size = int(12 * scaling_factor)
                 print(f"Setting default font size: {self.font_size}")
             
@@ -1115,6 +1115,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     }}
                     QListWidget {{
                     font-size: setted_font_size;
+                    }}
+                    QListWidget::item {{
+                    padding: 0px; 
+                    margin: 0px;
                     }}
                     QDoubleSpinBox {{
                     font-size: setted_font_size;
@@ -1603,8 +1607,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     def closeEvent(self, event):
         # reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-        
         msgBox = QMessageBox(self.MainWindow)
         msgBox.setWindowTitle("Close MetaX")
         msgBox.setText("Do you want to save before closing?")
@@ -1614,12 +1616,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msgBox.addButton(save_and_close_button, QMessageBox.YesRole)
         msgBox.addButton(direct_close_button, QMessageBox.NoRole)
         msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
-        reply = msgBox.exec()
+        msgBox.exec()
+        clicked_btn = msgBox.clickedButton()
         
-        if reply == 0 or reply == 1: # 0 is save and close, 1 is close without saving
+        if clicked_btn in [save_and_close_button, direct_close_button]:
             try:
-
-                if reply == 0:
+                if clicked_btn == save_and_close_button:
                     self.show_message("Saving settings...", "Closing...")
                     if getattr(self, 'tfa', None) is None:
                         # save settings.ini only
@@ -1655,7 +1657,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 event.accept()
         else:
             event.ignore()
-
 
             
     def make_related_comboboxes_searchable(self):
@@ -6428,7 +6429,9 @@ def runGUI():
     if not ui.update_required:
         MainWindow.show()
         splash.finish(MainWindow)
-
+        
+        # Froce reset the window icon after splash to make the icon show correctly on Taskbar
+        MainWindow.setWindowIcon(QIcon(":/icon/logo.png"))
     
     sys.exit(app.exec_())
 
