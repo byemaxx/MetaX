@@ -8,10 +8,10 @@ import threading
 import sqlite3
 if __name__ == '__main__':
     from proteins_to_taxafunc import Pep2TaxaFunc
-    from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
+    from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df
 else:
     from .proteins_to_taxafunc import Pep2TaxaFunc
-    from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df
+    from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df
     
     
 class PeptideAnnotator:
@@ -110,6 +110,13 @@ class PeptideAnnotator:
             df = add_ko_name_to_df(df)
         except Exception as e:
             print('Error: add additional KO_name column failed!')
+            print(e)
+            
+        try:
+            print("Trying to add 'KEGG_Module' to the dataframe...")
+            df = add_kegg_module_to_df(df)
+        except Exception as e:
+            print('Error: add additional KEGG_Module column failed!')
             print(e)
         
         return df

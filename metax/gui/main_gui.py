@@ -1,29 +1,9 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the GUI of MetaX
-
-import platform
-# Hide console window on Windows
-def hide_console_on_startup():
-    if platform.system() == 'Windows':
-        try:
-            from ctypes import windll
-            import time
-            hwnd = windll.kernel32.GetConsoleWindow()
-            if hwnd:
-                print("Starting MetaX...")
-                time.sleep(0.5) # To make sure the print saw by user before hide the console
-                windll.user32.ShowWindow(hwnd, 0)  # 0 = SW_HIDE
-        except Exception as e:
-            print(f"Failed to hide console: {e}")
-
-# Hide console window on Windows
-hide_console_on_startup()
-
 from PyQt5.QtCore import QCoreApplication, Qt
 
 # Set the attribute before creating the QApplication
 QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-
 # import the necessary PyQt5 modules to show the splash screen
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QSplashScreen
@@ -35,7 +15,11 @@ import sys
 app = QtWidgets.QApplication(sys.argv)
 splash = QSplashScreen()
 icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-splash.setPixmap(QPixmap(icon_path))
+pixmap = QPixmap(icon_path)
+scaled_pixmap = pixmap.scaled(pixmap.width() // 2, 
+                              pixmap.height() // 2, 
+                              Qt.KeepAspectRatio, Qt.SmoothTransformation)
+splash.setPixmap(scaled_pixmap)
 splash.show()
 app.processEvents()
 
@@ -111,6 +95,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from metax.gui.metax_gui.generic_thread import FunctionExecutor
     from metax.gui.metax_gui.resources import icon_rc
+    from metax.gui.metax_gui.console_window import ConsoleOutputWindow
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -157,7 +142,8 @@ else:
     from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
     from .metax_gui.generic_thread import FunctionExecutor
     from .metax_gui.resources import icon_rc # noqa: F401
-    
+    from .metax_gui.console_window import ConsoleOutputWindow
+
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
     from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
@@ -259,7 +245,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionRestore_From.setIcon(qta.icon('mdi.restore'))
         self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
         self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
-        self.actionHide_Show_Console.setIcon(qta.icon('mdi.console'))
+        self.action_Show_Console.setIcon(qta.icon('mdi.console'))
         self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
@@ -275,8 +261,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
-        self.console_visible = False
-        self.actionHide_Show_Console.triggered.connect(self.show_hide_console)
+        self.console_window = ConsoleOutputWindow(self.MainWindow)
+        self.action_Show_Console.triggered.connect(self.console_window.show)
         self.actionDebug_Console.triggered.connect(self.show_command_line_window)
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
@@ -352,7 +338,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path)
         self.pushButton_open_pep_direct_to_otf_output_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_output_path)
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
-
+        self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking)
+        self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides)
+        
+        
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
         self.toolButton__final_peptide_help.clicked.connect(self.show_toolButton_final_peptide_help)
@@ -402,7 +391,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_sub_meta_pca.currentIndexChanged.connect(self.change_event_comboBox_sub_meta_pca)
 
         ## Basic Stat
+        self.line_22.setVisible(False)
         self.pushButton_plot_pca_sns.clicked.connect(lambda: self.plot_basic_info_sns('pca'))
+        self.pushButton_plot_tsne.clicked.connect(lambda: self.plot_basic_info_sns('tsne'))
         self.pushButton_plot_corr.clicked.connect(lambda: self.plot_basic_info_sns('corr'))
         self.pushButton_plot_box_sns.clicked.connect(lambda: self.plot_basic_info_sns('box'))
         self.pushButton_plot_pca_js.clicked.connect(lambda: self.plot_basic_info_sns('pca_3d'))
@@ -1281,22 +1272,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_outlier_handling_method2.setEnabled(method2_enabled)
         self.comboBox_outlier_handling_group_or_sample.setEnabled(group_or_sample_enabled)
 
-            
-    
-    def show_hide_console(self):
-        from ctypes import windll
-        hwnd = windll.kernel32.GetConsoleWindow()
-        style = windll.user32.GetWindowLongW(hwnd, -16)  # GWL_STYLE = -16
-        style &= ~0x00080000
-        windll.user32.SetWindowLongW(hwnd, -16, style)
 
-        if hwnd:
-            if self.console_visible:
-                windll.user32.ShowWindow(hwnd, 0)
-                self.console_visible = False
-            else:
-                windll.user32.ShowWindow(hwnd, 1)
-                self.console_visible = True
 
     def init_QSettings(self):
         settings_path =self.metax_home_path
@@ -1666,10 +1642,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 # 关闭 plt.show() 出来的窗口
                 plt.close('all')
-                
-                # 关闭控制台窗口
-                if self.console_visible:
-                    self.show_hide_console()
                     
                 # 关闭所有子进程
                 for executor in self.executors:
@@ -1759,8 +1731,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def cross_test_tab_change(self, index):        
         if index in [3, 4]: # TUKEY Test or DESeq2 Test
             self.groupBox_cross_heatmap_plot.setVisible(False)
+            self.line_22.setVisible(True)
         else:
             self.groupBox_cross_heatmap_plot.setVisible(True)
+            self.line_22.setVisible(False)
             
     def change_event_comboBox_top_heatmap_scale(self):
         if self.comboBox_top_heatmap_scale.currentText() == 'None':
@@ -2064,7 +2038,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
         callback = kwargs.pop('callback', None)
 
-        executor = FunctionExecutor(func, *args, **kwargs)
+        executor = FunctionExecutor(func, *args,logger=self.logger,**kwargs)
         executor.finished.connect(handle_finished) #connect the signal to the slot
         self.executors.append(executor)
         executor.show()
@@ -2294,6 +2268,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             except Exception:
                 error_message = traceback.format_exc()
                 QMessageBox.warning(self.MainWindow, 'Error', error_message)
+                self.logger.write_log(f'Error when run_db_builder_own_table: {error_message}', 'e')
     
     
     
@@ -2431,13 +2406,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
         distinct_genome_threshold = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
+        stop_after_genome_ranking = self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked()
+        continue_base_on_annotaied_peptide_table = self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked()
+        turn_point_method = "auto" if self.checkBox_pep_direct_to_otfgenome_auto_cutoff.isChecked() else "coverage"
         
-        if peptide_table_path == '' or digested_pep_db_path == '' or output_path == '' or taxafunc_anno_db_path == ''\
-            or table_separator == '' or peptide_col == '' or intensity_col_prefix == '':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
-            return None
+        
+        for value in [peptide_table_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
+            if value == '':
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
+                return None
+            
         # check if the file exists in the path
-        for file in [peptide_table_path, digested_pep_db_path, taxafunc_anno_db_path]:
+        check_files = [peptide_table_path]
+        if not continue_base_on_annotaied_peptide_table:
+            check_files.append(digested_pep_db_path)
+        if not stop_after_genome_ranking:
+            check_files.append(taxafunc_anno_db_path)
+
+        for file in check_files:
             if not os.path.exists(file):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
                 return None
@@ -2453,18 +2439,54 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     intensity_col_prefix=intensity_col_prefix,
                     genome_peptide_coverage_cutoff= genome_peptide_coverage_cutoff,
                     protein_peptide_coverage_cutoff= protein_peptide_coverage_cutoff,
-                    output_path=output_path
+                    output_path=output_path,
+                    stop_after_genome_ranking=stop_after_genome_ranking,
+                    continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
+                    turn_point_method=turn_point_method
                     )
-                return instance.all_in_one(
-                    taxafunc_anno_db_path = taxafunc_anno_db_path,
-                    lca_threshold = lca_threshold,
-                    distinct_genome_threshold = distinct_genome_threshold,
-                    protein_genome_separator = protein_genome_separator
-                )
+                if stop_after_genome_ranking:
+                    return instance.process_peptides_to_proteins()
+                else:
+                    return instance.all_in_one(
+                        taxafunc_anno_db_path = taxafunc_anno_db_path,
+                        lca_threshold = lca_threshold,
+                        distinct_genome_threshold = distinct_genome_threshold,
+                        protein_genome_separator = protein_genome_separator
+                    )
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
         except Exception as e:
             self.logger.write_log(f'run_pep_dircet_to_otf error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
+    
+    def change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking(self):
+        if self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked():
+            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(False)
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(False)
+            self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.setChecked(False)
+            self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides()
+            # cahnge text of label_224
+            self.label_224.setText('Annotated Peptide Table Save To')
+        else:
+            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(True)
+            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(True)
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
+            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(True)
+            self.label_224.setText('OTFs Save To')
+
+    
+    def change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides(self):
+        if self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked():
+            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(False)
+            self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.setChecked(False)
+            self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking()
+            self.label_220.setText('Annotated Peptide Table')
+        else:
+            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(True)
+            self.label_220.setText('Peptide Table')
+    
+    
     
     #### TaxaFuncAnalyzer ####
 
@@ -2884,7 +2906,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.enable_multi_button(False)
             
             # checek if the genome_mode is True, then update taxa_level_list
-            taxa_level_list = ['Genome', 'Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life']
+            taxa_level_list = ['Species', 'Genus', 'Family', 'Order', 'Class', 'Phylum', 'Domain', 'Life','Genome']
             if not self.tfa.genome_mode:
                 taxa_level_list.remove('Genome')
  
@@ -3484,6 +3506,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def enable_multi_button(self, state=True):
         list_button = [
         self.pushButton_plot_pca_sns,
+        self.pushButton_plot_tsne,
         self.pushButton_basic_plot_number_bar,
         self.pushButton_basic_plot_upset,
         self.pushButton_plot_corr,
@@ -4703,6 +4726,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             - 'sankey': Sankey diagram.
             - 'num_bar': Number bar plot.
             - 'upset': Upset plot.
+            - 'tsne': t-SNE plot.
         Returns:
         None
         """
@@ -4785,6 +4809,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
 
+            elif method == 'tsne':
+                row_num = df.shape[0]
+                if row_num < 2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, t-SNE cannot be plotted!')
+                    return None
+                self.show_message('t-SNE is running, please wait...')
+                # def plot_tsne_sns(self, df, title_name='Table', show_label=True, perplexity=30, n_iter=1000,
+                #                 width=10, height=8, font_size=10, rename_sample:bool=False,
+                #                 font_transparency=0.6, adjust_label:bool=False, theme:str|None=None,
+                #                 sub_meta:str='None', legend_col_num:int|None=None, dot_size:float|None=None,
+                #                 early_exaggeration=12.0, learning_rate='auto', random_state=None):
+                perplexity = self.doubleSpinBox_basic_tsne_perplexity.value()
+                n_iter = self.spinBox_basic_tsne_n_iter.value()
+                early_exaggeration = self.doubleSpinBox_basic_tsne_early_exaggeration.value()
+                # check if the perplexity more than half of the sample size
+                if perplexity > len(sample_list)/2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 
+                                        f'The perplexity should be less than half of the sample size ({len(sample_list)/2}), please reset it!')
+                    return None
+                BasicPlot(self.tfa).plot_tsne_sns(df=df, title_name=title_name, show_label=show_label, perplexity=perplexity, n_iter=n_iter,
+                                        width=width, height=height, font_size=font_size, rename_sample = rename_sample,
+                                        font_transparency=font_transparency, adjust_label=adjust_label, theme=theme,
+                                        sub_meta = sub_meta, legend_col_num=legend_col_num, dot_size=dot_size,
+                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=None)
+
+                        
             elif method == 'box':
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
                 violinplot = self.checkBox_box_violinplot.isChecked()
@@ -4929,6 +4979,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
         remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
         p_type = self.comboBox_top_heatmap_p_type.currentText()
+        x_axis_filter_text = self.lineEdit_top_heatmap_filter_x_axis.text().strip() if self.checkBox_top_heatmap_filter_x_axis.isChecked() else None
+        y_axis_filter_text = self.lineEdit_top_heatmap_filter_y_axis.text().strip() if self.checkBox_top_heatmap_filter_y_axis.isChecked() else None
+        filter_by_regex = self.checkBox_top_heatmap_filter_with_regx.isChecked()
         
         if cmap == 'Auto':
             cmap = None
@@ -4951,6 +5004,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # print(df.shape)
         # print(df.columns)
         try:
+            if x_axis_filter_text:
+                x_filter_list = [i.strip() for i in x_axis_filter_text.split("##")]
+            else:
+                x_filter_list = None
+            
+            if y_axis_filter_text:
+                y_filter_list = [i.strip() for i in y_axis_filter_text.split("##")]
+            else:
+                y_filter_list = None
+                
             self.show_message(f'Plotting heatmap for {table_name}...')
             if table_name.startswith('dunnett_test'):
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_dunnett_test_res(df=df, 
@@ -4958,7 +5021,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale = scale, col_cluster = col_luster, row_cluster = row_luster,
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels, 
-                                                                               scale_method = scale_method, p_type = p_type)
+                                                                               scale_method = scale_method, p_type = p_type,
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
+                                                                               )
             elif table_name.startswith('deseq2all'):
                 
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
@@ -4971,7 +5038,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig', p_type = p_type,
                                                                                three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
-                                                                               scale_method = scale_method
+                                                                               scale_method = scale_method, 
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
                                                                                 )
 
                 # if fig is a tuple
@@ -4990,7 +5060,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                rename_taxa=rename_taxa, font_size=font_size,
                                                                                show_all_labels = show_all_labels,return_type = 'fig',
                                                                                three_levels_df_type = three_levels_df_type,remove_zero_col = remove_zero_col,
-                                                                               scale_method = scale_method, p_type = p_type
+                                                                               scale_method = scale_method, p_type = p_type, 
+                                                                               x_filter_list = x_filter_list, 
+                                                                               y_filter_list = y_filter_list,
+                                                                               filter_by_regex = filter_by_regex
                                                                                )
 
                 # if fig is a tuple
@@ -5022,7 +5095,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             top_number=top_num, value_type=value_type, fig_size=fig_size, 
                             col_cluster = col_luster, row_cluster = row_luster,
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
-                            show_all_labels = show_all_labels, scale = scale, scale_method = scale_method, p_type = p_type)
+                            show_all_labels = show_all_labels, scale = scale, scale_method = scale_method, p_type = p_type,
+                            x_filter_list = x_filter_list, y_filter_list = y_filter_list,
+                            filter_by_regex = filter_by_regex
+                            )
             else:
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(
                     df=df, top_number=top_num, value_type=value_type, fig_size=fig_size,
@@ -5030,7 +5106,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     row_cluster=row_luster, cmap=cmap, rename_taxa=rename_taxa,
                     font_size=font_size, show_all_labels=show_all_labels, rename_sample=rename_sample,
                     sort_by=sort_by, scale_method=scale_method, return_type="fig",
-                    p_type = p_type
+                    p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list,
+                    filter_by_regex = filter_by_regex
                 )
 
         except Exception as e:
@@ -5055,6 +5132,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         row_luster = self.checkBox_cross_heatmap_row_cluster.isChecked()
         remove_zero_col = self.checkBox_cross_3_level_plot_remove_zero_col.isChecked()
         p_type = self.comboBox_top_heatmap_p_type.currentText()
+        x_axis_filter_text = self.lineEdit_top_heatmap_filter_x_axis.text().strip() if self.checkBox_top_heatmap_filter_x_axis.isChecked() else None
+        y_axis_filter_text = self.lineEdit_top_heatmap_filter_y_axis.text().strip() if self.checkBox_top_heatmap_filter_y_axis.isChecked() else None
+        filter_by_regex = self.checkBox_top_heatmap_filter_with_regx.isChecked()
         
         sort_by = self.comboBox_top_heatmap_sort_type.currentText()
         sort_by_dict = {'f-statistic (ANOVA)': 'f', 't-statistic (T-Test)': 't', 'padj': 'padj', 'pvalue': 'pvalue'}
@@ -5065,11 +5145,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
         try:
+            self.show_message(f'Creating Table of heatmap for {table_name}...')
+            if x_axis_filter_text:
+                x_filter_list = [i.strip() for i in x_axis_filter_text.split("##")]
+            else:
+                x_filter_list = None
+            
+            if y_axis_filter_text:
+                y_filter_list = [i.strip() for i in y_axis_filter_text.split("##")]
+            else:
+                y_filter_list = None
+                
+                
             if table_name.startswith('dunnett_test'):
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).get_heatmap_table_of_dunnett_res(df = df,  pvalue=pvalue,scale = scale, 
                                                                                       col_cluster = col_luster, row_cluster = row_luster, 
                                                                                       rename_taxa=rename_taxa, scale_method = scale_method,
-                                                                                      p_type = p_type)
+                                                                                      p_type = p_type, 
+                                                                                      x_filter_list = x_filter_list, 
+                                                                                      y_filter_list = y_filter_list,
+                                                                                      filter_by_regex = filter_by_regex)
             elif 'deseq2all' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
@@ -5079,7 +5174,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table', p_type = p_type,
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                   remove_zero_col = remove_zero_col, scale_method = scale_method
+                                                                                   remove_zero_col = remove_zero_col, scale_method = scale_method,
+                                                                                      x_filter_list = x_filter_list, 
+                                                                                      y_filter_list = y_filter_list,
+                                                                                      filter_by_regex = filter_by_regex
                                                                                    )
             elif 'dunnettAllCondtion' in table_name:
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='dunnett',
@@ -5087,7 +5185,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                    col_cluster = col_luster, row_cluster = row_luster, 
                                                                                    rename_taxa=rename_taxa, return_type = 'table',
                                                                                    three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText(),
-                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method, p_type = p_type
+                                                                                    remove_zero_col = remove_zero_col, scale_method = scale_method, p_type = p_type,
+                                                                                    x_filter_list = x_filter_list, 
+                                                                                    y_filter_list = y_filter_list,
+                                                                                    filter_by_regex = filter_by_regex
                                                                                    )
 
             
@@ -5097,7 +5198,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         df=df, top_number=top_num, col_cluster=col_luster, row_cluster=row_luster,
                         value_type=value_type, pvalue=pvalue, rename_taxa=rename_taxa,
                         scale=scale, scale_method=scale_method, return_type="table",
-                        p_type = p_type
+                        p_type = p_type, 
+                        x_filter_list = x_filter_list, 
+                        y_filter_list = y_filter_list,
+                        filter_by_regex = filter_by_regex
                     )
                 else:  # get result of test and anova of [taxa, functions, peptides and custom table]
                     # get the intensity of the result items which are significant
@@ -5106,7 +5210,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         scale=scale, col_cluster=col_luster, row_cluster=row_luster,
                         rename_taxa=rename_taxa, sort_by=sort_by,
                         scale_method=scale_method, return_type="table",
-                        p_type = p_type
+                        p_type = p_type, 
+                        x_filter_list = x_filter_list, 
+                        y_filter_list = y_filter_list,
+                        filter_by_regex = filter_by_regex
                     )
 
         except Exception as e:
@@ -6301,9 +6408,9 @@ class LoggerManager:
 def global_exception_handler(type, value, tb):
     # Format the traceback information
     error_msg = "".join(traceback.format_exception(type, value, tb))
-    print("Uncaught exception:", error_msg)
+    print("Uncaught exception at golbal level:", error_msg)
     LoggerManager().write_log(error_msg, 'c')  # Using an instance to call write_log
-
+    print("Uncaught exception:", error_msg)
     # Display a general error message in a GUI dialog without the traceback
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
@@ -6316,10 +6423,8 @@ def global_exception_handler(type, value, tb):
 
 def runGUI():
     sys.excepthook = global_exception_handler
-
     MainWindow = QtWidgets.QMainWindow()
     ui = MetaXGUI(MainWindow)
-    
     if not ui.update_required:
         MainWindow.show()
         splash.finish(MainWindow)

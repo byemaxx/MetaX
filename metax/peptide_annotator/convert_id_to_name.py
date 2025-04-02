@@ -16,6 +16,16 @@ def download_kegg_files(save_path):
     except Exception as e:
         print('Error: download pathway.tsv failed!')
         print(e)
+        
+        
+def download_kegg_module_files(save_path):
+    url = "https://rest.kegg.jp/list/module/"
+    try:
+        urllib.request.urlretrieve(url, os.path.join(save_path, 'module.tsv'))
+        print(f'ko.tsv downloaded to {save_path}')
+    except Exception as e:
+        print('Error: download ko.tsv failed!')
+        print(e)
 
 
 def download_ec_files(save_path):
@@ -36,6 +46,14 @@ def download_ko_files(save_path):
         print('Error: download ko.tsv failed!')
         print(e)
     
+def download_go_files(save_path):
+    url = "https://purl.obolibrary.org/obo/go/go-basic.obo"
+    try:
+        urllib.request.urlretrieve(url, os.path.join(save_path, 'go-basic.obo'))
+        print(f'go-basic.obo downloaded to {save_path}')
+    except Exception as e:
+        print('Error: download go-basic.obo failed!')
+        print(e)
 
 def parse_dat_file(file_path):
     if not os.path.exists(file_path):
@@ -122,60 +140,187 @@ def get_pathway_dict():
                 pathway_dict[line[0]] = line[1]
     return pathway_dict
 
-def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
-    def lookup_and_join(ec_nums, column_name):
-    # For each EC number, lookup the corresponding value in the given column of df
-        values = []
-        for ec_num in ec_nums:
-            res = ec_dict[ec_num][column_name]
-            if res.startswith('Transferred entry:'):
-                new_ec_nums = res.split(':')[1].strip('.').replace(' ', '').split('and')
-                ec_nums.extend(new_ec_nums)
-                # Lookup and join the corresponding values, and store the result in the new column
-                res = lookup_and_join(new_ec_nums, column_name)
-                values.append(res)
-                # Just append the "Transferred entry" text instead of looking up again
-                # values.append('Transferred entry: ' + ', '.join(new_ec_nums))
-            else:
-                values.append(res)
-        if all(value == '-' for value in values):
-            return '-'
-        # Remove duplicates
-        values = list(dict.fromkeys(values))
-        # remove '-'
-        values = [value for value in values if value != '-']
-        return ' | '.join(values)
 
-    # check if the column 'EC' exists
+def lookup_and_join_for_EC(ec_nums: list, ec_dict:dict, column_name: str) -> str:
+    """
+    Look up values for each EC number and join them
+    
+    Args:
+        ec_nums: List of EC numbers
+        column_name: Name of column to look up in ec_dict
+        
+    Returns:
+        Joined string of lookup values
+    """
+    values = []
+    processed_nums = set()  # Track processed numbers to avoid recursion
+    
+    for ec_num in ec_nums:
+        if ec_num in processed_nums:
+            continue
+            
+        processed_nums.add(ec_num)
+        res = ec_dict[ec_num][column_name]
+        
+        if res.startswith('Transferred entry:'):
+            # Handle transferred entries
+            new_ec_nums = res.split(':')[1].strip('.').replace(' ', '').split('and')
+            # Add new numbers if not already processed
+            new_nums = [num for num in new_ec_nums if num not in processed_nums]
+            if new_nums:
+                res = lookup_and_join_for_EC(new_nums, ec_dict, column_name)
+                if res != '-':
+                    values.append(res)
+        else:
+            values.append(res)
+            
+    # Process results
+    if not values or all(value == '-' for value in values):
+        return '-'
+        
+    # Remove duplicates and empty values
+    values = list(dict.fromkeys(val for val in values if val != '-'))
+    return ' | '.join(values)
+
+def get_go_dict():
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    go_path = os.path.join(script_path, '../data/go-basic.obo')
+    if not os.path.exists(go_path):
+        print(f'{go_path} does not exist!\nTry to download the file from https://purl.obolibrary.org/obo/go/go-basic.obo')
+        download_go_files(os.path.dirname(go_path))
+    go_dict = {}
+    with open(go_path, 'r') as f:
+        current_id = None
+        current_name = None
+        current_namespace = None
+        for line in f:
+            line = line.strip()
+            if line.startswith('id:'):
+                current_id = line.split(': ')[1]
+            elif line.startswith('name:'):
+                current_name = line.split(': ')[1]
+            elif line.startswith('namespace:'):
+                current_namespace = line.split(': ')[1]
+            elif line == '[Term]':
+                if current_id and current_name and current_namespace:
+                    go_dict[current_id] = (current_name, current_namespace)
+                    current_id = None
+                    current_name = None
+                    current_namespace = None
+    return go_dict
+    
+
+def add_go_name_to_df(df: pd.DataFrame, split_char: str = ',') -> pd.DataFrame:
+    """
+    Add GO name columns to dataframe by converting GO IDs to their corresponding names and namespaces.
+
+    Args:
+        df (pd.DataFrame): Input dataframe containing GO IDs.
+        split_char (str): Separator for splitting multiple GO IDs in a single cell.
+
+    Returns:
+        pd.DataFrame: DataFrame with added GO name and namespace columns.
+    """
+    # Check if 'GOs' column exists
+    if 'GOs' not in df.columns:
+        print('GOs column does not exist!, return the original dataframe')
+        return df
+    print('Adding GO_name and GO_namespace to df...')
+
+    # Get GO dictionary
+    go_dict = get_go_dict()
+
+    # Helper function to query GO names and namespaces
+    def query_go_names(go_str):
+        if not go_str or not isinstance(go_str, str):
+            return '-', '-'
+        
+        go_ids = go_str.split(split_char)
+        names = []
+        namespaces = []
+        
+        for go_id in go_ids:
+            if go_id in go_dict:
+                name, namespace = go_dict[go_id]
+                names.append(name)
+                namespaces.append(namespace)
+            else:
+                names.append('-')
+                namespaces.append('-')
+        
+        # Remove duplicates and join with '|'
+        names = '|'.join(dict.fromkeys(names))
+        namespaces = '|'.join(dict.fromkeys(namespaces))
+        # repale "|-" of the end if exists
+        if names.endswith('|-'):
+            names = names[:-2]
+        if namespaces.endswith('|-'):
+            namespaces = namespaces[:-2]
+        return names, namespaces
+
+    # Apply the helper function to the 'GOs' column
+    df[['GO_name', 'GO_namespace']] = df['GOs'].apply(
+        lambda x: pd.Series(query_go_names(x))
+    )
+
+    # Handle 'GOs_prop' column if it exists
+    if 'GOs_prop' in df.columns:
+        df['GO_name_prop'] = df['GOs_prop']
+        df['GO_namespace_prop'] = df['GOs_prop']
+
+    print("Add GO_name and GO_namespace to df successfully!")
+    return df
+
+def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add EC name columns to dataframe by converting EC numbers to their corresponding information
+    
+    Args:
+        df (pd.DataFrame): Input dataframe containing EC numbers
+        
+    Returns:
+        pd.DataFrame: DataFrame with added EC name columns
+    """
+
+    # Check if EC column exists
     if 'EC' not in df.columns:
         print('EC column does not exist!, return the original dataframe')
         return df
 
+    # Create result dataframe
+    result_df = df.copy()
+    
+    # Get EC dictionary
     ec_dict = get_ec_dict()
-    # Create a mask for rows where 'EC' is not "not_found"
-    mask_EC = ~df['EC'].isin(['not_found', '-'])
+    
+    # Define target columns
+    ec_columns = ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']
+    
+    # Create mask for valid EC rows
+    mask_EC = ~result_df['EC'].isin(['not_found', '-'])
 
-    # For each row in df where 'EC' is not "not_found"
-    for i, row in df[mask_EC].iterrows():
-        # Split the 'EC' value into multiple EC numbers
+    # Process valid EC entries
+    for i, row in result_df[mask_EC].iterrows():
         ec_nums = row['EC'].split(',')
-        # And for each column to be added
-        for column_name in ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']:
-            # Lookup and join the corresponding values, and store the result in the new column
-            df.at[i, column_name] = lookup_and_join(ec_nums, column_name)
+        for column_name in ec_columns:
+            result_df.at[i, column_name] = lookup_and_join_for_EC(ec_nums,ec_dict, column_name)
 
-    # For rows where 'EC' is "not_found", set the new columns' values to "-"
-    df.loc[~mask_EC, ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']] = '-'
+    # Set default value for invalid entries
+    result_df.loc[~mask_EC, ec_columns] = '-'
 
-    # Set the new '_prop' columns' values to the values in the 'EC_prop' column
-    df['EC_DE_prop'] = df['EC_prop']
-    df['EC_AN_prop'] = df['EC_prop']
-    df['EC_CC_prop'] = df['EC_prop']
-    df['EC_CA_prop'] = df['EC_prop']
-    df.fillna('-', inplace=True)
-    df.replace('', '-', inplace=True)
+    # Handle property columns
+    for column_name in ec_columns:
+        prop_column = f'EC_{column_name}_prop'
+        if prop_column in result_df.columns:
+            result_df[prop_column] = result_df['EC_prop']
+            
+    # Fill NA values only for EC columns
+    for col in ec_columns:
+        result_df[col] = result_df[col].fillna('-')
+        result_df[col] = result_df[col].replace('', '-')
+            
     print("Add EC columns to df successfully!")
-    return df
+    return result_df
 
 def add_pathway_name_to_df(df: pd.DataFrame, kppe_id:bool = False) -> pd.DataFrame:
     def query_kegg(id_str, pathway_dict, kppe_id=False):
@@ -208,26 +353,51 @@ def add_pathway_name_to_df(df: pd.DataFrame, kppe_id:bool = False) -> pd.DataFra
 
     pathway_dict = get_pathway_dict()
     df.loc[:, 'KEGG_Pathway_name'] = df['KEGG_Pathway'].apply(lambda x: query_kegg(x, pathway_dict, kppe_id))
-    df.loc[:, 'KEGG_Pathway_name_prop'] = df['KEGG_Pathway_prop']    
+    if 'KEGG_Pathway_prop' in df.columns:
+        df.loc[:, 'KEGG_Pathway_name_prop'] = df['KEGG_Pathway_prop']    
     print("Add KEGG_Pathway_name to df successfully!")
     return df
 
-def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
-    def query_ko(id_str, ko_dict):
-        id_list = id_str.split(',')
-        ko_list = []
-        for ko_id in id_list:
-            if ko_id in ['not_found', '-']:
-                ko_list.append('-')
+
+def query_kegg_items(id_str: str, id_to_name_dict: dict, split_char: str = ',', id_split_char: str = ':') -> str:
+    """
+    Convert KEGG IDs to their corresponding names
+    
+    Args:
+        id_str: String containing KEGG IDs separated by split_char
+        id_to_name_dict: Dictionary mapping IDs to names
+        split_char: Separator character between IDs, defaults to comma
+    
+    Returns:
+        str: String of converted names joined by '|'
+    """
+    if not id_str or not isinstance(id_str, str):
+        return '-'
+    
+    name_set = set()
+    
+    id_list = id_str.split(split_char)
+    
+    for kegg_id in id_list:
+        if kegg_id in ('not_found', '-'):
+            name_set.add('-')
+            continue
+            
+        try:
+            if id_split_char:
+                _, id_part = kegg_id.split(':', 1)
             else:
-                ko_id = ko_id.split(':')[1]
-                ko_name = ko_dict.get(ko_id, '-')
-                ko_list.append(f'{ko_id}:{ko_name}')
-        # join the list into a string
-        ko_name_str = '|'.join(ko_list)
-        return ko_name_str
-        
-        
+                id_part = kegg_id
+            name = id_to_name_dict.get(id_part, '-')
+            if name != '-':
+                name_set.add(f'{id_part}:{name}')
+        except ValueError:
+            name_set.add('-')
+    
+    return next(iter(name_set)) if len(name_set) == 1 else '|'.join(name_set)
+
+
+def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     # check if the column 'KEGG_ko' exists
     if 'KEGG_ko' not in df.columns:
         print('KEGG_ko column does not exist!, return the original dataframe')
@@ -245,9 +415,34 @@ def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
             line = line.strip().split('\t')
             ko_dict[line[0]] = line[1]
     
-    df.loc[:, 'KEGG_ko_name'] = df['KEGG_ko'].apply(lambda x: query_ko(x, ko_dict))
-    df.loc[:, 'KEGG_ko_name_prop'] = df['KEGG_ko_prop']
+    df.loc[:, 'KEGG_ko_name'] = df['KEGG_ko'].apply(lambda x: query_kegg_items(x, ko_dict))
+    if 'KEGG_ko_prop' in df.columns:
+        df.loc[:, 'KEGG_ko_name_prop'] = df['KEGG_ko_prop']
     print("Add KEGG_ko_name to df successfully!")
+    return df
+
+def add_kegg_module_to_df(df: pd.DataFrame) -> pd.DataFrame:
+    # check if the column 'KEGG_ko' exists
+    if 'KEGG_Module' not in df.columns:
+        print('KEGG_Module column does not exist!, return the original dataframe')
+        return df
+    
+    # read ko.tsv
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    module_path = os.path.join(script_path, '../data/module.tsv')
+    if not os.path.exists(module_path):
+        print(f'{module_path} does not exist!\nTry to download the file from https://rest.kegg.jp/list/module')
+        download_kegg_module_files(os.path.dirname(module_path))
+    module_dict = {}
+    with open(module_path, 'r') as f:
+        for line in f:
+            line = line.strip().split('\t')
+            module_dict[line[0]] = line[1]
+    
+    df.loc[:, 'KEGG_module_name'] = df['KEGG_Module'].apply(lambda x: query_kegg_items(x, module_dict, split_char=',', id_split_char=''))
+    if 'KEGG_Module_prop' in df.columns:
+        df.loc[:, 'KEGG_module_name_prop'] = df['KEGG_Module_prop']
+    print("Add KEGG_module_name to df successfully!")
     return df
     
     
@@ -259,4 +454,6 @@ def add_ko_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
 #     df = add_pathway_name_to_df(df, kppe_id=True)
 #     df = add_ec_name_to_df(df)
 #     df = add_ko_name_to_df(df)
+#     df = add_kegg_module_to_df(df)
+#     df = add_go_name_to_df(df, split_char=',')
 #     df.to_csv("11.tsv", sep='\t', index=False)

@@ -37,10 +37,11 @@ class LoggingHandler(logging.Handler):
 class FunctionExecutor(QMainWindow):
     finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
 
-    def __init__(self, function, *args, **kwargs):
+    def __init__(self, function, *args, logger=None, **kwargs):
         super().__init__()
 
         self.function_running = True  # set flag to indicate that the function is running
+        self.logger = logger 
 
         self.setWindowTitle('Progress')
         # set the size of the window as 1/3 of the screen
@@ -97,8 +98,18 @@ class FunctionExecutor(QMainWindow):
         except Exception as e:
             import traceback
             error_message = traceback.format_exc()
+            sys.__stderr__.write(error_message)
+            sys.__stderr__.flush()
+            
+            logging.error(error_message)
+            
+            if self.logger:
+                self.logger.write_log(error_message, 'e')
+                
             success = False
-            self.result = error_message
+            # current function name 
+            current_function = self.function.__name__
+            self.result = f"Error in {current_function}\n\n{str(e)}"
         finally:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
@@ -154,6 +165,9 @@ class FunctionExecutor(QMainWindow):
 
             if reply == QMessageBox.Yes:
                 self.thread.terminate()  # 强制结束线程
+                # 记录终止信息到logger
+                if self.logger:
+                    self.logger.write_log("Process was manually terminated by user", 'w')
                 # return success as False, result as None
                 self.finished.emit("Process terminated.", False)
 

@@ -1,3 +1,45 @@
+# Version: 1.124.1
+## Date: 2025-04-01
+### Changes:
+- Optimize: Optimized the code of ui.
+
+# Version: 1.124.0
+## Date: 2025-03-31
+### Changes:
+- New: Added t-SNE plot for the basic plot part.
+
+# Version: 1.124.0
+## Date: 2025-03-31
+### Changes:
+- Change: use window to repalce the console to show the log message to improve the compatibility.
+
+# Version: 1.123.2
+## Date: 2025-03-25
+### Changes:
+- Optimize: Optimized the code to speed up the run time of extracting the result table of the group-control test.
+
+# Version: 1.123.1
+## Date: 2025-03-25
+### Changes:
+- New: Added regx support for the x-axis and y-axis filter for the heatmap plot in cross-test part.
+
+# Version: 1.123.0
+## Date: 2025-03-24
+### Changes:
+- New: Added x-axis and y-axis filter for the heatmap plot in cross-test part.
+
+# Version: 1.122.4
+## Date: 2025-03-18
+### Changes:
+- New: Added KEGG_Module_name to the OTF table.
+- Optimize: Optimized the code of the coonvert id to name.
+
+# Version: 1.122.3
+## Date: 2025-03-14
+### Changes:
+- New: Added a function to stop and restart the OTF directly Annotation after Ranking the genome.
+
+
 # Version: 1.122.2
 ## Date: 2025-03-06
 ### Changes:

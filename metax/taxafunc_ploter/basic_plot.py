@@ -260,6 +260,119 @@ class BasicPlot:
         except Exception as e:
             plt.close('all')
             raise e
+        
+    def plot_tsne_sns(self, df, title_name='Table', show_label=True, perplexity=30, n_iter=1000,
+                    width=10, height=8, font_size=10, rename_sample:bool=False,
+                    font_transparency=0.6, adjust_label:bool=False, theme:str|None=None,
+                    sub_meta:str='None', legend_col_num:int|None=None, dot_size:float|None=None,
+                    early_exaggeration=12.0, learning_rate='auto', random_state=None):
+        """
+        Use t-SNE to visualize the input data.
+        
+        Parameters:
+            df (DataFrame): Input data with rows as different entries (proteins/species etc.) and columns as different samples
+            title_name (str): Chart title
+            show_label (bool): Whether to display sample labels
+            perplexity (float): t-SNE perplexity parameter, typically between 5 and 50, less than half of the number of samples
+            n_iter (int): Maximum number of iterations for optimization, default is 1000
+            width, height (float): Chart width and height
+            font_size (int): Font size
+            rename_sample (bool): Whether to include group information in labels
+            font_transparency (float): Transparency of label text
+            adjust_label (bool): Whether to adjust label positions to avoid overlap
+            theme (str): Chart theme
+            sub_meta (str): Sub-metadata used for sample style grouping
+            legend_col_num (int): Number of columns in the legend
+            dot_size (float): Size of scatter plot dots
+            early_exaggeration (float): t-SNE early exaggeration parameter, default is 12.0
+            learning_rate (str or float): Learning rate
+            random_state (int): Random seed
+        """
+        try:
+            from sklearn.manifold import TSNE
+            
+            dft = df.copy()
+
+            sample_list = dft.columns
+            if perplexity >= len(sample_list) / 2:
+                print(f"Warning: Perplexity ({perplexity}) is too high for the number of samples ({len(sample_list)}). "
+                    "Consider reducing perplexity to improve results.")
+            
+            if sub_meta != 'None':
+                style_list = []
+                for i in sample_list:
+                    style_list.append(self.tfa.get_group_of_a_sample(i, sub_meta))
+            else:
+                style_list = None
+
+            new_sample_name = []
+            group_list = []
+            for i in sample_list:
+                group = self.tfa.get_group_of_a_sample(i)
+                new_sample_name.append(f'{i} ({group})')
+                group_list.append(group)
+
+            unique_groups = [x for i, x in enumerate(group_list) if i == group_list.index(x)]
+            if len(unique_groups) > 10:
+                distinct_colors = self.get_distinct_colors(len(unique_groups))
+                color_palette = dict(zip(unique_groups, distinct_colors))
+            else:
+                color_palette = None  
+
+            dft = dft.T
+            mat = dft.values
+
+            if theme is not None and theme != 'Auto':
+                plt.style.use(theme)
+            else:
+                sns.set_theme(style='whitegrid')
+
+            plt.figure(figsize=(width, height))
+            
+            tsne = TSNE(n_components=2, perplexity=perplexity, 
+                    n_iter=n_iter, early_exaggeration=early_exaggeration,
+                    learning_rate=learning_rate, random_state=random_state)
+            components = tsne.fit_transform(mat)
+            
+            dot_size = (width * height)*font_size/10 if dot_size is None else dot_size
+            
+            fig = sns.scatterplot(x=components[:, 0], y=components[:, 1], palette=color_palette, style=style_list,
+                                hue=group_list, s=dot_size,
+                                alpha=0.9, edgecolor='black', linewidth=0.5)
+
+            fig.set_title(f'T-SNE of {str(title_name)}',
+                        fontsize=font_size+2, fontweight='bold')
+            fig.set_xlabel('t-SNE 1', fontsize=font_size)
+            fig.set_ylabel('t-SNE 2', fontsize=font_size)
+
+            if legend_col_num != 0:
+                num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
+                plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=font_size+2, borderaxespad=0.,
+                        ncol=num_legend//30 + 1 if legend_col_num is None else legend_col_num)
+            else:
+                plt.legend([], [], frameon=False)
+
+            if show_label:
+                new_sample_name = new_sample_name if rename_sample else sample_list
+                texts = [fig.text(components[i, 0], components[i, 1], s=new_sample_name[i], size=font_size,
+                            color='black', alpha=font_transparency) for i in range(len(new_sample_name))]
+                if adjust_label:
+                    texts = adjust_text(
+                        texts,
+                        avoid_self=False,
+                        force_text=(0.1, 0.3),
+                        arrowprops=dict(
+                            arrowstyle="-", color="black", alpha=font_transparency
+                        ),
+                    )
+
+            plt.tight_layout()
+            plt.show()
+
+            return fig
+        except Exception as e:
+            plt.close('all')
+            raise e
 
     def plot_box_sns(self, df, title_name='Table', show_fliers=False, width=10, height=8,
                     font_size=10, theme: str | None = None, rename_sample: bool = False,

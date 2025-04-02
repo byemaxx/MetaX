@@ -1,7 +1,7 @@
 
 # for scaling data
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+import re
 import numpy as np
 # for heatmap plot
 import seaborn as sns
@@ -59,13 +59,34 @@ class HeatmapPlot:
             df.index = new_index_list
         return df
 
-    # For taxa-func table
+
+    def filter_data_by_x_y(self, df, x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
+        if x_filter_list:
+            if filter_by_regex:
+                cols = [col for col in df.columns if any(re.search(x, col) for x in x_filter_list)]
+            else:
+                cols = [col for col in df.columns if any(x in col for x in x_filter_list)]
+            df = df[cols]
+        if y_filter_list:
+            if filter_by_regex:
+                rows = [row for row in df.index if any(re.search(y, row) for y in y_filter_list)]
+            else:
+                rows = [row for row in df.index if any(y in row for y in y_filter_list)]
+            df = df.loc[rows]
+        if df.empty:
+            raise ValueError(f"The dataframe is empty after filter with X-Aixs filter: {x_filter_list} and Y-Axis filter: {y_filter_list}")
+        
+        return df
+    
+    
     def plot_top_taxa_func_heatmap_of_test_res(self, df, top_number:int|str= 100, 
                                         value_type:str = 'p', fig_size:tuple|None = None, pvalue:float = 0.05, 
                                          col_cluster:bool = True, row_cluster:bool = True,
                                         cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10, title:str = '',
                                         show_all_labels:tuple = (False, False), return_type:str = 'fig', scale = None, 
-                                        scale_method:str = 'maxmin', p_type:str = 'padj'):
+                                        scale_method:str = 'maxmin', p_type:str = 'padj',
+                                        x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False):
 
         func_name = self.tfa.func_name
         dft = df.copy()
@@ -113,8 +134,10 @@ class HeatmapPlot:
                 # df_top = self.rename_taxa(df_top)
             df_top = df_top.pivot(index=func_name, columns='Taxon', values=value_col_name)
             print(f"Top [{top_number}] significant: Taxa ({df_top.shape[1]}), Functions ({df_top.shape[0]})")
-            df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             
+            df_top = self.filter_data_by_x_y(df_top, x_filter_list, y_filter_list, filter_by_regex)
+            
+            df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
             
             data_include_negative_and_positive = True if (df_plot.min().min() < 0 and df_plot.max().max() > 0) else False
@@ -126,8 +149,8 @@ class HeatmapPlot:
                 "linecolor": (0 ,0 ,0 ,0.1),
                 "dendrogram_ratio": (0.1, 0.2),
                 "figsize": fig_size if return_type == 'fig' else None,
-                "col_cluster": col_cluster,
-                "row_cluster": row_cluster,
+                "col_cluster": col_cluster if df_plot.shape[1] > 1 else False,
+                "row_cluster": row_cluster if df_plot.shape[0] > 1 else False,
                 "method": self.linkage_method,
                 "metric": self.distance_metric,
                 "cbar_kws": {"label": plot_type, "shrink": 0.5},
@@ -203,7 +226,8 @@ class HeatmapPlot:
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True,
                                        sort_by:str = 'padj', scale_method:str = 'maxmin', return_type:str = 'fig',
-                                       p_type:str = 'padj'):
+                                       p_type:str = 'padj', x_filter_list: list = [], y_filter_list: list = [],
+                                       filter_by_regex:bool = False):
 
         dft = df.copy()
         
@@ -239,13 +263,17 @@ class HeatmapPlot:
             
             dft = dft.sort_values(by=[sort_column], ascending=ascending)
             mat = dft.head(top_number).drop(['pvalue', 'padj','t-statistic', 'abs_t-statistic'], axis=1, errors='ignore')
-
         else:
             raise ValueError("No 'f-statistic' or 't-statistic' in the dataframe")
+        
 
+        mat = self.filter_data_by_x_y(mat, x_filter_list, y_filter_list, filter_by_regex)
+        
         # if mat is empty, raise error
         if mat.empty:
-            raise ValueError(f"No significant differences between groups in {plot_type} <= [{pvalue}]")
+            erro_msg = f"No significant differences between groups in {plot_type} <= [{pvalue}]"
+            erro_msg += f" after filter with X-Aixs filter: {x_filter_list} and Y-Axis filter: {y_filter_list}" if x_filter_list or y_filter_list else ''
+            raise ValueError(erro_msg)
         
         if len(mat) < 2:
             row_cluster = False
@@ -350,8 +378,11 @@ class HeatmapPlot:
                     scale = None, col_cluster:bool = True, row_cluster:bool = True, 
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), scale_method:str = 'maxmin', return_type:str = 'fig',
-                    sample_to_group_dict:dict|None = None):
+                    sample_to_group_dict:dict|None = None, x_filter_list: list = [], y_filter_list: list = [],
+                    filter_by_regex:bool = False):
         
+
+        df = self.filter_data_by_x_y(df, x_filter_list, y_filter_list, filter_by_regex)
         # check if any row or column is all 0
         if (df == 0).all().any():
             # remove all 0 rows
@@ -460,7 +491,8 @@ class HeatmapPlot:
                                        show_all_labels:tuple = (False, False), 
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
-                                       show_col_colors:bool = True, remove_zero_col:bool = True, scale_method:str = 'maxmin'):
+                                       show_col_colors:bool = True, remove_zero_col:bool = True, scale_method:str = 'maxmin',
+                                       x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
         """
         Plot a heatmap of all condition results.
 
@@ -483,6 +515,9 @@ class HeatmapPlot:
             - three_levels_df_type (str): The type of the three levels DataFrame. Default is 'same_trends'. options: 'all_sig', 'no_na', 'half_same_trnds', 'same_trends'
             - show_col_colors (bool): Whether to show column colors. Default is True.
             - remove_zero_col (bool): Whether to remove zero columns. Default is True.
+            - scale_method (str): The scaling method for the data. Default is 'maxmin'.
+            - x_filter_list (list): The list of x-axis filter. Default is [].
+            - y_filter_list (list): The list of y-axis filter. Default is [].
 
         Returns:
             - retrun_type == 'fig': The heatmap figure. or (fig, df_dict) dict_df: {'all_sig': df1, 'no_na': df2, 'same_trends': df3}
@@ -516,12 +551,17 @@ class HeatmapPlot:
                 group_name = i.split('~')[0]
                 group_list.append(group_name)
             color_list = self.assign_colors(group_list)
+        
+
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
                     
         if dft.empty or dft is None:
             if res_df_type == 'deseq2':
                 error_msg = f"No significant differences Results in {p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All"
             else:
                 error_msg = f"No significant differences Results in  {p_type} < {pvalue} for {three_levels_df_type} in Dunnett test"
+            if x_filter_list or y_filter_list:
+                error_msg += f" with X-Aixs filter: {x_filter_list} and Y-Axis filter: {y_filter_list}"
             raise ValueError(error_msg)
     
             
@@ -653,7 +693,9 @@ class HeatmapPlot:
                                        fig_size:tuple|None = None, col_cluster:bool = True, row_cluster:bool = True,
                                        cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                                        show_all_labels:tuple = (False, False),  show_col_colors:bool = False,
-                                       scale_method:str = 'maxmin', p_type:str = 'padj'
+                                       scale_method:str = 'maxmin', p_type:str = 'padj',
+                                       x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False
                                        ):
         #! 只画t-statistic的heatmap, 用p_type来判断: 'padj' or 'pvalue'
         
@@ -668,7 +710,8 @@ class HeatmapPlot:
         dft = dft.loc[~(dft==0).all(axis=1)]
         
         dft = self.tfa.replace_if_two_index(dft)
-            
+        
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
 
         if len(dft) < 2:
             row_cluster = False
@@ -755,7 +798,9 @@ class HeatmapPlot:
 
     def get_heatmap_table_of_dunnett_res(self, df,  pvalue:float = 0.05,scale:str|None = None,
                                         col_cluster:bool = True, row_cluster:bool = True, rename_taxa:bool = True,
-                                        scale_method:str = 'maxmin', p_type:str = 'padj'):
+                                        scale_method:str = 'maxmin', p_type:str = 'padj',
+                                        x_filter_list: list = [], y_filter_list: list = [],
+                                        filter_by_regex:bool = False):
 
         
         dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
@@ -767,6 +812,8 @@ class HeatmapPlot:
         dft = dft.loc[~(dft==0).all(axis=1)]
         
         dft = self.tfa.replace_if_two_index(dft)
+        
+        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
             
 
         if len(dft) < 2:
@@ -824,63 +871,83 @@ class HeatmapPlot:
         
 
 
-    def scale_data(self, df: pd.DataFrame, scale_by: str|None = None, method: str|None = 'maxmin') -> pd.DataFrame:
+    def scale_data(self, df: pd.DataFrame, scale_by: str | None = None, method: str | None = 'maxmin') -> pd.DataFrame:
+        """
+        Scale the data by row, column or all using zscore or maxmin method.
+        """
         scale_by = scale_by.lower() if scale_by else None
         method = method.lower() if method else None
-        
+
         print(f"Scaling the data by [{scale_by}] using method [{method}]")
-        
-        if scale_by == 'none' or method == 'none' or scale_by is None or method is None:
+
+        if scale_by in ['none', None] or method in ['none', None]:
             print("No scaling is performed.")
             return df
-        
+
         df = df.copy()
-        
-        # convert 'column' to 'col' for consistency
+
         if scale_by == 'column':
             scale_by = 'col'
-             
-        if scale_by not in ['row', 'col', 'all', 'none']:
+
+        if scale_by not in ['row', 'col', 'all']:
             raise ValueError("scale_by must be 'row', 'col', 'all' or 'none'")
 
-        try:
-            if method == 'zscore':
-                scaler = StandardScaler()
+        if method not in ['zscore', 'maxmin']:
+            raise ValueError("method must be 'zscore' or 'maxmin' or 'none'")
 
-                if scale_by == 'row':
-                    if (df == 0).all(axis=1).any():
-                        raise ValueError("One or more rows are entirely zero, cannot perform z-score scaling.")
-                    
-                    df = df.apply(lambda row: pd.Series(scaler.fit_transform(row.values.reshape(-1, 1)).flatten(), index=row.index), axis=1)
+        # 定义 zscore 缩放函数，对 Series 进行处理：
+        # 如果 Series 中只有一个元素，则返回原值（因为标准差为0时直接缩放会变为0）
+        def zscore_series(s: pd.Series) -> pd.Series:
+            if len(s) == 1:
+                return s
+            mu = s.mean()
+            sigma = s.std(ddof=0)
+            if sigma == 0:
+                return s  # 保持原值
+            else:
+                return (s - mu) / sigma
 
-                elif scale_by == 'col':
-                    if (df == 0).all(axis=0).any():
-                        raise ValueError("One or more columns are entirely zero, cannot perform z-score scaling.")
-                    
-                    df = df.apply(lambda col: pd.Series(scaler.fit_transform(col.values.reshape(-1, 1)).flatten(), index=col.index), axis=0)
-                
-                else:  # 'all'
-                    if np.all(df.values.flatten() == 0):
-                        raise ValueError("All data are zero, cannot perform z-score scaling.")
-                    
-                    df = pd.DataFrame(scaler.fit_transform(df), index=df.index, columns=df.columns)
+        # 定义 maxmin 缩放函数，对 Series 进行处理：
+        # 如果 Series 中只有一个元素，则直接返回原值，避免 1 的归一化
+        def maxmin_series(s: pd.Series) -> pd.Series:
+            if len(s) == 1:
+                return s
+            max_val = s.abs().max()
+            if max_val == 0:
+                return s
+            else:
+                return s / max_val
 
-            else:  # 'maxmin'
-                if scale_by == 'row':
-                    max_val = df.abs().max(axis=1)
-                    df = pd.DataFrame([row / max_val.loc[index] if max_val.loc[index] != 0 else row for index, row in df.iterrows()], index=df.index, columns=df.columns) # type: ignore
-                elif scale_by == 'col':
-                    max_val = df.abs().max()
-                    for col in df.columns:
-                        if max_val[col] != 0:
-                            df[col] = df[col] / max_val[col]
-                else:  # 'all'
-                    max_val = df.abs().values.max()
-                    df = df / max_val if max_val != 0 else df
+        # 根据 method 和 scale_by 进行不同维度的缩放
+        if method == 'zscore':
+            if scale_by == 'row':
+                df = df.apply(zscore_series, axis=1)
+            elif scale_by == 'col':
+                df = df.apply(zscore_series, axis=0)
+            else:  # scale_by == 'all'
+                if df.size == 1:
+                    return df
+                flattened = df.values.flatten()
+                mu = flattened.mean()
+                sigma = flattened.std(ddof=0)
+                if sigma == 0:
+                    return df
+                else:
+                    df = (df - mu) / sigma
 
-        except Exception as e:
-            print(f'Error in scaling the data: {e}')
-            raise e
-        
+        elif method == 'maxmin':
+            if scale_by == 'row':
+                df = df.apply(maxmin_series, axis=1)
+            elif scale_by == 'col':
+                df = df.apply(maxmin_series, axis=0)
+            else:  # scale_by == 'all'
+                if df.size == 1:
+                    return df
+                max_val = np.abs(df.values).max()
+                if max_val == 0:
+                    return df
+                else:
+                    df = df / max_val
+
         return df
 
