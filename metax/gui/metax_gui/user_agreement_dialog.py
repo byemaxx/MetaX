@@ -54,9 +54,10 @@ class UserAgreementDialog(QDialog):
                 
                 <h3>Citation</h3>
                 <p>Please cite the following paper if you use MetaX in your research:</p>
-                <p><b>MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)</b></p>
+                <br>
+                <p><b>Operational Taxon-Function Framework in MetaX: Unveiling Taxonomic and Functional Associations in Metaproteomics</b></p>
                 <p>Qing Wu, Zhibin Ning, Ailing Zhang, Xu Zhang, Zhongzhi Sun, Daniel Figeys</p>
-                <p>bioRxiv 2024.04.19.590315; doi: https://doi.org/10.1101/2024.04.19.590315</p>
+                <p>Analytical Chemistry 2025.</p>
                 
                 <br>
                 <h3>Additional Information</h3>

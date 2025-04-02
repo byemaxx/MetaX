@@ -1,3 +1,14 @@
+# Version: 1.124.3
+## Date: 2025-04-02
+### Changes:
+- New: Added a function to add GO term to the OTF table if available.
+
+# Version: 1.124.2
+## Date: 2025-04-02
+### Changes:
+- Optimize: Optimized UI of Data Preprocessing part to make the layout more clear.
+- Fix: Fixed the bug of icon shows error in Taskbar.
+
 # Version: 1.124.1
 ## Date: 2025-04-01
 ### Changes:
