@@ -15,7 +15,11 @@ import sys
 app = QtWidgets.QApplication(sys.argv)
 splash = QSplashScreen()
 icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
-splash.setPixmap(QPixmap(icon_path))
+pixmap = QPixmap(icon_path)
+scaled_pixmap = pixmap.scaled(pixmap.width() // 2, 
+                              pixmap.height() // 2, 
+                              Qt.KeepAspectRatio, Qt.SmoothTransformation)
+splash.setPixmap(scaled_pixmap)
 splash.show()
 app.processEvents()
 

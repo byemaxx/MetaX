@@ -2,7 +2,7 @@ distinctipy>=1.2.2
 matplotlib>=3.7.2
 numpy>=1.25.1
 pandas>=2.0.3
-pydeseq2>=0.4.10
+pydeseq2==0.4.12
 pyecharts>=2.0.6
 PyQt5>=5.15.9
 PyQt5-Qt5>=5.15.2
@@ -15,7 +15,7 @@ QtAwesome>=1.2.3
 scikit-learn>=1.3.0
 scipy>=1.11.3
 tqdm>=4.65.0
-scikit-bio>=0.6.0
+scikit-bio>=0.6.3
 adjustText>=1.1.1
 openpyxl
 pyproject-toml>=0.0.10

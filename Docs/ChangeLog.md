@@ -1,3 +1,8 @@
+# Version: 1.124.1
+## Date: 2025-04-01
+### Changes:
+- Optimize: Optimized the code of ui.
+
 # Version: 1.124.0
 ## Date: 2025-03-31
 ### Changes:
