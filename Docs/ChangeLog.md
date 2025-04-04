@@ -1,3 +1,8 @@
+# Version: 1.124.4
+## Date: 2025-04-04
+### Changes:
+- Fix: Fixed the bug of when EC annotating.
+
 # Version: 1.124.3
 ## Date: 2025-04-02
 ### Changes:
