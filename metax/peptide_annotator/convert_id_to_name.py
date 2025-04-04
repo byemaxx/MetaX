@@ -309,9 +309,9 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
     result_df.loc[~mask_EC, ec_columns] = '-'
 
     # Handle property columns
-    for column_name in ec_columns:
-        prop_column = f'EC_{column_name}_prop'
-        if prop_column in result_df.columns:
+    if 'EC_prop' in df.columns:
+        for column_name in ec_columns:
+            prop_column = f'{column_name}_prop'
             result_df[prop_column] = result_df['EC_prop']
             
     # Fill NA values only for EC columns
