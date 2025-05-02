@@ -79,5 +79,5 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
 If you use MetaX in your research, please cite the following publication:
 
 > **Operational Taxon-Function Framework in MetaX: Unveiling Taxonomic and Functional Associations in Metaproteomics**. 
-> *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2025).  Analytical Chemistry. DOI:  <a href="https://doi.org/10.1101/2024.04.19.590315" target="_blank">10.1101/2024.04.19.590315</a>.
+> *Wu, Q., Ning, Z., Zhang, A., Zhang, X., Sun, Z., & Figeys, D.* (2025).  Analytical Chemistry. DOI:  <a href="https://doi.org/10.1021/acs.analchem.4c06645" target="_blank">10.1021/acs.analchem.4c06645</a>.
 
