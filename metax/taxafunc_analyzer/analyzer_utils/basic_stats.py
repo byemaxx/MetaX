@@ -33,7 +33,7 @@ class BasicStats:
 
         Args:
             df (pd.DataFrame): The input DataFrame containing the sample data. Defaults to None.
-            condition (list, optional): A list of conditions to filter the samples. Defaults to None.eg. ['V1', 'PBS']
+            condition (list, optional): A list of conditions to filter the samples. Defaults to None.eg. ['Individual', 'V1'] (Individual column, V1 rows in meta table)
             zero_domainant (bool, optional): If True, calculate the mean of non-zero values in each group if the number of zero values is less than half of the total number of values; otherwise, return 0. Defaults to False.
 
         Returns:
