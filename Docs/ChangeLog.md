@@ -1,3 +1,8 @@
+# Version: 1.124.5
+## Date: 2025-05-04
+### Changes:
+- Fix: Fixed the bug when use Any Data Mode and the 'sample_col_prefix' is empty, the program will raise error.
+
 # Version: 1.124.4
 ## Date: 2025-04-04
 ### Changes:

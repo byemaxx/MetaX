@@ -134,7 +134,7 @@ class TaxaFuncAnalyzer:
                 
             if self.sample_col_prefix == '': # if the prefix_col_name is not provided, use the first column name
                 sample_list = self.original_df.columns.tolist()
-                sample_list.remove(self.custom_col_name)
+                sample_list = sample_list[1:] # remove the first item
                 self.sample_list = sample_list
             else:
                 # check if the prefix_col_name is in the original_df.columns
