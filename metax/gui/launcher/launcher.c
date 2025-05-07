@@ -23,9 +23,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     char basePath[MAX_PATH];
     char pythonPath[MAX_PATH];
-    char scriptPath[MAX_PATH];
+    char metaxPath[MAX_PATH];
     char cmdExePath[MAX_PATH];
-    char commandLine[MAX_PATH*3]; // Increased size for longer command
+    char commandLine[MAX_PATH*4]; // Increased size for longer command
     
     // Get base path
     GetModuleFileName(NULL, basePath, MAX_PATH);
@@ -33,19 +33,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     // Use python.exe
     snprintf(pythonPath, MAX_PATH, "%s\\pyenv\\python.exe", basePath);
-    snprintf(scriptPath, MAX_PATH, "%s\\metax\\metax\\gui\\main_gui.py", basePath);
+    snprintf(metaxPath, MAX_PATH, "%s\\metax", basePath);
     
     // Get system directory for cmd.exe
     GetSystemDirectory(cmdExePath, MAX_PATH);
     snprintf(cmdExePath, MAX_PATH, "%s\\cmd.exe", cmdExePath);
     
-    // Create command line to use cmd.exe to start python
+    // Create command line to use cmd.exe to start python with -m parameter
     // /C means execute command and terminate
     // /S allows string with quotes after /C
     // We use start /B to run without creating a new window
-    snprintf(commandLine, MAX_PATH*3, 
-             "\"%s\" /S /C \"start /B \"\" \"%s\" \"%s\"\"", 
-             cmdExePath, pythonPath, scriptPath);
+    snprintf(commandLine, MAX_PATH*4, 
+             "\"%s\" /S /C \"set PYTHONPATH=%s && start /B \"\" \"%s\" -m metax.gui.main_gui\"", 
+             cmdExePath, metaxPath, pythonPath);
     
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -66,7 +66,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     else {
         // Try direct launch as fallback
-        snprintf(commandLine, MAX_PATH*2, "\"%s\" \"%s\"", pythonPath, scriptPath);
+        snprintf(commandLine, MAX_PATH*3, 
+                "set PYTHONPATH=%s && \"%s\" -m metax.gui.main_gui", 
+                metaxPath, pythonPath);
         
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
@@ -79,7 +81,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         else {
             // Last resort: Call Python directly with specific working directory
-            ShellExecute(NULL, "open", pythonPath, scriptPath, basePath, SW_SHOW);
+            char envPath[MAX_PATH*2];
+            snprintf(envPath, MAX_PATH*2, "PYTHONPATH=%s", metaxPath);
+            ShellExecute(NULL, "open", pythonPath, "-m metax.gui.main_gui", basePath, SW_SHOW);
         }
     }
     
