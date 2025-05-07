@@ -14,3 +14,6 @@ README_PyPi.md
 output
 metax/data/go-basic.obo
 metax/data/enzyme.dat
+build
+venv
+*.egg-info

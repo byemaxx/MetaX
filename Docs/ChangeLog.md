@@ -1,3 +1,9 @@
+# Version: 1.124.6
+## Date: 2025-05-07
+### Changes:
+- Fix: Fixed the dependency issue of the qt_material.
+
+
 # Version: 1.124.5
 ## Date: 2025-05-04
 ### Changes:

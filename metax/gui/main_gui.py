@@ -46,7 +46,6 @@ from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings, QSize
 
 import qtawesome as qta
-# from qt_material import apply_stylesheet
 
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
