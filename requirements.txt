@@ -10,7 +10,7 @@ PyQt5-sip>=12.12.1
 PyQtWebEngine>=5.15.6
 PyQtWebEngine-Qt5>=5.15.2
 python-dateutil>=2.8.2
-qt-material>=2.14
+qt-material==2.14
 QtAwesome>=1.2.3
 scikit-learn>=1.3.0
 scipy>=1.11.3
