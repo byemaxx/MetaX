@@ -1,3 +1,9 @@
+# Version: 1.124.7
+## Date: 2025-05-23
+### Changes:
+- Update: update MGNify database link in built-in download database.
+
+
 # Version: 1.124.6
 ## Date: 2025-05-07
 ### Changes:

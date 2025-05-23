@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>449</width>
-                 <height>479</height>
+                 <width>397</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1997,7 +1997,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>842</width>
+                        <width>813</width>
                         <height>267</height>
                        </rect>
                       </property>
@@ -3532,7 +3532,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>665</width>
+                        <width>677</width>
                         <height>157</height>
                        </rect>
                       </property>
@@ -4429,7 +4429,7 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>872</width>
+                       <width>890</width>
                        <height>154</height>
                       </rect>
                      </property>
@@ -6421,7 +6421,7 @@
                           <rect>
                            <x>0</x>
                            <y>0</y>
-                           <width>535</width>
+                           <width>559</width>
                            <height>94</height>
                           </rect>
                          </property>
@@ -7167,8 +7167,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>132</height>
+                        <width>505</width>
+                        <height>128</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -8022,7 +8022,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>620</width>
+                        <width>632</width>
                         <height>65</height>
                        </rect>
                       </property>
@@ -8776,7 +8776,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>775</width>
+                        <width>788</width>
                         <height>102</height>
                        </rect>
                       </property>
@@ -9957,8 +9957,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>107</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -10589,7 +10589,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
+                    <width>309</width>
                     <height>41</height>
                    </rect>
                   </property>
@@ -10631,7 +10631,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>259</width>
+                    <width>255</width>
                     <height>128</height>
                    </rect>
                   </property>
@@ -11239,6 +11239,11 @@
                  <item>
                   <property name="text">
                    <string>cow-rumen(v1.0.1)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>sheep-rumen(v1.0)</string>
                   </property>
                  </item>
                  <item>
