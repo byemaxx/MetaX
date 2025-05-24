@@ -1,3 +1,8 @@
+# Version: 1.125.0
+## Date: 2025-05-24
+### Changes:
+- New: added a option to set line color for heatmap plot.
+
 # Version: 1.124.7
 ## Date: 2025-05-23
 ### Changes:

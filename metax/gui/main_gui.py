@@ -213,6 +213,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
         self.executors = []  # save all FunctionExecutor object
         self.add_theme_to_combobox()
+        self.add_heatmap_line_color_to_combobox()
         
         # ploting parameters
         # set the default theme mode
@@ -1768,7 +1769,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_data_overiew_theme.addItems(mat_style_list)
         self.comboBox_deseq2_volcano_sns_theme.addItems(mat_style_list)
         
-            
+    def add_heatmap_line_color_to_combobox(self):
+        line_color_list = ['none','gray', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta']
+        line_color_combox_list = ['comboBox_basic_hetatmap_linecolor', 'comboBox_top_heatmap_linecolor', 'comboBox_corr_hetatmap_linecolor', 'comboBox_tflink_heatmap_linecolor']
+        for name in line_color_combox_list:
+            old_combobox = getattr(self, name)
+            new_combobox = ExtendedComboBox(old_combobox.parent())
+            new_combobox.addItems(line_color_list)
+            new_combobox.setCurrentIndex(0)
+            old_combobox.parent().layout().replaceWidget(old_combobox, new_combobox)
+            old_combobox.deleteLater()
+            setattr(self, name, new_combobox)
+
     def check_update(self, show_message=False, manual_check_trigger=True):
         if (manual_check_trigger is False) and (self.auto_check_update is False):
             print("Auto check update is disabled.")
@@ -4066,6 +4078,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             if plot_type == 'heatmap':
+                linecolor = self.comboBox_basic_hetatmap_linecolor.currentText()
                 df, sample_to_group_dict = self.tfa.BasicStats.prepare_dataframe_for_heatmap(df = df,
                                                                                           sub_meta = sub_meta, 
                                                                                           rename_sample = rename_sample,
@@ -4091,9 +4104,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels,  return_type = 'fig',
-                                                         sample_to_group_dict = sample_to_group_dict)
-                                                         
-            
+                                                         sample_to_group_dict = sample_to_group_dict, linecolor=linecolor)
+
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
                 plot_percent = self.checkBox_basic_bar_plot_percent.isChecked()
@@ -4982,6 +4994,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         x_axis_filter_text = self.lineEdit_top_heatmap_filter_x_axis.text().strip() if self.checkBox_top_heatmap_filter_x_axis.isChecked() else None
         y_axis_filter_text = self.lineEdit_top_heatmap_filter_y_axis.text().strip() if self.checkBox_top_heatmap_filter_y_axis.isChecked() else None
         filter_by_regex = self.checkBox_top_heatmap_filter_with_regx.isChecked()
+        linecolor = self.comboBox_top_heatmap_linecolor.currentText()
         
         if cmap == 'Auto':
             cmap = None
@@ -5024,7 +5037,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale_method = scale_method, p_type = p_type,
                                                                                x_filter_list = x_filter_list, 
                                                                                y_filter_list = y_filter_list,
-                                                                               filter_by_regex = filter_by_regex
+                                                                               filter_by_regex = filter_by_regex,
+                                                                               linecolor = linecolor
                                                                                )
             elif table_name.startswith('deseq2all'):
                 
@@ -5041,7 +5055,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale_method = scale_method, 
                                                                                x_filter_list = x_filter_list, 
                                                                                y_filter_list = y_filter_list,
-                                                                               filter_by_regex = filter_by_regex
+                                                                               filter_by_regex = filter_by_regex,
+                                                                                 linecolor = linecolor
                                                                                 )
 
                 # if fig is a tuple
@@ -5063,7 +5078,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                scale_method = scale_method, p_type = p_type, 
                                                                                x_filter_list = x_filter_list, 
                                                                                y_filter_list = y_filter_list,
-                                                                               filter_by_regex = filter_by_regex
+                                                                               filter_by_regex = filter_by_regex,
+                                                                                linecolor = linecolor
                                                                                )
 
                 # if fig is a tuple
@@ -5097,7 +5113,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             pvalue=pvalue, cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, title=title,
                             show_all_labels = show_all_labels, scale = scale, scale_method = scale_method, p_type = p_type,
                             x_filter_list = x_filter_list, y_filter_list = y_filter_list,
-                            filter_by_regex = filter_by_regex
+                            filter_by_regex = filter_by_regex, linecolor = linecolor
                             )
             else:
                 fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap_of_test_res(
@@ -5107,7 +5123,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     font_size=font_size, show_all_labels=show_all_labels, rename_sample=rename_sample,
                     sort_by=sort_by, scale_method=scale_method, return_type="fig",
                     p_type = p_type, x_filter_list = x_filter_list, y_filter_list = y_filter_list,
-                    filter_by_regex = filter_by_regex
+                    filter_by_regex = filter_by_regex, linecolor = linecolor
                 )
 
         except Exception as e:
@@ -5733,6 +5749,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         show_labels = self.checkBox_co_expr_show_label.isChecked()
         rename_taxa = self.checkBox_co_expr_rename_taxa.isChecked()
         font_size = self.spinBox_co_expr_font_size.value()
+        linecolor = self.comboBox_corr_hetatmap_linecolor.currentText()
         
         sample_list = self.tfa.sample_list
         if self.comboBox_co_expr_group_sample.currentText() == 'Sample':
@@ -5777,6 +5794,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                 width=width, height=height, 
                                                 font_size=font_size, 
                                                 show_all_labels=show_all_labels,
+                                                linecolor=linecolor,
                                                 )
                                                         
             except Exception:
@@ -6151,6 +6169,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         row_cluster = True if self.checkBox_tflink_hetatmap_row_cluster.isChecked() else False
         col_cluster = True if self.checkBox_tflink_hetatmap_col_cluster.isChecked() else False
         sub_meta = self.comboBox_tflink_sub_meta.currentText()
+        linecolor = self.comboBox_tflink_heatmap_linecolor.currentText()
         
         if cmap == 'Auto':
             cmap = None
@@ -6200,7 +6219,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             fig_res = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
-                                  return_type = return_type, sample_to_group_dict = sample_to_group_dict
+                                  return_type = return_type, sample_to_group_dict = sample_to_group_dict, linecolor=linecolor
                                   )
             
             if return_type == 'table':

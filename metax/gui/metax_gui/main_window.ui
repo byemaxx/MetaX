@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>965</width>
-    <height>700</height>
+    <height>779</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>397</width>
-                 <height>80</height>
+                 <width>449</width>
+                 <height>554</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1600,7 +1600,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1997,7 +1997,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>813</width>
+                        <width>859</width>
                         <height>267</height>
                        </rect>
                       </property>
@@ -3532,8 +3532,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>677</width>
-                        <height>157</height>
+                        <width>859</width>
+                        <height>193</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -3718,22 +3718,6 @@
                            </item>
                           </layout>
                          </item>
-                         <item row="3" column="2">
-                          <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Row Cluster</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
                          <item row="0" column="0">
                           <widget class="QLabel" name="label_183">
                            <property name="sizePolicy">
@@ -3776,22 +3760,6 @@
                            </property>
                            <property name="text">
                             <string>Heatmap</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="3">
-                          <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Col Cluster</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
                            </property>
                           </widget>
                          </item>
@@ -4139,6 +4107,83 @@
                              <property name="text">
                               <string>Show Percentages</string>
                              </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item row="3" column="2">
+                          <layout class="QHBoxLayout" name="horizontalLayout_8">
+                           <item>
+                            <widget class="QCheckBox" name="checkBox_basic_hetatmap_row_cluster">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Row Cluster</string>
+                             </property>
+                             <property name="checked">
+                              <bool>true</bool>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QCheckBox" name="checkBox_basic_hetatmap_col_cluster">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Col Cluster</string>
+                             </property>
+                             <property name="checked">
+                              <bool>true</bool>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                         <item row="3" column="3">
+                          <layout class="QHBoxLayout" name="horizontalLayout_129">
+                           <item>
+                            <widget class="QLabel" name="label_45">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Line Color</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QComboBox" name="comboBox_basic_hetatmap_linecolor">
+                             <item>
+                              <property name="text">
+                               <string>none</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>gray</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>black</string>
+                              </property>
+                             </item>
+                             <item>
+                              <property name="text">
+                               <string>white</string>
+                              </property>
+                             </item>
                             </widget>
                            </item>
                           </layout>
@@ -5519,6 +5564,77 @@
                            <string>Enable regex</string>
                           </property>
                          </widget>
+                        </item>
+                        <item row="1" column="4">
+                         <layout class="QHBoxLayout" name="horizontalLayout_130">
+                          <item>
+                           <widget class="QLabel" name="label_89">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>Line Color</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QComboBox" name="comboBox_top_heatmap_linecolor">
+                            <item>
+                             <property name="text">
+                              <string>none</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>gray</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>black</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>white</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>red</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>blue</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>yellow</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>purple</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>orange</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>brown</string>
+                             </property>
+                            </item>
+                           </widget>
+                          </item>
+                         </layout>
                         </item>
                        </layout>
                       </item>
@@ -7167,8 +7283,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>505</width>
-                        <height>128</height>
+                        <width>859</width>
+                        <height>182</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -7490,6 +7606,32 @@
                             <enum>Qt::Horizontal</enum>
                            </property>
                           </widget>
+                         </item>
+                         <item row="4" column="3">
+                          <layout class="QHBoxLayout" name="horizontalLayout_131">
+                           <item>
+                            <widget class="QLabel" name="label_239">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Line Color</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QComboBox" name="comboBox_corr_hetatmap_linecolor">
+                             <item>
+                              <property name="text">
+                               <string>none</string>
+                              </property>
+                             </item>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
                         </layout>
                        </item>
@@ -8022,8 +8164,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>632</width>
-                        <height>65</height>
+                        <width>859</width>
+                        <height>146</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -8610,7 +8752,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
@@ -8776,8 +8918,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>788</width>
-                        <height>102</height>
+                        <width>859</width>
+                        <height>225</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_69">
@@ -9206,6 +9348,32 @@
                             <enum>Qt::Horizontal</enum>
                            </property>
                           </widget>
+                         </item>
+                         <item row="2" column="4">
+                          <layout class="QHBoxLayout" name="horizontalLayout_132">
+                           <item>
+                            <widget class="QLabel" name="label_240">
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>Line Color</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QComboBox" name="comboBox_tflink_heatmap_linecolor">
+                             <item>
+                              <property name="text">
+                               <string>none</string>
+                              </property>
+                             </item>
+                            </widget>
+                           </item>
+                          </layout>
                          </item>
                         </layout>
                        </item>
@@ -9957,8 +10125,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>383</width>
-                        <height>68</height>
+                        <width>859</width>
+                        <height>169</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -11532,7 +11700,7 @@
      <x>0</x>
      <y>0</y>
      <width>965</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

@@ -832,6 +832,7 @@ class BasicPlot:
         height=8,
         font_size=10,
         show_all_labels=(False, False),
+        linecolor='none'
     ):
         corr = df.copy()
         # mask = np.triu(np.ones_like(corr, dtype=bool))
@@ -847,7 +848,8 @@ class BasicPlot:
                             'row_cluster':True if cluster else False,
                             'method':self.linkage_method,
                             'metric':self.distance_metric,
-                            "linecolor":(0/255, 0/255, 0/255, 0.01), "dendrogram_ratio":(.1, .2),
+                            "linecolor": None if linecolor == 'none' else linecolor,
+                            "dendrogram_ratio":(.1, .2),
                             "figsize":(width, height), "xticklabels":True if show_all_labels[0] else "auto",
                             "yticklabels":True if show_all_labels[1] else 'auto',
                             "center":0, "vmin":-1, "vmax":1
