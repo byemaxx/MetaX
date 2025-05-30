@@ -140,14 +140,14 @@ class GenomeRank:
         
         target_to_peptides = self._create_target_to_peptides(self.df, self.peptide_column, self.genome_column, self.genome_separator)
         
+        df_genome_distinct = self._get_distinct_genomes(self.df, self.genome_column, self.genome_separator)
+        
         if genome_rank_method == 'distinct_number':
-            df_genome_distinct = self._get_distinct_genomes(self.df, self.genome_column, self.genome_separator)
             genome_rank_list = df_genome_distinct[self.genome_column].tolist()
         elif genome_rank_method == 'peptide_number':
             genome_rank_list = sorted(target_to_peptides.keys(), key=lambda x: len(target_to_peptides[x]), reverse=True)
         elif genome_rank_method == 'combined':
             print(f"weight_distinct={weight_distinct}, weight_peptide={weight_peptide}")
-            df_genome_distinct = self._get_distinct_genomes(self.df, self.genome_column, self.genome_separator)
             df_peptide_counts = self._calculate_peptide_counts()
             df_combined = self._calculate_combined_rank(df_genome_distinct, df_peptide_counts, weight_distinct, weight_peptide)
             genome_rank_list = df_combined[self.genome_column].tolist()
@@ -166,6 +166,12 @@ class GenomeRank:
         df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
         new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
         df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
+        # add distinct peptides count to the results
+        df_results_by_rank = pd.merge(df_results_by_rank, 
+                                      df_genome_distinct[[self.genome_column, 'distinct_count']], 
+                                      on=self.genome_column, 
+                                      how='left').rename(columns={'distinct_count': 'distinct_peptides_count'})
+        
         self.df_results_by_rank = df_results_by_rank
         return df_results_by_rank
     
@@ -200,6 +206,6 @@ class GenomeRank:
 #     gr = GenomeRank(dft, 'Stripped.Sequence', 'uhgp_genomes', ';')
 #     df_results_rank_by_distinct = gr.get_rank_covre_df(genome_rank_method='combined')
 #     turning_point_idx = gr.get_turning_point()
-    
 
-    
+
+
