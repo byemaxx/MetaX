@@ -4,7 +4,7 @@
 import pandas as pd
 from tqdm import tqdm
 from collections import defaultdict
-
+import numpy as np
 
 
 class GenomeRank:
@@ -110,32 +110,43 @@ class GenomeRank:
         return turning_point_idx
 
     
-    def _calculate_combined_rank(self, df_genome_distinct, df_peptide_counts, weight_distinct=0.9, weight_peptide=0.1):
-        # Normalize counts for distinct and peptide counts
-        df_genome_distinct['distinct_score'] = df_genome_distinct['distinct_count'] / df_genome_distinct['distinct_count'].max()
-        df_peptide_counts['peptide_score'] = df_peptide_counts['peptide_count'] / df_peptide_counts['peptide_count'].max()
+    def _calculate_combined_rank(
+            self,
+            df_genome_distinct: pd.DataFrame,
+            df_peptide_counts: pd.DataFrame,
+            distinct_w: float = 0.9,
+            peptide_w: float = 0.1
+        ) -> pd.DataFrame:
+        """
+        combined_score = distinct_w * distinct_norm + peptide_w * peptide_norm
+        """
+        df = (pd.merge(df_genome_distinct[[self.genome_column, 'distinct_count']],
+                    df_peptide_counts[[self.genome_column, 'peptide_count']],
+                    on=self.genome_column, how='outer')
+                .fillna(0))
         
-        # Merge the two DataFrames on the genome column
-        df_combined = pd.merge(df_genome_distinct[[self.genome_column, 'distinct_score']], 
-                               df_peptide_counts[[self.genome_column, 'peptide_score']], 
-                               on=self.genome_column, how='outer').fillna(0)
+        distinct_log = np.log1p(df['distinct_count'])
+        d_min, d_max = distinct_log.min(), distinct_log.max()
+        if d_max > d_min:
+            df['distinct_norm'] = (distinct_log - d_min) / (d_max - d_min)
+        else:
+            df['distinct_norm'] = 0.0
+        
+        p_min, p_max = df['peptide_count'].min(), df['peptide_count'].max()
+        if p_max > p_min:
+            df['peptide_norm'] = (df['peptide_count'] - p_min) / (p_max - p_min)
+        else:
+            df['peptide_norm'] = 0.0
+        
+        df['combined_score'] = (distinct_w * df['distinct_norm'] +
+                                peptide_w  * df['peptide_norm'])
+        
+        df_sorted = df.sort_values('combined_score', ascending=False).reset_index(drop=True)
+        self.df_combined = df_sorted
+        return df_sorted
 
-        # Calculate combined score with weights
-        df_combined['combined_score'] = df_combined['distinct_score'] * weight_distinct + df_combined['peptide_score'] * weight_peptide
-
-        # remove genome not in distinct genome list
-        # print(f'Number of genomes before filtering: {df_combined.shape[0]}')
-        # df_combined = df_combined[df_combined['distinct_score'] > 0]
-        # print(f'Number of genomes with distinct peptides: {df_combined.shape[0]}')
         
-        
-        # Sort genomes by combined score in descending order
-        df_combined = df_combined.sort_values(by='combined_score', ascending=False).reset_index(drop=True)
-        self.df_combined = df_combined
-        return df_combined
-    
-    
-    def get_rank_covre_df(self, genome_rank_method='combined', weight_distinct=0.9, weight_peptide=0.1):
+    def get_rank_covre_df(self, genome_rank_method='combined', weight_distinct=0.9, weight_peptide=0.1, iters=1):
         print(f"Calculating genome coverage using [{genome_rank_method}] method")
         
         target_to_peptides = self._create_target_to_peptides(self.df, self.peptide_column, self.genome_column, self.genome_separator)
@@ -154,23 +165,29 @@ class GenomeRank:
         else:
             raise ValueError("Invalid genome_rank_method")
         
-        print(f"1st round for {self.genome_column} coverage...")
+        print(f"1st of {iters} round for {self.genome_column} coverage...")
         df_results_by_rank = self._calculate_genome_coverage(genome_rank_list, target_to_peptides)
-        # use "add_peptides" as the rank
-        print(f"2nd round for {self.genome_column} coverage...")
-        df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
-        new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
-        df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
-        # again use "add_peptides" as the rank
-        print(f"3rd round for {self.genome_column} coverage...")
-        df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
-        new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
-        df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
+        
+        # only do multiple iterations if iters > 1
+        for i in range(1, iters):
+            print(f"{i+1}rd round for {self.genome_column} coverage...")
+            df_results_by_rank.sort_values(by='added_peptides', ascending=False, inplace=True)
+            new_genome_rank_list = df_results_by_rank[self.genome_column].tolist()
+            df_results_by_rank = self._calculate_genome_coverage(new_genome_rank_list, target_to_peptides)
+        
         # add distinct peptides count to the results
         df_results_by_rank = pd.merge(df_results_by_rank, 
-                                      df_genome_distinct[[self.genome_column, 'distinct_count']], 
+                                      df_combined[[self.genome_column, 'distinct_count', 'peptide_count']],
                                       on=self.genome_column, 
-                                      how='left').rename(columns={'distinct_count': 'distinct_peptides_count'})
+                                      how='left')
+        
+        df_results_by_rank.rename(columns={'distinct_count': 'distinct_peptides_count',
+                                            'peptide_count': 'all_peptide_count'} , inplace=True)
+        
+        df_results_by_rank['rank'] = range(1, len(df_results_by_rank) + 1)
+        # move rank to the first column
+        cols = ['rank'] + [col for col in df_results_by_rank.columns if col != 'rank']
+        df_results_by_rank = df_results_by_rank[cols]
         
         self.df_results_by_rank = df_results_by_rank
         return df_results_by_rank
@@ -200,12 +217,15 @@ class GenomeRank:
         return turning_point_idx
     
 
-# if __name__ == '__main__':
-#     dft = pd.read_csv('test_data/diann_res_annotation.tsv', sep='\t')
-#     # dft = dft.head(10000)
-#     gr = GenomeRank(dft, 'Stripped.Sequence', 'uhgp_genomes', ';')
-#     df_results_rank_by_distinct = gr.get_rank_covre_df(genome_rank_method='combined')
-#     turning_point_idx = gr.get_turning_point()
+if __name__ == '__main__':
+    exrtacted_columns = ['Stripped.Sequence', 'Genomes']
+    dft = pd.read_csv('DIANN/temp/annotated_peptide_table.tsv', 
+                      sep='\t', usecols=exrtacted_columns)
+    # dft = dft.head(10000)
+    gr = GenomeRank(dft, 'Stripped.Sequence', 'Genomes', ';')
+    df_ranked = gr.get_rank_covre_df(genome_rank_method='combined')
+    turning_point_idx = gr.get_turning_point()
+    df_ranked.to_csv('DIANN/temp/genome_ranked.tsv', sep='\t', index=False)
 
 
 
