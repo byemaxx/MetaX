@@ -1,3 +1,8 @@
+# Version: 1.125.1
+## Date: 2025-06-09
+### Changes:
+- New: added a inof table with each annotated OTF table result.
+
 # Version: 1.125.0
 ## Date: 2025-05-24
 ### Changes:

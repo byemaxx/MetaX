@@ -6,10 +6,14 @@ import time
 import os
 import threading
 import sqlite3
+from datetime import datetime
+
 if __name__ == '__main__':
+    __version__ = "Test version"
     from proteins_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
 else:
+    from ..utils.version import __version__
     from .proteins_to_taxafunc import Pep2TaxaFunc
     from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
     
@@ -30,6 +34,8 @@ class PeptideAnnotator:
         sample_col_prefix (str): Prefix for sample columns.
         distinct_genome_threshold (int): Threshold for distinct genome count.
         exclude_protein_startwith (str): Prefix for proteins to exclude.
+        peptide_df (pd.DataFrame|None): DataFrame containing peptides, if provided.
+        additional_running_info (dict): Additional information for the run.
 
     Methods:
         run_annotate():
@@ -39,7 +45,8 @@ class PeptideAnnotator:
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
-                 peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None):
+                 peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None,
+                 additional_running_info: dict=None):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
@@ -56,6 +63,8 @@ class PeptideAnnotator:
         self.exclude_protein_startwith = exclude_protein_startwith
         
         self.thread_local = threading.local()
+        self.start_time = datetime.now()
+        self.additional_running_info = additional_running_info if additional_running_info else {}
         
     def get_connection(self):
         if not hasattr(self.thread_local, "conn"):
@@ -159,6 +168,26 @@ class PeptideAnnotator:
         df_t = df_t.reindex(columns=cols)
         return df_t
 
+    def get_metadata(self):
+        """get metadata for the running"""
+        metadata = {
+            "software": "MetaX (PeptideAnnotator)",
+            "version": __version__,
+            "run_time": self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "parameters": {
+                "database_path": os.path.abspath(self.db_path),
+                "input_peptide_path": os.path.abspath(self.peptide_path) if self.peptide_path else "DataFrame_input",
+                "threshold": self.threshold,
+                "genome_mode": self.genome_mode,
+                "distinct_genome_threshold": self.distinct_genome_threshold,
+                "exclude_protein_startwith": self.exclude_protein_startwith
+            }
+        }
+        if self.additional_running_info:
+            metadata["additional_info"] = self.additional_running_info
+            
+        return metadata
+
     def save_result(self, df):
         dir_path = os.path.dirname(self.output_path)
         if dir_path == '':
@@ -169,11 +198,10 @@ class PeptideAnnotator:
             print(f'Output directory did not exist, created: {dir_path}')
         
         if os.path.exists(self.output_path):
-            import datetime
             counter = 1
             base_name = os.path.splitext(os.path.basename(self.output_path))[0]
             ext = os.path.splitext(self.output_path)[-1]
-            new_output_path = os.path.join(dir_path, f'{base_name}_{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}{ext}')
+            new_output_path = os.path.join(dir_path, f'{base_name}_{pd.Timestamp.now().strftime("%Y%m%d%H%M%S")}{ext}')
             
             while os.path.exists(new_output_path):
                 counter += 1
@@ -181,8 +209,37 @@ class PeptideAnnotator:
             self.output_path = new_output_path
             print(f'Output file already exists, saved as: {self.output_path}')
         
+        # get metadata for the running
+        metadata = self.get_metadata()
+        completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        processing_duration = str(datetime.now() - self.start_time).split('.')[0]
+        
+        # save the dataframe to the output file (clean TSV without comments)
         df.to_csv(self.output_path, sep='\t', index=False)
+        
+        # save metadata to a separate info file
+        info_path = self.output_path.replace('.tsv', '_info.txt').replace('.txt', '_info.txt')
+        with open(info_path, 'w', encoding='utf-8') as f:
+            f.write("MetaX PeptideAnnotator Results\n")
+            if 'additional_info' in metadata:
+                f.write("="*50 + "\n")
+                for key, value in metadata['additional_info'].items():
+                    f.write(f"{key}: {value}\n")
+            f.write("="*50 + "\n")
+            f.write(f"Software: {metadata['software']} v{metadata['version']}\n")
+            f.write(f"Run time: {metadata['run_time']}\n")
+            f.write(f"Completion time: {completion_time}\n")
+            f.write(f"Processing duration: {processing_duration}\n")
+            f.write(f"Input: {metadata['parameters']['input_peptide_path']}\n")
+            f.write(f"Database: {metadata['parameters']['database_path']}\n")
+            f.write(f"Threshold: {metadata['parameters']['threshold']}\n")
+            f.write(f"Genome mode: {metadata['parameters']['genome_mode']}\n")
+            f.write(f"Distinct genome threshold: {metadata['parameters']['distinct_genome_threshold']}\n")
+            f.write(f"Exclude proteins: {metadata['parameters']['exclude_protein_startwith']}\n")
+            f.write(f"Result: {df.shape[0]} rows × {df.shape[1]} columns\n")
+        
         print(f'Output file: {self.output_path}')
+        print(f'Info file: {info_path}')
         print(f'Output shape: {df.shape}')
 
 

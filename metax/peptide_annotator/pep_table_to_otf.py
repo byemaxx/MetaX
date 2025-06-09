@@ -98,6 +98,9 @@ class peptideProteinsMapper:
         self.genome_ranked_table = None
         self.final_peptide_table = None
         
+        self.selected_proteins_num = 0
+        self.selected_genomes_num = 0
+        
         self.set_temp_dir(temp_dir)
         self.peptide_table = self.load_peptide_table()
     
@@ -161,7 +164,7 @@ class peptideProteinsMapper:
             
         else:
             # create a temp dir in output path
-            temp_dir = pathlib.Path(self.output_path).parent / 'temp'
+            temp_dir = pathlib.Path(self.output_path).parent / 'metax_temp'
             temp_dir.mkdir(parents=True, exist_ok=True)
             self.temp_dir = temp_dir
     
@@ -264,6 +267,8 @@ class peptideProteinsMapper:
         selected_genomes_list = selected_genomes['Genomes'].tolist()
         print(f'Original genomes: [{df_results_rank.shape[0]}]')
         print(f"The number of selected genomes: [{len(selected_genomes_list)}].\nThe last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}")
+        self.selected_genomes_num = len(selected_genomes_list)
+        
         return selected_genomes_list
     
     def calculate_protein_list(self, df):
@@ -279,6 +284,8 @@ class peptideProteinsMapper:
         selected_proteins_list = selected_proteins['Proteins'].tolist()
         print(f'Original proteins: [{df_results_rank.shape[0]}]')
         print(f"The number of selected proteins: [{len(selected_proteins_list)}].\nThe last protein with coverage_ratio: {selected_proteins.iloc[-1]['coverage_ratio']}")
+        self.selected_proteins_num = len(selected_proteins_list)
+        
         return selected_proteins_list
 
     def reduce_proteins_by_genome(self, df, selected_genomes_list):
@@ -361,6 +368,28 @@ class peptideProteinsMapper:
         else:
             self.process_peptides_to_proteins()
         
+        # collect additional running information
+        additional_running_info = {
+            "peptideProteinsMapper": "Peptides directly annotated with proteins from a database",
+            "Run time": pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "peptide_mapping_db": self.db_file,
+            "peptide_col": self.peptide_col,
+            "intensity_col_prefix": self.intensity_col_prefix,
+            "protein_genome_separator": protein_genome_separator,
+            "genome_peptide_coverage_cutoff": self.genome_peptide_coverage_cutoff,
+            "protein_peptide_coverage_cutoff": self.protein_peptide_coverage_cutoff,
+            "turn_point_method": self.turn_point_method,
+            "genome_cutoff_rank": self.genome_cutoff_rank if self.turn_point_method.lower() == 'rank' else "N/A",
+            "total_genomes_found": len(self.genome_ranked_table) if self.genome_ranked_table is not None else "Unknown",
+            "selected_genomes_num": self.selected_genomes_num,
+            "total_proteins_found": len(self.protein_ranked_table) if self.protein_ranked_table is not None else "Unknown",
+            "selected_proteins_num": self.selected_proteins_num,
+            "continue_base_on_annotated_peptide_table": self.continue_base_on_annotaied_peptide_table,
+            "stop_after_genome_ranking": self.stop_after_genome_ranking,
+            "original_peptide_count": len(self.peptide_table) if hasattr(self, 'peptide_table') else "Unknown",
+            "final_peptide_count": len(self.final_peptide_table) if hasattr(self, 'final_peptide_table') else "Unknown"
+        }
+        
 
         annotator = PeptideAnnotator(
             db_path=taxafunc_anno_db_path,
@@ -375,8 +404,8 @@ class peptideProteinsMapper:
             peptide_col=self.peptide_col,
             sample_col_prefix=self.intensity_col_prefix,
             distinct_genome_threshold=distinct_genome_threshold,
-            exclude_protein_startwith = exclude_protein_startwith 
-            
+            exclude_protein_startwith = exclude_protein_startwith,
+            additional_running_info=additional_running_info
         )
         annotator.run_annotate()
         print("OTF annotation finished")
