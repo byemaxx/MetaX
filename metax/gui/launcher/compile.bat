@@ -1,0 +1,1 @@
+gcc launcher.c .\resources.res -o MetaX.exe -mwindows

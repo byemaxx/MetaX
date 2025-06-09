@@ -86,7 +86,7 @@ class HeatmapPlot:
                                         show_all_labels:tuple = (False, False), return_type:str = 'fig', scale = None, 
                                         scale_method:str = 'maxmin', p_type:str = 'padj',
                                         x_filter_list: list = [], y_filter_list: list = [],
-                                        filter_by_regex:bool = False):
+                                        filter_by_regex:bool = False, linecolor:str = 'none'):
 
         func_name = self.tfa.func_name
         dft = df.copy()
@@ -146,7 +146,7 @@ class HeatmapPlot:
                 'center': 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
                 "linewidths": 0.01, 
-                "linecolor": (0 ,0 ,0 ,0.1),
+                "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "figsize": fig_size if return_type == 'fig' else None,
                 "col_cluster": col_cluster if df_plot.shape[1] > 1 else False,
@@ -227,7 +227,7 @@ class HeatmapPlot:
                                        show_all_labels:tuple = (False, False), rename_sample:bool = True,
                                        sort_by:str = 'padj', scale_method:str = 'maxmin', return_type:str = 'fig',
                                        p_type:str = 'padj', x_filter_list: list = [], y_filter_list: list = [],
-                                       filter_by_regex:bool = False):
+                                       filter_by_regex:bool = False, linecolor:str = 'none'):
 
         dft = df.copy()
         
@@ -307,7 +307,7 @@ class HeatmapPlot:
                 "center": 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
                 "linewidths": 0.01, 
-                "linecolor": (0 ,0 ,0 ,0.01),
+                "linecolor": None if linecolor == 'none' else linecolor,
                 "figsize": fig_size if return_type == 'fig' else None,
                 "cbar_kws": {"label": "Intensity", "shrink": 0.5},
                 "col_cluster": col_cluster,
@@ -379,8 +379,8 @@ class HeatmapPlot:
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), scale_method:str = 'maxmin', return_type:str = 'fig',
                     sample_to_group_dict:dict|None = None, x_filter_list: list = [], y_filter_list: list = [],
-                    filter_by_regex:bool = False):
-        
+                    filter_by_regex:bool = False, linecolor:str = 'none', linewidths:float = 0.01):
+
 
         df = self.filter_data_by_x_y(df, x_filter_list, y_filter_list, filter_by_regex)
         # check if any row or column is all 0
@@ -441,8 +441,8 @@ class HeatmapPlot:
             # "center": 0,
             "cmap": cmap,
             "figsize": fig_size,
-            "linewidths": 0.01,
-            "linecolor": (0 ,0 ,0 ,0.01),
+            "linewidths": linewidths,
+            "linecolor": None if linecolor == 'none' else linecolor,
             "dendrogram_ratio": (0.1, 0.2),
             "cbar_kws": {"label": "Intensity", "shrink": 0.5},
             "col_cluster": col_cluster,
@@ -492,7 +492,8 @@ class HeatmapPlot:
                                        return_type:str = 'fig', res_df_type:str = 'deseq2',
                                        p_type:str = 'padj', three_levels_df_type: str = 'same_trends',
                                        show_col_colors:bool = True, remove_zero_col:bool = True, scale_method:str = 'maxmin',
-                                       x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
+                                       x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False,
+                                       linecolor:str = 'none'):
         """
         Plot a heatmap of all condition results.
 
@@ -604,7 +605,7 @@ class HeatmapPlot:
                 "figsize": fig_size,
                 "norm": norm,
                 "linewidths": 0.01, 
-                "linecolor": (0 ,0 ,0 ,0.01),
+                "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "col_cluster": col_cluster,
                 "row_cluster": row_cluster,
@@ -695,7 +696,7 @@ class HeatmapPlot:
                                        show_all_labels:tuple = (False, False),  show_col_colors:bool = False,
                                        scale_method:str = 'maxmin', p_type:str = 'padj',
                                        x_filter_list: list = [], y_filter_list: list = [],
-                                        filter_by_regex:bool = False
+                                        filter_by_regex:bool = False, linecolor:str = 'none'
                                        ):
         #! 只画t-statistic的heatmap, 用p_type来判断: 'padj' or 'pvalue'
         
@@ -751,7 +752,7 @@ class HeatmapPlot:
                 "figsize": fig_size,
                 "norm": norm,
                 "linewidths": 0.01, 
-                "linecolor": (0 ,0 ,0 ,0.01),
+                "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "cbar_kws": {"label": "t-statistic", "shrink": 0.5},
                 "col_cluster": col_cluster,

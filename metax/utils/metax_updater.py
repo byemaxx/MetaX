@@ -10,6 +10,7 @@ import os
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QIcon
 import subprocess
 import urllib.request
 import pathlib
@@ -21,7 +22,7 @@ import urllib.error
 
 
 class Updater:
-    def __init__(self, MetaXGUI, version, splash, show_message=False, branch='main'):
+    def __init__(self, MetaXGUI, version, splash, show_message=False, branch='main', is_test_mode=False):
         self.MainWindow = MetaXGUI.MainWindow
         self.metaXGUI = MetaXGUI
         self.splash = splash
@@ -38,12 +39,14 @@ class Updater:
         self.install_libs = []
         self.uninstall_libs = []
         self.branch = branch
+        self.is_test_mode = is_test_mode
         
         self.remote_change_log_path = ""
         self.remote_version_path = ""
         self.remote_project_zip_download_path = ""
         self.set_init_path()
-        self.set_current_version_and_api()
+        if not self.is_test_mode:
+            self.set_current_version_and_api()
 
 
     def set_init_path(self):
@@ -57,6 +60,11 @@ class Updater:
         metax_folder_path = os.path.dirname(current_script_path)
         print(f"MetaX folder path: {metax_folder_path}")
         self.metax_folder_path = metax_folder_path
+        
+        if self.is_test_mode:
+            print(f"Test mode: Using version {self.current_version}")
+            return
+            
         # get the version and API from version.py
         self.version_path = os.path.join(metax_folder_path, 'utils/version.py')
         try:
@@ -67,13 +75,18 @@ class Updater:
         except Exception as e:
             print(f"Check local API failed: {e}")
 
-            
         print(f"Local version: {self.current_version}. API: {self.current_api}")
         
     def check_update_status(self):
         try:
+            if self.is_test_mode:
+                return self.current_version == self.remote_version
+
+            version_path = pathlib.Path(self.version_path)
+            if not version_path.is_file():
+                raise FileNotFoundError(f"File does not exist: {version_path}")
             # get the version from version.py
-            with open(self.version_path, 'r') as file:
+            with open(version_path, 'r') as file:
                 local_version_str = file.read()
                 new_local_version = local_version_str.split("__version__ = '")[1].split("'")[0]
 
@@ -356,9 +369,14 @@ class Updater:
                     
                     
 # TEST CODE
-class MockMainWindow:
+class MockMainWindow(QtWidgets.QWidget):
     def __init__(self):
+        super().__init__()
         self.update_required = False
+        self._icon = QIcon()
+
+    def windowIcon(self):
+        return self._icon
 
     def show_message(self, title, message):
         print(f"{title}: {message}")
@@ -366,13 +384,33 @@ class MockMainWindow:
 class MockMetaXGUI:
     def __init__(self):
         self.MainWindow = MockMainWindow()
+        self.update_required = False
+
+    def show_message(self, title, message):
+        print(f"{title}: {message}")
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)  #
-    mock_gui = MockMetaXGUI()
-    
-    updater = Updater(mock_gui, '1.101.5', None, show_message=True, branch='dev')
-    updater.check_update(show_message=True)
-    
+    try:
+        app = QtWidgets.QApplication(sys.argv)
+        mock_gui = MockMetaXGUI()
+        
+        # Test updater with different scenarios
+        print("\nTesting updater with dev branch:")
+        test_version = '1.124.0' 
+        print(f"Testing with version: {test_version}")
+        updater = Updater(mock_gui, test_version, None, show_message=True, branch='dev', is_test_mode=True)
+        updater.check_update(show_message=True)
+        
+        # print("\nTesting updater with main branch:")
+        # updater = Updater(mock_gui, test_version, None, show_message=True, branch='main', is_test_mode=True)
+        # updater.check_update(show_message=True)
 
-    sys.exit(app.exec_()) 
+        app.processEvents()
+        app.quit()
+
+    except Exception as e:
+        print(f"Error during testing: {e}")
+        sys.exit(1)
+    finally:
+        # 强制退出程序
+        os._exit(0) 
