@@ -7,7 +7,8 @@ name = "MetaXTools"
 version = "1.125.1"
 description = "MetaXTools is a novel tool for linking peptide sequences with taxonomic and functional information in Metaproteomics."
 readme = "README_PyPi.md"
-license = { text = "NorthOmics" }
+license = "LicenseRef-My-Custom-License"
+license-files = ["LICENSE"]
 authors = [
     { name = "Qing Wu", email = "byeomax@outlook.com" }
 ]
