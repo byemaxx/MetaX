@@ -146,7 +146,7 @@ jobs:
         echo "ℹ️  To publish for real, run this workflow again with 'Dry run' unchecked"
         
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-files
         path: dist/
