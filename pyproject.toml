@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MetaXTools"
-version = "1.125.1"
+dynamic = ["version"]
 description = "MetaXTools is a novel tool for linking peptide sequences with taxonomic and functional information in Metaproteomics."
 readme = "README_PyPi.md"
 license = "LicenseRef-My-Custom-License"
@@ -52,6 +52,9 @@ metax = "metax.gui.main_gui:runGUI"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["metax", "metax.*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "metax.utils.version.__version__"}
 
 [tool.setuptools.package-data]
 metax = ["data/example_data/*"]
