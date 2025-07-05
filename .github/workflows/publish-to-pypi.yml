@@ -135,17 +135,25 @@ jobs:
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "Bump version to $(python -c 'import sys; sys.path.insert(0, \"metax/utils\"); from version import __version__; print(__version__)')"
+          VERSION=$(python -c 'import sys; sys.path.insert(0, "metax/utils"); from version import __version__; print(__version__)')
+          git commit -m "Bump version to $VERSION"
           git push
         fi
         
     - name: Create Git tag
       if: ${{ github.event.inputs.dry_run != 'true' }}
       run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
         VERSION=$(python -c 'import sys; sys.path.insert(0, "metax/utils"); from version import __version__; print(__version__)')
         echo "Creating tag for version: $VERSION"
-        git tag -a "v$VERSION" -m "Release version $VERSION"
-        git push origin "v$VERSION"
+        # Check if tag already exists
+        if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+          echo "Tag v$VERSION already exists, skipping tag creation"
+        else
+          git tag -a "v$VERSION" -m "Release version $VERSION"
+          git push origin "v$VERSION"
+        fi
         
     - name: Check PyPI token
       if: ${{ github.event.inputs.dry_run != 'true' }}
