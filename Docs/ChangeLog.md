@@ -1,7 +1,12 @@
+# Version: 1.125.2
+## Date: 2025-07-05
+### Changes:
+- Fix: Improved the compatibility of the Database Downloader and Builder, fix potential bugs when building the database from the MGNify database.
+
 # Version: 1.125.1
 ## Date: 2025-06-09
 ### Changes:
-- New: added a inof table with each annotated OTF table result.
+- New: added a info table with each annotated OTF table result.
 
 # Version: 1.125.0
 ## Date: 2025-05-24

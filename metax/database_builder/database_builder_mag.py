@@ -142,7 +142,7 @@ def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv',
             
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-            
+        
         df = df[['Species_rep', 'Lineage']]
         df.columns = ['ID', 'Taxa']
         df = df.drop_duplicates()
@@ -219,7 +219,69 @@ def download_id2annotation(down_list, save_path):
 def read_file(args):
     """Read and process a single annotation file"""
     file_path = args[0]
-    return pd.read_csv(file_path, sep='\t', header=0, index_col=None)
+    try:
+        # Files should already be validated, so we can read directly
+        df = pd.read_csv(file_path, sep='\t', header=0, index_col=None)
+        
+        # Check if the dataframe is empty
+        if df.empty:
+            print(f"Warning: File {file_path} contains no data after reading.")
+            return None
+            
+        return df
+        
+    except Exception as e:
+        print(f"Error reading file {file_path}: {str(e)}")
+        # Since files are pre-validated, any error here is unexpected
+        raise
+
+def validate_annotation_files(file_list, path):
+    """Validate annotation files and return list of valid files"""
+    valid_files = []
+    invalid_files = []
+    
+    for f in file_list:
+        file_path = os.path.join(path, f)
+        try:
+            if not os.path.exists(file_path):
+                invalid_files.append(f"File does not exist: {f}")
+                continue
+            
+            if os.path.getsize(file_path) == 0:
+                invalid_files.append(f"Empty file: {f}")
+                continue
+            
+            # Try to read the first few lines to check if it's a valid TSV
+            with open(file_path, 'r', encoding='utf-8') as test_file:
+                first_line = test_file.readline().strip()
+                if not first_line or '\t' not in first_line:
+                    invalid_files.append(f"Invalid TSV format: {f}")
+                    continue
+            
+            valid_files.append(f)
+            
+        except Exception as e:
+            invalid_files.append(f"Error checking {f}: {str(e)}")
+    
+    # If there are invalid files, raise an error with detailed information
+    if invalid_files:
+        error_msg = f"Found {len(invalid_files)} invalid annotation files out of {len(file_list)} total files:\n"
+        for invalid in invalid_files[:20]:  # Show first 20 invalid files
+            error_msg += f"  - {invalid}\n"
+        if len(invalid_files) > 20:
+            error_msg += f"  ... and {len(invalid_files) - 20} more invalid files\n"
+        
+        error_msg += f"\nValid files: {len(valid_files)}/{len(file_list)}\n"
+        error_msg += "\nPlease check and re-download the invalid files before proceeding.\n"
+        error_msg += "You can:\n"
+        error_msg += "1. Delete the invalid files and re-run the download process\n"
+        error_msg += "2. Check your internet connection and retry downloading\n"
+        error_msg += "3. Verify the file URLs are accessible"
+        
+        raise ValueError(error_msg)
+    
+    print(f"All files are valid: {len(valid_files)}/{len(file_list)}")
+    return valid_files
 
 def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
     """Build id2annotation database from downloaded files"""
@@ -231,15 +293,25 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
             file_list = os.listdir(mgyg_dir)
             path = mgyg_dir
 
+        print("Validating annotation files...")
+        valid_files = validate_annotation_files(file_list, path)
+        
+        # If we reach here, all files are valid
         print("Loading annotation files...")
         with ThreadPoolExecutor() as executor:
             df_list = []
-            futures = [executor.submit(read_file, (os.path.join(path, f),)) for f in file_list]
-            with tqdm(total=len(file_list), desc="Processing files") as pbar:
+            futures = [executor.submit(read_file, (os.path.join(path, f),)) for f in valid_files]
+            with tqdm(total=len(valid_files), desc="Processing files") as pbar:
                 for future in as_completed(futures):
                     result = future.result()
                     pbar.update(1)
-                    df_list.append(result)
+                    if result is not None:  # Only add non-None results
+                        df_list.append(result)
+        
+        if not df_list:
+            raise ValueError("No valid annotation data could be loaded from the files.")
+        
+        print(f"Successfully loaded {len(df_list)} annotation files.")
         
         print("Concatenating annotation files...")
         df = pd.concat(df_list, ignore_index=True)
@@ -281,7 +353,20 @@ def query_download_list(db_path):
     try:
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        sql = "SELECT DISTINCT Species_rep FROM id2taxa"
+        
+        # Check what columns exist in the id2taxa table
+        pragma_sql = "PRAGMA table_info(id2taxa)"
+        columns_info = c.execute(pragma_sql).fetchall()
+        column_names = [col[1] for col in columns_info]
+        
+        # Try ID first (our standard), then Species_rep (for compatibility)
+        if 'ID' in column_names:
+            sql = "SELECT DISTINCT ID FROM id2taxa"
+        elif 'Species_rep' in column_names:
+            sql = "SELECT DISTINCT Species_rep FROM id2taxa"
+        else:
+            raise ValueError(f"Neither 'ID' nor 'Species_rep' column found in id2taxa table. Available columns: {column_names}")
+        
         result = c.execute(sql).fetchall()
         return [i[0] for i in result]
     except Exception as e:

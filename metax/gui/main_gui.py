@@ -6342,18 +6342,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     ### Database Builder ###
     def set_lineEdit_db_all_meta_path(self):
         db_all_meta_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select All Meta Table', self.last_path, 'tsv (*.tsv)')[0]
+        if db_all_meta_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No file selected!')
+            return None
         self.last_path = os.path.dirname(db_all_meta_path)
         db_all_meta_path = os.path.normpath(db_all_meta_path)
         self.lineEdit_db_all_meta_path.setText(db_all_meta_path)
     
     def set_lineEdit_db_anno_folder(self):
         db_anno_folder = QFileDialog.getExistingDirectory(self.MainWindow, 'Select Annotation Folder', self.last_path)
+        if db_anno_folder == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No folder selected!')
+            return None
         self.last_path = db_anno_folder
         db_anno_folder = os.path.normpath(db_anno_folder)
         self.lineEdit_db_anno_folder.setText(db_anno_folder)
 
     def set_lineEdit_db_save_path(self):
         db_save_path = QFileDialog.getExistingDirectory(self.MainWindow, 'Select Save Folder for MetaX-DataBase.db', self.last_path)
+        if db_save_path == '':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No folder selected!')
+            return None
         self.last_path = db_save_path
         db_save_path = os.path.normpath(db_save_path)
         self.lineEdit_db_save_path.setText(db_save_path)
