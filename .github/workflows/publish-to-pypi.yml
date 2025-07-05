@@ -112,21 +112,45 @@ jobs:
                 print(f'  - {file}')
         "
         
+    - name: Debug workflow inputs
+      run: |
+        echo "Workflow inputs:"
+        echo "  version_bump: ${{ github.event.inputs.version_bump }}"
+        echo "  dry_run: ${{ github.event.inputs.dry_run }}"
+        echo "Conditions:"
+        echo "  version_bump != 'none': ${{ github.event.inputs.version_bump != 'none' }}"
+        echo "  !dry_run: ${{ !github.event.inputs.dry_run }}"
+        
     - name: Commit version update
       if: ${{ github.event.inputs.version_bump != 'none' && !github.event.inputs.dry_run }}
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add metax/utils/version.py
-        git commit -m "Bump version to $(python -c 'exec(open(\"metax/utils/version.py\").read()); print(__version__)')" || exit 0
-        git push
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Bump version to $(python -c 'exec(open(\"metax/utils/version.py\").read()); print(__version__)')"
+          git push
+        fi
         
     - name: Create Git tag
       if: ${{ !github.event.inputs.dry_run }}
       run: |
         VERSION=$(python -c 'exec(open("metax/utils/version.py").read()); print(__version__)')
+        echo "Creating tag for version: $VERSION"
         git tag -a "v$VERSION" -m "Release version $VERSION"
         git push origin "v$VERSION"
+        
+    - name: Check PyPI token
+      if: ${{ !github.event.inputs.dry_run }}
+      run: |
+        if [ -z "${{ secrets.PYPI_API_TOKEN }}" ]; then
+          echo "❌ ERROR: PYPI_API_TOKEN secret is not set"
+          exit 1
+        else
+          echo "✅ PYPI_API_TOKEN is configured"
+        fi
         
     - name: Publish to PyPI
       if: ${{ !github.event.inputs.dry_run }}
@@ -135,7 +159,8 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
         echo "Publishing to PyPI..."
-        twine upload dist/*
+        twine upload dist/* --verbose
+        echo "✅ Successfully published to PyPI"
         
     - name: Dry run summary
       if: ${{ github.event.inputs.dry_run }}
