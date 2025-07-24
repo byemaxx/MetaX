@@ -52,7 +52,10 @@
 # Date: 2024-08-21
 # Version:0.2.12
 # add the protein_id as a function to the output
-
+#
+# Date: 2025-07-24
+# Version:0.2.13
+# Add "" to column names to handle special characters in SQLite
 
 from collections import Counter
 import sqlite3
@@ -148,35 +151,43 @@ class Pep2TaxaFunc:
     # return a dict of anatation of each protein
     def query_protein_from_db(self, protein_list):
         c = self.conn.cursor()
-        # get all columns name
-        c.execute('select * from id2annotation')
-        col_name = [tuple[0] for tuple in c.description]
-        # remove the columns that not need
-        for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
-            if i in col_name:
-                col_name.remove(i)
-    
-        sql = 'SELECT ' + ','.join(col_name) + ' from id2annotation where ID = ?'
-        re_dict = {i: [] for i in col_name}
+        try:
+            # get all columns name using LIMIT 1 to be more efficient
+            c.execute('select * from id2annotation limit 1')
+            col_name = [desc[0] for desc in c.description]
+            # remove the columns that not need
+            for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
+                if i in col_name:
+                    col_name.remove(i)
         
-        for i in protein_list:
-            re = c.execute(sql, (i,)).fetchone()
-            if re is not None:
-                for j in range(len(re)):
-                    func = re[j]
-                    if func not in ['', '-']:
-                        re_dict[list(re_dict.keys())[j]].append(func)
-                    else:
-                        re_dict[list(re_dict.keys())[j]].append('-')
+            # 使用双引号包围列名以处理特殊字符
+            safe_col_names = [f'"{col}"' for col in col_name]
+            sql = 'SELECT ' + ','.join(safe_col_names) + ' from id2annotation where "ID" = ?'
+            re_dict = {i: [] for i in col_name}
+            
+            for i in protein_list:
+                re = c.execute(sql, (i,)).fetchone()
+                if re is not None:
+                    for j in range(len(re)):
+                        func = re[j]
+                        if func not in ['', '-']:
+                            re_dict[list(re_dict.keys())[j]].append(func)
+                        else:
+                            re_dict[list(re_dict.keys())[j]].append('-')
 
-            else:
-                for v in re_dict.values():
-                    # if the protein is not found in the database, return 'not_found'
-                    v.append('not_found')
-        # add the protein_id as a function            
-        re_dict['protein_id'] = protein_list
+                else:
+                    for v in re_dict.values():
+                        # if the protein is not found in the database, return 'not_found'
+                        v.append('not_found')
+            # add the protein_id as a function            
+            re_dict['protein_id'] = protein_list
 
-        return re_dict
+            return re_dict
+            
+        except Exception as e:
+            print(f"Error in query_protein_from_db: {e}")
+            print(f"Columns found: {col_name if 'col_name' in locals() else 'Unknown'}")
+            return {'protein_id': protein_list}
 
 
     # find the most common annotation and its percentage
