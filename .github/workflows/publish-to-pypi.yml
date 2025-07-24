@@ -141,7 +141,7 @@ jobs:
         fi
         
     - name: Create Git tag
-      if: ${{ github.event.inputs.dry_run != 'true' }}
+      if: ${{ github.event.inputs.version_bump != 'none' && github.event.inputs.dry_run != 'true' }}
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
