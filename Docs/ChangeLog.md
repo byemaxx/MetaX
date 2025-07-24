@@ -1,3 +1,9 @@
+# Version: 1.125.3
+## Date: 2025-07-24
+### Changes:
+- Fix: Add '"' to the table column names in the SQL query to avoid SQL syntax errors when special characters are present in the SQLite table column names.
+
+
 # Version: 1.125.2
 ## Date: 2025-07-05
 ### Changes:
