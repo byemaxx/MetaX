@@ -8,16 +8,18 @@ import threading
 import sqlite3
 from datetime import datetime
 
-if __name__ == '__main__':
-    __version__ = "Test version"
-    from proteins_to_taxafunc import Pep2TaxaFunc
-    from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
-else:
+
+try:
     from ..utils.version import __version__
     from .proteins_to_taxafunc import Pep2TaxaFunc
     from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
-    
-    
+except ImportError:
+    print("ImportError occurred, trying alternative imports...")
+    __version__ = "Test version"
+    from proteins_to_taxafunc import Pep2TaxaFunc
+    from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
+
+        
 class PeptideAnnotator:
     """
     A class to annotate peptides with taxonomic and functional information.
@@ -218,7 +220,8 @@ class PeptideAnnotator:
         df.to_csv(self.output_path, sep='\t', index=False)
         
         # save metadata to a separate info file
-        info_path = self.output_path.replace('.tsv', '_info.txt').replace('.txt', '_info.txt')
+        base_path = os.path.splitext(self.output_path)[0]
+        info_path = f"{base_path}_info.txt"
         with open(info_path, 'w', encoding='utf-8') as f:
             f.write("MetaX PeptideAnnotator Results\n")
             if 'additional_info' in metadata:
