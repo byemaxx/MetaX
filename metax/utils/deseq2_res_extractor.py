@@ -150,9 +150,9 @@ class MissingGenesDialog(QDialog):
 
 
 class GeneExtractorApp(QMainWindow):
-    def __init__(self):
+    def __init__(self, deseq2_df=None, deseq2_df_name=None):
         super().__init__()
-        self.setWindowTitle("DESeq2 Results Extractor v0.2")
+        self.setWindowTitle("DESeq2 Results Extractor")
         self.resize(1000, 800)
         
         # Store data
@@ -162,9 +162,110 @@ class GeneExtractorApp(QMainWindow):
         self.df_padj = None
         self.df_long = None
         
+        # Store external deseq2 dataframe and name
+        self.external_deseq2_df = deseq2_df
+        self.external_deseq2_df_name = deseq2_df_name
+        
+        # Store the data format type: '2-level' or '3-level'
+        self.data_format_type = None
+        
         # Set up UI
         self.setup_ui()
         
+        # If dataframe is passed, validate and use it directly
+        if self.external_deseq2_df is not None:
+            if self._validate_deseq2_dataframe(self.external_deseq2_df):
+                self.df_res = self.external_deseq2_df.copy()
+                if self.external_deseq2_df_name:
+                    self.file_path_edit.setPlaceholderText(f"Using external DESeq2 DataFrame: {self.external_deseq2_df_name}")
+                else:
+                    self.file_path_edit.setPlaceholderText("Using external DESeq2 DataFrame")
+            else:
+                # If validation fails, reset the external dataframe
+                self.external_deseq2_df = None
+                self.external_deseq2_df_name = None
+    
+    def _validate_deseq2_dataframe(self, df):
+        """
+        Validate if the passed DataFrame has the correct format for DESeq2 results.
+        Support both formats:
+        - 3-level columns from get_stats_deseq2_against_control_with_conditon
+        - 2-level columns from get_stats_deseq2_against_control
+        """
+        try:
+            # Check if it's a DataFrame
+            if not isinstance(df, pd.DataFrame):
+                QMessageBox.critical(self, "DataFrame Format Error", 
+                                   "The passed object is not a pandas DataFrame.")
+                return False
+            
+            # Check if it has MultiIndex columns
+            if not isinstance(df.columns, pd.MultiIndex):
+                QMessageBox.critical(self, "DataFrame Format Error", 
+                                   "The DataFrame must have MultiIndex columns.\n"
+                                   "Expected format: 2-level or 3-level columns from DESeq2 functions.")
+                return False
+            
+            # Support both 2-level and 3-level columns
+            if df.columns.nlevels == 3:
+                # 3-level format from get_stats_deseq2_against_control_with_conditon
+                third_level_cols = df.columns.get_level_values(2).unique()
+                expected_cols = {'log2FoldChange', 'padj', 'pvalue'}
+                
+                if not expected_cols.issubset(set(third_level_cols)):
+                    missing_cols = expected_cols - set(third_level_cols)
+                    QMessageBox.critical(self, "DataFrame Format Error", 
+                                       f"Missing required columns in the third level: {missing_cols}\n"
+                                       f"Found columns: {list(third_level_cols)}\n"
+                                       "Expected format: columns from get_stats_deseq2_against_control_with_conditon function.")
+                    return False
+                
+                self.data_format_type = '3-level'
+                print(f"Successfully validated external DESeq2 DataFrame with 3-level columns, shape: {df.shape}")
+                print(f"First level (conditions): {list(df.columns.get_level_values(0).unique())}")
+                print(f"Second level (groups): {list(df.columns.get_level_values(1).unique())}")
+                print(f"Third level (metrics): {list(df.columns.get_level_values(2).unique())}")
+                
+            elif df.columns.nlevels == 2:
+                # 2-level format from get_stats_deseq2_against_control
+                second_level_cols = df.columns.get_level_values(1).unique()
+                expected_cols = {'log2FoldChange', 'padj', 'pvalue'}
+                
+                if not expected_cols.issubset(set(second_level_cols)):
+                    missing_cols = expected_cols - set(second_level_cols)
+                    QMessageBox.critical(self, "DataFrame Format Error", 
+                                       f"Missing required columns in the second level: {missing_cols}\n"
+                                       f"Found columns: {list(second_level_cols)}\n"
+                                       "Expected format: columns from get_stats_deseq2_against_control function.")
+                    return False
+                
+                self.data_format_type = '2-level'
+                print(f"Successfully validated external DESeq2 DataFrame with 2-level columns, shape: {df.shape}")
+                print(f"First level (groups): {list(df.columns.get_level_values(0).unique())}")
+                print(f"Second level (metrics): {list(df.columns.get_level_values(1).unique())}")
+                
+            else:
+                QMessageBox.critical(self, "DataFrame Format Error", 
+                                   f"The DataFrame must have exactly 2 or 3 levels in column index, but got {df.columns.nlevels} levels.\n"
+                                   "Expected format: 2-level or 3-level columns from DESeq2 functions.")
+                return False
+            
+            # Check if DataFrame is not empty
+            if df.empty:
+                QMessageBox.warning(self, "DataFrame Warning", 
+                                  "The passed DataFrame is empty.")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            QMessageBox.critical(self, "DataFrame Validation Error", 
+                               f"Error validating DataFrame format:\n{str(e)}\n\n"
+                               "Please ensure the DataFrame is generated by:\n"
+                               "- cross_test.get_stats_deseq2_against_control_with_conditon() (3-level)\n"
+                               "- cross_test.get_stats_deseq2_against_control() (2-level)")
+            return False
+    
     def setup_ui(self):
         # Create central widget
         central_widget = QWidget()
@@ -180,7 +281,7 @@ class GeneExtractorApp(QMainWindow):
         # File selection part
         file_layout = QHBoxLayout()
         self.file_path_edit = QLineEdit()
-        self.file_path_edit.setPlaceholderText("Select deseq2allinCondition(XXX).tsv file...")
+        self.file_path_edit.setPlaceholderText("Select deseq2allinCondition(XXX).tsv or deseq2all(XXX).tsv file...")
         self.file_path_edit.setReadOnly(True)
         browse_button = QPushButton("Browse...")
         browse_button.clicked.connect(self.browse_file)
@@ -263,6 +364,11 @@ class GeneExtractorApp(QMainWindow):
         )
         if file_path:
             self.file_path_edit.setText(file_path)
+            # Reset external dataframe when new file is selected
+            self.external_deseq2_df = None
+            self.external_deseq2_df_name = None
+            self.df_res = None
+            self.data_format_type = None
     
     def browse_output_dir(self):
         dir_path = QFileDialog.getExistingDirectory(self, "Select Output Directory")
@@ -319,31 +425,49 @@ class GeneExtractorApp(QMainWindow):
     
     def extract_all_items(self):
         """Extract all entries from the TSV file"""
-        file_path = self.file_path_edit.text()
-        if not file_path:
-            QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
-            return
+        # Check if we have dataframe from parameter or file
+        if self.external_deseq2_df is not None:
+            df = self.external_deseq2_df
+        else:
+            file_path = self.file_path_edit.text()
+            if not file_path:
+                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                return
+            try:
+                # Read data file
+                df = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error reading file:\n{str(e)}")
+                return
 
         try:
-            # Read data file
-            df = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1)
             items = df.index.tolist()
             
             if items:
                 self.genes_text.setPlainText('\n'.join(items))
                 QMessageBox.information(self, "Success", f"Added {len(items)} entries.")
             else:
-                QMessageBox.warning(self, "Warning", "No entries found in the file.")
+                QMessageBox.warning(self, "Warning", "No entries found in the data.")
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error reading file:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Error extracting entries:\n{str(e)}")
 
     def filter_and_add_items(self):
         """Extract entries based on filter conditions"""
-        file_path = self.file_path_edit.text()
-        if not file_path:
-            QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
-            return
+        # Check if we have dataframe from parameter or file
+        if self.external_deseq2_df is not None:
+            df = self.external_deseq2_df
+        else:
+            file_path = self.file_path_edit.text()
+            if not file_path:
+                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                return
+            try:
+                # Read data file
+                df = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error reading file:\n{str(e)}")
+                return
 
         filter_text = self.filter_text.text().strip()
         if not filter_text:
@@ -351,8 +475,6 @@ class GeneExtractorApp(QMainWindow):
             return
 
         try:
-            # Read data file
-            df = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1)
             items = df.index.tolist()
             
             # Split filter conditions
@@ -388,14 +510,51 @@ class GeneExtractorApp(QMainWindow):
                 QMessageBox.warning(self, "Warning", "No matching entries found.")
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error processing file:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Error processing data:\n{str(e)}")
 
     def process_data(self):
-        # Check if file is selected
-        file_path = self.file_path_edit.text()
-        if not file_path:
-            QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
-            return
+        # Check if we have dataframe from parameter or file
+        if self.external_deseq2_df is not None:
+            # Use external dataframe
+            self.df_res = self.external_deseq2_df.copy()
+        else:
+            # Check if file is selected
+            file_path = self.file_path_edit.text()
+            if not file_path:
+                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                return
+            
+            try:
+                # Read data file
+                progress_msg = QProgressDialog("Reading data file...", None, 0, 0, self)
+                progress_msg.setWindowTitle("Processing")
+                progress_msg.setModal(True)
+                progress_msg.setCancelButton(None)
+                progress_msg.setMinimumDuration(0)
+                progress_msg.show()
+                QApplication.processEvents()
+                
+                # Detect file format first
+                self.data_format_type = self._detect_file_format(file_path)
+                print(f"Detected file format: {self.data_format_type}")
+                
+                # Read file based on detected format
+                if self.data_format_type == '3-level':
+                    # Original 3-level format
+                    self.df_res = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1, engine='c', low_memory=False)
+                    # Remove the first column (index)
+                    self.df_res = self.df_res.iloc[:, 1:]
+                else:
+                    # 2-level format
+                    self.df_res = pd.read_csv(file_path, sep="\t", header=[0, 1], index_col=1, engine='c', low_memory=False)
+                    self.df_res = self.df_res.iloc[:, 1:]
+                progress_msg.close()
+                
+            except Exception as e:
+                if 'progress_msg' in locals():
+                    progress_msg.close()
+                QMessageBox.critical(self, "Error", f"Error reading file:\n{str(e)}")
+                return
         
         # Get entry list
         genes_text = self.genes_text.toPlainText().strip()
@@ -425,15 +584,6 @@ class GeneExtractorApp(QMainWindow):
             dedup_message = f"Found and removed {ex_list_original_count - ex_list_dedup_count} duplicate entry names.\n"
 
         try:
-            # Read data file
-            progress_msg.setLabelText("Reading data file...")
-            QApplication.processEvents()
-            
-            # Optimization: Use engine='c' and low_memory=False to speed up reading large files
-            self.df_res = pd.read_csv(file_path, sep="\t", header=[0, 1, 2], index_col=1, engine='c', low_memory=False)
-            # Remove the first column (index)
-            self.df_res = self.df_res.iloc[:, 1:]
-            
             progress_msg.setLabelText("Checking if entries exist...")
             QApplication.processEvents()
             
@@ -461,19 +611,32 @@ class GeneExtractorApp(QMainWindow):
             progress_msg.setLabelText("Extracting log2FoldChange, padj, and pvalue values...")
             QApplication.processEvents()
             
-            # Optimization: Extract all required columns at once
+            # Process based on data format type
             cols = ['log2FoldChange', 'padj', 'pvalue']
             
-            # Optimization: Directly extract specific entries and columns to reduce memory usage
-            self.df_ex = self.df_res.loc[ex_list, (slice(None), slice(None), cols)]
-            
-            # Create a dictionary of dataframes to improve efficiency
-            dfs = {}
-            for col in cols:
-                df = self.df_ex.loc[:, (slice(None), slice(None), col)]
-                df.columns = df.columns.droplevel(2)
-                df.columns = ["~".join(col) for col in df.columns.values]
-                dfs[col] = df
+            if self.data_format_type == '3-level':
+                # Original 3-level processing
+                self.df_ex = self.df_res.loc[ex_list, (slice(None), slice(None), cols)]
+                
+                # Create a dictionary of dataframes to improve efficiency
+                dfs = {}
+                for col in cols:
+                    df = self.df_ex.loc[:, (slice(None), slice(None), col)]
+                    df.columns = df.columns.droplevel(2)
+                    df.columns = ["~".join(col) for col in df.columns.values]
+                    dfs[col] = df
+                    
+            else:  # 2-level
+                # New 2-level processing
+                self.df_ex = self.df_res.loc[ex_list, (slice(None), cols)]
+                
+                # Create a dictionary of dataframes
+                dfs = {}
+                for col in cols:
+                    df = self.df_ex.loc[:, (slice(None), col)]
+                    df.columns = df.columns.droplevel(1)
+                    # For 2-level, column names are already simple group names
+                    dfs[col] = df
             
             self.df_log2FC = dfs['log2FoldChange']
             self.df_padj = dfs['padj']
@@ -496,17 +659,26 @@ class GeneExtractorApp(QMainWindow):
                 long_dfs.values()
             )
             
-            # Add condition columns
-            self.df_long['cond1'] = self.df_long['condition'].str.split("~").str[0]
-            self.df_long['cond2'] = self.df_long['condition'].str.split("~").str[1]
+            # Add condition columns based on format type
+            if self.data_format_type == '3-level':
+                # For 3-level, split condition by "~"
+                self.df_long['cond1'] = self.df_long['condition'].str.split("~").str[0]
+                self.df_long['cond2'] = self.df_long['condition'].str.split("~").str[1]
             
             # remove the row log2FoldChange is nan
             self.df_long = self.df_long[~self.df_long['log2FoldChange'].isna()]
             
             self.df_long.set_index('items', inplace=True)
             
-            progress_msg.close()  # First close the progress dialog
+            progress_msg.setLabelText("Preparing Data Display...")
+            QApplication.processEvents()
+            
             self.display_results()  # Display results
+
+            progress_msg.setLabelText("Completing UI updates...")
+            QApplication.processEvents()
+            
+            progress_msg.close()  # First close the progress dialog
             
             # Construct success message
             success_message = f"{dedup_message}Original number of input entries: {ex_list_original_count}\n"
@@ -685,6 +857,34 @@ class GeneExtractorApp(QMainWindow):
             if reply == QMessageBox.Yes:
                 self.genes_text.clear()
                 QMessageBox.information(self, "Success", "All entries cleared.")
+
+    def _detect_file_format(self, file_path):
+        """
+        Detect the format of the TSV file by reading the header
+        Returns: '2-level' or '3-level'
+        """
+        try:
+            # Read the header lines to detect the format
+            header_lines = []
+            with open(file_path, 'r') as f:
+                for i, line in enumerate(f):
+                    if i > 10:  # Only check first 10 lines
+                        break
+                    header_lines.append(line.strip().split('\t'))
+            
+            # Detect based on the structure of first few lines
+            if len(header_lines) >= 3:
+                # Check if the third line contains actual metric names
+                third_line = header_lines[2]
+                if any(metric in third_line for metric in ['log2FoldChange', 'padj', 'pvalue']):
+                    return '3-level'
+            
+            # Default to 2-level if we can't determine it's 3-level
+            return '2-level'
+            
+        except Exception as e:
+            print(f"Error detecting file format: {e}")
+            return '2-level'  # Default fallback
 
 
 if __name__ == "__main__":

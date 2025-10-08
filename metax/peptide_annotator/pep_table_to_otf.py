@@ -27,7 +27,7 @@ else:
     from .get_genome_rank import GenomeRank
     from .peptable_annotator import PeptideAnnotator
 
-def query_peptide_proteins(db_file, peptide_list, chunk_size=10000):
+def query_peptide_proteins(db_file, peptide_list, chunk_size=10000, removed_genomes_set:set|None = None):
     """
     Query peptide to protein mapping from a database with progress tracking.
     
@@ -44,43 +44,47 @@ def query_peptide_proteins(db_file, peptide_list, chunk_size=10000):
 
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
-        
         for i in tqdm(range(0, len(peptide_list), chunk_size), desc="Querying database in chunks"):
             chunk = peptide_list[i:i + chunk_size]
-            
             query = "SELECT peptide, proteins FROM peptide_proteins WHERE peptide IN ({})".format(
                 ','.join(['?'] * len(chunk))
             )
             cursor.execute(query, chunk)
-            
             rows = cursor.fetchall()
-            for peptide, proteins_json in tqdm(rows, desc="Processing peptide mappings", leave=False):
+
+            for peptide, proteins_json in rows:  
                 try:
-                    proteins = json.loads(proteins_json)  # decode JSON string
-                    peptide_proteins[peptide] = ";".join(proteins)  # join proteins with semicolon
+                    proteins = json.loads(proteins_json)
                 except json.JSONDecodeError:
-                    peptide_proteins[peptide] = ""  # empty string if JSON decoding fails
+                    peptide_proteins[peptide] = ""
+                    continue
+                if removed_genomes_set:
+                    proteins = [p for p in proteins if p.split('_', 1)[0] not in removed_genomes_set]
+                peptide_proteins[peptide] = ';'.join(proteins) if proteins else ""
 
     return peptide_proteins
 
 
 class peptideProteinsMapper:
     def __init__(self, peptide_table_path, db_path, 
+                 removed_genomes_set:set|None = None,
                  table_separator='\t',
                  peptide_col='Sequence', 
                  intensity_col_prefix='Intensity',
                  genome_cutoff_rank:int|None= None,   # if set, it will only get the top N genomes, otherwise use genome_peptide_coverage_cutoff
-                 genome_peptide_coverage_cutoff=0.97,
-                 protein_peptide_coverage_cutoff=1.0,
+                 genome_peptide_coverage_cutoff:float|None = 0.97,
+                 protein_peptide_coverage_cutoff:float|None = 1.0,
                  output_path=None,
                  temp_dir=None,
                  stop_after_genome_ranking=False,
                  continue_base_on_annotaied_peptide_table=False, # use genome annotated peptide table to continue the process, skip querying proteins
-                 turn_point_method='auto' # not use percentage cutoff for genome ranking
+                 turn_point_method='auto', # 'auto', 'coverage', 'rank', or 'distinct_count'
+                 turn_point_distinct_cutoff=3 # cutoff value for distinct_count method
                  ):
 
         self.peptide_table_path = peptide_table_path
         self.db_file = db_path
+        self.removed_genomes_set = removed_genomes_set
         self.table_separator = table_separator
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
@@ -91,7 +95,8 @@ class peptideProteinsMapper:
         self.temp_dir = None
         self.stop_after_genome_ranking = stop_after_genome_ranking
         self.continue_base_on_annotaied_peptide_table = continue_base_on_annotaied_peptide_table
-        self.turn_point_method = turn_point_method # auto or coverage
+        self.turn_point_method = turn_point_method # 'auto', 'coverage', 'rank', or 'distinct_count'
+        self.turn_point_distinct_cutoff = turn_point_distinct_cutoff # cutoff value for distinct_count method
         
         self.has_intensity = False
         self.protein_ranked_table = None
@@ -100,6 +105,9 @@ class peptideProteinsMapper:
         
         self.selected_proteins_num = 0
         self.selected_genomes_num = 0
+        self.original_peptides_before_mapping = 0
+        self.peptides_after_mapping = 0
+        self.removed_peptides_no_matched = 0
         
         self.set_temp_dir(temp_dir)
         self.peptide_table = self.load_peptide_table()
@@ -206,13 +214,16 @@ class peptideProteinsMapper:
         
         unique_peptides = self.peptide_table[self.peptide_col].drop_duplicates().tolist()
 
-        peptide_proteins_dict = query_peptide_proteins(self.db_file, unique_peptides)
+        peptide_proteins_dict = query_peptide_proteins(self.db_file, unique_peptides, removed_genomes_set=self.removed_genomes_set)
 
         self.peptide_table["Proteins"] = self.peptide_table[self.peptide_col].map(peptide_proteins_dict)
 
         original_count = len(self.peptide_table)
+        self.original_peptides_before_mapping = original_count
         self.peptide_table = self.peptide_table[self.peptide_table["Proteins"].notna() & (self.peptide_table["Proteins"] != "")]
         removed_count = original_count - len(self.peptide_table)
+        self.peptides_after_mapping = len(self.peptide_table)
+        self.removed_peptides_no_matched = removed_count
         
         print(f"Original peptides: {original_count}, after filtering: {len(self.peptide_table)}")
         print(f"Removed peptides: {removed_count} due to no protein mapped in the database")
@@ -234,13 +245,31 @@ class peptideProteinsMapper:
         df['Genomes'] = df['Proteins'].apply(extract_genome)
         return df
         
+    def _update_cutoff_parameters_for_reporting(self, turn_point_method):
+        if turn_point_method.lower() == 'auto':
+            self.genome_cutoff_rank = "N/A"
+            self.turn_point_distinct_cutoff = "N/A"
+            self.genome_peptide_coverage_cutoff = "N/A"
+        elif turn_point_method.lower() == 'coverage':
+            self.genome_cutoff_rank = "N/A"
+            self.turn_point_distinct_cutoff = "N/A"
+        elif turn_point_method.lower() == 'rank':
+            self.turn_point_distinct_cutoff = "N/A"
+            self.genome_peptide_coverage_cutoff = "N/A"
+        elif turn_point_method.lower() == 'distinct_count':
+            self.genome_cutoff_rank = "N/A"
+            self.genome_peptide_coverage_cutoff = "N/A"
+        else:
+            # warning already raised in calculate_genome_list
+            pass
+        
     def calculate_genome_list(self, df, turn_point_method="auto"):
         gr = GenomeRank(df = df, 
                                  peptide_column = self.peptide_col,
                                  genome_column = 'Genomes',
                                  genome_separator = ';')
         df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
-                                                           weight_distinct=0.9, weight_peptide=0.1)
+                                                           weight_distinct=1, weight_peptide=0)
         df_weights = gr.df_combined[['Genomes', 'distinct_norm', 'peptide_norm', 'combined_score']]
         df_results_rank = df_results_rank.merge(df_weights, on='Genomes', how='left')
         # svaing the genome ranking table to temp dir
@@ -253,15 +282,32 @@ class peptideProteinsMapper:
             std_threshold = 1
             print(f"Calculating turning point by rolling window: window_size={window_size}, std_threshold={std_threshold}")
             cutoff_index = gr._calculate_turning_point(df_results_rank, window_size, std_threshold)
+
         elif turn_point_method.lower() == 'coverage':
+            if type(self.genome_peptide_coverage_cutoff) not in [float, int] or not (0 < self.genome_peptide_coverage_cutoff < 1): # type: ignore
+                self.genome_peptide_coverage_cutoff = 0.97
+                print(f"Warning: Invalid genome_peptide_coverage_cutoff: {self.genome_peptide_coverage_cutoff}, should be between 0 and 1. Using default value: 0.97")
+                
             print(f"Calculating turning point by percentage cutoff: {self.genome_peptide_coverage_cutoff}")
-            # cutoff indes is  "coverage_ratio" > peptide_coverage_cutoff
             cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]
+            
         elif turn_point_method.lower() == 'rank' and type(self.genome_cutoff_rank) is int: 
+            # make sure rank is less than total genomes, unless use Auto
+            if self.genome_cutoff_rank > df_results_rank.shape[0]:
+                raise ValueError(f"genome_cutoff_rank: {self.genome_cutoff_rank} is larger than total genomes found: {df_results_rank.shape[0]}, please check!")
             print(f"Get top {self.genome_cutoff_rank} genomes by rank")
             cutoff_index = self.genome_cutoff_rank - 1
+            
+        elif turn_point_method.lower() == 'distinct_count':
+            cutoff_value = self.turn_point_distinct_cutoff
+            print(f"Get top genomes with at least {cutoff_value} distinct peptides")
+            cutoff_index = df_results_rank[df_results_rank['distinct_peptides_count'] >= cutoff_value].index[-1]
+            
         else:
-            raise ValueError(f"Invalid turn_point_method: {turn_point_method}, should be 'Auto' or 'Coverage'")
+            raise ValueError(f"Invalid turn_point_method: {turn_point_method}, should be 'auto', 'coverage', 'rank', or 'distinct_count'")
+        
+        # Store the actually used parameters for reporting, set unused ones to 'N/A'
+        self._update_cutoff_parameters_for_reporting(turn_point_method)
         
         selected_genomes = df_results_rank.loc[:cutoff_index]
         selected_genomes_list = selected_genomes['Genomes'].tolist()
@@ -376,10 +422,14 @@ class peptideProteinsMapper:
             "peptide_col": self.peptide_col,
             "intensity_col_prefix": self.intensity_col_prefix,
             "protein_genome_separator": protein_genome_separator,
+            "original_peptides_before_mapping": self.original_peptides_before_mapping,
+            "peptides_after_mapping": self.peptides_after_mapping,
+            "removed_peptides_no_matched": self.removed_peptides_no_matched,
             "genome_peptide_coverage_cutoff": self.genome_peptide_coverage_cutoff,
             "protein_peptide_coverage_cutoff": self.protein_peptide_coverage_cutoff,
             "turn_point_method": self.turn_point_method,
-            "genome_cutoff_rank": self.genome_cutoff_rank if self.turn_point_method.lower() == 'rank' else "N/A",
+            "turn_point_distinct_cutoff": self.turn_point_distinct_cutoff,
+            "genome_cutoff_rank": self.genome_cutoff_rank if self.turn_point_method.lower() in ['rank', 'distinct_count'] else "N/A",
             "total_genomes_found": len(self.genome_ranked_table) if self.genome_ranked_table is not None else "Unknown",
             "selected_genomes_num": self.selected_genomes_num,
             "total_proteins_found": len(self.protein_ranked_table) if self.protein_ranked_table is not None else "Unknown",
@@ -387,7 +437,7 @@ class peptideProteinsMapper:
             "continue_base_on_annotated_peptide_table": self.continue_base_on_annotaied_peptide_table,
             "stop_after_genome_ranking": self.stop_after_genome_ranking,
             "original_peptide_count": len(self.peptide_table) if hasattr(self, 'peptide_table') else "Unknown",
-            "final_peptide_count": len(self.final_peptide_table) if hasattr(self, 'final_peptide_table') else "Unknown"
+            "final_peptide_count": len(self.final_peptide_table) if hasattr(self, 'final_peptide_table') else "Unknown",
         }
         
 
@@ -412,7 +462,7 @@ class peptideProteinsMapper:
         
         
 if __name__ == "__main__":
-    peptide_table_path = "DIANN/temp/annotated_peptide_table.tsv"
+    peptide_table_path = "C:/Users/Qing/Desktop/diann_res_test/report.pr_matrix_test.tsv"
     # peptide_table_path = "temp/annotated_peptide_table.tsv"
     db_path = "C:/Users/Qing/Desktop/UHGP/UHGP_digested_db/peptide_to_protein.db"
     
@@ -430,11 +480,26 @@ if __name__ == "__main__":
     
     # # test all_in_one
     taxafunc_anno_db_path = "C:/Users/Qing/Desktop/UHGP/MetaX_human-gut_v2.0.2_dacanadded_20250523.db"
-    output_path = "DIANN/OTF_dreict_anno.tsv"
+    output_path ="C:/Users/Qing/Desktop/diann_res_test/otf.tsv"
+    
+    # set of genomes to be removed
+    removed_genomes_set = set()
+    removed_genomes_file_path = "C:/Users/Qing/OneDrive - University of Ottawa/code/TaxaFunc/MetaX/.local_tests/removed_genomes.txt"
+    with open(removed_genomes_file_path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                removed_genomes_set.add(line)
+    print(len(removed_genomes_set), "genomes in the genome list")
+
     peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
+                                           removed_genomes_set=removed_genomes_set,
                                            peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
-                                           genome_cutoff_rank=1035,turn_point_method='rank',
-                                           genome_peptide_coverage_cutoff=0.95, protein_peptide_coverage_cutoff=1,
-                                           continue_base_on_annotaied_peptide_table=True)
+                                           turn_point_method='Coverage',
+                                           genome_cutoff_rank=None,
+                                           turn_point_distinct_cutoff=5,
+                                           genome_peptide_coverage_cutoff=0.97, 
+                                           protein_peptide_coverage_cutoff=1,
+                                           continue_base_on_annotaied_peptide_table=False)
     peptide_mapper.all_in_one(taxafunc_anno_db_path=taxafunc_anno_db_path)
     print("all in one finished")

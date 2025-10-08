@@ -4,6 +4,8 @@
 
 MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.
 
+📥[Download MetaX](#download--installation)
+
 
 ![abstract](https://github.com/byemaxx/MetaX/raw/main/Docs/MetaX_Cookbook.assets/abstract.png)
 
@@ -60,9 +62,13 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
 
 - **Command-line version**
 
-    > Use [PyPi](https://pypi.org/project/MetaXTools/) to install, then type `metax` in the terminal to launch the GUI.
+    > Install via [PyPI](https://pypi.org/project/MetaXTools/):
     >
-    > `python -m pip install MetaXTools`
+    > ```bash
+    > python -m pip install MetaXTools
+    > ```
+    > 
+    > After installation, launch the GUI by typing `metax` in your terminal.
 
 
 

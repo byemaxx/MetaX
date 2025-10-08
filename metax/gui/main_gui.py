@@ -317,6 +317,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.listWidget_co_expr_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
         self.listWidget_list_for_ploting.itemDoubleClicked.connect(self.copy_to_clipboard)
         self.listWidget_trends_list_for_ploting.itemDoubleClicked.connect(self.copy_to_clipboard)
+        # setup context menu for table list
+        self.setup_table_list_context_menu()
 
 
         # set button click event
@@ -1642,7 +1644,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 for plt_dialog in self.plt_dialogs:
                     plt_dialog.close()
                 
-                # 关闭 plt.show() 出来的窗口
+                # Colos DESeq2 extractor windows
+                if hasattr(self, 'deseq2_extractors'):
+                    for extractor_window in self.deseq2_extractors:
+                        if extractor_window and hasattr(extractor_window, 'close'):
+                            extractor_window.close()
+                    self.deseq2_extractors.clear()
+                
+                # close plt.show() windows
                 plt.close('all')
                     
                 # 关闭所有子进程
@@ -6366,6 +6375,74 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.last_path = db_save_path
         db_save_path = os.path.normpath(db_save_path)
         self.lineEdit_db_save_path.setText(db_save_path)
+
+    def setup_table_list_context_menu(self):
+        """Setup context menu for table list widget"""
+        self.listWidget_table_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listWidget_table_list.customContextMenuRequested.connect(self.show_table_list_context_menu)
+
+    def show_table_list_context_menu(self, position):
+        """Show context menu for table list widget"""
+        item = self.listWidget_table_list.itemAt(position)
+        if item is None:
+            return
+        
+        item_text = item.text()
+        
+        # Create context menu
+        context_menu = QMenu(self.listWidget_table_list)
+        
+        # Add default action
+        view_action = QAction("View Table", self.listWidget_table_list)
+        view_action.triggered.connect(lambda: self.show_table_in_list())
+        context_menu.addAction(view_action)
+        
+        # Add DESeq2 extractor action if item contains "deseq2allinCondition"
+        if  item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all('):
+            context_menu.addSeparator()
+            deseq2_action = QAction("Open in DESeq2 Results Extractor", self.listWidget_table_list)
+            deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))
+            context_menu.addAction(deseq2_action)
+        
+        # Show menu
+        context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
+
+    def open_deseq2_extractor(self, table_name):
+        """Open DESeq2 Results Extractor with the selected table"""
+        try:
+            # Get the table data
+            if table_name not in self.table_dict:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'Table "{table_name}" not found!')
+                return
+            
+            # Import GeneExtractorApp from deseq2_res_extractor
+            from metax.utils.deseq2_res_extractor import GeneExtractorApp
+            
+            # Get the dataframe
+            df = self.table_dict[table_name]
+            
+            # Create and show the extractor window
+            extractor_window = GeneExtractorApp(deseq2_df=df, deseq2_df_name=table_name)
+            # Set main window as parent to ensure proper window management
+            extractor_window.setParent(self.MainWindow, extractor_window.windowFlags())
+            extractor_window.show()
+            
+            # Store reference to prevent garbage collection
+            if not hasattr(self, 'deseq2_extractors'):
+                self.deseq2_extractors = []
+            self.deseq2_extractors.append(extractor_window)
+            
+            self.logger.write_log(f"Opened DESeq2 Results Extractor for table: {table_name}", 'i')
+            
+        except ImportError as e:
+            QMessageBox.critical(self.MainWindow, 'Import Error', 
+                               f'Failed to import DESeq2 Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to import DESeq2 Results Extractor: {str(e)}", 'e')
+        except Exception as e:
+            QMessageBox.critical(self.MainWindow, 'Error', 
+                               f'Failed to open DESeq2 Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to open DESeq2 Results Extractor: {str(e)}", 'e')
+
 ###############   Class MetaXGUI End   ###############
 
 
