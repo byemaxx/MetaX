@@ -6398,7 +6398,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         context_menu.addAction(view_action)
         
         # Add DESeq2 extractor action if item contains "deseq2allinCondition"
-        if "deseq2allinCondition" in item_text:
+        if  item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all('):
             context_menu.addSeparator()
             deseq2_action = QAction("Open in DESeq2 Results Extractor", self.listWidget_table_list)
             deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))

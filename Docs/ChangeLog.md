@@ -1,3 +1,8 @@
+# Version: 1.126.0
+## Date: 2025-10-08
+### Changes:
+- Add: Added a new function to extract the multiple DESeq2 result tables based on the condition in the result file.
+
 # Version: 1.125.3
 ## Date: 2025-07-24
 ### Changes:
