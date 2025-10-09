@@ -933,10 +933,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.checkBox_tflink_plot_mean.setEnabled(True)
 
     def hide_plot_setting_groupbox(self):
-        groupbox_list = ["scrollArea_set_otf_options","groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
-                         "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
-                         "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
-                         "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
+        groupbox_list = ["scrollArea_set_otf_options","scrollArea_basic_plot_settings", "scrollArea_basic_heatmap_plot_settings", 
+                         "scrollArea_cross_heatmap_settings", "scrollArea_deseq2_plot_settings",
+                         "scrollArea_co_expression_plot_settings", "scrollArea_expression_trends_plot_settings",
+                         "scrollArea_taxa_func_link_plot_settings", "scrollArea_taxa_func_link_net_plot_settings",
                          "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
                          "groupBox_pep_direct_to_otf"
                          ]
