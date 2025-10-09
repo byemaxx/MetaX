@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>965</width>
+    <width>1001</width>
     <height>779</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>449</width>
-                 <height>554</height>
+                 <width>467</width>
+                 <height>558</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -596,174 +596,7 @@
             <string>Set TaxaFunc</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_25">
-            <item row="12" column="0">
-             <widget class="QPushButton" name="pushButton_set_multi_table">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>GO</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="Line" name="line_9">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_105">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>14</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>Function and Taxa</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <layout class="QGridLayout" name="gridLayout_37">
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="checkBox_create_protein_table">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Create Proteins Intensity Table</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QComboBox" name="comboBox_method_of_protein_inference">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>razor</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>anti-razor</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>rank</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QCheckBox" name="checkBox_infrence_protein_by_sample">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="text">
-                 <string>Inference by each Sample</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <layout class="QHBoxLayout" name="horizontalLayout_93">
-                <item>
-                 <widget class="QLabel" name="label_24">
-                  <property name="text">
-                   <string>Peptide Number Threshold of Protein</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_protein">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>999</number>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="2">
-               <layout class="QHBoxLayout" name="horizontalLayout_2">
-                <item>
-                 <widget class="QLabel" name="label_136">
-                  <property name="text">
-                   <string>Protein Ranking Method</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="comboBox_protein_ranking_method">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>unique_counts</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>all_counts</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>unique_intensity</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>shared_intensity</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_135">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Protein Inference Method</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="8" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="label_39">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -783,329 +616,14 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <layout class="QGridLayout" name="gridLayout_17">
-              <item row="1" column="2">
-               <widget class="QLabel" name="label_128">
-                <property name="text">
-                 <string>Peptide Number Threshold</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_28">
-                <property name="text">
-                 <string>Taxa Level</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_27">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Function</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
-               <layout class="QHBoxLayout" name="horizontalLayout_95">
-                <item>
-                 <widget class="QPushButton" name="pushButton_func_threshold_help">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>?</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QDoubleSpinBox" name="doubleSpinBox_func_threshold">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="decimals">
-                   <number>3</number>
-                  </property>
-                  <property name="maximum">
-                   <double>1.000000000000000</double>
-                  </property>
-                  <property name="singleStep">
-                   <double>0.050000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>1.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="1">
-               <widget class="QComboBox" name="comboBox_taxa_level_to_stast">
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <property name="currentText">
-                 <string>Species</string>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Species</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Genus</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Family</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Order</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Class</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Phylum</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Domain</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Life</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Genome</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QComboBox" name="comboBox_function_to_stast">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_44">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Function Filter Threshold</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="4">
-               <layout class="QHBoxLayout" name="horizontalLayout_96">
-                <item>
-                 <widget class="QCheckBox" name="checkBox_set_taxa_func_split_func">
-                  <property name="toolTip">
-                   <string>Split items that contain multiple functions</string>
-                  </property>
-                  <property name="text">
-                   <string>Split Functions By</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="lineEdit_set_taxa_func_split_func_sep">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>50</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>Separator between multiple functions</string>
-                  </property>
-                  <property name="text">
-                   <string>;</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="checkBox_set_taxa_func_split_func_share_intensity">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>YES: Each function shares the average Intensity after splitting. NO: Every function gives the original Intensity value after splitting.</string>
-                  </property>
-                  <property name="text">
-                   <string>Share Intensty</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="3">
-               <layout class="QHBoxLayout" name="horizontalLayout">
-                <item>
-                 <widget class="QLabel" name="label_127">
-                  <property name="text">
-                   <string>Taxa</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_taxa">
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>999</number>
-                  </property>
-                  <property name="value">
-                   <number>3</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_126">
-                  <property name="text">
-                   <string>Func</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_func">
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>999</number>
-                  </property>
-                  <property name="value">
-                   <number>3</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_123">
-                  <property name="text">
-                   <string>Taxa-Func</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_taxa_func">
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>999</number>
-                  </property>
-                  <property name="value">
-                   <number>3</number>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="4">
-               <widget class="QCheckBox" name="checkBox_set_otf_taxa_and_func_only_from_otf">
-                <property name="toolTip">
-                 <string>If chceked, the taxa table and functions table would be only generated from the OTFs table rather than all the taxa at the selected level and all functions of the selected type and threshold.</string>
-                </property>
-                <property name="statusTip">
-                 <string/>
-                </property>
-                <property name="text">
-                 <string>Create Taxa and Functions only from OTFs</string>
-                </property>
-                <property name="checked">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_134">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>14</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>Sum Proteins Intensity</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="Line" name="line_4">
+            <item row="5" column="0">
+             <widget class="Line" name="line_9">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
-            <item row="11" column="0">
+            <item row="10" column="0">
              <layout class="QGridLayout" name="gridLayout_79">
               <item row="3" column="0">
                <widget class="QLabel" name="label_40">
@@ -1584,6 +1102,620 @@
               </item>
              </layout>
             </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_105">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>14</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Function and Taxa</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="QPushButton" name="pushButton_set_multi_table">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>GO</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <layout class="QGridLayout" name="gridLayout_17">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_28">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Taxa Level</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_44">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Function Filter Threshold</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="comboBox_function_to_stast">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QLabel" name="label_127">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Taxa</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_taxa">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>999</number>
+                  </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_126">
+                  <property name="text">
+                   <string>Func</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_func">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>999</number>
+                  </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_123">
+                  <property name="text">
+                   <string>Taxa-Func</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="spinBox_peptide_num_threshold_taxa_func">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>999</number>
+                  </property>
+                  <property name="value">
+                   <number>3</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_27">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Function</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <layout class="QHBoxLayout" name="horizontalLayout_95">
+                <item>
+                 <widget class="QPushButton" name="pushButton_func_threshold_help">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>?</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox_func_threshold">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="decimals">
+                   <number>3</number>
+                  </property>
+                  <property name="maximum">
+                   <double>1.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLabel" name="label_128">
+                <property name="text">
+                 <string>Minimum Peptide Number Threshold</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_134">
+                <item>
+                 <widget class="QComboBox" name="comboBox_taxa_level_to_stast">
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="currentText">
+                   <string>Species</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Species</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Genus</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Family</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Order</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Class</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Phylum</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Domain</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Life</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Genome</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="checkBox_show_mroe_options_of_set_otf">
+              <property name="text">
+               <string>Show More Options</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QScrollArea" name="scrollArea_set_otf_options">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_10">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>922</width>
+                 <height>171</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_37">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_81">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_241">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Function:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QCheckBox" name="checkBox_set_taxa_func_split_func_share_intensity">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>YES: Each function shares the average Intensity after splitting. NO: Every function gives the original Intensity value after splitting.</string>
+                    </property>
+                    <property name="text">
+                     <string>Share intensity between split functions</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="checkBox_set_taxa_func_split_func">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Split items that contain multiple functions</string>
+                    </property>
+                    <property name="text">
+                     <string>Split function terms by</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_243">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>OTFS:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_set_otf_remove_unknown_taxa">
+                    <property name="text">
+                     <string>Remove unknown taxa</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_242">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Taxa:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="checkBox_create_protein_table">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Generate protein intensity table</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QLineEdit" name="lineEdit_set_taxa_func_split_func_sep">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>50</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="toolTip">
+                     <string>Separator between multiple functions</string>
+                    </property>
+                    <property name="text">
+                     <string>;</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_set_otf_taxa_and_func_only_from_otf">
+                    <property name="toolTip">
+                     <string>If chceked, the taxa table and functions table would be only generated from the OTFs table rather than all the taxa at the selected level and all functions of the selected type and threshold.</string>
+                    </property>
+                    <property name="statusTip">
+                     <string/>
+                    </property>
+                    <property name="text">
+                     <string>Create taxa and functions based only on OTFs</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_93">
+                    <item>
+                     <widget class="QLabel" name="label_24">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Minimum peptide number per protein</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_peptide_num_threshold_protein">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>999</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="5" column="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_2">
+                    <item>
+                     <widget class="QLabel" name="label_136">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Protein Ranking Method</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_protein_ranking_method">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>unique_counts</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>all_counts</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>unique_intensity</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>shared_intensity</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="0" colspan="3">
+                   <widget class="QLabel" name="label_134">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>14</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Sum Proteins Intensity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_96">
+                    <item>
+                     <widget class="QLabel" name="label_135">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Protein inference method</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_method_of_protein_inference">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>razor</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>anti-razor</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>rank</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="QCheckBox" name="checkBox_infrence_protein_by_sample">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Perform inference per sample</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="tab_basic_stast">
@@ -1600,7 +1732,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1997,7 +2129,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
+                        <width>895</width>
                         <height>267</height>
                        </rect>
                       </property>
@@ -3532,8 +3664,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>193</height>
+                        <width>895</width>
+                        <height>197</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_50">
@@ -7283,8 +7415,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>182</height>
+                        <width>895</width>
+                        <height>184</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_49">
@@ -8164,8 +8296,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>146</height>
+                        <width>632</width>
+                        <height>65</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_57">
@@ -8918,7 +9050,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
+                        <width>895</width>
                         <height>225</height>
                        </rect>
                       </property>
@@ -10125,8 +10257,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>859</width>
-                        <height>169</height>
+                        <width>383</width>
+                        <height>68</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_66">
@@ -11699,8 +11831,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>965</width>
-     <height>23</height>
+     <width>1001</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -11821,7 +11953,6 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>comboBox_taxa_level_to_stast</tabstop>
   <tabstop>toolButton_meta_table_help</tabstop>
   <tabstop>comboBox_function_to_stast</tabstop>
   <tabstop>pushButton_get_meta_path</tabstop>
@@ -11841,11 +11972,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>106</x>
-     <y>96</y>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
-     <y>97</y>
+     <y>96</y>
     </hint>
    </hints>
   </connection>
@@ -11857,11 +11988,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>106</x>
-     <y>96</y>
+     <y>95</y>
     </hint>
     <hint type="destinationlabel">
      <x>119</x>
-     <y>97</y>
+     <y>96</y>
     </hint>
    </hints>
   </connection>
@@ -11872,12 +12003,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>546</x>
-     <y>162</y>
+     <x>852</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
-     <x>271</x>
-     <y>199</y>
+     <x>295</x>
+     <y>529</y>
     </hint>
    </hints>
   </connection>
@@ -11888,12 +12019,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>546</x>
-     <y>162</y>
+     <x>852</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
-     <x>271</x>
-     <y>336</y>
+     <x>295</x>
+     <y>693</y>
     </hint>
    </hints>
   </connection>
@@ -11904,12 +12035,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>546</x>
-     <y>162</y>
+     <x>852</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
-     <x>546</x>
-     <y>199</y>
+     <x>735</x>
+     <y>531</y>
     </hint>
    </hints>
   </connection>
@@ -11920,12 +12051,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>332</x>
-     <y>137</y>
+     <x>330</x>
+     <y>165</y>
     </hint>
     <hint type="destinationlabel">
-     <x>332</x>
-     <y>137</y>
+     <x>423</x>
+     <y>165</y>
     </hint>
    </hints>
   </connection>
@@ -11936,12 +12067,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>147</x>
-     <y>137</y>
+     <x>230</x>
+     <y>582</y>
     </hint>
     <hint type="destinationlabel">
-     <x>76</x>
-     <y>97</y>
+     <x>388</x>
+     <y>115</y>
     </hint>
    </hints>
   </connection>
@@ -11952,12 +12083,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>61</x>
-     <y>91</y>
+     <x>63</x>
+     <y>390</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>94</y>
+     <x>121</x>
+     <y>413</y>
     </hint>
    </hints>
   </connection>
@@ -11968,12 +12099,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>75</x>
-     <y>94</y>
+     <x>88</x>
+     <y>476</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>97</y>
+     <x>132</x>
+     <y>534</y>
     </hint>
    </hints>
   </connection>
@@ -11984,8 +12115,8 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>187</x>
-     <y>581</y>
+     <x>209</x>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
      <x>149</x>
@@ -12000,12 +12131,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>111</x>
-     <y>271</y>
+     <x>77</x>
+     <y>134</y>
     </hint>
     <hint type="destinationlabel">
-     <x>134</x>
-     <y>351</y>
+     <x>111</x>
+     <y>114</y>
     </hint>
    </hints>
   </connection>
@@ -12016,12 +12147,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>75</x>
-     <y>95</y>
+     <x>88</x>
+     <y>485</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>97</y>
+     <x>132</x>
+     <y>547</y>
     </hint>
    </hints>
   </connection>
@@ -12033,11 +12164,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>52</x>
-     <y>120</y>
+     <y>118</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>97</y>
+     <x>121</x>
+     <y>113</y>
     </hint>
    </hints>
   </connection>
@@ -12048,12 +12179,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>77</x>
-     <y>119</y>
+     <x>91</x>
+     <y>444</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>98</y>
+     <x>132</x>
+     <y>506</y>
     </hint>
    </hints>
   </connection>
@@ -12064,12 +12195,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>53</x>
-     <y>95</y>
+     <x>55</x>
+     <y>111</y>
     </hint>
     <hint type="destinationlabel">
-     <x>119</x>
-     <y>97</y>
+     <x>121</x>
+     <y>113</y>
     </hint>
    </hints>
   </connection>
@@ -12080,12 +12211,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>102</y>
+     <x>379</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel">
-     <x>78</x>
-     <y>102</y>
+     <x>498</x>
+     <y>307</y>
     </hint>
    </hints>
   </connection>
@@ -12096,12 +12227,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>102</y>
+     <x>379</x>
+     <y>305</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>102</y>
+     <x>620</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
@@ -12112,12 +12243,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>147</x>
-     <y>138</y>
+     <x>900</x>
+     <y>531</y>
     </hint>
     <hint type="destinationlabel">
-     <x>98</x>
-     <y>97</y>
+     <x>498</x>
+     <y>141</y>
     </hint>
    </hints>
   </connection>
@@ -12128,12 +12259,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>77</x>
-     <y>50</y>
+     <x>95</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
-     <x>99</x>
-     <y>53</y>
+     <x>117</x>
+     <y>73</y>
     </hint>
    </hints>
   </connection>
@@ -12144,12 +12275,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>546</x>
-     <y>162</y>
+     <x>852</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
-     <x>546</x>
-     <y>255</y>
+     <x>687</x>
+     <y>613</y>
     </hint>
    </hints>
   </connection>
@@ -12160,12 +12291,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>113</y>
+     <x>277</x>
+     <y>569</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>113</y>
+     <x>760</x>
+     <y>571</y>
     </hint>
    </hints>
   </connection>
@@ -12176,12 +12307,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>88</x>
-     <y>79</y>
+     <x>99</x>
+     <y>412</y>
     </hint>
     <hint type="destinationlabel">
-     <x>110</x>
-     <y>83</y>
+     <x>121</x>
+     <y>527</y>
     </hint>
    </hints>
   </connection>
@@ -12192,12 +12323,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>113</y>
+     <x>277</x>
+     <y>569</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>113</y>
+     <x>277</x>
+     <y>519</y>
     </hint>
    </hints>
   </connection>
@@ -12208,12 +12339,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>113</y>
+     <x>277</x>
+     <y>569</y>
     </hint>
     <hint type="destinationlabel">
-     <x>128</x>
-     <y>113</y>
+     <x>760</x>
+     <y>519</y>
     </hint>
    </hints>
   </connection>
@@ -12224,12 +12355,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>39</x>
-     <y>52</y>
+     <x>57</x>
+     <y>72</y>
     </hint>
     <hint type="destinationlabel">
-     <x>100</x>
-     <y>54</y>
+     <x>118</x>
+     <y>74</y>
     </hint>
    </hints>
   </connection>
@@ -12240,12 +12371,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>66</x>
-     <y>84</y>
+     <x>57</x>
+     <y>99</y>
     </hint>
     <hint type="destinationlabel">
-     <x>83</x>
-     <y>84</y>
+     <x>74</x>
+     <y>97</y>
     </hint>
    </hints>
   </connection>
@@ -12256,12 +12387,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>100</x>
-     <y>84</y>
+     <x>91</x>
+     <y>99</y>
     </hint>
     <hint type="destinationlabel">
-     <x>72</x>
-     <y>44</y>
+     <x>90</x>
+     <y>64</y>
     </hint>
    </hints>
   </connection>
@@ -12272,12 +12403,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>116</x>
-     <y>84</y>
+     <x>107</x>
+     <y>99</y>
     </hint>
     <hint type="destinationlabel">
-     <x>72</x>
-     <y>41</y>
+     <x>90</x>
+     <y>61</y>
     </hint>
    </hints>
   </connection>
@@ -12289,11 +12420,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>252</x>
-     <y>757</y>
+     <y>697</y>
     </hint>
     <hint type="destinationlabel">
-     <x>405</x>
-     <y>759</y>
+     <x>400</x>
+     <y>699</y>
     </hint>
    </hints>
   </connection>
@@ -12304,12 +12435,28 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>520</x>
-     <y>757</y>
+     <x>515</x>
+     <y>697</y>
     </hint>
     <hint type="destinationlabel">
-     <x>801</x>
-     <y>759</y>
+     <x>796</x>
+     <y>699</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_show_mroe_options_of_set_otf</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>scrollArea_set_otf_options</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>88</x>
+     <y>256</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>131</x>
+     <y>285</y>
     </hint>
    </hints>
   </connection>

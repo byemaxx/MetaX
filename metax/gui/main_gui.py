@@ -933,7 +933,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.checkBox_tflink_plot_mean.setEnabled(True)
 
     def hide_plot_setting_groupbox(self):
-        groupbox_list = ["groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
+        groupbox_list = ["scrollArea_set_otf_options","groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
                          "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
                          "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
                          "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
@@ -2983,7 +2983,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
             
             taxa_level = name_dict[taxa_input]
-            
+            remove_unknown_taxa = self.checkBox_set_otf_remove_unknown_taxa.isChecked()
+
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
             
@@ -3148,7 +3149,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'keep_unknow_func': False,
                                         'split_func': split_func, 'split_func_params': split_func_params,
                                         'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf,
-                                        'quant_method': quant_method}
+                                        'quant_method': quant_method, 
+                                        'remove_unknown_taxa': remove_unknown_taxa}
                 
                 self.logger.write_log(f"set_multi_table_params: {set_multi_table_params} \
                     \n\nOutlier_params: {outlier_params} \n\nData_preprocess_params: {data_preprocess_params}", 'i')

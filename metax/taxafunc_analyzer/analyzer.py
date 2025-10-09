@@ -945,7 +945,7 @@ class TaxaFuncAnalyzer:
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
                         peptide_num_threshold: dict = {'taxa': 1, 'func': 1, 'taxa_func': 1},
-                          quant_method: str = 'sum', **kwargs):
+                          quant_method: str = 'sum', remove_unknown_taxa: bool = True, **kwargs):
         # if **kwargs is not empty, print the warning
         if kwargs:
             print(f"Warning: The following parameters are not used in 'CREATE TAXA TABLE' function: {kwargs.keys()}")
@@ -977,15 +977,20 @@ class TaxaFuncAnalyzer:
             level_sign = 'm' if self.genome_mode else 's'
             if level != level_sign:
                 df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: strip_taxa(x, level))
+            if remove_unknown_taxa:
+                print(f"Remove the peptides with '{level}__'in Taxon column...")
+                original_taxa_num = df_t.shape[0]
+                df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
+                new_taxa_num = df_t.shape[0]
+                print(f"Removed: [{original_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
 
-            print(f"Remove the peptides with '{level}__'in Taxon column...")
-            orignial_taxa_num = df_t.shape[0]
-            df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
-            new_taxa_num = df_t.shape[0]
-            print(f"Rmoved: [{orignial_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
-
-            df_filtered_peptides = df_t
+            else:
+                print(f"Keep the peptides with '{level}__' in Taxon column, and replace as {level}__unknown")
+                df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(
+                    lambda x: x.replace(f"{level}__", f"{level}__unknown") if x.endswith(f"{level}__") else x)
+                
             # df_filtered_peptides is a df with all cols, which filtered by the selected taxa level
+            df_filtered_peptides = df_t
         else:
             raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
 
@@ -1075,7 +1080,7 @@ class TaxaFuncAnalyzer:
                           keep_unknow_func: bool = False, 
                           split_func: bool = False, split_func_params: dict = {'split_by': '|', 'share_intensity': False},
                           taxa_and_func_only_from_otf: bool = False,
-                          quant_method: str = 'sum'):
+                          quant_method: str = 'sum', remove_unknown_taxa: bool = True):
 
         """
         `Example Usage:`
@@ -1162,11 +1167,16 @@ class TaxaFuncAnalyzer:
             # remove the cases like: "d__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__|m__MGYG000001780"
             # the genome iws identified but the species name is empty like "s__"
             # So remove the taxon column with endswith "|s__" or other level
-            print(f"Remove the peptides with '{level}__'in Taxon column...")
-            orignial_taxa_num = df_t.shape[0]
-            df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
-            new_taxa_num = df_t.shape[0]
-            print(f"Rmoved: [{orignial_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
+            if remove_unknown_taxa:
+                print(f"Remove the peptides with '{level}__'in Taxon column...")
+                original_taxa_num = df_t.shape[0]
+                df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
+                new_taxa_num = df_t.shape[0]
+                print(f"Removed: [{original_taxa_num - new_taxa_num}], Left: [{new_taxa_num}]")
+            else: # replace {level}__ as {level}__unknown
+                print(f"Keep the peptides with '{level}__' in Taxon column, and replace as {level}__unknown")
+                df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(
+                    lambda x: x.replace(f"{level}__", f"{level}__unknown") if x.endswith(f"{level}__") else x)
 
             df_filtered_peptides = df_t
             # df_filtered_peptides is a df with all cols, which filtered by the selected taxa level
@@ -1390,7 +1400,7 @@ if __name__ == '__main__':
                     sum_protein=False, 
                     sum_protein_params = {'method': 'anti-razor', 'by_sample': False, 'rank_method': 'unique_counts', 'greedy_method': 'heap', 'peptide_num_threshold': 3},
                     split_func=False, split_func_params = {'split_by': '|', 'share_intensity': False},
-                    taxa_and_func_only_from_otf=False, quant_method='sum', func_threshold=1.00
+                    taxa_and_func_only_from_otf=False, quant_method='sum', func_threshold=1.00, remove_unknown_taxa=True
                     )
     
     #### TEST FOR _create_taxa_table_only_from_otf

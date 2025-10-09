@@ -1,3 +1,8 @@
+# Version: 1.126.1
+## Date: 2025-10-09
+### Changes:
+- Add: Added a option to keep or remove "unkown taxa" when create the multi tables.
+
 # Version: 1.126.0
 ## Date: 2025-10-08
 ### Changes:
