@@ -104,6 +104,8 @@ The Data Overview provides basic information about your data, such as the number
 
 - **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by any taxa, the follow analysis focus on functions).
 
+- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+
 - **Split Function:** Split the annotations with multi-functions.
 
   - | KO                  | Intensity |
@@ -119,7 +121,16 @@ The Data Overview provides basic information about your data, such as the number
 
     If <u>Share Intensity</u> is checked, the intensity above would given <u>5</u> to each split KO
 
-- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+- **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed.
+   When unchecked, such peptides will be retained and labeled as *unknown*, for example:
+
+  ```
+  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_
+  to
+  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown
+  ```
+
+  
 
 - **Create Taxa and Func only from OTFs:**
 
@@ -134,9 +145,10 @@ The Data Overview provides basic information about your data, such as the number
 
 ### Sum Proteins Intensity
 
-Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
+Click **Generate Protein Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
 
 - **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
+  
   - Razor:
     1. Build a minimal set of proteins to cover all peptides.
     2. For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).
@@ -153,13 +165,15 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
     >- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
     
 
+- **Minimum peptide number per protein:** Filters out proteins that contain fewer peptides than the specified threshold.
+
 ### Data preprocessing
 
 - **Quantitative Method：**
 
   - **<u>Sum</u>**: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.
 
-  - **<u>DirecteLFQ</u>**: Using DirecteLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
+  - **<u>DirectLFQ</u>**: Using DirectLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
 
     
 
@@ -180,14 +194,28 @@ There are several methods for detecting and handling outliers.
   
   - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as a NaN.
   
-  - **Half-Zero:** This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.
+  - **Half-Zero:** 
   
-  - **Zero-Dominant:** This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.
+    ​	Applies to grouped data.
+  
+    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
+  
+    - If fewer than half of the values are zero, all *zero* values are replaced with NaN.
+    - If the number of zero and non-zero values is equal, *all* values in the group are replaced with NaN.
+  
+  - **Zero-Dominant:** 
+  
+    ​	Applies to grouped data.
+  
+    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
+    - Otherwise, the group remains unchanged.
   
   - **Zero-Inflated Poisson:** This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
   
   - **Negative Binomial:** This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
+  
   - **Z-Score:** Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.
+  
   - **Mahalanobis Distance:** Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.
 
 ​	<u>In all methods, You can choose detection outliers by a meta column, and a meta to handle the outliers.</u>
@@ -420,7 +448,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Significant comparing enables us to find the result of **<u>The taxa between the two groups showing no significant differences, while the related functions are significantly different</u>** and function no significant but relted taxa significant.
 - ![Significant_Taxa-Func](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
 
-### Plot Corss Heatmap
+### Plot Cross Heatmap
 
 - The **result** of the T-test and ANOVA Test will show in a new window
 
