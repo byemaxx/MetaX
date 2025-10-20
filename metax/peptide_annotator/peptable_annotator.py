@@ -48,7 +48,7 @@ class PeptideAnnotator:
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
                  peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None,
-                 additional_running_info: dict=None):
+                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum'):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
@@ -63,6 +63,7 @@ class PeptideAnnotator:
         self.sample_col_prefix = sample_col_prefix.strip()
         self.distinct_genome_threshold = distinct_genome_threshold
         self.exclude_protein_startwith = exclude_protein_startwith
+        self.duplicate_peptide_handling_mode = duplicate_peptide_handling_mode  # 'first', 'sum', 'max', 'min', 'mean', 'keep'
         
         self.thread_local = threading.local()
         self.start_time = datetime.now()
@@ -217,6 +218,7 @@ class PeptideAnnotator:
         processing_duration = str(datetime.now() - self.start_time).split('.')[0]
         
         # save the dataframe to the output file (clean TSV without comments)
+        print('Saving result dataframe to output file...')
         df.to_csv(self.output_path, sep='\t', index=False)
         
         # save metadata to a separate info file
@@ -323,6 +325,54 @@ class PeptideAnnotator:
         cols = [col.replace('Intensity__', 'Intensity_') for col in cols]
         df.columns = cols
         return df
+    
+    def handle_duplicate_peptides(self, df):
+        row_count = df.shape[0]
+        # 统计 [protein, peptide] 组合的唯一数
+        try:
+            unique_pair_count = df[[self.protein_col, self.peptide_col]].drop_duplicates().shape[0]
+        except KeyError:
+            print('Warning: protein or peptide column not found when checking duplicates.')
+            return df
+
+        if row_count == unique_pair_count:
+            print('No duplicate peptides found.')
+            return df
+
+        sample_cols = [col for col in df.columns if col.startswith(self.sample_col_prefix)]
+
+        # 无样本列或选择 'first' 时，直接保留首条
+        if self.duplicate_peptide_handling_mode == 'first' or len(sample_cols) == 0:
+            if len(sample_cols) == 0 and self.duplicate_peptide_handling_mode != 'first':
+                print('No sample columns detected, fallback to "first".')
+            df = df.drop_duplicates(subset=[self.protein_col, self.peptide_col], keep='first')
+            print(f'Handling duplicate peptides with mode [first]: from [{row_count}] -> [{df.shape[0]}]')
+            return df
+
+        # 确保样本列为数值，避免聚合时报错
+        df[sample_cols] = df[sample_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
+
+        group_keys = [self.protein_col, self.peptide_col]
+        mode = self.duplicate_peptide_handling_mode
+
+        if mode == 'sum':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].sum()
+        elif mode == 'max':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].max()
+        elif mode == 'min':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].min()
+        elif mode == 'mean':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].mean()
+        elif mode == 'keep':  # 保留全部，不做处理, 仅在代码中使用, GUI中不提供该选项
+            print(f'Handling duplicate peptides with mode [keep]: from [{row_count}] -> [{df.shape[0]}]')
+            return df
+        else:
+            print(f'Warning: Unknown duplicate_peptide_handling_mode [{mode}], no handling applied.')
+            print(f'Handling duplicate peptides with mode [keep]: from [{row_count}] -> [{df.shape[0]}]')
+            return df
+
+        print(f'Handling duplicate peptides with mode [{mode}]: from [{row_count}] -> [{df.shape[0]}]')
+        return df
 
     def run_annotate(self):
         print('Start running Peptide Annotator...')
@@ -361,6 +411,8 @@ class PeptideAnnotator:
         df = df.loc[df[intensity_cols].sum(axis=1) > 0]
         
         print(f'After filtering columns and rows, the peptide table shape: {df.shape}')
+        
+        df = self.handle_duplicate_peptides(df)
         
         df = self.exclude_proteins(df)
         

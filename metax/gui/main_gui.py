@@ -937,7 +937,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          "scrollArea_cross_heatmap_settings", "scrollArea_deseq2_plot_settings",
                          "scrollArea_co_expression_plot_settings", "scrollArea_expression_trends_plot_settings",
                          "scrollArea_taxa_func_link_plot_settings", "scrollArea_taxa_func_link_net_plot_settings",
-                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
+                         "scrollArea_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
                          "groupBox_pep_direct_to_otf"
                          ]
         for groupbox_name in groupbox_list:
@@ -2358,7 +2358,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         sample_col_prefix = self.lineEdit_annotator_sample_col_prefix.text()
         distinct_genome_threshold = self.spinBox_annotator_distinct_num_threshold.value()
         exclude_protein_startwith = self.lineEdit_annotator_exclude_protein_startwith.text()
-
+        duplicate_peptide_handling_mode = self.comboBox_annotator_duplicate_peptide_handle_mode.currentText()  # 'first', 'sum', 'max', 'min', 'mean', 'keep'
+        
         if db_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select database!')
         elif final_peptide_path == '':
@@ -2381,8 +2382,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         peptide_col=peptide_col,
                         sample_col_prefix=sample_col_prefix,
                         distinct_genome_threshold=distinct_genome_threshold,
-                        exclude_protein_startwith = exclude_protein_startwith
-                        
+                        exclude_protein_startwith=exclude_protein_startwith,
+                        duplicate_peptide_handling_mode=duplicate_peptide_handling_mode
+
                     )
                     return instance.run_annotate()
                 self.run_in_new_window(peptide2taxafunc_main_wrapper, show_msg=True)
@@ -2633,7 +2635,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
     def show_toolButton_final_peptide_help(self):
         QMessageBox.information(self.MainWindow, 'Final Peptide Help',
-                                 'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
+                                 'Option 1. From MAG Search results (e.g. final_peptides.tsv in MetaLab-MAG, xxs.pr_matrix.tsv in DIA-NN Results)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample')
                                     
     def show_toolButton_lca_threshould_help(self):
         # QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')

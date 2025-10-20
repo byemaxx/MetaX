@@ -1,3 +1,9 @@
+# Version: 1.126.2
+## Date: 2025-10-20
+### Changes:
+- Add: Annotator compatible with the DIA-NN output from MAG search result.
+- Add: Added an option to handle duplicate peptides when annotate the OTF table. Options include 'first', 'sum', 'max', 'min', 'mean', and 'keep'.
+
 # Version: 1.126.1
 ## Date: 2025-10-09
 ### Changes:
