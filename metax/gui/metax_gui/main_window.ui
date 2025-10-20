@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>467</width>
-                 <height>558</height>
+                 <width>397</width>
+                 <height>80</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1401,7 +1401,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>939</width>
+                 <width>734</width>
                  <height>171</height>
                 </rect>
                </property>
@@ -3700,8 +3700,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>915</width>
-                     <height>230</height>
+                     <width>677</width>
+                     <height>157</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_50">
@@ -5938,7 +5938,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>919</width>
+                    <width>890</width>
                     <height>154</height>
                    </rect>
                   </property>
@@ -8021,8 +8021,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>915</width>
-                     <height>183</height>
+                     <width>632</width>
+                     <height>65</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -9866,8 +9866,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>915</width>
-                     <height>204</height>
+                     <width>383</width>
+                     <height>68</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10602,92 +10602,6 @@
                   <layout class="QGridLayout" name="gridLayout_15">
                    <item row="0" column="0">
                     <layout class="QGridLayout" name="gridLayout_35">
-                     <item row="1" column="2">
-                      <widget class="QLabel" name="label_201">
-                       <property name="text">
-                        <string>Genome Separator in Protein ID</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="0" column="0">
-                      <widget class="QLabel" name="label_204">
-                       <property name="text">
-                        <string>Filter Genome with Min Distinct peptide Number</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="1">
-                      <widget class="QLineEdit" name="lineEdit_annotator_sample_col_prefix">
-                       <property name="toolTip">
-                        <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
-                       </property>
-                       <property name="text">
-                        <string>Intensity</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="3">
-                      <widget class="QLineEdit" name="lineEdit_annotator_protein_col_name">
-                       <property name="text">
-                        <string>Proteins</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="1">
-                      <widget class="QLineEdit" name="lineEdit_annotator_peptide_col_name">
-                       <property name="text">
-                        <string>Sequence</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="3">
-                      <widget class="QLineEdit" name="lineEdit_annotator_exclude_protein_startwith">
-                       <property name="toolTip">
-                        <string>Remove the peptides which annoate to exclude proteins, Separated by ';' if multiple.(e.g.: REV_;Human_)</string>
-                       </property>
-                       <property name="text">
-                        <string>REV_;</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="1">
-                      <widget class="QLineEdit" name="lineEdit_annotator_protein_separator">
-                       <property name="toolTip">
-                        <string>The separator between proteins in protein groups, e.g. &quot;;&quot; in  MGYG000003683_00301;MGYG000000756_01431;MGYG000001490_01143</string>
-                       </property>
-                       <property name="text">
-                        <string>;</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="0">
-                      <widget class="QLabel" name="label_199">
-                       <property name="text">
-                        <string>Protein Separator</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="0" column="1">
-                      <widget class="QSpinBox" name="spinBox_annotator_distinct_num_threshold">
-                       <property name="maximum">
-                        <number>9999</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="0">
-                      <widget class="QLabel" name="label_203">
-                       <property name="text">
-                        <string>Prefix of Intensity Column</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="2">
-                      <widget class="QLabel" name="label_205">
-                       <property name="text">
-                        <string>Prefix for Proteins to Exclude</string>
-                       </property>
-                      </widget>
-                     </item>
                      <item row="2" column="0">
                       <widget class="QLabel" name="label_200">
                        <property name="text">
@@ -10695,13 +10609,10 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="1" column="3">
-                      <widget class="QLineEdit" name="lineEdit_annotator_genome_separator">
-                       <property name="toolTip">
-                        <string>The separator in protein ID to split the genome ID. e.g. &quot;_&quot; in MGYG000003683_00301</string>
-                       </property>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_199">
                        <property name="text">
-                        <string>_</string>
+                        <string>Protein Separator</string>
                        </property>
                       </widget>
                      </item>
@@ -10722,6 +10633,66 @@
                        </property>
                       </widget>
                      </item>
+                     <item row="3" column="1">
+                      <widget class="QLineEdit" name="lineEdit_annotator_sample_col_prefix">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="statusTip">
+                        <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
+                       </property>
+                       <property name="text">
+                        <string>Intensity</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="3">
+                      <widget class="QLineEdit" name="lineEdit_annotator_exclude_protein_startwith">
+                       <property name="toolTip">
+                        <string>Remove the peptides which annoate to exclude proteins, Separated by ';' if multiple.(e.g.: REV_;Human_)</string>
+                       </property>
+                       <property name="statusTip">
+                        <string>e.g. REV_MGYG000000049_00365; HUMAN_XXXX</string>
+                       </property>
+                       <property name="text">
+                        <string>REV_;</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QSpinBox" name="spinBox_annotator_distinct_num_threshold">
+                       <property name="maximum">
+                        <number>9999</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_204">
+                       <property name="text">
+                        <string>Filter Genome with Min Distinct peptide Number</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QLineEdit" name="lineEdit_annotator_protein_separator">
+                       <property name="toolTip">
+                        <string>The separator between proteins in protein groups, e.g. &quot;;&quot; in  MGYG000003683_00301;MGYG000000756_01431;MGYG000001490_01143</string>
+                       </property>
+                       <property name="text">
+                        <string>;</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="3">
+                      <widget class="QLineEdit" name="lineEdit_annotator_genome_separator">
+                       <property name="toolTip">
+                        <string>The separator in protein ID to split the genome ID. e.g. &quot;_&quot; in MGYG000003683_00301</string>
+                       </property>
+                       <property name="text">
+                        <string>_</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="4" column="0">
                       <widget class="QLabel" name="label_244">
                        <property name="sizePolicy">
@@ -10732,6 +10703,20 @@
                        </property>
                        <property name="text">
                         <string>Method to handle duplicate peptides</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="2">
+                      <widget class="QLabel" name="label_205">
+                       <property name="text">
+                        <string>Prefix for Proteins to Exclude</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_201">
+                       <property name="text">
+                        <string>Genome Separator in Protein ID</string>
                        </property>
                       </widget>
                      </item>
@@ -10760,6 +10745,53 @@
                        <item>
                         <property name="text">
                          <string>first</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_203">
+                       <property name="text">
+                        <string>Prefix of Intensity Column</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QComboBox" name="comboBox_annotator_peptide_col_name">
+                       <property name="statusTip">
+                        <string> e.g. &quot;Stripped.Sequence&quot; in DIA-NN result</string>
+                       </property>
+                       <property name="editable">
+                        <bool>true</bool>
+                       </property>
+                       <item>
+                        <property name="text">
+                         <string>Sequence</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Stripped.Sequence</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <widget class="QComboBox" name="comboBox_annotator_protein_col_name">
+                       <property name="statusTip">
+                        <string> e.g. &quot;Protein.Group&quot; in DIA-NN result</string>
+                       </property>
+                       <property name="editable">
+                        <bool>true</bool>
+                       </property>
+                       <item>
+                        <property name="text">
+                         <string>Proteins</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Protein.Group</string>
                         </property>
                        </item>
                       </widget>

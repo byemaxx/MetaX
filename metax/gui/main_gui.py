@@ -2353,8 +2353,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         genome_mode = self.checkBox_annotator_genome_mode.isChecked()
         protein_separator = self.lineEdit_annotator_protein_separator.text()
         protein_genome_separator = self.lineEdit_annotator_genome_separator.text()
-        peptide_col = self.lineEdit_annotator_peptide_col_name.text()
-        protein_col = self.lineEdit_annotator_protein_col_name.text()
+        peptide_col = self.comboBox_annotator_peptide_col_name.currentText()
+        protein_col = self.comboBox_annotator_protein_col_name.currentText()
         sample_col_prefix = self.lineEdit_annotator_sample_col_prefix.text()
         distinct_genome_threshold = self.spinBox_annotator_distinct_num_threshold.value()
         exclude_protein_startwith = self.lineEdit_annotator_exclude_protein_startwith.text()
@@ -2634,7 +2634,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msg_box.exec_()
                 
     def show_toolButton_final_peptide_help(self):
-        QMessageBox.information(self.MainWindow, 'Final Peptide Help',
+        QMessageBox.information(self.MainWindow, 'Peptide Table Help',
                                  'Option 1. From MAG Search results (e.g. final_peptides.tsv in MetaLab-MAG, xxs.pr_matrix.tsv in DIA-NN Results)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample')
                                     
     def show_toolButton_lca_threshould_help(self):

@@ -766,11 +766,11 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ### 1. Results from MAG Workflow
 
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., **DIA-NN**, **MetaLab-MAG**, **MetaLab-DIA**, and other workflows which using MAG databases like MGnify or customized MAGs Database.
 
 - Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
-  ![peptide2taxafunc](./MetaX_Cookbook.assets/peptide2taxafunc.png)
+  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
 
   **Required:**
 
@@ -778,19 +778,19 @@ The peptide results use Metagenome-assembled genomes (MAGs) as the reference dat
 
   - **Peptide Table**:
 
-    - *Option 1*: From MetaLab-MAG results (final_peptides.tsv)
+    - *Option 1*: From the Search engine which using Metagenome-assembled genomes (MAGs)  as database. (e.g. ***final_peptides.tsv*** in MetaLab-MAG, ***xxx_report.pr_matrix.tsv*** in DIA-NN result)
 
-    - *Option 2*: Create it manually, with the first column as the ID (e.g., peptide sequence) and the second column as the proteins ID of MGnify (e.g., MGYG000003683_00301; MGYG000001490_01143) or your database, and other columns as the intensity of each sample.
+    - *Option 2*: Manually create a table with one column for the **peptide sequence** and another column for the **protein group** (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the **intensity values** for each sample.
 
     **Example:**
 
     | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
     | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
-    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
+    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
     | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
     | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
-    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
-    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
+    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124  | 0               | 307519          | 0               | 0               |
+    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102 | 306231          | 0               | 0               | 1214497         |
 
   - **Output Save Path**: The location to save the result table.
 
@@ -804,13 +804,13 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
 - Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
 
-  ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png)
+  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="peptide2taxafunc_tab2_1" style="zoom:80%;" />
 
 - The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
 
   - Select **OTFs Save To** to set the location to save the result table.
 
-  ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png)
+  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png" alt="peptide2taxafunc_tab2_2" style="zoom:80%;" />
 
 <br>
 

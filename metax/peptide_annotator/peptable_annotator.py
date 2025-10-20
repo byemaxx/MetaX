@@ -406,9 +406,9 @@ class PeptideAnnotator:
     
     def handle_duplicate_peptides(self, df):
         row_count = df.shape[0]
-        # 统计 [protein, peptide] 组合的唯一数
+        # check duplicate peptide-protein pairs
         try:
-            unique_pair_count = df[[self.protein_col, self.peptide_col]].drop_duplicates().shape[0]
+            unique_pair_count = df[[self.peptide_col, self.protein_col]].drop_duplicates().shape[0]
         except KeyError:
             print('Warning: protein or peptide column not found when checking duplicates.')
             return df
@@ -426,7 +426,7 @@ class PeptideAnnotator:
         if self.duplicate_peptide_handling_mode == 'first' or len(sample_cols) == 0:
             if len(sample_cols) == 0 and self.duplicate_peptide_handling_mode != 'first':
                 print('No sample columns detected, fallback to "first".')
-            df = df.drop_duplicates(subset=[self.protein_col, self.peptide_col], keep='first')
+            df = df.drop_duplicates(subset=[self.peptide_col, self.protein_col], keep='first')
             removed = row_count - df.shape[0]
             self.run_stats['duplicate_mode'] = 'first'
             self.run_stats['duplicate_removed'] = removed
@@ -436,7 +436,7 @@ class PeptideAnnotator:
         # Keep sample columns as numeric, fill NaN with 0 to avoid issues during aggregation
         df[sample_cols] = df[sample_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
 
-        group_keys = [self.protein_col, self.peptide_col]
+        group_keys = [self.peptide_col, self.protein_col]
         mode = self.duplicate_peptide_handling_mode
 
         if mode == 'sum':
