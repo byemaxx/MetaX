@@ -268,6 +268,7 @@ map04152	AMPK signaling pathway
 map04150	mTOR signaling pathway
 map04075	Plant hormone signal transduction
 map04080	Neuroactive ligand-receptor interaction
+map04082	Neuroactive ligand signaling
 map04081	Hormone signaling
 map04060	Cytokine-cytokine receptor interaction
 map04061	Viral protein interaction with cytokine and cytokine receptor
@@ -393,6 +394,7 @@ map04320	Dorso-ventral axis formation
 map04360	Axon guidance
 map04361	Axon regeneration
 map04380	Osteoclast differentiation
+map04382	Cornified envelope formation
 map04211	Longevity regulating pathway
 map04212	Longevity regulating pathway - worm
 map04213	Longevity regulating pathway - multiple species
@@ -838,6 +840,7 @@ ko04152	AMPK signaling pathway
 ko04150	mTOR signaling pathway
 ko04075	Plant hormone signal transduction
 ko04080	Neuroactive ligand-receptor interaction
+ko04082	Neuroactive ligand signaling
 ko04081	Hormone signaling
 ko04060	Cytokine-cytokine receptor interaction
 ko04061	Viral protein interaction with cytokine and cytokine receptor
@@ -963,6 +966,7 @@ ko04320	Dorso-ventral axis formation
 ko04360	Axon guidance
 ko04361	Axon regeneration
 ko04380	Osteoclast differentiation
+ko04382	Cornified envelope formation
 ko04211	Longevity regulating pathway
 ko04212	Longevity regulating pathway - worm
 ko04213	Longevity regulating pathway - multiple species
