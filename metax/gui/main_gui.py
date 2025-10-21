@@ -342,7 +342,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
         self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking)
         self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides)
-        
+        self.comboBox_pep_direct_to_otf_genome_cut_method.currentIndexChanged.connect(self.change_event_comboBox_pep_direct_to_otf_genome_cut_method)
         
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -674,6 +674,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
 
+    def change_event_comboBox_pep_direct_to_otf_genome_cut_method(self):
+        current_text = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
+        if current_text == 'auto':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+        elif current_text == 'distinct_count':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+        elif current_text == 'coverage':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(True)
+        else:
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+
     
     def hide_or_show_all_items_in_layout(self, layout, hide: bool):
         """
@@ -938,7 +953,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          "scrollArea_co_expression_plot_settings", "scrollArea_expression_trends_plot_settings",
                          "scrollArea_taxa_func_link_plot_settings", "scrollArea_taxa_func_link_net_plot_settings",
                          "scrollArea_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
-                         "groupBox_pep_direct_to_otf"
+                         "scrollArea_pep_direct_to_otf_settings"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -2427,11 +2442,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text()
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
-        distinct_genome_threshold = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
+        turn_point_distinct_cutoff = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
         stop_after_genome_ranking = self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked()
         continue_base_on_annotaied_peptide_table = self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked()
-        turn_point_method = "auto" if self.checkBox_pep_direct_to_otfgenome_auto_cutoff.isChecked() else "coverage"
+        turn_point_method = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
         
         
         for value in [peptide_table_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
@@ -2465,7 +2480,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     output_path=output_path,
                     stop_after_genome_ranking=stop_after_genome_ranking,
                     continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
-                    turn_point_method=turn_point_method
+                    turn_point_method=turn_point_method,
+                    turn_point_distinct_cutoff=turn_point_distinct_cutoff
                     )
                 if stop_after_genome_ranking:
                     return instance.process_peptides_to_proteins()
@@ -2473,7 +2489,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     return instance.all_in_one(
                         taxafunc_anno_db_path = taxafunc_anno_db_path,
                         lca_threshold = lca_threshold,
-                        distinct_genome_threshold = distinct_genome_threshold,
+                        distinct_genome_threshold = 0,
                         protein_genome_separator = protein_genome_separator
                     )
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
@@ -2635,7 +2651,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
     def show_toolButton_final_peptide_help(self):
         QMessageBox.information(self.MainWindow, 'Peptide Table Help',
-                                 'Option 1. From MAG Search results (e.g. final_peptides.tsv in MetaLab-MAG, xxs.pr_matrix.tsv in DIA-NN Results)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample')
+                                 "Option 1. From MAG Search results (e.g. final_peptides.tsv in MetaLab-MAG, xxs.pr_matrix.tsv in DIA-NN Results)\
+                                     \n\nOption 2. Manually create a table with one column for the 'peptide sequence' and another column for the 'protein group' (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the 'intensity values' for each sample.")
                                     
     def show_toolButton_lca_threshould_help(self):
         # QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
