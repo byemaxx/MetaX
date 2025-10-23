@@ -1,3 +1,19 @@
+# Version: 1.126.2
+## Date: 2025-10-20
+### Changes:
+- Optimize: Optimized the UI and Guidebook of the Peptide Annotator part.
+
+# Version: 1.126.2
+## Date: 2025-10-20
+### Changes:
+- Add: Annotator compatible with the DIA-NN output from MAG search result.
+- Add: Added an option to handle duplicate peptides when annotate the OTF table. Options include 'first', 'sum', 'max', 'min', 'mean', and 'keep'.
+
+# Version: 1.126.1
+## Date: 2025-10-09
+### Changes:
+- Add: Added a option to keep or remove "unkown taxa" when create the multi tables.
+
 # Version: 1.126.0
 ## Date: 2025-10-08
 ### Changes:

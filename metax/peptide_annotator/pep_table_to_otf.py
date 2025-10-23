@@ -27,23 +27,51 @@ else:
     from .get_genome_rank import GenomeRank
     from .peptable_annotator import PeptideAnnotator
 
-def query_peptide_proteins(db_file, peptide_list, chunk_size=10000, removed_genomes_set:set|None = None):
+def query_peptide_proteins(db_file, peptide_list, 
+                           chunk_size=10000, 
+                           removed_genomes_set:set|None = None,
+                           selected_genomes_set:set|None = None):
     """
     Query peptide to protein mapping from a database with progress tracking.
-    
+
     Args:
         db_file (str): The file path to the SQLite database.
         peptide_list (list of str): A list of peptide sequences to query.
         chunk_size (int): The number of peptides to query in one batch (default: 10000).
+        removed_genomes_set (set[str] | None): Genomes to exclude. None means no exclusion; empty set means exclude nothing.
+        selected_genomes_set (set[str] | None): Genomes to include. None means no inclusion filter; empty set means include none.
+
+    Note:
+        If a genome appears in both selected and removed sets, removal takes precedence.
         
     Returns:
         dict: A dictionary mapping peptide sequences to a semicolon-separated string of proteins.
     """
-    
     peptide_proteins = {}
+
+    # if set is empty, treat as no filtering
+    sel_set = set(selected_genomes_set) if selected_genomes_set else None
+    rm_set = set(removed_genomes_set) if removed_genomes_set else None
+
+    # 冲突处理：同时在 selected 与 removed 中的基因组，按“移除优先”
+    if sel_set is not None and rm_set is not None:
+        conflict = sel_set & rm_set
+        if conflict:
+            print(f"Warning: {len(conflict)} genomes appear in both selected and removed sets; removal takes precedence.")
+            sel_set -= rm_set
 
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
+
+        # limit chunk size based on SQLite max variable number
+        try:
+            cursor.execute("PRAGMA max_variable_number;")
+            row = cursor.fetchone()
+            max_vars = int(row[0]) if row and row[0] else 999
+        except Exception:
+            max_vars = 999
+        chunk_size = max(1, min(chunk_size, max_vars))
+
         for i in tqdm(range(0, len(peptide_list), chunk_size), desc="Querying database in chunks"):
             chunk = peptide_list[i:i + chunk_size]
             query = "SELECT peptide, proteins FROM peptide_proteins WHERE peptide IN ({})".format(
@@ -52,14 +80,24 @@ def query_peptide_proteins(db_file, peptide_list, chunk_size=10000, removed_geno
             cursor.execute(query, chunk)
             rows = cursor.fetchall()
 
-            for peptide, proteins_json in rows:  
+            for peptide, proteins_json in rows:
                 try:
                     proteins = json.loads(proteins_json)
                 except json.JSONDecodeError:
                     peptide_proteins[peptide] = ""
                     continue
-                if removed_genomes_set:
-                    proteins = [p for p in proteins if p.split('_', 1)[0] not in removed_genomes_set]
+
+                # returning empty if no proteins found
+                if not proteins or not isinstance(proteins, list):
+                    peptide_proteins[peptide] = ""
+                    continue
+
+                # filtering by selected/removed genomes
+                if sel_set is not None:
+                    proteins = [p for p in proteins if p.split('_', 1)[0] in sel_set]
+                if rm_set is not None:
+                    proteins = [p for p in proteins if p.split('_', 1)[0] not in rm_set]
+
                 peptide_proteins[peptide] = ';'.join(proteins) if proteins else ""
 
     return peptide_proteins
@@ -68,6 +106,7 @@ def query_peptide_proteins(db_file, peptide_list, chunk_size=10000, removed_geno
 class peptideProteinsMapper:
     def __init__(self, peptide_table_path, db_path, 
                  removed_genomes_set:set|None = None,
+                 selected_genomes_set:set|None = None,
                  table_separator='\t',
                  peptide_col='Sequence', 
                  intensity_col_prefix='Intensity',
@@ -85,6 +124,7 @@ class peptideProteinsMapper:
         self.peptide_table_path = peptide_table_path
         self.db_file = db_path
         self.removed_genomes_set = removed_genomes_set
+        self.selected_genomes_set = selected_genomes_set
         self.table_separator = table_separator
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
@@ -214,7 +254,9 @@ class peptideProteinsMapper:
         
         unique_peptides = self.peptide_table[self.peptide_col].drop_duplicates().tolist()
 
-        peptide_proteins_dict = query_peptide_proteins(self.db_file, unique_peptides, removed_genomes_set=self.removed_genomes_set)
+        peptide_proteins_dict = query_peptide_proteins(self.db_file, unique_peptides, 
+                                                       removed_genomes_set=self.removed_genomes_set,
+                                                       selected_genomes_set=self.selected_genomes_set)
 
         self.peptide_table["Proteins"] = self.peptide_table[self.peptide_col].map(peptide_proteins_dict)
 
@@ -462,8 +504,7 @@ class peptideProteinsMapper:
         
         
 if __name__ == "__main__":
-    peptide_table_path = "C:/Users/Qing/Desktop/diann_res_test/report.pr_matrix_test.tsv"
-    # peptide_table_path = "temp/annotated_peptide_table.tsv"
+    peptide_table_path = "temp/annotated_peptide_table.tsv"
     db_path = "C:/Users/Qing/Desktop/UHGP/UHGP_digested_db/peptide_to_protein.db"
     
     ## test process_peptides_to_proteins
@@ -480,24 +521,41 @@ if __name__ == "__main__":
     
     # # test all_in_one
     taxafunc_anno_db_path = "C:/Users/Qing/Desktop/UHGP/MetaX_human-gut_v2.0.2_dacanadded_20250523.db"
-    output_path ="C:/Users/Qing/Desktop/diann_res_test/otf.tsv"
+    output_path ="OTF_coverage.tsv"
     
     # set of genomes to be removed
     removed_genomes_set = set()
-    removed_genomes_file_path = "C:/Users/Qing/OneDrive - University of Ottawa/code/TaxaFunc/MetaX/.local_tests/removed_genomes.txt"
-    with open(removed_genomes_file_path) as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                removed_genomes_set.add(line)
-    print(len(removed_genomes_set), "genomes in the genome list")
-
+    removed_genomes_file_path = ".local_tests/removed_genomes.txt"
+    if not pathlib.Path(removed_genomes_file_path).is_file():
+        print("No removed genomes file found, skip removing genomes")
+    else:
+        with open(removed_genomes_file_path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    removed_genomes_set.add(line)
+        print(len(removed_genomes_set), "genomes in the genome list")
+    
+    # set of genomes to be selected
+    selected_mag_set = set()
+    # selected_mag_file_path = '.local_tests/selected_genomes.txt'
+    # if not pathlib.Path(selected_mag_file_path).is_file():
+    #     print("No selected genomes file found, skip keeping selected genomes")
+    # else:
+    #     with open(selected_mag_file_path) as f:
+    #         for line in f:
+    #             line = line.strip()
+    #             if line:
+    #                 selected_mag_set.add(line)
+    #     print(len(selected_mag_set), "genomes in the selected mags list")
+    
+    # initialize and run all in one
     peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-                                           removed_genomes_set=removed_genomes_set,
-                                           peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
-                                           turn_point_method='Coverage',
+                                           removed_genomes_set=removed_genomes_set, selected_genomes_set=selected_mag_set,
+                                           peptide_col='Stripped.Sequence', intensity_col_prefix=r"E:", table_separator='\t',
+                                           turn_point_method='coverage',
                                            genome_cutoff_rank=None,
-                                           turn_point_distinct_cutoff=5,
+                                           turn_point_distinct_cutoff=3,
                                            genome_peptide_coverage_cutoff=0.97, 
                                            protein_peptide_coverage_cutoff=1,
                                            continue_base_on_annotaied_peptide_table=False)

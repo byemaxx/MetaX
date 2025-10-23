@@ -342,7 +342,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
         self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking)
         self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides)
-        
+        self.comboBox_pep_direct_to_otf_genome_cut_method.currentIndexChanged.connect(self.change_event_comboBox_pep_direct_to_otf_genome_cut_method)
         
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -674,6 +674,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
 
+    def change_event_comboBox_pep_direct_to_otf_genome_cut_method(self):
+        current_text = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
+        if current_text == 'auto':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+        elif current_text == 'distinct_count':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+        elif current_text == 'coverage':
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(True)
+        else:
+            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
+
     
     def hide_or_show_all_items_in_layout(self, layout, hide: bool):
         """
@@ -933,12 +948,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.checkBox_tflink_plot_mean.setEnabled(True)
 
     def hide_plot_setting_groupbox(self):
-        groupbox_list = ["groupBox_basic_plot", "groupBox_basic_heatmap_plot_settings", 
-                         "groupBox_cross_heatmap_settings", "groupBox_deseq2_plot_settings",
-                         "groupBox_co_expression_plot_settings", "groupBox_expression_trends_plot_settings",
-                         "groupBox_taxa_func_link_plot_settings", "groupBox_taxa_func_link_net_plot_settings",
-                         "groupBox_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
-                         "groupBox_pep_direct_to_otf"
+        groupbox_list = ["scrollArea_set_otf_options","scrollArea_basic_plot_settings", "scrollArea_basic_heatmap_plot_settings", 
+                         "scrollArea_cross_heatmap_settings", "scrollArea_deseq2_plot_settings",
+                         "scrollArea_co_expression_plot_settings", "scrollArea_expression_trends_plot_settings",
+                         "scrollArea_taxa_func_link_plot_settings", "scrollArea_taxa_func_link_net_plot_settings",
+                         "scrollArea_peptide_annotator_settings", "groupBox_otf_analyzer_settings",
+                         "scrollArea_pep_direct_to_otf_settings"
                          ]
         for groupbox_name in groupbox_list:
             groupbox = getattr(self, groupbox_name)
@@ -2353,12 +2368,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         genome_mode = self.checkBox_annotator_genome_mode.isChecked()
         protein_separator = self.lineEdit_annotator_protein_separator.text()
         protein_genome_separator = self.lineEdit_annotator_genome_separator.text()
-        peptide_col = self.lineEdit_annotator_peptide_col_name.text()
-        protein_col = self.lineEdit_annotator_protein_col_name.text()
+        peptide_col = self.comboBox_annotator_peptide_col_name.currentText()
+        protein_col = self.comboBox_annotator_protein_col_name.currentText()
         sample_col_prefix = self.lineEdit_annotator_sample_col_prefix.text()
         distinct_genome_threshold = self.spinBox_annotator_distinct_num_threshold.value()
         exclude_protein_startwith = self.lineEdit_annotator_exclude_protein_startwith.text()
-
+        duplicate_peptide_handling_mode = self.comboBox_annotator_duplicate_peptide_handle_mode.currentText()  # 'first', 'sum', 'max', 'min', 'mean', 'keep'
+        
         if db_path == '':
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select database!')
         elif final_peptide_path == '':
@@ -2381,8 +2397,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         peptide_col=peptide_col,
                         sample_col_prefix=sample_col_prefix,
                         distinct_genome_threshold=distinct_genome_threshold,
-                        exclude_protein_startwith = exclude_protein_startwith
-                        
+                        exclude_protein_startwith=exclude_protein_startwith,
+                        duplicate_peptide_handling_mode=duplicate_peptide_handling_mode
+
                     )
                     return instance.run_annotate()
                 self.run_in_new_window(peptide2taxafunc_main_wrapper, show_msg=True)
@@ -2425,11 +2442,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text()
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
-        distinct_genome_threshold = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
+        turn_point_distinct_cutoff = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
         stop_after_genome_ranking = self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked()
         continue_base_on_annotaied_peptide_table = self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked()
-        turn_point_method = "auto" if self.checkBox_pep_direct_to_otfgenome_auto_cutoff.isChecked() else "coverage"
+        turn_point_method = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
         
         
         for value in [peptide_table_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
@@ -2463,7 +2480,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     output_path=output_path,
                     stop_after_genome_ranking=stop_after_genome_ranking,
                     continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
-                    turn_point_method=turn_point_method
+                    turn_point_method=turn_point_method,
+                    turn_point_distinct_cutoff=turn_point_distinct_cutoff
                     )
                 if stop_after_genome_ranking:
                     return instance.process_peptides_to_proteins()
@@ -2471,7 +2489,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     return instance.all_in_one(
                         taxafunc_anno_db_path = taxafunc_anno_db_path,
                         lca_threshold = lca_threshold,
-                        distinct_genome_threshold = distinct_genome_threshold,
+                        distinct_genome_threshold = 0,
                         protein_genome_separator = protein_genome_separator
                     )
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
@@ -2632,8 +2650,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         msg_box.exec_()
                 
     def show_toolButton_final_peptide_help(self):
-        QMessageBox.information(self.MainWindow, 'Final Peptide Help',
-                                 'Option 1. From MetaLab-MAG results (final_peptides.tsv)\n\nOption 2. You can also create it by yourself, make sure the first column is ID(e.g. peptide sequence) and second column is proteins ID of MGnify (e.g. MGYG000003683_00301;MGYG000001490_01143), other columns are intensity of each sample') 
+        QMessageBox.information(self.MainWindow, 'Peptide Table Help',
+                                 "Option 1. From MAG Search results (e.g. final_peptides.tsv in MetaLab-MAG, xxs.pr_matrix.tsv in DIA-NN Results)\
+                                     \n\nOption 2. Manually create a table with one column for the 'peptide sequence' and another column for the 'protein group' (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the 'intensity values' for each sample.")
                                     
     def show_toolButton_lca_threshould_help(self):
         # QMessageBox.information(self.MainWindow, 'LCA Threshold Help', 'For each peptide, find the proportion of LCAs in the corresponding protein group with the largest number of taxonomic categories. The default is 1.00 (100%).')
@@ -2983,7 +3002,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                          'Order': 'o', 'Class': 'c', 'Phylum': 'p', 'Domain': 'd', 'Life': 'l'}
             
             taxa_level = name_dict[taxa_input]
-            
+            remove_unknown_taxa = self.checkBox_set_otf_remove_unknown_taxa.isChecked()
+
             func_threshold = self.doubleSpinBox_func_threshold.value()
             func_threshold = round(func_threshold, 3)
             
@@ -3148,7 +3168,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         'keep_unknow_func': False,
                                         'split_func': split_func, 'split_func_params': split_func_params,
                                         'taxa_and_func_only_from_otf': taxa_and_func_only_from_otf,
-                                        'quant_method': quant_method}
+                                        'quant_method': quant_method, 
+                                        'remove_unknown_taxa': remove_unknown_taxa}
                 
                 self.logger.write_log(f"set_multi_table_params: {set_multi_table_params} \
                     \n\nOutlier_params: {outlier_params} \n\nData_preprocess_params: {data_preprocess_params}", 'i')

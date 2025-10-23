@@ -104,6 +104,8 @@ The Data Overview provides basic information about your data, such as the number
 
 - **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by any taxa, the follow analysis focus on functions).
 
+- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+
 - **Split Function:** Split the annotations with multi-functions.
 
   - | KO                  | Intensity |
@@ -119,7 +121,16 @@ The Data Overview provides basic information about your data, such as the number
 
     If <u>Share Intensity</u> is checked, the intensity above would given <u>5</u> to each split KO
 
-- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+- **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed.
+   When unchecked, such peptides will be retained and labeled as *unknown*, for example:
+
+  ```
+  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_
+  to
+  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown
+  ```
+
+  
 
 - **Create Taxa and Func only from OTFs:**
 
@@ -134,9 +145,10 @@ The Data Overview provides basic information about your data, such as the number
 
 ### Sum Proteins Intensity
 
-Click **Create Proteins Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
+Click **Generate Protein Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
 
 - **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
+  
   - Razor:
     1. Build a minimal set of proteins to cover all peptides.
     2. For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).
@@ -153,13 +165,15 @@ Click **Create Proteins Intensity Table** to sum peptides to proteins if the Pro
     >- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
     
 
+- **Minimum peptide number per protein:** Filters out proteins that contain fewer peptides than the specified threshold.
+
 ### Data preprocessing
 
 - **Quantitative Method：**
 
   - **<u>Sum</u>**: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.
 
-  - **<u>DirecteLFQ</u>**: Using DirecteLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
+  - **<u>DirectLFQ</u>**: Using DirectLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
 
     
 
@@ -180,14 +194,28 @@ There are several methods for detecting and handling outliers.
   
   - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as a NaN.
   
-  - **Half-Zero:** This rule applies to groups of data. If more than half of the values in a group are 0, while the rest are non-zero, then the non-zero values are marked as NaN. Conversely, if less than half of the values are 0, then the zero values are marked as NaN. If the group contains an equal number of 0 and non-zero values, all values in the group are marked as NaN.
+  - **Half-Zero:** 
   
-  - **Zero-Dominant:** This rule applies to groups of data. If more than half of the values in a group are 0, then the non-zero values are marked as NaN.
+    ​	Applies to grouped data.
+  
+    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
+  
+    - If fewer than half of the values are zero, all *zero* values are replaced with NaN.
+    - If the number of zero and non-zero values is equal, *all* values in the group are replaced with NaN.
+  
+  - **Zero-Dominant:** 
+  
+    ​	Applies to grouped data.
+  
+    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
+    - Otherwise, the group remains unchanged.
   
   - **Zero-Inflated Poisson:** This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
   
   - **Negative Binomial:** This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
+  
   - **Z-Score:** Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.
+  
   - **Mahalanobis Distance:** Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.
 
 ​	<u>In all methods, You can choose detection outliers by a meta column, and a meta to handle the outliers.</u>
@@ -420,7 +448,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Significant comparing enables us to find the result of **<u>The taxa between the two groups showing no significant differences, while the related functions are significantly different</u>** and function no significant but relted taxa significant.
 - ![Significant_Taxa-Func](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
 
-### Plot Corss Heatmap
+### Plot Cross Heatmap
 
 - The **result** of the T-test and ANOVA Test will show in a new window
 
@@ -738,11 +766,11 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ### 1. Results from MAG Workflow
 
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., MetaLab-MAG, MetaLab-DIA and other workflows wich using MAG databases like MGnify or customized MAGs Database.
+The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., **DIA-NN**, **MetaLab-MAG**, **MetaLab-DIA**, and other workflows which using MAG databases like MGnify or customized MAGs Database.
 
 - Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
-  ![peptide2taxafunc](./MetaX_Cookbook.assets/peptide2taxafunc.png)
+  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
 
   **Required:**
 
@@ -750,19 +778,19 @@ The peptide results use Metagenome-assembled genomes (MAGs) as the reference dat
 
   - **Peptide Table**:
 
-    - *Option 1*: From MetaLab-MAG results (final_peptides.tsv)
+    - *Option 1*: From the Search engine which using Metagenome-assembled genomes (MAGs)  as database. (e.g. ***final_peptides.tsv*** in MetaLab-MAG, ***xxx_report.pr_matrix.tsv*** in DIA-NN result)
 
-    - *Option 2*: Create it manually, with the first column as the ID (e.g., peptide sequence) and the second column as the proteins ID of MGnify (e.g., MGYG000003683_00301; MGYG000001490_01143) or your database, and other columns as the intensity of each sample.
+    - *Option 2*: Manually create a table with one column for the **peptide sequence** and another column for the **protein group** (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the **intensity values** for each sample.
 
     **Example:**
 
     | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
     | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
-    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002258_01582;MGYG000001300_00281;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
+    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
     | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
     | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
-    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124;MGYG000004758_00803;MGYG000002486_00845;MGYG000000271_01269 | 0               | 307519          | 0               | 0               |
-    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102;MGYG000004271_00233;MGYG000002517_00542;MGYG000000489_01025 | 306231          | 0               | 0               | 1214497         |
+    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124  | 0               | 307519          | 0               | 0               |
+    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102 | 306231          | 0               | 0               | 1214497         |
 
   - **Output Save Path**: The location to save the result table.
 
@@ -776,13 +804,13 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
 - Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
 
-  ![peptide2taxafunc_tab2_1](MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png)
+  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="peptide2taxafunc_tab2_1" style="zoom:80%;" />
 
 - The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
 
   - Select **OTFs Save To** to set the location to save the result table.
 
-  ![peptide2taxafunc_tab2_2](MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png)
+  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png" alt="peptide2taxafunc_tab2_2" style="zoom:80%;" />
 
 <br>
 

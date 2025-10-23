@@ -48,7 +48,7 @@ class PeptideAnnotator:
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
                  peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None,
-                 additional_running_info: dict=None):
+                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum'):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
@@ -63,10 +63,13 @@ class PeptideAnnotator:
         self.sample_col_prefix = sample_col_prefix.strip()
         self.distinct_genome_threshold = distinct_genome_threshold
         self.exclude_protein_startwith = exclude_protein_startwith
+        self.duplicate_peptide_handling_mode = duplicate_peptide_handling_mode  # 'first', 'sum', 'max', 'min', 'mean', 'keep'
         
         self.thread_local = threading.local()
         self.start_time = datetime.now()
         self.additional_running_info = additional_running_info if additional_running_info else {}
+        # save running statistics for logging info file
+        self.run_stats: dict = {}
         
     def get_connection(self):
         if not hasattr(self.thread_local, "conn"):
@@ -217,6 +220,7 @@ class PeptideAnnotator:
         processing_duration = str(datetime.now() - self.start_time).split('.')[0]
         
         # save the dataframe to the output file (clean TSV without comments)
+        print('Saving result dataframe to output file...')
         df.to_csv(self.output_path, sep='\t', index=False)
         
         # save metadata to a separate info file
@@ -224,27 +228,96 @@ class PeptideAnnotator:
         info_path = f"{base_path}_info.txt"
         with open(info_path, 'w', encoding='utf-8') as f:
             f.write("MetaX PeptideAnnotator Results\n")
-            if 'additional_info' in metadata:
-                f.write("="*50 + "\n")
-                for key, value in metadata['additional_info'].items():
-                    f.write(f"{key}: {value}\n")
             f.write("="*50 + "\n")
+            # 运行元信息
             f.write(f"Software: {metadata['software']} v{metadata['version']}\n")
             f.write(f"Run time: {metadata['run_time']}\n")
-            f.write(f"Completion time: {completion_time}\n")
-            f.write(f"Processing duration: {processing_duration}\n")
-            f.write(f"Input: {metadata['parameters']['input_peptide_path']}\n")
-            f.write(f"Database: {metadata['parameters']['database_path']}\n")
-            f.write(f"Threshold: {metadata['parameters']['threshold']}\n")
-            f.write(f"Genome mode: {metadata['parameters']['genome_mode']}\n")
-            f.write(f"Distinct genome threshold: {metadata['parameters']['distinct_genome_threshold']}\n")
-            f.write(f"Exclude proteins: {metadata['parameters']['exclude_protein_startwith']}\n")
-            f.write(f"Result: {df.shape[0]} rows × {df.shape[1]} columns\n")
+            f.write("-"*50 + "\n")
+            # 参数信息
+            f.write("Parameters:\n")
+            f.write(f"  - Threshold: {metadata['parameters']['threshold']}\n")
+            f.write(f"  - Genome mode: {metadata['parameters']['genome_mode']}\n")
+            f.write(f"  - Distinct genome threshold: {metadata['parameters']['distinct_genome_threshold']}\n")
+            f.write(f"  - Exclude proteins: {metadata['parameters']['exclude_protein_startwith']}\n")
+            f.write(f"  - Protein separator: '{self.protein_separator}'\n")
+            f.write(f"  - Protein-genome separator: '{self.protein_genome_separator}'\n")
+            f.write(f"  - Protein column: '{self.protein_col}', Peptide column: '{self.peptide_col}'\n")
+            f.write(f"  - Sample prefix (input): '{self.sample_col_prefix}'\n")
+            # 额外信息
+            if 'additional_info' in metadata:
+                f.write("-"*50 + "\n")
+                f.write("Additional info:\n")
+                for key, value in metadata['additional_info'].items():
+                    f.write(f"  - {key}: {value}\n")
+            f.write("-"*50 + "\n")
+            # I/O 路径信息
+            f.write("Input/Output:\n")
+            f.write(f"  - Input: {metadata['parameters']['input_peptide_path']}\n")
+            f.write(f"  - Database: {metadata['parameters']['database_path']}\n")
+            f.write(f"  - Output (TSV): {self.output_path}\n")
+            f.write(f"  - Output (info): {info_path}\n")
+            f.write("-"*50 + "\n")
+            # 处理流程摘要
+            f.write("Processing summary:\n")
+            rs = self.run_stats if hasattr(self, 'run_stats') else {}
+            if rs:
+                if 'read_rows' in rs:
+                    f.write(f"  - Read rows: {rs.get('read_rows')}\n")
+                if 'removed_empty_protein' in rs:
+                    f.write(f"  - Removed rows (empty protein): {rs.get('removed_empty_protein')}\n")
+                if 'removed_zero_intensity' in rs:
+                    f.write(f"  - Removed rows (all-zero samples): {rs.get('removed_zero_intensity')}\n")
+                if 'duplicate_mode' in rs:
+                    f.write(f"  - Duplicate handling mode: {rs.get('duplicate_mode')}\n")
+                if 'duplicate_removed' in rs:
+                    f.write(f"  - Removed rows (duplicates): {rs.get('duplicate_removed')}\n")
+                if 'excluded_proteins_removed' in rs:
+                    f.write(f"  - Removed rows (excluded proteins): {rs.get('excluded_proteins_removed')}\n")
+                if 'distinct_genome_threshold' in rs:
+                    f.write(f"  - Distinct genome threshold used: {rs.get('distinct_genome_threshold')}\n")
+                if 'genome_kept_count' in rs:
+                    f.write(f"  - Genomes kept after distinct filter: {rs.get('genome_kept_count')}\n")
+                if 'genome_filtered_removed' in rs:
+                    f.write(f"  - Removed rows (genome distinct filter): {rs.get('genome_filtered_removed')}\n")
+            else:
+                f.write("  - NA\n")
+            f.write("-"*50 + "\n")
+            # 结果摘要
+            f.write("Result summary:\n")
+            f.write(f"  - Shape: {df.shape[0]} rows × {df.shape[1]} columns\n")
+            seq_col = 'Sequence' if 'Sequence' in df.columns else self.peptide_col
+            prot_col = 'Proteins' if 'Proteins' in df.columns else self.protein_col
+            try:
+                unique_seq = df[seq_col].nunique(dropna=True)
+            except Exception:
+                unique_seq = 'NA'
+            try:
+                unique_protein_groups = df[prot_col].nunique(dropna=True)
+            except Exception:
+                unique_protein_groups = 'NA'
+            f.write(f"  - Unique sequences: {unique_seq}\n")
+            f.write(f"  - Unique protein groups: {unique_protein_groups}\n")
+            sample_cols_out = [c for c in df.columns if c.startswith('Intensity_')]
+            f.write(f"  - Sample columns: {len(sample_cols_out)}\n")
+            if sample_cols_out:
+                show_names = sample_cols_out[:10] + (['...'] if len(sample_cols_out) > 10 else [])
+                f.write(f"  - Samples: {', '.join(show_names)}\n")
+            f.write("-"*50 + "\n")
+            # 完成时间放在最后，形成自然的“结束”
+            f.write("Completion:\n")
+            f.write(f"  - Completion time: {completion_time}\n")
+            f.write(f"  - Processing duration: {processing_duration}\n")
         
         print(f'Output file: {self.output_path}')
         print(f'Info file: {info_path}')
         print(f'Output shape: {df.shape}')
-
+        # 额外控制台摘要
+        try:
+            print(f"Samples: {len([c for c in df.columns if c.startswith('Intensity_')])}, Unique sequences: {df.get('Sequence', pd.Series()).nunique(dropna=True)}")
+            if self.run_stats:
+                print(f"Duplicates removed: {self.run_stats.get('duplicate_removed', 0)} (mode={self.run_stats.get('duplicate_mode', 'NA')})")
+        except Exception:
+            pass
 
     def exclude_proteins(self, df):
         if not self.exclude_protein_startwith:
@@ -257,11 +330,14 @@ class PeptideAnnotator:
                 return df
             
             # check each protein in the string separated by protein_separator
+            before_rows = df.shape[0]
             mask = df[self.protein_col].str.split(self.protein_separator).apply(
                 lambda proteins: any(p.strip().startswith(tuple(exclude_list)) for p in proteins)
             )
             df = df[~mask]
-            print(f'After removing exclude proteins: {df.shape}')
+            removed = before_rows - df.shape[0]
+            self.run_stats['excluded_proteins_removed'] = removed
+            print(f'After removing exclude proteins: {df.shape} (removed: {removed})')
         except Exception as e:
             print('Error: removing exclude proteins failed!')
             print(e)
@@ -301,7 +377,11 @@ class PeptideAnnotator:
         df[self.protein_col] = df[self.protein_col].apply(lambda x: self.remove_proteins_not_in_genome_list(x, genome_list))
         # remove rows with empty proteins
         df = df[df[self.protein_col].str.len() > 0]
-        print(f'Peptides number: from [{original_num}] -> [{df.shape[0]}] after filtering genomes with distinct peptides')
+        removed = original_num - df.shape[0]
+        self.run_stats['distinct_genome_threshold'] = self.distinct_genome_threshold
+        self.run_stats['genome_kept_count'] = len(genome_list)
+        self.run_stats['genome_filtered_removed'] = removed
+        print(f'Peptides number: from [{original_num}] -> [{df.shape[0]}] after filtering genomes with distinct peptides (removed: {removed})')
         return df
         
     def rename_columns(self, df):
@@ -322,6 +402,67 @@ class PeptideAnnotator:
         # replace the "Intensity__" to "Intensity_" if there are any
         cols = [col.replace('Intensity__', 'Intensity_') for col in cols]
         df.columns = cols
+        return df
+    
+    def handle_duplicate_peptides(self, df):
+        row_count = df.shape[0]
+        # check duplicate peptide-protein pairs
+        try:
+            unique_pair_count = df[[self.peptide_col, self.protein_col]].drop_duplicates().shape[0]
+        except KeyError:
+            print('Warning: protein or peptide column not found when checking duplicates.')
+            return df
+
+        if row_count == unique_pair_count:
+            print('No duplicate peptides found.')
+            self.run_stats['duplicate_mode'] = self.duplicate_peptide_handling_mode
+            self.run_stats['duplicate_removed'] = 0
+            return df
+
+        sample_cols = [col for col in df.columns if col.startswith(self.sample_col_prefix)]
+        print(f'Sample columns detected: {len(sample_cols)}')
+
+        # 无样本列或选择 'first' 时，直接保留首条
+        if self.duplicate_peptide_handling_mode == 'first' or len(sample_cols) == 0:
+            if len(sample_cols) == 0 and self.duplicate_peptide_handling_mode != 'first':
+                print('No sample columns detected, fallback to "first".')
+            df = df.drop_duplicates(subset=[self.peptide_col, self.protein_col], keep='first')
+            removed = row_count - df.shape[0]
+            self.run_stats['duplicate_mode'] = 'first'
+            self.run_stats['duplicate_removed'] = removed
+            print(f'Handling duplicate peptides with mode [first]: from [{row_count}] -> [{df.shape[0]}] (removed: {removed})')
+            return df
+
+        # Keep sample columns as numeric, fill NaN with 0 to avoid issues during aggregation
+        df[sample_cols] = df[sample_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
+
+        group_keys = [self.peptide_col, self.protein_col]
+        mode = self.duplicate_peptide_handling_mode
+
+        if mode == 'sum':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].sum()
+        elif mode == 'max':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].max()
+        elif mode == 'min':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].min()
+        elif mode == 'mean':
+            df = df.groupby(group_keys, as_index=False)[sample_cols].mean()
+        elif mode == 'keep':  # 保留全部，不做处理, 仅在代码中使用, GUI中不提供该选项
+            self.run_stats['duplicate_mode'] = 'keep'
+            self.run_stats['duplicate_removed'] = 0
+            print(f'Handling duplicate peptides with mode [keep]: from [{row_count}] -> [{df.shape[0]}]')
+            return df
+        else:
+            print(f'Warning: Unknown duplicate_peptide_handling_mode [{mode}], no handling applied.')
+            self.run_stats['duplicate_mode'] = mode
+            self.run_stats['duplicate_removed'] = 0
+            print(f'Handling duplicate peptides with mode [keep]: from [{row_count}] -> [{df.shape[0]}]')
+            return df
+
+        removed = row_count - df.shape[0]
+        self.run_stats['duplicate_mode'] = mode
+        self.run_stats['duplicate_removed'] = removed
+        print(f'Handling duplicate peptides with mode [{mode}]: from [{row_count}] -> [{df.shape[0]}] (removed: {removed})')
         return df
 
     def run_annotate(self):
@@ -354,13 +495,23 @@ class PeptideAnnotator:
         # remove the columns only containing self.sample_col_prefix, rather than starting with self.sample_col_prefix
         intensity_cols = [col for col in intensity_cols if col != self.sample_col_prefix]
         df = df.loc[:, [self.peptide_col, self.protein_col] + intensity_cols]
+        self.run_stats['read_rows'] = df.shape[0]
+        self.run_stats['read_cols'] = df.shape[1]
+        self.run_stats['sample_cols_in_input'] = len(intensity_cols)
         # remove the rows with empty protein column
         print("Removing rows with empty protein column if there are...")
+        before_rows = df.shape[0]
         df = df[df[self.protein_col].str.len() > 0]
+        self.run_stats['removed_empty_protein'] = before_rows - df.shape[0]
+        # remove rows with 0/NaN in all samples
         print("Removing rows with 0 or NaN in all samples...")
+        before_rows2 = df.shape[0]
         df = df.loc[df[intensity_cols].sum(axis=1) > 0]
+        self.run_stats['removed_zero_intensity'] = before_rows2 - df.shape[0]
         
         print(f'After filtering columns and rows, the peptide table shape: {df.shape}')
+        
+        df = self.handle_duplicate_peptides(df)
         
         df = self.exclude_proteins(df)
         
