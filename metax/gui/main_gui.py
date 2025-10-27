@@ -4874,7 +4874,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         width=width, height=height, font_size=font_size, rename_sample = rename_sample,
                                         font_transparency=font_transparency, adjust_label=adjust_label, theme=theme,
                                         sub_meta = sub_meta, legend_col_num=legend_col_num, dot_size=dot_size,
-                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=None)
+                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=2025)
 
                         
             elif method == 'box':
