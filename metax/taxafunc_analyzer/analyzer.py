@@ -84,6 +84,7 @@ class TaxaFuncAnalyzer:
         self.custom_df: Optional[pd.DataFrame] = None # other df, any df that user want to add
         self.peptide_num_used = {'taxa': 0, 'func': 0, 'taxa_func': 0, 'protein': 0}
         self.distinct_peptides_list: list|None = None
+        self.preprocess_methods: Optional[Dict] = None # store the data preprocess methods
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
@@ -96,6 +97,7 @@ class TaxaFuncAnalyzer:
         self.GetMatrix = GetMatrix(self)
         self.detect_and_handle_outliers = DataPreprocessing(self).detect_and_handle_outliers
         self.data_preprocess = DataPreprocessing(self).data_preprocess
+        self.invert_transform = DataPreprocessing(self).invert_transform
 
 
         self._set_original_df(df_path)
@@ -1100,7 +1102,7 @@ class TaxaFuncAnalyzer:
         """
         print(f"Original data shape: {self.original_df.shape}")
         
-
+        self.preprocess_methods = data_preprocess_params
         # for any_df_mode, the df is considered as other_df
         if self.any_df_mode:
             self.set_any_df_table(outlier_params=outlier_params, data_preprocess_params=data_preprocess_params)

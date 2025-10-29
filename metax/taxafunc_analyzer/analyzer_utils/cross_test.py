@@ -311,163 +311,347 @@ class CrossTest:
         return res_df
         
         
-
-    # USAGE: res_df = get_stats_deseq2_against_control_with_conditon(sw.taxa_df, 'PBS', 'Individual')
-    def get_stats_deseq2_against_control_with_conditon(self, df, control_group, condition, group_list=None, quiet=False) -> pd.DataFrame:
+    def get_stats_deseq2_against_control_with_conditon(
+        self,
+        df,
+        control_group,
+        condition,                          # e.g. 'Individual' or 'Sex'
+        group_list=None,
+        quiet=False,
+        # ---- NEW (all optional, backward-compatible) ----
+        add_covariates: list[str] | None = None,          # e.g. ['Age','Batch'] ; will be applied within each condition level
+        interactions: list[tuple[str, str]] | None = None,# e.g. [('Sugar_name','Age')]
+        test_mode: str = "categorical",                   # 'categorical' (default) or 'continuous'
+        continuous_term: str | None = None,               # e.g. 'Age' or 'Sugar_name[T.ISO]:Age' (only for test_mode='continuous')
+        lfc_null: float = 0.0,                            # effect-size threshold for continuous tests
+        alt_hypothesis: str | None = None                 # 'greaterAbs'/'lessAbs'/'greater'/'less'
+    ) -> pd.DataFrame:
         """
-        Perform statistical analysis using the DESeq2 method to compare groups against a control group with a specific condition.
+        Run DESeq2 comparisons within each level of a given condition (stratified analysis).
+        Backward-compatible; now supports in-stratum covariates/interactions and continuous-term tests.
 
-        Args:
-            df (pd.DataFrame): The input dataframe containing the data for analysis.
-            control_group (str): The name of the control group. e.g. 'PBS'.
-            condition (str): The name of the condition to compare against. e.g. 'Individual'.
-            group_list (list, optional): A list of groups to include in the analysis. Defaults to None. If None, all groups will be included.
-            quiet (bool, optional): Whether to suppress printing progress messages. Defaults to False.
-
-        Returns:
-            pd.DataFrame: A dataframe with 3-level column index containing the results of the DESeq2 analysis.
+        Notes:
+        - The 'condition' is used to subset data per level: i.e., for each level L in meta[condition],
+            we run get_stats_deseq2_against_control(..., condition=[condition, L], ...)
+        - To avoid collinearity, if 'condition' appears in add_covariates, it will be dropped with a warning.
+        - For population-level paired design, prefer the unified model:
+                get_stats_deseq2_against_control(..., add_covariates=['Individual'])
+            rather than stratifying by Individual here.
         """
+        import warnings
 
         meta_df = self.tfa.meta_df.copy()
-
         self.tfa.check_if_condition_valid(condition_meta=condition,  current_group_list=group_list)
 
-        condition_list = meta_df[condition].unique()
-        print(f'------------------ Start Comparisons Deseq2 with Condition [{condition}]------------------')
-        print(f'Condition List: {condition_list}')
+        # validate condition variable exists
+        if condition not in meta_df.columns:
+            raise KeyError(f"Condition '{condition}' not found in metadata. Available: {list(meta_df.columns)}")
 
-        # only extract the row is condition in second_meta
+        # unique levels to iterate
+        condition_list = list(meta_df[condition].dropna().unique())
+        print(f'------------------ Start Comparisons (stratified by [{condition}]) ------------------')
+        print(f'Levels: {condition_list}')
+
+        # sanitize covariates: drop the same variable as 'condition'
+        covs = list(add_covariates) if add_covariates else None
+        if covs and condition in covs:
+            warnings.warn(
+                f"[MetaX] '{condition}' is used for stratification and cannot be used as a covariate simultaneously; "
+                f"removing it from add_covariates."
+            )
+            covs = [c for c in covs if c != condition]
+        # optional: if after removal covs becomes empty, set to None for clarity
+        if covs is not None and len(covs) == 0:
+            covs = None
+
+        # do the work per level
         res_dict = {}
-        for condition_group in condition_list:
-            print(f'Start for [{condition_group}]...')
-            dft = self.get_stats_deseq2_against_control(df = df, control_group=control_group, condition=[condition, condition_group], group_list=group_list, concat_sample_to_result=True, quiet=quiet)
-            res_dict[condition_group] = dft
-            print(f'Done for [{condition_group}]...')
-        
+        for cond_level in condition_list:
+            print(f'-- Start level [{cond_level}] (condition: {condition}) --')
+            # within-level subset is handled by 'condition=[condition, cond_level]' in the downstream call
+            dft = self.get_stats_deseq2_against_control(
+                df=df,
+                control_group=control_group,
+                group_list=group_list,
+                concat_sample_to_result=True,  # keep your previous default behavior here
+                quiet=quiet,
+                condition=[condition, cond_level],     # subset to this stratum
+                # pass-through new parameters into the unified engine
+                add_covariates=covs,                   # covariates INSIDE this stratum (must not include 'condition')
+                interactions=interactions,
+                test_mode=test_mode,
+                continuous_term=continuous_term,
+                lfc_null=lfc_null,
+                alt_hypothesis=alt_hypothesis
+            )
+            res_dict[cond_level] = dft
+            print(f'-- Done level [{cond_level}] --')
+
+        # 3-level columns: (condition_level) × (group2) × (result_cols)
         res_df = pd.concat(res_dict.values(), keys=res_dict.keys(), axis=1)
-        print(f'\n------------------ Done for Comparisons Deseq2 with Condition [{condition}]------------------\n')
+        print(f'------------------ Done (stratified by [{condition}]) ------------------')
+        return res_df
+
+
+    def _safe_name(self, s: str) -> str:
+        """Make names formula-safe: replace '-' with '_' only for metadata names/levels."""
+        return str(s).replace('-', '_')
+
+    def _find_coef_index(self, dds, term: str) -> int:
+        """
+        Find column index of a coefficient in design matrix for continuous tests.
+        term examples:
+        - 'Age'                        (main effect of Age)
+        - 'Sugar_name[T.ISO]:Age'      (interaction: factor level ISO with Age)
+        """
+        import re
+        cols = list(dds.design_matrix.columns)
+        # exact match first
+        if term in cols:
+            return cols.index(term)
+        # tolerant search: e.g., 'Age' may appear in interactions/encodings
+        candidates = [c for c in cols if c == term or c.endswith(':' + term) or c.endswith(term)]
+        if len(candidates) == 1:
+            return cols.index(candidates[0])
+        # try regex end match
+        patt = re.compile(re.escape(term) + r"$")
+        for i, c in enumerate(cols):
+            if patt.search(c):
+                return i
+        raise KeyError(f"Could not find coefficient column for term '{term}'. "
+                    f"Available: {cols}")
         
-        return res_df # a dataframe with 3 level columns index
 
-            
-    def get_stats_deseq2_against_control(self, df, control_group, group_list: list|None = None, concat_sample_to_result: bool = False, quiet: bool = False, condition: list|None = None) -> pd.DataFrame:
-            all_group_list = sorted(set(self.tfa.group_list))
-            if group_list is None:
-                group_list = all_group_list
-            
-            # checek if control_group and group_list are in meta_list
-            if control_group not in all_group_list:
-                raise ValueError(f"control_group must be in {all_group_list}")
-            if any(i not in all_group_list for i in group_list):
-                raise ValueError(f"groups must be in {all_group_list}")
-            
-            # check if the control_group is in group_list
-            elif control_group in group_list:
-                group_list.remove(control_group)
-                
-            
-            res_dict = {}
+    def get_stats_deseq2_against_control(
+        self,
+        df,
+        control_group,
+        group_list: list | None = None,
+        concat_sample_to_result: bool = False,
+        quiet: bool = False,
+        condition: list | None = None,
+        # NEW: pass-throughs for covariates/continuous tests (all optional, backward-compatible)
+        add_covariates: list[str] | None = None,
+        interactions: list[tuple[str, str]] | None = None,
+        test_mode: str = "categorical",           # "categorical" (default) or "continuous"
+        continuous_term: str | None = None,       # e.g. "Age" or "Sugar_name[T.ISO]:Age" when test_mode="continuous"
+        lfc_null: float = 0.0,                    # effect-size threshold for continuous tests (optional)
+        alt_hypothesis: str | None = None          # "greaterAbs"/"lessAbs"/"greater"/"less"
+    ) -> pd.DataFrame:
+        """
+        Run DESeq2 for multiple group-vs-control comparisons and column-bind results.
+        Backward-compatible; supports optional continuous covariates & interactions.
+        """
+        all_group_list = sorted(set(self.tfa.group_list))
+        if group_list is None:
+            group_list = all_group_list
 
-            for group2 in group_list:
-                print(f'\n-------------Start to compare [{control_group}] and [{group2}]----------------\n')
-                df_res = self.get_stats_deseq2(df=df, group1=control_group, group2=group2, concat_sample_to_result=concat_sample_to_result, quiet=quiet, condition=condition)
-                res_dict[group2] = df_res
-                print(f'\n------------- Done for [{control_group}] and [{group2}]----------------\n')
+        if control_group not in all_group_list:
+            raise ValueError(f"control_group must be in {all_group_list}")
+        if any(i not in all_group_list for i in group_list):
+            raise ValueError(f"groups must be in {all_group_list}")
 
-            print('Concatenating results...')
-            combined_df = pd.concat(res_dict, axis=1)
-            print('Done for all comparisons')
+        if control_group in group_list:
+            group_list.remove(control_group)
 
-            return combined_df
-            
-            
-            
-    def get_stats_deseq2(self, df, group1, group2, concat_sample_to_result: bool = True, quiet: bool = False, condition: list|None = None) -> pd.DataFrame:
+        res_dict = {}
+
+        for group2 in group_list:
+            print(f'\n-------------Start to compare [{control_group}] and [{group2}]----------------\n')
+            df_res = self.get_stats_deseq2(
+                df=df,
+                group1=control_group,
+                group2=group2,
+                concat_sample_to_result=concat_sample_to_result,
+                quiet=quiet,
+                condition=condition,
+                add_covariates=add_covariates,
+                interactions=interactions,
+                test_mode=test_mode,
+                continuous_term=continuous_term,
+                lfc_null=lfc_null,
+                alt_hypothesis=alt_hypothesis
+            )
+            res_dict[group2] = df_res
+            print(f'\n------------- Done for [{control_group}] and [{group2}]----------------\n')
+
+        print('Concatenating results...')
+        combined_df = pd.concat(res_dict, axis=1)
+        print('Done for all comparisons')
+
+        return combined_df
+
+
+    def get_stats_deseq2(
+        self,
+        df,
+        group1,
+        group2,
+        concat_sample_to_result: bool = True,
+        quiet: bool = False,
+        condition: list | None = None,
+        # NEW (all optional; keep backward compatibility)
+        add_covariates: list[str] | None = None,         # e.g. ["Age","BMI"]
+        interactions: list[tuple[str, str]] | None = None,   # e.g. [("Sugar_name","Age")]
+        test_mode: str = "categorical",                  # "categorical" (default) or "continuous"
+        continuous_term: str | None = None,              # e.g. "Age" or "Sugar_name[T.ISO]:Age"
+        lfc_null: float = 0.0,
+        alt_hypothesis: str | None = None
+    ) -> pd.DataFrame:
+        """
+        Run DESeq2 for group2 vs group1 using PyDESeq2 >= 0.5.x with formulaic design.
+        Backward-compatible defaults:
+        - by default, categorical group comparison with contrast=[factor, group2, group1]
+        - log2FoldChange = group2 / group1
+        Optional:
+        - add_covariates: add continuous/categorical covariates into the design
+        - interactions: list of (factor_like, covariate_like) to include factor:covariate
+        - test_mode="continuous": test a continuous term / interaction by contrast vector
+        """
         print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
-        
+
+        # Resolve sample lists
         group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
         group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
         sample_list = group1_sample + group2_sample
-        
+
         print(f'group1 [{group1}]:\n{group1_sample}\n')
         print(f'group2 [{group2}]:\n{group2_sample}\n')
-        
-        # Create intensity matrix
+
+        # Build intensity matrix for selected samples
         dft = df.copy()
         dft = dft[sample_list]
-        dft = self.tfa.replace_if_two_index(dft)
-                
-        counts_df = dft.T
-        # make sure the max value is not larger than int32
-        max_value = 2147483647
-        if counts_df.max().max() > max_value:
-            times = counts_df.max().max() / max_value
-            divide = int(times) + 1
-            counts_df = counts_df / divide
-            print(f'Warning: the max value is [{counts_df.max().max()}], [{times}] times larger than int32, all values are divided by [{divide}]')
+        dft = self.tfa.replace_if_two_index(dft)  # keep your original helper
+
+        # counts: samples x features (int), with stable scaling → round → int
+        counts_df = dft.T  # rows = samples, cols = features
+        target_max = 1e6
+        raw_max = float(np.nanmax(counts_df.values)) if counts_df.size else 0.0
+        scale = max(raw_max / target_max, 1.0)
+        if scale > 1.0:
+            print(f'[Scaling] scale={scale:.3f} (max {raw_max:.3g} → target_max {target_max:.0f})')
         else:
-            print(f'The max value is [{counts_df.max().max()}], not larger than int32, no need to divide')
-              
-        counts_df = counts_df.astype(int)
-        counts_df = counts_df.sort_index()
-            
+            print(f'[Scaling] no scaling applied (max {raw_max:.3g} ≤ target_max {target_max:.0f})')
+        counts_df = (counts_df / scale).round().astype(int)
 
-
-        # Create meta data
+        # Build metadata
         meta_df = self.tfa.meta_df.copy()
         meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
         meta_df.set_index('Sample', inplace=True)
-        
-        # ! Deseq2 would make mistake if the meta name and sample contain '_'
-        # ! replace '_' with '-' in meta_df
-        meta_df = meta_df.replace('_', '-', regex=True)
-        columns = meta_df.columns
-        meta_df.columns = [i.replace('_', '-') for i in columns]
-        
+
+        # Patsy/formulaic-safe: replace '-' with '_' ONLY for metadata columns
+        meta_df = meta_df.rename(columns=lambda c: c.replace('-', '_'))
+
+        # Design factor name (variable in formula)
+        design_factor = self._safe_name(self.tfa.meta_name)
+
+        # Ensure the design factor exists
+        if design_factor not in meta_df.columns:
+            raise KeyError(
+                f"Design factor '{design_factor}' not found in metadata columns: {list(meta_df.columns)}. "
+                f"Original meta_name: '{self.tfa.meta_name}'. Make sure it matches a metadata column."
+            )
+
+        # Replace '-' with '_' in the *values* of design factor (levels)
+        meta_df[design_factor] = meta_df[design_factor].astype(str).str.replace('-', '_', regex=False)
+
+        # Also normalize covariate column names and (for safety) ensure numeric types where intended
+        covs = []
+        if add_covariates:
+            covs = [self._safe_name(c) for c in add_covariates]
+            for c_old, c_new in zip(add_covariates, covs):
+                if c_new not in meta_df.columns and c_old in meta_df.columns:
+                    # If user passed old name containing '-', it was renamed above
+                    meta_df.rename(columns={c_old: c_new}, inplace=True)
+
+        # Normalize interaction terms (name only; design will be built as formula)
+        ints = []
+        if interactions:
+            ints = [f"{self._safe_name(a)}:{self._safe_name(b)}" for (a, b) in interactions]
+
+        # Align indices
+        counts_df = counts_df.sort_index()
         meta_df = meta_df.sort_index()
+        if not counts_df.index.equals(meta_df.index):
+            shared = counts_df.index.intersection(meta_df.index)
+            counts_df = counts_df.loc[shared]
+            meta_df = meta_df.loc[shared]
+            if counts_df.shape[0] == 0:
+                raise ValueError("No overlapping samples between counts and metadata after alignment.")
+
+        # Build formulaic design
+        rhs_terms = [design_factor] + covs + ints
+        design_formula = "~" + " + ".join(rhs_terms) if rhs_terms else "~ 1"
+        print(f"[Design] {design_formula}")
 
         dds = DeseqDataSet(
             counts=counts_df,
             metadata=meta_df,
-            design_factors=self.tfa.meta_name.replace('_', '-'), # ! replace '_' with '-' in meta_name
+            design=design_formula,
             quiet=quiet
-            )
+        )
         dds.deseq2()
-        
+
+        # Build contrast
+        if test_mode == "categorical":
+            # Backward-compatible: log2FC = group2 / group1
+            g1 = self._safe_name(group1)
+            g2 = self._safe_name(group2)
+            contrast = [design_factor, g2, g1]
+            print(f"Contrast used: {contrast}  => log2FoldChange = {g2} / {g1}")
+        elif test_mode == "continuous":
+            if not continuous_term:
+                raise ValueError("For test_mode='continuous', please provide 'continuous_term', "
+                                "e.g., 'Age' or 'Sugar_name[T.ISO]:Age'.")
+            coef_idx = self._find_coef_index(dds, continuous_term)
+            cvec = np.zeros(len(dds.design_matrix.columns))
+            cvec[coef_idx] = 1.0
+            contrast = cvec
+            print(f"Continuous contrast vector built for term '{continuous_term}' "
+                f"(coef index {coef_idx}); alt_hypothesis={alt_hypothesis}, lfc_null={lfc_null}")
+        else:
+            raise ValueError("test_mode must be 'categorical' or 'continuous'.")
+
+        # Run stats
         try:
-            stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=True, independent_filter=True, quiet=quiet)
+            stat_res = DeseqStats(
+                dds,
+                contrast=contrast,
+                alpha=0.05,
+                cooks_filter=True,
+                independent_filter=True,
+                quiet=quiet,
+                alt_hypothesis=alt_hypothesis,
+                lfc_null=lfc_null
+            )
             stat_res.summary()
         except KeyError as e:
             if 'cooks' in str(e):
                 print('cooks_filter is not available, use cooks_filter=False')
-                stat_res = DeseqStats(dds, alpha=0.05, cooks_filter=False, independent_filter=True, quiet=quiet)
+                stat_res = DeseqStats(
+                    dds,
+                    contrast=contrast,
+                    alpha=0.05,
+                    cooks_filter=False,
+                    independent_filter=True,
+                    quiet=quiet,
+                    alt_hypothesis=alt_hypothesis,
+                    lfc_null=lfc_null
+                )
                 stat_res.summary()
             else:
                 raise e
-        except Exception as e:
-            raise e
 
         res = stat_res.results_df
-        
+
+        # Optionally merge raw sample columns back for convenience
         if concat_sample_to_result:
             res_merged = pd.merge(res, dft, left_index=True, right_index=True)
         else:
             res_merged = res
 
-
-        # check order
-        res_group = stat_res.LFC.columns[1]
-        res_group_2 = stat_res.LFC.columns[1].split('_vs_')[1]
-        input_group_2 = group2.replace('_', '-')
-        print(f'res_group order: {res_group}')
-        print(f'res_group_2: {res_group_2}')
-        print(f'input_group_2: {input_group_2}')
-        if res_group_2 != input_group_2: #reverse the log2FoldChange due to res need  group2/group1
-            print(f'Keep log2FoldChange values to match the group order [{group2} / {group1}]')
-        else:
-            res_merged["log2FoldChange"] = -res_merged["log2FoldChange"]
-            print(f'Reverse log2FoldChange values to match the group order [{group2} / {group1}]')
         return res_merged
+
 
     # Get the Tukey test result of a taxon or a function
     def get_stats_tukey_test(self, taxon_name: str|None =None, func_name: str|None =None, sum_all: bool=True, condition:list|None =None):

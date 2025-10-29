@@ -1,3 +1,9 @@
+# Version: 1.127.0
+## Date: 2025-10-28
+### Changes:
+- Change: Update PyDeseq2 to v0.5.2, MetaX now supports to run DESeq2 with covariates.
+- Add: Added a function to check data before run DESeq2 analysis, including check if there are transformed, normalized applied to the data.
+
 # Version: 1.126.2
 ## Date: 2025-10-20
 ### Changes:

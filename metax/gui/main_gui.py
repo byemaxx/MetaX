@@ -311,6 +311,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # update in condition combobox to multi checkable
         self.update_in_condition_combobox()
         
+        # update DESeq2 covariates combobox to multi checkable
+        self.update_deseq2_covariates_combobox()
+        
         # link double click event to list widget
         self.listWidget_table_list.itemDoubleClicked.connect(self.show_table_in_list)
         self.listWidget_tfnet_focus_list.itemDoubleClicked.connect(self.copy_to_clipboard)
@@ -451,7 +454,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # self.tabWidget_3.removeTab(3)
         
         # Hide button of DESeq2 in Group Control Test
-        self.pushButton_multi_deseq2.hide() if self.like_times < 3 else None
+        self.hide_show_multi_deseq2_button(method='hide') if self.like_times < 2 else None
 
         self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
         self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
@@ -771,12 +774,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         else:
             self.comboBox_group_control_comparing_each_condition_meta.setEnabled(False)
             self.checkBox_group_control_in_condition.setEnabled(True)
-            if self.checkBox_group_control_in_condition.isChecked():
-                self.comboBox_group_control_condition_meta.setEnabled(True)
-                self.comboBox_group_control_condition_group.setEnabled(True)
-            else:
-                self.comboBox_group_control_condition_meta.setEnabled(False)
-                self.comboBox_group_control_condition_group.setEnabled(False)
+            self.comboBox_group_control_condition_meta.setEnabled(True)
+            self.comboBox_group_control_condition_group.setEnabled(True)
+
 
 
     def update_all_condition_meta(self):
@@ -785,7 +785,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                self.comboBox_group_control_condition_meta, self.comboBox_tflink_condition_meta,
                                self.comboBox_basic_condition_meta, self.comboBox_tukey_condition_meta, 
                                self.comboBox_trends_condition_meta, self.comboBox_ttest_condition_meta, 
-                               self.comboBox_co_expression_condition_meta, self.comboBox_group_control_comparing_each_condition_meta]
+                               self.comboBox_co_expression_condition_meta, self.comboBox_group_control_comparing_each_condition_meta,
+                               self.comboBox_group_control_condition_deseq2_covariates,
+                               self.comboBox_deseq2_covariates]
         try:
             meta_list = self.tfa.meta_df.columns.tolist()[1:]
             
@@ -1347,7 +1349,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         like_times = self.settings.value("like_times", 0, type=int)
         if like_times:
             self.like_times = like_times
-            if self.like_times >= 3:
+            if self.like_times >= 2:
                 print("Hidden Button of DESeq2 in Group Control Test is eligible to show.")
                 # if like_times < 3, the following code will hide the button
         
@@ -1860,18 +1862,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         dialog.setLayout(dialog_layout)
         dialog.exec_()
+        
+
+    def hide_show_multi_deseq2_button(self, method='hide'):
+        if method == 'hide':
+            show = False
+        else:
+            show = True
+        self.pushButton_multi_deseq2.setVisible(show)
+        self.hide_or_show_all_items_in_layout(self.horizontalLayout_136, hide=not show)
 
     def like_us(self):
-        if 0 <= self.like_times < 2:
+        if 0 <= self.like_times < 1:
             QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
-            self.pushButton_others_plot_line.setText('Plot Bar')
             self.like_times += 1
             
-        elif self.like_times >= 2:
+        elif self.like_times >= 1:
             QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
             self.like_times += 1
-            # now like_times = 3
-            self.pushButton_multi_deseq2.show()
+            self.hide_show_multi_deseq2_button(method='show')
             print("Hidden Button of DESeq2 in Group Control Test is shown.")
             
         else:
@@ -3380,6 +3389,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # Hide or show all items in layout based on checkbox state
         self.update_in_condition_layout_state()
 
+    def update_deseq2_covariates_combobox(self):
+        # replace combobox in covariates layout to multi-selection combobox
+        combobox_layout_dict = {
+            self.horizontalLayout_139: 'comboBox_group_control_condition_deseq2_covariates',
+            self.horizontalLayout_138: 'comboBox_deseq2_covariates',
+        }
+        for layout, combobox_name in combobox_layout_dict.items():
+            # Locate the original combobox
+            for i in range(layout.count()):
+                widget = layout.itemAt(i).widget()
+                if isinstance(widget, QtWidgets.QComboBox) and widget.objectName() == combobox_name:
+                    # Replace the widget
+                    widget.deleteLater()
+                    new_combobox = CheckableComboBox()
+                    new_combobox.setObjectName(combobox_name)
+                    new_combobox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+                    layout.insertWidget(i, new_combobox)
+                    setattr(self, combobox_name, new_combobox)
+                    break
+                
+        
 
     
     def update_group_and_sample_combobox(self, meta_name = None, update_group_list = True, update_sample_list = True):
@@ -5389,6 +5419,98 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return True
         else:
             return False
+        
+        
+    def _guard_and_prepare_counts_for_deseq2(self, df):
+        """
+        One-stop guard before running DESeq2.
+        - Warn if normalization was applied (cannot invert): Continue or Cancel.
+        - If transformed: offer three choices -> Invert & Run / Run without Inverting / Cancel.
+        - Return the (possibly inverted) df, or None if user cancels.
+
+        Usage:
+            df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+            if df_checked is None:
+                # (optional) re-enable UI here
+                return
+            df = df_checked
+        """
+
+        def _warn(title, text):
+            QMessageBox.warning(self.MainWindow, title, text)
+
+        # Apply optional style if present
+        def _style_box(box):
+            try:
+                box.setStyleSheet(self.msgbox_style)
+            except Exception:
+                pass
+
+        # ------- 1) Normalization check (non-invertible) -------
+        norm_method = self.tfa.preprocess_methods.get('normalize_method', None)
+        if norm_method and norm_method != 'None':
+            box = QMessageBox(self.MainWindow)
+            _style_box(box)
+            box.setWindowTitle('Warning')
+            box.setText(f'The data has been normalized by [{norm_method}].\n'
+                        'DESeq2 requires raw counts data.\n\n'
+                        'Continue anyway? (Not recommended)')
+            btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
+            btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
+            box.setDefaultButton(btn_cancel)
+            box.exec_()
+            if box.clickedButton() is btn_cancel:
+                return None
+            print('User chose to continue with normalized data.')
+
+        # ------- 2) Transform check (invertible: 3-way) -------
+        transform_method = self.tfa.preprocess_methods.get('transform_method', None)
+        if transform_method and transform_method != 'None':
+            if transform_method == 'boxcox': # cannot invert boxcox , and or ask user to confirm
+                _warn('Warning', 'The data has been transformed by Box-Cox, which cannot be inverted.\nDESeq2 requires raw counts data.')
+                box = QMessageBox(self.MainWindow)
+                _style_box(box)
+                box.setWindowTitle('Warning')
+                box.setText('The data has been transformed by [boxcox].\n\nContinue anyway? (Not recommended)')
+                btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
+                btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
+                box.setDefaultButton(btn_cancel)
+                box.exec_()
+                if box.clickedButton() is btn_cancel:
+                    return None
+                print('User chose to continue with Box-Cox transformed data.')
+                return df
+            # transform is invertible
+            box = QMessageBox(self.MainWindow)
+            _style_box(box)
+            box.setWindowTitle("Warning")
+            box.setText(
+                f"The data has been transformed by [{transform_method}].\n\n"
+                "DESeq2 requires raw counts. What would you like to do?"
+            )
+            btn_invert  = QPushButton("Invert & Run")
+            btn_run_raw = QPushButton("Run without Inverting")
+            btn_cancel  = QPushButton("Cancel")
+            box.addButton(btn_invert,  QMessageBox.YesRole)
+            box.addButton(btn_run_raw, QMessageBox.NoRole)
+            box.addButton(btn_cancel,  QMessageBox.RejectRole)
+            box.setDefaultButton(btn_invert)
+            box.exec_()
+
+            clicked = box.clickedButton()
+            if clicked is btn_invert:
+                try:
+                    df = self.tfa.invert_transform(df, transform_method)
+                    print(f'Applied inverse transform for [{transform_method}] and will proceed.')
+                except Exception as e:
+                    _warn('Error', f'Failed to invert transformation [{transform_method}]: {e}')
+                    return None
+            elif clicked is btn_run_raw:
+                print('User chose to run without inverting transformation.')
+            else:
+                return None
+
+        return df
 
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
@@ -5403,6 +5525,36 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             
         group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
         
+        deseq2_covariates = self.comboBox_group_control_condition_deseq2_covariates.getCheckedItems()
+        if deseq2_covariates:
+            #! Seems like do not need to check this. e.g. condition can be ['v1', 'v2'] in 'individual'
+            # 1) Not allowed to be the same as the condition metadata
+            # if self.checkBox_group_control_in_condition.isChecked() and condition is not None:
+            #     condition_meta = condition[0]  # 元数据列名
+            #     if any(cov == condition_meta for cov in deseq2_covariates):
+            #         QMessageBox.warning(
+            #             self.MainWindow, 'Warning',
+            #             f'The DESeq2 covariates should not contain the condition meta [{condition_meta}]!'
+            #         )
+            #         return None
+
+            # 2) Not allowed to be the same as the metadata selected for "Comparing Each Condition"
+            if self.checkBox_comparing_group_control_in_condition.isChecked():
+                if all_condition_meta and any(cov == all_condition_meta for cov in deseq2_covariates):
+                    QMessageBox.warning(
+                        self.MainWindow, 'Warning',
+                        f'The DESeq2 covariates should not contain the [{all_condition_meta}] meta!'
+                    )
+                    return None
+
+            # 3) Not allowed to be the same as the main group metadata
+            if any(cov == self.tfa.meta_name for cov in deseq2_covariates):
+                QMessageBox.warning(
+                    self.MainWindow, 'Warning',
+                    f'The DESeq2 covariates should not contain the [{self.tfa.meta_name}]!'
+                )
+                return None
+            
         if control_group in group_list:
             group_list.remove(control_group)
         
@@ -5433,18 +5585,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     
             elif method == 'deseq2':
                 df = self.get_table_by_df_type(df_type=df_type)
+                df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+                if df_checked is None:
+                    for combobox in self.meta_combobox_list:
+                        combobox.setEnabled(True)
+                    return
+                df = df_checked
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     self.temp_params_dict= {'table_name': f'deseq2allinCondition({df_type})'}
                     self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon, 
                                            callback= self.callback_after_group_control_test,
                                            df = df, control_group=control_group, group_list=group_list,
-                                           condition=all_condition_meta)
+                                           condition=all_condition_meta, add_covariates=deseq2_covariates)
 
                 else:
                     self.temp_params_dict= {'table_name': f'deseq2all({df_type})'}
                     self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control, 
                                            callback= self.callback_after_group_control_test,
-                                           df = df,control_group=control_group, group_list=group_list, condition=condition)
+                                           df = df,control_group=control_group, group_list=group_list, 
+                                           condition=condition, add_covariates=deseq2_covariates)
 
             else:
                 raise ValueError(f'No such method: {method}')
@@ -5647,9 +5806,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         df_type = self.comboBox_table_for_deseq2.currentText()
         df = self.get_table_by_df_type(df_type=df_type)
-
+        df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+        if df_checked is None:
+            for combobox in self.meta_combobox_list:
+                combobox.setEnabled(True)
+            return
+        df = df_checked
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
+        deseq2_covariates = self.comboBox_deseq2_covariates.getCheckedItems()
 
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
             condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.getCheckedItems()]
@@ -5668,23 +5833,34 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         elif group1 == group2:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two different groups!')
             return None
-
-        else:
-            # self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
-            try:
-                if self.check_if_last_test_not_finish():
-                    return None
-                self.temp_params_dict ={'deseq2': 'deseq2'} # only for stop the next test
-                
-                deseq2_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition}
-                self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2, callback= self.callback_after_deseq2, **deseq2_params)
-
-            except Exception as e:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
-                self.logger.write_log(f'deseq2_test: groups: {[group1, group2]}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
+        
+        if deseq2_covariates:
+            # condition same as covariates
+            # if self.checkBox_deseq2_comparing_in_condition.isChecked() and condition is not None:
+            #     cond_meta = condition[0]
+            #     if any(cov == cond_meta for cov in add_covariates):
+            #         QMessageBox.warning(self.MainWindow, 'Warning', f'The DESeq2 covariates should not contain the condition meta [{cond_meta}]!')
+            #         return None
+            # main group meta same as covariates
+            if any(cov == self.tfa.meta_name for cov in deseq2_covariates):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'The DESeq2 covariates should not contain the [{self.tfa.meta_name}]!')
                 return None
+            
+        # self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
+        try:
+            if self.check_if_last_test_not_finish():
+                return None
+            self.temp_params_dict ={'deseq2': 'deseq2'} # only for stop the next test
+            
+            deseq2_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': deseq2_covariates}
+            self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2, callback= self.callback_after_deseq2, **deseq2_params)
+
+        except Exception as e:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
+            self.logger.write_log(f'deseq2_test: groups: {[group1, group2]}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
+            return None
                 
     def callback_after_deseq2(self, result, success):
         self.temp_params_dict = {}
