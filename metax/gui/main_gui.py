@@ -4084,6 +4084,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if self.checkBox_basic_hetatmap_col_cluster.isChecked():
             col_cluster = True
         
+        # Plot peptide mode #
         if self.checkBox_basic_heatmap_plot_peptide.isChecked():
             title = f'{plot_type.capitalize()} of Peptide'
             if len(self.basic_heatmap_list) == 0:
@@ -4120,7 +4121,31 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 df = self.tfa.peptide_df.loc[peptides_list]
                 df = df[sample_list]
+                
+            if plot_type == 'sankey':
+                lookup = (
+                    self.tfa.processed_original_df
+                    .set_index('Sequence')[['Taxon', self.tfa.func_name]]
+                )
 
+                aligned = lookup.reindex(df.index)  # 按 df.index 对齐，自动填充缺失为 NaN
+
+                df['Taxon'] = aligned['Taxon'].to_numpy()
+                df['Function'] = aligned[self.tfa.func_name].to_numpy()
+                df['Peptide'] = df.index.to_numpy()
+                if table_name == 'Taxa':
+                    # combine taxa and peptide to index with '|' connector
+                    df.index = [f'{taxa}|{pep}' for taxa, pep in zip(df['Taxon'], df.index)]
+                elif table_name == 'Functions':
+                    df.index = [f'{func}|{pep}' for func, pep in zip(df['Function'], df['Peptide'])]
+                elif table_name == 'Taxa-Functions':
+                    df.index = [f'{taxa}:::{func}:::{pep}' for taxa, func, pep in zip(df['Taxon'], df['Function'], df['Peptide'])]
+                else:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'Sankey plot only supports Taxa, Functions, and Taxa-Functions table!')
+                    return None
+                df = df.drop(columns=['Taxon', 'Function', 'Peptide'], errors='ignore')
+                    
+        # Not plot peptide mode #
         else:
             title = f'{plot_type.capitalize()} of {table_name.capitalize()}'
             dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
@@ -4216,11 +4241,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.show_table(df=df, title=title)
                 
             elif plot_type == 'sankey':
-                if self.comboBox_basic_table.currentText() == 'Custom':
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'Custom is not supported to plot Sankey!')
-                    return None
-                if self.checkBox_basic_heatmap_plot_peptide.isChecked():
-                    QMessageBox.warning(self.MainWindow, 'Warning', 'Peptide is not supported to plot Sankey!')
+                if table_name not in ['Taxa', 'Taxa-Functions']:
+                    QMessageBox.warning(self.MainWindow, 'Warning', f'{table_name} is not supported to plot Sankey!')
                     return None
                  
                 self.show_message('Plotting Sankey...')
