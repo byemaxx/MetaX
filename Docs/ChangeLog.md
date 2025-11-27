@@ -1,3 +1,9 @@
+# Version: 1.127.1
+## Date: 2025-11-27
+### Changes:
+- New: Added a function to plot peptide info at basic plot part.
+- Fix: Fixed the bug of export img failed in web plot dialog(e.g. sankey, sunburst, network).
+
 # Version: 1.127.0
 ## Date: 2025-10-28
 ### Changes:
