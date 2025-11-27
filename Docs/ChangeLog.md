@@ -1,3 +1,15 @@
+# Version: 1.127.1
+## Date: 2025-11-27
+### Changes:
+- New: Added a function to plot peptide info at basic plot part.
+- Fix: Fixed the bug of export img failed in web plot dialog(e.g. sankey, sunburst, network).
+
+# Version: 1.127.0
+## Date: 2025-10-28
+### Changes:
+- Change: Update PyDeseq2 to v0.5.2, MetaX now supports to run DESeq2 with covariates.
+- Add: Added a function to check data before run DESeq2 analysis, including check if there are transformed, normalized applied to the data.
+
 # Version: 1.126.2
 ## Date: 2025-10-20
 ### Changes:

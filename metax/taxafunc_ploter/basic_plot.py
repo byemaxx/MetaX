@@ -265,7 +265,7 @@ class BasicPlot:
                     width=10, height=8, font_size=10, rename_sample:bool=False,
                     font_transparency=0.6, adjust_label:bool=False, theme:str|None=None,
                     sub_meta:str='None', legend_col_num:int|None=None, dot_size:float|None=None,
-                    early_exaggeration=12.0, learning_rate='auto', random_state=None):
+                    early_exaggeration=12.0, learning_rate='auto', random_state: int | None = 2025):
         """
         Use t-SNE to visualize the input data.
         

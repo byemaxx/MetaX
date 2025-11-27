@@ -136,8 +136,8 @@ class SankeyPlot:
         df['index'] = df.index
         df = df[['index', value_col]]
         
-        if '<' in df['index'][0]:
-            index_str = df['index'].str.split("<", expand=True)
+        if ' <' in df['index'][0]: # taxa-function combined index
+            index_str = df['index'].str.split(" <", expand=True)
             if '|' in index_str[0][0]:
                 taxon_index = 0
                 func_index = 1
@@ -148,15 +148,27 @@ class SankeyPlot:
 
             df['Taxon'] = index_str[taxon_index].str.replace(">", "")
             df['Function'] = index_str[func_index].str.replace(">", "")
+            
+        elif ':::' in df['index'][0]: # taxa-function-peptide combined index
+            index_str = df['index'].str.split(":::", expand=True)
+            df = df[[value_col]]
 
-        else:
+            df['Taxon'] = index_str[0]
+            df['Function'] = index_str[1]
+            df['Peptide'] = index_str[2]
+
+        else: # only taxa index
             df = df[[value_col]]
             df['Taxon'] = df.index
             
         
         df_t = df['Taxon'].str.split('|', expand=True)
+        
         if "Function" in df.columns.tolist():
             df_t = df_t.join(df['Function'])
+            
+        if "Peptide" in df.columns.tolist():
+            df_t = df_t.join(df['Peptide'])
         
         df_t = df_t.join(df[value_col])
         names = df_t.columns.tolist()

@@ -98,6 +98,41 @@ class DataPreprocessing:
             df[self.tfa.sample_list] = df_mat
 
             return df
+        
+    def invert_transform(self, df: pd.DataFrame, transform_method: str|None = None) -> pd.DataFrame:
+        '''
+        Inverts the data transformation applied to the DataFrame.
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing the transformed data.
+        transform_method (str or None): The transformation method that was originally applied. If None or 'None', no inversion is performed.
+        Returns:
+        pd.DataFrame: The DataFrame with the transformation inverted, if applicable.        
+        '''
+        if transform_method in [None, 'None']:
+            print('transform_method is not set, data inverse transform did not perform.')
+            return df
+        else:
+            df_mat = df[self.tfa.sample_list]
+
+            invert_operations = {
+                'None': lambda x: x,
+                'cube': lambda x: np.power(x, 3),
+                'log10': lambda x: np.power(10, x) - 1,
+                'log2': lambda x: np.power(2, x) - 1,
+                'sqrt': lambda x: np.square(np.clip(df, 0, None))
+                # 'boxcox': lambda x: x.apply(lambda col: stats.inv_boxcox(col, lmbda)) # lmbda need to be saved
+            }
+    
+            if transform_method in invert_operations:
+                df_mat = invert_operations[transform_method](df_mat)
+                df_mat = df_mat.round().astype(int)
+                print(f'Data inverse transformed by [{transform_method}]')
+            else:
+                raise ValueError('transform_method must be in [None, log2, log10, sqrt, cube]')
+
+            df[self.tfa.sample_list] = df_mat
+
+            return df
 
     
     def _data_normalization(self, df: pd.DataFrame, normalize_method: str|None = None) -> pd.DataFrame:
