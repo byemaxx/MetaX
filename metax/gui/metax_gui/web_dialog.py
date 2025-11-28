@@ -38,6 +38,8 @@ class WebDialog(QDialog):
         self._download_paths = {}
         # 记录上次相同 download_key 的时间戳（用于短时防抖）
         self._last_download_times = {}
+        # 标记正在进行中的下载 key，避免在同一下载进行时重复弹出保存对话框
+        self._download_in_progress = set()
         # 调试开关，设为 True 将打印下载相关信息
         self._download_debug = False
 
@@ -78,11 +80,15 @@ class WebDialog(QDialog):
         # 立即标记为已处理，避免在弹窗等待期间再次触发
         self._handled_downloads.add(item_id)
 
-        # 尝试在下载完成/取消后移除标记（若信号存在）
+        # 在下载完成后清理 handled 标记（使用明确的回调以避免 lambda 捕获问题）
         try:
-            download_item.finished.connect(lambda: self._handled_downloads.discard(item_id))
+            def _clear_handled(*args, _id=item_id):
+                try:
+                    self._handled_downloads.discard(_id)
+                except Exception:
+                    pass
+            download_item.finished.connect(_clear_handled)
         except Exception:
-            # 若没有 finished 信号或连接失败，则忽略（仍已标记，避免重复弹窗）
             pass
 
         try:
@@ -118,10 +124,40 @@ class WebDialog(QDialog):
                 pass
             return
 
+        # 若此 download_key 已经处于进行中，直接取消并返回，避免再次弹窗
+        if download_key in self._download_in_progress:
+            if self._download_debug:
+                print(f"[download] Ignoring request while in-progress for key={download_key!r}")
+            try:
+                download_item.cancel()
+            except Exception:
+                pass
+            return
+
         # 如果之前已经为相同的下载选择过路径，则复用该路径，避免再次弹窗
         if download_key in self._download_paths:
             previous_path = self._download_paths[download_key]
             try:
+                # 标记为进行中，使用明确回调在 finished 时清理状态
+                self._download_in_progress.add(download_key)
+                def _cleanup_existing(*args, key=download_key, _id=item_id):
+                    try:
+                        self._download_in_progress.discard(key)
+                    except Exception:
+                        pass
+                    try:
+                        self._download_paths.pop(key, None)
+                    except Exception:
+                        pass
+                    try:
+                        self._handled_downloads.discard(_id)
+                    except Exception:
+                        pass
+                try:
+                    download_item.finished.connect(_cleanup_existing)
+                except Exception:
+                    pass
+
                 download_item.setPath(previous_path)
                 download_item.accept()
             except Exception:
@@ -136,12 +172,40 @@ class WebDialog(QDialog):
             downloads_dir = os.path.expanduser("~")
         default_path = os.path.join(downloads_dir, suggested)
 
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save File", default_path, "All Files (*)")
+        # 根据建议文件名的后缀构建文件类型过滤器，便于继承扩展名而不是仅显示 All Files
+        try:
+            _, suggested_ext = os.path.splitext(suggested)
+        except Exception:
+            suggested_ext = ""
+        if suggested_ext:
+            ext_no_dot = suggested_ext.lstrip('.')
+            filter_label = f"{ext_no_dot.upper()} Files (*{suggested_ext})"
+            filter_str = f"{filter_label};;All Files (*)"
+            selected_filter = filter_label
+        else:
+            filter_str = "All Files (*)"
+            selected_filter = "All Files (*)"
+
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save File", default_path, filter_str, selected_filter)
         if file_path:
             try:
-                # 先连接清理回调，保证无论如何都会尝试清理已记录的路径
+                # 标记该 key 为进行中并连接 finished 回调以便清理状态
+                self._download_in_progress.add(download_key)
+                def _on_finished(*args, key=download_key, _id=item_id):
+                    try:
+                        self._download_in_progress.discard(key)
+                    except Exception:
+                        pass
+                    try:
+                        self._download_paths.pop(key, None)
+                    except Exception:
+                        pass
+                    try:
+                        self._handled_downloads.discard(_id)
+                    except Exception:
+                        pass
                 try:
-                    download_item.finished.connect(lambda: self._download_paths.pop(download_key, None))
+                    download_item.finished.connect(_on_finished)
                 except Exception:
                     pass
 

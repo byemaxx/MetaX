@@ -1,6 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QToolBox
+from PyQt5.QtWidgets import QWidget, QToolBox, QFileDialog, QMessageBox
 from PyQt5.QtCore import pyqtSignal
-from .ui_setting_window import Ui_Settings
+import os
+
+try:
+    from .ui_setting_window import Ui_Settings
+except ImportError:
+    from ui_setting_window import Ui_Settings
 
 class SettingsWidget(QWidget):
     update_mode_changed = pyqtSignal(str)
@@ -10,19 +15,21 @@ class SettingsWidget(QWidget):
     html_theme_changed = pyqtSignal(str)
     protein_infer_method_changed = pyqtSignal(str)
     stat_mean_by_zero_dominant_changed = pyqtSignal(bool)
+    metatree_dir_changed = pyqtSignal(str)
 
-    def __init__(self, parent=None, update_branch="main", auto_check_update=True, stat_mean_by_zero_dominant=False, QSettings=None):
+    def __init__(self, parent=None, update_branch="main", auto_check_update=True, stat_mean_by_zero_dominant=False, settings=None):
         super().__init__(parent)
         self.update_mode = update_branch
         self.auto_check_update = auto_check_update
-
+        # store QSettings object (may be None)
+        self.settings = settings
         if parent:
             self.setWindowIcon(parent.windowIcon())
 
         self.ui = Ui_Settings()
         self.ui.setupUi(self)
         
-        self.init_ui(self.update_mode, self.auto_check_update, stat_mean_by_zero_dominant, QSettings)
+        self.init_ui(self.update_mode, self.auto_check_update, stat_mean_by_zero_dominant, settings)
         # resize the window, 800 as default
         self.resize(800, 400)
         
@@ -69,8 +76,16 @@ class SettingsWidget(QWidget):
         # stat_mean_by_zero_dominant
         self.ui.checkBox_stat_mean_by_zero_dominant.stateChanged.connect(self.handle_stat_mean_by_zero_dominant_changed)
         
+        # open metatree directory path
+        self.ui.pushButton_open_metatree_dir_path.clicked.connect(self.set_meta_tree_directory)
+        # handle manual edits to the metatree path line edit
+        try:
+            self.ui.lineEdit_metatree_dir_path.textChanged.connect(self._handle_metatree_lineedit_changed)
+        except Exception:
+            pass
         
-    def init_ui(self, update_mode, auto_check_update, stat_mean_by_zero_dominant, QSettings=None,):
+        
+    def init_ui(self, update_mode, auto_check_update, stat_mean_by_zero_dominant, settings=None,):
         if update_mode == "main":
             self.ui.radioButton_update_stable.setChecked(True)
         elif update_mode == "dev":
@@ -80,11 +95,19 @@ class SettingsWidget(QWidget):
         # set the default values for stat_mean_by_zero_dominant
         self.ui.checkBox_stat_mean_by_zero_dominant.setChecked(stat_mean_by_zero_dominant)
         
-        if QSettings:
-            method = QSettings.value('protein_infer_greedy_mode', 'fast')
+        if settings:
+            method = settings.value('protein_infer_greedy_mode', 'fast')
             selected_method = 'normal' if method == 'greedy' else 'fast'
             print(f"Protein inference method: {method}")
             self.ui.comboBox_protein_infer_greedy_mode.setCurrentText(selected_method)
+        # set MetaTree path line edit from settings if available
+        if settings and settings.contains('metatree_dir'):
+            try:
+                mt_path = settings.value('metatree_dir')
+                if mt_path:
+                    self.ui.lineEdit_metatree_dir_path.setText(mt_path)
+            except Exception:
+                pass
             
 
     def handle_checkbox_state_changed(self):
@@ -153,6 +176,120 @@ class SettingsWidget(QWidget):
     def handle_stat_mean_by_zero_dominant_changed(self):
         checked = self.ui.checkBox_stat_mean_by_zero_dominant.isChecked()
         self.stat_mean_by_zero_dominant_changed.emit(checked)
+    
+    def set_meta_tree_directory(self):
+        # open a file dialog to select a directory, check if index.html exists in the selected directory
+        # shows on lineEdit_metatree_dir_path
+        
+        # start at current setting or user home
+        start_dir = None
+        if hasattr(self, 'settings') and self.settings:
+            try:
+                current = self.settings.value('metatree_dir')
+                if current:
+                    start_dir = current
+            except Exception:
+                start_dir = None
+
+        if not start_dir:
+            start_dir = os.path.expanduser('~')
+
+        folder = QFileDialog.getExistingDirectory(self, 'Select MetaTree directory', start_dir)
+        if not folder:
+            return
+
+        index_html = os.path.join(folder, 'index.html')
+        if not os.path.exists(index_html):
+            QMessageBox.warning(self, 'Warning', "Selected directory does not contain 'index.html'. Please select a valid MetaTree build directory.")
+            # clear the line edit (do not show invalid folder) and remove stored setting, notify listeners
+            try:
+                self.ui.lineEdit_metatree_dir_path.setText('')
+            except Exception:
+                pass
+            if hasattr(self, 'settings') and self.settings:
+                try:
+                    # remove the stored metatree_dir (or set to empty)
+                    try:
+                        self.settings.remove('metatree_dir')
+                    except Exception:
+                        self.settings.setValue('metatree_dir', '')
+                    # notify listeners that metatree is unavailable
+                    try:
+                        self.metatree_dir_changed.emit('')
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+            return
+
+        # update UI
+        try:
+            self.ui.lineEdit_metatree_dir_path.setText(folder)
+        except Exception:
+            pass
+
+        # save to QSettings if available
+        if hasattr(self, 'settings') and self.settings:
+            try:
+                self.settings.setValue('metatree_dir', folder)
+                # notify listeners that metatree_dir was changed
+                try:
+                    self.metatree_dir_changed.emit(folder)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+    def _handle_metatree_lineedit_changed(self, text: str):
+        """Handle manual edits to the metatree path line edit.
+
+        If the entered path points to a valid metatree (contains index.html) we save it;
+        otherwise remove the setting and notify listeners to hide the button.
+        """
+        text = text.strip() if text is not None else ''
+        if text == '':
+            # empty path -> remove setting and notify
+            if hasattr(self, 'settings') and self.settings:
+                try:
+                    try:
+                        self.settings.remove('metatree_dir')
+                    except Exception:
+                        self.settings.setValue('metatree_dir', '')
+                except Exception:
+                    pass
+            try:
+                self.metatree_dir_changed.emit('')
+            except Exception:
+                pass
+            return
+
+        # check if index.html exists
+        index_html = os.path.join(text, 'index.html')
+        if os.path.exists(index_html):
+            # save
+            if hasattr(self, 'settings') and self.settings:
+                try:
+                    self.settings.setValue('metatree_dir', text)
+                except Exception:
+                    pass
+            try:
+                self.metatree_dir_changed.emit(text)
+            except Exception:
+                pass
+        else:
+            # invalid path -> remove stored setting and notify
+            if hasattr(self, 'settings') and self.settings:
+                try:
+                    try:
+                        self.settings.remove('metatree_dir')
+                    except Exception:
+                        self.settings.setValue('metatree_dir', '')
+                except Exception:
+                    pass
+            try:
+                self.metatree_dir_changed.emit('')
+            except Exception:
+                pass
          
 if __name__ == "__main__":
     import sys
