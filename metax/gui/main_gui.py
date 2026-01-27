@@ -4378,7 +4378,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     # prepare data TSV: reset index so first column is the hierarchical ID
                     data_df = df.copy()
                     data_df = data_df.reset_index()
-                    # save to 
+                    # convert DataFrame to TSV string for MetaTree
                     data_tsv = data_df.to_csv(sep='\t', index=False)
 
                     # prepare meta TSV: copy and filter to selected samples
