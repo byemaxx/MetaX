@@ -1386,7 +1386,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         This function is intended to be a small, testable pure-check that does not
         raise on typical I/O or settings issues: it logs errors and returns False.
         """
-        import os
         try:
             if hasattr(self, 'settings') and self.settings and self.settings.contains('metatree_dir'):
                 mt = self.settings.value('metatree_dir')
