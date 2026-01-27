@@ -346,12 +346,20 @@ class GeneExtractorApp(QMainWindow):
         self.output_dir_edit = QLineEdit()
         self.output_dir_edit.setPlaceholderText("Select output directory...")
         self.output_dir_edit.setReadOnly(True)
+
+        prefix_label = QLabel("File prefix:")
+        self.output_prefix_edit = QLineEdit()
+        self.output_prefix_edit.setText("deseq2_")
+        self.output_prefix_edit.setPlaceholderText("deseq2_")
+
         output_browse_button = QPushButton("Browse...")
         output_browse_button.clicked.connect(self.browse_output_dir)
         save_button = QPushButton("Save Results")
         save_button.clicked.connect(self.save_results)
         output_layout.addWidget(self.output_dir_edit)
         output_layout.addWidget(output_browse_button)
+        output_layout.addWidget(prefix_label)
+        output_layout.addWidget(self.output_prefix_edit)
         output_layout.addWidget(save_button)
         
         # Add to main layout
@@ -814,16 +822,14 @@ class GeneExtractorApp(QMainWindow):
     
     def save_results(self):
         # Check if there is data to save
-        if self.df_long is None or self.df_log2FC is None or self.df_padj is None:
+        if self.df_long is None or self.df_log2FC is None or self.df_padj is None or self.df_pvalue is None:
             QMessageBox.warning(self, "Warning", "No data to save! Please process the data first.")
             return
         
         # Check output directory
         output_dir = self.output_dir_edit.text()
         if not output_dir:
-            output_dir, _ = QFileDialog.getSaveFileName(
-                self, "Save results to folder", "", "All Files (*)"
-            )
+            output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
             if not output_dir:
                 return
             self.output_dir_edit.setText(output_dir)
@@ -832,12 +838,42 @@ class GeneExtractorApp(QMainWindow):
             # Ensure the directory exists
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
+
+            prefix = "deseq2_"
+            if hasattr(self, "output_prefix_edit"):
+                user_prefix = self.output_prefix_edit.text().strip()
+                if user_prefix:
+                    prefix = user_prefix
+
+            # Basic sanitization: avoid creating subfolders / invalid paths via prefix
+            prefix = prefix.replace("/", "_").replace("\\", "_")
+
+            output_files = {
+                f"{prefix}combined_long.tsv": os.path.join(output_dir, f"{prefix}combined_long.tsv"),
+                f"{prefix}log2FC.tsv": os.path.join(output_dir, f"{prefix}log2FC.tsv"),
+                f"{prefix}padj.tsv": os.path.join(output_dir, f"{prefix}padj.tsv"),
+                f"{prefix}pvalue.tsv": os.path.join(output_dir, f"{prefix}pvalue.tsv"),
+            }
+
+            existing_files = [path for path in output_files.values() if os.path.exists(path)]
+            if existing_files:
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Overwrite",
+                    "The following file(s) already exist in the selected directory:\n\n"
+                    + "\n".join(os.path.basename(p) for p in existing_files)
+                    + "\n\nDo you want to overwrite them?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
+                )
+                if reply != QMessageBox.Yes:
+                    return
             
             # Save dataframes
-            self.df_long.to_csv(os.path.join(output_dir, "combined_long.tsv"), sep="\t", index=True)
-            self.df_log2FC.to_csv(os.path.join(output_dir, "log2FC.tsv"), sep="\t", index=True)
-            self.df_padj.to_csv(os.path.join(output_dir, "padj.tsv"), sep="\t", index=True)
-            self.df_pvalue.to_csv(os.path.join(output_dir, "pvalue.tsv"), sep="\t", index=True)
+            self.df_long.to_csv(output_files[f"{prefix}combined_long.tsv"], sep="\t", index=True)
+            self.df_log2FC.to_csv(output_files[f"{prefix}log2FC.tsv"], sep="\t", index=True)
+            self.df_padj.to_csv(output_files[f"{prefix}padj.tsv"], sep="\t", index=True)
+            self.df_pvalue.to_csv(output_files[f"{prefix}pvalue.tsv"], sep="\t", index=True)
             
             QMessageBox.information(self, "Success", f"Results saved to directory:\n{output_dir}")
         
