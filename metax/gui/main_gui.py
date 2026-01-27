@@ -31,6 +31,7 @@ import pickle
 import datetime
 from collections import OrderedDict
 import re
+import json
 
 
 # import third-party modules
@@ -424,6 +425,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
         self.pushButton_basic_heatmap_get_table.clicked.connect(lambda: self.plot_basic_list('get_table'))
         self.pushButton_basic_heatmap_sankey_plot.clicked.connect(lambda: self.plot_basic_list('sankey'))
+        self.pushButton_basic_heatmap_metatree.clicked.connect(lambda: self.plot_basic_list('metatree'))
         self.pushButton_basic_heatmap_plot_upset.clicked.connect(lambda: self.plot_basic_list('upset'))
         self.pushButton_basic_heatmap_add_a_list.clicked.connect(self.add_a_list_to_heatmap)
         self.comboBox_basic_heatmap_selection_list.add_all_searched.connect(self.add_all_searched_basic_heatmap_to_list)
@@ -672,10 +674,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         tfa_exists = getattr(self, 'tfa', None) is not None
         taxa_df_exists = tfa_exists and getattr(self.tfa, 'taxa_df', None) is not None
 
-        if current_text == 'Taxa' and taxa_df_exists or current_text == 'Taxa-Functions' and taxa_df_exists:
+        if (current_text == 'Taxa' and taxa_df_exists) or (current_text == 'Taxa-Functions' and taxa_df_exists):
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(True)
+            self.pushButton_basic_heatmap_metatree.setEnabled(self._metatree_available())
         else:
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
+            self.pushButton_basic_heatmap_metatree.setEnabled(False)
 
     def change_event_comboBox_pep_direct_to_otf_genome_cut_method(self):
         current_text = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
@@ -862,7 +866,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 update_branch=self.update_branch,
                 auto_check_update=self.auto_check_update,
                 stat_mean_by_zero_dominant = get_stat_mean_by_zero_dominant(),
-                QSettings=self.settings,
+                settings=self.settings,
             )
             settings_widget.update_mode_changed.connect(self.on_update_mode_changed)
             settings_widget.auto_check_update_changed.connect(self.on_auto_check_update_changed)
@@ -871,6 +875,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             settings_widget.tf_link_net_params_dict_changed.connect(self.on_tf_link_net_params_changed)
             settings_widget.html_theme_changed.connect(self.on_html_theme_changed)
             settings_widget.stat_mean_by_zero_dominant_changed.connect(self.on_stat_mean_by_zero_dominant_changed)
+            # update metatree button when user changes metatree dir in settings
+            try:
+                settings_widget.metatree_dir_changed.connect(self.on_metatree_dir_changed)
+            except Exception:
+                pass
             # Other settings
             settings_widget.protein_infer_method_changed.connect(self.on_protein_infer_method_changed)
             
@@ -1306,6 +1315,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_user_agreement()
             
         self.settings = QSettings(os.path.join(settings_path, "settings.ini"), QSettings.IniFormat)
+        # ensure metatree button reflects stored setting early
+        try:
+            # use the consolidated refresh function; avoid re-evaluating combo during init
+            self.refresh_metatree_state(reeval_combo=False)
+        except Exception:
+            # keep init robust; errors will be logged inside the refresh function when possible
+            pass
         
     def show_user_agreement(self):
         self.dialog = UserAgreementDialog(self.MainWindow)
@@ -1318,6 +1334,81 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, "Warning", "You must accept the user agreement to use MetaX.")
             sys.exit(0)
         
+
+    def refresh_metatree_state(self, reeval_combo: bool = True) -> bool:
+        """
+        Refresh MetaTree button visibility/enabled state and optionally re-evaluate
+        combo-based enabled state.
+
+        Returns True if MetaTree is available (settings contains a valid metatree_dir
+        and index.html exists), otherwise False.
+        """
+        try:
+            available = bool(self._metatree_available())
+            # Update visibility first
+            try:
+                self.pushButton_basic_heatmap_metatree.setVisible(available)
+                # default disabled until selection logic enables it
+                self.pushButton_basic_heatmap_metatree.setEnabled(False)
+            except Exception:
+                # Widget updates should not crash the app; log and continue
+                try:
+                    self.logger.exception("Failed to update MetaTree button widget state")
+                except Exception:
+                    pass
+
+            # Optionally re-evaluate enabled/disabled state based on current combo selection
+            if reeval_combo:
+                try:
+                    self.change_event_comboBox_basic_heatmap_table()
+                except Exception:
+                    try:
+                        self.logger.exception("Error while re-evaluating combo state for MetaTree button")
+                    except Exception:
+                        pass
+
+            return available
+        except Exception:
+            try:
+                self.logger.exception("Unexpected error while refreshing MetaTree state")
+            except Exception:
+                pass
+            try:
+                self.pushButton_basic_heatmap_metatree.setVisible(False)
+                self.pushButton_basic_heatmap_metatree.setEnabled(False)
+            except Exception:
+                pass
+            return False
+
+    def _metatree_available(self) -> bool:
+        """Return True if settings contains a metatree_dir with index.html present.
+
+        This function is intended to be a small, testable pure-check that does not
+        raise on typical I/O or settings issues: it logs errors and returns False.
+        """
+        try:
+            if hasattr(self, 'settings') and self.settings and self.settings.contains('metatree_dir'):
+                mt = self.settings.value('metatree_dir')
+                if mt:
+                    idx = os.path.join(mt, 'index.html')
+                    return os.path.exists(idx)
+        except Exception:
+            try:
+                self.logger.exception("Error while checking MetaTree availability")
+            except Exception:
+                pass
+            return False
+        return False
+
+    def on_metatree_dir_changed(self, path: str):
+        """Handler called when SettingsWidget.metatree_dir_changed is emitted.
+
+        Refresh visibility and then re-evaluate enabled state based on current table selection.
+        Kept as a thin wrapper for backwards compatibility; the heavy lifting is in
+        `refresh_metatree_state`.
+        """
+        # Let refresh_metatree_state handle errors and logging
+        self.refresh_metatree_state(reeval_combo=True)
 
     def load_basic_Settings(self):
         """
@@ -3609,6 +3700,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_get_table,
         self.pushButton_basic_heatmap_plot_upset,
         self.pushButton_basic_heatmap_sankey_plot,
+        self.pushButton_basic_heatmap_metatree,
         self.pushButton_basic_heatmap_add_top,
         self.pushButton_co_expr_plot,
         self.pushButton_co_expr_heatmap_plot,
@@ -4257,7 +4349,84 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
-            
+                
+            elif plot_type == 'metatree':
+                if table_name not in ['Taxa', 'Taxa-Functions']:
+                    QMessageBox.warning(self.MainWindow, 'Warning', f'{table_name} is not supported to plot MetaTree!')
+                    return None
+                # Launch the MetaTree web app and inject data/meta from memory
+                try:
+                    # prefer user-configured MetaTree directory from QSettings
+                    metatree_dir = None
+                    try:
+                        if hasattr(self, 'settings') and self.settings and self.settings.contains('metatree_dir'):
+                            metatree_dir = self.settings.value('metatree_dir')
+                    except Exception:
+                        metatree_dir = None
+
+                    # Require user-configured MetaTree directory from QSettings; no fallback
+                    if not metatree_dir:
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'MetaTree path is not configured. Please set MetaTree path in Settings.')
+                        return
+
+                    html_index_path = os.path.join(metatree_dir, 'index.html')
+                    if not os.path.exists(html_index_path):
+                        QMessageBox.warning(self.MainWindow, 'Warning', f'MetaTree index not found at {html_index_path}. Please set MetaTree path in Settings.')
+                        return
+                    
+                    # prepare data TSV: reset index so first column is the hierarchical ID
+                    data_df = df.copy()
+                    data_df = data_df.reset_index()
+                    # convert DataFrame to TSV string for MetaTree
+                    data_tsv = data_df.to_csv(sep='\t', index=False)
+
+                    # prepare meta TSV: copy and filter to selected samples
+                    if not hasattr(self.tfa, 'meta_df'):
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'Meta table not available! Please load metadata first.')
+                        return None
+                    meta_df = self.tfa.meta_df.copy()
+                    # filter meta to the sample_list used for the current plot
+                    meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
+                    meta_tsv = meta_df.to_csv(sep='\t', index=False)
+
+                    # Build JS to inject data into MetaTree after page load
+                    js = (
+                        f"(function(){{\n"
+                        f"  try {{\n"
+                        f"    if (window.loadDataFromText) {{\n"
+                        f"      window.loadDataFromText({json.dumps(data_tsv)}, {{ label: 'MetaX data' }});\n"
+                        f"    }}\n"
+                        f"    if (window.loadMetaFromText) {{\n"
+                        f"      window.loadMetaFromText({json.dumps(meta_tsv)}, {{ label: 'MetaX meta' }});\n"
+                        f"    }}\n"
+                        f"  }} catch(e) {{ console.error(e); }}\n"
+                        f"}})();"
+                    )
+
+
+                    # open the metatree index in WebDialog and inject TSV via JS after load
+                    web = web_dialog.WebDialog(html_index_path, None, theme=self.html_theme)
+
+                    def _on_load(ok):
+                        if ok:
+                            try:
+                                web.webEngineView.page().runJavaScript(js)
+                                self.logger.write_log('Injected data to MetaTree', 'i')
+                            except Exception:
+                                self.logger.write_log(f'Failed to inject data to MetaTree: {traceback.format_exc()}', 'e')
+
+                    web.webEngineView.loadFinished.connect(_on_load)
+                    # show dialog
+                    web.resize(int(width * 100), int(height * 100))
+                    web.setWindowTitle(f'MetaTree: {table_name}')
+                    self.web_list.append(web)
+                    web.show()
+
+                except Exception:
+                    error_message = traceback.format_exc()
+                    self.logger.write_log(f'metatree launch error: {error_message}', 'e')
+                    QMessageBox.warning(self.MainWindow, 'Error', f'Failed to launch MetaTree: {error_message}')
+
             elif plot_type == 'upset':
                 show_percentages = self.checkBox_basic_heatmap_plot_upset_show_percentage.isChecked()
                 min_subset_size = self.spinBox_basic_heatmap_plot_upset_min_subset.value()

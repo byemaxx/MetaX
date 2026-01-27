@@ -1,3 +1,13 @@
+# Version: 1.127.3
+## Date: 2025-11-28
+### Changes:
+- New: added a reminder dialog in Deseq2ResExtractor part to remind user if the files already exist when save the result tables.
+
+# Version: 1.127.2
+## Date: 2025-11-28
+### Changes:
+- Fix: fix web dialog download issue.
+
 # Version: 1.127.1
 ## Date: 2025-11-27
 ### Changes:
