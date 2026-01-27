@@ -1349,7 +1349,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             try:
                 self.pushButton_basic_heatmap_metatree.setVisible(available)
                 # default disabled until selection logic enables it
-                self.pushButton_basic_heatmap_metatree.setEnabled(False if available else False)
+                self.pushButton_basic_heatmap_metatree.setEnabled(False)
             except Exception:
                 # Widget updates should not crash the app; log and continue
                 try:
