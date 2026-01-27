@@ -846,7 +846,7 @@ class GeneExtractorApp(QMainWindow):
                     prefix = user_prefix
 
             # Basic sanitization: avoid creating subfolders / invalid paths via prefix
-            prefix = prefix.replace("/", "_").replace("\\\\", "_")
+            prefix = prefix.replace("/", "_").replace("\\", "_")
 
             output_files = {
                 f"{prefix}combined_long.tsv": os.path.join(output_dir, f"{prefix}combined_long.tsv"),
