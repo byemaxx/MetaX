@@ -21,7 +21,10 @@ class FileDragDropLineEdit(QLineEdit):
             
             if self.mode == 'folder':
                 if self.default_filename == '':
-                    url = os.path.dirname(url)
+                    # Expect a folder path; if a file is dropped, use its parent folder.
+                    # If a folder is dropped, keep it as-is.
+                    if os.path.isfile(url):
+                        url = os.path.dirname(url)
                 else:
                     # if url is a folder, append default file name
                     if os.path.isdir(url):
