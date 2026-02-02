@@ -2606,20 +2606,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking(self):
         if self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked():
+            self.comboBox_pep_direct_to_otf_genome_cut_method.setEnabled(False)
             self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(False)
             self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(False)
             self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(False)
             self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(False)
+            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
             self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.setChecked(False)
             self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides()
             # cahnge text of label_224
             self.label_224.setText('Annotated Peptide Table Save To')
         else:
+            self.comboBox_pep_direct_to_otf_genome_cut_method.setEnabled(True)
             self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(True)
             self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(True)
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
             self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(True)
+            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(True)
             self.label_224.setText('OTFs Save To')
+            # Re-apply enable/disable rules based on current cut-method.
+            self.change_event_comboBox_pep_direct_to_otf_genome_cut_method()
 
     
     def change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides(self):
