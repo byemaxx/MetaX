@@ -363,7 +363,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>467</width>
-                 <height>558</height>
+                 <height>554</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1936,7 +1936,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>915</width>
+                     <width>813</width>
                      <height>267</height>
                     </rect>
                    </property>
@@ -3711,7 +3711,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>915</width>
-                     <height>230</height>
+                     <height>226</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_50">
@@ -8070,7 +8070,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>915</width>
-                     <height>183</height>
+                     <height>179</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -9915,7 +9915,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>915</width>
-                     <height>204</height>
+                     <height>202</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10643,8 +10643,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>706</width>
-                    <height>144</height>
+                    <width>921</width>
+                    <height>429</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -10895,8 +10895,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>309</width>
-                    <height>41</height>
+                    <width>923</width>
+                    <height>513</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -11037,7 +11037,14 @@
               </attribute>
               <layout class="QGridLayout" name="gridLayout_74">
                <item row="1" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_digestied_pep_db_path"/>
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_digestied_genome_pep_path">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="statusTip">
+                  <string>The folder contains all the digested genome files, with each file containing protein-peptide information.</string>
+                 </property>
+                </widget>
                </item>
                <item row="7" column="0" colspan="4">
                 <widget class="QPushButton" name="pushButton_run_pep_direct_to_otf">
@@ -11078,7 +11085,11 @@
                 </widget>
                </item>
                <item row="0" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_path"/>
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_peptide_path">
+                 <property name="statusTip">
+                  <string>Peptite table with intensity from search result(e.g. report.pr_matrix)</string>
+                 </property>
+                </widget>
                </item>
                <item row="2" column="3">
                 <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path">
@@ -11090,7 +11101,7 @@
                <item row="1" column="0" colspan="2">
                 <widget class="QLabel" name="label_222">
                  <property name="text">
-                  <string>Digested Pepetide Database</string>
+                  <string>Digested Genome Folder</string>
                  </property>
                 </widget>
                </item>
@@ -11150,10 +11161,18 @@
                 </widget>
                </item>
                <item row="2" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pro2taxafunc_db_path"/>
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_pro2taxafunc_db_path">
+                 <property name="statusTip">
+                  <string>The databse file from Database builder of MetaX</string>
+                 </property>
+                </widget>
                </item>
                <item row="3" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_output_path"/>
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_output_path">
+                 <property name="statusTip">
+                  <string>The path for save the OTF result</string>
+                 </property>
+                </widget>
                </item>
                <item row="0" column="3">
                 <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_peptide_path">
@@ -11172,8 +11191,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>733</width>
-                    <height>152</height>
+                    <width>921</width>
+                    <height>398</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11891,7 +11910,7 @@
      <x>0</x>
      <y>0</y>
      <width>1001</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">
@@ -12282,7 +12301,7 @@
   <connection>
    <sender>checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides</sender>
    <signal>toggled(bool)</signal>
-   <receiver>lineEdit_pep_direct_to_otf_digestied_pep_db_path</receiver>
+   <receiver>lineEdit_pep_direct_to_otf_digestied_genome_pep_path</receiver>
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
