@@ -697,6 +697,8 @@ class peptideProteinsMapper:
         """
         if self.digested_genome_folders is None:
             raise ValueError("digested_genome_folders is required")
+        if not peptide_list:
+            return {}, "", ""
 
         folders = [self.digested_genome_folders] if isinstance(self.digested_genome_folders, str) else list(self.digested_genome_folders)
         folders = [f for f in folders if f]
