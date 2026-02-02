@@ -14,7 +14,7 @@ import sys
 # Show the splash screen as early as possible
 app = QtWidgets.QApplication(sys.argv)
 splash = QSplashScreen()
-logo_png_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")
+logo_png_path = os.path.join(os.path.dirname(__file__), "metax_gui", "resources", "logo.png")
 pixmap = QPixmap(logo_png_path)
 scaled_pixmap = pixmap.scaled(pixmap.width() // 2, 
                               pixmap.height() // 2, 
@@ -302,7 +302,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_metalab_anno_functions = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_functions, 'file')
         self.lineEdit_metalab_anno_otf_save_path = self.make_line_edit_drag_drop(self.lineEdit_metalab_anno_otf_save_path, 'folder', 'OTF.tsv')
         self.lineEdit_pep_direct_to_otf_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_peptide_path, 'file')
-        self.lineEdit_pep_direct_to_otf_digestied_pep_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_pep_db_path, 'file')
+        self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path, 'folder')
         self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 'file')
         self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_dreict_anno.tsv')
 
@@ -340,7 +340,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_run_metalab_maxq_annotate.clicked.connect(self.run_metalab_maxq_annotate)
         # peptideAnnotator Pep Direct to OTF
         self.pushButton_open_pep_direct_to_otf_peptide_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_peptide_path)
-        self.pushButton_open_pep_direct_to_otf_digestied_pep_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_digestied_pep_db_path)
+        self.pushButton_open_pep_direct_to_otf_digestied_pep_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path)
         self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path)
         self.pushButton_open_pep_direct_to_otf_output_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_output_path)
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
@@ -1424,7 +1424,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "lineEdit_taxafunc_path",
             "lineEdit_meta_path",
             "lineEdit_db_path",
-            "lineEdit_pep_direct_to_otf_digestied_pep_db_path",
+            "lineEdit_pep_direct_to_otf_digestied_genome_pep_path",
             "lineEdit_pep_direct_to_otf_pro2taxafunc_db_path",
         ]
         for name in line_edit_names:
@@ -1468,7 +1468,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "lineEdit_taxafunc_path",
             "lineEdit_meta_path",
             "lineEdit_db_path",
-            "lineEdit_pep_direct_to_otf_digestied_pep_db_path",
+            "lineEdit_pep_direct_to_otf_digestied_genome_pep_path",
             "lineEdit_pep_direct_to_otf_pro2taxafunc_db_path",
         ]
         else:
@@ -2077,11 +2077,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pep_direct_to_otf_peptide_path = os.path.normpath(pep_direct_to_otf_peptide_path)
         self.lineEdit_pep_direct_to_otf_peptide_path.setText(pep_direct_to_otf_peptide_path)
         
-    def set_lineEdit_pep_direct_to_otf_digestied_pep_db_path(self):
-        digestied_pep_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Digestied Peptide Database', self.last_path, 'sqlite3 (*.db)')[0]
-        self.last_path = os.path.dirname(digestied_pep_db_path)
-        digestied_pep_db_path = os.path.normpath(digestied_pep_db_path)
-        self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setText(digestied_pep_db_path)
+    def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
+        digested_genome_folder_path = QFileDialog.getExistingDirectory(
+            self.MainWindow,
+            'Select Digested Genome Folder',
+            self.last_path,
+        )
+        if not digested_genome_folder_path:
+            return
+        self.last_path = os.path.dirname(digested_genome_folder_path)
+        digested_genome_folder_path = os.path.normpath(digested_genome_folder_path)
+        self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.setText(digested_genome_folder_path)
     
     def set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path(self):
         pro2taxafunc_db_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Protein to Taxa-Functions Database', self.last_path, 'sqlite3 (*.db)')[0]
@@ -2533,7 +2539,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
     def run_pep_dircet_to_otf(self):
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text()
-        digested_pep_db_path = self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.text()
+        digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text()
         table_separator = self.lineEdit_pep_direct_to_otf_pep_table_sep.text()
         peptide_col = self.lineEdit_pep_direct_to_otf_peptide_col_name.text()
         intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text()
@@ -2557,7 +2563,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # check if the file exists in the path
         check_files = [peptide_table_path]
         if not continue_base_on_annotaied_peptide_table:
-            check_files.append(digested_pep_db_path)
+            check_files.append(digested_genome_folder_path)
         if not stop_after_genome_ranking:
             check_files.append(taxafunc_anno_db_path)
 
@@ -2567,11 +2573,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return None
                 
         try:
-            self.logger.write_log(f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} digested_pep_db_path:{digested_pep_db_path} output_path:{output_path} taxafunc_anno_db_path:{taxafunc_anno_db_path}')
+            self.logger.write_log(f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} taxafunc_anno_db_path:{taxafunc_anno_db_path}')
             def pep_direct_to_otf_main_wrapper():
                 instance = peptideProteinsMapper(
                     peptide_table_path=peptide_table_path, 
-                    db_path=digested_pep_db_path,
+                    digested_genome_folders=digested_genome_folder_path,
                     table_separator=table_separator,
                     peptide_col=peptide_col,
                     intensity_col_prefix=intensity_col_prefix,
@@ -2581,7 +2587,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     stop_after_genome_ranking=stop_after_genome_ranking,
                     continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
                     turn_point_method=turn_point_method,
-                    turn_point_distinct_cutoff=turn_point_distinct_cutoff
+                    turn_point_distinct_cutoff=turn_point_distinct_cutoff,
+                    digested_parallel_backend="subprocess",
                     )
                 if stop_after_genome_ranking:
                     return instance.process_peptides_to_proteins()
@@ -2617,12 +2624,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides(self):
         if self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked():
-            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(False)
+            self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.setEnabled(False)
             self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.setChecked(False)
             self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking()
             self.label_220.setText('Annotated Peptide Table')
         else:
-            self.lineEdit_pep_direct_to_otf_digestied_pep_db_path.setEnabled(True)
+            self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.setEnabled(True)
             self.label_220.setText('Peptide Table')
     
     
