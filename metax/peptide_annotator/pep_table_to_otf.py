@@ -471,6 +471,7 @@ class peptideProteinsMapper:
                  protein_genome_separator: str = "_",
                  n_jobs: int | None = None,
                  digested_parallel_backend: str = "subprocess",
+                 genome_list: Iterable[str] | None = None,
                  ):
 
         self.peptide_table_path = peptide_table_path
@@ -480,6 +481,7 @@ class peptideProteinsMapper:
         self.digested_protein_col = digested_protein_col
         self.removed_genomes_set = removed_genomes_set
         self.selected_genomes_set = selected_genomes_set
+        self.genome_list = self._normalize_genome_list(genome_list)
         self.table_separator = table_separator
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
@@ -517,6 +519,80 @@ class peptideProteinsMapper:
         except Exception:
             rows = "Unknown"
         print(f"[Save...] {desc}: {path} (rows={rows})")
+
+    @staticmethod
+    def _normalize_genome_list(genome_list: Iterable[str] | None) -> list[str] | None:
+        if genome_list is None:
+            return None
+
+        raw_items = genome_list.split(";") if isinstance(genome_list, str) else list(genome_list)
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for item in raw_items:
+            if item is None:
+                continue
+            genome = str(item).strip()
+            if not genome or genome in seen:
+                continue
+            seen.add(genome)
+            cleaned.append(genome)
+        return cleaned
+
+    @staticmethod
+    def _collect_genomes_from_df(df: pd.DataFrame) -> set[str]:
+        if 'Genomes' not in df.columns:
+            return set()
+
+        genomes: set[str] = set()
+        for value in df['Genomes'].dropna():
+            value_str = str(value).strip()
+            if not value_str or value_str.lower() == 'nan':
+                continue
+            for genome in value_str.split(';'):
+                genome = genome.strip()
+                if genome:
+                    genomes.add(genome)
+        return genomes
+
+    def _get_selected_genome_list(
+        self,
+        df: pd.DataFrame,
+        genome_list: Iterable[str] | None = None,
+    ) -> list[str]:
+        effective_genome_list = (
+            self._normalize_genome_list(genome_list)
+            if genome_list is not None
+            else self.genome_list
+        )
+
+        if effective_genome_list is None:
+            return self.calculate_genome_list(df, turn_point_method=self.turn_point_method)
+
+        if not effective_genome_list:
+            print("Warning: genome_list is provided but empty; no genomes will be selected.")
+            self.selected_genomes_num = 0
+            return []
+
+        available_genomes = self._collect_genomes_from_df(df)
+        selected_genomes_list = list(effective_genome_list)
+
+        if available_genomes:
+            missing = [g for g in selected_genomes_list if g not in available_genomes]
+            selected_genomes_list = [g for g in selected_genomes_list if g in available_genomes]
+            if missing:
+                preview = ', '.join(missing[:10])
+                suffix = "..." if len(missing) > 10 else ""
+                print(
+                    f"Warning: {len(missing)} genomes in genome_list are not found in annotated peptides "
+                    f"and will be ignored: {preview}{suffix}"
+                )
+
+        print(
+            f"Using provided genome_list, skip calculate_genome_list(). "
+            f"Selected genomes: [{len(selected_genomes_list)}]"
+        )
+        self.selected_genomes_num = len(selected_genomes_list)
+        return selected_genomes_list
     
     def load_peptide_table(self):
         print("Loading peptide table...")
@@ -860,7 +936,16 @@ class peptideProteinsMapper:
             # warning already raised in calculate_genome_list
             pass
         
-    def calculate_genome_list(self, df, turn_point_method="auto"):
+    def calculate_genome_list(self, df, turn_point_method="auto") -> list[str]:
+        ''' 
+        INPUT: df with columns: Peptide, Proteins, Genomes, Intensity*
+        OUTPUT: list of selected genomes based on the turning point method
+        Parameters for turning point methods:
+        - auto: automatically calculate the turning point based on the coverage_ratio curve (default)
+        - coverage: select genomes until the coverage_ratio reaches a specified cutoff (e.g. 0.97)
+        - rank: select top N genomes based on the combined score ranking (e.g. top 10)
+        - distinct_count: select genomes with at least N distinct peptides (e.g. 3)
+        '''
         from metax.peptide_annotator.get_genome_rank import GenomeRank
         gr = GenomeRank(df = df, 
                                  peptide_column = self.peptide_col,
@@ -972,9 +1057,9 @@ class peptideProteinsMapper:
         return df
 
 
-    def process_peptides_to_proteins(self):# main function workflow
+    def process_peptides_to_proteins(self, genome_list: Iterable[str] | None = None):# main function workflow
         if self.continue_base_on_annotaied_peptide_table:
-            self.run_base_on_annotaied_peptide_table()
+            self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
             return
 
         self.annotate_peptides()
@@ -983,8 +1068,7 @@ class peptideProteinsMapper:
         if self.stop_after_genome_ranking:
             print("Stopped after genome ranking")
             self.final_peptide_table = self.peptide_table
-            self.calculate_genome_list(self.peptide_table, 
-                                    turn_point_method=self.turn_point_method)
+            self._get_selected_genome_list(self.peptide_table, genome_list=genome_list)
             #save the annotated peptide table to output path
             self._log_save(self.peptide_table, self.output_path, "annotated_peptide_table")
             t0 = time.time()
@@ -998,12 +1082,11 @@ class peptideProteinsMapper:
             t0 = time.time()
             self.peptide_table.to_csv(annotated_tmp_path, sep='\t', index=False)
             print(f"[Save] annotated_peptide_table(temp) done in {time.time() - t0:.2f}s")
-            self.run_base_on_annotaied_peptide_table()
+            self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
 
 
-    def run_base_on_annotaied_peptide_table(self):
-        selected_genomes_list = self.calculate_genome_list(self.peptide_table, 
-                                                           turn_point_method=self.turn_point_method)
+    def run_base_on_annotaied_peptide_table(self, genome_list: Iterable[str] | None = None):
+        selected_genomes_list = self._get_selected_genome_list(self.peptide_table, genome_list=genome_list)
         self.final_peptide_table = self.reduce_proteins_by_genome(self.peptide_table, selected_genomes_list)
         selected_proteins_list = self.calculate_protein_list(self.final_peptide_table)
         self.final_peptide_table = self.reduce_proteins_by_mini_proteins_list(self.final_peptide_table, selected_proteins_list)
@@ -1016,13 +1099,14 @@ class peptideProteinsMapper:
                    genome_mode = True, 
                    distinct_genome_threshold = 1, # usually 3
                    exclude_protein_startwith = None, #Usually 'REV_;XXX_' 
-                   protein_genome_separator = '_'
+                   protein_genome_separator = '_',
+                   genome_list: Iterable[str] | None = None,
                    ): # run peptide to OTF
         
         if self.continue_base_on_annotaied_peptide_table:
-            self.run_base_on_annotaied_peptide_table()
+            self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
         else:
-            self.process_peptides_to_proteins()
+            self.process_peptides_to_proteins(genome_list=genome_list)
         
         # collect additional running information
         additional_running_info = {
@@ -1112,7 +1196,7 @@ if __name__ == "__main__":
                 line = line.strip()
                 if line:
                     removed_genomes_set.add(line)
-        print(len(removed_genomes_set), "genomes in the genome list")
+        print(len(removed_genomes_set), "genomes in the remove genome list")
     
     # set of genomes to be selected
     selected_mag_set = set()
@@ -1134,14 +1218,15 @@ if __name__ == "__main__":
                                            # use digested genome folders for peptide to protein mapping
                                            digested_genome_folders=digested_genome_folders,
                                            removed_genomes_set=removed_genomes_set, selected_genomes_set=selected_mag_set,
-                                           peptide_col='Stripped.Sequence', intensity_col_prefix=r"Intensity", table_separator='\t',
+                                           peptide_col='Stripped.Sequence', intensity_col_prefix=r"E:", table_separator='\t',
                                            turn_point_method='coverage',
                                            genome_cutoff_rank=None,
                                            turn_point_distinct_cutoff=3,
                                            genome_peptide_coverage_cutoff=0.97, 
                                            protein_peptide_coverage_cutoff=1,
                                            continue_base_on_annotaied_peptide_table=False,
-                                        #    stop_after_genome_ranking=True
+                                        #    stop_after_genome_ranking=True,
+                                            genome_list=None
                                            )
     peptide_mapper.all_in_one(taxafunc_anno_db_path=taxafunc_anno_db_path)
     print("all in one finished")
