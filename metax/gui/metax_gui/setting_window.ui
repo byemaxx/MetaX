@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
-    <height>439</height>
+    <width>824</width>
+    <height>625</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>748</width>
-        <height>367</height>
+        <width>806</width>
+        <height>553</height>
        </rect>
       </property>
       <attribute name="label">
@@ -679,7 +679,7 @@
          <item row="0" column="0">
           <widget class="QCheckBox" name="checkBox_stat_mean_by_zero_dominant">
            <property name="text">
-            <string>Calculate Non-Zero Mean (Return 0 if Zeros &gt; 50%) for Each Group</string>
+            <string>Calculate Non-Zero Mean (0 if zeros &gt;50%; else mean of non-zeros) for Each Group</string>
            </property>
           </widget>
          </item>
@@ -692,8 +692,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>748</width>
-        <height>367</height>
+        <width>806</width>
+        <height>553</height>
        </rect>
       </property>
       <attribute name="label">
