@@ -121,16 +121,17 @@ The Data Overview provides basic information about your data, such as the number
 
     If <u>Share Intensity</u> is checked, the intensity above would given <u>5</u> to each split KO
 
-- **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed.
-   When unchecked, such peptides will be retained and labeled as *unknown*, for example:
+- **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed. When unchecked, such peptides will be retained and labeled as *unknown*, for example:
 
-  ```
-  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_
-  to
-  d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown
-  ```
+    ```text
+    d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_
+    ```
 
-  
+    to
+
+    ```text
+    d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown
+    ```
 
 - **Create Taxa and Func only from OTFs:**
 
@@ -293,11 +294,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select **Sub Meta**  to plot with two meta
 
-    - <img src="MetaX_Cookbook.assets/sub_meta.png" >
+    <img src="MetaX_Cookbook.assets/sub_meta.png" >
 
   - Change settings in the **PLOT PARAMETER** tab
 
-    - <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting"  />
+    <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting"  />
 
       
 
@@ -305,40 +306,40 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     **e.g. :** Select PBS, BAS and others groups **only in** <u>Individual</u> <u>V1</u> 
 
-    - <img src="MetaX_Cookbook.assets/group_in_condition.png">
+    <img src="MetaX_Cookbook.assets/group_in_condition.png">
 
   - Select **specific Samples** to Analysis
 
-    - <img src="./MetaX_Cookbook.assets/pca_setting.png" >
+    <img src="./MetaX_Cookbook.assets/pca_setting.png" >
 
       
 
-    - <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:80%;" />
+    <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:80%;" />
 
 - **Number stats**
 
   - We can plot the bar for the number for each table by **groups** or by **samples**
 
-  <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number"  />
+    <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number"  />
 
 - **Taxa Specific**
 
   - Alpha/Beta Diversity
 
-    - <img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div"  />
-    - <img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div"  />
+    <img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div"  />
+    <img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div"  />
 
   - Sunburst
 
-    - <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst"  />
+    <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst"  />
 
   - TreeMap
 
-    - <img src="MetaX_Cookbook.assets/treemap.png" alt="treemap"  />
+    <img src="MetaX_Cookbook.assets/treemap.png" alt="treemap"  />
 
   - Sankey
 
-    - <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey">
+    <img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey">
 
     
 
@@ -378,11 +379,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - **Plot Mean**: calculate the mean of each group before plotting
   
   - **Sub Meta:** select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
-    - <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" >
+    <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" >
   
   - Plot all color maps to view by right click <u>**Theme**</u>
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
-    - <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">
+    <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">
   
 - **Plot:**
 
@@ -392,7 +393,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
     <img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic"  />
     
-    - <img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed"  />
+    <img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed"  />
 
 
 
@@ -413,7 +414,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - 3D Bar plot
 
   - Plot 3D bar by selecting a **sub meta**.
-  - <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
+  <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
 
 
 
@@ -495,7 +496,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
   - Result of Dunnett's Test:
     - T- Statistic value shown in the heatmap
-  - <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
+  <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
 
 
 
@@ -665,7 +666,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 - Plot list only
   - **Plot List Only:** Show the items only in the list and the items linked to them
   - **Without Links:** Only show the items in the focus list
-    - <img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" >
+    <img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" >
   
 - Network plot
   - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
@@ -681,7 +682,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.
 - Also, we can export the current MetaX to a file and reload it again.
-  - <img src="MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" style="zoom:;" />
+  <img src="MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" style="zoom:;" />
 
 
 
@@ -826,7 +827,7 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
 - **Show or Hide the Console**
 
-  - <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console"  />
+  <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console"  />
 
   
 
@@ -834,7 +835,7 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
   - Check the box of **Auto Check Update** to enable or disable check update when launching
   - Change to update from the **stable version** or **beta version** by settings
-  - <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
+  <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
   - Other Options Settings
   - ![settings_page2](MetaX_Cookbook.assets\settings_page2.png)
   

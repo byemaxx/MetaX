@@ -1,307 +1,89 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Build and Deploy Docs to GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
-#   push:
-#     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
+  push:
+    branches:
+      - main
+    paths:
+      - "Docs/**"
+      - "docs/**"
+      - "scripts/build_docs.py"
+      - "docs/requirements.txt"
+      - ".github/workflows/jekyll-gh-pages.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Docs/**"
+      - "docs/**"
+      - "scripts/build_docs.py"
+      - "docs/requirements.txt"
+      - ".github/workflows/jekyll-gh-pages.yml"
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  # Build job
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-      
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install markdown jinja2
+          pip install -r docs/requirements.txt
 
-      - name: Convert Markdown to HTML
+      - name: Generate documentation site
+        run: python scripts/build_docs.py
+
+      - name: Resolve docs directory
         run: |
-            python <<EOF
-            import markdown
-            from jinja2 import Template
-            import re
+          if [ -d "Docs" ]; then
+            echo "DOCS_DIR=Docs" >> "$GITHUB_ENV"
+          elif [ -d "docs" ]; then
+            echo "DOCS_DIR=docs" >> "$GITHUB_ENV"
+          else
+            echo "Docs directory not found."
+            exit 1
+          fi
 
-            # Read markdown file
-            markdown_file_path = './Docs/MetaX_Cookbook.md'
-            with open(markdown_file_path, 'r', encoding='utf-8') as file:
-                markdown_content = file.read()
+      - name: Add .nojekyll
+        run: touch "${{ env.DOCS_DIR }}/.nojekyll"
 
-            # Remove # Contents and [TOC]
-            markdown_content = markdown_content.replace('# Contents', '').replace('[TOC]', '')
-
-            # Extract headings and generate table of contents
-            headings = re.findall(r'^(#+) (.+)', markdown_content, re.MULTILINE)
-            toc_items = []
-
-            for heading in headings:
-                level = len(heading[0])
-                title = heading[1]
-                anchor = re.sub(r'[^a-zA-Z0-9]+', '-', title.strip()).lower().strip('-')
-                toc_items.append((level, title, anchor))
-
-            # Convert markdown to HTML
-            html_content = markdown.markdown(markdown_content, extensions=['tables', 'toc'])
-
-            # Add Bootstrap classes to tables and images
-            html_content = re.sub(r'<img (.*?)>', r'<div style="text-align: center;"><img \1 class="img-fluid" style="max-width: 60%; min-width: 300px; height: auto; display: inline-block;"></div>', html_content)
-            html_content = re.sub(r'<table>', r'<div class="table-responsive"><table class="table table-striped table-bordered">', html_content)
-            html_content = re.sub(r'</table>', r'</table></div>', html_content)
-            html_content = re.sub(
-                r'href="##([^"]+)"',  # 匹配类似 ##Module-4.-Peptide-Annotator 的链接
-                lambda match: f'href="#{re.sub(r"[^a-zA-Z0-9]+", "-", match.group(1).strip()).lower().strip("-")}"',
-                html_content
-            )
-            # Jinja2 template for HTML output
-            template = Template('''
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>MetaX</title>
-                <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/flatly/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body {
-                        display: flex;
-                        font-family: Arial, sans-serif;
-                        background-color: #f8f9fa;
-                        margin: 0;
-                    }
-                    nav {
-                        width: 300px;
-                        padding: 20px;
-                        background: linear-gradient(180deg, #34495e, #2c3e50);
-                        border-right: 1px solid #dee2e6;
-                        position: fixed;
-                        height: 100%;
-                        overflow-y: auto;
-                    }
-                    nav h2 {
-                        color: #ecf0f1;
-                    }
-                    nav a {
-                        display: block;
-                        padding: 4px 16px;
-                        color: #ecf0f1;
-                        text-decoration: none;
-                        line-height: 1.2;
-                        margin: 0;
-                        font-size: 0.85rem;
-                        transition: all 0.3s ease-in-out;
-                    }
-                    nav a.level-1 {
-                        font-weight: bold; /* 一级标题加粗 */
-                        font-size: 1rem;
-                    }
-                    nav a.active {
-                        background-color: #0C9277FF;
-                        color: #ffffff;
-                        font-weight: bold;
-                        border-left: 4px solid #0D7A64FF;
-                    }
-                    nav a:hover {
-                        transform: scale(1.05);
-                        background-color: #34495e;
-                        color: #ffffff;
-                    }
-                    main {
-                        flex: 1;
-                        padding: 40px;
-                        margin-left: 300px;
-                        overflow-y: auto;
-                        line-height: 1.6;
-                    }
-                    h1 {
-                        border-bottom: 2px solid #0B8B71FF;
-                        padding-bottom: 10px;
-                    }
-                    h2 {
-                        color: #16a085;
-                    }
-                    h3 {
-                        color: #2980b9;
-                    }
-                    table {
-                        width: 100%;
-                        margin-bottom: 1rem;
-                        color: #212529;
-                        border-collapse: collapse;
-                        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-                        border-radius: 8px;
-                    }
-                    table th, table td {
-                        padding: 0.75rem;
-                        vertical-align: top;
-                        border-top: 1px solid #dee2e6;
-                    }
-                    img {
-                        border: 1px solid #ddd;
-                        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-                        border-radius: 5px;
-                    }
-                    .table-responsive {
-                        display: block;
-                        width: 100%;
-                        overflow-x: auto;
-                        -webkit-overflow-scrolling: touch;
-                    }
-                    #backToTop {
-                        position: fixed;
-                        bottom: 20px;
-                        right: 20px;
-                        display: none;
-                        background-color: #34495e;
-                        color: #ffffff;
-                        border: none;
-                        padding: 10px 15px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        transition: background-color 0.3s;
-                    }
-                    #backToTop:hover {
-                        background-color: #0B705CFF;
-                    }
-                    .dark-mode {
-                        background-color: #2c3e50;
-                        color: #ecf0f1;
-                    }
-                    .dark-mode nav {
-                        background-color: #1c2833;
-                    }
-                    .dark-mode nav a {
-                        color: #ecf0f1;
-                    }
-                </style>
-            </head>
-            <body>
-
-            <nav>
-                <h2>MetaX</h2>
-                <button id="toggleTheme" style="background-color: #ecf0f1; color: #34495e; border: none; padding: 10px; margin-bottom: 10px; cursor: pointer;">Toggle Theme</button>
-                <ul class="nav flex-column">
-                {% for level, title, anchor in toc_items %}
-                    <li class="nav-item" style="margin-left: {{ (level - 1) * 20 }}px;">
-                        <a class="nav-link level-{{ level }}" href="#{{ anchor }}" id="nav-{{ anchor }}">{{ title }}</a>
-                    </li>
-                {% endfor %}
-                </ul>
-            </nav>
-
-            <main>
-                {{ content }}
-            </main>
-
-            <button id="backToTop">Top</button>
-
-            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-            <script>
-                // Function to get the current scroll position and update the active nav link
-                function updateActiveNavLink() {
-                    var sections = document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6');
-                    var navLinks = document.querySelectorAll('nav a');
-                    var fromTop = window.scrollY + 20;
-
-                    sections.forEach(function(section) {
-                        var top = section.offsetTop;
-                        var bottom = top + section.offsetHeight;
-                        var id = section.id;
-
-                        if (fromTop >= top && fromTop < bottom) {
-                            navLinks.forEach(function(link) {
-                                link.classList.remove('active');
-                            });
-                            var activeLink = document.querySelector('nav a[href="#' + id + '"]');
-                            if (activeLink) {
-                                activeLink.classList.add('active');
-                                activeLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                        }
-                    });
-                }
-
-                // Show/hide back-to-top button
-                window.addEventListener('scroll', function () {
-                    var backToTop = document.getElementById('backToTop');
-                    if (window.scrollY > 300) {
-                        backToTop.style.display = 'block';
-                    } else {
-                        backToTop.style.display = 'none';
-                    }
-                });
-
-                // Scroll to top
-                document.getElementById('backToTop').addEventListener('click', function () {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-
-                // Toggle theme
-                document.getElementById('toggleTheme').addEventListener('click', function () {
-                    document.body.classList.toggle('dark-mode');
-                });
-
-                window.addEventListener('scroll', updateActiveNavLink);
-            </script>
-
-            </body>
-            </html>
-            ''')
-
-            # Render the template with the content and TOC items
-            html_output = template.render(content=html_content, toc_items=toc_items)
-
-            # Write the HTML output to a file
-            output_file_path = './Docs/index.html'
-            with open(output_file_path, 'w', encoding='utf-8') as file:
-                file.write(html_output)
-
-            print("HTML file has been generated successfully.")
-
-            EOF
+      - name: Verify generated HTML
+        run: test -f "${{ env.DOCS_DIR }}/index.html"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./Docs/
-          destination: ./_site
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
 
-  # Deployment job
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "${{ env.DOCS_DIR }}"
+
   deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
