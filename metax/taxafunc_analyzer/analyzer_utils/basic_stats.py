@@ -7,22 +7,54 @@ class BasicStats:
         self.tfa = tfa
         
     def _get_mean_by_zero_dominant(self, df: pd.DataFrame) -> pd.Series:
-        """
-        Optimized function to calculate the mean of non-zero values in each row if the number of zero values
-        is less than half of the total values; otherwise, return 0.
-        
+        """Calculate a row-wise mean that is robust to zero-inflated data.
+
+        This function is designed for tables where ``0`` typically represents "not detected" (zero-inflated)
+        rather than a true quantitative measurement. For each row:
+
+        - If more than half of the values are exactly ``0``, the row is considered *zero-dominant* and the
+          output for that row is set to ``0``.
+        - Otherwise, compute the mean of the **non-zero** values only (zeros are excluded from the mean).
+
+        Notes:
+        - The threshold uses ``> (n_cols / 2)`` for zero-dominant rows. Therefore, when exactly half the
+          values are zero, the function will still compute the non-zero mean.
+        - Only values that are exactly ``0`` are treated as zeros. Missing values (``NaN``/``pd.NA``) are
+          ignored by the mean (because ``skipna=True``).
+        - Output is returned as a ``pd.Series`` aligned to ``df.index``.
+
+        Example:
+            >>> import pandas as pd
+            >>> df = pd.DataFrame(
+            ...     {
+            ...         "S1": [0, 0, 2],
+            ...         "S2": [0, 0, 4],
+            ...         "S3": [3, 0, 6],
+            ...         "S4": [1, 5, 8],
+            ...     },
+            ...     index=["row_a", "row_b", "row_c"],
+            ... )
+            >>> # row_a: 2 zeros out of 4 (not > half) => mean(non-zero)=(3+1)/2=2
+            >>> # row_b: 3 zeros out of 4 (> half)     => output=0
+            >>> # row_c: no zeros                      => mean=5
+            >>> BasicStats(None)._get_mean_by_zero_dominant(df)
+            row_a    2.0
+            row_b    0.0
+            row_c    5.0
+            dtype: float64
+
         Args:
             df (pd.DataFrame): Input DataFrame.
 
         Returns:
-            pd.Series: A Series with mean values based on the zero-dominant condition.
+            pd.Series: Mean values using the zero-dominant rule (row-wise).
         """
         # 计算每行的零值数量
         zero_counts = (df == 0).sum(axis=1)
         # 判断每行零值是否超过一半，超过的行直接设为0
         mean_series = pd.Series(0, index=df.index)
         non_zero_rows = zero_counts <= (df.shape[1] / 2)
-        # 对非零主导的行计算非零均值
+        # 对非零主导的行计算*非零*均值
         mean_series[non_zero_rows] = df[non_zero_rows].replace(0, pd.NA).mean(axis=1, skipna=True)
         return mean_series
     
@@ -34,7 +66,7 @@ class BasicStats:
         Args:
             df (pd.DataFrame): The input DataFrame containing the sample data. Defaults to None.
             condition (list, optional): A list of conditions to filter the samples. Defaults to None.eg. ['Individual', 'V1'] (Individual column, V1 rows in meta table)
-            zero_domainant (bool, optional): If True, calculate the mean of non-zero values in each group if the number of zero values is less than half of the total number of values; otherwise, return 0. Defaults to False.
+            zero_domainant (bool, optional): If True, if 0 > 50% of the values in a group, return 0; otherwise, calculate the mean of **non-zero values**. If False, calculate the mean of all values. Defaults to None
 
         Returns:
             pd.DataFrame: A DataFrame containing the mean values of the groups.
