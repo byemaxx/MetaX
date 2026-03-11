@@ -1,6 +1,6 @@
 # MetaX Cookbook
 
-This is the guidebook for the MetaX **GUI Version**. If you are using the CLI to analyze, We recommend that you read the [documentation](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for each MetaX module for instructions on how to use it from the command line.
+This guidebook is for the MetaX **GUI version**. If you are using the CLI, we recommend reading the [documentation](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for instructions on how to use each MetaX module from the command line.
 
 # Overview
 
@@ -37,15 +37,15 @@ Visit **GitHub** to get more information:
 
 # Exploring Data with MetaX
 
-See the **<u>[Preparing Your Data](#Preparing-Your-Data)</u>** section to build the database and annotate peptides to OTFs before starting. 
+See the **<u>[Preparing Your Data](#preparing-your-data)</u>** section to build the database and annotate peptides to OTFs before starting.
 
 ## Module 1. OTF Analyzer
 
-After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**[Peptide Annotator](##Module-4.-Peptide-Annotator)**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
+After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**[Peptide Annotator](#module-4-peptide-annotator)**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
 
 ## 1. Data Preparation
 
-**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>[Peptide Annotator](##Module-4.-Peptide-Annotator)</u> module.
+**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>[Peptide Annotator](#module-4-peptide-annotator)</u> module.
 
 **Meta Table:** The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.
 
@@ -102,9 +102,9 @@ The Data Overview provides basic information about your data, such as the number
 
 ![FUNC_prop](./MetaX_Cookbook.assets/FUNC_prop.png)
 
-- **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by any taxa, the follow analysis focus on functions).
+- **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by taxa, and the following analysis focuses on functions).
 
-- **Peptide Number Threshold:**  only keep the taxon (function or OTF) at least has the setting number of peptides.
+- **Peptide Number Threshold:** Only keep taxa, functions, or OTFs that have at least the specified number of peptides.
 
 - **Split Function:** Split the annotations with multi-functions.
 
@@ -119,7 +119,7 @@ The Data Overview provides basic information about your data, such as the number
     | ko:K00625 | 10        |
     | ko:K13788 | 10        |
 
-    If <u>Share Intensity</u> is checked, the intensity above would given <u>5</u> to each split KO
+    If <u>Share Intensity</u> is checked, the intensity above will be split equally, giving <u>5</u> to each KO.
 
 - **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed. When unchecked, such peptides will be retained and labeled as *unknown*, for example:
 
@@ -140,9 +140,9 @@ The Data Overview provides basic information about your data, such as the number
     - <u>Function table:</u> Peptides are filtered solely by functional categories and thresholds, regardless of their taxa levels.
     - <u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
   - **With selection (checkbox checked):**
-
-
-- All tables are filtered by both taxa levels and functional categories simultaneously.
+    - <u>Taxa table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
+    - <u>Function table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
+    - <u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
 
 ### Sum Proteins Intensity
 
@@ -170,11 +170,11 @@ Click **Generate Protein Intensity Table** to sum peptides to proteins if the Pr
 
 ### Data preprocessing
 
-- **Quantitative Method：**
+- **Quantitative Method:**
 
   - **<u>Sum</u>**: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.
 
-  - **<u>DirectLFQ</u>**: Using DirectLFQ to normalize the peptides and then estimate the intensity by using  *intensity traces*.
+  - **<u>DirectLFQ</u>**: Use DirectLFQ to normalize peptides and then estimate intensity using *intensity traces*.
 
     
 
@@ -189,7 +189,7 @@ There are several methods for detecting and handling outliers.
 
 
 
-- **Outliers Detection:**
+- **Outlier Detection:**
 
   - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
   
@@ -219,13 +219,13 @@ There are several methods for detecting and handling outliers.
   
   - **Mahalanobis Distance:** Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.
 
-​	<u>In all methods, You can choose detection outliers by a meta column, and a meta to handle the outliers.</u>
+<u>In all methods, you can choose one meta column for outlier detection and another meta column for handling outliers.</u>
 
 - **Outliers Imputation:**
 
   - **Drop:** Remove peptides that contain any NaN values.
 
-  - **Original:** Remove peptides that contain any NaN values.
+  - **Original:** Keep the remaining NaN values as-is.
 
   - **Mean**: Outliers will be imputed by the mean.
 
@@ -237,11 +237,11 @@ There are several methods for detecting and handling outliers.
 
   - **Multiple**: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of the nearest features.
 
-  You can choose the outliers Imputation by *each group* or by *all samples*.
+  You can choose outlier imputation by *each group* or by *all samples*.
 
 - **Remove Batch Effect:**
 
-  - Here, you can choose a group as the batch effect, then use [<u>reCombat</u>] (https://github.com/BorgwardtLab/reComBat) for handling.
+  - Here, you can choose a group as the batch effect and then use [<u>reCombat</u>](https://github.com/BorgwardtLab/reComBat) to handle it.
 - **Data Transformation:**
 
   - Log2, Log10, Square root transformation, Cube root transformation and box-cox.
@@ -251,10 +251,10 @@ There are several methods for detecting and handling outliers.
   - **Trace Shifting:** Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).
     - Note: If <u>both</u> trace shifting and transformation are applied, *<u>normalization will be done before transformation.</u>*
   
-  - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring and Normalization by Precentage.
+  - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring, and normalization by percentage.
   
 
-<u>If you use [Z-Score, Mean centring and Pareto Scaling] data normalization, the data will be given a minimum offset again to avoid negative values.</u>
+<u>If you use Z-Score, Mean centring, or Pareto Scaling for data normalization, the data will be given a minimum offset again to avoid negative values.</u>
 
 - **Drag the item's name** to change the <u>**order**</u> of data preprocessing.
 
@@ -264,7 +264,7 @@ There are several methods for detecting and handling outliers.
 
 ![TaxaFunc_ready](./MetaX_Cookbook.assets/TaxaFunc_ready.png)
 
-Then we can check tables in **Table Review** part, and export it.
+Then you can check the tables in the **Table Review** section and export them.
 
 <img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review"  />
 
@@ -276,9 +276,9 @@ Then we can check tables in **Table Review** part, and export it.
 
 ### PCA, Correlation and Box Plot
 
-<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" style="zoom:;" />
+<img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" />
 
-We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default all) to plot **PCA**, **Correlation**,  and **Box Plot** for **[Taxa, Function, Taxa-Func, Peptide table, Protein table**]
+You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default: all) to plot **PCA**, **Correlation**, and **Box Plot** for **Taxa, Function, Taxa-Func, Peptide, and Protein** tables.
 
 <img src="./MetaX_Cookbook.assets/pca.png" alt="pca"  />
 
@@ -290,9 +290,9 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - **Setting and modifying the plot**
 
-  - Show or hide labels in the figure by checking the checkbox **Show Labels**
+  - Show or hide labels in the figure by checking **Show Labels**.
 
-  - Select **Sub Meta**  to plot with two meta
+  - Select **Sub Meta** to plot with two meta columns.
 
     <img src="MetaX_Cookbook.assets/sub_meta.png" >
 
@@ -304,7 +304,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Select specific Groups **with condition**
 
-    **e.g. :** Select PBS, BAS and others groups **only in** <u>Individual</u> <u>V1</u> 
+    **For example:** Select PBS, BAS, and other groups **only in** <u>Individual</u> <u>V1</u>.
 
     <img src="MetaX_Cookbook.assets/group_in_condition.png">
 
@@ -318,7 +318,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - **Number stats**
 
-  - We can plot the bar for the number for each table by **groups** or by **samples**
+  - Plot the counts for each table by **groups** or by **samples**.
 
     <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number"  />
 
@@ -348,20 +348,20 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" >
 
-- **Select items(Taxa, Function, Taxa-Func and Peptide ) to plot:**
+- **Select items (Taxa, Function, Taxa-Func, and Peptide) to plot:**
   - Add **All Taxa**, or select one we are interested in.
 
 <img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list"  />
 
 
 
-- **Add items to Top List:** select the top items to plot by some statistical method.
+- **Add items to Top List:** Select the top items to plot using a statistical method.
 
-  - Clicked <u>filter with threshold</u> will filter by the padj of ANOVA and T-TEST and padj and Log2FC of DESeq2 result (setting in the corresponding page).
+  - Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of DESeq2 results (configured on the corresponding page).
 
   <img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  />
 
-- **Add a list for ploting:**
+- **Add a list for plotting:**
 
   - Make sure one row one item
 
@@ -381,7 +381,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
   - **Sub Meta:** select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
     <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" >
   
-  - Plot all color maps to view by right click <u>**Theme**</u>
+  - View all color maps by right-clicking <u>**Theme**</u>.
     - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
     <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">
   
@@ -403,15 +403,15 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar"  />
 
-- **interactive function:**
+- **Interactive functions:**
 
   <img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting"  />
 
-  - change to line plot:
+  - Change to a line plot:
 
     <img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line"  />
 
-- 3D Bar plot
+- **3D Bar Plot**
 
   - Plot 3D bar by selecting a **sub meta**.
   <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
@@ -434,24 +434,24 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### T-TEST
 
-- Select 2 group stats T-Test for  **[Taxa, Function, Taxa-Func, Peptide table and Proteins Table**]
+- Select two groups for T-test analysis on **Taxa, Function, Taxa-Func, Peptide, and Protein** tables.
 
 <img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test"/>
 
 ### ANOVA-TEST
 
-- select <u>some groups</u> or <u>all groups</u> to ANOVA Test for  **[Taxa, Function, Taxa-Func and Peptide table**]
+- Select <u>some groups</u> or <u>all groups</u> to run ANOVA on **Taxa, Function, Taxa-Func, and Peptide** tables.
 
 <img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test"/>
 
 ### Significant Taxa-Func
 
-- Significant comparing enables us to find the result of **<u>The taxa between the two groups showing no significant differences, while the related functions are significantly different</u>** and function no significant but relted taxa significant.
+- Significant comparison helps identify cases where **<u>taxa show no significant differences between two groups, while their related functions are significantly different</u>**, and vice versa.
 - ![Significant_Taxa-Func](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
 
 ### Plot Cross Heatmap
 
-- The **result** of the T-test and ANOVA Test will show in a new window
+- The **results** of the T-test and ANOVA test will appear in a new window.
 
   <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res"/>
 
@@ -459,11 +459,10 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Plot Heatmap for results
 
-  - Chose a Table to plot **top differences heatmap** or get **the top table**
+  - Choose a table to plot a **top differences heatmap** or export **the top table**.
 
 <img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting"  />
 
-- 
 - Taxa-Func cross heatmap:
   - The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.
 
@@ -502,7 +501,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### DESeq2
 
-- Select two groups to calculate FoldChange by [<u>PyDESeq2</u>]: https://github.com/owkin/PyDESeq2
+- Select two groups to calculate fold change with [<u>PyDESeq2</u>](https://github.com/owkin/PyDESeq2).
 
   
 
@@ -523,7 +522,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
     <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" />
 
 
-### TUKEY_TEST
+### Tukey Test
 
 <img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test"/>
 
@@ -543,9 +542,9 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
   - Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.
 
-  - Show Linked Func Only: only shows the function linked with the current taxon in the function combo box.
+  - Show Linked Func Only: Only shows the functions linked with the current taxon in the function combo box.
 
-    ​	**Do  not forget to click <u>Reset Function Taxa List</u> to reset all items after the filtering**
+    **Do not forget to click <u>Reset Function Taxa List</u> to restore all items after filtering.**
 
   
 
@@ -562,11 +561,11 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Co-Expression Networks & Heatmap
 
-- select Groups or Samples to calculate the correlation and plot the network
+- Select groups or samples to calculate correlations and plot the network.
 
 <img src="./MetaX_Cookbook.assets/co_network_page.png">
 
-- Slecet table, and set the method of correlation and threshold
+- Select a table, then set the correlation method and threshold.
 
   ![image-20230728142905839](./MetaX_Cookbook.assets/co_network_setting.png)
 
@@ -582,7 +581,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic"  />
 
-- Correlation of expression
+- Expression correlation
   - ![image-20240723162241316](MetaX_Cookbook.assets/expression_corelation_heatmap.png)
 
 ### Expression Trends
@@ -593,7 +592,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 - Clusters plot (clustered by **k-means**)
 
-  - The coloured line is the average 
+  - The coloured line is the average.
 
   <img src="./MetaX_Cookbook.assets/trends_cluster.png" style="zoom: 67%;"  >
 
@@ -619,7 +618,7 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 <img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png">
 
-- Check all taxa in one function (or Check all functions in a taxon)
+- Check all taxa in one function (or all functions in one taxon).
 
   - select **a function**, and click the button **<u>Show Linked Taxa Only</u>**
     - **Linked Number**: The number shows how many taxa are linked in this function
@@ -658,14 +657,14 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ### Taxa-Func Network
 
-- Select some groups or samples (default all)
-- add some taxa, func or taxa-func to focus the window  (Optional)
+- Select some groups or samples (default: all).
+- Add some taxa, functions, or taxa-func items to focus the view (optional).
 
 <img src="./MetaX_Cookbook.assets/taxa_func_link_page.png">
 
 - Plot list only
-  - **Plot List Only:** Show the items only in the list and the items linked to them
-  - **Without Links:** Only show the items in the focus list
+  - **Plot List Only:** Show only the items in the list and the items linked to them.
+  - **Without Links:** Only show the items in the focus list.
     <img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" >
   
 - Network plot
@@ -680,9 +679,9 @@ We can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default a
 
 ## 8. Restore Last TaxaFunc Object
 
-- Once you create TaxaFunc, the <u>TaxaFunc Object</u> will save automatically, and you can restore it next time.
-- Also, we can export the current MetaX to a file and reload it again.
-  <img src="MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" style="zoom:;" />
+- Once you create TaxaFunc, the <u>TaxaFunc Object</u> is saved automatically, and you can restore it next time.
+- You can also export the current MetaX object to a file and reload it later.
+  <img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" />
 
 
 
@@ -767,7 +766,7 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ### 1. Results from MAG Workflow
 
-The peptide results use Metagenome-assembled genomes (MAGs) as the reference database for protein searches, e.g., **DIA-NN**, **MetaLab-MAG**, **MetaLab-DIA**, and other workflows which using MAG databases like MGnify or customized MAGs Database.
+These peptide results use metagenome-assembled genomes (MAGs) as the reference database for protein searches, such as **DIA-NN**, **MetaLab-MAG**, **MetaLab-DIA**, and other workflows that use MAG databases like MGnify or custom MAG databases.
 
 - Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
 
@@ -775,7 +774,7 @@ The peptide results use Metagenome-assembled genomes (MAGs) as the reference dat
 
   **Required:**
 
-  - **Database**: The database created by <u>[Database Builder](##Module-2.-Database-Builder)</u>
+  - **Database**: The database created by <u>[Database Builder](#module-2-database-builder)</u>
 
   - **Peptide Table**:
 
@@ -801,7 +800,7 @@ The peptide results use Metagenome-assembled genomes (MAGs) as the reference dat
 
 ### 2. Results from MaxQuant Workflow
 
-The peptide results from **MetaLab 2.3** MaxQuant workflow.
+These peptide results come from the **MetaLab 2.3** MaxQuant workflow.
 
 - Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
 
@@ -831,17 +830,17 @@ The peptide results from **MetaLab 2.3** MaxQuant workflow.
 
   
 
-- Settings
+- **Settings**
 
-  - Check the box of **Auto Check Update** to enable or disable check update when launching
-  - Change to update from the **stable version** or **beta version** by settings
+  - Check **Auto Check Update** to enable or disable update checks on launch.
+  - Choose whether to update from the **stable version** or **beta version** in Settings.
   <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
   - Other Options Settings
-  - ![settings_page2](MetaX_Cookbook.assets\settings_page2.png)
+  - ![settings_page2](./MetaX_Cookbook.assets/settings_page2.png)
   
   
 
 
 # Enjoy MetaX
 
-If you have any issues or suggestions, please New issue in my [GitHub](https://github.com/byemaxx/MetaX).
+If you have any issues or suggestions, please open a new issue on [GitHub](https://github.com/byemaxx/MetaX).
