@@ -292,6 +292,8 @@ TEMPLATE = """
 
         main > * {
             max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         main ul,
@@ -300,10 +302,11 @@ TEMPLATE = """
             --list-indent: calc(var(--list-indent) + 24px);
         }
 
-        main li > figure.image-wrap,
+        main li > .image-wrap,
         main li > .table-responsive {
-            margin-left: calc(-1 * var(--list-indent));
-            width: calc(100% + var(--list-indent));
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         h1, h2, h3, h4 {
@@ -334,12 +337,12 @@ TEMPLATE = """
         }
 
         table {
-            width: 100%;
-            margin-bottom: 1rem;
+            width: auto;
+            min-width: 0;
+            margin-bottom: 0;
             color: var(--text);
             border-collapse: collapse;
             box-shadow: none;
-            border-radius: var(--radius);
             background: var(--surface);
             overflow: hidden;
             font-size: 0.95rem;
@@ -349,13 +352,13 @@ TEMPLATE = """
         table td {
             padding: 0.75rem;
             vertical-align: top;
-            border-top: 1px solid var(--table-border);
+            border: 1px solid var(--table-border);
+            white-space: nowrap;
         }
 
         table thead th {
-            background: var(--table-head-bg);
+            background: linear-gradient(180deg, var(--table-head-bg) 0%, var(--surface-soft) 100%);
             font-weight: 600;
-            border-top: none;
         }
 
         table tbody tr:nth-child(odd) {
@@ -379,31 +382,48 @@ TEMPLATE = """
             border-radius: var(--radius);
             margin: 14px auto;
             background: var(--surface);
+            border: 1px solid var(--table-border);
+            box-shadow: var(--shadow);
+            padding: 8px;
         }
 
         .image-wrap {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             width: 100%;
             margin: 20px auto;
             text-align: center;
         }
 
+        main img.doc-image,
         .image-wrap img.doc-image {
+            width: auto;
             max-width: min(100%, 900px);
-            min-width: min(100%, 300px);
             height: auto;
             display: block;
-            margin: 0 auto;
+            margin-left: auto;
+            margin-right: auto;
             border: 1px solid var(--table-border);
             box-shadow: none;
             border-radius: 8px;
             background: var(--surface);
         }
 
+        main p img.doc-image,
+        main li img.doc-image,
+        main div img.doc-image,
+        main .image-wrap > img.doc-image {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .table-responsive > table {
             margin: 0 auto;
             width: auto !important;
-            min-width: 100%;
+            min-width: 0;
         }
 
         pre,
@@ -596,6 +616,7 @@ TEMPLATE = """
     const TOC_COLLAPSE_KEY = "metax-docs-collapsed-anchors";
     const SIDEBAR_COLLAPSE_KEY = "metax-docs-sidebar-collapsed";
     const MOBILE_BREAKPOINT = 960;
+    const ANCHOR_OFFSET = 84;
 
     const body = document.body;
     const nav = document.getElementById("doc-nav");
@@ -608,9 +629,11 @@ TEMPLATE = """
     const navLinks = Array.from(document.querySelectorAll("nav a.nav-link"));
     const tocNodes = Array.from(document.querySelectorAll(".toc-node"));
     const tocCarets = Array.from(document.querySelectorAll(".toc-caret"));
+    const contentImages = Array.from(document.querySelectorAll("main img"));
     const sections = Array.from(document.querySelectorAll("main h1, main h2, main h3, main h4, main h5, main h6")).filter(function(node) {
         return Boolean(node.id);
     });
+    let hashRealignTimer = null;
 
     function collapsibleNodes() {
         return tocNodes.filter(function(node) {
@@ -701,6 +724,41 @@ TEMPLATE = """
         }
     }
 
+    function currentHashTarget() {
+        if (!window.location.hash || window.location.hash.length < 2) {
+            return null;
+        }
+        try {
+            return document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function scrollToCurrentHashTarget(behavior) {
+        const target = currentHashTarget();
+        if (!target) {
+            return false;
+        }
+
+        const top = Math.max(window.scrollY + target.getBoundingClientRect().top - ANCHOR_OFFSET, 0);
+        window.scrollTo({ top: top, behavior: behavior || "auto" });
+        return true;
+    }
+
+    function scheduleHashRealign(delay, behavior) {
+        if (hashRealignTimer !== null) {
+            clearTimeout(hashRealignTimer);
+        }
+
+        hashRealignTimer = window.setTimeout(function() {
+            hashRealignTimer = null;
+            if (scrollToCurrentHashTarget(behavior)) {
+                updateActiveNavLink();
+            }
+        }, delay);
+    }
+
     function normalizeMediaLists() {
         document.querySelectorAll("ul, ol").forEach(function(list) {
             const items = Array.from(list.children).filter(function(child) {
@@ -739,7 +797,21 @@ TEMPLATE = """
     });
 
     navLinks.forEach(function(link) {
-        link.addEventListener("click", closeMobileToc);
+        link.addEventListener("click", function(event) {
+            closeMobileToc();
+
+            const href = link.getAttribute("href");
+            if (!href || !href.startsWith("#")) {
+                return;
+            }
+
+            event.preventDefault();
+            if (window.location.hash !== href) {
+                history.pushState(null, "", href);
+            }
+            scheduleHashRealign(0, "smooth");
+            scheduleHashRealign(250, "auto");
+        });
     });
 
     tocCarets.forEach(function(caret) {
@@ -786,6 +858,25 @@ TEMPLATE = """
         }
     });
 
+    window.addEventListener("hashchange", function() {
+        scheduleHashRealign(0, "auto");
+    });
+
+    window.addEventListener("load", function() {
+        scheduleHashRealign(0, "auto");
+    });
+
+    contentImages.forEach(function(image) {
+        if (image.complete) {
+            return;
+        }
+        image.addEventListener("load", function() {
+            if (window.location.hash) {
+                scheduleHashRealign(50, "auto");
+            }
+        });
+    });
+
     document.addEventListener("DOMContentLoaded", function() {
         const savedTheme = localStorage.getItem(THEME_KEY);
         applyTheme(savedTheme === "dark" ? "dark" : "light");
@@ -794,6 +885,7 @@ TEMPLATE = """
         setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
         updateActiveNavLink();
         updateBackToTop();
+        scheduleHashRealign(0, "auto");
     });
 </script>
 
@@ -806,7 +898,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Convert cookbook markdown to a styled HTML page.")
     parser.add_argument("--input", type=Path, help="Path to markdown source file.")
     parser.add_argument("--output", type=Path, help="Path to generated HTML output file.")
-    parser.add_argument("--title", default="MetaX", help="Document title shown in the page header.")
+    parser.add_argument("--title", default="MetaX Cookbook", help="Document title shown in the page header.")
     return parser.parse_args()
 
 
@@ -868,6 +960,77 @@ def ensure_class(attrs: str, class_names: list[str]) -> str:
     return f'{attrs} class="{" ".join(class_names)}"'
 
 
+def ensure_attribute(attrs: str, name: str, value: str) -> str:
+    attrs = attrs.strip()
+    pattern = re.compile(rf'{re.escape(name)}\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
+    if pattern.search(attrs):
+        return attrs
+    if not attrs:
+        return f'{name}="{value}"'
+    return f'{attrs} {name}="{value}"'
+
+
+def normalize_style_attribute(style_value: str) -> str:
+    declarations: list[tuple[str, str]] = []
+    zoom_width: str | None = None
+
+    for declaration in style_value.split(";"):
+        if ":" not in declaration:
+            continue
+
+        prop, raw_value = declaration.split(":", 1)
+        prop = prop.strip().lower()
+        value = raw_value.strip()
+        if not prop or not value:
+            continue
+
+        if prop == "zoom":
+            if value.endswith("%"):
+                zoom_width = value
+            elif re.fullmatch(r"\d*\.?\d+", value):
+                zoom_width = f"{float(value) * 100:g}%"
+            continue
+
+        declarations.append((prop, value))
+
+    if zoom_width:
+        declarations = [(prop, value) for prop, value in declarations if prop != "width"]
+        declarations.append(("width", zoom_width))
+
+    return "; ".join(f"{prop}: {value}" for prop, value in declarations)
+
+
+def normalize_image_attrs(attrs: str) -> str:
+    attrs = attrs.strip()
+    if not attrs:
+        return attrs
+
+    attrs = re.sub(
+        r'(src\s*=\s*["\'])([^"\']*)(["\'])',
+        lambda match: match.group(1) + match.group(2).replace("\\", "/") + match.group(3),
+        attrs,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+
+    style_pattern = re.compile(r'(style\s*=\s*["\'])([^"\']*)(["\'])', re.IGNORECASE)
+    style_match = style_pattern.search(attrs)
+    if style_match:
+        normalized_style = normalize_style_attribute(style_match.group(2))
+        if normalized_style:
+            attrs = (
+                attrs[: style_match.start()]
+                + f'{style_match.group(1)}{normalized_style}{style_match.group(3)}'
+                + attrs[style_match.end() :]
+            )
+        else:
+            attrs = (attrs[: style_match.start()] + attrs[style_match.end() :]).strip()
+            attrs = re.sub(r"\s{2,}", " ", attrs)
+
+    attrs = ensure_attribute(attrs, "decoding", "async")
+    return attrs
+
+
 def enhance_tables(html_content: str) -> str:
     def replace_table_open(match: re.Match[str]) -> str:
         attrs = ensure_class(match.group(1) or "", ["table", "table-striped", "table-bordered"])
@@ -882,8 +1045,9 @@ def enhance_images(html_content: str) -> str:
     pattern = re.compile(r"<img\b([^>]*?)\s*/?>")
 
     def replace_image(match: re.Match[str]) -> str:
-        attrs = ensure_class(match.group(1) or "", ["doc-image"])
-        return f'<figure class="image-wrap"><img {attrs}></figure>'
+        attrs = normalize_image_attrs(match.group(1) or "")
+        attrs = ensure_class(attrs, ["doc-image"])
+        return f'<span class="image-wrap"><img {attrs}></span>'
 
     return pattern.sub(replace_image, html_content)
 
@@ -897,9 +1061,9 @@ def normalize_internal_links(html_content: str) -> str:
 
 
 def cleanup_block_wrappers(html_content: str) -> str:
-    # Avoid invalid <p><figure></figure></p> markup that can break centering in browsers.
+    # Avoid invalid block wrappers that can break centering in browsers.
     html_content = re.sub(
-        r"<p>\s*(<figure class=\"image-wrap\">.*?</figure>)\s*</p>",
+        r"<p>\s*((?:<span class=\"image-wrap\">.*?</span>\s*)+)\s*</p>",
         r"\1",
         html_content,
         flags=re.DOTALL,
@@ -911,7 +1075,7 @@ def cleanup_block_wrappers(html_content: str) -> str:
         flags=re.DOTALL,
     )
     html_content = re.sub(
-        r"<li>\s*(<figure class=\"image-wrap\">.*?</figure>)\s*</li>",
+        r"<li>\s*((?:<span class=\"image-wrap\">.*?</span>\s*)+)\s*</li>",
         r'<li class="media-item">\1</li>',
         html_content,
         flags=re.DOTALL,

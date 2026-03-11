@@ -1,3 +1,8 @@
+# Version: 1.127.4
+## Date: 2026-03-11
+### Changes:
+- Fix: Fixed a function was deprecated in the new version of Pandas.
+
 # Version: 1.127.3
 ## Date: 2025-11-28
 ### Changes:

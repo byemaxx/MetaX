@@ -1,0 +1,2353 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaX Cookbook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #0f172a;
+            --muted-text: #64748b;
+            --accent: #0969da;
+            --accent-strong: #0550ae;
+            --link: #0969da;
+            --surface: #ffffff;
+            --surface-soft: #f6f8fa;
+            --nav-bg: #f6f8fa;
+            --nav-text: #24292f;
+            --nav-border: #d0d7de;
+            --nav-soft: #f3f4f6;
+            --nav-soft-strong: #eaeef2;
+            --active-bg: #ddf4ff;
+            --active-border: #0969da;
+            --table-border: #d0d7de;
+            --table-head-bg: #f6f8fa;
+            --table-stripe-odd: #ffffff;
+            --table-stripe-even: #f9fbff;
+            --code-bg: rgba(175, 184, 193, 0.2);
+            --nav-width: 310px;
+            --radius: 8px;
+            --shadow: 0 1px 2px rgba(31, 35, 40, 0.04);
+        }
+
+        body.dark-mode {
+            --bg: #0f172a;
+            --text: #e6edf3;
+            --muted-text: #9da7b3;
+            --accent: #58a6ff;
+            --accent-strong: #79c0ff;
+            --link: #58a6ff;
+            --surface: #161b22;
+            --surface-soft: #21262d;
+            --nav-bg: #161b22;
+            --nav-text: #c9d1d9;
+            --nav-border: #30363d;
+            --nav-soft: #21262d;
+            --nav-soft-strong: #30363d;
+            --active-bg: rgba(56, 139, 253, 0.2);
+            --active-border: #58a6ff;
+            --table-border: #30363d;
+            --table-head-bg: #1f2733;
+            --table-stripe-odd: #161b22;
+            --table-stripe-even: #1b2230;
+            --code-bg: rgba(110, 118, 129, 0.4);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        nav {
+            width: var(--nav-width);
+            padding: 20px 16px;
+            background: var(--nav-bg);
+            color: var(--nav-text);
+            border-right: 1px solid var(--nav-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: none;
+            z-index: 1000;
+        }
+
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .nav-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        nav h2 {
+            margin: 0;
+            color: var(--nav-text);
+            letter-spacing: 0;
+            font-size: 1.18rem;
+            white-space: nowrap;
+        }
+
+        .theme-toggle {
+            border: 1px solid var(--nav-border);
+            background: var(--nav-soft);
+            color: var(--nav-text);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--nav-soft-strong);
+        }
+
+        .sidebar-toggle {
+            border: 1px solid var(--nav-border);
+            background: var(--nav-soft);
+            color: var(--nav-text);
+            border-radius: 8px;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--nav-soft-strong);
+        }
+
+        .toc-actions {
+            display: flex;
+            gap: 8px;
+            margin: 0 0 10px;
+        }
+
+        .toc-actions button {
+            border: 1px solid var(--nav-border);
+            background: var(--nav-soft);
+            color: var(--nav-text);
+            border-radius: 8px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .toc-actions button:hover {
+            background: var(--nav-soft-strong);
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc-node {
+            margin: 2px 0;
+        }
+
+        .toc-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-left: calc((var(--toc-level) - 1) * 12px);
+        }
+
+        .toc-children {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc-caret,
+        .toc-spacer {
+            width: 18px;
+            min-width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toc-caret {
+            border: none;
+            background: transparent;
+            color: var(--nav-text);
+            border-radius: 6px;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .toc-caret::before {
+            content: "▾";
+            font-size: 0.78rem;
+        }
+
+        .toc-caret:hover {
+            background: var(--nav-soft);
+            opacity: 1;
+        }
+
+        .toc-node.collapsed > .toc-row .toc-caret {
+            transform: rotate(-90deg);
+        }
+
+        .toc-node.collapsed > .toc-children {
+            display: none;
+        }
+
+        nav a {
+            display: block;
+            padding: 6px 10px;
+            color: var(--nav-text);
+            text-decoration: none;
+            line-height: 1.2;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+            opacity: 0.9;
+        }
+
+        nav a.level-1 {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        nav a.active {
+            background-color: var(--active-bg);
+            color: var(--accent-strong);
+            border-left: 4px solid var(--active-border);
+            opacity: 1;
+        }
+
+        nav a:hover {
+            background-color: var(--nav-soft-strong);
+            color: var(--text);
+            opacity: 1;
+        }
+
+        nav a:focus-visible,
+        .theme-toggle:focus-visible,
+        .sidebar-toggle:focus-visible,
+        .toc-caret:focus-visible,
+        .toc-actions button:focus-visible,
+        #backToTop:focus-visible,
+        .toc-toggle:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        main {
+            margin-left: var(--nav-width);
+            padding: 36px 42px;
+            min-height: 100vh;
+            --list-indent: 0px;
+        }
+
+        main > * {
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        main ul,
+        main ol {
+            padding-left: 24px;
+            --list-indent: calc(var(--list-indent) + 24px);
+        }
+
+        main li > .image-wrap,
+        main li > .table-responsive {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1, h2, h3, h4 {
+            scroll-margin-top: 84px;
+        }
+
+        h1 {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 1.85rem;
+        }
+
+        h2 {
+            color: var(--accent);
+        }
+
+        h3 {
+            color: var(--link);
+        }
+
+        p, li {
+            color: var(--text);
+        }
+
+        a {
+            color: var(--link);
+        }
+
+        table {
+            width: auto;
+            min-width: 0;
+            margin-bottom: 0;
+            color: var(--text);
+            border-collapse: collapse;
+            box-shadow: none;
+            background: var(--surface);
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+
+        table th,
+        table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border: 1px solid var(--table-border);
+            white-space: nowrap;
+        }
+
+        table thead th {
+            background: linear-gradient(180deg, var(--table-head-bg) 0%, var(--surface-soft) 100%);
+            font-weight: 600;
+        }
+
+        table tbody tr:nth-child(odd) {
+            background: var(--table-stripe-odd);
+        }
+
+        table tbody tr:nth-child(even) {
+            background: var(--table-stripe-even);
+        }
+
+        table tbody tr:hover {
+            background: var(--active-bg);
+        }
+
+        .table-responsive {
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: var(--radius);
+            margin: 14px auto;
+            background: var(--surface);
+            border: 1px solid var(--table-border);
+            box-shadow: var(--shadow);
+            padding: 8px;
+        }
+
+        .image-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        main img.doc-image,
+        .image-wrap img.doc-image {
+            width: auto;
+            max-width: min(100%, 900px);
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid var(--table-border);
+            box-shadow: none;
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        main p img.doc-image,
+        main li img.doc-image,
+        main div img.doc-image,
+        main .image-wrap > img.doc-image {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .table-responsive > table {
+            margin: 0 auto;
+            width: auto !important;
+            min-width: 0;
+        }
+
+        pre,
+        code {
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+        }
+
+        pre {
+            background: var(--surface-soft);
+            padding: 14px 16px;
+            border: 1px solid var(--table-border);
+            overflow-x: auto;
+            line-height: 1.45;
+            margin: 1rem 0;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.1em 0.35em;
+            font-size: 0.92em;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 0.9rem;
+            color: inherit;
+        }
+
+        ul.media-list,
+        ol.media-list {
+            padding-left: 0;
+            margin-left: 0;
+        }
+
+        li.media-item {
+            list-style: none;
+            margin: 0.4rem 0 0.9rem;
+            padding-left: 0;
+        }
+
+        li.media-item::marker {
+            content: "";
+        }
+
+        #backToTop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: var(--accent-strong);
+            color: #ffffff;
+            border: 1px solid transparent;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: none;
+            z-index: 1010;
+        }
+
+        #backToTop:hover {
+            background-color: var(--accent);
+        }
+
+        .toc-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 1200;
+            border: 1px solid transparent;
+            background: var(--accent-strong);
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.92rem;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        @media (min-width: 961px) {
+            body.sidebar-collapsed nav {
+                width: 86px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            body.sidebar-collapsed main {
+                margin-left: 86px;
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+
+            body.sidebar-collapsed .toc-actions,
+            body.sidebar-collapsed .toc-list,
+            body.sidebar-collapsed .theme-toggle,
+            body.sidebar-collapsed .nav-title-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 960px) {
+            nav {
+                width: calc(100% - 24px);
+                left: 12px;
+                top: 58px;
+                height: auto;
+                max-height: 0;
+                overflow: hidden;
+                border-radius: 14px;
+                border-right: none;
+                padding-top: 0;
+                padding-bottom: 0;
+                transition: max-height 0.25s ease, padding 0.25s ease;
+            }
+
+            nav.open {
+                max-height: 72vh;
+                overflow-y: auto;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+
+            main {
+                margin-left: 0;
+                padding: 70px 16px 24px;
+            }
+
+            .toc-toggle {
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button id="tocToggle" class="toc-toggle" type="button" aria-expanded="false" aria-controls="doc-nav">Contents</button>
+
+
+
+<nav id="doc-nav" aria-label="Table of contents">
+    <div class="nav-header">
+        <div class="nav-title">
+            <h2 class="nav-title-text">MetaX Cookbook</h2>
+            <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar">◀</button>
+        </div>
+        <button id="toggleTheme" class="theme-toggle" type="button" aria-label="Toggle color theme">Dark</button>
+    </div>
+    <div class="toc-actions">
+        <button id="collapseAllToc" type="button">Collapse All</button>
+        <button id="expandAllToc" type="button">Expand All</button>
+    </div>
+    <ul class="toc-list">
+    
+        <li class="toc-node level-1" data-anchor="metax-cookbook" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#metax-cookbook" id="nav-metax-cookbook">MetaX Cookbook</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="overview" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#overview" id="nav-overview">Overview</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="project-page" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#project-page" id="nav-project-page">Project Page</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="getting-started" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#getting-started" id="nav-getting-started">Getting Started</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="exploring-data-with-metax" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle Exploring Data with MetaX" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-1" href="#exploring-data-with-metax" id="nav-exploring-data-with-metax">Exploring Data with MetaX</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-2" data-anchor="module-1-otf-analyzer" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#module-1-otf-analyzer" id="nav-module-1-otf-analyzer">Module 1. OTF Analyzer</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="1-data-preparation" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#1-data-preparation" id="nav-1-data-preparation">1. Data Preparation</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="2-data-overview" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#2-data-overview" id="nav-2-data-overview">2. Data Overview</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="3-set-taxafunc" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle 3. Set TaxaFunc" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#3-set-taxafunc" id="nav-3-set-taxafunc">3. Set TaxaFunc</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="data-selection" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#data-selection" id="nav-data-selection">Data Selection</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="sum-proteins-intensity" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#sum-proteins-intensity" id="nav-sum-proteins-intensity">Sum Proteins Intensity</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="data-preprocessing" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#data-preprocessing" id="nav-data-preprocessing">Data preprocessing</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="4-basic-stats" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle 4. Basic Stats" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#4-basic-stats" id="nav-4-basic-stats">4. Basic Stats</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="pca-correlation-and-box-plot" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#pca-correlation-and-box-plot" id="nav-pca-correlation-and-box-plot">PCA, Correlation and Box Plot</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="heatmap-and-bar-plot" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#heatmap-and-bar-plot" id="nav-heatmap-and-bar-plot">Heatmap and Bar Plot</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="peptide-query" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#peptide-query" id="nav-peptide-query">Peptide Query</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="5-cross-test" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle 5. Cross Test" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#5-cross-test" id="nav-5-cross-test">5. Cross Test</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="t-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#t-test" id="nav-t-test">T-TEST</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="anova-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#anova-test" id="nav-anova-test">ANOVA-TEST</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="significant-taxa-func" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#significant-taxa-func" id="nav-significant-taxa-func">Significant Taxa-Func</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="plot-cross-heatmap" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#plot-cross-heatmap" id="nav-plot-cross-heatmap">Plot Cross Heatmap</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="group-control-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#group-control-test" id="nav-group-control-test">Group-Control TEST</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="deseq2" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#deseq2" id="nav-deseq2">DESeq2</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="tukey-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#tukey-test" id="nav-tukey-test">Tukey Test</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="6-expression-analysis" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle 6. Expression Analysis" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#6-expression-analysis" id="nav-6-expression-analysis">6. Expression Analysis</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="co-expression-networks-heatmap" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#co-expression-networks-heatmap" id="nav-co-expression-networks-heatmap">Co-Expression Networks & Heatmap</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="expression-trends" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#expression-trends" id="nav-expression-trends">Expression Trends</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="7-taxa-func-link" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle 7. Taxa-Func Link" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#7-taxa-func-link" id="nav-7-taxa-func-link">7. Taxa-Func Link</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="taxa-func-link-plot" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#taxa-func-link-plot" id="nav-taxa-func-link-plot">Taxa-Func Link Plot</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="taxa-func-network" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#taxa-func-network" id="nav-taxa-func-network">Taxa-Func Network</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="8-restore-last-taxafunc-object" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#8-restore-last-taxafunc-object" id="nav-8-restore-last-taxafunc-object">8. Restore Last TaxaFunc Object</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="preparing-your-data" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle Preparing Your Data" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-1" href="#preparing-your-data" id="nav-preparing-your-data">Preparing Your Data</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-2" data-anchor="module-2-database-builder" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#module-2-database-builder" id="nav-module-2-database-builder">Module 2. Database Builder</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="module-3-database-updater" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-2" href="#module-3-database-updater" id="nav-module-3-database-updater">Module 3. Database Updater</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-2" data-anchor="module-4-peptide-annotator" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+        
+        <button class="toc-caret" type="button" aria-label="Toggle Module 4. Peptide Annotator" aria-expanded="true"></button>
+        
+        <a class="nav-link toc-link level-2" href="#module-4-peptide-annotator" id="nav-module-4-peptide-annotator">Module 4. Peptide Annotator</a>
+    </div>
+    
+    <ul class="toc-children">
+    
+        <li class="toc-node level-3" data-anchor="1-results-from-mag-workflow" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#1-results-from-mag-workflow" id="nav-1-results-from-mag-workflow">1. Results from MAG Workflow</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-3" data-anchor="2-results-from-maxquant-workflow" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-3" href="#2-results-from-maxquant-workflow" id="nav-2-results-from-maxquant-workflow">2. Results from MaxQuant Workflow</a>
+    </div>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+    </ul>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="developer-tools" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#developer-tools" id="nav-developer-tools">Developer Tools</a>
+    </div>
+    
+</li>
+    
+        <li class="toc-node level-1" data-anchor="enjoy-metax" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 1;">
+        
+        <span class="toc-spacer" aria-hidden="true"></span>
+        
+        <a class="nav-link toc-link level-1" href="#enjoy-metax" id="nav-enjoy-metax">Enjoy MetaX</a>
+    </div>
+    
+</li>
+    
+    </ul>
+</nav>
+
+<main id="doc-main">
+    <h1 id="metax-cookbook">MetaX Cookbook</h1>
+<p>This guidebook is for the MetaX <strong>GUI version</strong>. If you are using the CLI, we recommend reading the <a href="https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb">documentation</a> for instructions on how to use each MetaX module from the command line.</p>
+<h1 id="overview">Overview</h1>
+<p><strong><a href="https://github.com/byemaxx/MetaX">MetaX</a></strong> is a novel tool for linking peptide sequences with taxonomic and functional information in <strong>Metaproteomics</strong>. We introduce the <strong><em>Operational Taxon-Function (OTF)</em></strong> concept to explore microbial roles and interactions ("<strong>who is doing what and how</strong>") within ecosystems. </p>
+<p>MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.</p>
+<span class="image-wrap"><img alt="abstract" src="./MetaX_Cookbook.assets/abstract.png" decoding="async" class="doc-image"></span>
+<h1 id="project-page">Project Page</h1>
+<p>Visit <strong>GitHub</strong> to get more information:</p>
+<p><a href="https://github.com/byemaxx/MetaX">https://github.com/byemaxx/MetaX</a></p>
+<h1 id="getting-started">Getting Started</h1>
+<ul>
+<li>The main window of MetaX</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window" decoding="async" class="doc-image"></span>
+<ul>
+<li>Click 'Tools Menu' to switch <strong>different modules</strong></li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu" decoding="async" class="doc-image"></span>
+<p><br></p>
+<h1 id="exploring-data-with-metax">Exploring Data with MetaX</h1>
+<p>See the <strong><u><a href="#preparing-your-data">Preparing Your Data</a></u></strong> section to build the database and annotate peptides to OTFs before starting.</p>
+<h2 id="module-1-otf-analyzer">Module 1. OTF Analyzer</h2>
+<p>After obtaining the <strong>Operational Taxa-Functions (OTF) Table</strong> using the <u><strong><a href="#module-4-peptide-annotator">Peptide Annotator</a></strong></u>, you can perform downstream analysis with the <strong><u>OTF Analyzer</u></strong>.</p>
+<h2 id="1-data-preparation">1. Data Preparation</h2>
+<p><strong>OTFs (Operational Taxa-Functions) Table:</strong> Obtained from the <u><a href="#module-4-peptide-annotator">Peptide Annotator</a></u> module.</p>
+<p><strong>Meta Table:</strong> The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.</p>
+<p><strong>Example Meta Table:</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>samples</th>
+<th>Individuals</th>
+<th>Treatment</th>
+<th>Sweetener</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample_1</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_2</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_3</td>
+<td>V1</td>
+<td>Treatment</td>
+<td>XYL</td>
+</tr>
+<tr>
+<td>sample_4</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+<tr>
+<td>sample_5</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+<tr>
+<td>sample_6</td>
+<td>V1</td>
+<td>Control</td>
+<td>PBS</td>
+</tr>
+</tbody>
+</table></div>
+<p>You can load example data by <strong>clicking the button</strong>.</p>
+<span class="image-wrap"><img alt="load_example" src="./MetaX_Cookbook.assets/load_example.png" decoding="async" class="doc-image"></span>
+<p>Then, click <strong>Go</strong> to start the analysis.</p>
+<ul>
+<li><strong>Advanced Settings</strong></li>
+<li class="media-item"><span class="image-wrap"><img alt="ad_settings_otf_analyzer" src="./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png" decoding="async" class="doc-image"></span></li>
+<li><strong>Peptide Column Name:</strong> Specifies the column in the OTF table that contains peptide information.</li>
+<li><strong>Protein Column Name:</strong> Specifies the column in the OTF table that contains protein information (only required if protein summation is performed in downstream analysis).</li>
+<li><strong>Sample Column Prefix:</strong> Identifies the prefix of sample columns to determine intensity columns in the OTF table.</li>
+<li><strong>Any Data Mode:</strong> Allows analysis of any table using MetaX, not limited to OTF tables (only partial tool functionality is available).<ul>
+<li><strong>Customized Table Item Column Name:</strong> Specifies the column containing item names in any data mode. If left empty, the first column will be selected by default.</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-data-overview">2. Data Overview</h2>
+<p>The Data Overview provides basic information about your data, such as the number of taxa, functions, and proportions.</p>
+<ul>
+<li>Set the threshold for linked peptides and the differences between them to plot figures.</li>
+</ul>
+<span class="image-wrap"><img alt="data_overview" src="./MetaX_Cookbook.assets/data_overview.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Select different functions to plot the proportion distribution.</li>
+</ul>
+<span class="image-wrap"><img alt="data_overview_func" src="./MetaX_Cookbook.assets/data_overview_func.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Filter out samples for downstream analysis.</li>
+</ul>
+<span class="image-wrap"><img alt="data_overview_filter" src="./MetaX_Cookbook.assets/data_overview_filter.png" decoding="async" class="doc-image"></span>
+<h2 id="3-set-taxafunc">3. Set TaxaFunc</h2>
+<span class="image-wrap"><img alt="set_multi_table" src="./MetaX_Cookbook.assets/set_multi_table.png" decoding="async" class="doc-image"></span>
+<h3 id="data-selection">Data Selection</h3>
+<ul>
+<li>
+<p><strong>Function:</strong> Select a function for downstream analysis (<strong>None</strong> in the list means no function is selected, focusing only on peptides and taxa).</p>
+</li>
+<li>
+<p><strong>Function Filter Threshold:</strong> If a specific function within a protein group of a peptide has the highest proportion, it will be considered the representative function for that peptide. The default threshold is 1.00 (100%).</p>
+</li>
+</ul>
+<span class="image-wrap"><img alt="FUNC_prop" src="./MetaX_Cookbook.assets/FUNC_prop.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Taxa Level:</strong> Select a taxa level for downstream analysis (<strong>Life</strong> in the list means no filtering by taxa, and the following analysis focuses on functions).</p>
+</li>
+<li>
+<p><strong>Peptide Number Threshold:</strong> Only keep taxa, functions, or OTFs that have at least the specified number of peptides.</p>
+</li>
+<li>
+<p><strong>Split Function:</strong> Split the annotations with multi-functions.</p>
+</li>
+<li class="media-item"><div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>KO</th>
+<th>Intensity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ko:K00625,ko:K13788</td>
+<td>10</td>
+</tr>
+</tbody>
+</table></div>
+<p>to</p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>KO</th>
+<th>Intensity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ko:K00625</td>
+<td>10</td>
+</tr>
+<tr>
+<td>ko:K13788</td>
+<td>10</td>
+</tr>
+</tbody>
+</table></div>
+<p>If <u>Share Intensity</u> is checked, the intensity above will be split equally, giving <u>5</u> to each KO.</p>
+</li>
+<li>
+<p><strong>Remove unknown taxa:</strong> Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed. When unchecked, such peptides will be retained and labeled as <em>unknown</em>, for example:</p>
+<p><code>text
+d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_</code></p>
+<p>to</p>
+<p><code>text
+d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown</code></p>
+</li>
+<li>
+<p><strong>Create Taxa and Func only from OTFs:</strong></p>
+</li>
+<li>
+<p><strong>Without selection (checkbox not checked):</strong></p>
+<ul>
+<li><u>Taxa table:</u> Peptides are filtered based solely on taxa levels, without considering any functional categories.</li>
+<li><u>Function table:</u> Peptides are filtered solely by functional categories and thresholds, regardless of their taxa levels.</li>
+<li><u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
+</ul>
+</li>
+<li><strong>With selection (checkbox checked):</strong><ul>
+<li><u>Taxa table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
+<li><u>Function table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
+<li><u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
+</ul>
+</li>
+</ul>
+<h3 id="sum-proteins-intensity">Sum Proteins Intensity</h3>
+<p>Click <strong>Generate Protein Intensity Table</strong> to sum peptides to proteins if the Protein column is in the original table.</p>
+<ul>
+<li>
+<p><strong>Occam's Razor</strong>, <strong>Anti-Razor</strong> and <strong>Rank:</strong> Methods available for inferring shared peptides.</p>
+</li>
+<li>
+<p>Razor:</p>
+<ol>
+<li>Build a minimal set of proteins to cover all peptides.</li>
+<li>For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).</li>
+</ol>
+</li>
+<li>Anti-Razor:<ul>
+<li>All proteins share the intensity of each peptide.</li>
+</ul>
+</li>
+<li>
+<p>Rank:</p>
+<ol>
+<li>Build the rank of proteins.</li>
+<li>Choose the protein with a higher rank for the shared peptide.</li>
+</ol>
+<blockquote>
+<p>Methods to Build Protein Rank:
+- unique_counts: Use the counts of proteins inferred by unique peptides.
+- all_count: Use the counts of all proteins.
+- unique_intensity: Use the intensity of proteins inferred by unique peptides.
+- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Minimum peptide number per protein:</strong> Filters out proteins that contain fewer peptides than the specified threshold.</p>
+</li>
+</ul>
+<h3 id="data-preprocessing">Data preprocessing</h3>
+<ul>
+<li>
+<p><strong>Quantitative Method:</strong></p>
+</li>
+<li>
+<p><strong><u>Sum</u></strong>: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.</p>
+</li>
+<li>
+<p><strong><u>DirectLFQ</u></strong>: Use DirectLFQ to normalize peptides and then estimate intensity using <em>intensity traces</em>.</p>
+</li>
+<li>
+<p><strong>Outlier handling:</strong></p>
+</li>
+</ul>
+<p>There are several methods for detecting and handling outliers.</p>
+<ul>
+<li>Two steps will be applied:</li>
+<li><u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows <code>only contain NaN values and 0</code> will be removed. The remaining NaN values will be handled in the next step.</li>
+<li>
+<p><u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.</p>
+</li>
+<li>
+<p><strong>Outlier Detection:</strong></p>
+</li>
+<li>
+<p><strong>IQR:</strong> In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.</p>
+</li>
+<li>
+<p><strong>Missing-Value:</strong> Detect nan values in the data. If a value is nan, it will be marked as a NaN.</p>
+</li>
+<li>
+<p><strong>Half-Zero:</strong> </p>
+<p>​   Applies to grouped data.</p>
+<ul>
+<li>
+<p>If more than half of the values in a group are zero, all <em>non-zero</em> values are replaced with NaN.</p>
+</li>
+<li>
+<p>If fewer than half of the values are zero, all <em>zero</em> values are replaced with NaN.</p>
+</li>
+<li>If the number of zero and non-zero values is equal, <em>all</em> values in the group are replaced with NaN.</li>
+</ul>
+</li>
+<li>
+<p><strong>Zero-Dominant:</strong> </p>
+<p>​   Applies to grouped data.</p>
+<ul>
+<li>If more than half of the values in a group are zero, all <em>non-zero</em> values are replaced with NaN.</li>
+<li>Otherwise, the group remains unchanged.</li>
+</ul>
+</li>
+<li>
+<p><strong>Zero-Inflated Poisson:</strong> This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
+</li>
+<li>
+<p><strong>Negative Binomial:</strong> This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
+</li>
+<li>
+<p><strong>Z-Score:</strong> Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.</p>
+</li>
+<li>
+<p><strong>Mahalanobis Distance:</strong> Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.</p>
+</li>
+</ul>
+<p><u>In all methods, you can choose one meta column for outlier detection and another meta column for handling outliers.</u></p>
+<ul>
+<li>
+<p><strong>Outliers Imputation:</strong></p>
+</li>
+<li>
+<p><strong>Drop:</strong> Remove peptides that contain any NaN values.</p>
+</li>
+<li>
+<p><strong>Original:</strong> Keep the remaining NaN values as-is.</p>
+</li>
+<li>
+<p><strong>Mean</strong>: Outliers will be imputed by the mean.</p>
+</li>
+<li>
+<p><strong>Median</strong>: Outliers will be imputed by the median.</p>
+</li>
+<li>
+<p><strong>KNN</strong>: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbours to fill in missing values.</p>
+</li>
+<li>
+<p><strong>Regression</strong>: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modelling each feature with missing values as a function of other features.</p>
+</li>
+<li>
+<p><strong>Multiple</strong>: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of the nearest features.</p>
+</li>
+</ul>
+<p>You can choose outlier imputation by <em>each group</em> or by <em>all samples</em>.</p>
+<ul>
+<li>
+<p><strong>Remove Batch Effect:</strong></p>
+</li>
+<li>
+<p>Here, you can choose a group as the batch effect and then use <a href="https://github.com/BorgwardtLab/reComBat"><u>reCombat</u></a> to handle it.</p>
+</li>
+<li>
+<p><strong>Data Transformation:</strong></p>
+</li>
+<li>
+<p>Log2, Log10, Square root transformation, Cube root transformation and box-cox.</p>
+</li>
+<li>
+<p><strong>Data Normalization:</strong></p>
+</li>
+<li>
+<p><strong>Trace Shifting:</strong> Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).</p>
+<ul>
+<li>Note: If <u>both</u> trace shifting and transformation are applied, <em><u>normalization will be done before transformation.</u></em></li>
+</ul>
+</li>
+<li>
+<p>Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring, and normalization by percentage.</p>
+</li>
+</ul>
+<p><u>If you use Z-Score, Mean centring, or Pareto Scaling for data normalization, the data will be given a minimum offset again to avoid negative values.</u></p>
+<ul>
+<li><strong>Drag the item's name</strong> to change the <u><strong>order</strong></u> of data preprocessing.</li>
+</ul>
+<p><strong>Then, click Go to create a TaxaFunc object for analysis.</strong></p>
+<span class="image-wrap"><img alt="TaxaFunc_ready" src="./MetaX_Cookbook.assets/TaxaFunc_ready.png" decoding="async" class="doc-image"></span>
+<p>Then you can check the tables in the <strong>Table Review</strong> section and export them.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/table_review_open_window.png" alt="table_review_open_window" decoding="async" class="doc-image"></span>
+<h2 id="4-basic-stats">4. Basic Stats</h2>
+<h3 id="pca-correlation-and-box-plot">PCA, Correlation and Box Plot</h3>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" decoding="async" class="doc-image"></span>
+<p>You can select <u><strong>meta</strong></u> <u><strong>groups</strong></u> or <u><strong>samples</strong></u> (default: all) to plot <strong>PCA</strong>, <strong>Correlation</strong>, and <strong>Box Plot</strong> for <strong>Taxa, Function, Taxa-Func, Peptide, and Protein</strong> tables.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca.png" alt="pca" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/boxplot.png" alt="boxplot" style="width: 50%" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Setting and modifying the plot</strong></p>
+</li>
+<li>
+<p>Show or hide labels in the figure by checking <strong>Show Labels</strong>.</p>
+</li>
+<li>
+<p>Select <strong>Sub Meta</strong> to plot with two meta columns.</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/sub_meta.png" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Change settings in the <strong>PLOT PARAMETER</strong> tab</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Select specific Groups <strong>with condition</strong></p>
+<p><strong>For example:</strong> Select PBS, BAS, and other groups <strong>only in</strong> <u>Individual</u> <u>V1</u>.</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/group_in_condition.png" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Select <strong>specific Samples</strong> to Analysis</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca_setting.png" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="width: 80%" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p><strong>Number stats</strong></p>
+</li>
+<li>
+<p>Plot the counts for each table by <strong>groups</strong> or by <strong>samples</strong>.</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p><strong>Taxa Specific</strong></p>
+</li>
+<li>
+<p>Alpha/Beta Diversity</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/alpha_div.png" alt="alpha_div" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/beta_div.png" alt="beta_div" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Sunburst</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>TreeMap</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/treemap.png" alt="treemap" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Sankey</p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey" decoding="async" class="doc-image"></span>
+</li>
+</ul>
+<h3 id="heatmap-and-bar-plot">Heatmap and Bar Plot</h3>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" decoding="async" class="doc-image"></span>
+<ul>
+<li><strong>Select items (Taxa, Function, Taxa-Func, and Peptide) to plot:</strong></li>
+<li>Add <strong>All Taxa</strong>, or select one we are interested in.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Add items to Top List:</strong> Select the top items to plot using a statistical method.</p>
+</li>
+<li>
+<p>Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of DESeq2 results (configured on the corresponding page).</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Add a list for plotting:</strong></p>
+</li>
+<li>
+<p>Make sure one row one item</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Setting:</strong></p>
+</li>
+<li>
+<p>Change the setting fit for your data.</p>
+</li>
+<li><strong>Rename Samples</strong>: Add group info to each sample name</li>
+<li><strong>Rename Taxa</strong>: Only keep the last taxonomic level to reduce to name</li>
+<li>
+<p><strong>Plot Mean</strong>: calculate the mean of each group before plotting</p>
+</li>
+<li>
+<p><strong>Sub Meta:</strong> select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
+    <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" decoding="async" class="doc-image"></span></p>
+</li>
+<li>
+<p>View all color maps by right-clicking <u><strong>Theme</strong></u>.</p>
+<ul>
+<li class="media-item"><span class="image-wrap"><img alt="right_click_theme" src="MetaX_Cookbook.assets/right_click_theme.png" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" decoding="async" class="doc-image"></span></li>
+</ul>
+</li>
+<li>
+<p><strong>Plot:</strong></p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Modify</strong> the pic to fit the window to get the <strong>Perfect picture</strong>:</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p><strong>Bar Plot:</strong></p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar" decoding="async" class="doc-image"></span>
+<ul>
+<li><strong>Interactive functions:</strong></li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Change to a line plot:</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p><strong>3D Bar Plot</strong></p>
+</li>
+<li>
+<p>Plot 3D bar by selecting a <strong>sub meta</strong>.
+  <span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d" decoding="async" class="doc-image"></span></p>
+</li>
+</ul>
+<h3 id="peptide-query">Peptide Query</h3>
+<ul>
+<li>Query everything of a peptide</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query" decoding="async" class="doc-image"></span>
+<h2 id="5-cross-test">5. Cross Test</h2>
+<h3 id="t-test">T-TEST</h3>
+<ul>
+<li>Select two groups for T-test analysis on <strong>Taxa, Function, Taxa-Func, Peptide, and Protein</strong> tables.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test" decoding="async" class="doc-image"></span>
+<h3 id="anova-test">ANOVA-TEST</h3>
+<ul>
+<li>Select <u>some groups</u> or <u>all groups</u> to run ANOVA on <strong>Taxa, Function, Taxa-Func, and Peptide</strong> tables.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test" decoding="async" class="doc-image"></span>
+<h3 id="significant-taxa-func">Significant Taxa-Func</h3>
+<ul>
+<li>Significant comparison helps identify cases where <strong><u>taxa show no significant differences between two groups, while their related functions are significantly different</u></strong>, and vice versa.</li>
+<li class="media-item"><span class="image-wrap"><img alt="Significant_Taxa-Func" src="MetaX_Cookbook.assets/Significant_Taxa-Func.png" decoding="async" class="doc-image"></span></li>
+</ul>
+<h3 id="plot-cross-heatmap">Plot Cross Heatmap</h3>
+<ul>
+<li>The <strong>results</strong> of the T-test and ANOVA test will appear in a new window.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Plot Heatmap for results</p>
+</li>
+<li>
+<p>Choose a table to plot a <strong>top differences heatmap</strong> or export <strong>the top table</strong>.</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting" decoding="async" class="doc-image"></span>
+<ul>
+<li>Taxa-Func cross heatmap:</li>
+<li>The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Func(Taxa) Heatmap:</p>
+</li>
+<li>
+<p>The colour shows the intensity of the significant Func(Taxa) between groups.</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Significant Taxa-Func Heatmap:</p>
+</li>
+<li>
+<p>The colored tiles represent the taxa which were not significantly different between groups but the related functions were.</p>
+</li>
+</ul>
+<h3 id="group-control-test">Group-Control TEST</h3>
+<ul>
+<li><strong>Dunnett's Test</strong></li>
+</ul>
+<p>Set a Group as <strong>"Control"</strong>, then compare all groups to Control</p>
+<ul>
+<li>
+<p><strong>Comparing in Each Condition:</strong> Select a meta such as individual, then compare groups to control in each individual.</p>
+</li>
+<li>
+<p><strong>DESeq2 Test</strong></p>
+</li>
+</ul>
+<p>Bingo! You noticed the hidden function of MetaX,  click <strong>Help -&gt; About -&gt; Like</strong> 3 times to unlock the function to compare all groups to control.</p>
+<ul>
+<li class="media-item"><span class="image-wrap"><img alt="group_control_test" src="./MetaX_Cookbook.assets/group_control_test.png" decoding="async" class="doc-image"></span></li>
+<li>Result of Dunnett's Test:<ul>
+<li>T- Statistic value shown in the heatmap
+  <span class="image-wrap"><img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap" decoding="async" class="doc-image"></span></li>
+</ul>
+</li>
+</ul>
+<h3 id="deseq2">DESeq2</h3>
+<ul>
+<li>Select two groups to calculate fold change with <a href="https://github.com/owkin/PyDESeq2"><u>PyDESeq2</u></a>.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/deseq2.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Select <u>p-adjust</u>, <u>log2FC</u> to plot</li>
+</ul>
+<p>(<strong>Ultra-Up(Down):</strong> |log2FC| &gt; Max log2FC)</p>
+<ul>
+<li>
+<p>Volcano:</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/volcano.png" alt="volcano" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>Sankey:</p>
+<ul>
+<li>The last node level is the functions linked to each Taxon (When plotting Taxa-Func)</li>
+</ul>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" decoding="async" class="doc-image"></span>
+</li>
+</ul>
+<h3 id="tukey-test">Tukey Test</h3>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Select a function:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this function.</p>
+</li>
+<li>
+<p><strong>Select a Taxon:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this taxon.</p>
+</li>
+<li>
+<p><strong>Select both function and taxon:</strong> </p>
+</li>
+<li>
+<p>Test the significant groups in this function and this taxon.</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.</p>
+</li>
+<li>
+<p>Show Linked Func Only: Only shows the functions linked with the current taxon in the function combo box.</p>
+<p><strong>Do not forget to click <u>Reset Function Taxa List</u> to restore all items after filtering.</strong></p>
+</li>
+<li>
+<p><strong>Tukey result plot:</strong></p>
+</li>
+<li>The dots and lines show the difference in the mean value of the Tukey test</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot" decoding="async" class="doc-image"></span>
+<h2 id="6-expression-analysis">6. Expression Analysis</h2>
+<h3 id="co-expression-networks-heatmap">Co-Expression Networks &amp; Heatmap</h3>
+<ul>
+<li>Select groups or samples to calculate correlations and plot the network.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_page.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Select a table, then set the correlation method and threshold.</li>
+</ul>
+<span class="image-wrap"><img alt="image-20230728142905839" src="./MetaX_Cookbook.assets/co_network_setting.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Add some items to the focus list (Optional)</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Network Plot</p>
+</li>
+<li>
+<p>The Red dots are focus items</p>
+</li>
+<li>The depth of color and the width of edges represent the correlation value</li>
+<li>The size of the dot indicates the number of connections</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic" decoding="async" class="doc-image"></span>
+<ul>
+<li>Expression correlation</li>
+<li class="media-item"><span class="image-wrap"><img alt="image-20240723162241316" src="MetaX_Cookbook.assets/expression_corelation_heatmap.png" decoding="async" class="doc-image"></span></li>
+</ul>
+<h3 id="expression-trends">Expression Trends</h3>
+<ul>
+<li>Add items to the list window to plot the clusters with similar trends of intensity</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/trends_page.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Clusters plot (clustered by <strong>k-means</strong>)</p>
+</li>
+<li>
+<p>The coloured line is the average.</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/trends_cluster.png" style="width: 67%" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Select a <strong>specific cluster</strong> to plot <u>interactive Lines</u> or get the <u>table</u></p>
+</li>
+<li class="media-item"><span class="image-wrap"><img alt="image-20230728144544988" src="./MetaX_Cookbook.assets/trends_cluster_setting.png" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p>The dashed red line  is the average </p>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032" decoding="async" class="doc-image"></span>
+</li>
+</ul>
+<h2 id="7-taxa-func-link">7. Taxa-Func Link</h2>
+<h3 id="taxa-func-link-plot">Taxa-Func Link Plot</h3>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Check all taxa in one function (or all functions in one taxon).</p>
+</li>
+<li>
+<p>select <strong>a function</strong>, and click the button <strong><u>Show Linked Taxa Only</u></strong></p>
+<ul>
+<li><strong>Linked Number</strong>: The number shows how many taxa are linked in this function</li>
+<li><strong>The number starts with Taxa</strong>: The number shows how many peptides are in this Taxa-Func</li>
+</ul>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517" decoding="async" class="doc-image"></span>
+<ul>
+<li>Filter items of the Taxa and Func list</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_filter.png" alt="image-20230728150853953" style="width: 50%" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>Plot Heatmap or Bar</p>
+</li>
+<li>
+<p>Select some groups (Default all) to get <strong>the intensity of each taxon of this function</strong></p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" decoding="async" class="doc-image"></span>
+</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Plot <strong>peptides</strong> in <u>one Function of a Taxon</u></li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Switch Bar to Stacked or not ( Line)</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck" decoding="async" class="doc-image"></span>
+<ul>
+<li>Change Bar plot to Lines</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line" decoding="async" class="doc-image"></span>
+<h3 id="taxa-func-network">Taxa-Func Network</h3>
+<ul>
+<li>Select some groups or samples (default: all).</li>
+<li>Add some taxa, functions, or taxa-func items to focus the view (optional).</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" decoding="async" class="doc-image"></span>
+<ul>
+<li>Plot list only</li>
+<li><strong>Plot List Only:</strong> Show only the items in the list and the items linked to them.</li>
+<li>
+<p><strong>Without Links:</strong> Only show the items in the focus list.
+    <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" decoding="async" class="doc-image"></span></p>
+</li>
+<li>
+<p>Network plot</p>
+</li>
+<li>The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity</li>
+<li>The red dots are the taxa we focused on</li>
+<li>The green dots are the functions we focused on</li>
+<li>More parameters can be set in <strong>Dev</strong>-&gt;<strong>Settings</strong>-&gt;<strong>Others</strong> (e.g. Nodes Shape, color, Line Style)</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network" decoding="async" class="doc-image"></span>
+<h2 id="8-restore-last-taxafunc-object">8. Restore Last TaxaFunc Object</h2>
+<ul>
+<li>Once you create TaxaFunc, the <u>TaxaFunc Object</u> is saved automatically, and you can restore it next time.</li>
+<li>You can also export the current MetaX object to a file and reload it later.
+  <span class="image-wrap"><img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" decoding="async" class="doc-image"></span></li>
+</ul>
+<h1 id="preparing-your-data">Preparing Your Data</h1>
+<h2 id="module-2-database-builder">Module 2. Database Builder</h2>
+<p><strong>Note:</strong> The results from <strong>MetaLab v2.3</strong> MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.</p>
+<ul>
+<li>Build the database for the <strong>first time</strong> using the <u>Database Builder</u>.</li>
+</ul>
+<p><strong>Option 1: Build Database Using MGnify Data</strong></p>
+<p>Ensure you download the correct database type corresponding to your data.</p>
+<span class="image-wrap"><img alt="dbbuilder" src="./MetaX_Cookbook.assets/dbbuilder.png" decoding="async" class="doc-image"></span>
+<p><strong>Option 2: Build Database Using Own Data</strong></p>
+<ol>
+<li><strong>Annotation Table:</strong> A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.</li>
+</ol>
+<span class="image-wrap"><img alt="dbbuilder_own" src="./MetaX_Cookbook.assets/dbbuilder_own.png" decoding="async" class="doc-image"></span>
+<ol start="2">
+<li><strong>Taxa Table:</strong> A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.</li>
+</ol>
+<p><strong>Example Annotation Table:</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Query</th>
+<th>Preferred_name</th>
+<th>EC</th>
+<th>KEGG_ko</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001_00696</td>
+<td>mfd</td>
+<td>-</td>
+<td>ko:K03723</td>
+</tr>
+<tr>
+<td>MGYG000000001_02838</td>
+<td>hxlR</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MGYG000000001_01674</td>
+<td>ispG</td>
+<td>1.17.7.1,1.17.7.3</td>
+<td>ko:K03526</td>
+</tr>
+<tr>
+<td>MGYG000000001_02710</td>
+<td>glsA</td>
+<td>3.5.1.2</td>
+<td>ko:K01425</td>
+</tr>
+<tr>
+<td>MGYG000000001_01356</td>
+<td>mutS2</td>
+<td>-</td>
+<td>ko:K07456</td>
+</tr>
+<tr>
+<td>MGYG000000001_02630</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>MGYG000000001_02418</td>
+<td>ackA</td>
+<td>2.7.2.1</td>
+<td>ko:K00925</td>
+</tr>
+<tr>
+<td>MGYG000000001_00728</td>
+<td>atpA</td>
+<td>3.6.3.14</td>
+<td>ko:K02111</td>
+</tr>
+<tr>
+<td>MGYG000000001_00695</td>
+<td>pth</td>
+<td>3.1.1.29</td>
+<td>ko:K01056</td>
+</tr>
+<tr>
+<td>MGYG000000001_02907</td>
+<td>-</td>
+<td>-</td>
+<td>ko:K03086</td>
+</tr>
+<tr>
+<td>MGYG000000001_02592</td>
+<td>rplC</td>
+<td>-</td>
+<td>ko:K02906</td>
+</tr>
+<tr>
+<td>MGYG000000001_00137</td>
+<td>-</td>
+<td>-</td>
+<td>ko:K03480,ko:K03488</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example Taxa Table:</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Genome</th>
+<th>Lineage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001</td>
+<td>d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_GCA-900066495;s_GCA-900066495 sp902362365</td>
+</tr>
+<tr>
+<td>MGYG000000002</td>
+<td>d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae;g_Blautia_A;s_Blautia_A faecis</td>
+</tr>
+<tr>
+<td>MGYG000000003</td>
+<td>d_Bacteria;p_Bacteroidota;c_Bacteroidia;o_Bacteroidales;f_Rikenellaceae;g_Alistipes;s_Alistipes shahii</td>
+</tr>
+<tr>
+<td>MGYG000000004</td>
+<td>d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Oscillospirales;f_Ruminococcaceae;g_Anaerotruncus;s_Anaerotruncus colihominis</td>
+</tr>
+<tr>
+<td>MGYG000000005</td>
+<td>d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Peptostreptococcaceae;g_Terrisporobacter;s_Terrisporobacter glycolicus_A</td>
+</tr>
+<tr>
+<td>MGYG000000006</td>
+<td>d_Bacteria;p_Firmicutes;c_Bacilli;o_Staphylococcales;f_Staphylococcaceae;g_Staphylococcus;s_Staphylococcus xylosus</td>
+</tr>
+<tr>
+<td>MGYG000000007</td>
+<td>d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus intestinalis</td>
+</tr>
+<tr>
+<td>MGYG000000008</td>
+<td>d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Lactobacillus;s_Lactobacillus johnsonii</td>
+</tr>
+<tr>
+<td>MGYG000000009</td>
+<td>d_Bacteria;p_Firmicutes;c_Bacilli;o_Lactobacillales;f_Lactobacillaceae;g_Ligilactobacillus;s_Ligilactobacillus murinus</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="module-3-database-updater">Module 3. Database Updater</h2>
+<p>The <strong>Database Updater</strong> allows updating the database built by the <strong>Database Builder</strong> or adding more annotations. This step is <strong><u>optional</u></strong>.</p>
+<ul>
+<li>Update the built database and extend annotations.</li>
+</ul>
+<span class="image-wrap"><img alt="db_updater" src="./MetaX_Cookbook.assets/db_updater.png" decoding="async" class="doc-image"></span>
+<p><strong>Option 1: Built-in Mode</strong></p>
+<p>We recommend some extended databases, such as <a href="https://bcb.unl.edu/dbCAN_seq">dbCAN_seq</a>.</p>
+<p><strong>Option 2: TSV Table</strong></p>
+<p>Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.</p>
+<p><strong>Example:</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Protein ID</th>
+<th>COG</th>
+<th>KEGG</th>
+<th>...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MGYG000000001_02630</td>
+<td>Function 1</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+<tr>
+<td>MGYG000000001_01475</td>
+<td>Function 2</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+<tr>
+<td>MGYG000000001_01539</td>
+<td>Function 3</td>
+<td>Function 1</td>
+<td>...</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="module-4-peptide-annotator">Module 4. Peptide Annotator</h2>
+<h3 id="1-results-from-mag-workflow">1. Results from MAG Workflow</h3>
+<p>These peptide results use metagenome-assembled genomes (MAGs) as the reference database for protein searches, such as <strong>DIA-NN</strong>, <strong>MetaLab-MAG</strong>, <strong>MetaLab-DIA</strong>, and other workflows that use MAG databases like MGnify or custom MAG databases.</p>
+<ul>
+<li>Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.</li>
+</ul>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc" decoding="async" class="doc-image"></span>
+<p><strong>Required:</strong></p>
+<ul>
+<li>
+<p><strong>Database</strong>: The database created by <u><a href="#module-2-database-builder">Database Builder</a></u></p>
+</li>
+<li>
+<p><strong>Peptide Table</strong>:</p>
+<ul>
+<li>
+<p><em>Option 1</em>: From the Search engine which using Metagenome-assembled genomes (MAGs)  as database. (e.g. <strong><em>final_peptides.tsv</em></strong> in MetaLab-MAG, <strong><em>xxx_report.pr_matrix.tsv</em></strong> in DIA-NN result)</p>
+</li>
+<li>
+<p><em>Option 2</em>: Manually create a table with one column for the <strong>peptide sequence</strong> and another column for the <strong>protein group</strong> (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the <strong>intensity values</strong> for each sample.</p>
+</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Proteins</th>
+<th>Intensity_V1_01</th>
+<th>Intensity_V1_02</th>
+<th>Intensity_V1_03</th>
+<th>Intensity_V1_04</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(Acetyl)KGGVEPQSETVWR</td>
+<td>MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002926_00231;...</td>
+<td>714650</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)KVIPELNGK</td>
+<td>MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;...</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK</td>
+<td>MGYG000001199_02893</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)LLTGLPDAYGR</td>
+<td>MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124</td>
+<td>0</td>
+<td>307519</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>(Acetyl)MDFTLDKK</td>
+<td>MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102</td>
+<td>306231</td>
+<td>0</td>
+<td>0</td>
+<td>1214497</td>
+</tr>
+</tbody>
+</table></div></li>
+<li>
+<p><strong>Output Save Path</strong>: The location to save the result table.</p>
+</li>
+<li>
+<p><strong>LCA Threshold</strong>: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).</p>
+<span class="image-wrap"><img alt="LCA_prop" src="./MetaX_Cookbook.assets/LCA_prop.png" decoding="async" class="doc-image"></span>
+</li>
+</ul>
+<h3 id="2-results-from-maxquant-workflow">2. Results from MaxQuant Workflow</h3>
+<p>These peptide results come from the <strong>MetaLab 2.3</strong> MaxQuant workflow.</p>
+<ul>
+<li>Select the <strong>MetaLab</strong> result folder, which contains the <strong>maxquant_search</strong> folder.</li>
+</ul>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="peptide2taxafunc_tab2_1" style="width: 80%" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p>The <strong>Peptide Annotator</strong> will automatically find the <strong>peptides_report.txt</strong>, <strong>BuiltIn.pepTaxa.csv</strong>, and <strong>functions.tsv</strong> in the <strong>maxquant_search</strong> folder. Alternatively, you can select the files manually.</p>
+</li>
+<li>
+<p>Select <strong>OTFs Save To</strong> to set the location to save the result table.</p>
+</li>
+</ul>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png" alt="peptide2taxafunc_tab2_2" style="width: 80%" decoding="async" class="doc-image"></span>
+<p><br></p>
+<h1 id="developer-tools">Developer Tools</h1>
+<ul>
+<li>
+<p><strong>Export Log</strong></p>
+</li>
+<li>
+<p>You can export the log file for debugging or reporting the issue.</p>
+</li>
+<li class="media-item"><span class="image-wrap"><img alt="dev_menu" src="MetaX_Cookbook.assets/dev_menu.png" decoding="async" class="doc-image"></span>
+</li>
+<li>
+<p><strong>Show or Hide the Console</strong></p>
+</li>
+</ul>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/show_console.png" alt="show_console" decoding="async" class="doc-image"></span>
+<ul>
+<li>
+<p><strong>Settings</strong></p>
+</li>
+<li>
+<p>Check <strong>Auto Check Update</strong> to enable or disable update checks on launch.</p>
+</li>
+<li>Choose whether to update from the <strong>stable version</strong> or <strong>beta version</strong> in Settings.
+  <span class="image-wrap"><img src="MetaX_Cookbook.assets/settings.png" alt="settings" decoding="async" class="doc-image"></span></li>
+<li>Other Options Settings</li>
+<li class="media-item"><span class="image-wrap"><img alt="settings_page2" src="./MetaX_Cookbook.assets/settings_page2.png" decoding="async" class="doc-image"></span></li>
+</ul>
+<h1 id="enjoy-metax">Enjoy MetaX</h1>
+<p>If you have any issues or suggestions, please open a new issue on <a href="https://github.com/byemaxx/MetaX">GitHub</a>.</p>
+</main>
+
+<button id="backToTop" type="button" aria-label="Back to top">Top</button>
+
+<script>
+    const THEME_KEY = "metax-docs-theme";
+    const TOC_COLLAPSE_KEY = "metax-docs-collapsed-anchors";
+    const SIDEBAR_COLLAPSE_KEY = "metax-docs-sidebar-collapsed";
+    const MOBILE_BREAKPOINT = 960;
+    const ANCHOR_OFFSET = 84;
+
+    const body = document.body;
+    const nav = document.getElementById("doc-nav");
+    const tocToggle = document.getElementById("tocToggle");
+    const themeToggle = document.getElementById("toggleTheme");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const collapseAllToc = document.getElementById("collapseAllToc");
+    const expandAllToc = document.getElementById("expandAllToc");
+    const backToTop = document.getElementById("backToTop");
+    const navLinks = Array.from(document.querySelectorAll("nav a.nav-link"));
+    const tocNodes = Array.from(document.querySelectorAll(".toc-node"));
+    const tocCarets = Array.from(document.querySelectorAll(".toc-caret"));
+    const contentImages = Array.from(document.querySelectorAll("main img"));
+    const sections = Array.from(document.querySelectorAll("main h1, main h2, main h3, main h4, main h5, main h6")).filter(function(node) {
+        return Boolean(node.id);
+    });
+    let hashRealignTimer = null;
+
+    function collapsibleNodes() {
+        return tocNodes.filter(function(node) {
+            return node.getAttribute("data-has-children") === "true";
+        });
+    }
+
+    function nodeCaret(node) {
+        return node.querySelector(".toc-row .toc-caret");
+    }
+
+    function setNodeCollapsed(node, collapsed) {
+        node.classList.toggle("collapsed", collapsed);
+        const caret = nodeCaret(node);
+        if (caret) {
+            caret.setAttribute("aria-expanded", String(!collapsed));
+        }
+    }
+
+    function saveCollapsedTocState() {
+        const collapsedAnchors = collapsibleNodes()
+            .filter(function(node) {
+                return node.classList.contains("collapsed");
+            })
+            .map(function(node) {
+                return node.getAttribute("data-anchor");
+            });
+        localStorage.setItem(TOC_COLLAPSE_KEY, JSON.stringify(collapsedAnchors));
+    }
+
+    function loadCollapsedTocState() {
+        let collapsed = [];
+        try {
+            collapsed = JSON.parse(localStorage.getItem(TOC_COLLAPSE_KEY) || "[]");
+        } catch (error) {
+            collapsed = [];
+        }
+        const collapsedSet = new Set(collapsed);
+        collapsibleNodes().forEach(function(node) {
+            const anchor = node.getAttribute("data-anchor");
+            setNodeCollapsed(node, collapsedSet.has(anchor));
+        });
+    }
+
+    function applyTheme(theme) {
+        const dark = theme === "dark";
+        body.classList.toggle("dark-mode", dark);
+        themeToggle.textContent = dark ? "Light" : "Dark";
+    }
+
+    function updateActiveNavLink() {
+        if (!sections.length) {
+            return;
+        }
+
+        const threshold = 120;
+        let currentId = sections[0].id;
+
+        sections.forEach(function(section) {
+            if (section.getBoundingClientRect().top <= threshold) {
+                currentId = section.id;
+            }
+        });
+
+        navLinks.forEach(function(link) {
+            const isActive = link.getAttribute("href") === "#" + currentId;
+            link.classList.toggle("active", isActive);
+        });
+
+        const activeLink = document.querySelector('nav a.nav-link[href="#' + currentId + '"]');
+        if (activeLink) {
+            let currentNode = activeLink.closest(".toc-node");
+            while (currentNode) {
+                setNodeCollapsed(currentNode, false);
+                currentNode = currentNode.parentElement.closest(".toc-node");
+            }
+        }
+    }
+
+    function updateBackToTop() {
+        backToTop.style.display = window.scrollY > 300 ? "block" : "none";
+    }
+
+    function closeMobileToc() {
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
+            nav.classList.remove("open");
+            tocToggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    function currentHashTarget() {
+        if (!window.location.hash || window.location.hash.length < 2) {
+            return null;
+        }
+        try {
+            return document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function scrollToCurrentHashTarget(behavior) {
+        const target = currentHashTarget();
+        if (!target) {
+            return false;
+        }
+
+        const top = Math.max(window.scrollY + target.getBoundingClientRect().top - ANCHOR_OFFSET, 0);
+        window.scrollTo({ top: top, behavior: behavior || "auto" });
+        return true;
+    }
+
+    function scheduleHashRealign(delay, behavior) {
+        if (hashRealignTimer !== null) {
+            clearTimeout(hashRealignTimer);
+        }
+
+        hashRealignTimer = window.setTimeout(function() {
+            hashRealignTimer = null;
+            if (scrollToCurrentHashTarget(behavior)) {
+                updateActiveNavLink();
+            }
+        }, delay);
+    }
+
+    function normalizeMediaLists() {
+        document.querySelectorAll("ul, ol").forEach(function(list) {
+            const items = Array.from(list.children).filter(function(child) {
+                return child.tagName === "LI";
+            });
+            if (!items.length) {
+                return;
+            }
+
+            const mediaOnly = items.every(function(item) {
+                return item.classList.contains("media-item");
+            });
+
+            if (mediaOnly) {
+                list.classList.add("media-list");
+            }
+        });
+    }
+
+    function setSidebarCollapsed(collapsed) {
+        body.classList.toggle("sidebar-collapsed", collapsed);
+        sidebarToggle.textContent = collapsed ? "▶" : "◀";
+        sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+        localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
+    }
+
+    themeToggle.addEventListener("click", function() {
+        const nextTheme = body.classList.contains("dark-mode") ? "light" : "dark";
+        applyTheme(nextTheme);
+        localStorage.setItem(THEME_KEY, nextTheme);
+    });
+
+    tocToggle.addEventListener("click", function() {
+        const open = nav.classList.toggle("open");
+        tocToggle.setAttribute("aria-expanded", String(open));
+    });
+
+    navLinks.forEach(function(link) {
+        link.addEventListener("click", function(event) {
+            closeMobileToc();
+
+            const href = link.getAttribute("href");
+            if (!href || !href.startsWith("#")) {
+                return;
+            }
+
+            event.preventDefault();
+            if (window.location.hash !== href) {
+                history.pushState(null, "", href);
+            }
+            scheduleHashRealign(0, "smooth");
+            scheduleHashRealign(250, "auto");
+        });
+    });
+
+    tocCarets.forEach(function(caret) {
+        caret.addEventListener("click", function(event) {
+            const node = event.currentTarget.closest(".toc-node");
+            const collapsed = node.classList.contains("collapsed");
+            setNodeCollapsed(node, !collapsed);
+            saveCollapsedTocState();
+        });
+    });
+
+    collapseAllToc.addEventListener("click", function() {
+        collapsibleNodes().forEach(function(node) {
+            setNodeCollapsed(node, true);
+        });
+        saveCollapsedTocState();
+    });
+
+    expandAllToc.addEventListener("click", function() {
+        collapsibleNodes().forEach(function(node) {
+            setNodeCollapsed(node, false);
+        });
+        saveCollapsedTocState();
+    });
+
+    sidebarToggle.addEventListener("click", function() {
+        const collapsed = !body.classList.contains("sidebar-collapsed");
+        setSidebarCollapsed(collapsed);
+    });
+
+    backToTop.addEventListener("click", function() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    window.addEventListener("scroll", function() {
+        updateBackToTop();
+        updateActiveNavLink();
+    }, { passive: true });
+
+    window.addEventListener("resize", function() {
+        if (window.innerWidth > MOBILE_BREAKPOINT) {
+            nav.classList.remove("open");
+            tocToggle.setAttribute("aria-expanded", "false");
+        }
+    });
+
+    window.addEventListener("hashchange", function() {
+        scheduleHashRealign(0, "auto");
+    });
+
+    window.addEventListener("load", function() {
+        scheduleHashRealign(0, "auto");
+    });
+
+    contentImages.forEach(function(image) {
+        if (image.complete) {
+            return;
+        }
+        image.addEventListener("load", function() {
+            if (window.location.hash) {
+                scheduleHashRealign(50, "auto");
+            }
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        applyTheme(savedTheme === "dark" ? "dark" : "light");
+        normalizeMediaLists();
+        loadCollapsedTocState();
+        setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
+        updateActiveNavLink();
+        updateBackToTop();
+        scheduleHashRealign(0, "auto");
+    });
+</script>
+
+</body>
+</html>
