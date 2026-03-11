@@ -8,6 +8,7 @@ on:
       - "Docs/**"
       - "docs/**"
       - "scripts/build_docs.py"
+      - "Docs/requirements.txt"
       - "docs/requirements.txt"
       - ".github/workflows/jekyll-gh-pages.yml"
   pull_request:
@@ -17,6 +18,7 @@ on:
       - "Docs/**"
       - "docs/**"
       - "scripts/build_docs.py"
+      - "Docs/requirements.txt"
       - "docs/requirements.txt"
       - ".github/workflows/jekyll-gh-pages.yml"
   workflow_dispatch:
@@ -32,15 +34,22 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CHECKOUT_REF: ${{ github.event.inputs.target_ref || github.ref }}
+    timeout-minutes: 15
     steps:
+      - name: Resolve checkout ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.target_ref }}" ]; then
+            echo "CHECKOUT_REF=${{ github.event.inputs.target_ref }}" >> "$GITHUB_ENV"
+          else
+            echo "CHECKOUT_REF=${{ github.ref }}" >> "$GITHUB_ENV"
+          fi
+
       - name: Show resolved refs
         run: |
           echo "github.ref=${{ github.ref }}"
@@ -58,26 +67,61 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: docs/requirements.txt
+          cache-dependency-path: |
+            Docs/requirements.txt
+            docs/requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          if [ -f "Docs/requirements.txt" ]; then
+            pip install -r Docs/requirements.txt
+          elif [ -f "docs/requirements.txt" ]; then
             pip install -r docs/requirements.txt
+          else
+            echo "requirements file not found in Docs/ or docs/"
+            ls -la
+            ls -la Docs || true
+            ls -la docs || true
+            exit 1
+          fi
 
       - name: Generate documentation site
         run: python scripts/build_docs.py
 
       - name: Resolve docs directory
         run: |
-          if [ -d "Docs" ]; then
+          has_docs_markdown=0
+          has_lowercase_markdown=0
+
+          if [ -f "Docs/MetaX_Cookbook.md" ]; then
+            has_docs_markdown=1
+          fi
+
+          if [ -f "docs/MetaX_Cookbook.md" ]; then
+            has_lowercase_markdown=1
+          fi
+
+          if [ "$has_docs_markdown" -eq 1 ] && [ "$has_lowercase_markdown" -eq 1 ]; then
+            if ! diff -qr Docs docs >/dev/null; then
+              echo "Docs/ and docs/ both exist but differ. Pick one canonical docs directory before publishing."
+              exit 1
+            fi
             echo "DOCS_DIR=Docs" >> "$GITHUB_ENV"
-          elif [ -d "docs" ]; then
+          elif [ "$has_docs_markdown" -eq 1 ]; then
+            echo "DOCS_DIR=Docs" >> "$GITHUB_ENV"
+          elif [ "$has_lowercase_markdown" -eq 1 ]; then
             echo "DOCS_DIR=docs" >> "$GITHUB_ENV"
+            resolved_docs_dir="docs"
           else
-            echo "Docs directory not found."
+            echo "Could not find MetaX_Cookbook.md in Docs/ or docs/."
             exit 1
           fi
+
+          if [ -z "${resolved_docs_dir:-}" ]; then
+            resolved_docs_dir="Docs"
+          fi
+          echo "Resolved docs directory: $resolved_docs_dir"
 
       - name: Add .nojekyll
         run: touch "${{ env.DOCS_DIR }}/.nojekyll"
@@ -89,7 +133,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: "${{ env.DOCS_DIR }}"
 
@@ -97,6 +141,7 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
