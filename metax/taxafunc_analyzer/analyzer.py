@@ -227,7 +227,7 @@ class TaxaFuncAnalyzer:
             if self.sample_col_prefix != '': # if the prefix_col_name is not provided, use the first column name
                 meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.replace(self.sample_col_prefix, ''))
             # replace space with _
-            meta = meta.applymap(lambda x: x.strip() if isinstance(x, str) else x) # type: ignore
+            meta = meta.map(lambda x: x.strip() if isinstance(x, str) else x) # type: ignore
             # remove the "_" if the sample name is started with "_"
             meta['Sample'] = meta['Sample'].apply(lambda x: x[1:] if x.startswith('_') else x)
             
