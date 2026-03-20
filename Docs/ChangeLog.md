@@ -1,3 +1,8 @@
+# Version: 1.127.5
+## Date: 2026-03-20
+### Changes:
+- Fix: add checks for empty file selections in MetaX GUI.
+
 # Version: 1.127.4
 ## Date: 2026-03-11
 ### Changes:
