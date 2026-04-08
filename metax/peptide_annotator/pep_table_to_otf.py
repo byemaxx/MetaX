@@ -462,6 +462,7 @@ class peptideProteinsMapper:
                  genome_cutoff_rank:int|None= None,   # if set, it will only get the top N genomes, otherwise use genome_peptide_coverage_cutoff
                  genome_peptide_coverage_cutoff:float|None = 0.97,
                  protein_peptide_coverage_cutoff:float|None = 1.0,
+                 protein_rank_iters: int = 5,
                  output_path=None,
                  temp_dir=None,
                  stop_after_genome_ranking=False,
@@ -488,6 +489,7 @@ class peptideProteinsMapper:
         self.genome_cutoff_rank = genome_cutoff_rank 
         self.genome_peptide_coverage_cutoff = genome_peptide_coverage_cutoff
         self.protein_peptide_coverage_cutoff = protein_peptide_coverage_cutoff
+        self.protein_rank_iters = max(1, int(protein_rank_iters))
         self.output_path = output_path
         self.temp_dir = None
         self.stop_after_genome_ranking = stop_after_genome_ranking
@@ -1011,7 +1013,12 @@ class peptideProteinsMapper:
                                     peptide_column = self.peptide_col,
                                     genome_column = 'Proteins',
                                     genome_separator = ';')
-        df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', iters=3)
+        df_results_rank = gr.get_rank_covre_df(
+            genome_rank_method='combined',
+            iters=self.protein_rank_iters,
+            target_coverage=self.protein_peptide_coverage_cutoff,
+            stop_when_selected_stable=True,
+        )
         self.protein_ranked_table = df_results_rank
         cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.protein_peptide_coverage_cutoff].index[0]
         selected_proteins = df_results_rank.loc[:cutoff_index]
@@ -1124,6 +1131,7 @@ class peptideProteinsMapper:
             "removed_peptides_no_matched": self.removed_peptides_no_matched,
             "genome_peptide_coverage_cutoff": self.genome_peptide_coverage_cutoff,
             "protein_peptide_coverage_cutoff": self.protein_peptide_coverage_cutoff,
+            "protein_rank_iters": self.protein_rank_iters,
             "turn_point_method": self.turn_point_method,
             "turn_point_distinct_cutoff": self.turn_point_distinct_cutoff,
             "genome_cutoff_rank": self.genome_cutoff_rank if self.turn_point_method.lower() in ['rank', 'distinct_count'] else "N/A",
