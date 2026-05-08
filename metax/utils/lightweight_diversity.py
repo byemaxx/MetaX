@@ -232,6 +232,8 @@ ALPHA_DIVERSITY_METRICS = {
 BETA_DIVERSITY_METRIC_ALIASES = {
     "manhattan": "cityblock",
     "cityblock": "cityblock",
+    "bray_curtis": "braycurtis",
+    "matching": "hamming",
 }
 
 BINARY_BETA_DIVERSITY_METRICS = {
@@ -252,6 +254,38 @@ def _normalize_beta_metric(metric: str) -> str:
     return BETA_DIVERSITY_METRIC_ALIASES.get(normalized, normalized)
 
 
+def _zero_aware_braycurtis(u, v) -> float:
+    """Calculate Bray-Curtis distance with explicit all-zero handling."""
+    denominator = np.abs(u + v).sum()
+    if denominator == 0:
+        return 0.0
+    return float(np.abs(u - v).sum() / denominator)
+
+
+def _zero_aware_cosine(u, v) -> float:
+    """Calculate cosine distance with explicit zero-vector handling."""
+    u_norm = np.linalg.norm(u)
+    v_norm = np.linalg.norm(v)
+    if u_norm == 0 and v_norm == 0:
+        return 0.0
+    if u_norm == 0 or v_norm == 0:
+        return 1.0
+    return float(1 - np.dot(u, v) / (u_norm * v_norm))
+
+
+def _zero_aware_correlation(u, v) -> float:
+    """Calculate correlation distance with explicit constant-vector handling."""
+    u_centered = u - np.mean(u)
+    v_centered = v - np.mean(v)
+    u_norm = np.linalg.norm(u_centered)
+    v_norm = np.linalg.norm(v_centered)
+    if u_norm == 0 and v_norm == 0:
+        return 0.0 if np.allclose(u, v) else 1.0
+    if u_norm == 0 or v_norm == 0:
+        return 1.0
+    return float(1 - np.dot(u_centered, v_centered) / (u_norm * v_norm))
+
+
 def _dice_distance(u, v) -> float:
     """Calculate Dice dissimilarity on binary vectors.
 
@@ -268,13 +302,48 @@ def _dice_distance(u, v) -> float:
     return float(1 - (2 * shared / total))
 
 
+def _zero_aware_jaccard(u, v) -> float:
+    """Calculate Jaccard dissimilarity on binary vectors with all-zero handling."""
+    u = np.asarray(u, dtype=bool)
+    v = np.asarray(v, dtype=bool)
+    union = np.logical_or(u, v).sum()
+    if union == 0:
+        return 0.0
+    shared = np.logical_and(u, v).sum()
+    return float(1 - shared / union)
+
+
+def _jensen_shannon_distance(u, v) -> float:
+    """Calculate Jensen-Shannon distance with base-2 normalization.
+
+    Empty-vs-empty comparisons return 0.0. Empty-vs-non-empty comparisons
+    return 1.0, the maximum distance under base-2 normalization.
+    """
+    u_total = u.sum()
+    v_total = v.sum()
+    if u_total == 0 and v_total == 0:
+        return 0.0
+    if u_total == 0 or v_total == 0:
+        return 1.0
+
+    p = u / u_total
+    q = v / v_total
+    m = 0.5 * (p + q)
+
+    def kl_divergence(a, b):
+        mask = a > 0
+        return np.sum(a[mask] * np.log2(a[mask] / b[mask]))
+
+    return float(np.sqrt(0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)))
+
+
 def beta_diversity_to_dataframe(metric: str, data: pd.DataFrame) -> pd.DataFrame:
     """Calculate a beta-diversity distance matrix from a samples-by-features table."""
     if data.shape[0] < 2:
         raise ValueError("At least two samples are required for beta diversity.")
 
     metric = _normalize_beta_metric(metric)
-    values = data.values
+    values = data.values.astype(float, copy=False)
 
     if np.any(pd.isna(values)):
         raise ValueError("Input table for beta diversity cannot contain NaN values.")
@@ -284,10 +353,16 @@ def beta_diversity_to_dataframe(metric: str, data: pd.DataFrame) -> pd.DataFrame
     if metric in BINARY_BETA_DIVERSITY_METRICS:
         values = values > 0
 
-    if metric == "dice":
-        distances = pdist(values, metric=_dice_distance)
-    else:
-        distances = pdist(values, metric=metric)
+    custom_metrics = {
+        "braycurtis": _zero_aware_braycurtis,
+        "cosine": _zero_aware_cosine,
+        "correlation": _zero_aware_correlation,
+        "dice": _dice_distance,
+        "jaccard": _zero_aware_jaccard,
+        "jensenshannon": _jensen_shannon_distance,
+    }
+    distance_metric = custom_metrics.get(metric, metric)
+    distances = pdist(values, metric=distance_metric)
 
     matrix = squareform(distances)
     if np.any(~np.isfinite(matrix)):
