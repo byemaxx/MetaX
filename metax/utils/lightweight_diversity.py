@@ -229,14 +229,70 @@ ALPHA_DIVERSITY_METRICS = {
     "ace": ace,
 }
 
+BETA_DIVERSITY_METRIC_ALIASES = {
+    "manhattan": "cityblock",
+    "cityblock": "cityblock",
+}
+
+BINARY_BETA_DIVERSITY_METRICS = {
+    "dice",
+    "hamming",
+    "jaccard",
+    "rogerstanimoto",
+    "russellrao",
+    "sokalmichener",
+    "sokalsneath",
+    "yule",
+}
+
+
+def _normalize_beta_metric(metric: str) -> str:
+    """Normalize user-facing metric names to SciPy-compatible names."""
+    normalized = metric.strip().lower().replace(" ", "_").replace("-", "_")
+    return BETA_DIVERSITY_METRIC_ALIASES.get(normalized, normalized)
+
+
+def _dice_distance(u, v) -> float:
+    """Calculate Dice dissimilarity on binary vectors.
+
+    Two all-zero vectors are treated as identical and return 0.0. This avoids
+    NaN values in the distance matrix and matches the expected behavior for
+    absence-only comparisons in MetaX plots.
+    """
+    u = np.asarray(u, dtype=bool)
+    v = np.asarray(v, dtype=bool)
+    shared = np.logical_and(u, v).sum()
+    total = u.sum() + v.sum()
+    if total == 0:
+        return 0.0
+    return float(1 - (2 * shared / total))
+
 
 def beta_diversity_to_dataframe(metric: str, data: pd.DataFrame) -> pd.DataFrame:
     """Calculate a beta-diversity distance matrix from a samples-by-features table."""
     if data.shape[0] < 2:
         raise ValueError("At least two samples are required for beta diversity.")
 
-    distances = pdist(data.values, metric=metric)
+    metric = _normalize_beta_metric(metric)
+    values = data.values
+
+    if np.any(pd.isna(values)):
+        raise ValueError("Input table for beta diversity cannot contain NaN values.")
+    if np.any(values < 0):
+        raise ValueError("Input table for beta diversity cannot contain negative values.")
+
+    if metric in BINARY_BETA_DIVERSITY_METRICS:
+        values = values > 0
+
+    if metric == "dice":
+        distances = pdist(values, metric=_dice_distance)
+    else:
+        distances = pdist(values, metric=metric)
+
     matrix = squareform(distances)
+    if np.any(~np.isfinite(matrix)):
+        raise ValueError(f"Metric '{metric}' produced non-finite distances and cannot be plotted.")
+
     return pd.DataFrame(matrix, index=data.index, columns=data.index)
 
 
@@ -263,6 +319,8 @@ def pcoa(distance_matrix: pd.DataFrame | np.ndarray, warn_neg_eigval: float | bo
         raise ValueError("PCoA requires a square distance matrix.")
     if not np.allclose(matrix, matrix.T):
         raise ValueError("PCoA requires a symmetric distance matrix.")
+    if np.any(~np.isfinite(matrix)):
+        raise ValueError("PCoA requires a finite distance matrix.")
 
     centered = center_distance_matrix(matrix)
     eigvals, eigvecs = eigh(centered)
