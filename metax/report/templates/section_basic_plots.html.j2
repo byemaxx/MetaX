@@ -1,0 +1,99 @@
+<div class="panel" data-tab-group data-search-scope>
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">GUI Basic Plot families</div>
+      <h2>Explore generated Basic Plot outputs</h2>
+      <p class="panel-help">Switch between the same plot families exposed in MetaX GUI. Each family is further split by result scope, so taxa, function, and OTF outputs are reviewed separately.</p>
+    </div>
+  </div>
+
+  {% if figures_by_kind %}
+    <div class="toolbar">
+      <input class="search-input" data-artifact-search type="search" placeholder="Search figures by taxa level, function, or plot type">
+      <span class="muted">{{ basic_plot_figure_count }} Basic Plot figures</span>
+    </div>
+    <div class="tab-strip">
+      {% for kind, items in figures_by_kind.items() %}
+        <button class="tab-button {% if loop.first %}active{% endif %}" data-tab-target="basic-{{ loop.index }}">{{ kind }} <span class="count-pill">{{ items|length }}</span></button>
+      {% endfor %}
+    </div>
+
+    {% for kind, items in figures_by_kind.items() %}
+      {% set family_index = loop.index %}
+      <div class="tab-panel {% if loop.first %}active{% endif %}" data-tab-panel="basic-{{ family_index }}">
+        {% set note = basic_plot_family_notes.get(kind) %}
+        {% if note %}
+          <div class="family-context">
+            <div class="family-note">
+              <div class="family-note-label">Interpretation</div>
+              <p>{{ note.purpose }} {{ note.read }}</p>
+            </div>
+          </div>
+        {% endif %}
+
+        {% set subgroups = basic_plot_subgroups.get(kind, {}) %}
+        <div class="subpanel" data-tab-group>
+          {% if subgroups|length > 1 %}
+            <div class="subgroup-summary">Choose a result scope before reviewing this plot family.</div>
+            <div class="tab-strip subtab-strip">
+              {% for subgroup, subitems in subgroups.items() %}
+                <button class="tab-button {% if loop.first %}active{% endif %}" data-tab-target="basic-{{ family_index }}-scope-{{ loop.index }}">{{ subgroup }} <span class="count-pill">{{ subitems|length }}</span></button>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% for subgroup, subitems in subgroups.items() %}
+            <div class="tab-panel {% if loop.first %}active{% endif %}" data-tab-panel="basic-{{ family_index }}-scope-{{ loop.index }}">
+              <div class="subgroup-heading">
+                <h3>{{ subgroup }}</h3>
+                <p class="muted">{{ subitems|length }} {{ kind }} figure{% if subitems|length != 1 %}s{% endif %}</p>
+              </div>
+              {% if subgroup == "OTF" %}
+                {% set function_groups = basic_plot_otf_function_groups.get(kind, {}) %}
+                <div class="function-panel-stack">
+                  {% for function_name, function_items in function_groups.items() %}
+                    <div class="function-panel">
+                      <div class="subgroup-heading">
+                        <h3>{{ function_name }}</h3>
+                        <p class="muted">{{ function_items|length }} OTF {{ kind }} figure{% if function_items|length != 1 %}s{% endif %}</p>
+                      </div>
+                      <div class="figure-grid">
+                        {% for figure in function_items %}
+                          {% include "figure_tile.html.j2" %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% else %}
+                    <div class="empty-state">No OTF figures were generated for this plot family.</div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="figure-grid">
+                  {% for figure in subitems %}
+                    {% include "figure_tile.html.j2" %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="empty-state">No {{ kind }} figures were generated in this family.</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="task-grid">
+      {% for title, text in [
+        ("Sample clustering", "PCA and correlation plots will summarize whether samples separate by metadata groups."),
+        ("Feature patterns", "Heatmaps will highlight the most abundant or most changed features."),
+        ("Composition", "Barplots, sunburst, treemap, and sankey views will summarize taxa and function composition."),
+        ("Diversity", "Alpha and beta diversity summaries will be shown when enabled.")
+      ] %}
+        <div class="task-card">
+          <div class="task-top"><div class="task-badge">{{ loop.index }}</div><h3>{{ title }}</h3></div>
+          <p class="muted">{{ text }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

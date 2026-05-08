@@ -1,0 +1,66 @@
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Run notes</div>
+      <h2>Items that may need attention</h2>
+      <p class="panel-help">Warnings do not necessarily mean the report failed. They explain skipped optional steps, input differences, or analysis choices that users should know before interpreting results.</p>
+    </div>
+    <a class="action-link" href="logs/report.log">Open full log</a>
+  </div>
+
+  <div class="section-context">
+    <strong>Run context for these notes:</strong>
+    group column {{ warning_run_info.group_meta }},
+    control {{ warning_run_info.control_group }},
+    taxa levels {{ warning_run_info.taxa_levels }},
+    functions {{ warning_run_info.function_columns }},
+    top-N {{ warning_run_info.top_n }},
+    heatmap top-N {{ warning_run_info.heatmap_top_n }},
+    alpha {{ warning_run_info.alpha }},
+    log2FC cutoff {{ warning_run_info.log2fc_cutoff }}.
+  </div>
+
+  {% if warnings %}
+    {% for warning in warnings %}
+      <div class="message">
+        <strong>Warning</strong>
+        <div>{{ warning.message }}</div>
+        {% if warning.source %}<div class="artifact-meta">Source: {{ warning.source }}</div>{% endif %}
+        {% if warning.details %}
+          <details class="figure-meta-details">
+            <summary>Run details</summary>
+            <div class="artifact-meta">
+              {% for key, value in warning.details.items() %}
+                <div><strong>{{ key }}:</strong> {{ value }}</div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">No warnings were recorded for this run.</div>
+  {% endif %}
+
+  {% if errors %}
+    <h3>Errors</h3>
+    {% for error in errors %}
+      <div class="message error">
+        <strong>Error</strong>
+        <div>{{ error.message }}</div>
+        {% if error.source %}<div class="artifact-meta">Source: {{ error.source }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Export</div>
+      <h2>Use the results outside this report</h2>
+      <p class="panel-help">The summary file lists every generated table, figure, and note in a machine-readable format.</p>
+    </div>
+    <a class="action-link" href="summary.json">Download result summary</a>
+  </div>
+</div>

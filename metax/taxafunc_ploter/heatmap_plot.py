@@ -41,6 +41,13 @@ class HeatmapPlot:
         else:
             return 'top'
 
+    def _heatmap_right_margin(self, n_columns: int) -> float:
+        if n_columns <= 3:
+            return 0.34
+        if n_columns <= 8:
+            return 0.42
+        return 0.5
+
     def rename_taxa(self, df):
         first_index = df.index[0]
         index_list = df.index.tolist()
@@ -145,7 +152,7 @@ class HeatmapPlot:
             sns_params = {
                 'center': 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
-                "linewidths": 0.01, 
+                "linewidths": 0, 
                 "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "figsize": fig_size if return_type == 'fig' else None,
@@ -306,7 +313,7 @@ class HeatmapPlot:
             sns_params = {
                 "center": 0 if data_include_negative_and_positive else None,
                 "cmap": cmap,
-                "linewidths": 0.01, 
+                "linewidths": 0, 
                 "linecolor": None if linecolor == 'none' else linecolor,
                 "figsize": fig_size if return_type == 'fig' else None,
                 "cbar_kws": {"label": "Intensity", "shrink": 0.5},
@@ -359,7 +366,7 @@ class HeatmapPlot:
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
 
-            plt.subplots_adjust(left=0.05, bottom=0.11, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+            plt.subplots_adjust(left=0.05, bottom=0.11, right=self._heatmap_right_margin(len(mat.columns)), top=0.96, wspace=0.01, hspace=0.01)
             
             plt.tight_layout()
             plt.show()
@@ -379,7 +386,7 @@ class HeatmapPlot:
                     cmap:str|None = None, rename_taxa:bool = True, font_size:int = 10,
                     show_all_labels:tuple = (False, False), scale_method:str = 'maxmin', return_type:str = 'fig',
                     sample_to_group_dict:dict|None = None, x_filter_list: list = [], y_filter_list: list = [],
-                    filter_by_regex:bool = False, linecolor:str = 'none', linewidths:float = 0.01):
+                    filter_by_regex:bool = False, linecolor:str = 'none', linewidths:float = 0):
 
 
         df = self.filter_data_by_x_y(df, x_filter_list, y_filter_list, filter_by_regex)
@@ -604,7 +611,7 @@ class HeatmapPlot:
                 "cmap": cmap,
                 "figsize": fig_size,
                 "norm": norm,
-                "linewidths": 0.01, 
+                "linewidths": 0, 
                 "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "col_cluster": col_cluster,
@@ -751,7 +758,7 @@ class HeatmapPlot:
                 "cmap": cmap,
                 "figsize": fig_size,
                 "norm": norm,
-                "linewidths": 0.01, 
+                "linewidths": 0, 
                 "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "cbar_kws": {"label": "t-statistic", "shrink": 0.5},
@@ -786,7 +793,7 @@ class HeatmapPlot:
             cbar.ax.yaxis.set_ticks_position('left')
             cbar.ax.yaxis.set_label_position('left')
             
-            plt.subplots_adjust(left=0.05, bottom=0.15, right=0.5, top=0.96, wspace=0.01, hspace=0.01)
+            plt.subplots_adjust(left=0.05, bottom=0.15, right=self._heatmap_right_margin(len(dft.columns)), top=0.96, wspace=0.01, hspace=0.01)
 
             plt.tight_layout()
             plt.show()
@@ -951,4 +958,3 @@ class HeatmapPlot:
                     df = df / max_val
 
         return df
-
