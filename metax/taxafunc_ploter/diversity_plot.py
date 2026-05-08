@@ -1,14 +1,16 @@
 import pandas as pd
-import skbio.diversity.alpha as alpha
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as ticker
 
-from skbio.diversity import beta_diversity
-from skbio.stats.ordination import pcoa
-
-
+from ..utils.lightweight_diversity import (
+    ALPHA_DIVERSITY_METRICS,
+    ace,
+    beta_diversity_to_dataframe,
+    pcoa,
+)
 from .get_distinct_colors import GetDistinctColors
+
 
 class DiversityPlot(object):
     def __init__(self, tfa):
@@ -20,8 +22,7 @@ class DiversityPlot(object):
         sns.set_theme()
         
     def ace_with_threshold(self, row):
-        ace = alpha.ace(row, self.ace_threshold)
-        return ace
+        return ace(row, self.ace_threshold)
     
     
     def plot_alpha_diversity(self, metric:str='shannon', sample_list:list=None, 
@@ -46,21 +47,9 @@ class DiversityPlot(object):
             sub_group_list = None
             sub_meta = None
             
-                  
-        metric_dict = {
-            'shannon': alpha.shannon,
-            'simpson': alpha.simpson,
-            'chao1': alpha.chao1,
-            'observed_otus': alpha.observed_otus,
-            'pielou_e': alpha.pielou_e,
-            'fisher_alpha': alpha.fisher_alpha,
-            'dominance': alpha.dominance,
-            'menhinick': alpha.menhinick,
-            'mcintosh_d': alpha.mcintosh_d,
-            'mcintosh_e': alpha.mcintosh_e,
-            'ace': self.ace_with_threshold,
-            
-        }
+        metric_dict = dict(ALPHA_DIVERSITY_METRICS)
+        metric_dict['ace'] = self.ace_with_threshold
+
         if metric not in metric_dict:
             raise ValueError(f'Invalid metric: {metric}. Please choose from: {list(metric_dict.keys())}')
         
@@ -81,6 +70,7 @@ class DiversityPlot(object):
                 # get the threshold by 20% of the minimum value
                 df2 = df[df > 0]
                 threshold = int(df2.quantile(0.2).min())
+                threshold = max(threshold, 1)
                 
                 print(f'threshold: {threshold}')
                 self.ace_threshold = threshold
@@ -209,11 +199,9 @@ class DiversityPlot(object):
             df = df[sample_list]
             df = df.T
             
-            # bc_dm = beta_diversity("braycurtis", df, df.index)
-            bc_dm = beta_diversity(metric, df, df.index)
-            distance_matrix = bc_dm.to_data_frame()
+            distance_matrix = beta_diversity_to_dataframe(metric, df)
+            pcoa_res = pcoa(distance_matrix)
 
-            pcoa_res = pcoa(bc_dm)
             if theme is not None and theme != 'Auto':
                 plt.style.use(theme) 
             else:               
@@ -226,12 +214,13 @@ class DiversityPlot(object):
                                   hue=group_list_for_hue, palette=color_palette, alpha=0.9,
                                   edgecolor='black', linewidth=0.5)
                 
-            fig.set_xlabel("PCo1 (%.2f%%)" % (pcoa_res.proportion_explained[0] * 100), fontsize=font_size)
-            fig.set_ylabel("PCo2 (%.2f%%)" % (pcoa_res.proportion_explained[1] * 100), fontsize=font_size)
+            fig.set_xlabel("PCo1 (%.2f%%)" % (pcoa_res.proportion_explained.iloc[0] * 100), fontsize=font_size)
+            fig.set_ylabel("PCo2 (%.2f%%)" % (pcoa_res.proportion_explained.iloc[1] * 100), fontsize=font_size)
             # set title
             num_legend = len(unique_groups) if sub_meta == 'None' else len(set(style_list)) + len(unique_groups)
             
-            title = f'PCoA plot of {metric} distance {title_name} (Total explained variation: {pcoa_res.proportion_explained[0] * 100 + pcoa_res.proportion_explained[1] * 100:.2f}%)'
+            total_explained = (pcoa_res.proportion_explained.iloc[0] + pcoa_res.proportion_explained.iloc[1]) * 100
+            title = f'PCoA plot of {metric} distance {title_name} (Total explained variation: {total_explained:.2f}%)'
             plt.title(title, fontsize=font_size+2, fontweight='bold')
             
             if legend_col_num != 0:
@@ -243,7 +232,7 @@ class DiversityPlot(object):
             if show_label:
                 if rename_sample:
                     sample_list = [f'{sample_id} ({self.tfa.get_group_of_a_sample(sample_id)})' for sample_id in sample_list]
-                texts = [fig.text(pcoa_res.samples.PC1[i], pcoa_res.samples.PC2[i], s=sample_list[i], size=font_size, 
+                texts = [fig.text(pcoa_res.samples.PC1.iloc[i], pcoa_res.samples.PC2.iloc[i], s=sample_list[i], size=font_size, 
                             color='black', alpha=font_transparency) for i in range(len(sample_list))]
                 if adjust_label:
                     from adjustText import adjust_text
