@@ -965,14 +965,17 @@ class peptideProteinsMapper:
         return df
         
     def calculate_protein_list(self, df):
-        print("reducing proteins by protein ranking")
-        from metax.peptide_annotator.get_genome_rank import GenomeRank
-        gr = GenomeRank(df = df,
-                                    peptide_column = self.peptide_col,
-                                    genome_column = 'Proteins',
-                                    genome_separator = ';')
-        df_results_rank = gr.get_rank_covre_df(
-            genome_rank_method='combined',
+        print("reducing proteins by peptide coverage ranking")
+        from metax.peptide_annotator.peptide_coverage_ranker import PeptideCoverageRanker
+        # Proteins are the ranked targets here; the ranker is also usable for genomes or other target columns.
+        ranker = PeptideCoverageRanker(
+            df=df,
+            peptide_column=self.peptide_col,
+            target_column='Proteins',
+            target_separator=';',
+        )
+        df_results_rank = ranker.get_ranked_coverage_df(
+            rank_method='combined',
             iters=self.protein_rank_iters,
             target_coverage=self.protein_peptide_coverage_cutoff,
             stop_when_selected_stable=True,
