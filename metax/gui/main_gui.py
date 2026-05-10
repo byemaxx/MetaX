@@ -29,6 +29,7 @@ import traceback
 import logging
 import pickle
 import datetime
+import subprocess
 from collections import OrderedDict
 import re
 import json
@@ -177,6 +178,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         self.metax_home_path = os.path.join(QDir.homePath(), 'MetaX')
         self.last_path = QDir.homePath() # init last path as home path
+        self.pep_direct_to_otf_selected_genomes = []
+        self.pep_direct_to_otf_selected_genome_source = ""
+        self.metaumbra_gui_process = None
         
         # init the check update status
         self.update_branch = 'main'
@@ -344,9 +348,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_pro2taxafunc_db_path)
         self.pushButton_open_pep_direct_to_otf_output_path.clicked.connect(self.set_lineEdit_pep_direct_to_otf_output_path)
         self.pushButton_run_pep_direct_to_otf.clicked.connect(self.run_pep_dircet_to_otf)
-        self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking)
-        self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.clicked.connect(self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides)
-        self.comboBox_pep_direct_to_otf_genome_cut_method.currentIndexChanged.connect(self.change_event_comboBox_pep_direct_to_otf_genome_cut_method)
+        self.checkBox_pep_direct_to_otf_stop_after_metaumbra.toggled.connect(self.update_pep_direct_to_otf_output_mode)
+        self.pushButton_pep_direct_to_otf_open_genome_list_file.clicked.connect(self.open_pep_direct_to_otf_genome_list_file)
+        self.pushButton_pep_direct_to_otf_open_window_paste_gnome_list.clicked.connect(self.paste_pep_direct_to_otf_genome_list)
+        self.pushButton_pep_direct_to_otf_reset_selected_genome_list.clicked.connect(self.reset_pep_direct_to_otf_selected_genome_list)
+        self.pushButton_pep_direct_to_otf_open_metaumbra_gui.clicked.connect(self.open_metaumbra_gui)
+        self.update_pep_direct_to_otf_output_mode()
         
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -681,22 +688,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.pushButton_basic_heatmap_sankey_plot.setEnabled(False)
             self.pushButton_basic_heatmap_metatree.setEnabled(False)
 
-    def change_event_comboBox_pep_direct_to_otf_genome_cut_method(self):
-        current_text = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
-        if current_text == 'auto':
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
-        elif current_text == 'distinct_count':
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(True)
-            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
-        elif current_text == 'coverage':
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(True)
-        else:
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
-
-    
     def hide_or_show_all_items_in_layout(self, layout, hide: bool):
         """
         Recursively hide or show all items in the given layout, including nested layouts.
@@ -1823,6 +1814,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         return new_line_edit
 
+    def update_pep_direct_to_otf_output_mode(self):
+        stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
+        if stop_after_metaumbra:
+            self.label_224.setText('MetaUmbra Genome Presence Save To')
+            default_filename = 'genome_presence.tsv'
+            status_tip = 'The path for save the MetaUmbra genome presence result'
+        else:
+            self.label_224.setText('OTFs Save To')
+            default_filename = 'OTF_dreict_anno.tsv'
+            status_tip = 'The path for save the OTF result'
+
+        self.lineEdit_pep_direct_to_otf_output_path.setStatusTip(status_tip)
+        if hasattr(self.lineEdit_pep_direct_to_otf_output_path, 'default_filename'):
+            self.lineEdit_pep_direct_to_otf_output_path.default_filename = default_filename
+
 
     # double click listwidget item to copy to clipboard
     def copy_to_clipboard(self, item):
@@ -1926,14 +1932,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MetaX_GUI\\resources\\logo.png")
 
         about_html =f'''<h1>MetaX</h1>
-        <h4>Version: {__version__}</h4><h4><a href='https://www.northomics.ca/'>NorthOmics Lab</h4>
+        <h4>Version: {__version__}</h4>
         <img src='{logo_path}' width='200' height='200' align='right' />
         <p>MetaX is an integrated framework designed to link taxa with functions, enabling the creation of Operational Taxa-Functions (OTFs) and facilitating comprehensive analysis in metaproteomics.</p>
         <br>
 
         <h3>Citation</h3>
         <p>Please cite the following paper if you use MetaX in your research:</p>
-        <p><b>MetaX: A peptide centric metaproteomic data analysis platform using Operational Taxa-Functions (OTF)</b></p>
+        <p><b>Wu Q, Ning Z, Zhang A, et al. Operational taxon-function framework in MetaX: Unveiling taxonomic and functional associations in metaproteomics[J]. Analytical Chemistry, 2025, 97(18): 9739-9747.</b></p>
+        <p>DOI: <a href='https://pubs.acs.org/doi/full/10.1021/acs.analchem.4c06645'>10.1021/acs.analchem.4c06645</a></p>
         
         <br>
         <h3>Aditional Information</h3>
@@ -2116,12 +2123,127 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setText(pro2taxafunc_db_path)
         
     def set_lineEdit_pep_direct_to_otf_output_path(self):
-        pep_direct_to_otf_output_path = QFileDialog.getSaveFileName(self.MainWindow, 'Save OTF Table', os.path.join(self.last_path, 'OTF_dreict_anno.tsv'), 'tsv (*.tsv)')[0]
+        if self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked():
+            title = 'Save MetaUmbra Genome Presence Table'
+            default_name = 'genome_presence.tsv'
+        else:
+            title = 'Save OTF Table'
+            default_name = 'OTF_dreict_anno.tsv'
+        pep_direct_to_otf_output_path = QFileDialog.getSaveFileName(self.MainWindow, title, os.path.join(self.last_path, default_name), 'tsv (*.tsv)')[0]
         if not pep_direct_to_otf_output_path:
             return
         self.last_path = os.path.dirname(pep_direct_to_otf_output_path)
         pep_direct_to_otf_output_path = os.path.normpath(pep_direct_to_otf_output_path)
         self.lineEdit_pep_direct_to_otf_output_path.setText(pep_direct_to_otf_output_path)
+
+    def _decode_pep_direct_to_otf_separator(self, separator: str) -> str:
+        separator = separator or ''
+        if separator == r'\t':
+            return '\t'
+        if separator == r'\s':
+            return r'\s+'
+        return separator
+
+    def _parse_pep_direct_to_otf_genome_text(self, text: str) -> list[str]:
+        genomes = []
+        seen = set()
+        for item in re.split(r'[\r\n,;，；]+', text or ''):
+            genome = item.strip()
+            if genome and genome not in seen:
+                seen.add(genome)
+                genomes.append(genome)
+        return genomes
+
+    def _update_pep_direct_to_otf_selected_genome_label(self):
+        count = len(self.pep_direct_to_otf_selected_genomes)
+        self.label__pep_direct_to_otf_selected_genome_num.setText(f'Selected genomes: {count}')
+
+    def _add_pep_direct_to_otf_selected_genomes(self, genomes: list[str], source: str = '') -> int:
+        existing = set(self.pep_direct_to_otf_selected_genomes)
+        added = 0
+        for genome in genomes:
+            genome = str(genome).strip()
+            if not genome or genome in existing:
+                continue
+            self.pep_direct_to_otf_selected_genomes.append(genome)
+            existing.add(genome)
+            added += 1
+        if source:
+            self.pep_direct_to_otf_selected_genome_source = source
+        self._update_pep_direct_to_otf_selected_genome_label()
+        return added
+
+    def _read_pep_direct_to_otf_genome_list_file(self, file_path: str) -> list[str]:
+        with open(file_path, 'r', encoding='utf-8-sig') as handle:
+            text = handle.read()
+
+        first_line = next((line for line in text.splitlines() if line.strip()), '')
+        delimiter = '\t' if '\t' in first_line else ','
+        columns = [col.strip() for col in first_line.split(delimiter)]
+        if 'genome_id' not in columns:
+            return self._parse_pep_direct_to_otf_genome_text(text)
+
+        df = pd.read_csv(file_path, sep=delimiter)
+        if 'qvalue' in df.columns:
+            qvalue_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff.value(), 3)
+            qvalues = pd.to_numeric(df['qvalue'], errors='coerce')
+            df = df[qvalues <= qvalue_cutoff]
+        return self._parse_pep_direct_to_otf_genome_text('\n'.join(df['genome_id'].dropna().astype(str).tolist()))
+
+    def open_pep_direct_to_otf_genome_list_file(self):
+        genome_list_path = QFileDialog.getOpenFileName(
+            self.MainWindow,
+            'Select Genome List or MetaUmbra Result',
+            self.last_path,
+            'Genome list (*.txt *.tsv *.csv);;All Files (*)'
+        )[0]
+        if not genome_list_path:
+            return
+        try:
+            genomes = self._read_pep_direct_to_otf_genome_list_file(genome_list_path)
+            added = self._add_pep_direct_to_otf_selected_genomes(genomes, source=os.path.normpath(genome_list_path))
+            self.last_path = os.path.dirname(genome_list_path)
+            QMessageBox.information(
+                self.MainWindow,
+                'Genome List',
+                f'Loaded {len(genomes)} genomes, added {added} new genomes.\n\nSelected genomes: {len(self.pep_direct_to_otf_selected_genomes)}'
+            )
+        except Exception:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'open_pep_direct_to_otf_genome_list_file error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', error_message)
+
+    def paste_pep_direct_to_otf_genome_list(self):
+        text, ok = QtWidgets.QInputDialog.getMultiLineText(
+            self.MainWindow,
+            'Paste Genome List',
+            'Paste one genome ID per line, or separated by comma/semicolon:'
+        )
+        if not ok or not text.strip():
+            return
+        genomes = self._parse_pep_direct_to_otf_genome_text(text)
+        added = self._add_pep_direct_to_otf_selected_genomes(genomes, source='pasted')
+        QMessageBox.information(
+            self.MainWindow,
+            'Genome List',
+            f'Pasted {len(genomes)} genomes, added {added} new genomes.\n\nSelected genomes: {len(self.pep_direct_to_otf_selected_genomes)}'
+        )
+
+    def reset_pep_direct_to_otf_selected_genome_list(self):
+        self.pep_direct_to_otf_selected_genomes = []
+        self.pep_direct_to_otf_selected_genome_source = ''
+        self._update_pep_direct_to_otf_selected_genome_label()
+
+    def open_metaumbra_gui(self):
+        try:
+            if self.metaumbra_gui_process and self.metaumbra_gui_process.poll() is None:
+                QMessageBox.information(self.MainWindow, 'MetaUmbra GUI', 'MetaUmbra GUI is already running.')
+                return
+            self.metaumbra_gui_process = subprocess.Popen([sys.executable, '-m', 'metaumbra', 'gui'])
+        except Exception:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f'open_metaumbra_gui error: {error_message}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Error', error_message)
     
     
     ## peptideAnnotator peptide direct annotation tab end
@@ -2571,106 +2693,293 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'Error when run_metalab_maxq_annotate: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
             
+    def _get_pep_direct_to_otf_temp_dir(self, output_path: str) -> str:
+        output_dir = os.path.dirname(output_path) or os.getcwd()
+        temp_dir = os.path.join(output_dir, 'metax_temp')
+        os.makedirs(temp_dir, exist_ok=True)
+        return temp_dir
+
+    def _derive_pep_direct_to_otf_metaumbra_output_path(self, output_path: str) -> str:
+        temp_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
+        output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'OTF'
+        return os.path.join(temp_dir, f'{output_stem}_metaumbra_genome_presence.tsv')
+
+    def _select_genomes_from_metaumbra_result(self, genome_presence_path: str) -> list[str]:
+        return self._read_pep_direct_to_otf_genome_list_file(genome_presence_path)
+
+    def _get_pep_direct_to_otf_metaumbra_settings(self) -> dict:
+        return {
+            "metaumbra_peptide_score_col": self.lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col.text().strip(),
+            "metaumbra_peptide_error_col": self.lineEdit_pep_direct_to_otf_metaumbra_peptide_error_col.text().strip(),
+            "metaumbra_single_peptide_error_rate_upper_bound": round(
+                self.doubleSpinBox_pep_direct_to_otf_metaumbra_single_peptide_error.value(),
+                3,
+            ),
+            "metaumbra_genome_qvalue_cutoff": round(
+                self.doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff.value(),
+                3,
+            ),
+        }
+
+    def _run_pep_direct_to_otf_metaumbra_scoring(
+        self,
+        peptide_table_path: str,
+        digested_genome_folder_path: str,
+        output_path: str,
+        peptide_col: str,
+    ) -> dict:
+        metaumbra_settings = self._get_pep_direct_to_otf_metaumbra_settings()
+
+        cmd = [
+            sys.executable,
+            '-m',
+            'metaumbra',
+            'score',
+            '--peptide-table',
+            peptide_table_path,
+            '--genome-digest-dirs',
+            digested_genome_folder_path,
+            '--output',
+            output_path,
+            '--peptide-seq-col',
+            peptide_col,
+            '--peptide-score-col',
+            metaumbra_settings["metaumbra_peptide_score_col"],
+            '--peptide-error-col',
+            metaumbra_settings["metaumbra_peptide_error_col"],
+            '--single-peptide-error-rate-upper-bound',
+            str(metaumbra_settings["metaumbra_single_peptide_error_rate_upper_bound"]),
+        ]
+
+        print("Launching MetaUmbra scoring in an isolated process:")
+        print(" ".join([f'"{part}"' if " " in str(part) else str(part) for part in cmd]))
+
+        env = os.environ.copy()
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
+        env.setdefault("PYTHONIOENCODING", "utf-8")
+
+        creationflags = 0
+        try:
+            creationflags = subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined]
+        except Exception:
+            creationflags = 0
+
+        proc = subprocess.Popen(
+            cmd,
+            cwd=repo_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+            env=env,
+            creationflags=creationflags,
+        )
+
+        last_lines = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            print(line.rstrip("\n"))
+            last_lines.append(line)
+            if len(last_lines) > 80:
+                last_lines = last_lines[-80:]
+
+        return_code = proc.wait()
+        if return_code != 0:
+            tail = "".join(last_lines[-30:])
+            raise RuntimeError(f"MetaUmbra scoring failed (exit={return_code}). Last output:\n{tail}")
+
+        if not os.path.exists(output_path):
+            raise RuntimeError(f"MetaUmbra scoring finished but output file was not found: {output_path}")
+
+        return {"output": output_path, **metaumbra_settings}
+
+    def _run_pep_direct_to_otf_with_genome_list(
+        self,
+        peptide_table_path: str,
+        digested_genome_folder_path: str,
+        table_separator: str,
+        peptide_col: str,
+        intensity_col_prefix: str,
+        protein_peptide_coverage_cutoff: float,
+        output_path: str,
+        taxafunc_anno_db_path: str,
+        lca_threshold: float,
+        protein_genome_separator: str,
+        selected_genomes: list[str],
+        duplicate_peptide_handling_mode: str,
+        genome_selection_metadata: dict | None = None,
+    ):
+        selected_genomes = list(dict.fromkeys([str(genome).strip() for genome in selected_genomes if str(genome).strip()]))
+        if not selected_genomes:
+            raise ValueError("No genomes were selected.")
+
+        print(f"Selected genomes for digest scan: {len(selected_genomes)}")
+        temp_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
+        instance = peptideProteinsMapper(
+            peptide_table_path=peptide_table_path,
+            digested_genome_folders=digested_genome_folder_path,
+            table_separator=table_separator,
+            peptide_col=peptide_col,
+            intensity_col_prefix=intensity_col_prefix,
+            protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
+            output_path=output_path,
+            temp_dir=temp_dir,
+            selected_genomes_set=set(selected_genomes),
+            genome_list=selected_genomes,
+            continue_base_on_annotaied_peptide_table=False,
+            digested_parallel_backend="subprocess",
+            duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
+        )
+        return instance.all_in_one(
+            taxafunc_anno_db_path=taxafunc_anno_db_path,
+            lca_threshold=lca_threshold,
+            distinct_genome_threshold=0,
+            protein_genome_separator=protein_genome_separator,
+            genome_list=selected_genomes,
+            duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
+            genome_selection_metadata=genome_selection_metadata,
+        )
+
     def run_pep_dircet_to_otf(self):
-        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text()
-        digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text()
-        table_separator = self.lineEdit_pep_direct_to_otf_pep_table_sep.text()
-        peptide_col = self.lineEdit_pep_direct_to_otf_peptide_col_name.text()
-        intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text()
-        genome_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.value(), 3)
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
+        digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
+        table_separator = self._decode_pep_direct_to_otf_separator(self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip())
+        peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
+        intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text().strip()
         protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
-        output_path = self.lineEdit_pep_direct_to_otf_output_path.text()
-        taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text()
+        output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
+        taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
-        turn_point_distinct_cutoff = self.spinBox_pep_direct_to_otf_distinct_num_threshold.value()
-        protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text()
-        stop_after_genome_ranking = self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked()
-        continue_base_on_annotaied_peptide_table = self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked()
-        turn_point_method = self.comboBox_pep_direct_to_otf_genome_cut_method.currentText()
-        
-        
-        for value in [peptide_table_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
+        protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text().strip()
+        duplicate_peptide_handling_mode = self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip()
+        stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
+        use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
+
+        for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
             if value == '':
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
                 return None
-            
-        # check if the file exists in the path
-        check_files = [peptide_table_path]
-        if not continue_base_on_annotaied_peptide_table:
-            check_files.append(digested_genome_folder_path)
-        if not stop_after_genome_ranking:
+
+        if not duplicate_peptide_handling_mode:
+            duplicate_peptide_handling_mode = 'sum'
+
+        if not stop_after_metaumbra and not taxafunc_anno_db_path:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Protein to TaxaFunc Database')
+            return None
+
+        if not use_selected_genome_list and table_separator != '\t':
+            QMessageBox.warning(self.MainWindow, 'Warning', 'MetaUmbra scoring currently requires a tab-separated peptide table.')
+            return None
+
+        check_files = [peptide_table_path, digested_genome_folder_path]
+        if not stop_after_metaumbra:
             check_files.append(taxafunc_anno_db_path)
 
         for file in check_files:
             if not os.path.exists(file):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
                 return None
-                
+
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.isdir(output_dir):
+            QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
+            return None
+
+        selected_genomes = list(self.pep_direct_to_otf_selected_genomes)
+        if use_selected_genome_list and not selected_genomes:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please open or paste at least one selected genome.')
+            return None
+
         try:
-            self.logger.write_log(f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} taxafunc_anno_db_path:{taxafunc_anno_db_path}')
+            self.logger.write_log(
+                f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} '
+                f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
+                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} stop_after_metaumbra:{stop_after_metaumbra} '
+                f'use_selected_genome_list:{use_selected_genome_list} '
+                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode}'
+            )
+
             def pep_direct_to_otf_main_wrapper():
-                instance = peptideProteinsMapper(
-                    peptide_table_path=peptide_table_path, 
-                    digested_genome_folders=digested_genome_folder_path,
+                if use_selected_genome_list:
+                    print("Using predefined genome list; skip MetaUmbra scoring.")
+                    genome_selection_metadata = {
+                        "workflow": "Peptide Direct to OTFs (MetaUmbra)",
+                        "genome_selection_method": "selected_genome_list",
+                        "metaumbra_scoring_run": False,
+                        "use_selected_genome_list": True,
+                        "selected_genome_source": self.pep_direct_to_otf_selected_genome_source or "GUI selected genome list",
+                        "selected_genomes_input_count": len(selected_genomes),
+                    }
+                    return self._run_pep_direct_to_otf_with_genome_list(
+                        peptide_table_path=peptide_table_path,
+                        digested_genome_folder_path=digested_genome_folder_path,
+                        table_separator=table_separator,
+                        peptide_col=peptide_col,
+                        intensity_col_prefix=intensity_col_prefix,
+                        protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
+                        output_path=output_path,
+                        taxafunc_anno_db_path=taxafunc_anno_db_path,
+                        lca_threshold=lca_threshold,
+                        protein_genome_separator=protein_genome_separator,
+                        selected_genomes=selected_genomes,
+                        duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
+                        genome_selection_metadata=genome_selection_metadata,
+                    )
+
+                if stop_after_metaumbra:
+                    print("Running MetaUmbra scoring only.")
+                    return self._run_pep_direct_to_otf_metaumbra_scoring(
+                        peptide_table_path=peptide_table_path,
+                        digested_genome_folder_path=digested_genome_folder_path,
+                        output_path=output_path,
+                        peptide_col=peptide_col,
+                    )
+
+                metaumbra_output_path = self._derive_pep_direct_to_otf_metaumbra_output_path(output_path)
+                print(f"Step 1/2: running MetaUmbra scoring: {metaumbra_output_path}")
+                metaumbra_result = self._run_pep_direct_to_otf_metaumbra_scoring(
+                    peptide_table_path=peptide_table_path,
+                    digested_genome_folder_path=digested_genome_folder_path,
+                    output_path=metaumbra_output_path,
+                    peptide_col=peptide_col,
+                )
+                selected_genomes_from_metaumbra = self._select_genomes_from_metaumbra_result(metaumbra_output_path)
+                if not selected_genomes_from_metaumbra:
+                    raise ValueError("MetaUmbra scoring did not select any genomes with the current q-value cutoff.")
+
+                print(f"Step 2/2: matching peptides to proteins for {len(selected_genomes_from_metaumbra)} selected genomes.")
+                genome_selection_metadata = {
+                    "workflow": "Peptide Direct to OTFs (MetaUmbra)",
+                    "genome_selection_method": "MetaUmbra",
+                    "metaumbra_scoring_run": True,
+                    "use_selected_genome_list": False,
+                    "metaumbra_genome_presence_path": metaumbra_result["output"],
+                    "selected_genomes_from_metaumbra_count": len(selected_genomes_from_metaumbra),
+                    **{key: value for key, value in metaumbra_result.items() if key != "output"},
+                }
+                return self._run_pep_direct_to_otf_with_genome_list(
+                    peptide_table_path=peptide_table_path,
+                    digested_genome_folder_path=digested_genome_folder_path,
                     table_separator=table_separator,
                     peptide_col=peptide_col,
                     intensity_col_prefix=intensity_col_prefix,
-                    genome_peptide_coverage_cutoff= genome_peptide_coverage_cutoff,
-                    protein_peptide_coverage_cutoff= protein_peptide_coverage_cutoff,
+                    protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
                     output_path=output_path,
-                    stop_after_genome_ranking=stop_after_genome_ranking,
-                    continue_base_on_annotaied_peptide_table=continue_base_on_annotaied_peptide_table,
-                    turn_point_method=turn_point_method,
-                    turn_point_distinct_cutoff=turn_point_distinct_cutoff,
-                    digested_parallel_backend="subprocess",
-                    )
-                if stop_after_genome_ranking:
-                    return instance.process_peptides_to_proteins()
-                else:
-                    return instance.all_in_one(
-                        taxafunc_anno_db_path = taxafunc_anno_db_path,
-                        lca_threshold = lca_threshold,
-                        distinct_genome_threshold = 0,
-                        protein_genome_separator = protein_genome_separator
-                    )
+                    taxafunc_anno_db_path=taxafunc_anno_db_path,
+                    lca_threshold=lca_threshold,
+                    protein_genome_separator=protein_genome_separator,
+                    selected_genomes=selected_genomes_from_metaumbra,
+                    duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
+                    genome_selection_metadata=genome_selection_metadata,
+                )
+
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
         except Exception as e:
             self.logger.write_log(f'run_pep_dircet_to_otf error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
-    
-    def change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking(self):
-        if self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.isChecked():
-            self.comboBox_pep_direct_to_otf_genome_cut_method.setEnabled(False)
-            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(False)
-            self.spinBox_pep_direct_to_otf_distinct_num_threshold.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(False)
-            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(False)
-            self.doubleSpinBox_pep_direct_to_otfgenome__coverage_cutoff.setEnabled(False)
-            self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.setChecked(False)
-            self.change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides()
-            # cahnge text of label_224
-            self.label_224.setText('Annotated Peptide Table Save To')
-        else:
-            self.comboBox_pep_direct_to_otf_genome_cut_method.setEnabled(True)
-            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.setEnabled(True)
-            self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.setEnabled(True)
-            self.lineEdit_pep_direct_to_otf_genome_separator.setEnabled(True)
-            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(True)
-            self.label_224.setText('OTFs Save To')
-            # Re-apply enable/disable rules based on current cut-method.
-            self.change_event_comboBox_pep_direct_to_otf_genome_cut_method()
-
-    
-    def change_event_checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides(self):
-        if self.checkBox_pep_direct_to_otfgenome_continue_base_on_annotatied_peptides.isChecked():
-            self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.setEnabled(False)
-            self.checkBox_pep_direct_to_otfgenome_stop_after_ranking.setChecked(False)
-            self.change_event_checkBox_pep_direct_to_otfgenome_stop_after_ranking()
-            self.label_220.setText('Annotated Peptide Table')
-        else:
-            self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.setEnabled(True)
-            self.label_220.setText('Peptide Table')
     
     
     
