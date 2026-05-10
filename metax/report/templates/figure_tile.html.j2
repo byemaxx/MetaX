@@ -1,0 +1,46 @@
+<div class="figure-tile" data-search-item="{{ (figure.title ~ ' ' ~ figure.description ~ ' ' ~ figure.relative_path)|lower }}">
+  <div>
+    <div class="artifact-title">{{ figure.rich_title|default(figure.title)|safe }}</div>
+    {% if figure.description %}
+      <details class="figure-meta-details">
+        <summary>Details</summary>
+        <div class="artifact-meta">{{ figure.description }}</div>
+      </details>
+    {% endif %}
+  </div>
+  {% if figure.relative_path.lower().endswith(".png") %}
+    <img src="{{ figure.relative_path }}" alt="{{ figure.title }}" loading="lazy">
+    <div class="artifact-actions">
+      <button class="action-button primary" data-open-figure="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">Preview</button>
+      {% if figure.alternate_interactive_relative_path %}
+        <button class="action-button" data-open-interactive="{{ figure.alternate_interactive_relative_path }}" data-figure-title="{{ figure.alternate_interactive_title|default(figure.title) }}">JS version</button>
+      {% endif %}
+      {% if figure.table_preview_relative_path %}
+        <button class="action-button" data-open-table="{{ figure.table_preview_relative_path }}" data-figure-title="{{ figure.table_title|default('Result table') }}">Table</button>
+      {% endif %}
+      <a class="action-link" href="{{ figure.relative_path }}">Export</a>
+    </div>
+  {% elif figure.relative_path.lower().endswith(".html") %}
+    <button class="interactive-thumb" type="button" data-open-interactive="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">
+      <span class="interactive-mark">HTML</span>
+      <span class="interactive-copy">
+        <strong>Interactive plot</strong>
+        <span>Preview in a large viewer</span>
+      </span>
+    </button>
+    <div class="artifact-actions">
+      <button class="action-button primary" data-open-interactive="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">Preview</button>
+      {% if figure.table_preview_relative_path %}
+        <button class="action-button" data-open-table="{{ figure.table_preview_relative_path }}" data-figure-title="{{ figure.table_title|default('Result table') }}">Table</button>
+      {% endif %}
+      <a class="action-link" href="{{ figure.relative_path }}">Export</a>
+    </div>
+  {% else %}
+    <div class="artifact-actions">
+      {% if figure.table_preview_relative_path %}
+        <button class="action-button" data-open-table="{{ figure.table_preview_relative_path }}" data-figure-title="{{ figure.table_title|default('Result table') }}">Table</button>
+      {% endif %}
+      <a class="action-link" href="{{ figure.relative_path }}">Open figure</a>
+    </div>
+  {% endif %}
+</div>

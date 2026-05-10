@@ -1,0 +1,33 @@
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Overview charts</div>
+      <h2>Quick visual checks</h2>
+      <p class="panel-help">These charts help users understand whether the dataset has broad taxonomic coverage and usable function annotations before looking at detailed tables.</p>
+    </div>
+  </div>
+
+  {% if overview_figures_by_group %}
+    <div class="section-context">
+      <strong>What to check first:</strong>
+      taxonomy coverage indicates whether peptides are assigned across expected taxa levels; function annotation coverage shows which functional columns are usable for downstream tables and plots.
+    </div>
+    <div class="function-panel-stack">
+      {% for group_name, group_figures in overview_figures_by_group.items() %}
+        <div class="function-panel">
+          <div class="subgroup-heading">
+            <h3>{{ group_name }}</h3>
+            <span class="muted">{{ group_figures|length }} charts</span>
+          </div>
+          <div class="figure-grid">
+            {% for figure in group_figures %}
+              {% include "figure_tile.html.j2" %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">No overview charts were generated for this run.</div>
+  {% endif %}
+</div>
