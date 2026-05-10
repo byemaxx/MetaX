@@ -33,6 +33,7 @@ import subprocess
 from collections import OrderedDict
 import re
 import json
+import ntpath
 
 
 # import third-party modules
@@ -354,6 +355,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_pep_direct_to_otf_reset_selected_genome_list.clicked.connect(self.reset_pep_direct_to_otf_selected_genome_list)
         self.pushButton_pep_direct_to_otf_open_metaumbra_gui.clicked.connect(self.open_metaumbra_gui)
         self.update_pep_direct_to_otf_output_mode()
+        self._last_pep_direct_to_otf_peptide_table_signature = ''
+        self.lineEdit_pep_direct_to_otf_peptide_path.textChanged.connect(
+            self.update_pep_direct_to_otf_peptide_table_columns
+        )
+        self.lineEdit_pep_direct_to_otf_pep_table_sep.textChanged.connect(
+            self.update_pep_direct_to_otf_peptide_table_columns
+        )
         
         ## help button click event
         self.toolButton_db_path_help.clicked.connect(self.show_toolButton_db_path_help)
@@ -2101,6 +2109,266 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.last_path = os.path.dirname(pep_direct_to_otf_peptide_path)
         pep_direct_to_otf_peptide_path = os.path.normpath(pep_direct_to_otf_peptide_path)
         self.lineEdit_pep_direct_to_otf_peptide_path.setText(pep_direct_to_otf_peptide_path)
+
+    def _read_pep_direct_to_otf_peptide_table_preview(self, file_path: str) -> tuple[list[str], pd.DataFrame]:
+        configured_sep = self._decode_pep_direct_to_otf_separator(
+            self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
+        )
+        fallback_seps = [configured_sep]
+        if file_path.lower().endswith('.csv'):
+            fallback_seps.append(',')
+        fallback_seps.extend(['\t', ','])
+
+        tried = set()
+        last_error = None
+        for sep in fallback_seps:
+            if not sep or sep in tried:
+                continue
+            tried.add(sep)
+            engine = 'python' if sep.startswith('\\') else 'c'
+            try:
+                preview_df = pd.read_csv(file_path, sep=sep, nrows=25, engine=engine)
+                columns = [str(col) for col in preview_df.columns]
+                if len(columns) <= 1 and sep != fallback_seps[-1]:
+                    continue
+                return columns, preview_df
+            except Exception as exc:
+                last_error = exc
+
+        raise ValueError(f"Could not read peptide table header: {last_error}")
+
+    @staticmethod
+    def _score_pep_direct_to_otf_peptide_column(column: str) -> int:
+        normalized = re.sub(r'[\s_-]+', '.', column.strip().lower())
+        exact_scores = {
+            'stripped.sequence': 120,
+            'sequence': 110,
+            'peptide': 105,
+            'peptide.sequence': 100,
+            'base.sequence': 95,
+            'modified.sequence': 80,
+            'modified.peptide': 75,
+        }
+        if normalized in exact_scores:
+            return exact_scores[normalized]
+
+        score = 0
+        if 'sequence' in normalized:
+            score += 50
+        if 'peptide' in normalized:
+            score += 45
+        if 'stripped' in normalized:
+            score += 25
+        if 'base' in normalized:
+            score += 15
+
+        negative_terms = [
+            'protein',
+            'intensity',
+            'score',
+            'q.value',
+            'mass',
+            'charge',
+            'length',
+            'missed.cleavage',
+            'identification',
+            'contaminant',
+        ]
+        if any(term in normalized for term in negative_terms):
+            score -= 80
+        return score
+
+    def _infer_pep_direct_to_otf_peptide_column(self, columns: list[str]) -> str:
+        if not columns:
+            return ''
+        scored = [
+            (self._score_pep_direct_to_otf_peptide_column(column), index, column)
+            for index, column in enumerate(columns)
+        ]
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        best_score, _, best_column = scored[0]
+        return best_column if best_score > 0 else columns[0]
+
+    @staticmethod
+    def _is_likely_numeric_column(series: pd.Series) -> float:
+        non_empty = series.dropna()
+        if non_empty.empty:
+            return 0.0
+        numeric = pd.to_numeric(non_empty, errors='coerce')
+        return float(numeric.notna().sum() / len(non_empty))
+
+    @staticmethod
+    def _generic_sample_prefix_from_column(column: str) -> str:
+        column = column.strip()
+        match = re.match(
+            r'^(.+?)(?:[\s_.:-]+(?:[A-Za-z]*\d|sample|rep|raw|fraction).*)$',
+            column,
+            flags=re.IGNORECASE,
+        )
+        if not match:
+            return ''
+        return match.group(1).strip(' _.-:')
+
+    @staticmethod
+    def _is_raw_data_path_column(column: str) -> bool:
+        column = column.strip().strip('"').strip("'")
+        lower_column = column.lower()
+        is_path = bool(re.match(r'^[A-Za-z]:[\\/]', column)) or column.startswith(('\\\\', '//'))
+        raw_extensions = ('.raw', '.d', '.wiff', '.mzml', '.mzxml', '.mgf')
+        return is_path and any(ext in lower_column for ext in raw_extensions)
+
+    @staticmethod
+    def _ensure_path_prefix_separator(prefix: str, path_examples: list[str]) -> str:
+        if not prefix:
+            return ''
+        separator = '\\' if any('\\' in path for path in path_examples) else '/'
+        if prefix.endswith(('\\', '/')):
+            return prefix
+        return prefix + separator
+
+    def _infer_pep_direct_to_otf_raw_path_prefix(self, columns: list[str], preview_df: pd.DataFrame) -> str:
+        raw_path_columns = [
+            column.strip().strip('"').strip("'")
+            for column in columns
+            if self._is_raw_data_path_column(column)
+            and column in preview_df.columns
+            and self._is_likely_numeric_column(preview_df[column]) >= 0.5
+        ]
+        if not raw_path_columns:
+            return ''
+
+        raw_path_dirs = [ntpath.dirname(column) for column in raw_path_columns]
+        raw_path_dirs = [path_dir for path_dir in raw_path_dirs if path_dir]
+        if not raw_path_dirs:
+            return ''
+
+        try:
+            common_dir = ntpath.commonpath(raw_path_dirs)
+        except ValueError:
+            drive_groups: dict[str, list[str]] = {}
+            for path_dir in raw_path_dirs:
+                drive = ntpath.splitdrive(path_dir)[0].lower()
+                drive_groups.setdefault(drive, []).append(path_dir)
+            largest_group = max(drive_groups.values(), key=len)
+            try:
+                common_dir = ntpath.commonpath(largest_group)
+            except ValueError:
+                common_dir = ntpath.dirname(largest_group[0])
+
+        return self._ensure_path_prefix_separator(common_dir, raw_path_columns)
+
+    def _infer_pep_direct_to_otf_sample_prefix(self, columns: list[str], preview_df: pd.DataFrame) -> str:
+        raw_path_prefix = self._infer_pep_direct_to_otf_raw_path_prefix(columns, preview_df)
+        if raw_path_prefix:
+            return raw_path_prefix
+
+        known_prefixes = [
+            'Intensity',
+            'LFQ intensity',
+            'Reporter intensity corrected',
+            'Reporter intensity',
+            'Abundance',
+            'Area',
+            'Quantity',
+            'PG.Quantity',
+            'Precursor.Quantity',
+        ]
+        negative_terms = [
+            'identification type',
+            'sequence',
+            'peptide',
+            'protein',
+            'score',
+            'q-value',
+            'q.value',
+            'mass',
+            'charge',
+            'length',
+            'missed cleavages',
+            'contaminant',
+        ]
+
+        candidates: dict[str, dict[str, float]] = {}
+
+        def add_candidate(prefix: str, column: str, bonus: float = 0.0) -> None:
+            prefix = prefix.strip(' _.-:')
+            if not prefix:
+                return
+            lower_prefix = prefix.lower()
+            if any(term in lower_prefix for term in negative_terms):
+                return
+            ratio = (
+                self._is_likely_numeric_column(preview_df[column])
+                if column in preview_df.columns
+                else 0.0
+            )
+            entry = candidates.setdefault(prefix, {'count': 0.0, 'numeric': 0.0, 'bonus': 0.0})
+            entry['count'] += 1.0
+            entry['numeric'] += ratio
+            entry['bonus'] += bonus
+
+        for column in columns:
+            lower_column = column.lower()
+            for known_prefix in known_prefixes:
+                if lower_column.startswith(known_prefix.lower()):
+                    add_candidate(known_prefix, column, bonus=50.0)
+            generic_prefix = self._generic_sample_prefix_from_column(column)
+            if generic_prefix:
+                add_candidate(generic_prefix, column)
+
+        if not candidates:
+            return ''
+
+        def candidate_score(item: tuple[str, dict[str, float]]) -> float:
+            prefix, stats = item
+            count = stats['count']
+            numeric_ratio = stats['numeric'] / count if count else 0.0
+            known_bonus = stats['bonus']
+            short_bonus = 5.0 if len(prefix) <= 24 else 0.0
+            return count * 10.0 + numeric_ratio * 30.0 + known_bonus + short_bonus
+
+        best_prefix, best_stats = max(candidates.items(), key=candidate_score)
+        if best_stats['count'] < 1:
+            return ''
+        return best_prefix
+
+    def update_pep_direct_to_otf_peptide_table_columns(self, *_):
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
+        if not peptide_table_path or not os.path.isfile(peptide_table_path):
+            return
+
+        separator = self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
+        signature = f'{peptide_table_path}|{separator}'
+        if signature == self._last_pep_direct_to_otf_peptide_table_signature:
+            return
+
+        try:
+            columns, preview_df = self._read_pep_direct_to_otf_peptide_table_preview(peptide_table_path)
+            peptide_col = self._infer_pep_direct_to_otf_peptide_column(columns)
+            sample_prefix = self._infer_pep_direct_to_otf_sample_prefix(columns, preview_df)
+        except Exception as exc:
+            self.logger.write_log(f'update_pep_direct_to_otf_peptide_table_columns error: {exc}', 'e')
+            return
+
+        self._last_pep_direct_to_otf_peptide_table_signature = signature
+
+        ordered_columns = []
+        if peptide_col:
+            ordered_columns.append(peptide_col)
+        ordered_columns.extend([column for column in columns if column not in ordered_columns])
+
+        self.comboBox_pep_direct_to_otf_peptide_col_name.blockSignals(True)
+        self.comboBox_pep_direct_to_otf_peptide_col_name.clear()
+        self.comboBox_pep_direct_to_otf_peptide_col_name.addItems(ordered_columns)
+        if peptide_col:
+            self.comboBox_pep_direct_to_otf_peptide_col_name.setCurrentText(peptide_col)
+        self.comboBox_pep_direct_to_otf_peptide_col_name.blockSignals(False)
+
+        if sample_prefix:
+            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setText(sample_prefix)
+            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setStatusTip(
+                f"Auto-detected prefix from peptide table: {sample_prefix}"
+            )
         
     def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
         digested_genome_folder_path = QFileDialog.getExistingDirectory(
