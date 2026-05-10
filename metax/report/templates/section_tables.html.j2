@@ -1,0 +1,68 @@
+<div class="panel" data-tab-group data-search-scope>
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Result files</div>
+      <h2>Browse downloadable tables and comparison results</h2>
+      <p class="panel-help">Raw abundance tables, QC summaries, and group comparison TSVs are collected here. Click Preview for a paginated in-page view, or Export when you need the complete TSV file.</p>
+    </div>
+  </div>
+
+  {% if result_files %}
+    <div class="toolbar">
+      <input class="search-input" data-artifact-search type="search" placeholder="Search tables by name, taxa level, function, comparison, or result type">
+      <span class="muted">{{ result_file_count }} downloadable result files</span>
+    </div>
+
+    <div class="tab-strip">
+      {% for category, items in result_files_by_category.items() %}
+        {% if category == "taxa" %}
+          {% set label = "Taxa abundance" %}
+        {% elif category == "function" %}
+          {% set label = "Function abundance" %}
+        {% elif category == "otf" %}
+          {% set label = "OTF tables" %}
+        {% elif category == "qc" %}
+          {% set label = "Quality checks" %}
+        {% elif category == "comparison_taxa" %}
+          {% set label = "Taxa comparisons" %}
+        {% elif category == "comparison_function" %}
+          {% set label = "Function comparisons" %}
+        {% elif category == "comparison_otf" %}
+          {% set label = "OTF comparisons" %}
+        {% else %}
+          {% set label = category|replace("_", " ")|capitalize %}
+        {% endif %}
+        <button class="tab-button {% if loop.first %}active{% endif %}" data-tab-target="tables-{{ category }}">{{ label }} <span class="count-pill">{{ items|length }}</span></button>
+      {% endfor %}
+    </div>
+
+    {% for category, items in result_files_by_category.items() %}
+      <div class="tab-panel {% if loop.first %}active{% endif %}" data-tab-panel="tables-{{ category }}">
+        <div class="artifact-list">
+          {% for item in items %}
+            <div class="artifact" data-search-item="{{ (item.title ~ ' ' ~ item.description ~ ' ' ~ item.relative_path)|lower }}">
+              <div class="artifact-row">
+                <div>
+                  <div class="artifact-title">{{ item.rich_title|default(item.title)|safe }}</div>
+                  {% if item.description %}<div class="artifact-meta">{{ item.description }}</div>{% endif %}
+                  <div class="file-path">{{ item.relative_path }}</div>
+                </div>
+                <div class="artifact-actions">
+                  {% if item.preview_relative_path %}
+                    <button class="action-button primary" data-preview-src="{{ item.preview_relative_path }}" data-active-label="Hide preview" data-inactive-label="Preview">Preview</button>
+                  {% endif %}
+                  <a class="action-link" href="{{ item.relative_path }}">Export</a>
+                </div>
+              </div>
+              {% if item.preview_relative_path %}
+                <iframe class="preview-frame" title="{{ item.title }} preview"></iframe>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">No result files were generated for this run.</div>
+  {% endif %}
+</div>

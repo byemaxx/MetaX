@@ -40,6 +40,8 @@ dependencies = [
     "adjustText>=1.1.1",
     "openpyxl",
     "pyproject-toml>=0.0.10",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
     "statsmodels",
     "seaborn>=0.13.2",
     "numba>=0.60.0",
@@ -49,6 +51,7 @@ dependencies = [
 
 [project.scripts]
 metax = "metax.gui.main_gui:runGUI"
+metax-report = "metax.report.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -58,7 +61,7 @@ include = ["metax", "metax.*"]
 version = {attr = "metax.utils.version.__version__"}
 
 [tool.setuptools.package-data]
-metax = ["data/example_data/*"]
+metax = ["data/example_data/*", "report/templates/*.j2"]
 
 [project.urls]
 Homepage = "https://github.com/byemaxx/MetaX"

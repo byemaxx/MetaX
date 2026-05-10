@@ -19,6 +19,8 @@ tqdm>=4.65.0
 adjustText>=1.1.1
 openpyxl
 pyproject-toml>=0.0.10
+PyYAML>=6.0
+Jinja2>=3.1
 statsmodels
 seaborn>=0.13.2
 numba>=0.60.0
