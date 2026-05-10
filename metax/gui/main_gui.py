@@ -2516,12 +2516,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
 
         prepared_df = summary.merge(wide, on='Stripped.Sequence', how='left')
-        prepared_df['score'] = prepared_df['Evidence']
         ordered_cols = [
             'Run',
             'Stripped.Sequence',
             'Evidence',
-            'score',
             'Q.Value',
             'Precursor.Normalised',
         ] + [col for col in prepared_df.columns if col.startswith(intensity_prefix)]
