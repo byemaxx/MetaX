@@ -2103,14 +2103,63 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     ## peptideAnnotator peptide direct annotation tab
     def set_lineEdit_pep_direct_to_otf_peptide_path(self):
-        pep_direct_to_otf_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Peptide Table', self.last_path, 'tsv (*.tsv *.txt *.csv)')[0]
+        pep_direct_to_otf_peptide_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select Peptide Table', self.last_path, 'Peptide Table (*.tsv *.txt *.csv *.parquet);;All Files (*)')[0]
         if not pep_direct_to_otf_peptide_path:
             return
         self.last_path = os.path.dirname(pep_direct_to_otf_peptide_path)
         pep_direct_to_otf_peptide_path = os.path.normpath(pep_direct_to_otf_peptide_path)
         self.lineEdit_pep_direct_to_otf_peptide_path.setText(pep_direct_to_otf_peptide_path)
 
+    @staticmethod
+    def _is_parquet_path(file_path: str) -> bool:
+        return str(file_path).lower().endswith(('.parquet', '.parq'))
+
+    @staticmethod
+    def _diann_parquet_required_columns() -> list[str]:
+        return ['Run', 'Stripped.Sequence', 'Evidence', 'Q.Value', 'Precursor.Normalised']
+
+    @staticmethod
+    def _diann_parquet_intensity_prefix() -> str:
+        return 'Precursor.Normalised.'
+
+    @staticmethod
+    def _diann_parquet_score_col() -> str:
+        return 'Evidence'
+
+    @staticmethod
+    def _diann_parquet_error_col() -> str:
+        return 'Q.Value'
+
+    def _apply_diann_parquet_metaumbra_columns(self) -> None:
+        self.lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col.setText(
+            self._diann_parquet_score_col()
+        )
+        self.lineEdit_pep_direct_to_otf_metaumbra_peptide_error_col.setText(
+            self._diann_parquet_error_col()
+        )
+
+    def _read_parquet_preview(self, file_path: str, batch_size: int = 25) -> tuple[list[str], pd.DataFrame]:
+        try:
+            import pyarrow.parquet as pq
+        except ImportError as exc:
+            raise ImportError(
+                "Reading parquet peptide tables requires pyarrow. "
+                "Install MetaX dependencies again or run: pip install pyarrow"
+            ) from exc
+
+        parquet_file = pq.ParquetFile(file_path)
+        columns = [str(name) for name in parquet_file.schema.names]
+        batch_iter = parquet_file.iter_batches(batch_size=batch_size)
+        try:
+            first_batch = next(batch_iter)
+        except StopIteration:
+            return columns, pd.DataFrame(columns=columns)
+        return columns, first_batch.to_pandas()
+
     def _read_pep_direct_to_otf_peptide_table_preview(self, file_path: str) -> tuple[list[str], pd.DataFrame]:
+        if self._is_parquet_path(file_path):
+            return self._read_parquet_preview(file_path)
+
         configured_sep = self._decode_pep_direct_to_otf_separator(
             self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
         )
@@ -2345,7 +2394,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             columns, preview_df = self._read_pep_direct_to_otf_peptide_table_preview(peptide_table_path)
             peptide_col = self._infer_pep_direct_to_otf_peptide_column(columns)
-            sample_prefix = self._infer_pep_direct_to_otf_sample_prefix(columns, preview_df)
+            if self._is_parquet_path(peptide_table_path):
+                missing = [col for col in self._diann_parquet_required_columns() if col not in columns]
+                if missing:
+                    raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
+                peptide_col = 'Stripped.Sequence'
+                sample_prefix = self._diann_parquet_intensity_prefix()
+                self._apply_diann_parquet_metaumbra_columns()
+            else:
+                sample_prefix = self._infer_pep_direct_to_otf_sample_prefix(columns, preview_df)
         except Exception as exc:
             self.logger.write_log(f'update_pep_direct_to_otf_peptide_table_columns error: {exc}', 'e')
             return
@@ -2369,6 +2426,120 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.lineEdit_pep_direct_to_otf_sample_col_prefix.setStatusTip(
                 f"Auto-detected prefix from peptide table: {sample_prefix}"
             )
+
+    @staticmethod
+    def _safe_sample_column_name(prefix: str, run: str) -> str:
+        run = str(run).strip()
+        run_name = os.path.splitext(ntpath.basename(run))[0] if run else 'unknown_run'
+        run_name = re.sub(r'[^A-Za-z0-9_.-]+', '_', run_name).strip('_')
+        return f'{prefix}{run_name or "unknown_run"}'
+
+    def _prepare_diann_parquet_for_pep_direct_to_otf(
+        self,
+        parquet_path: str,
+        output_path: str,
+    ) -> tuple[str, str, str, str, dict]:
+        required_columns = self._diann_parquet_required_columns()
+        output_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
+        output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'pep_direct_to_otf'
+        prepared_path = os.path.join(output_dir, f'{output_stem}_diann_parquet_peptide_table.tsv')
+
+        print(f"Preparing DIA-NN parquet peptide table: {parquet_path}")
+        try:
+            df = pd.read_parquet(parquet_path, columns=required_columns)
+        except Exception as exc:
+            raise RuntimeError(
+                "Failed to read DIA-NN parquet. Make sure the file is a DIA-NN report parquet "
+                f"with columns {required_columns}."
+            ) from exc
+
+        missing = [col for col in required_columns if col not in df.columns]
+        if missing:
+            raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
+
+        df = df.dropna(subset=['Run', 'Stripped.Sequence'])
+        if df.empty:
+            raise ValueError("DIA-NN parquet contains no rows with both Run and Stripped.Sequence.")
+
+        df['Run'] = df['Run'].astype(str)
+        df['Stripped.Sequence'] = df['Stripped.Sequence'].astype(str)
+        for col in ['Evidence', 'Q.Value', 'Precursor.Normalised']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        grouped = (
+            df.groupby(['Run', 'Stripped.Sequence'], as_index=False)
+            .agg(
+                Evidence=('Evidence', 'max'),
+                **{
+                    'Q.Value': ('Q.Value', 'min'),
+                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
+                },
+            )
+        )
+
+        intensity_prefix = self._diann_parquet_intensity_prefix()
+        run_to_column: dict[str, str] = {}
+        used_columns: set[str] = set()
+        for run in sorted(grouped['Run'].dropna().astype(str).unique()):
+            base_column = self._safe_sample_column_name(intensity_prefix, run)
+            column = base_column
+            suffix = 2
+            while column in used_columns:
+                column = f'{base_column}_{suffix}'
+                suffix += 1
+            used_columns.add(column)
+            run_to_column[run] = column
+
+        grouped['sample_col'] = grouped['Run'].map(run_to_column)
+        wide = (
+            grouped.pivot_table(
+                index='Stripped.Sequence',
+                columns='sample_col',
+                values='Precursor.Normalised',
+                aggfunc='sum',
+                fill_value=0,
+            )
+            .reset_index()
+        )
+        wide.columns.name = None
+
+        summary = (
+            grouped.groupby('Stripped.Sequence', as_index=False)
+            .agg(
+                Run=('Run', lambda values: ';'.join(sorted(set(map(str, values))))),
+                Evidence=('Evidence', 'max'),
+                **{
+                    'Q.Value': ('Q.Value', 'min'),
+                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
+                },
+            )
+        )
+
+        prepared_df = summary.merge(wide, on='Stripped.Sequence', how='left')
+        prepared_df['score'] = prepared_df['Evidence']
+        ordered_cols = [
+            'Run',
+            'Stripped.Sequence',
+            'Evidence',
+            'score',
+            'Q.Value',
+            'Precursor.Normalised',
+        ] + [col for col in prepared_df.columns if col.startswith(intensity_prefix)]
+        prepared_df = prepared_df.loc[:, ordered_cols]
+        prepared_df.to_csv(prepared_path, sep='\t', index=False)
+
+        metadata = {
+            "input_peptide_table_format": "diann_parquet",
+            "input_peptide_table_original_path": parquet_path,
+            "prepared_peptide_table_path": prepared_path,
+            "prepared_peptide_rows": int(prepared_df.shape[0]),
+            "prepared_sample_columns": len(run_to_column),
+        }
+        print(
+            "Prepared DIA-NN parquet peptide table: "
+            f"{prepared_path} (peptides={prepared_df.shape[0]}, runs={len(run_to_column)})"
+        )
+        return prepared_path, '\t', 'Stripped.Sequence', intensity_prefix, metadata
         
     def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
         digested_genome_folder_path = QFileDialog.getExistingDirectory(
@@ -3125,6 +3296,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         duplicate_peptide_handling_mode = self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip()
         stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
         use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
+        original_peptide_table_path = peptide_table_path
+        parquet_conversion_metadata = {}
+        if self._is_parquet_path(peptide_table_path):
+            table_separator = '\t'
+            peptide_col = peptide_col or 'Stripped.Sequence'
+            intensity_col_prefix = intensity_col_prefix or self._diann_parquet_intensity_prefix()
+            self._apply_diann_parquet_metaumbra_columns()
 
         for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
             if value == '':
@@ -3156,6 +3334,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
             return None
 
+        if self._is_parquet_path(peptide_table_path):
+            try:
+                (
+                    peptide_table_path,
+                    table_separator,
+                    peptide_col,
+                    intensity_col_prefix,
+                    parquet_conversion_metadata,
+                ) = self._prepare_diann_parquet_for_pep_direct_to_otf(
+                    parquet_path=original_peptide_table_path,
+                    output_path=output_path,
+                )
+            except Exception:
+                error_message = traceback.format_exc()
+                self.logger.write_log(f'prepare_diann_parquet_for_pep_direct_to_otf error: {error_message}', 'e')
+                QMessageBox.warning(self.MainWindow, 'Error', error_message)
+                return None
+
         selected_genomes = list(self.pep_direct_to_otf_selected_genomes)
         if use_selected_genome_list and not selected_genomes:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please open or paste at least one selected genome.')
@@ -3180,6 +3376,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         "use_selected_genome_list": True,
                         "selected_genome_source": self.pep_direct_to_otf_selected_genome_source or "GUI selected genome list",
                         "selected_genomes_input_count": len(selected_genomes),
+                        **parquet_conversion_metadata,
                     }
                     return self._run_pep_direct_to_otf_with_genome_list(
                         peptide_table_path=peptide_table_path,
@@ -3227,6 +3424,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "metaumbra_genome_presence_path": metaumbra_result["output"],
                     "selected_genomes_from_metaumbra_count": len(selected_genomes_from_metaumbra),
                     **{key: value for key, value in metaumbra_result.items() if key != "output"},
+                    **parquet_conversion_metadata,
                 }
                 return self._run_pep_direct_to_otf_with_genome_list(
                     peptide_table_path=peptide_table_path,

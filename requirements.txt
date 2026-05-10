@@ -2,6 +2,7 @@ distinctipy>=1.2.2
 matplotlib>=3.7.2
 numpy>=1.25.1
 pandas>=2.0.3
+pyarrow>=15.0.0
 pydeseq2==0.5.2
 pyecharts>=2.0.6
 PyQt5>=5.15.9
