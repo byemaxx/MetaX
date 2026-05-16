@@ -23,6 +23,7 @@ dependencies = [
     "matplotlib>=3.7.2",
     "numpy>=1.25.1",
     "pandas>=2.0.3",
+    "pyarrow>=15.0.0",
     "pydeseq2==0.4.12",
     "pyecharts>=2.0.6",
     "PyQt5>=5.15.9",
@@ -39,14 +40,18 @@ dependencies = [
     "adjustText>=1.1.1",
     "openpyxl",
     "pyproject-toml>=0.0.10",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
     "statsmodels",
     "seaborn>=0.13.2",
     "numba>=0.60.0",
-    "UpSetPlot>=0.9.0"
+    "UpSetPlot>=0.9.0",
+    "metaumbra[gui-pyqt5]>=1.1.6"
 ]
 
 [project.scripts]
 metax = "metax.gui.main_gui:runGUI"
+metax-report = "metax.report.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -56,7 +61,7 @@ include = ["metax", "metax.*"]
 version = {attr = "metax.utils.version.__version__"}
 
 [tool.setuptools.package-data]
-metax = ["data/example_data/*"]
+metax = ["data/example_data/*", "report/templates/*.j2"]
 
 [project.urls]
 Homepage = "https://github.com/byemaxx/MetaX"

@@ -25,6 +25,7 @@ map00640	Propanoate metabolism
 map00650	Butanoate metabolism
 map00660	C5-Branched dibasic acid metabolism
 map00562	Inositol phosphate metabolism
+map00566	Sulfoquinovose metabolism
 map00190	Oxidative phosphorylation
 map00195	Photosynthesis
 map00196	Photosynthesis - antenna proteins
@@ -157,6 +158,7 @@ map00404	Staurosporine biosynthesis
 map00405	Phenazine biosynthesis
 map00333	Prodigiosin biosynthesis
 map00254	Aflatoxin biosynthesis
+map00975	Biosynthesis of various siderophores
 map00998	Biosynthesis of various antibiotics
 map00999	Biosynthesis of various plant secondary metabolites
 map00997	Biosynthesis of various other secondary metabolites
@@ -273,10 +275,13 @@ map04081	Hormone signaling
 map04060	Cytokine-cytokine receptor interaction
 map04061	Viral protein interaction with cytokine and cytokine receptor
 map04512	ECM-receptor interaction
-map04514	Cell adhesion molecules
+map04514	Cell adhesion molecule (CAM) interaction
+map04517	IgSF CAM signaling
+map04518	Integrin signaling
+map04519	Cadherin signaling
 map04144	Endocytosis
 map04145	Phagosome
-map04142	Lysosome
+map04142	Lysosome biogenesis
 map04146	Peroxisome
 map04140	Autophagy - animal
 map04138	Autophagy - yeast
@@ -328,7 +333,7 @@ map04659	Th17 cell differentiation
 map04657	IL-17 signaling pathway
 map04662	B cell receptor signaling pathway
 map04664	Fc epsilon RI signaling pathway
-map04666	Fc gamma R-mediated phagocytosis
+map04666	Fc gamma R-mediated phagosome formation
 map04670	Leukocyte transendothelial migration
 map04672	Intestinal immune network for IgA production
 map04062	Chemokine signaling pathway
@@ -606,6 +611,7 @@ ko00640	Propanoate metabolism
 ko00650	Butanoate metabolism
 ko00660	C5-Branched dibasic acid metabolism
 ko00562	Inositol phosphate metabolism
+ko00566	Sulfoquinovose metabolism
 ko00190	Oxidative phosphorylation
 ko00195	Photosynthesis
 ko00196	Photosynthesis - antenna proteins
@@ -738,6 +744,7 @@ ko00404	Staurosporine biosynthesis
 ko00405	Phenazine biosynthesis
 ko00333	Prodigiosin biosynthesis
 ko00254	Aflatoxin biosynthesis
+ko00975	Biosynthesis of various siderophores
 ko00998	Biosynthesis of various antibiotics
 ko00999	Biosynthesis of various plant secondary metabolites
 ko00997	Biosynthesis of various other secondary metabolites
@@ -845,10 +852,13 @@ ko04081	Hormone signaling
 ko04060	Cytokine-cytokine receptor interaction
 ko04061	Viral protein interaction with cytokine and cytokine receptor
 ko04512	ECM-receptor interaction
-ko04514	Cell adhesion molecules
+ko04514	Cell adhesion molecule (CAM) interaction
+ko04517	IgSF CAM signaling
+ko04518	Integrin signaling
+ko04519	Cadherin signaling
 ko04144	Endocytosis
 ko04145	Phagosome
-ko04142	Lysosome
+ko04142	Lysosome biogenesis
 ko04146	Peroxisome
 ko04140	Autophagy - animal
 ko04138	Autophagy - yeast
@@ -900,7 +910,7 @@ ko04659	Th17 cell differentiation
 ko04657	IL-17 signaling pathway
 ko04662	B cell receptor signaling pathway
 ko04664	Fc epsilon RI signaling pathway
-ko04666	Fc gamma R-mediated phagocytosis
+ko04666	Fc gamma R-mediated phagosome formation
 ko04670	Leukocyte transendothelial migration
 ko04672	Intestinal immune network for IgA production
 ko04062	Chemokine signaling pathway

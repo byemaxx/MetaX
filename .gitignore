@@ -17,3 +17,4 @@ build
 venv
 *.egg-info
 conda-recipe
+report_output*/

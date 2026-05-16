@@ -2,9 +2,9 @@ M00001	Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate
 M00002	Glycolysis, core module involving three-carbon compounds
 M00003	Gluconeogenesis, oxaloacetate => fructose-6P
 M00004	Pentose phosphate pathway (Pentose phosphate cycle)
-M00005	PRPP biosynthesis, ribose 5P => PRPP
-M00006	Pentose phosphate pathway, oxidative phase, glucose 6P => ribulose 5P
-M00007	Pentose phosphate pathway, non-oxidative phase, fructose 6P => ribose 5P
+M00005	PRPP biosynthesis, ribose-5P => PRPP
+M00006	Pentose phosphate pathway, oxidative phase, glucose-6P => ribulose-5P
+M00007	Pentose phosphate pathway, non-oxidative phase, fructose-6P => ribose-5P
 M00008	Entner-Doudoroff pathway, glucose-6P => glyceraldehyde-3P + pyruvate
 M00009	Citrate cycle (TCA cycle, Krebs cycle)
 M00010	Citrate cycle, first carbon oxidation, oxaloacetate => 2-oxoglutarate
@@ -56,7 +56,7 @@ M00057	Glycosaminoglycan biosynthesis, linkage tetrasaccharide
 M00058	Glycosaminoglycan biosynthesis, chondroitin sulfate backbone
 M00059	Glycosaminoglycan biosynthesis, heparan sulfate backbone
 M00060	KDO2-lipid A biosynthesis, Raetz pathway, LpxL-LpxM type
-M00061	D-Glucuronate degradation, D-glucuronate => pyruvate + D-glyceraldehyde 3P
+M00061	D-Glucuronate degradation, D-glucuronate => pyruvate + D-glyceraldehyde-3P
 M00063	CMP-KDO biosynthesis, ribulose-5P => CMP-KDO
 M00064	ADP-LDmanHep biosynthesis, sedoheptulose-7P => ADP-LDmanHep
 M00065	GPI-anchor biosynthesis, core oligosaccharide
@@ -114,7 +114,7 @@ M00120	Coenzyme A biosynthesis, pantothenate => CoA
 M00121	Heme biosynthesis, plants and bacteria, glutamate => heme
 M00122	Cobalamin biosynthesis, cobyrinate a,c-diamide => cobalamin
 M00123	Biotin biosynthesis, pimeloyl-ACP/CoA => biotin
-M00124	Pyridoxal-P biosynthesis, erythrose-4P => pyridoxal-P
+M00124	Pyridoxal phosphate biosynthesis, erythrose-4P => pyridoxal-P
 M00125	Riboflavin biosynthesis, plants and bacteria, GTP => riboflavin/FMN/FAD
 M00126	Tetrahydrofolate biosynthesis, GTP => THF
 M00127	Thiamine biosynthesis, prokaryotes, AIR (+ DXP/tyrosine) => TMP/TPP
@@ -181,8 +181,8 @@ M00367	C10-C20 isoprenoid biosynthesis, non-plant eukaryotes
 M00368	Ethylene biosynthesis, methionine => ethylene
 M00369	Cyanogenic glycoside biosynthesis, tyrosine => dhurrin
 M00370	Glucosinolate biosynthesis, tryptophan => glucobrassicin
-M00371	Castasterone biosynthesis, campesterol => castasterone
-M00372	Abscisic acid biosynthesis, 9'-cis-neoxanthin/9-cis-violaxanthin => abscisic acid
+M00371	Castasterone biosynthesis, plants, campesterol => castasterone
+M00372	Abscisic acid biosynthesis, plants, 9'-cis-neoxanthin/9-cis-violaxanthin => abscisic acid
 M00373	Ethylmalonyl pathway
 M00374	Dicarboxylate-hydroxybutyrate cycle
 M00375	Hydroxypropionate-hydroxybutylate cycle
@@ -223,12 +223,12 @@ M00548	Benzene degradation, benzene => catechol
 M00549	UDP-Glc biosynthesis, Glc => UDP-Glc
 M00550	Ascorbate degradation, ascorbate => D-xylulose-5P
 M00551	Benzoate degradation, benzoate => catechol / methylbenzoate => methylcatechol
-M00552	D-galactonate degradation, De Ley-Doudoroff pathway, D-galactonate => glycerate-3P
+M00552	Galactonate degradation, De Ley-Doudoroff pathway, galactonate => glycerate-3P
 M00554	UDP-Gal biosynthesis, Gal => UDP-Gal
 M00555	Betaine biosynthesis, choline => betaine
 M00563	Methanogenesis, methylamine/dimethylamine/trimethylamine => methane
 M00564	Helicobacter pylori pathogenicity signature, cagA pathogenicity island
-M00565	Trehalose biosynthesis, D-glucose 1P => trehalose
+M00565	Trehalose biosynthesis, D-glucose-1P => trehalose
 M00567	Methanogenesis, CO2 => methane
 M00568	Catechol ortho-cleavage, catechol => 3-oxoadipate
 M00569	Catechol meta-cleavage, catechol => acetyl-CoA / 4-methylcatechol => propanoyl-CoA
@@ -240,7 +240,7 @@ M00575	Pertussis pathogenicity signature, T1SS
 M00576	ETEC pathogenicity signature, heat-labile and heat-stable enterotoxins
 M00577	Biotin biosynthesis, BioW pathway, pimelate => pimeloyl-CoA => biotin
 M00579	Phosphate acetyltransferase-acetate kinase pathway, acetyl-CoA => acetate
-M00580	Pentose phosphate pathway, archaea, fructose 6P => ribose 5P
+M00580	Pentose phosphate pathway, archaea, fructose-6P => ribose-5P
 M00595	Sulfur oxidation, SOX system, thiosulfate => sulfate
 M00596	Dissimilatory sulfate reduction, sulfate => H2S
 M00597	Anoxygenic photosystem II
@@ -263,7 +263,7 @@ M00624	Terephthalate degradation, terephthalate => 3,4-dihydroxybenzoate
 M00625	Methicillin resistance
 M00627	beta-Lactam resistance, Bla system
 M00630	D-Galacturonate degradation (fungi), D-galacturonate => glycerol
-M00631	D-Galacturonate degradation (bacteria), D-galacturonate => pyruvate + D-glyceraldehyde 3P
+M00631	D-Galacturonate degradation (bacteria), D-galacturonate => pyruvate + D-glyceraldehyde-3P
 M00632	Galactose degradation, Leloir pathway, galactose => alpha-D-glucose-1P
 M00633	Semi-phosphorylative Entner-Doudoroff pathway, gluconate/galactonate => glycerate-3P
 M00636	Phthalate degradation, phthalate => protocatechuate
@@ -387,7 +387,7 @@ M00873	Fatty acid biosynthesis in mitochondria, animals
 M00874	Fatty acid biosynthesis in mitochondria, fungi
 M00875	Staphyloferrin B biosynthesis, L-serine => staphyloferrin B
 M00876	Staphyloferrin A biosynthesis, L-ornithine => staphyloferrin A
-M00877	Kanosamine biosynthesis, glucose 6-phosphate => kanosamine
+M00877	Kanosamine biosynthesis, glucose-6P => kanosamine
 M00878	Phenylacetate degradation, phenylaxetate => acetyl-CoA/succinyl-CoA
 M00879	Arginine succinyltransferase pathway, arginine => glutamate
 M00880	Molybdenum cofactor biosynthesis, GTP => molybdenum cofactor
@@ -424,7 +424,7 @@ M00912	NAD biosynthesis, tryptophan => quinolinate => NAD
 M00913	Pantothenate biosynthesis, 2-oxoisovalerate/spermine => pantothenate
 M00914	Coenzyme A biosynthesis, archaea, 2-oxoisovalerate => 4-phosphopantoate => CoA
 M00915	Caffeine degradation, caffeine => xanthine
-M00916	Pyridoxal-P biosynthesis, R5P + glyceraldehyde-3P + glutamine => pyridoxal-P
+M00916	Pyridoxal phosphate biosynthesis, R5P + glyceraldehyde-3P + glutamine => pyridoxal-P
 M00917	Phytosterol biosynthesis, squalene 2,3-epoxide => campesterol/sitosterol
 M00918	Aerobactin biosynthesis, lysine => aerobactin
 M00919	Ectoine degradation, ectoine => aspartate
@@ -434,8 +434,8 @@ M00923	UDP-L-FucNAc biosynthesis, UDP-GlcNAc => UDP-L-FucNAc
 M00924	Cobalamin biosynthesis, anaerobic, uroporphyrinogen III => sirohydrochlorin => cobyrinate a,c-diamide
 M00925	Cobalamin biosynthesis, aerobic, uroporphyrinogen III => precorrin 2 => cobyrinate a,c-diamide
 M00926	Heme biosynthesis, bacteria, glutamyl-tRNA => coproporphyrin III => heme
-M00927	Gibberellin A12 biosynthesis, GAPP => GA12
-M00928	Gibberellin A4/A1 biosynthesis, GA12/GA53 => GA4/GA1
+M00927	Gibberellin A12 biosynthesis, plants, GAPP => GA12
+M00928	Gibberellin A4/A1 biosynthesis, plants, GA12/GA53 => GA4/GA1
 M00929	Gibberellin A1 biosynthesis, GGPP => GA1
 M00930	Menaquinone biosynthesis, futalosine pathway
 M00931	Menaquinone biosynthesis, modified futalosine pathway
@@ -545,13 +545,26 @@ M01034	GDP-D-Rha4NFormyl biosynthesis, GDP-Man => GDP-D-Rha4N => GDP-D-Rha4NForm
 M01035	UDP-ManNAc3NAcA biosynthesis, UDP-GlcNAc => UDP-ManNAc3NAcA
 M01036	UDP-GalNAcA biosynthesis, UDP-GlcNAc => UDP-GalNAcA
 M01037	UDP-D-FucNAc4N biosynthesis, UDP-GlcNAc => UDP-D-FucNAc4N
-M01038	Staphyloxanthin biosynthesis, farnesyl-PP => staphyloxanthin
-M01039	Spirilloxanthin biosynthesis, lycopene => spirilloxanthin
-M01040	Lutein biosynthesis, lycopene => lutein
-M01041	Bacterioruberin biosynthesis, lycopene => bacterioruberin
-M01042	Neurosporaxanthin biosynthesis, lycopene => neurosporaxanthin
-M01043	Okenone biosynthesis, lycopene => okenone
+M01038	Staphyloxanthin biosynthesis, bacteria, farnesyl-PP => staphyloxanthin
+M01039	Spirilloxanthin biosynthesis, bacteria, lycopene => spirilloxanthin
+M01040	Lutein biosynthesis, plants, lycopene => lutein
+M01041	Bacterioruberin biosynthesis, archaea, lycopene => bacterioruberin
+M01042	Neurosporaxanthin biosynthesis, fungi, lycopene => neurosporaxanthin
+M01043	Okenone biosynthesis, bacteria, lycopene => okenone
 M01044	Astaxanthin biosynthesis, beta-carotene => astaxanthin
 M01045	Zeaxanthin biosynthesis, lycopene => beta-carotene => zeaxanthin
 M01046	Xanthophyll cycle
 M01047	Juvenile hormone biosynthesis, insects, farnesyl-PP => juvenile hormone III
+M01048	Sulfoquinovosyldiacylglycerol (SQDG) biosynthesis, glucose-1P => SQDG
+M01049	Sulfoquinovose degradation, sulfoglycolytic Embden-Meyerhof pathway, beta-sulfoquinovose => (S)-DHPS
+M01050	Sulfoquinovose degradation, sulfoglycolytic Entner-Doudoroff pathway, sulfoquinovose => (S)-3-sulfolactate
+M01051	Sulfoquinovose degradation, sulfoquinovose => glucose
+M01052	Sulfoquinovose degradation, beta-sulfoquinovose => isethionate
+M01053	Deferoxamine biosynthesis, lysine => deferoxamine E/B
+M01054	Schizokinen biosynthesis, glutamate => schizokinen
+M01055	Putrebactin biosynthesis, putrescine => putrebactin
+M01056	Alcaligin biosynthesis, putrescine => alcaligin
+M01057	Rhizoferrin biosynthesis, ornithine + citrate => rhizoferrin
+M01058	Achromobactin biosynthesis, serine + citrate => achromobactin
+M01059	Vibrioferrin biosynthesis, serine + citrate => vibrioferrin
+M01060	Petrobactin biosynthesis, spermidine => petrobactin

@@ -1,0 +1,120 @@
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Report home</div>
+      <h2>Your analysis at a glance</h2>
+      <p class="panel-help">Use this page to confirm what was analyzed, then move through the report from charts to downloadable results.</p>
+    </div>
+    <div class="chip-row">
+      {% for level in selected_taxa_levels %}
+        <span class="chip">Taxa level {{ level }}</span>
+      {% endfor %}
+      {% for function_name in selected_function_columns %}
+        <span class="chip">{{ function_name }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric primary">
+      <div class="label">Samples analyzed</div>
+      <div class="value">{{ dataset_summary.get("n_samples", 0) }}</div>
+      <div class="hint">Samples matched to the metadata table</div>
+    </div>
+    <div class="metric blue">
+      <div class="label">Peptides</div>
+      <div class="value">{{ dataset_summary.get("n_peptides", 0) }}</div>
+      <div class="hint">Rows kept after basic input loading</div>
+    </div>
+    <div class="metric coral">
+      <div class="label">OTF tables</div>
+      <div class="value">{{ dataset_summary.get("otf_counts", [])|length }}</div>
+      <div class="hint">Feature counts are listed for every computed taxa-function table</div>
+    </div>
+    <div class="metric gold">
+      <div class="label">Report outputs</div>
+      <div class="value">{{ run_summary.n_tables + run_summary.n_figures }}</div>
+      <div class="hint">{{ run_summary.n_tables }} tables and {{ run_summary.n_figures }} figures</div>
+    </div>
+  </div>
+
+  {% if dataset_summary.get("otf_counts") %}
+    <div class="section-context" style="margin-top: 16px;">
+      <strong>OTF feature counts:</strong>
+      each card shows the number of taxa-function links generated for one taxa level and function annotation combination.
+    </div>
+    <div class="metric-grid">
+      {% for item in dataset_summary.get("otf_counts", []) %}
+        <div class="metric">
+          <div class="label">{{ item.taxa_level }} / {{ item.function_column }}</div>
+          <div class="value">{{ item.n_features }}</div>
+          <div class="hint">{{ item.title }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Recommended review path</div>
+      <h2>Where to start</h2>
+    </div>
+  </div>
+  <div class="task-grid">
+    <div class="task-card">
+      <div class="task-top"><div class="task-badge">1</div><h3>Check the dataset</h3></div>
+      <p class="muted">Confirm sample count, selected taxa levels, and function annotation columns before interpreting the results.</p>
+    </div>
+    <div class="task-card">
+      <div class="task-top"><div class="task-badge">2</div><h3>Review overview charts</h3></div>
+      <p class="muted">Use the chart section for a quick sense of taxonomic coverage and function annotation quality.</p>
+    </div>
+    <div class="task-card">
+      <div class="task-top"><div class="task-badge">3</div><h3>Browse result tables</h3></div>
+      <p class="muted">Preview paginated tables in the browser, then export the full TSV files for downstream work.</p>
+    </div>
+    <div class="task-card">
+      <div class="task-top"><div class="task-badge">4</div><h3>Look for run notes</h3></div>
+      <p class="muted">Warnings explain skipped optional steps or input differences that may affect interpretation.</p>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Input and settings</div>
+      <h2>What was used</h2>
+      <p class="panel-help">The detailed method settings are saved with the report so the analysis can be reproduced.</p>
+    </div>
+    <a class="action-link" href="config_used.yaml">Download method settings</a>
+  </div>
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="label">OTF table</div>
+      <div class="value">Provided</div>
+      <div class="hint">{{ run_summary.otf_file }}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Metadata table</div>
+      <div class="value">{{ "Provided" if run_summary.meta_file != "Generated internally" else "Generated" }}</div>
+      <div class="hint">{{ run_summary.meta_file }}</div>
+    </div>
+    <div class="metric">
+      <div class="label">Grouping column</div>
+      <div class="value">{{ run_summary.group_column }}</div>
+      <div class="hint">Used for group summaries and comparisons when available</div>
+    </div>
+    <div class="metric">
+      <div class="label">Control group</div>
+      <div class="value">{{ run_summary.control_group }}</div>
+      <div class="hint">Used for group-vs-control testing when available</div>
+    </div>
+  </div>
+  <details class="config-block">
+    <summary>Show full method settings</summary>
+    <pre>{{ config_yaml }}</pre>
+  </details>
+</div>
