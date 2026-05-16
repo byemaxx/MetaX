@@ -77,8 +77,8 @@ def query_peptide_proteins(db_file, peptide_list,
     """
     peptide_proteins = {}
 
-    # if set is empty, treat as no filtering
-    sel_set = set(selected_genomes_set) if selected_genomes_set else None
+    # None means no filtering; an empty selected set intentionally selects nothing.
+    sel_set = set(selected_genomes_set) if selected_genomes_set is not None else None
     rm_set = set(removed_genomes_set) if removed_genomes_set else None
 
     # 冲突处理：同时在 selected 与 removed 中的基因组，按“移除优先”
@@ -364,7 +364,28 @@ def query_peptide_proteins_from_digested_genome_folders(
     if not all_files:
         raise ValueError(f"No '*.tsv' digested genome files found in: {valid_folders}")
 
-    # Resolve digested column names once (assume all genome TSVs share the same header)
+    rm_set = set(removed_genomes_set) if removed_genomes_set else None
+    sel_set = set(selected_genomes_set) if selected_genomes_set is not None else None
+    if rm_set is not None and sel_set is not None:
+        sel_set -= rm_set
+
+    original_file_count = len(all_files)
+    if sel_set is not None or rm_set is not None:
+        all_files = [
+            file_path
+            for file_path in all_files
+            if (sel_set is None or pathlib.Path(file_path).stem in sel_set)
+            and (rm_set is None or pathlib.Path(file_path).stem not in rm_set)
+        ]
+
+    if not all_files:
+        print(
+            "[DigestedScan] No genome TSV files remain after selected/removed genome filtering. "
+            f"Original files: {original_file_count}"
+        )
+        return {}, "", ""
+
+    # Resolve digested column names once (assume all selected genome TSVs share the same header)
     resolved_pep_col, resolved_pro_col = _resolve_digest_columns_once(
         first_file=all_files[0],
         sep=sep,
@@ -375,18 +396,13 @@ def query_peptide_proteins_from_digested_genome_folders(
     print(f"[DigestedScan] Folders: {len(valid_folders)}")
     for f in valid_folders:
         print(f"[DigestedScan]  - {f}")
-    print(f"[DigestedScan] Genome TSV files: {len(all_files)}")
+    print(f"[DigestedScan] Genome TSV files: {len(all_files)} selected from {original_file_count}")
     print(f"[DigestedScan] Using columns: peptide='{resolved_pep_col}', protein='{resolved_pro_col}'")
 
     peptide_set = {str(p) for p in peptide_list if isinstance(p, str) and p}
     if not peptide_set:
         # keep return type stable
         return {}, "", ""
-
-    rm_set = set(removed_genomes_set) if removed_genomes_set else None
-    sel_set = set(selected_genomes_set) if selected_genomes_set else None
-    if rm_set is not None and sel_set is not None:
-        sel_set -= rm_set
 
     if n_jobs is None:
         n_jobs = max(1, (os.cpu_count() or 1) - 1)
@@ -459,20 +475,16 @@ class peptideProteinsMapper:
                  table_separator='\t',
                  peptide_col='Sequence', 
                  intensity_col_prefix='Intensity',
-                 genome_cutoff_rank:int|None= None,   # if set, it will only get the top N genomes, otherwise use genome_peptide_coverage_cutoff
-                 genome_peptide_coverage_cutoff:float|None = 0.97,
                  protein_peptide_coverage_cutoff:float|None = 1.0,
                  protein_rank_iters: int = 5,
                  output_path=None,
                  temp_dir=None,
-                 stop_after_genome_ranking=False,
                  continue_base_on_annotaied_peptide_table=False, # use genome annotated peptide table to continue the process, skip querying proteins
-                 turn_point_method='auto', # 'auto', 'coverage', 'rank', or 'distinct_count'
-                 turn_point_distinct_cutoff=3, # cutoff value for distinct_count method
                  protein_genome_separator: str = "_",
                  n_jobs: int | None = None,
                  digested_parallel_backend: str = "subprocess",
                  genome_list: Iterable[str] | None = None,
+                 duplicate_peptide_handling_mode: str = 'sum',
                  ):
 
         self.peptide_table_path = peptide_table_path
@@ -486,23 +498,18 @@ class peptideProteinsMapper:
         self.table_separator = table_separator
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
-        self.genome_cutoff_rank = genome_cutoff_rank 
-        self.genome_peptide_coverage_cutoff = genome_peptide_coverage_cutoff
         self.protein_peptide_coverage_cutoff = protein_peptide_coverage_cutoff
         self.protein_rank_iters = max(1, int(protein_rank_iters))
         self.output_path = output_path
         self.temp_dir = None
-        self.stop_after_genome_ranking = stop_after_genome_ranking
         self.continue_base_on_annotaied_peptide_table = continue_base_on_annotaied_peptide_table
-        self.turn_point_method = turn_point_method # 'auto', 'coverage', 'rank', or 'distinct_count'
-        self.turn_point_distinct_cutoff = turn_point_distinct_cutoff # cutoff value for distinct_count method
         self.protein_genome_separator = protein_genome_separator
         self.n_jobs = n_jobs
         self.digested_parallel_backend = digested_parallel_backend
+        self.duplicate_peptide_handling_mode = (duplicate_peptide_handling_mode or 'sum').strip().lower()
         
         self.has_intensity = False
         self.protein_ranked_table = None
-        self.genome_ranked_table = None
         self.final_peptide_table = None
         
         self.selected_proteins_num = 0
@@ -540,6 +547,13 @@ class peptideProteinsMapper:
             cleaned.append(genome)
         return cleaned
 
+    def _get_effective_selected_genomes_set(self) -> set[str] | None:
+        if self.selected_genomes_set is not None:
+            return set(self._normalize_genome_list(self.selected_genomes_set) or [])
+        if self.genome_list is not None:
+            return set(self.genome_list)
+        return None
+
     @staticmethod
     def _collect_genomes_from_df(df: pd.DataFrame) -> set[str]:
         if 'Genomes' not in df.columns:
@@ -556,6 +570,30 @@ class peptideProteinsMapper:
                     genomes.add(genome)
         return genomes
 
+    def _build_genome_prefixes(self, genome_list: Iterable[str] | None) -> list[tuple[str, str]]:
+        if genome_list is None:
+            genome_list = self.genome_list or []
+        prefixes = [
+            (f"{genome}{self.protein_genome_separator}", genome)
+            for genome in self._normalize_genome_list(genome_list) or []
+        ]
+        return sorted(prefixes, key=lambda item: len(item[0]), reverse=True)
+
+    def _extract_genome_from_protein(
+        self,
+        protein: str,
+        genome_prefixes: list[tuple[str, str]] | None = None,
+    ) -> str:
+        protein = str(protein).strip()
+        if not protein or protein.lower() == "nan":
+            return ""
+
+        for prefix, genome in genome_prefixes or []:
+            if protein.startswith(prefix):
+                return genome
+
+        return protein.split(self.protein_genome_separator, 1)[0]
+
     def _get_selected_genome_list(
         self,
         df: pd.DataFrame,
@@ -568,7 +606,10 @@ class peptideProteinsMapper:
         )
 
         if effective_genome_list is None:
-            return self.calculate_genome_list(df, turn_point_method=self.turn_point_method)
+            raise ValueError(
+                "genome_list is required. The old MetaX genome ranking workflow has been removed; "
+                "provide genomes selected by MetaUmbra or by an explicit selected genome list."
+            )
 
         if not effective_genome_list:
             print("Warning: genome_list is provided but empty; no genomes will be selected.")
@@ -590,7 +631,7 @@ class peptideProteinsMapper:
                 )
 
         print(
-            f"Using provided genome_list, skip calculate_genome_list(). "
+            f"Using provided genome_list. "
             f"Selected genomes: [{len(selected_genomes_list)}]"
         )
         self.selected_genomes_num = len(selected_genomes_list)
@@ -617,7 +658,7 @@ class peptideProteinsMapper:
         
         if intensity_cols:
             self.has_intensity = True
-            print("Intensity columns found, will be kept in the output and used for genome ranking")
+            print("Intensity columns found and will be kept in the output")
             self.sum_duplicates_peptides()
         else:
             print("Warning: Intensity columns not found")
@@ -662,36 +703,59 @@ class peptideProteinsMapper:
             self.temp_dir = temp_dir
     
     def sum_duplicates_peptides(self):
-        # check if the peptides are unique, if not, combine the intensity columns, sum them up, if na , consider as 0
-        # Get all intensity columns
+        # Resolve duplicate peptide rows before peptide->protein mapping.
         intensity_cols = [col for col in self.peptide_table.columns if col.startswith(self.intensity_col_prefix)]
         print(f"Found {len(intensity_cols)} intensity columns")
 
-        # Check if peptides are unique
         duplicated_peptides = self.peptide_table[self.peptide_col].duplicated().sum()
-        if duplicated_peptides > 0:
-            print(f"Found {duplicated_peptides} duplicate peptide entries, combining their intensities")
-            
-            # Fill NA values with 0 in intensity columns
-            self.peptide_table[intensity_cols] = self.peptide_table[intensity_cols].fillna(0)
-            
-            # Group by peptide and sum the intensity columns
-            grouped_table = self.peptide_table.groupby(self.peptide_col)[intensity_cols].sum().reset_index()            
-            
-            # Get non-intensity columns
-            non_intensity_cols = [col for col in self.peptide_table.columns 
-                                    if not col.startswith(self.intensity_col_prefix) and col != self.peptide_col]
-            
-            # Keep the first occurrence of each peptide for other columns
-            first_occurrence = self.peptide_table.drop_duplicates(subset=[self.peptide_col])[
-                [self.peptide_col] + non_intensity_cols]
-            
-            # Merge back together
-            self.peptide_table = pd.merge(grouped_table, first_occurrence, on=self.peptide_col)
-            
-            print(f"After combining duplicates: {len(self.peptide_table)} unique peptides")
-        else:
+        if duplicated_peptides == 0:
             print("No duplicate peptides found, skipping combination of intensities")
+            return
+
+        mode = self.duplicate_peptide_handling_mode
+        valid_modes = {'sum', 'max', 'min', 'mean', 'first', 'keep'}
+        if mode not in valid_modes:
+            print(f"Warning: unknown duplicate_peptide_handling_mode [{mode}], fallback to [sum].")
+            mode = 'sum'
+            self.duplicate_peptide_handling_mode = mode
+
+        row_count = len(self.peptide_table)
+        print(f"Found {duplicated_peptides} duplicate peptide entries, handling with mode [{mode}]")
+
+        if mode == 'keep':
+            print(f"Keeping duplicate peptide rows unchanged: [{row_count}] rows")
+            return
+
+        if mode == 'first':
+            self.peptide_table = self.peptide_table.drop_duplicates(subset=[self.peptide_col], keep='first')
+            print(f"Handling duplicate peptides with mode [first]: [{row_count}] -> [{len(self.peptide_table)}]")
+            return
+
+        self.peptide_table[intensity_cols] = (
+            self.peptide_table[intensity_cols]
+            .apply(pd.to_numeric, errors='coerce')
+            .fillna(0)
+        )
+
+        if mode == 'sum':
+            grouped_table = self.peptide_table.groupby(self.peptide_col, as_index=False)[intensity_cols].sum()
+        elif mode == 'max':
+            grouped_table = self.peptide_table.groupby(self.peptide_col, as_index=False)[intensity_cols].max()
+        elif mode == 'min':
+            grouped_table = self.peptide_table.groupby(self.peptide_col, as_index=False)[intensity_cols].min()
+        else:
+            grouped_table = self.peptide_table.groupby(self.peptide_col, as_index=False)[intensity_cols].mean()
+
+        non_intensity_cols = [
+            col for col in self.peptide_table.columns
+            if not col.startswith(self.intensity_col_prefix) and col != self.peptide_col
+        ]
+        first_occurrence = self.peptide_table.drop_duplicates(subset=[self.peptide_col])[
+            [self.peptide_col] + non_intensity_cols
+        ]
+        self.peptide_table = pd.merge(grouped_table, first_occurrence, on=self.peptide_col)
+
+        print(f"Handling duplicate peptides with mode [{mode}]: [{row_count}] -> [{len(self.peptide_table)}]")
 
     def annotate_peptides(self):
         """Annotate peptides with proteins.
@@ -708,17 +772,19 @@ class peptideProteinsMapper:
 
         if self.digested_genome_folders is not None:
             print("Annotation mode: digested genome folders (no pre-built peptide DB needed)")
+            effective_selected_genomes = self._get_effective_selected_genomes_set()
             backend = (self.digested_parallel_backend or "subprocess").strip().lower()
             if backend == "subprocess":
                 peptide_proteins_dict, resolved_pep_col, resolved_pro_col = self._query_peptide_proteins_via_subprocess(
                     peptide_list=unique_peptides,
+                    selected_genomes_set=effective_selected_genomes,
                 )
             else:
                 peptide_proteins_dict, resolved_pep_col, resolved_pro_col = query_peptide_proteins_from_digested_genome_folders(
                     digested_genome_folders=self.digested_genome_folders,
                     peptide_list=unique_peptides,
                     removed_genomes_set=self.removed_genomes_set,
-                    selected_genomes_set=self.selected_genomes_set,
+                    selected_genomes_set=effective_selected_genomes,
                     protein_genome_separator=self.protein_genome_separator,
                     # digested genome TSVs are generated by digestion pipelines and are expected to be tab-separated
                     sep="\t",
@@ -739,7 +805,7 @@ class peptideProteinsMapper:
                 self.db_file,
                 unique_peptides,
                 removed_genomes_set=self.removed_genomes_set,
-                selected_genomes_set=self.selected_genomes_set,
+                selected_genomes_set=self._get_effective_selected_genomes_set(),
             )
 
         self.peptide_table["Proteins"] = self.peptide_table[self.peptide_col].map(peptide_proteins_dict)
@@ -762,6 +828,7 @@ class peptideProteinsMapper:
     def _query_peptide_proteins_via_subprocess(
         self,
         peptide_list: list[str],
+        selected_genomes_set: set[str] | None = None,
     ) -> tuple[dict[str, str], str, str]:
         """Run digested scanning in an isolated subprocess (stable for GUI on Windows).
 
@@ -806,8 +873,8 @@ class peptideProteinsMapper:
                 removed_arg = ["--removed-genomes-file", str(removed_file)]
 
             selected_arg = []
-            if self.selected_genomes_set:
-                selected_file.write_text("\n".join(sorted(set(self.selected_genomes_set))), encoding="utf-8")
+            if selected_genomes_set is not None:
+                selected_file.write_text("\n".join(sorted(selected_genomes_set)), encoding="utf-8")
                 selected_arg = ["--selected-genomes-file", str(selected_file)]
 
             pep_col_arg = []
@@ -906,115 +973,35 @@ class peptideProteinsMapper:
             return mapping, resolved_pep_col, resolved_pro_col
 
     def extract_genome_col(self, df):
+        genome_prefixes = self._build_genome_prefixes(self.genome_list)
+
         def extract_genome(proteins):
             if proteins in [None, '', 'NaN']:
                 return ''
             proteins = proteins.split(';')
             genomes = []
             for protein in proteins:
-                genome = protein.split('_')[0]
-                genomes.append(genome)
+                genome = self._extract_genome_from_protein(protein, genome_prefixes)
+                if genome:
+                    genomes.append(genome)
             genomes = list(set(genomes))
             return ';'.join(genomes)
 
         df['Genomes'] = df['Proteins'].apply(extract_genome)
         return df
         
-    def _update_cutoff_parameters_for_reporting(self, turn_point_method):
-        if turn_point_method.lower() == 'auto':
-            self.genome_cutoff_rank = "N/A"
-            self.turn_point_distinct_cutoff = "N/A"
-            self.genome_peptide_coverage_cutoff = "N/A"
-        elif turn_point_method.lower() == 'coverage':
-            self.genome_cutoff_rank = "N/A"
-            self.turn_point_distinct_cutoff = "N/A"
-        elif turn_point_method.lower() == 'rank':
-            self.turn_point_distinct_cutoff = "N/A"
-            self.genome_peptide_coverage_cutoff = "N/A"
-        elif turn_point_method.lower() == 'distinct_count':
-            self.genome_cutoff_rank = "N/A"
-            self.genome_peptide_coverage_cutoff = "N/A"
-        else:
-            # warning already raised in calculate_genome_list
-            pass
-        
-    def calculate_genome_list(self, df, turn_point_method="auto") -> list[str]:
-        ''' 
-        INPUT: df with columns: Peptide, Proteins, Genomes, Intensity*
-        OUTPUT: list of selected genomes based on the turning point method
-        Parameters for turning point methods:
-        - auto: automatically calculate the turning point based on the coverage_ratio curve (default)
-        - coverage: select genomes until the coverage_ratio reaches a specified cutoff (e.g. 0.97)
-        - rank: select top N genomes based on the combined score ranking (e.g. top 10)
-        - distinct_count: select genomes with at least N distinct peptides (e.g. 3)
-        '''
-        from metax.peptide_annotator.get_genome_rank import GenomeRank
-        gr = GenomeRank(df = df, 
-                                 peptide_column = self.peptide_col,
-                                 genome_column = 'Genomes',
-                                 genome_separator = ';')
-        df_results_rank = gr.get_rank_covre_df(genome_rank_method='combined', 
-                                                           weight_distinct=1, weight_peptide=0)
-        df_weights = gr.df_combined[['Genomes', 'distinct_norm', 'peptide_norm', 'combined_score']]
-        df_results_rank = df_results_rank.merge(df_weights, on='Genomes', how='left')
-        # svaing the genome ranking table to temp dir
-        # df_results_rank.to_csv(f'{self.output_path.replace(".tsv", "_genome_ranked.tsv")}', sep='\t', index=False)
-        genome_rank_path = f'{self.temp_dir}/genome_ranked.tsv'
-        self._log_save(df_results_rank, genome_rank_path, "genome_ranked")
-        t0 = time.time()
-        df_results_rank.to_csv(genome_rank_path, sep='\t', index=False)
-        print(f"[Save] genome_ranked done in {time.time() - t0:.2f}s")
-        self.genome_ranked_table = df_results_rank
-        
-        if turn_point_method.lower() == 'auto':
-            window_size = 20
-            std_threshold = 1
-            print(f"Calculating turning point by rolling window: window_size={window_size}, std_threshold={std_threshold}")
-            cutoff_index = gr._calculate_turning_point(df_results_rank, window_size, std_threshold)
-
-        elif turn_point_method.lower() == 'coverage':
-            if type(self.genome_peptide_coverage_cutoff) not in [float, int] or not (0 < self.genome_peptide_coverage_cutoff < 1): # type: ignore
-                self.genome_peptide_coverage_cutoff = 0.97
-                print(f"Warning: Invalid genome_peptide_coverage_cutoff: {self.genome_peptide_coverage_cutoff}, should be between 0 and 1. Using default value: 0.97")
-                
-            print(f"Calculating turning point by percentage cutoff: {self.genome_peptide_coverage_cutoff}")
-            cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.genome_peptide_coverage_cutoff].index[0]
-            
-        elif turn_point_method.lower() == 'rank' and type(self.genome_cutoff_rank) is int: 
-            # make sure rank is less than total genomes, unless use Auto
-            if self.genome_cutoff_rank > df_results_rank.shape[0]:
-                raise ValueError(f"genome_cutoff_rank: {self.genome_cutoff_rank} is larger than total genomes found: {df_results_rank.shape[0]}, please check!")
-            print(f"Get top {self.genome_cutoff_rank} genomes by rank")
-            cutoff_index = self.genome_cutoff_rank - 1
-            
-        elif turn_point_method.lower() == 'distinct_count':
-            cutoff_value = self.turn_point_distinct_cutoff
-            print(f"Get top genomes with at least {cutoff_value} distinct peptides")
-            cutoff_index = df_results_rank[df_results_rank['distinct_peptides_count'] >= cutoff_value].index[-1]
-            
-        else:
-            raise ValueError(f"Invalid turn_point_method: {turn_point_method}, should be 'auto', 'coverage', 'rank', or 'distinct_count'")
-        
-        # Store the actually used parameters for reporting, set unused ones to 'N/A'
-        self._update_cutoff_parameters_for_reporting(turn_point_method)
-        
-        selected_genomes = df_results_rank.loc[:cutoff_index]
-        selected_genomes_list = selected_genomes['Genomes'].tolist()
-        print(f'Original genomes: [{df_results_rank.shape[0]}]')
-        print(f"The number of selected genomes: [{len(selected_genomes_list)}].\nThe last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}")
-        self.selected_genomes_num = len(selected_genomes_list)
-        
-        return selected_genomes_list
-    
     def calculate_protein_list(self, df):
-        print("reducing proteins by genome ranking")
-        from metax.peptide_annotator.get_genome_rank import GenomeRank
-        gr = GenomeRank(df = df,
-                                    peptide_column = self.peptide_col,
-                                    genome_column = 'Proteins',
-                                    genome_separator = ';')
-        df_results_rank = gr.get_rank_covre_df(
-            genome_rank_method='combined',
+        print("reducing proteins by peptide coverage ranking")
+        from metax.peptide_annotator.peptide_coverage_ranker import PeptideCoverageRanker
+        # Proteins are the ranked targets here; the ranker is also usable for genomes or other target columns.
+        ranker = PeptideCoverageRanker(
+            df=df,
+            peptide_column=self.peptide_col,
+            target_column='Proteins',
+            target_separator=';',
+        )
+        df_results_rank = ranker.get_ranked_coverage_df(
+            rank_method='combined',
             iters=self.protein_rank_iters,
             target_coverage=self.protein_peptide_coverage_cutoff,
             stop_when_selected_stable=True,
@@ -1034,8 +1021,18 @@ class peptideProteinsMapper:
         original_peptides = df.shape[0]
 
         selected_genomes_set = set(selected_genomes_list)
+        selected_genome_prefixes = self._build_genome_prefixes(selected_genomes_list)
+
+        def keep_selected_proteins(proteins: list[str]) -> str:
+            selected_proteins = []
+            for protein in proteins:
+                genome = self._extract_genome_from_protein(protein, selected_genome_prefixes)
+                if genome in selected_genomes_set:
+                    selected_proteins.append(protein)
+            return ';'.join(selected_proteins)
+
         df['Proteins'] = df['Proteins'].astype(str).str.split(';')
-        df['Proteins'] = df['Proteins'].apply(lambda proteins: ';'.join([p for p in proteins if p.split('_')[0] in selected_genomes_set]))
+        df['Proteins'] = df['Proteins'].apply(keep_selected_proteins)
         
         df = df[df['Proteins'] != '']
         
@@ -1071,25 +1068,13 @@ class peptideProteinsMapper:
 
         self.annotate_peptides()
         self.extract_genome_col(self.peptide_table)
-        
-        if self.stop_after_genome_ranking:
-            print("Stopped after genome ranking")
-            self.final_peptide_table = self.peptide_table
-            self._get_selected_genome_list(self.peptide_table, genome_list=genome_list)
-            #save the annotated peptide table to output path
-            self._log_save(self.peptide_table, self.output_path, "annotated_peptide_table")
-            t0 = time.time()
-            self.peptide_table.to_csv(self.output_path, sep='\t', index=False)
-            print(f"[Save] annotated_peptide_table done in {time.time() - t0:.2f}s")
-            return
-        else:
-            #save the annotated peptide table to temp dir
-            annotated_tmp_path = f'{self.temp_dir}/annotated_peptide_table.tsv'
-            self._log_save(self.peptide_table, annotated_tmp_path, "annotated_peptide_table(temp)")
-            t0 = time.time()
-            self.peptide_table.to_csv(annotated_tmp_path, sep='\t', index=False)
-            print(f"[Save] annotated_peptide_table(temp) done in {time.time() - t0:.2f}s")
-            self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
+
+        annotated_tmp_path = f'{self.temp_dir}/annotated_peptide_table.tsv'
+        self._log_save(self.peptide_table, annotated_tmp_path, "annotated_peptide_table(temp)")
+        t0 = time.time()
+        self.peptide_table.to_csv(annotated_tmp_path, sep='\t', index=False)
+        print(f"[Save] annotated_peptide_table(temp) done in {time.time() - t0:.2f}s")
+        self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
 
 
     def run_base_on_annotaied_peptide_table(self, genome_list: Iterable[str] | None = None):
@@ -1108,13 +1093,22 @@ class peptideProteinsMapper:
                    exclude_protein_startwith = None, #Usually 'REV_;XXX_' 
                    protein_genome_separator = '_',
                    genome_list: Iterable[str] | None = None,
+                   duplicate_peptide_handling_mode: str | None = None,
+                   genome_selection_metadata: dict | None = None,
                    ): # run peptide to OTF
+        duplicate_peptide_handling_mode = (
+            duplicate_peptide_handling_mode or self.duplicate_peptide_handling_mode
+        ).strip().lower()
         
         if self.continue_base_on_annotaied_peptide_table:
             self.run_base_on_annotaied_peptide_table(genome_list=genome_list)
         else:
             self.process_peptides_to_proteins(genome_list=genome_list)
         
+        genome_selection_info = dict(genome_selection_metadata or {})
+        if "genome_selection_method" not in genome_selection_info:
+            genome_selection_info["genome_selection_method"] = "provided_genome_list"
+
         # collect additional running information
         additional_running_info = {
             "peptideProteinsMapper": "Peptides directly annotated with proteins from a database",
@@ -1129,21 +1123,18 @@ class peptideProteinsMapper:
             "original_peptides_before_mapping": self.original_peptides_before_mapping,
             "peptides_after_mapping": self.peptides_after_mapping,
             "removed_peptides_no_matched": self.removed_peptides_no_matched,
-            "genome_peptide_coverage_cutoff": self.genome_peptide_coverage_cutoff,
+            "genome_selection_method": genome_selection_info.get("genome_selection_method"),
             "protein_peptide_coverage_cutoff": self.protein_peptide_coverage_cutoff,
             "protein_rank_iters": self.protein_rank_iters,
-            "turn_point_method": self.turn_point_method,
-            "turn_point_distinct_cutoff": self.turn_point_distinct_cutoff,
-            "genome_cutoff_rank": self.genome_cutoff_rank if self.turn_point_method.lower() in ['rank', 'distinct_count'] else "N/A",
-            "total_genomes_found": len(self.genome_ranked_table) if self.genome_ranked_table is not None else "Unknown",
             "selected_genomes_num": self.selected_genomes_num,
             "total_proteins_found": len(self.protein_ranked_table) if self.protein_ranked_table is not None else "Unknown",
             "selected_proteins_num": self.selected_proteins_num,
             "continue_base_on_annotated_peptide_table": self.continue_base_on_annotaied_peptide_table,
-            "stop_after_genome_ranking": self.stop_after_genome_ranking,
+            "duplicate_peptide_handling_mode": duplicate_peptide_handling_mode,
             "original_peptide_count": len(self.peptide_table) if hasattr(self, 'peptide_table') else "Unknown",
             "final_peptide_count": len(self.final_peptide_table) if hasattr(self, 'final_peptide_table') else "Unknown",
         }
+        additional_running_info.update(genome_selection_info)
         
 
         from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -1161,7 +1152,8 @@ class peptideProteinsMapper:
             sample_col_prefix=self.intensity_col_prefix,
             distinct_genome_threshold=distinct_genome_threshold,
             exclude_protein_startwith = exclude_protein_startwith,
-            additional_running_info=additional_running_info
+            additional_running_info=additional_running_info,
+            duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
         )
         annotator.run_annotate()
         print("OTF annotation finished")
@@ -1176,18 +1168,6 @@ if __name__ == "__main__":
     digested_genome_folders = [
         ".local_tests/digested_genomes",  # folder mode (preferred)
     ]
-    
-    ## test process_peptides_to_proteins
-    # output_path = "anntated_report.pr_matrix.tsv"
-    # peptide_mapper = peptideProteinsMapper(peptide_table_path=peptide_table_path, db_path=db_path, output_path=output_path,
-    #                                        peptide_col='Stripped.Sequence', intensity_col_prefix="D:", table_separator='\t',
-    #                                        genome_cutoff_rank=None,
-    #                                         genome_peptide_coverage_cutoff=0.98, protein_peptide_coverage_cutoff=1,
-    #                                         stop_after_genome_ranking=True, turn_point_method="Coverage",
-    #                                         continue_base_on_annotaied_peptide_table=False)
-    # peptide_mapper.process_peptides_to_proteins()
-    # peptide_mapper.final_peptide_table.to_csv(output_path, sep='\t', index=False)
-    # print("peptide annotation finished")
     
     # # test all_in_one
     taxafunc_anno_db_path = ".local_tests/MetaX_taxafunc.db"
@@ -1227,14 +1207,9 @@ if __name__ == "__main__":
                                            digested_genome_folders=digested_genome_folders,
                                            removed_genomes_set=removed_genomes_set, selected_genomes_set=selected_mag_set,
                                            peptide_col='Stripped.Sequence', intensity_col_prefix=r"E:", table_separator='\t',
-                                           turn_point_method='coverage',
-                                           genome_cutoff_rank=None,
-                                           turn_point_distinct_cutoff=3,
-                                           genome_peptide_coverage_cutoff=0.97, 
                                            protein_peptide_coverage_cutoff=1,
                                            continue_base_on_annotaied_peptide_table=False,
-                                        #    stop_after_genome_ranking=True,
-                                            genome_list=None
+                                           genome_list=selected_mag_set
                                            )
     peptide_mapper.all_in_one(taxafunc_anno_db_path=taxafunc_anno_db_path)
     print("all in one finished")

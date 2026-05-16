@@ -1,0 +1,68 @@
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Taxa-function links</div>
+      <h2>Which taxa carry which functions</h2>
+      <p class="panel-help">The OTF tables in Result Tables provide the underlying links. Interactive networks and sankey summaries will appear here as the advanced plotting phase is added.</p>
+    </div>
+  </div>
+
+  {% set tf_figures = figures_by_category.get("taxa_function", []) %}
+  {% if tf_figures %}
+    <div class="section-context">
+      <strong>What this section means:</strong>
+      taxa-function figures are built from OTF tables. They show which taxa are linked to major functional annotations and whether those links are concentrated in specific groups or broad across the dataset.
+    </div>
+    <div class="figure-grid">
+      {% for figure in tf_figures %}
+        <div class="figure-tile">
+          <div class="artifact-title">{{ figure.rich_title|default(figure.title)|safe }}</div>
+          {% if figure.description %}
+            <details class="figure-meta-details">
+              <summary>Details</summary>
+              <div class="artifact-meta">{{ figure.description }}</div>
+            </details>
+          {% endif %}
+          {% if figure.relative_path.lower().endswith(".png") %}
+            <img src="{{ figure.relative_path }}" alt="{{ figure.title }}">
+            <div class="artifact-actions">
+              <button class="action-button primary" data-open-figure="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">View larger</button>
+              <a class="action-link" href="{{ figure.relative_path }}">Open image</a>
+            </div>
+          {% elif figure.relative_path.lower().endswith(".html") %}
+            <button class="interactive-thumb" type="button" data-open-interactive="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">
+              <span class="interactive-mark">HTML</span>
+              <span class="interactive-copy">
+                <strong>Interactive plot</strong>
+                <span>Preview in a large viewer</span>
+              </span>
+            </button>
+            <div class="artifact-actions">
+              <button class="action-button primary" data-open-interactive="{{ figure.relative_path }}" data-figure-title="{{ figure.title }}">Preview</button>
+              <a class="action-link" href="{{ figure.relative_path }}">Export</a>
+            </div>
+          {% else %}
+            <div class="artifact-actions">
+              <a class="action-link" href="{{ figure.relative_path }}">Open figure</a>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="task-grid">
+      <div class="task-card">
+        <div class="task-top"><div class="task-badge">N</div><h3>Network view</h3></div>
+        <p class="muted">Will show major taxa-function connections with top-N filtering.</p>
+      </div>
+      <div class="task-card">
+        <div class="task-top"><div class="task-badge">S</div><h3>Sankey summary</h3></div>
+        <p class="muted">Will show how dominant taxa connect to dominant functions.</p>
+      </div>
+      <div class="task-card">
+        <div class="task-top"><div class="task-badge">H</div><h3>OTF heatmap</h3></div>
+        <p class="muted">Will highlight the strongest taxa-function abundance patterns.</p>
+      </div>
+    </div>
+  {% endif %}
+</div>

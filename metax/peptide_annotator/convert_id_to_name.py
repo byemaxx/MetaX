@@ -2,15 +2,36 @@ import pandas as pd
 import os
 import urllib.request
 
+
+GO_BASIC_OBO_URLS = [
+    "https://current.geneontology.org/ontology/go-basic.obo",
+    "https://purl.obolibrary.org/obo/go/go-basic.obo",
+]
+
+
+def open_url_with_headers(url):
+    return urllib.request.urlopen(urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        },
+    ), timeout=60)
+
+
+def download_file_with_headers(url, output_path):
+    with open_url_with_headers(url) as response:
+        with open(output_path, "wb") as file:
+            file.write(response.read())
+
 def download_kegg_files(save_path):
     try:
         url_map ='https://rest.kegg.jp/list/pathway'
         url_ko = 'https://rest.kegg.jp/list/pathway/ko'
         with open(os.path.join(save_path, 'pathway.tsv'), 'w') as f:
             for url in [url_map, url_ko]:
-                response = urllib.request.urlopen(url)
-                html = response.read().decode('utf-8')
-                f.write(html)
+                with open_url_with_headers(url) as response:
+                    html = response.read().decode('utf-8')
+                    f.write(html)
                 f.write('\n')
         print(f'pathway.tsv downloaded to {save_path}')
     except Exception as e:
@@ -21,7 +42,7 @@ def download_kegg_files(save_path):
 def download_kegg_module_files(save_path):
     url = "https://rest.kegg.jp/list/module/"
     try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'module.tsv'))
+        download_file_with_headers(url, os.path.join(save_path, 'module.tsv'))
         print(f'ko.tsv downloaded to {save_path}')
     except Exception as e:
         print('Error: download ko.tsv failed!')
@@ -31,7 +52,7 @@ def download_kegg_module_files(save_path):
 def download_ec_files(save_path):
     try:
         url = "https://ftp.expasy.org/databases/enzyme/enzyme.dat"
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'enzyme.dat'))
+        download_file_with_headers(url, os.path.join(save_path, 'enzyme.dat'))
         print(f'enzyme.dat downloaded to {save_path}')
     except Exception as e:
         print('Error: download enzyme.dat failed!')
@@ -40,20 +61,25 @@ def download_ec_files(save_path):
 def download_ko_files(save_path):
     url = "https://rest.kegg.jp/list/ko"
     try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'ko.tsv'))
+        download_file_with_headers(url, os.path.join(save_path, 'ko.tsv'))
         print(f'ko.tsv downloaded to {save_path}')
     except Exception as e:
         print('Error: download ko.tsv failed!')
         print(e)
     
 def download_go_files(save_path):
-    url = "https://purl.obolibrary.org/obo/go/go-basic.obo"
-    try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'go-basic.obo'))
-        print(f'go-basic.obo downloaded to {save_path}')
-    except Exception as e:
-        print('Error: download go-basic.obo failed!')
-        print(e)
+    os.makedirs(save_path, exist_ok=True)
+    output_path = os.path.join(save_path, 'go-basic.obo')
+    errors = []
+    for url in GO_BASIC_OBO_URLS:
+        try:
+            download_file_with_headers(url, output_path)
+            print(f'go-basic.obo downloaded to {save_path}')
+            return
+        except Exception as e:
+            errors.append(f'{url}: {e}')
+    print('Error: download go-basic.obo failed!')
+    print('\n'.join(errors))
 
 def parse_dat_file(file_path):
     if not os.path.exists(file_path):
