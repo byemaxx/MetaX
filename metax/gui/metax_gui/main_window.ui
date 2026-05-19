@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1258</width>
+    <width>1277</width>
     <height>925</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -59,130 +59,6 @@
             <string>Data Import</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>OTF Table</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QToolButton" name="toolButton_meta_table_help">
-              <property name="text">
-               <string>?</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>Meta Table</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="3">
-             <widget class="QPushButton" name="pushButton_get_meta_path">
-              <property name="text">
-               <string>Open</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QPushButton" name="pushButton_load_example_for_analyzer">
-              <property name="toolTip">
-               <string>Load the Exmapel Data (4000 peptides)</string>
-              </property>
-              <property name="text">
-               <string>Load Example Data</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="2">
-             <widget class="QPushButton" name="pushButton_run_taxaFuncAnalyzer">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Go</string>
-              </property>
-              <property name="default">
-               <bool>false</bool>
-              </property>
-              <property name="flat">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QLineEdit" name="lineEdit_meta_path"/>
-            </item>
-            <item row="2" column="3">
-             <widget class="QPushButton" name="pushButton_get_taxafunc_path">
-              <property name="text">
-               <string>Open</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QLabel" name="label_46">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <family>Arial</family>
-                <pointsize>22</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="layoutDirection">
-               <enum>Qt::LeftToRight</enum>
-              </property>
-              <property name="text">
-               <string>Operational Taxa-Functions (OTF) Analyzer</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
-             <widget class="QLineEdit" name="lineEdit_taxafunc_path">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QToolButton" name="toolButton_taxafunc_table_help">
-              <property name="text">
-               <string>?</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0" colspan="3">
-             <widget class="QCheckBox" name="checkBox_show_advanced_analyzer_settings">
-              <property name="text">
-               <string>Show Advanced Settings</string>
-              </property>
-             </widget>
-            </item>
             <item row="5" column="0" colspan="4">
              <widget class="QGroupBox" name="groupBox_otf_analyzer_settings">
               <property name="sizePolicy">
@@ -274,6 +150,137 @@
               </layout>
              </widget>
             </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pushButton_load_example_for_analyzer">
+              <property name="toolTip">
+               <string>Load the Exmapel Data (4000 peptides)</string>
+              </property>
+              <property name="text">
+               <string>Load Example Data</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="lineEdit_taxafunc_path">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QToolButton" name="toolButton_meta_table_help">
+              <property name="text">
+               <string>?</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Meta Table</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="lineEdit_meta_path"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="label_46">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>22</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>Operational Taxa-Functions (OTF) Analyzer</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="3">
+             <widget class="QCheckBox" name="checkBox_show_advanced_analyzer_settings">
+              <property name="text">
+               <string>Show Advanced Settings</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="2">
+             <widget class="QPushButton" name="pushButton_run_taxaFuncAnalyzer">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Go</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QToolButton" name="toolButton_taxafunc_table_help">
+              <property name="text">
+               <string>?</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>OTF Table</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QPushButton" name="pushButton_get_taxafunc_path">
+              <property name="text">
+               <string>Open</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QPushButton" name="pushButton_get_meta_path">
+              <property name="text">
+               <string>Open</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QPushButton" name="pushButton_generate_report">
+              <property name="text">
+               <string>Generate Report</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="tab_overview">
@@ -362,8 +369,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>584</width>
-                 <height>632</height>
+                 <width>592</width>
+                 <height>620</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -487,8 +494,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>444</width>
-                 <height>68</height>
+                 <width>450</width>
+                 <height>71</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -531,8 +538,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>380</width>
-                 <height>99</height>
+                 <width>389</width>
+                 <height>105</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1445,7 +1452,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1172</width>
+                 <width>1191</width>
                  <height>238</height>
                 </rect>
                </property>
@@ -3754,7 +3761,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1140</width>
+                     <width>1159</width>
                      <height>238</height>
                     </rect>
                    </property>
@@ -5379,7 +5386,7 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1112</width>
+                        <width>1131</width>
                         <height>130</height>
                        </rect>
                       </property>
@@ -8113,7 +8120,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1140</width>
+                     <width>1159</width>
                      <height>171</height>
                     </rect>
                    </property>
@@ -9958,7 +9965,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1140</width>
+                     <width>1159</width>
                      <height>217</height>
                     </rect>
                    </property>
@@ -11498,7 +11505,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>443</width>
+                    <width>452</width>
                     <height>60</height>
                    </rect>
                   </property>
@@ -11540,8 +11547,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>367</width>
-                    <height>180</height>
+                    <width>373</width>
+                    <height>189</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -12116,7 +12123,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1258</width>
+     <width>1277</width>
      <height>30</height>
     </rect>
    </property>

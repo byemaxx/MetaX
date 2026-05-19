@@ -98,6 +98,7 @@ if __name__ == '__main__':
     from metax.gui.metax_gui.generic_thread import FunctionExecutor
     from metax.gui.metax_gui.resources import icon_rc
     from metax.gui.metax_gui.console_window import ConsoleOutputWindow
+    from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -145,6 +146,7 @@ else:
     from .metax_gui.generic_thread import FunctionExecutor
     from .metax_gui.resources import icon_rc # noqa: F401
     from .metax_gui.console_window import ConsoleOutputWindow
+    from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
 
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -387,6 +389,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_get_taxafunc_path.clicked.connect(self.set_lineEdit_taxafunc_path)
         self.pushButton_get_meta_path.clicked.connect(self.set_lineEdit_meta_path)
         self.pushButton_run_taxaFuncAnalyzer.clicked.connect(self.set_taxaFuncAnalyzer)
+        self.pushButton_generate_report.clicked.connect(lambda: show_auto_otf_report_dialog(self))
         self.toolButton_taxafunc_table_help.clicked.connect(self.show_taxafunc_table_help)
         self.toolButton_meta_table_help.clicked.connect(self.show_meta_table_help)
 
