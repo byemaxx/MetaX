@@ -404,6 +404,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_set_multi_table.clicked.connect(self.set_multi_table)
         self.comboBox_outlier_detection.currentIndexChanged.connect(self.update_outlier_detection)
         self.comboBox_outlier_handling_method1.currentIndexChanged.connect(self.update_outlier_handling_method1)
+        self.update_outlier_detection()
         # set change event
         self.checkBox_create_protein_table.stateChanged.connect(self.change_event_checkBox_create_protein_table)
         self.comboBox_method_of_protein_inference.currentIndexChanged.connect(self.update_method_of_protein_inference)
@@ -1279,13 +1280,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             toolbox.setCurrentIndex(0)
             
     def update_outlier_detection(self):
-        if self.comboBox_outlier_detection.currentText() == "None":
+        detect_method = self.comboBox_outlier_detection.currentText().strip()
+        self.hide_or_show_all_items_in_layout(
+            self.horizontalLayout_outlier_intensity_percentile_threshold,
+            hide=detect_method != "Intensity-Percentile",
+        )
+
+        if detect_method == "None":
             self.comboBox_outlier_handling_method1.setEnabled(False)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
             self.comboBox_outlier_handling_method2.setEnabled(False)
             self.comboBox_outlier_handling_group_or_sample.setEnabled(False)
             
-        elif self.comboBox_outlier_detection.currentText() == "Missing-Value":
+        elif detect_method == "Missing-Value":
             self.comboBox_outlier_handling_method1.setEnabled(True)
             self.comboBox_outlier_detection_group_or_sample.setEnabled(False)
             self.comboBox_outlier_handling_method2.setEnabled(False)
@@ -3830,6 +3837,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # set comboBox_outlier_detection
             self.comboBox_outlier_detection_group_or_sample.clear()
             self.comboBox_outlier_detection_group_or_sample.addItems(meta_list)
+            self.comboBox_outlier_detection_group_or_sample.addItem('Each Sample')
             self.comboBox_outlier_detection_group_or_sample.addItem('All Samples')
             
             # set all condition_meta
@@ -3947,7 +3955,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             quant_method = quant_method_dict.get(self.comboBox_quant_method.currentText().lower(), 'sum')
             
             # outlier detect and handle
-            outlier_detect_method = self.comboBox_outlier_detection.currentText()
+            outlier_detect_method = self.comboBox_outlier_detection.currentText().strip()
             outlier_detect_by_group = self.comboBox_outlier_detection_group_or_sample.currentText()
             outlier_handle_method1 = self.comboBox_outlier_handling_method1.currentText() 
             outlier_handle_method2= self.comboBox_outlier_handling_method2.currentText()
@@ -3971,6 +3979,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
             if outlier_detect_method != 'None':
                 outlier_detect_method = outlier_detect_method.lower()
+                if outlier_detect_method == "intensity-percentile":
+                    outlier_detect_method_value = self.doubleSpinBox_outlier_intensity_percentile_threshold.value()
+                    outlier_detect_method = (outlier_detect_method, outlier_detect_method_value)
+
                 if outlier_handle_method1 == 'Drop':
                     msg_box = QMessageBox(parent=self.MainWindow)
                     msg_box.setWindowTitle('Warning')
@@ -3981,6 +3993,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     msg_box.addButton(QMessageBox.No)
                     if msg_box.exec_() == QMessageBox.No:
                         return None
+                
             if  outlier_handle_method1 in ['mean', 'median'] and outlier_handle_method2 == 'Drop':
                 msg_box = QMessageBox(parent=self.MainWindow)
                 msg_box.setWindowTitle('Warning')

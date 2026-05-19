@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1277</width>
+    <width>1258</width>
     <height>925</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -362,8 +362,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>566</width>
-                 <height>116</height>
+                 <width>584</width>
+                 <height>632</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -487,8 +487,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>450</width>
-                 <height>71</height>
+                 <width>444</width>
+                 <height>68</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -531,8 +531,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>389</width>
-                 <height>105</height>
+                 <width>380</width>
+                 <height>99</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -748,6 +748,11 @@
                   </item>
                   <item>
                    <property name="text">
+                    <string>Intensity-Percentile</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
                     <string>Z-Score</string>
                    </property>
                   </item>
@@ -767,6 +772,45 @@
                    </property>
                   </item>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_outlier_intensity_percentile_threshold">
+                  <item>
+                   <widget class="QLabel" name="label_outlier_intensity_percentile_threshold">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Low intensity percentile threshold (%)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="doubleSpinBox_outlier_intensity_percentile_threshold">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="statusTip">
+                     <string>Intensity values below this threshold will be considered outliers</string>
+                    </property>
+                    <property name="maximum">
+                     <double>100.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>1.000000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>5.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </item>
@@ -1401,7 +1445,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1070</width>
+                 <width>1172</width>
                  <height>238</height>
                 </rect>
                </property>
@@ -3710,8 +3754,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>960</width>
-                     <height>213</height>
+                     <width>1140</width>
+                     <height>238</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_50">
@@ -5335,8 +5379,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>790</width>
-                        <height>129</height>
+                        <width>1112</width>
+                        <height>130</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
@@ -8069,8 +8113,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>909</width>
-                     <height>90</height>
+                     <width>1140</width>
+                     <height>171</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -9914,8 +9958,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>563</width>
-                     <height>95</height>
+                     <width>1140</width>
+                     <height>217</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10683,8 +10727,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1165</width>
-                    <height>378</height>
+                    <width>985</width>
+                    <height>295</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11202,8 +11246,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1165</width>
-                    <height>427</height>
+                    <width>1050</width>
+                    <height>198</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11454,8 +11498,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1167</width>
-                    <height>555</height>
+                    <width>443</width>
+                    <height>60</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -11496,8 +11540,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>373</width>
-                    <height>189</height>
+                    <width>367</width>
+                    <height>180</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -12072,7 +12116,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1277</width>
+     <width>1258</width>
      <height>30</height>
     </rect>
    </property>

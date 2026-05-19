@@ -203,11 +203,13 @@ class DataPreprocessing:
             return self.tfa.group_dict
         elif by_group == 'All Samples':
             return  {'All Samples': self.tfa.sample_list}
+        elif by_group == 'Each Sample':
+            return {sample: [sample] for sample in self.tfa.sample_list}
         else:
             return self.tfa._get_group_dict_from_meta(by_group)
     
     # set outlier to nan
-    def _outlier_detection(self, df: pd.DataFrame, method: str|None = None, by_group:str|None = None) -> pd.DataFrame:
+    def _outlier_detection(self, df: pd.DataFrame, method: str|tuple[str, float]|list[object]|None = None, by_group:str|None = None) -> pd.DataFrame:
         '''
         ### _outlier_detection
 
@@ -219,12 +221,15 @@ class DataPreprocessing:
         - **df** (`pd.DataFrame`):  
         The DataFrame in which outliers need to be detected.
         
-        - **method** (`str`, optional):  
+        - **method** (`str`, `tuple[str, float]`, or YAML-style `list`, optional):  
         The method used for outlier detection. Options include:
         - `none`: No outlier detection.
         - `missing-value`: Detect missing values.
         - `half-zero`: Detect outliers based on half-zero criteria (if half or more samples are 0, set to NaN).
         - `zero-dominant`: Detect outliers based on zero-dominance (if half or more samples are 0, set to NaN).
+        - `("intensity-percentile", value)` or `["intensity-percentile", value]`: Detect low-intensity values
+          by the selected sample/group intensity percentile. `value` is always a percentage value.
+          For example, `5` means values below the 5th percentile in each selected scope.
         - `iqr`: Interquartile range method (if sample is out of 1.5*IQR, set to NaN).
         - `z-score`: Z-score method (if samples in a group are out of 3*std, set to NaN).
         - `zero-inflated-poisson`: Zero-inflated Poisson distribution method (if the predicted value is less than 0.01, set to NaN).
@@ -279,7 +284,19 @@ class DataPreprocessing:
 
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
-        if method in['None', 'missing-value', 'none', None]:
+        method_value = None
+        if isinstance(method, (tuple, list)):
+            if len(method) != 2:
+                raise ValueError('Parameterized outlier method must be in the form: (method_name, value)')
+            method, method_value = method
+            method = str(method).strip().lower()
+        elif isinstance(method, str):
+            method = method.strip().lower()
+
+        if method == 'intensity-percentage':
+            method = 'intensity-percentile'
+
+        if method in['missing-value', 'none', None]:
             print('outlier_method is not set, outlier detection did not perform.')
             return df
 
@@ -325,6 +342,66 @@ class DataPreprocessing:
 
                 print(f'Group: [{key}], Samples: [{total_count}], Normal: [{normal_rows.sum()}], Abnormal: [{abnormal_rows_lt_half.sum()}], '
                     f'Zero > 0.5: [{abnormal_rows_lt_half.sum()}], Total Abnormal Ratio: [{abnormal_rows_lt_half.sum()/len(df_mat)*100:.2f}%]')
+
+
+        elif method == 'intensity-percentile':
+            df_mat = df_mat.astype(float)
+
+            if method_value is None:
+                raise ValueError('intensity-percentile outlier method requires a threshold value')
+
+            try:
+                threshold = float(method_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError('intensity-percentile threshold must be numeric') from exc
+
+            if threshold <= 0:
+                raise ValueError('intensity-percentile threshold must be greater than 0')
+            if threshold >= 100:
+                raise ValueError('intensity-percentile threshold must be less than 100%')
+
+            print(f'Outlier detection by [intensity-percentile] (if intensity is below the {threshold:g}th percentile in each selected scope, set to nan)...')
+
+            intensity_groups_dict = groups_dict
+            if by_group == 'Each Sample':
+                print('Each Sample selected: calculate percentile threshold separately within each sample.')
+            elif by_group == 'All Samples':
+                print('All Samples selected: calculate one percentile threshold from all samples.')
+            else:
+                print(f'Calculate percentile threshold within [{len(intensity_groups_dict)}] selected group(s).')
+
+            print_scope_details = len(intensity_groups_dict) <= 20
+            total_outlier_value_count = 0
+            total_value_count = 0
+            rows_with_any_outlier = pd.Series(False, index=df_mat.index)
+
+            for group, cols in intensity_groups_dict.items():
+                group_values = df_mat[cols].where(df_mat[cols] > 0).stack()
+
+                if group_values.empty:
+                    if print_scope_details:
+                        print(f'Group: [{group}], Samples: [{len(cols)}], No positive intensity values, skipped.')
+                    continue
+
+                intensity_cutoff = group_values.quantile(threshold / 100)
+                outliers = df_mat[cols] < intensity_cutoff
+                df_mat.loc[:, cols] = df_mat[cols].mask(outliers)
+                outlier_value_count = outliers.sum().sum()
+                outlier_row_count = outliers.any(axis=1).sum()
+                total_outlier_value_count += outlier_value_count
+                total_value_count += df_mat[cols].size
+                rows_with_any_outlier |= outliers.any(axis=1)
+
+                if print_scope_details:
+                    print(f'Group: [{group}], Samples: [{len(cols)}], Percentile: [{threshold:g}%], Cutoff: [{intensity_cutoff:.4g}], '
+                        f'Outlier values: [{outlier_value_count} in {df_mat[cols].size} ({outlier_value_count/df_mat[cols].size*100:.2f}%)], '
+                        f'Rows with outlier: [{outlier_row_count} in {len(df_mat)} ({outlier_row_count/len(df_mat)*100:.2f}%)]')
+
+            if not print_scope_details and total_value_count > 0:
+                row_count = rows_with_any_outlier.sum()
+                print(f'Processed [{len(intensity_groups_dict)}] scopes. Percentile: [{threshold:g}%], '
+                    f'Outlier values: [{total_outlier_value_count} in {total_value_count} ({total_outlier_value_count/total_value_count*100:.2f}%)], '
+                    f'Rows with outlier: [{row_count} in {len(df_mat)} ({row_count/len(df_mat)*100:.2f}%)]')
 
 
 
@@ -390,7 +467,7 @@ class DataPreprocessing:
 
 
         else:
-            raise ValueError(f'Invalid outlier method: {method}\nMust be in [none, missing-value, half-zero, zero-dominant, iqr, z-score, zero-inflated-poisson, negative-binomial, mahalanobis-distance]')
+            raise ValueError(f'Invalid outlier method: {method}\nMust be in [none, missing-value, half-zero, zero-dominant, intensity-percentile, iqr, z-score, zero-inflated-poisson, negative-binomial, mahalanobis-distance]')
 
         df[self.tfa.sample_list] = df_mat
         # statistics the number
@@ -616,7 +693,7 @@ class DataPreprocessing:
         return time.strftime("[%Y-%m-%d %H:%M:%S]", time.localtime())
 
     def detect_and_handle_outliers(self, df: pd.DataFrame, 
-                                    detect_method: str|None = 'none',
+                                    detect_method: str|tuple[str, float]|list[object]|None = 'none',
                                     handle_method: str|None = 'drop+drop', 
                                     detection_by_group:str|None=None, 
                                     handle_by_group:str|None=None) -> pd.DataFrame:
@@ -627,6 +704,7 @@ class DataPreprocessing:
             - `missing-value`: Detect missing values.
             - `half-zero`: Detect outliers based on half-zero criteria.
             - `zero-dominant`: Detect outliers based on zero-dominance.
+            - `("intensity-percentile", value)` or `["intensity-percentile", value]`: Detect low-intensity values by selected sample/group intensity percentile. `value` is always a percentage value.
             - `iqr`: Interquartile range method.
             - `z-score`: Z-score method.
             - `zero-inflated-poisson`: Zero-inflated Poisson distribution method.
