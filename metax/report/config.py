@@ -30,7 +30,7 @@ class AnalysisConfig:
 @dataclass
 class PreprocessConfig:
     quant_method: str = "sum"
-    outlier_detect_method: str = "missing-value"
+    outlier_detect_method: str | list[Any] = "missing-value"
     outlier_handle_method: str = "fillzero"
     detection_by_group: Optional[str] = None
     handle_by_group: Optional[str] = None
