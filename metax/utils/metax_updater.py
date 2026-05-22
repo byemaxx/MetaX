@@ -38,6 +38,10 @@ class Updater:
         self.update_libs = []
         self.install_libs = []
         self.uninstall_libs = []
+        self.dependencies_updated = False
+        self.update_log_dialog = None
+        self.update_log_browser = None
+        self.update_log_close_button = None
         self.branch = branch
         self.is_test_mode = is_test_mode
         
@@ -53,6 +57,60 @@ class Updater:
         self.remote_version_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/metax/utils/version.py"
         self.remote_change_log_path = f"https://raw.githubusercontent.com/byemaxx/MetaX/{self.branch}/Docs/ChangeLog.md"
         self.remote_project_zip_download_path = f"https://github.com/byemaxx/MetaX/archive/refs/heads/{self.branch}.zip"
+
+    def get_update_workspace_path(self):
+        return os.path.join(pathlib.Path.home(), 'MetaX/update')
+
+    def get_downloaded_project_folder_path(self):
+        return os.path.join(self.get_update_workspace_path(), f'MetaX-{self.branch}')
+
+    def clear_update_required_flag(self):
+        if hasattr(self.metaXGUI, "update_required"):
+            self.metaXGUI.update_required = False
+
+    def show_update_log_dialog(self):
+        if self.update_log_dialog is not None:
+            self.update_log_dialog.show()
+            return
+
+        dialog = QtWidgets.QDialog(self.MainWindow)
+        dialog.setWindowTitle("Updating MetaX")
+        dialog.setWindowIcon(self.MainWindow.windowIcon())
+        layout = QtWidgets.QVBoxLayout(dialog)
+
+        text_browser = QtWidgets.QTextBrowser()
+        text_browser.setReadOnly(True)
+        layout.addWidget(text_browser)
+
+        button_box = QtWidgets.QDialogButtonBox()
+        close_button = button_box.addButton(QtWidgets.QDialogButtonBox.Close)
+        close_button.setEnabled(False)
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+
+        dialog.setLayout(layout)
+        dialog.resize(700, 450)
+        dialog.show()
+        QtWidgets.QApplication.processEvents()
+
+        self.update_log_dialog = dialog
+        self.update_log_browser = text_browser
+        self.update_log_close_button = close_button
+
+    def append_update_log(self, message):
+        print(message)
+        if self.update_log_browser is None:
+            return
+
+        self.update_log_browser.append(message)
+        scrollbar = self.update_log_browser.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+        QtWidgets.QApplication.processEvents()
+
+    def finish_update_log_dialog(self):
+        if self.update_log_close_button is not None:
+            self.update_log_close_button.setEnabled(True)
+        QtWidgets.QApplication.processEvents()
 
     def set_current_version_and_api(self):
         # MetaX folder path is this file's parent and the parent's parent
@@ -148,11 +206,10 @@ class Updater:
 
 
     def download_project_zip_and_unzip(self):
-        home_path = pathlib.Path.home()
-        # if 'MetaX/update' not in home_path, create it
-        metaX_update_path = os.path.join(home_path, 'MetaX/update')
+        metaX_update_path = self.get_update_workspace_path()
         # if the folder exists, delete it first
         if os.path.exists(metaX_update_path):
+            self.append_update_log(f"Cleaning update workspace: {metaX_update_path}")
             shutil.rmtree(metaX_update_path)
         # then create it
         os.makedirs(metaX_update_path)
@@ -160,30 +217,94 @@ class Updater:
         # download the project zip file
         project_zip_path = os.path.join(metaX_update_path, 'MetaX.zip')
         try:
+            self.append_update_log(f"Downloading MetaX from {self.remote_project_zip_download_path}")
             # Adding a timeout to the download process
             with urllib.request.urlopen(self.remote_project_zip_download_path, timeout=60) as response:
+                total_size_header = response.headers.get("Content-Length")
+                total_size = int(total_size_header) if total_size_header else 0
+                downloaded_size = 0
+                next_progress_log = 0
                 with open(project_zip_path, 'wb') as out_file:
-                    shutil.copyfileobj(response, out_file)
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        out_file.write(chunk)
+                        downloaded_size += len(chunk)
+                        if downloaded_size >= next_progress_log:
+                            downloaded_mb = downloaded_size / (1024 * 1024)
+                            if total_size > 0:
+                                total_mb = total_size / (1024 * 1024)
+                                percent = (downloaded_size / total_size) * 100
+                                self.append_update_log(f"Downloaded {downloaded_mb:.1f}/{total_mb:.1f} MB ({percent:.1f}%).")
+                            else:
+                                self.append_update_log(f"Downloaded {downloaded_mb:.1f} MB.")
+                            next_progress_log = downloaded_size + (5 * 1024 * 1024)
 
             # Unzip the project zip file
+            self.append_update_log("Extracting downloaded package...")
             with zipfile.ZipFile(project_zip_path, 'r') as zip_ref:
-                zip_ref.extractall(metaX_update_path)
+                members = zip_ref.infolist()
+                total_members = len(members)
+                for index, member in enumerate(members, start=1):
+                    zip_ref.extract(member, metaX_update_path)
+                    if index == total_members or index % 50 == 0:
+                        self.append_update_log(f"Extracted {index}/{total_members} files.")
                 
             # Optionally, delete the project zip file after extraction
             os.remove(project_zip_path)
+            self.append_update_log("Download and extraction completed.")
             
             
             return True
 
         except urllib.error.HTTPError as e:
-            print(f"URL Error during download: {e.reason}")
+            self.append_update_log(f"URL Error during download: {e.reason}")
             return False
         except socket.timeout:
-            print("Download timed out")
+            self.append_update_log("Download timed out")
             return False
         except Exception as e:
-            print(f"Download project zip failed: {e}")
+            self.append_update_log(f"Download project zip failed: {e}")
             return False
+
+    def install_project_dependencies(self):
+        project_folder_path = self.get_downloaded_project_folder_path()
+        if not os.path.isdir(project_folder_path):
+            return False, f"Downloaded project folder does not exist: {project_folder_path}"
+
+        command = [sys.executable, "-m", "pip", "install", "--upgrade", project_folder_path]
+        self.append_update_log(f"Installing MetaX dependencies with command: {' '.join(command)}")
+        output_lines = []
+        try:
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
+            )
+        except Exception as e:
+            return False, str(e)
+
+        if process.stdout is not None:
+            for line in process.stdout:
+                clean_line = line.rstrip()
+                output_lines.append(clean_line)
+                if clean_line:
+                    self.append_update_log(clean_line)
+
+        return_code = process.wait()
+        output = "\n".join(output_lines)
+        if return_code != 0:
+            self.append_update_log(f"Install MetaX dependencies failed with exit code {return_code}.")
+            return False, output
+
+        self.append_update_log("Install MetaX dependencies succeeded.")
+        self.dependencies_updated = True
+        return True, output
 
             
         
@@ -192,26 +313,30 @@ class Updater:
             current_script_path = os.path.dirname(os.path.abspath(__file__))
             metax_folder_path = os.path.dirname(current_script_path)
             metax_folder_path = os.path.dirname(metax_folder_path)
-            print(f"MetaX folder path: {metax_folder_path}")
+            self.append_update_log(f"Replacing MetaX files in: {metax_folder_path}")
             
             #remove all files in the metax folder, except the __pycache__ folder and data folder and tsv files
+            removed_count = 0
             for root, dirs, files in os.walk(metax_folder_path):
                 for file in files:
                     if file != '__init__.py' and file != '__pycache__' and not file.endswith('.pyc'):
                         os.remove(os.path.join(root, file))
+                        removed_count += 1
                 for dir in dirs:
                     if dir not in ['__pycache__']:
                         shutil.rmtree(os.path.join(root, dir))
+            self.append_update_log(f"Removed {removed_count} old files.")
 
             # move the new MetaX folder to the old MetaX folder
-            home_path = pathlib.Path.home()
-            metaX_update_path = os.path.join(home_path, 'MetaX/update')
-            project_folder_path = os.path.join(metaX_update_path, f'MetaX-{self.branch}') # /home/user/MetaX/update/MetaX-main or /home/user/MetaX/update/MetaX-dev
+            project_folder_path = self.get_downloaded_project_folder_path() # /home/user/MetaX/update/MetaX-main or /home/user/MetaX/update/MetaX-dev
+            moved_count = 0
             for root, dirs, files in os.walk(project_folder_path):
                 for file in files:
                     shutil.move(os.path.join(root, file), os.path.join(metax_folder_path, file))
+                    moved_count += 1
                 for dir in dirs:
                     shutil.move(os.path.join(root, dir), os.path.join(metax_folder_path, dir))
+            self.append_update_log(f"Moved {moved_count} new files into the MetaX installation.")
         
             return True
             
@@ -225,17 +350,25 @@ class Updater:
             print(f"Read change log failed: {e}")
             change_log_str = "No change log."
 
-        if self.current_api != self.remote_api:
-            self.display_message_in_text_browser("Update", f"MetaX new version is available with a new API.\
-                \n\nPlease download the new version manually from: https://github.com/byemaxx/MetaX\
-                \n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}\n\nChange log:\n{change_log_str}")
-            return
+        api_changed = str(self.current_api) != str(self.remote_api)
+        dependency_notice = ""
+        if api_changed:
+            dependency_notice = (
+                "\n\nThis update changes the MetaX API version and may require new Python dependencies."
+                "\nMetaX will run pip with the current Python interpreter before replacing the local code:"
+                f"\n{sys.executable} -m pip install --upgrade <downloaded MetaX source>"
+            )
 
         reply = self.display_message_in_text_browser("Update", f"MetaX new version is available. Do you want to update?\
-                                    \ncurrent version: {self.current_version}\nremote version: {self.remote_version}\n\nChange log:\n{change_log_str}",
+                                    {dependency_notice}\
+                                    \n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}\
+                                    \nCurrent API: {self.current_api}\nRemote API: {self.remote_api}\n\nChange log:\n{change_log_str}",
                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.metaXGUI.show_message("Updating MetaX...", "Updating...")
+            self.show_update_log_dialog()
+            self.append_update_log(f"Starting MetaX update: {self.current_version} -> {self.remote_version}")
+            self.append_update_log(f"Current API: {self.current_api}; remote API: {self.remote_api}")
             # set update_required flag to True
             # this flag will stop MainWindow.show()
             self.metaXGUI.update_required = True
@@ -243,20 +376,49 @@ class Updater:
             try:
                 download_success = self.download_project_zip_and_unzip()
                 if not download_success:
+                    self.clear_update_required_flag()
+                    self.finish_update_log_dialog()
                     QMessageBox.warning(self.MainWindow, "Update", "Download failed. Please try again later or update manually.")
                     return
+
+                if api_changed:
+                    self.metaXGUI.show_message("Installing MetaX dependencies...", "Updating...")
+                    dependency_success, dependency_output = self.install_project_dependencies()
+                    if not dependency_success:
+                        dependency_output = dependency_output.strip()
+                        if len(dependency_output) > 3000:
+                            dependency_output = dependency_output[-3000:]
+                        QMessageBox.warning(
+                            self.MainWindow,
+                            "Update",
+                            "MetaX downloaded the new version, but dependency installation failed. "
+                            "The local MetaX code was not replaced.\n\n"
+                            f"Command:\n{sys.executable} -m pip install --upgrade {self.get_downloaded_project_folder_path()}\n\n"
+                            f"Output:\n{dependency_output}"
+                        )
+                        self.clear_update_required_flag()
+                        self.finish_update_log_dialog()
+                        return
+
                 # replace the old MetaX folder with the new one
                 replace_success = self.replace_metax_dir()
                 if not replace_success:
+                    self.clear_update_required_flag()
+                    self.finish_update_log_dialog()
                     QMessageBox.warning(self.MainWindow, "Update", "An error occurred while replacing the MetaX directory. Please try again later or update manually.")
                     return
 
                 # check if the update is successful
                 if self.check_update_status():
                     msg = f"MetaX has been updated to {self.remote_version}. Please restart MetaX."
+                    if self.dependencies_updated:
+                        msg = f"MetaX has been updated to {self.remote_version}, and dependencies were updated. Please restart MetaX."
+                    self.append_update_log(msg)
                 else:
                     msg = f"Warning: MetaX update failed. Still in version {self.current_version}. Please try again later or update manually."
+                    self.append_update_log(msg)
 
+                self.finish_update_log_dialog()
                 QMessageBox.information(self.MainWindow, "Update", msg)
                 # force close MetaX without triggering closeEvent
                 QtWidgets.QApplication.quit()
@@ -265,6 +427,9 @@ class Updater:
                 sys.exit()
 
             except Exception as e:
+                self.clear_update_required_flag()
+                self.append_update_log(f"Update failed: {e}")
+                self.finish_update_log_dialog()
                 QMessageBox.warning(self.MainWindow, "Update", f'Update failed: {e}')
 
     def display_message_in_text_browser(self, title, message, buttons=QMessageBox.NoButton, default_button=QMessageBox.NoButton):
@@ -413,4 +578,4 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         # 强制退出程序
-        os._exit(0) 
+        os._exit(0)
