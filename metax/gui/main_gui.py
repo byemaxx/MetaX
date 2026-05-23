@@ -2686,7 +2686,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if self.metaumbra_gui_process and self.metaumbra_gui_process.poll() is None:
                 QMessageBox.information(self.MainWindow, 'MetaUmbra GUI', 'MetaUmbra GUI is already running.')
                 return
-            self.metaumbra_gui_process = subprocess.Popen([sys.executable, '-m', 'metaumbra', 'gui'])
+            repo_root, env = self._get_metaumbra_subprocess_env()
+            self._ensure_metaumbra_version(env)
+            self.metaumbra_gui_process = subprocess.Popen(
+                [sys.executable, '-m', 'metaumbra', 'gui'],
+                cwd=repo_root,
+                env=env,
+            )
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'open_metaumbra_gui error: {error_message}', 'e')
@@ -3151,6 +3157,44 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'OTF'
         return os.path.join(temp_dir, f'{output_stem}_metaumbra_genome_presence.tsv')
 
+    @staticmethod
+    def _parse_metaumbra_version(version_text: str) -> tuple[int, int, int] | None:
+        match = re.search(r'(\d+)\.(\d+)\.(\d+)', version_text)
+        if not match:
+            return None
+        return tuple(int(part) for part in match.groups())
+
+    def _get_metaumbra_subprocess_env(self) -> tuple[str, dict]:
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        env = os.environ.copy()
+        env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
+        env.setdefault("PYTHONIOENCODING", "utf-8")
+        return repo_root, env
+
+    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.2.0") -> None:
+        proc = subprocess.run(
+            [sys.executable, '-m', 'metaumbra', '--version'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+        )
+        version_output = (proc.stdout or '').strip()
+        if proc.returncode != 0:
+            raise RuntimeError(f"Unable to launch MetaUmbra with {sys.executable}:\n{version_output}")
+
+        actual = self._parse_metaumbra_version(version_output)
+        required = self._parse_metaumbra_version(minimum)
+        if actual is None or required is None or actual < required:
+            raise RuntimeError(
+                f"MetaX direct-to-OTF requires MetaUmbra >= {minimum}, but the active Python resolves "
+                f"{version_output or 'an unknown MetaUmbra version'}.\n"
+                f"Python executable: {sys.executable}\n"
+                "Install or update MetaUmbra in this environment before running the workflow."
+            )
+
     def _select_genomes_from_metaumbra_result(self, genome_presence_path: str) -> list[str]:
         return self._read_pep_direct_to_otf_genome_list_file(genome_presence_path)
 
@@ -3201,10 +3245,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         print("Launching MetaUmbra scoring in an isolated process:")
         print(" ".join([f'"{part}"' if " " in str(part) else str(part) for part in cmd]))
 
-        env = os.environ.copy()
-        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
-        env.setdefault("PYTHONIOENCODING", "utf-8")
+        repo_root, env = self._get_metaumbra_subprocess_env()
+        self._ensure_metaumbra_version(env)
 
         creationflags = 0
         try:
