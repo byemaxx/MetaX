@@ -311,7 +311,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_pep_direct_to_otf_peptide_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_peptide_path, 'file')
         self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path, 'folder')
         self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 'file')
-        self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_dreict_anno.tsv')
+        self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_direct_anno.tsv')
 
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
@@ -1840,7 +1840,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             status_tip = 'The path for save the MetaUmbra genome presence result'
         else:
             self.label_224.setText('OTFs Save To')
-            default_filename = 'OTF_dreict_anno.tsv'
+            default_filename = 'OTF_direct_anno.tsv'
             status_tip = 'The path for save the OTF result'
 
         self.lineEdit_pep_direct_to_otf_output_path.setStatusTip(status_tip)
@@ -2575,7 +2575,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             default_name = 'genome_presence.tsv'
         else:
             title = 'Save OTF Table'
-            default_name = 'OTF_dreict_anno.tsv'
+            default_name = 'OTF_direct_anno.tsv'
         pep_direct_to_otf_output_path = QFileDialog.getSaveFileName(self.MainWindow, title, os.path.join(self.last_path, default_name), 'tsv (*.tsv)')[0]
         if not pep_direct_to_otf_output_path:
             return
