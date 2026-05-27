@@ -1,3 +1,10 @@
+# Version: 2.0.0
+## Date: 2026-05-27
+### Changes:
+- New: Added peptide direct annotation function for the OTF table, by built-in [MetaUmbra](https://github.com/byemaxx/MetaUmbra) in **Peptide Annotator**.
+- New: Added **Report Generator** function to generate the report for the OTF analysis, including the basic statistics.
+
+
 # Version: 1.127.5
 ## Date: 2026-03-20
 ### Changes:

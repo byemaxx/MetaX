@@ -2686,18 +2686,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if self.metaumbra_gui_process and self.metaumbra_gui_process.poll() is None:
                 QMessageBox.information(self.MainWindow, 'MetaUmbra GUI', 'MetaUmbra GUI is already running.')
                 return
-            repo_root, env = self._get_metaumbra_subprocess_env()
-            self._ensure_metaumbra_version(env)
-            self.metaumbra_gui_process = subprocess.Popen(
-                [sys.executable, '-m', 'metaumbra', 'gui'],
-                cwd=repo_root,
-                env=env,
-            )
+
+            metaumbra_gui = shutil.which("metaumbra-gui")
+            if metaumbra_gui:
+                cmd = [metaumbra_gui]
+            else:
+                cmd = [sys.executable, "-m", "metaumbra.gui"]
+
+            self.metaumbra_gui_process = subprocess.Popen(cmd)
+
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'open_metaumbra_gui error: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
-    
     
     ## peptideAnnotator peptide direct annotation tab end
 
