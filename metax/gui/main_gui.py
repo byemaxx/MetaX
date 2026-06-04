@@ -442,6 +442,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_add_top.clicked.connect(self.add_basic_heatmap_top_list)
         self.pushButton_basic_heatmap_plot.clicked.connect(lambda: self.plot_basic_list('heatmap'))
         self.pushButton_basic_bar_plot.clicked.connect(lambda: self.plot_basic_list('bar'))
+        self.pushButton_basic_items_pca_plot.clicked.connect(lambda: self.plot_basic_list('pca'))
         self.pushButton_basic_heatmap_get_table.clicked.connect(lambda: self.plot_basic_list('get_table'))
         self.pushButton_basic_heatmap_sankey_plot.clicked.connect(lambda: self.plot_basic_list('sankey'))
         self.pushButton_basic_heatmap_metatree.clicked.connect(lambda: self.plot_basic_list('metatree'))
@@ -4580,6 +4581,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_basic_heatmap_clean_list,
         self.pushButton_basic_heatmap_plot,
         self.pushButton_basic_bar_plot,
+        self.pushButton_basic_items_pca_plot,
         self.pushButton_basic_heatmap_get_table,
         self.pushButton_basic_heatmap_plot_upset,
         self.pushButton_basic_heatmap_sankey_plot,
@@ -5199,6 +5201,56 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
                                                                 plot_percent = plot_percent, sub_meta = sub_meta, plt_theme = plt_theme)
+
+            elif plot_type == 'pca':
+                width = self.spinBox_basic_heatmap_width.value()
+                height = self.spinBox_basic_heatmap_height.value()
+                font_size = self.spinBox_basic_heatmap_label_font_size.value()
+                rename_sample = self.checkBox_basic_hetatmap_rename_sample_name.isChecked()
+                sub_meta = self.comboBox_3dbar_sub_meta.currentText()
+                show_label = self.checkBox_basic_items_pca_show_labels.isChecked()
+                use_3d_pca = self.checkBox_basic_items_pca_js.isChecked()
+
+                row_num = df.shape[0]
+                if use_3d_pca:
+                    if row_num < 3:
+                        QMessageBox.warning(self.MainWindow, 'Warning', 'The number of selected items is less than 3, PCA 3D cannot be plotted!')
+                        return None
+                elif row_num < 2:
+                    QMessageBox.warning(self.MainWindow, 'Warning', 'The number of selected items is less than 2, PCA cannot be plotted!')
+                    return None
+
+                title_name = table_name if len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in [
+                    'All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items'
+                ] else f'{table_name} (Selected Items)'
+
+                self.show_message('PCA is running, please wait...')
+                if use_3d_pca:
+                    pic = PcaPlot_js(
+                        self.tfa,
+                        theme=self.html_theme
+                    ).plot_pca_pyecharts_3d(
+                        df=df,
+                        title_name=title_name,
+                        show_label=show_label,
+                        rename_sample=rename_sample,
+                        width=width,
+                        height=height,
+                        font_size=font_size,
+                        legend_col_num=None,
+                    )
+                    self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
+                else:
+                    BasicPlot(self.tfa).plot_pca_sns(
+                        df=df,
+                        title_name=title_name,
+                        show_label=show_label,
+                        rename_sample=rename_sample,
+                        width=width,
+                        height=height,
+                        font_size=font_size,
+                        sub_meta=sub_meta,
+                    )
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
