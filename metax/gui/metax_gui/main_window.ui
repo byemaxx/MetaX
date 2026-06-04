@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1277</width>
-    <height>925</height>
+    <width>1039</width>
+    <height>705</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -369,8 +369,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>592</width>
-                 <height>620</height>
+                 <width>486</width>
+                 <height>484</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -494,8 +494,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>450</width>
-                 <height>71</height>
+                 <width>311</width>
+                 <height>49</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -538,8 +538,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>389</width>
-                 <height>105</height>
+                 <width>261</width>
+                 <height>75</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1452,8 +1452,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1191</width>
-                 <height>238</height>
+                 <width>977</width>
+                 <height>171</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_37">
@@ -1987,8 +1987,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1168</width>
-                     <height>364</height>
+                     <width>936</width>
+                     <height>267</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_34">
@@ -3215,7 +3215,7 @@
               </widget>
               <widget class="QWidget" name="tab_13">
                <attribute name="title">
-                <string>Heatmap and Bar</string>
+                <string>Items Plot</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_23">
                 <item row="5" column="0">
@@ -3612,6 +3612,16 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QPushButton" name="pushButton_basic_items_pca_plot">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Plot PCA</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QPushButton" name="pushButton_basic_heatmap_plot_upset">
                     <property name="enabled">
                      <bool>false</bool>
@@ -3761,8 +3771,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1159</width>
-                     <height>238</height>
+                     <width>936</width>
+                     <height>157</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_50">
@@ -4107,8 +4117,14 @@
                             <verstretch>0</verstretch>
                            </sizepolicy>
                           </property>
+                          <property name="layoutDirection">
+                           <enum>Qt::LeftToRight</enum>
+                          </property>
                           <property name="text">
                            <string>Rename</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                           </property>
                          </widget>
                         </item>
@@ -4413,6 +4429,34 @@
                             <string>white</string>
                            </property>
                           </item>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item row="1" column="3">
+                       <layout class="QHBoxLayout" name="horizontalLayout_133">
+                        <item>
+                         <widget class="QLabel" name="label_250">
+                          <property name="text">
+                           <string>PCA</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QCheckBox" name="checkBox_basic_items_pca_show_labels">
+                          <property name="text">
+                           <string>Show Labels</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QCheckBox" name="checkBox_basic_items_pca_js">
+                          <property name="text">
+                           <string>3D PCA</string>
+                          </property>
                          </widget>
                         </item>
                        </layout>
@@ -5386,8 +5430,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1131</width>
-                        <height>130</height>
+                        <width>933</width>
+                        <height>95</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
@@ -6037,8 +6081,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1263</width>
-                    <height>211</height>
+                    <width>940</width>
+                    <height>154</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_38">
@@ -7493,8 +7537,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>736</width>
-                     <height>175</height>
+                     <width>513</width>
+                     <height>128</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_49">
@@ -8120,8 +8164,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1159</width>
-                     <height>171</height>
+                     <width>953</width>
+                     <height>109</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -9415,8 +9459,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1188</width>
-                     <height>138</height>
+                     <width>810</width>
+                     <height>102</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_69">
@@ -9965,8 +10009,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1159</width>
-                     <height>217</height>
+                     <width>953</width>
+                     <height>145</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10734,8 +10778,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>985</width>
-                    <height>295</height>
+                    <width>701</width>
+                    <height>210</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11253,8 +11297,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1050</width>
-                    <height>198</height>
+                    <width>706</width>
+                    <height>144</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11505,8 +11549,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>452</width>
-                    <height>60</height>
+                    <width>313</width>
+                    <height>41</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -11547,8 +11591,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>373</width>
-                    <height>189</height>
+                    <width>259</width>
+                    <height>128</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -12123,8 +12167,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1277</width>
-     <height>30</height>
+     <width>1039</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

@@ -1,3 +1,8 @@
+# Version: 2.1.0
+## Date: 2026-06-04
+### Changes:
+- New: Added a function to plot the PCA for selected items.
+
 # Version: 2.0.0
 ## Date: 2026-05-27
 ### Changes:
