@@ -886,6 +886,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 pass
             # Other settings
             settings_widget.protein_infer_method_changed.connect(self.on_protein_infer_method_changed)
+            settings_widget.use_local_js_assets_changed.connect(self.on_use_local_js_assets_changed)
             
             layout.addWidget(settings_widget)
             self.settings_dialog.setLayout(layout)
@@ -905,6 +906,29 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def on_auto_check_update_changed(self, auto_check):
         self.auto_check_update = auto_check
         print(f"Auto check update set to: {auto_check}")
+        
+    def on_use_local_js_assets_changed(self, checked: bool):
+        self.use_local_js_assets = checked
+        try:
+            from pyecharts.globals import CurrentConfig
+            import urllib.request
+            
+            if checked:
+                import metax
+                _metax_dir = os.path.dirname(os.path.abspath(metax.__file__))
+                _assets_dir = os.path.join(_metax_dir, 'assets', 'pyecharts')
+                _asset_uri = urllib.request.pathname2url(_assets_dir)
+                CurrentConfig.ONLINE_HOST = "file://" + _asset_uri + "/"
+            else:
+                CurrentConfig.ONLINE_HOST = "https://assets.pyecharts.org/assets/v5/"
+                
+            if hasattr(self, 'settings') and self.settings is not None:
+                self.settings.setValue('use_local_js_assets', checked)
+        except Exception as e:
+            try:
+                self.logger.write_log(f'Failed to set pyecharts local JS assets: {str(e)}', 'e')
+            except Exception:
+                pass
         
     # handle the heatmap params changed from settings window
     def on_heatmap_params_changed(self, params_dict):
@@ -1332,6 +1356,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         except Exception:
             # keep init robust; errors will be logged inside the refresh function when possible
             pass
+            
+        # Read use_local_js_assets setting and apply to pyecharts
+        try:
+            use_local = self.settings.value('use_local_js_assets', True, type=bool)
+            self.use_local_js_assets = use_local
+            self.on_use_local_js_assets_changed(use_local)
+        except Exception:
+            pass
         
     def show_user_agreement(self):
         self.dialog = UserAgreementDialog(self.MainWindow)
@@ -1500,6 +1532,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # save update_branch setting
         self.settings.setValue("update_branch", self.update_branch)
         self.settings.setValue("auto_check_update", self.auto_check_update)
+        if hasattr(self, 'use_local_js_assets'):
+            self.settings.setValue("use_local_js_assets", self.use_local_js_assets)
         #save theme
         if self.settings.contains("theme"):
             self.settings.setValue("theme", self.settings.value("theme", type=str))

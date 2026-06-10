@@ -1,3 +1,8 @@
+# Version: 2.1.2
+## Date: 2026-06-10
+### Changes:
+- JS plot: Added a local echarts js file to speed up the plot of the HTML plot (e.g. sankey, sunburst, network) and gave an option to use the local js file or the online js file in the setting.
+
 # Version: 2.1.1
 ## Date: 2026-06-10
 ### Changes:
