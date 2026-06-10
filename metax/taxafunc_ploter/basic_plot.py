@@ -289,6 +289,7 @@ class BasicPlot:
             random_state (int): Random seed
         """
         try:
+            import inspect
             from sklearn.manifold import TSNE
             
             dft = df.copy()
@@ -329,9 +330,25 @@ class BasicPlot:
 
             plt.figure(figsize=(width, height))
             
-            tsne = TSNE(n_components=2, perplexity=perplexity, 
-                    n_iter=n_iter, early_exaggeration=early_exaggeration,
-                    learning_rate=learning_rate, random_state=random_state)
+            tsne_kwargs = dict(
+                n_components=2,
+                perplexity=perplexity,
+                early_exaggeration=early_exaggeration,
+                random_state=random_state,
+            )
+            tsne_signature = inspect.signature(TSNE)
+            if "max_iter" in tsne_signature.parameters:
+                tsne_kwargs["max_iter"] = n_iter
+            else:
+                tsne_kwargs["n_iter"] = n_iter
+
+            learning_rate_param = tsne_signature.parameters.get("learning_rate")
+            if learning_rate == "auto" and learning_rate_param is not None and learning_rate_param.default != "auto":
+                tsne_kwargs["learning_rate"] = 200.0
+            else:
+                tsne_kwargs["learning_rate"] = learning_rate
+
+            tsne = TSNE(**tsne_kwargs)
             components = tsne.fit_transform(mat)
             
             dot_size = (width * height)*font_size/10 if dot_size is None else dot_size
