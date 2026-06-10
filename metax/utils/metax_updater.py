@@ -309,36 +309,49 @@ class Updater:
             
         
     def replace_metax_dir(self):
-            # MetaX folder path is this file's parent and the parent's parent
-            current_script_path = os.path.dirname(os.path.abspath(__file__))
-            metax_folder_path = os.path.dirname(current_script_path)
-            metax_folder_path = os.path.dirname(metax_folder_path)
-            self.append_update_log(f"Replacing MetaX files in: {metax_folder_path}")
-            
-            #remove all files in the metax folder, except the __pycache__ folder and data folder and tsv files
-            removed_count = 0
-            for root, dirs, files in os.walk(metax_folder_path):
-                for file in files:
-                    if file != '__init__.py' and file != '__pycache__' and not file.endswith('.pyc'):
-                        os.remove(os.path.join(root, file))
-                        removed_count += 1
-                for dir in dirs:
-                    if dir not in ['__pycache__']:
-                        shutil.rmtree(os.path.join(root, dir))
-            self.append_update_log(f"Removed {removed_count} old files.")
-
-            # move the new MetaX folder to the old MetaX folder
-            project_folder_path = self.get_downloaded_project_folder_path() # /home/user/MetaX/update/MetaX-main or /home/user/MetaX/update/MetaX-dev
-            moved_count = 0
-            for root, dirs, files in os.walk(project_folder_path):
-                for file in files:
-                    shutil.move(os.path.join(root, file), os.path.join(metax_folder_path, file))
-                    moved_count += 1
-                for dir in dirs:
-                    shutil.move(os.path.join(root, dir), os.path.join(metax_folder_path, dir))
-            self.append_update_log(f"Moved {moved_count} new files into the MetaX installation.")
+        # MetaX folder path is this file's parent and the parent's parent
+        current_script_path = os.path.dirname(os.path.abspath(__file__))
+        metax_folder_path = os.path.dirname(current_script_path)
+        metax_folder_path = os.path.dirname(metax_folder_path)
+        self.append_update_log(f"Replacing MetaX files in: {metax_folder_path}")
         
+        project_folder_path = self.get_downloaded_project_folder_path()
+        if not os.path.exists(project_folder_path):
+            self.append_update_log(f"Error: Downloaded project folder not found at {project_folder_path}")
+            return False
+
+        replaced_count = 0
+        try:
+            for item in os.listdir(project_folder_path):
+                source_item = os.path.join(project_folder_path, item)
+                target_item = os.path.join(metax_folder_path, item)
+                
+                # Exclude .git and other repo-specific files that don't need to be in the local installation
+                if item in ['.git', '.github', '.gitignore']:
+                    continue
+
+                if os.path.isdir(source_item):
+                    if os.path.exists(target_item):
+                        shutil.rmtree(target_item, ignore_errors=True)
+                    shutil.copytree(source_item, target_item, dirs_exist_ok=True)
+                    replaced_count += 1
+                else:
+                    if os.path.exists(target_item):
+                        try:
+                            os.remove(target_item)
+                        except Exception:
+                            pass
+                    shutil.copy2(source_item, target_item)
+                    replaced_count += 1
+
+            self.append_update_log(f"Updated {replaced_count} files/directories in the MetaX installation.")
             return True
+
+        except Exception as e:
+            self.append_update_log(f"An error occurred while replacing files: {e}")
+            import traceback
+            self.append_update_log(traceback.format_exc())
+            return False
             
 
 
