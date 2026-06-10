@@ -1,3 +1,8 @@
+# Version: 2.1.1
+## Date: 2026-06-10
+### Changes:
+- MetaX Updater: fixed the bug of when update, the pyenv folder was removed.
+
 # Version: 2.1.0
 ## Date: 2026-06-04
 ### Changes:
