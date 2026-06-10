@@ -822,11 +822,23 @@ class BasicPlot:
             # Plot UpSet
             fig = plt.figure(figsize=(width, height))
             plt.rcParams.update({'font.size': font_size})
-            upset_plot(upset_data, fig = fig, show_counts=show_label,
-                       show_percentages=show_percentages if show_label else False,
-                    element_size=None, sort_categories_by ='-input', 
-                    min_subset_size=min_subset_size if min_subset_size != 0 else None,
-                    max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+            axes = upset_plot(upset_data, fig = fig, show_counts=False,
+                              show_percentages=False,
+                              element_size=None, sort_categories_by ='-input',
+                              sort_by='cardinality',
+                              min_subset_size=min_subset_size if min_subset_size != 0 else None,
+                              max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+
+            if show_label:
+                ax = axes['intersections']
+                total_items = len(upset_data)
+                for c in ax.containers:
+                    if show_percentages:
+                        labels = [f'{int(v)}\n({(v/total_items)*100:.1f}%)' if v > 0 else '' for v in c.datavalues]
+                        ax.bar_label(c, labels=labels, padding=1)
+                    else:
+                        labels = [f'{int(v)}' if v > 0 else '' for v in c.datavalues]
+                        ax.bar_label(c, labels=labels, padding=1)
 
             plt.suptitle(f"UpSet of {title_name}", fontsize=font_size + 2, fontweight='bold')
             plt.tight_layout()
