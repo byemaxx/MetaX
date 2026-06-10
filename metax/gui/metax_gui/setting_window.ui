@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>824</width>
-    <height>625</height>
+    <width>1034</width>
+    <height>721</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>806</width>
-        <height>553</height>
+        <width>1008</width>
+        <height>623</height>
        </rect>
       </property>
       <attribute name="label">
@@ -644,13 +644,6 @@
        </item>
        <item row="3" column="3">
         <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_22">
-           <property name="text">
-            <string>Theme</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <widget class="QComboBox" name="comboBox_html_theme">
            <item>
@@ -663,6 +656,32 @@
              <string>dark</string>
             </property>
            </item>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Theme</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QCheckBox" name="checkBox_use_local_js_assets">
+           <property name="toolTip">
+            <string>When checked, interactive plots load instantly and work offline using local libraries. Uncheck this before exporting HTML reports if you plan to share them with others, so their browsers can download the libraries from the internet.</string>
+           </property>
+           <property name="text">
+            <string>Use Local JS Assets (Offline/Fast)</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -692,8 +711,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>806</width>
-        <height>553</height>
+        <width>1008</width>
+        <height>623</height>
        </rect>
       </property>
       <attribute name="label">
