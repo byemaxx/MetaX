@@ -12,11 +12,12 @@ import pandas as pd
 
 from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-from .config import AutoReportConfig, save_config_used
+from .config import AutoReportConfig
 from .html_report import HtmlReportBuilder
 from .paths import ReportPaths
 from .plot_builder import PlotBuilder
 from .registry import ResultRegistry
+from .reproducibility import save_reproducibility_artifacts
 from .stats_builder import StatsBuilder
 from .table_builder import TableBuilder, VALID_TAXA_LEVELS
 
@@ -27,6 +28,7 @@ class ReportResult:
     index_html_path: Path
     summary_json_path: Path
     registry: ResultRegistry
+    reproducibility_artifacts: dict[str, Path] = field(default_factory=dict)
 
 
 @dataclass
@@ -72,7 +74,9 @@ class AutoOTFReport:
         logger.info("Meta path: %s", self.config.input.meta_path)
         logger.info("Output directory: %s", paths.output_dir)
         logger.info("Config: %s", self.config.to_dict())
-        save_config_used(self.config, paths.output_dir)
+        reproducibility_artifacts = save_reproducibility_artifacts(self.config, paths.output_dir)
+        for artifact_name, artifact_path in reproducibility_artifacts.items():
+            logger.info("Saved reproducibility %s: %s", artifact_name, artifact_path)
 
         try:
             with self._redirect_backend_output(logger):
@@ -101,6 +105,7 @@ class AutoOTFReport:
                 index_html_path=index_html_path,
                 summary_json_path=summary_json_path,
                 registry=registry,
+                reproducibility_artifacts=reproducibility_artifacts,
             )
         except Exception as exc:
             registry.add_error(str(exc), "AutoOTFReport")
