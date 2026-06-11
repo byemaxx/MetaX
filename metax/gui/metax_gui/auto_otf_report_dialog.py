@@ -458,6 +458,11 @@ class AutoOTFReportLogDialog(QDialog):
             self.status_label.setText("Report finished.")
             self.open_report_button.setEnabled(True)
             self._append_log(f"Report generated: {result.index_html_path}")
+            reproducibility_artifacts = getattr(result, "reproducibility_artifacts", {})
+            if reproducibility_artifacts:
+                self._append_log("Reproducibility files:")
+                for artifact_name, artifact_path in reproducibility_artifacts.items():
+                    self._append_log(f"  {artifact_name}: {artifact_path}")
         else:
             self.status_label.setText("Report failed.")
             self._append_log(message)
