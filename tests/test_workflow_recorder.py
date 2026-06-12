@@ -11,6 +11,7 @@ from metax.workflow_recorder import (
     gui_action_step,
     set_multi_tables_step,
     taxafunc_analyzer_step,
+    deseq2_step,
 )
 
 

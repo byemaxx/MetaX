@@ -353,7 +353,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
         self.actionSettings.setIcon(qta.icon('mdi.cog'))
         self.actionTutorial.setIcon(qta.icon('mdi6.book-open-page-variant-outline'))
-        self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi.file-document-box-multiple-outline'))
         # set menu bar click event
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
         self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
@@ -366,6 +365,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
         self.actionExport_Workflow_Notebook = QtWidgets.QAction("Export Workflow Notebook", self.MainWindow)
         self.actionExport_Workflow_Notebook.setObjectName("actionExport_Workflow_Notebook")
+        self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi6.file-document-multiple-outline'))
         self.menuOthers.addAction(self.actionExport_Workflow_Notebook)
         self.actionExport_Workflow_Notebook.triggered.connect(self.export_workflow_notebook)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
