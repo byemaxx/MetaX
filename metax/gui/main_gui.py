@@ -2188,6 +2188,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return
         self._record_current_taxafunc_if_needed()
         try:
+            if hasattr(self, 'tfa') and self.tfa is not None and self.tfa.meta_name:
+                set_group_code = f"tfa.set_group({repr(self.tfa.meta_name)})"
+                if set_group_code not in step.code:
+                    lines = step.code.split('\n')
+                    for i, line in enumerate(lines):
+                        if not line.startswith('#') and line.strip():
+                            lines.insert(i, set_group_code)
+                            break
+                    else:
+                        lines.append(set_group_code)
+                    step.code = '\n'.join(lines)
+                    
             recorder.add_step(step)
             self.logger.write_log(f"recorded GUI workflow step: {getattr(step, 'title', step)}", "i")
         except Exception:
@@ -6984,6 +6996,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "show_all_labels": show_all_labels,
                     "linecolor": linecolor,
                     "scale_method": scale_method,
+                    "x_filter_list": x_filter_list,
+                    "y_filter_list": y_filter_list,
+                    "filter_by_regex": filter_by_regex,
+                    "three_levels_df_type": getattr(self.comboBox_cross_3_level_plot_df_type, "currentText", lambda: "same_trends")(),
+                    "log2fc_min": getattr(self.doubleSpinBox_mini_log2fc_heatmap, "value", lambda: -1)(),
+                    "log2fc_max": getattr(self.doubleSpinBox_max_log2fc_heatmap, "value", lambda: 1)(),
+                    "remove_zero_col": remove_zero_col,
                 }
             )
 
@@ -7287,7 +7306,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             box.setDefaultButton(btn_cancel)
             box.exec_()
             if box.clickedButton() is btn_cancel:
-                return None
+                return None, False, None
             print('User chose to continue with normalized data.')
 
         # ------- 2) Transform check (invertible: 3-way) -------
@@ -7304,9 +7323,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 box.setDefaultButton(btn_cancel)
                 box.exec_()
                 if box.clickedButton() is btn_cancel:
-                    return None
+                    return None, False, None
                 print('User chose to continue with Box-Cox transformed data.')
-                return df
+                return df, False, None
             # transform is invertible
             box = QMessageBox(self.MainWindow)
             _style_box(box)
@@ -7329,15 +7348,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 try:
                     df = self.tfa.invert_transform(df, transform_method)
                     print(f'Applied inverse transform for [{transform_method}] and will proceed.')
+                    return df, True, transform_method
                 except Exception as e:
                     _warn('Error', f'Failed to invert transformation [{transform_method}]: {e}')
-                    return None
+                    return None, False, None
             elif clicked is btn_run_raw:
                 print('User chose to run without inverting transformation.')
             else:
-                return None
+                return None, False, None
 
-        return df
+        return df, False, None
 
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
@@ -7452,7 +7472,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     
             elif method == 'deseq2':
                 df = self.get_table_by_df_type(df_type=df_type)
-                df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+                df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
                 if df_checked is None:
                     for combobox in self.meta_combobox_list:
                         combobox.setEnabled(True)
@@ -7472,6 +7492,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "group_list": group_list,
                                 "condition": all_condition_meta,
                                 "add_covariates": deseq2_covariates,
+                                "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_cond",
                         ),
@@ -7493,6 +7514,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "group_list": group_list,
                                 "condition": condition,
                                 "add_covariates": deseq2_covariates,
+                                "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_control",
                         ),
@@ -7750,7 +7772,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         df_type = self.comboBox_table_for_deseq2.currentText()
         df = self.get_table_by_df_type(df_type=df_type)
-        df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+        df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
         if df_checked is None:
             for combobox in self.meta_combobox_list:
                 combobox.setEnabled(True)
@@ -7807,6 +7829,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         "group2": group2,
                         "condition": condition,
                         "add_covariates": deseq2_covariates,
+                        "invert_transform": transform_method if is_inverted else None,
                     },
                     output_name="df_deseq2",
                 ),

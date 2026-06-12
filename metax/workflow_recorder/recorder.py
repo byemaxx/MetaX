@@ -314,7 +314,7 @@ def deseq2_step(
     else:
         key_expr = f"'deseq2(' + df_type.lower() + ')'"
 
-    code = _join_code(
+    code_lines = [
         "# Requires `tfa` from the OTF loading step.",
         f"df_type = {_python_literal(df_type)}",
         "df_map = {",
@@ -327,11 +327,27 @@ def deseq2_step(
         "}",
         "df = df_map[df_type.lower()]",
         "",
+    ]
+    
+    if safe_params.get("invert_transform"):
+        code_lines.extend([
+            f"invert_method = {_python_literal(safe_params['invert_transform'])}",
+            "df = tfa.invert_transform(df, invert_method)",
+            ""
+        ])
+        
+    # Remove invert_transform from params since CrossTest methods don't take it
+    if "invert_transform" in safe_params:
+        del safe_params["invert_transform"]
+
+    code_lines.extend([
         _assignment("deseq2_params", safe_params),
         f"{output_name} = tfa.CrossTest.{method_name}(df=df, **deseq2_params)",
         f"stats_results[{key_expr}] = {output_name}",
         f"print(type({output_name}))",
-    )
+    ])
+    
+    code = _join_code(*code_lines)
     return AnalysisStep(
         title=title,
         step_type="deseq2_test",
@@ -767,25 +783,73 @@ def _gui_action_replay_helper_code() -> str:
                         "Set it to the DataFrame produced by the previous statistical test cell."
                     )
                 df = stats_tables[table_name]
-                return HeatmapPlot(tfa).plot_basic_heatmap_of_test_res(
-                    df=df,
-                    top_number=parameters.get("top_num", 20),
-                    value_type=parameters.get("sort_by", "padj"),
-                    pvalue=parameters.get("pvalue", 0.05),
-                    scale=parameters.get("scale", "None"),
-                    col_cluster=parameters.get("col_cluster", False),
-                    row_cluster=parameters.get("row_cluster", False),
-                    cmap=None,
-                    rename_taxa=parameters.get("rename_taxa", False),
-                    rename_sample=parameters.get("rename_sample", False),
-                    font_size=parameters.get("font_size", 10),
-                    show_all_labels=parameters.get("show_all_labels", (False, False)),
-                    linecolor=parameters.get("linecolor", "none"),
-                    scale_method=parameters.get("scale_method", "maxmin"),
-                    return_type="fig",
-                    p_type=parameters.get("p_type", "padj"),
-                    fig_size=(int(parameters.get("width", 10)), int(parameters.get("height", 8))),
-                )
+                
+                common_kwargs = {
+                    "fig_size": (int(parameters.get("width", 10)), int(parameters.get("height", 8))),
+                    "pvalue": parameters.get("pvalue", 0.05),
+                    "scale": parameters.get("scale", "None"),
+                    "col_cluster": parameters.get("col_cluster", False),
+                    "row_cluster": parameters.get("row_cluster", False),
+                    "cmap": None,
+                    "rename_taxa": parameters.get("rename_taxa", False),
+                    "font_size": parameters.get("font_size", 10),
+                    "show_all_labels": parameters.get("show_all_labels", (False, False)),
+                    "scale_method": parameters.get("scale_method", "maxmin"),
+                    "linecolor": parameters.get("linecolor", "none"),
+                    "p_type": parameters.get("p_type", "padj"),
+                    "x_filter_list": parameters.get("x_filter_list", []),
+                    "y_filter_list": parameters.get("y_filter_list", []),
+                    "filter_by_regex": parameters.get("filter_by_regex", False),
+                }
+
+                if table_name.startswith('dunnett_test'):
+                    return HeatmapPlot(tfa).plot_heatmap_of_dunnett_test_res(
+                        df=df,
+                        **common_kwargs
+                    )
+                elif table_name.startswith('deseq2all'):
+                    return HeatmapPlot(tfa).plot_heatmap_of_all_condition_res(
+                        df=df,
+                        res_df_type='deseq2',
+                        log2fc_min=parameters.get("log2fc_min", -1),
+                        log2fc_max=parameters.get("log2fc_max", 1),
+                        three_levels_df_type=parameters.get("three_levels_df_type", "same_trends"),
+                        remove_zero_col=parameters.get("remove_zero_col", True),
+                        return_type="fig",
+                        **common_kwargs
+                    )
+                elif table_name.startswith('dunnettAllCondtion'):
+                    return HeatmapPlot(tfa).plot_heatmap_of_all_condition_res(
+                        df=df,
+                        res_df_type='dunnett',
+                        three_levels_df_type=parameters.get("three_levels_df_type", "same_trends"),
+                        remove_zero_col=parameters.get("remove_zero_col", True),
+                        return_type="fig",
+                        **common_kwargs
+                    )
+                elif 'taxa-functions' in table_name:
+                    title = ""
+                    if 'NonSigTaxa_SigFuncs(taxa-functions)' in table_name:
+                        title = "Taxa Non-Significant; Related Functions Significantly Different Across Groups"
+                    elif 'SigTaxa_NonSigFuncs(taxa-functions)' in table_name:
+                        title = "Functions Non-Significant; Related Taxa Significantly Different Across Groups"
+                    return HeatmapPlot(tfa).plot_top_taxa_func_heatmap_of_test_res(
+                        df=df,
+                        top_number=parameters.get("top_num", 20),
+                        value_type=parameters.get("sort_by", "padj"),
+                        title=title,
+                        **common_kwargs
+                    )
+                else:
+                    return HeatmapPlot(tfa).plot_basic_heatmap_of_test_res(
+                        df=df,
+                        top_number=parameters.get("top_num", 20),
+                        value_type=parameters.get("sort_by", "padj"),
+                        rename_sample=parameters.get("rename_sample", False),
+                        sort_by=parameters.get("sort_by", "padj"),
+                        return_type="fig",
+                        **common_kwargs
+                    )
 
             if action_name == "plot_deseq2_volcano":
                 table_name = parameters["table_name"]
