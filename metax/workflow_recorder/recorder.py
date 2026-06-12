@@ -1025,7 +1025,7 @@ def _gui_action_replay_helper_code() -> str:
                     title = func
                 if taxa and func:
                     short_taxa = taxa.split('|')[-1] if rename_taxa else taxa
-                    title = f"{short_taxa}\n{func}"
+                    title = f"{short_taxa}\\n{func}"
 
                 df = tfa.GetMatrix.get_intensity_matrix(**params)
                 if df.empty:
