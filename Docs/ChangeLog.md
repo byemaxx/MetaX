@@ -1,3 +1,12 @@
+# Version: 2.2.0
+## Date: 2026-06-12
+### Changes:
+- New: Introduced the **Export Workflow** feature, allowing users to export GUI-based analysis steps directly into runnable Jupyter Notebook code for enhanced reproducibility.
+- Bugfix: Fixed DESeq2 analysis crashing in the Jupyter workflow by implementing missing inverse log transformation logic for counts.
+- Bugfix: Removed overly restrictive experimental group requirements in `cross_test.py`, allowing safe bypass of unmatched strata combinations in Condition.
+- Bugfix: Handled empty grouping conditions in cross tests to prevent downstream empty dataframe merging errors.
+- Bugfix: Addressed distance matrix linkage failure (`ValueError`) in heatmap plotting by appropriately filling NaN values in correlation matrices.
+
 # Version: 2.1.2
 ## Date: 2026-06-10
 ### Changes:
