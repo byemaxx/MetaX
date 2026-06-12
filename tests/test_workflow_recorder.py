@@ -203,3 +203,52 @@ def test_all_gui_actions_generation():
     assert "stats_results['deseq2(' + df_type.lower() + ')']" in deseq2_cells[0]
     assert "stats_results['deseq2all(' + df_type.lower() + ')']" in deseq2_cells[1]
     assert "stats_results['deseq2allinCondition(' + df_type.lower() + ')']" in deseq2_cells[2]
+
+
+def test_plot_basic_list_pca_replay_imports_basic_plot():
+    recorder = WorkflowRecorder()
+    recorder.add_step(
+        gui_action_step(
+            title="Plot PCA List",
+            step_type="plot",
+            action_name="plot_basic_list",
+            parameters={"plot_type": "pca", "table_name": "Taxa", "use_3d_pca": False},
+        )
+    )
+
+    notebook = recorder.to_notebook()
+    helper_cell = next(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code" and "def replay_metax_gui_action" in "".join(cell["source"])
+    )
+    plot_basic_list_branch = helper_cell.split('if action_name == "plot_basic_list":', 1)[1]
+
+    assert "from metax.taxafunc_ploter.basic_plot import BasicPlot" in plot_basic_list_branch
+    assert "return BasicPlot(tfa).plot_pca_sns" in plot_basic_list_branch
+
+
+def test_async_workflow_step_preserves_current_tfa_group():
+    import pytest
+
+    main_gui = pytest.importorskip("metax.gui.main_gui", exc_type=ImportError)
+
+    gui = main_gui.MetaXGUI.__new__(main_gui.MetaXGUI)
+    gui.tfa = SimpleNamespace(meta_name="Treatment")
+    gui.workflow_recorder = WorkflowRecorder()
+    gui.logger = SimpleNamespace(write_log=lambda *args, **kwargs: None)
+
+    gui._record_async_workflow_step(
+        AnalysisStep(
+            title="Run ANOVA",
+            step_type="anova_test",
+            code="# Requires `tfa` from the OTF loading step.\nparams = {}\nresult = tfa.CrossTest.get_stats_anova(**params)",
+        ),
+        result=None,
+    )
+
+    assert len(gui.workflow_recorder.steps) == 1
+    assert "tfa.set_group('Treatment')" in gui.workflow_recorder.steps[0].code
+    assert gui.workflow_recorder.steps[0].code.index("tfa.set_group('Treatment')") < gui.workflow_recorder.steps[0].code.index(
+        "params = {}"
+    )
