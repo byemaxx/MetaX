@@ -864,6 +864,7 @@ class BasicPlot:
         linecolor='none'
     ):
         corr = df.copy()
+        corr.fillna(0, inplace=True)
         # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:

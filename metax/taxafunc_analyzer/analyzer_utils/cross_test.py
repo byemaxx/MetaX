@@ -341,7 +341,6 @@ class CrossTest:
         import warnings
 
         meta_df = self.tfa.meta_df.copy()
-        self.tfa.check_if_condition_valid(condition_meta=condition,  current_group_list=group_list)
 
         # validate condition variable exists
         if condition not in meta_df.columns:
@@ -384,10 +383,15 @@ class CrossTest:
                 lfc_null=lfc_null,
                 alt_hypothesis=alt_hypothesis
             )
-            res_dict[cond_level] = dft
+            if dft is not None and not dft.empty:
+                res_dict[cond_level] = dft
             print(f'-- Done level [{cond_level}] --')
 
         # 3-level columns: (condition_level) × (group2) × (result_cols)
+        if not res_dict:
+            print(f"No valid DESeq2 results found across any levels for condition {condition}.")
+            return pd.DataFrame()
+            
         res_df = pd.concat(res_dict.values(), keys=res_dict.keys(), axis=1)
         print(f'------------------ Done (stratified by [{condition}]) ------------------')
         return res_df
@@ -472,10 +476,14 @@ class CrossTest:
                 lfc_null=lfc_null,
                 alt_hypothesis=alt_hypothesis
             )
-            res_dict[group2] = df_res
+            if df_res is not None:
+                res_dict[group2] = df_res
             print(f'\n------------- Done for [{control_group}] and [{group2}]----------------\n')
 
         print('Concatenating results...')
+        if not res_dict:
+            print("No valid comparisons were performed.")
+            return pd.DataFrame()
         combined_df = pd.concat(res_dict, axis=1)
         print('Done for all comparisons')
 
@@ -517,6 +525,10 @@ class CrossTest:
 
         print(f'group1 [{group1}]:\n{group1_sample}\n')
         print(f'group2 [{group2}]:\n{group2_sample}\n')
+
+        if not group1_sample or not group2_sample:
+            print(f"Skipping DESeq2 for [{group1}] vs [{group2}] because one of the groups has no samples under condition {condition}.")
+            return None
 
         # Build intensity matrix for selected samples
         dft = df.copy()
