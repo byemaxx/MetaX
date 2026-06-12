@@ -458,11 +458,38 @@ class AutoOTFReportLogDialog(QDialog):
             self.status_label.setText("Report finished.")
             self.open_report_button.setEnabled(True)
             self._append_log(f"Report generated: {result.index_html_path}")
+            reproducibility_artifacts = getattr(result, "reproducibility_artifacts", {})
+            if reproducibility_artifacts:
+                self._append_log("Reproducibility files:")
+                for artifact_name, artifact_path in reproducibility_artifacts.items():
+                    self._append_log(f"  {artifact_name}: {artifact_path}")
+            self._record_workflow_step(result, reproducibility_artifacts)
         else:
             self.status_label.setText("Report failed.")
             self._append_log(message)
         self._finished_emitted = True
         self.report_finished.emit(result, success)
+
+    def _record_workflow_step(self, result, reproducibility_artifacts):
+        recorder = getattr(self.gui, "workflow_recorder", None)
+        if recorder is None:
+            return
+
+        config_path = reproducibility_artifacts.get("config")
+        if not config_path:
+            return
+
+        try:
+            recorder.add_auto_otf_report(config_path, result)
+            workflow_paths = recorder.export_all(result.output_dir)
+            self._append_log("GUI workflow files:")
+            for artifact_name, artifact_path in workflow_paths.as_dict().items():
+                self._append_log(f"  {artifact_name}: {artifact_path}")
+            self.gui.logger.write_log(f"auto OTF report workflow exported: {workflow_paths.as_dict()}", "i")
+        except Exception:
+            error_message = traceback.format_exc()
+            self.gui.logger.write_log(f"auto OTF report workflow export failed: {error_message}", "w")
+            self._append_log("GUI workflow export failed. See the MetaX log for details.")
 
     def _request_stop(self):
         if not self.running:

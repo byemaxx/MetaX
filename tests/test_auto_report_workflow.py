@@ -30,6 +30,11 @@ def test_auto_report_runs_on_example_dataset(tmp_path: Path):
     assert result.index_html_path.exists()
     assert result.summary_json_path.exists()
     assert (result.output_dir / "config_used.yaml").exists()
+    assert (result.output_dir / "run_metax_report.py").exists()
+    assert (result.output_dir / "run_metax_report.bat").exists()
+    assert result.reproducibility_artifacts["config"] == result.output_dir / "config_used.yaml"
+    assert result.reproducibility_artifacts["python_script"] == result.output_dir / "run_metax_report.py"
+    assert result.reproducibility_artifacts["windows_script"] == result.output_dir / "run_metax_report.bat"
     for level in ["p", "g", "s"]:
         assert (result.output_dir / "tables" / "taxa" / f"taxa_table_{level}.tsv").exists()
     for function_name in ["KEGG_ko_name", "Gene"]:

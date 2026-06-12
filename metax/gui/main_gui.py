@@ -34,6 +34,7 @@ from collections import OrderedDict
 import re
 import json
 import ntpath
+from pathlib import Path
 
 
 # import third-party modules
@@ -53,15 +54,70 @@ import qtawesome as qta
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
 
-# if not run as script, import the necessary MetaX modules by absolute path
-if __name__ == '__main__':
-    # Use absolute path to import the module
+try:
+    from ..utils.version import __version__
+    from ..taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+    from ..utils.metax_updater import Updater
+    from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
+    from ..taxafunc_ploter.basic_plot import BasicPlot
+    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
+    from ..taxafunc_ploter.volcano_plot import VolcanoPlot
+    from ..taxafunc_ploter.tukey_plot import TukeyPlot
+    from ..taxafunc_ploter.bar_plot_js import BarPlot
+    from ..taxafunc_ploter.sankey_plot import SankeyPlot
+    from ..taxafunc_ploter.network_plot import NetworkPlot
+    from ..taxafunc_ploter.trends_plot import TrendsPlot
+    from ..taxafunc_ploter.trends_plot_js import TrendsPlot_js
+    from ..taxafunc_ploter.pca_plot_js import PcaPlot_js
+    from ..taxafunc_ploter.diversity_plot import DiversityPlot
+    from ..taxafunc_ploter.sunburst_plot import SunburstPlot
+    from ..taxafunc_ploter.treemap_plot import TreeMapPlot
+
+    from .metax_gui import ui_main_window
+    from .metax_gui import web_dialog
+    from .metax_gui.matplotlib_figure_canvas import MatplotlibWidget
+    from .metax_gui.checkable_combo_box import CheckableComboBox
+    from .metax_gui.ui_table_view import Ui_Table_view
+    from .metax_gui.drag_line_edit import FileDragDropLineEdit
+    from .metax_gui.extended_combo_box import ExtendedComboBox
+    from .metax_gui.show_plt import ExportablePlotDialog
+    from .metax_gui.input_window import InputWindow
+    from .metax_gui.command_window import CommandWindow
+    from .metax_gui.user_agreement_dialog import UserAgreementDialog
+    from .metax_gui.settings_widget import SettingsWidget
+    from .metax_gui.cmap_combo_box import CmapComboBox
+    from .metax_gui.ui_lca_help import UiLcaHelpDialog
+    from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
+    from .metax_gui.generic_thread import FunctionExecutor
+    from .metax_gui.resources import icon_rc # noqa: F401
+    from .metax_gui.console_window import ConsoleOutputWindow
+    from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+    from ..workflow_recorder import (
+        AnalysisStep,
+        WorkflowRecorder,
+        auto_otf_report_step,
+        deseq2_step,
+        gui_action_step,
+        method_call_step,
+        set_multi_tables_step,
+        taxafunc_analyzer_step,
+    )
+
+    from ..peptide_annotator.metalab2otf import MetaLab2OTF
+    from ..peptide_annotator.peptable_annotator import PeptideAnnotator
+    from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+
+    from ..database_builder.database_builder_own import build_db
+    from ..database_updater.database_updater import run_db_update
+    from ..database_builder.database_builder_mag import download_and_build_database
+
+except (ImportError, ValueError):
+    # Use absolute path to import the module when running directly as a script
     metax_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    # set parent dir as the root dir
     metax_dir = os.path.dirname(metax_dir)
-    print(metax_dir)
-    sys.path.append(metax_dir)
-    
+    if metax_dir not in sys.path:
+        sys.path.append(metax_dir)
+
     from metax.utils.version import __version__
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
     from metax.utils.metax_updater import Updater
@@ -107,55 +163,89 @@ if __name__ == '__main__':
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
     from metax.database_builder.database_builder_mag import download_and_build_database
-    
-    
-else:
-    from ..utils.version import __version__
-    from ..taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
-    from ..utils.metax_updater import Updater
-    from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
-    from ..taxafunc_ploter.basic_plot import BasicPlot
-    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
-    from ..taxafunc_ploter.volcano_plot import VolcanoPlot
-    from ..taxafunc_ploter.tukey_plot import TukeyPlot
-    from ..taxafunc_ploter.bar_plot_js import BarPlot
-    from ..taxafunc_ploter.sankey_plot import SankeyPlot
-    from ..taxafunc_ploter.network_plot import NetworkPlot
-    from ..taxafunc_ploter.trends_plot import TrendsPlot
-    from ..taxafunc_ploter.trends_plot_js import TrendsPlot_js
-    from ..taxafunc_ploter.pca_plot_js import PcaPlot_js
-    from ..taxafunc_ploter.diversity_plot import DiversityPlot
-    from ..taxafunc_ploter.sunburst_plot import SunburstPlot
-    from ..taxafunc_ploter.treemap_plot import TreeMapPlot
+    from metax.workflow_recorder import (
+        AnalysisStep,
+        WorkflowRecorder,
+        auto_otf_report_step,
+        deseq2_step,
+        gui_action_step,
+        method_call_step,
+        set_multi_tables_step,
+        taxafunc_analyzer_step,
+    )
 
-    from .metax_gui import ui_main_window
-    from .metax_gui import web_dialog
-    from .metax_gui.matplotlib_figure_canvas import MatplotlibWidget
-    from .metax_gui.checkable_combo_box import CheckableComboBox
-    from .metax_gui.ui_table_view import Ui_Table_view
-    from .metax_gui.drag_line_edit import FileDragDropLineEdit
-    from .metax_gui.extended_combo_box import ExtendedComboBox
-    from .metax_gui.show_plt import ExportablePlotDialog
-    from .metax_gui.input_window import InputWindow
-    from .metax_gui.command_window import CommandWindow
-    from .metax_gui.user_agreement_dialog import UserAgreementDialog
-    from .metax_gui.settings_widget import SettingsWidget
-    from .metax_gui.cmap_combo_box import CmapComboBox
-    from .metax_gui.ui_lca_help import UiLcaHelpDialog
-    from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
-    from .metax_gui.generic_thread import FunctionExecutor
-    from .metax_gui.resources import icon_rc # noqa: F401
-    from .metax_gui.console_window import ConsoleOutputWindow
-    from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
 
-    from ..peptide_annotator.metalab2otf import MetaLab2OTF
-    from ..peptide_annotator.peptable_annotator import PeptideAnnotator
-    from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+class WorkflowStepsSelectionDialog(QDialog):
+    def __init__(self, steps, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Export Workflow - Select Steps")
+        self.resize(600, 400)
+        
+        self.steps = steps
+        
+        layout = QVBoxLayout(self)
+        
+        label = QtWidgets.QLabel("Select the analysis steps you want to export to the notebook.\n"
+                                 "Mandatory configuration steps (Load OTF, Create Processed Tables) are locked.")
+        layout.addWidget(label)
+        
+        self.list_widget = QListWidget(self)
+        layout.addWidget(self.list_widget)
+        
+        self.item_step_pairs = []
+        for step in steps:
+            is_mandatory = step.step_type in ("load_taxafunc_analyzer", "set_multi_tables")
+            
+            display_text = f"[{step.step_type.upper()}] {step.title}"
+            item = QListWidgetItem(display_text, self.list_widget)
+            
+            if is_mandatory:
+                item.setCheckState(Qt.Checked)
+                item.setFlags(item.flags() & ~Qt.ItemIsUserCheckable)
+                item.setToolTip("Mandatory step required for setup")
+            else:
+                item.setCheckState(Qt.Checked)
+                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            
+            self.list_widget.addItem(item)
+            self.item_step_pairs.append((item, step))
+            
+        btn_select_layout = QtWidgets.QHBoxLayout()
+        select_all_btn = QPushButton("Select All", self)
+        select_all_btn.clicked.connect(self.select_all)
+        select_none_btn = QPushButton("Clear Optional", self)
+        select_none_btn.clicked.connect(self.clear_optional)
+        btn_select_layout.addWidget(select_all_btn)
+        btn_select_layout.addWidget(select_none_btn)
+        layout.addLayout(btn_select_layout)
+        
+        btn_layout = QtWidgets.QHBoxLayout()
+        ok_btn = QPushButton("Export", self)
+        ok_btn.clicked.connect(self.accept)
+        cancel_btn = QPushButton("Cancel", self)
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(ok_btn)
+        btn_layout.addWidget(cancel_btn)
+        layout.addLayout(btn_layout)
 
-    from ..database_builder.database_builder_own import build_db
-    from ..database_updater.database_updater import run_db_update
-    from ..database_builder.database_builder_mag import download_and_build_database
+    def select_all(self):
+        for item, step in self.item_step_pairs:
+            is_mandatory = step.step_type in ("load_taxafunc_analyzer", "set_multi_tables")
+            if not is_mandatory:
+                item.setCheckState(Qt.Checked)
 
+    def clear_optional(self):
+        for item, step in self.item_step_pairs:
+            is_mandatory = step.step_type in ("load_taxafunc_analyzer", "set_multi_tables")
+            if not is_mandatory:
+                item.setCheckState(Qt.Unchecked)
+
+    def get_selected_steps(self):
+        selected = []
+        for item, step in self.item_step_pairs:
+            if item.checkState() == Qt.Checked:
+                selected.append(step)
+        return selected
 
 
 ###############   Class MetaXGUI Begin   ###############
@@ -193,6 +283,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.init_QSettings()
         # Check and load settings
         self.load_basic_Settings()
+        
+        self.workflow_recorder = WorkflowRecorder(
+            title="MetaX GUI Workflow",
+            metadata={"metax_package_root": os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))},
+        )
         
         #check update
         self.update_required = False
@@ -268,6 +363,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionRestore_Last_TaxaFunc.triggered.connect(lambda: self.run_restore_taxafunnc_obj_from_file(last=True))
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
+        self.actionExport_Workflow_Notebook = QtWidgets.QAction("Export Workflow Notebook", self.MainWindow)
+        self.actionExport_Workflow_Notebook.setObjectName("actionExport_Workflow_Notebook")
+        self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi6.file-document-multiple-outline'))
+        self.menuOthers.addAction(self.actionExport_Workflow_Notebook)
+        self.actionExport_Workflow_Notebook.triggered.connect(self.export_workflow_notebook)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
         self.console_window = ConsoleOutputWindow(self.MainWindow)
         self.action_Show_Console.triggered.connect(self.console_window.show)
@@ -275,10 +375,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionCheck_Update.triggered.connect(lambda: self.check_update(show_message=True, manual_check_trigger=True))
         self.actionSettings.triggered.connect(self.show_settings_window)
         
-        self.screen = QApplication.screenAt(QCursor.pos()).geometry()
-
-        self.screen_width = self.screen.width()
-        self.screen_height = self.screen.height()
+        screen = QApplication.screenAt(QCursor.pos())
+        if screen is None:
+            screen = QApplication.primaryScreen()
+        if screen is not None:
+            self.screen = screen.geometry()
+            self.screen_width = self.screen.width()
+            self.screen_height = self.screen.height()
+        else:
+            self.screen = None
+            self.screen_width = 1920
+            self.screen_height = 1080
         # set figure width and height(16 * 9) if the screen is larger than 1920 * 1080
         spinBox_pairs = [
             (self.spinBox_network_width, self.spinBox_network_height),
@@ -1132,7 +1239,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 print(f"Reading font size from settings file: {self.font_size}")
             else:
                 screen = QApplication.screenAt(QCursor.pos())
-                logical_dpi = screen.logicalDotsPerInch()
+                if screen is None:
+                    screen = QApplication.primaryScreen()
+                if screen is not None:
+                    logical_dpi = screen.logicalDotsPerInch()
+                else:
+                    logical_dpi = 96.0
                 scaling_factor = logical_dpi / 96.0
                 self.font_size = int(12 * scaling_factor)
                 print(f"Setting default font size: {self.font_size}")
@@ -1972,8 +2084,143 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         url = QUrl("https://byemaxx.github.io/MetaX/")
         QDesktopServices.openUrl(url)
-        
-        
+    def export_workflow_notebook(self):
+        self._record_current_taxafunc_if_needed()
+        if not getattr(self, "workflow_recorder", None) or not self.workflow_recorder.steps:
+            QMessageBox.information(
+                self.MainWindow,
+                "Workflow Notebook",
+                "No GUI analysis steps have been recorded in this session yet.",
+            )
+            return
+
+        dialog = WorkflowStepsSelectionDialog(self.workflow_recorder.steps, self.MainWindow)
+        if dialog.exec_() != QDialog.Accepted:
+            return
+
+        selected_steps = dialog.get_selected_steps()
+        if not selected_steps:
+            QMessageBox.warning(
+                self.MainWindow,
+                "Workflow Notebook",
+                "No steps selected for export.",
+            )
+            return
+
+        default_path = os.path.join(self.last_path, "metax_gui_workflow.ipynb")
+        notebook_path, _ = QFileDialog.getSaveFileName(
+            self.MainWindow,
+            "Export Workflow Notebook",
+            default_path,
+            "Jupyter Notebook (*.ipynb)",
+        )
+        if not notebook_path:
+            return
+
+        try:
+            target_path = Path(notebook_path)
+            # Create a temporary recorder with the selected steps to avoid altering the session's recorder
+            temp_recorder = WorkflowRecorder(
+                title=self.workflow_recorder.record.title,
+                metadata=self.workflow_recorder.record.metadata,
+            )
+            for step in selected_steps:
+                temp_recorder.add_step(step)
+
+            paths = temp_recorder.export_all(target_path.parent, target_path.stem)
+            self.last_path = str(target_path.parent)
+            QMessageBox.information(
+                self.MainWindow,
+                "Workflow Notebook",
+                "Workflow exported:\n"
+                f"{paths.notebook_path}\n"
+                f"{paths.python_path}\n"
+                f"{paths.yaml_path}",
+            )
+            self.logger.write_log(f"workflow notebook exported: {paths.as_dict()}", "i")
+        except Exception:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f"export_workflow_notebook error: {error_message}", "e")
+            QMessageBox.warning(self.MainWindow, "Error", error_message)
+
+    def _current_taxafunc_params_for_workflow(self):
+        taxafunc_path = self.lineEdit_taxafunc_path.text().strip()
+        meta_path = self.lineEdit_meta_path.text().strip() or None
+        return {
+            'df_path': taxafunc_path,
+            'meta_path': meta_path,
+            'any_df_mode': self.checkBox_otf_analyzer_any_data_mode.isChecked(),
+            'peptide_col_name': self.lineEdit_otf_analyzer_peptide_col_name.text(),
+            'protein_col_name': self.lineEdit_otf_analyzer_protein_col_name.text(),
+            'sample_col_prefix': self.lineEdit_otf_analyzer_sample_col_prefix.text(),
+            'custom_col_name': self.lineEdit_otf_analyzer_custom_col_name.text(),
+        }
+
+    def _record_current_taxafunc_if_needed(self):
+        recorder = getattr(self, "workflow_recorder", None)
+        if recorder is None or self.tfa is None:
+            return
+        has_load_step = any(step.step_type == "load_taxafunc_analyzer" for step in recorder.steps)
+        if has_load_step:
+            return
+        try:
+            load_step = taxafunc_analyzer_step(
+                self._current_taxafunc_params_for_workflow(),
+                self.tfa.meta_name,
+                self._taxafunc_summary_for_workflow()
+            )
+            recorder.steps.insert(0, load_step)
+        except Exception:
+            self.logger.write_log(f"record current TaxaFuncAnalyzer failed: {traceback.format_exc()}", "w")
+
+    def _taxafunc_summary_for_workflow(self):
+        if self.tfa is None:
+            return {}
+        return {
+            "original_rows": getattr(self.tfa, "original_row_num", None),
+            "processed_rows": getattr(getattr(self.tfa, "original_df", None), "shape", [None])[0],
+            "sample_count": len(getattr(self.tfa, "sample_list", []) or []),
+        }
+
+    def _add_current_group_to_workflow_step(self, step):
+        if not step or not hasattr(self, 'tfa') or self.tfa is None or not self.tfa.meta_name:
+            return step
+        set_group_code = f"tfa.set_group({repr(self.tfa.meta_name)})"
+        if set_group_code in step.code:
+            return step
+        lines = step.code.split('\n')
+        for i, line in enumerate(lines):
+            if not line.startswith('#') and line.strip():
+                lines.insert(i, set_group_code)
+                break
+        else:
+            lines.append(set_group_code)
+        step.code = '\n'.join(lines)
+        return step
+
+    def _record_workflow_step(self, step):
+        recorder = getattr(self, "workflow_recorder", None)
+        if recorder is None:
+            return
+        self._record_current_taxafunc_if_needed()
+        try:
+            step = self._add_current_group_to_workflow_step(step)
+            recorder.add_step(step)
+            self.logger.write_log(f"recorded GUI workflow step: {getattr(step, 'title', step)}", "i")
+        except Exception:
+            self.logger.write_log(f"record GUI workflow step failed: {traceback.format_exc()}", "w")
+
+    def _record_gui_action(self, title, action_name, parameters=None, step_type="gui_action", data_source="tfa"):
+        self._record_workflow_step(
+            gui_action_step(
+                title=title,
+                step_type=step_type,
+                action_name=action_name,
+                parameters=parameters or {},
+                data_source=data_source,
+            )
+        )
+
     def show_about(self):
 
         dialog = QDialog(self.MainWindow)
@@ -2785,6 +3032,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def run_in_new_window(self, func, *args, show_msg=False, **kwargs):
+        callback = kwargs.pop('callback', None)
+        workflow_step = kwargs.pop('workflow_step', None)
+
         # 定义 handle_finished 方法来处理执行完成后的逻辑
         def handle_finished(result, success):
             # # 存储执行结果到类的属性中
@@ -2810,13 +3060,33 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 print(f"Thread finished. Running callback function: {callback.__name__}")
                 # callback(result, success)
                 callback(result, success)
-                
-        callback = kwargs.pop('callback', None)
 
+            if success and workflow_step is not None:
+                self._record_async_workflow_step(workflow_step, result)
+                
         executor = FunctionExecutor(func, *args,logger=self.logger,**kwargs)
         executor.finished.connect(handle_finished) #connect the signal to the slot
         self.executors.append(executor)
         executor.show()
+
+    def _record_async_workflow_step(self, workflow_step, result):
+        recorder = getattr(self, "workflow_recorder", None)
+        if recorder is None:
+            return
+        self._record_current_taxafunc_if_needed()
+        try:
+            if callable(workflow_step):
+                step = workflow_step(result)
+            elif isinstance(workflow_step, dict):
+                step = AnalysisStep(**workflow_step)
+            else:
+                step = workflow_step
+            step = self._add_current_group_to_workflow_step(step)
+            recorder.add_step(step)
+            self.logger.write_log(f"recorded GUI workflow step: {getattr(step, 'title', step)}", "i")
+        except Exception:
+            error_message = traceback.format_exc()
+            self.logger.write_log(f"record GUI workflow step failed: {error_message}", "w")
 
            
 
@@ -4200,7 +4470,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         QMessageBox.warning(self.MainWindow, 'Error', str(result))
                         
                         
-                self.run_in_new_window(self.tfa.set_multi_tables, callback=callback_after_set_multi_tables, show_msg=False, **set_multi_table_params)
+                self.run_in_new_window(
+                    self.tfa.set_multi_tables,
+                    callback=callback_after_set_multi_tables,
+                    show_msg=False,
+                    workflow_step=set_multi_tables_step(function, set_multi_table_params),
+                    **set_multi_table_params
+                )
                 
                 # self.tfa.set_multi_tables(**set_multi_table_params)
                 # callback_after_set_multi_tables()
@@ -5201,6 +5477,28 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels,  return_type = 'fig',
                                                          sample_to_group_dict = sample_to_group_dict, linecolor=linecolor)
+                self._record_gui_action(
+                    title=f"Plot Heatmap ({table_name})",
+                    action_name="plot_basic_list",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "heatmap",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "selected_items": list(self.basic_heatmap_list),
+                        "width": width,
+                        "height": height,
+                        "scale": scale,
+                        "row_cluster": row_cluster,
+                        "col_cluster": col_cluster,
+                        "cmap": cmap,
+                        "rename_taxa": rename_taxa,
+                        "font_size": font_size,
+                        "show_all_labels": show_all_labels,
+                        "linecolor": linecolor,
+                        "scale_method": "maxmin",
+                    }
+                )
 
             elif plot_type == 'bar':
                 show_legend = self.checkBox_basic_bar_show_legend.isChecked()
@@ -5235,6 +5533,30 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
                                                                 plot_percent = plot_percent, sub_meta = sub_meta, plt_theme = plt_theme)
+                self._record_gui_action(
+                    title=f"Plot Intensity Bar ({table_name})",
+                    action_name="plot_basic_list",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "bar",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "selected_items": list(self.basic_heatmap_list),
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "rename_taxa": rename_taxa,
+                        "rename_sample": rename_sample,
+                        "plot_mean": plot_mean,
+                        "show_all_labels": show_all_labels,
+                        "show_legend": show_legend,
+                        "plot_percent": plot_percent,
+                        "sub_meta": sub_meta,
+                        "use_3d_for_sub_meta": use_3d_for_sub_meta,
+                        "js_bar": js_bar,
+                        "plt_theme": plt_theme if not js_bar else None,
+                    }
+                )
 
             elif plot_type == 'pca':
                 width = self.spinBox_basic_heatmap_width.value()
@@ -5285,6 +5607,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         font_size=font_size,
                         sub_meta=sub_meta,
                     )
+                self._record_gui_action(
+                    title=f"Plot PCA ({table_name})",
+                    action_name="plot_basic_list",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "pca",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "selected_items": list(self.basic_heatmap_list),
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "rename_sample": rename_sample,
+                        "sub_meta": sub_meta,
+                        "show_label": show_label,
+                        "use_3d_pca": use_3d_pca,
+                        "title_name": title_name,
+                    }
+                )
             
             elif plot_type == 'get_table':
                 self.show_message('Getting table...')
@@ -5300,6 +5641,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     df = self.tfa.rename_taxa(df)
                         
                 self.show_table(df=df, title=title)
+                self._record_gui_action(
+                    title=f"Get Table ({table_name})",
+                    action_name="plot_basic_list",
+                    step_type="table",
+                    parameters={
+                        "plot_type": "get_table",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "selected_items": list(self.basic_heatmap_list),
+                        "rename_sample": rename_sample,
+                        "rename_taxa": rename_taxa,
+                        "plot_mean": plot_mean,
+                        "sub_meta": sub_meta,
+                    }
+                )
                 
             elif plot_type == 'sankey':
                 if table_name not in ['Taxa', 'Taxa-Functions']:
@@ -5318,6 +5674,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
                 self.save_and_show_js_plot(pic, title)
+                self._record_gui_action(
+                    title=f"Plot Intensity Sankey ({table_name})",
+                    action_name="plot_basic_list",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "sankey",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "selected_items": list(self.basic_heatmap_list),
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "sub_meta": sub_meta,
+                        "plot_mean": plot_mean,
+                        "title_new": title_new,
+                        "subtitle": subtitle,
+                        "show_legend": self.checkBox_basic_bar_show_legend.isChecked(),
+                    }
+                )
                 
             elif plot_type == 'metatree':
                 if table_name not in ['Taxa', 'Taxa-Functions']:
@@ -5625,6 +6000,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # eanble the button
             self.pushButton_trends_get_trends_table.setEnabled(True)
             self.pushButton_trends_plot_interactive_line.setEnabled(True)
+            self._record_gui_action(
+                title=f"Plot Trends Cluster ({table_name})",
+                action_name="plot_trends_cluster",
+                step_type="plot",
+                parameters={
+                    "table_name": table_name,
+                    "sample_list": sample_list,
+                    "selected_items": list(self.trends_cluster_list),
+                    "num_cluster": num_cluster,
+                    "width": width,
+                    "height": height,
+                    "font_size": font_size,
+                    "num_col": num_col,
+                }
+            )
                 
         except Exception:
             error_message = traceback.format_exc()
@@ -5705,6 +6095,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                          rename_taxa=rename_taxa, show_legend=show_legend, 
                                                          add_group_name = plot_samples, font_size=font_size)
             self.save_and_show_js_plot(pic, f'Cluster {cluster_num+1} of {table_name}')
+            self._record_gui_action(
+                title=f"Plot Trends Interactive Line ({table_name} - Cluster {cluster_num+1})",
+                action_name="plot_trends_interactive_line",
+                step_type="plot",
+                parameters={
+                    "table_name": table_name,
+                    "cluster_num": cluster_num,
+                    "width": self.spinBox_trends_width.value(),
+                    "height": self.spinBox_trends_height.value(),
+                    "font_size": font_size,
+                    "get_intensity": get_intensity,
+                    "show_legend": show_legend,
+                    "rename_taxa": rename_taxa,
+                    "plot_samples": plot_samples,
+                    "condition": condition,
+                    "sample_list": sample_list if (plot_samples or get_intensity) else None,
+                    "group_list": group_list if (plot_samples or get_intensity) else None,
+                }
+            )
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_trends_interactive_line error: {error_message}', 'e')
@@ -6027,6 +6436,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                 theme=theme, 
                                                 legend_col_num=legend_col_num,
                                                 dot_size = dot_size)
+                self._record_gui_action(
+                    title=f"Plot PCA ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "pca",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "show_label": show_label,
+                        "rename_sample": rename_sample,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "sub_meta": sub_meta,
+                        "theme": theme,
+                    }
+                )
 
             elif method == 'pca_3d':
                 row_num = df.shape[0]
@@ -6040,6 +6467,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                  rename_sample = rename_sample,
                                                                 width=width, height=height, font_size=font_size, legend_col_num=legend_col_num)
                 self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
+                self._record_gui_action(
+                    title=f"Plot PCA 3D ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "pca_3d",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "show_label": show_label,
+                        "rename_sample": rename_sample,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "legend_col_num": legend_col_num,
+                        "theme": theme,
+                    }
+                )
 
             elif method == 'tsne':
                 row_num = df.shape[0]
@@ -6065,6 +6510,31 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         font_transparency=font_transparency, adjust_label=adjust_label, theme=theme,
                                         sub_meta = sub_meta, legend_col_num=legend_col_num, dot_size=dot_size,
                                         early_exaggeration=early_exaggeration, learning_rate='auto', random_state=2025)
+                self._record_gui_action(
+                    title=f"Plot t-SNE ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "tsne",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "show_label": show_label,
+                        "perplexity": perplexity,
+                        "n_iter": n_iter,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "rename_sample": rename_sample,
+                        "font_transparency": font_transparency,
+                        "adjust_label": adjust_label,
+                        "theme": theme,
+                        "sub_meta": sub_meta,
+                        "legend_col_num": legend_col_num,
+                        "dot_size": dot_size,
+                        "early_exaggeration": early_exaggeration,
+                    }
+                )
 
                         
             elif method == 'box':
@@ -6076,6 +6546,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                  rename_sample = rename_sample, plot_samples = plot_samples, 
                                                  legend_col_num=legend_col_num, sub_meta = sub_meta,
                                                  violinplot=violinplot, log_scale=log_scale)
+                self._record_gui_action(
+                    title=f"Plot Box Plot ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "box",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "theme": theme,
+                        "rename_sample": rename_sample,
+                        "sub_meta": sub_meta,
+                    }
+                )
 
             elif method == 'corr':
                 cluster = self.checkBox_corr_cluster.isChecked()
@@ -6096,6 +6583,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                 show_all_labels=show_all_labels, theme=theme, cmap=cmap,
                                                 rename_sample = rename_sample, corr_method=corr_method, 
                                                 plot_mean = plot_mean, sub_meta = sub_meta)
+                self._record_gui_action(
+                    title=f"Plot Correlation ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "corr",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "theme": theme,
+                        "rename_sample": rename_sample,
+                        "sub_meta": sub_meta,
+                    }
+                )
 
             elif method == 'alpha_div':
                 self.show_message('Alpha diversity is running, please wait...')
@@ -6108,6 +6612,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                              legend_col_num=legend_col_num, rename_sample = rename_sample, 
                                                              df_type=table_name, title_name=title_name)
                 self.update_table_dict(f'alpha_diversity({title_name})', aplha_diversity_df)
+                self._record_gui_action(
+                    title=f"Plot Alpha Diversity ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "alpha_div",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "metric": metric,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "plot_all_samples": plot_all_samples,
+                        "theme": theme,
+                        "sub_meta": sub_meta,
+                        "show_fliers": show_fliers,
+                        "legend_col_num": legend_col_num,
+                        "rename_sample": rename_sample,
+                    }
+                )
             elif method == "beta_div":
                 self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
@@ -6118,6 +6643,29 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                             theme=theme,sub_meta = sub_meta, legend_col_num=legend_col_num,
                                                             dot_size = dot_size, df_type=table_name, title_name=title_name)
                 self.update_table_dict(f'beta_diversity_distance_matrix({title_name})', beta_diversity_distance_matrix)
+                self._record_gui_action(
+                    title=f"Plot Beta Diversity ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "beta_div",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "metric": metric,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "font_transparency": font_transparency,
+                        "rename_sample": rename_sample,
+                        "show_label": show_label,
+                        "adjust_label": adjust_label,
+                        "theme": theme,
+                        "sub_meta": sub_meta,
+                        "legend_col_num": legend_col_num,
+                        "dot_size": dot_size,
+                    }
+                )
                                                             
 
             elif method == 'sunburst':
@@ -6131,6 +6679,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                         title='Sunburst of Taxa', show_label=show_label,
                                                         label_font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Sunburst of Taxa')
+                self._record_gui_action(
+                    title=f"Plot Sunburst ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "sunburst",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "width": width,
+                        "height": height,
+                        "show_label": show_label,
+                        "font_size": font_size,
+                        "theme": theme,
+                    }
+                )
             
             elif method == 'treemap':
                 if self.tfa.taxa_level == 'life':
@@ -6143,6 +6706,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                         show_sub_title = self.checkBox_pca_if_show_lable.isChecked(),
                                                         font_size = font_size)
                 self.save_and_show_js_plot(pic, 'Treemap of Taxa')
+                self._record_gui_action(
+                    title=f"Plot Treemap ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "treemap",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "width": width,
+                        "height": height,
+                        "show_label": self.checkBox_pca_if_show_lable.isChecked(),
+                        "font_size": font_size,
+                        "theme": theme,
+                    }
+                )
                 
             elif method == 'sankey':
                 if self.tfa.taxa_level == 'life':
@@ -6156,6 +6734,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height,
                                                                  font_size = font_size, title='', subtitle='', sub_meta=sub_meta)
                 self.save_and_show_js_plot(pic, title)
+                self._record_gui_action(
+                    title=f"Plot Sankey ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "sankey",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "sub_meta": sub_meta,
+                        "theme": theme,
+                    }
+                )
             
             elif method == 'num_bar':
                 plot_sample =self.checkBox_basic_plot_number_plot_sample.isChecked()
@@ -6164,6 +6757,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     theme=theme, plot_sample = plot_sample, 
                                                     show_label = show_label, rename_sample = rename_sample, 
                                                     legend_col_num=legend_col_num, sub_meta = sub_meta)
+                self._record_gui_action(
+                    title=f"Plot Number Bar ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "num_bar",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "theme": theme,
+                        "plot_sample": plot_sample,
+                        "show_label": show_label,
+                        "rename_sample": rename_sample,
+                        "legend_col_num": legend_col_num,
+                        "sub_meta": sub_meta,
+                    }
+                )
             
             elif method == 'upset':
                 plot_sample = self.checkBox_basic_plot_number_plot_sample.isChecked()
@@ -6176,6 +6789,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                rename_sample = rename_sample, show_percentages = show_percentages,
                                                min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
                 self.update_table_dict(f'upset_all({title_name})', upset_df)
+                self._record_gui_action(
+                    title=f"Plot UpSet Plot ({table_name})",
+                    action_name="plot_basic_info_sns",
+                    step_type="plot",
+                    parameters={
+                        "method": "upset",
+                        "table_name": table_name,
+                        "sample_list": sample_list,
+                        "title_name": title_name,
+                        "width": width,
+                        "height": height,
+                        "font_size": font_size,
+                        "show_label": show_label,
+                        "plot_sample": plot_sample,
+                        "sub_meta": sub_meta,
+                        "rename_sample": rename_sample,
+                        "show_percentages": show_percentages,
+                        "min_subset_size": min_subset_size,
+                        "max_subset_rank": max_subset_rank,
+                    }
+                )
                 
         except (IndexError, AttributeError):
             error_message = traceback.format_exc()
@@ -6346,6 +6980,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     filter_by_regex = filter_by_regex, linecolor = linecolor
                 )
 
+            self._record_gui_action(
+                title=f"Plot Top Heatmap ({table_name})",
+                action_name="plot_top_heatmap",
+                step_type="plot",
+                data_source="statistical_result_table",
+                parameters={
+                    "table_name": table_name,
+                    "top_num": top_num,
+                    "sort_by": value_type,
+                    "pvalue": pvalue,
+                    "scale": scale,
+                    "col_cluster": col_luster,
+                    "row_cluster": row_luster,
+                    "rename_taxa": rename_taxa,
+                    "rename_sample": rename_sample,
+                    "width": width,
+                    "height": length,
+                    "p_type": p_type,
+                    "font_size": font_size,
+                    "show_all_labels": show_all_labels,
+                    "linecolor": linecolor,
+                    "scale_method": scale_method,
+                    "x_filter_list": x_filter_list,
+                    "y_filter_list": y_filter_list,
+                    "filter_by_regex": filter_by_regex,
+                    "three_levels_df_type": getattr(self.comboBox_cross_3_level_plot_df_type, "currentText", lambda: "same_trends")(),
+                    "log2fc_min": getattr(self.doubleSpinBox_mini_log2fc_heatmap, "value", lambda: -1)(),
+                    "log2fc_max": getattr(self.doubleSpinBox_max_log2fc_heatmap, "value", lambda: 1)(),
+                    "remove_zero_col": remove_zero_col,
+                }
+            )
+
         except Exception as e:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
@@ -6510,11 +7176,37 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 p_type = self.comboBox_top_heatmap_p_type.currentText()
                 p_value = round(p_value, 4)
                 anova_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition, 'p_type': p_type}
-                self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_anova_test, **anova_sig_tf_params)
+                self.run_in_new_window(
+                    self.tfa.CrossTest.get_stats_diff_taxa_but_func,
+                    callback=self.callback_after_anova_test,
+                    workflow_step=method_call_step(
+                        title="Run Significant Taxa-Function ANOVA Test",
+                        step_type="anova_test",
+                        target="tfa.CrossTest",
+                        method_name="get_stats_diff_taxa_but_func",
+                        parameters=anova_sig_tf_params,
+                        output_name="anova_sig_tf_result",
+                        gui_table_names=['NonSigTaxa_SigFuncs(taxa-functions)', 'SigTaxa_NonSigFuncs(taxa-functions)'],
+                    ),
+                    **anova_sig_tf_params
+                )
             
             else:  
                 anova_params = {'group_list': group_list, 'df_type': df_type, 'condition': condition}
-                self.run_in_new_window(self.tfa.CrossTest.get_stats_anova, callback= self.callback_after_anova_test, **anova_params)
+                self.run_in_new_window(
+                    self.tfa.CrossTest.get_stats_anova,
+                    callback=self.callback_after_anova_test,
+                    workflow_step=method_call_step(
+                        title=f"Run ANOVA Test ({df_type})",
+                        step_type="anova_test",
+                        target="tfa.CrossTest",
+                        method_name="get_stats_anova",
+                        parameters=anova_params,
+                        output_name="df_anova",
+                        gui_table_names=[f'anova_test({df_type})'],
+                    ),
+                    **anova_params
+                )
                 
         except Exception:
             error_message = traceback.format_exc()
@@ -6620,7 +7312,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             box.setDefaultButton(btn_cancel)
             box.exec_()
             if box.clickedButton() is btn_cancel:
-                return None
+                return None, False, None
             print('User chose to continue with normalized data.')
 
         # ------- 2) Transform check (invertible: 3-way) -------
@@ -6637,9 +7329,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 box.setDefaultButton(btn_cancel)
                 box.exec_()
                 if box.clickedButton() is btn_cancel:
-                    return None
+                    return None, False, None
                 print('User chose to continue with Box-Cox transformed data.')
-                return df
+                return df, False, None
             # transform is invertible
             box = QMessageBox(self.MainWindow)
             _style_box(box)
@@ -6662,15 +7354,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 try:
                     df = self.tfa.invert_transform(df, transform_method)
                     print(f'Applied inverse transform for [{transform_method}] and will proceed.')
+                    return df, True, transform_method
                 except Exception as e:
                     _warn('Error', f'Failed to invert transformation [{transform_method}]: {e}')
-                    return None
+                    return None, False, None
             elif clicked is btn_run_raw:
                 print('User chose to run without inverting transformation.')
             else:
-                return None
+                return None, False, None
 
-        return df
+        return df, False, None
 
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
@@ -6733,19 +7426,59 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if method == 'dunnett':
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     self.temp_params_dict= {'table_name': f'dunnettAllCondtion({df_type})'}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_dunnett_test_against_control_with_conditon, callback= self.callback_after_group_control_test, 
-                                           control_group=control_group, group_list=group_list, df_type=df_type, condition=all_condition_meta)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_dunnett_test_against_control_with_conditon,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=method_call_step(
+                            title=f"Run Dunnett Test Against Control with Condition ({df_type})",
+                            step_type="dunnett_test",
+                            target="tfa.CrossTest",
+                            method_name="get_stats_dunnett_test_against_control_with_conditon",
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "df_type": df_type,
+                                "condition": all_condition_meta,
+                            },
+                            output_name="df_dunnett_cond",
+                            gui_table_names=[f'dunnettAllCondtion({df_type})'],
+                        ),
+                        control_group=control_group,
+                        group_list=group_list,
+                        df_type=df_type,
+                        condition=all_condition_meta,
+                    )
                     
 
                 else:
                     self.temp_params_dict= {'table_name': f'dunnett_test({df_type})'}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_dunnett_test, callback= self.callback_after_group_control_test, 
-                                           control_group=control_group, group_list=group_list, df_type=df_type, condition=condition)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_dunnett_test,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=method_call_step(
+                            title=f"Run Dunnett Test Against Control ({df_type})",
+                            step_type="dunnett_test",
+                            target="tfa.CrossTest",
+                            method_name="get_stats_dunnett_test",
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "df_type": df_type,
+                                "condition": condition,
+                            },
+                            output_name="df_dunnett",
+                            gui_table_names=[f'dunnett_test({df_type})'],
+                        ),
+                        control_group=control_group,
+                        group_list=group_list,
+                        df_type=df_type,
+                        condition=condition,
+                    )
                     
                     
             elif method == 'deseq2':
                 df = self.get_table_by_df_type(df_type=df_type)
-                df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+                df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
                 if df_checked is None:
                     for combobox in self.meta_combobox_list:
                         combobox.setEnabled(True)
@@ -6753,17 +7486,47 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df = df_checked
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     self.temp_params_dict= {'table_name': f'deseq2allinCondition({df_type})'}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon, 
-                                           callback= self.callback_after_group_control_test,
-                                           df = df, control_group=control_group, group_list=group_list,
-                                           condition=all_condition_meta, add_covariates=deseq2_covariates)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=deseq2_step(
+                            title=f"Run DESeq2 Against Control with Condition ({df_type})",
+                            method_name="get_stats_deseq2_against_control_with_conditon",
+                            df_type=df_type,
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "condition": all_condition_meta,
+                                "add_covariates": deseq2_covariates,
+                                "invert_transform": transform_method if is_inverted else None,
+                            },
+                            output_name="df_deseq2_cond",
+                        ),
+                        df = df, control_group=control_group, group_list=group_list,
+                        condition=all_condition_meta, add_covariates=deseq2_covariates
+                    )
 
                 else:
                     self.temp_params_dict= {'table_name': f'deseq2all({df_type})'}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2_against_control, 
-                                           callback= self.callback_after_group_control_test,
-                                           df = df,control_group=control_group, group_list=group_list, 
-                                           condition=condition, add_covariates=deseq2_covariates)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_deseq2_against_control,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=deseq2_step(
+                            title=f"Run DESeq2 Against Control ({df_type})",
+                            method_name="get_stats_deseq2_against_control",
+                            df_type=df_type,
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "condition": condition,
+                                "add_covariates": deseq2_covariates,
+                                "invert_transform": transform_method if is_inverted else None,
+                            },
+                            output_name="df_deseq2_control",
+                        ),
+                        df = df,control_group=control_group, group_list=group_list, 
+                        condition=condition, add_covariates=deseq2_covariates
+                    )
 
             else:
                 raise ValueError(f'No such method: {method}')
@@ -6838,7 +7601,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # self.show_message('Tukey test is running...\n\n It may take a long time! Please wait...')
         try:
             self.pushButton_tukey_test.setEnabled(False)
-            self.run_in_new_window(self.tfa.CrossTest.get_stats_tukey_test, callback= self.callback_after_tukey_test, taxon_name=taxa, func_name=func, sum_all=sum_all, condition=condition)
+            tukey_params = {'taxon_name': taxa, 'func_name': func, 'sum_all': sum_all, 'condition': condition}
+            self.run_in_new_window(
+                self.tfa.CrossTest.get_stats_tukey_test,
+                callback=self.callback_after_tukey_test,
+                workflow_step=method_call_step(
+                    title="Run Tukey Test",
+                    step_type="tukey_test",
+                    target="tfa.CrossTest",
+                    method_name="get_stats_tukey_test",
+                    parameters=tukey_params,
+                    output_name="df_tukey",
+                    gui_table_names=['tukey_test'],
+                ),
+                **tukey_params
+            )
             
         except Exception:
             error_message = traceback.format_exc()
@@ -6862,6 +7639,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def plot_tukey(self):
         df = self.table_dict['tukey_test']
         TukeyPlot().plot_tukey(df)
+        self._record_gui_action(
+            title="Plot Tukey HSD",
+            action_name="plot_tukey",
+            step_type="plot",
+            data_source="statistical_result_table",
+            parameters={
+                "table_name": "tukey_test",
+            }
+        )
 
     #T-test
     def t_test(self):
@@ -6892,12 +7678,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     p_type = self.comboBox_top_heatmap_p_type.currentText()
                     
                     ttest_sig_tf_params = {'group_list': group_list, 'p_value': p_value, 'condition': condition, "p_type": p_type}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_diff_taxa_but_func, callback= self.callback_after_ttest, **ttest_sig_tf_params)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_diff_taxa_but_func,
+                        callback=self.callback_after_ttest,
+                        workflow_step=method_call_step(
+                            title="Run Significant Taxa-Function T-Test",
+                            step_type="t_test",
+                            target="tfa.CrossTest",
+                            method_name="get_stats_diff_taxa_but_func",
+                            parameters=ttest_sig_tf_params,
+                            output_name="ttest_result",
+                            gui_table_names=['NonSigTaxa_SigFuncs(taxa-functions)', 'SigTaxa_NonSigFuncs(taxa-functions)'],
+                        ),
+                        **ttest_sig_tf_params
+                    )
                     
                 
                 else:
                     ttest_params = {'group_list': group_list, 'df_type': df_type, 'condition': condition}
-                    self.run_in_new_window(self.tfa.CrossTest.get_stats_ttest, callback= self.callback_after_ttest, **ttest_params)
+                    self.run_in_new_window(
+                        self.tfa.CrossTest.get_stats_ttest,
+                        callback=self.callback_after_ttest,
+                        workflow_step=method_call_step(
+                            title=f"Run T-Test ({df_type})",
+                            step_type="t_test",
+                            target="tfa.CrossTest",
+                            method_name="get_stats_ttest",
+                            parameters=ttest_params,
+                            output_name="df_ttest",
+                            gui_table_names=[f't_test({df_type})'],
+                        ),
+                        **ttest_params
+                    )
                     
                     
                     
@@ -6966,7 +7778,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         df_type = self.comboBox_table_for_deseq2.currentText()
         df = self.get_table_by_df_type(df_type=df_type)
-        df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+        df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
         if df_checked is None:
             for combobox in self.meta_combobox_list:
                 combobox.setEnabled(True)
@@ -7010,10 +7822,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             if self.check_if_last_test_not_finish():
                 return None
-            self.temp_params_dict ={'deseq2': 'deseq2'} # only for stop the next test
-            
             deseq2_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': deseq2_covariates}
-            self.run_in_new_window(self.tfa.CrossTest.get_stats_deseq2, callback= self.callback_after_deseq2, **deseq2_params)
+            self.run_in_new_window(
+                self.tfa.CrossTest.get_stats_deseq2,
+                callback=self.callback_after_deseq2,
+                workflow_step=deseq2_step(
+                    title=f"Run DESeq2 ({df_type.lower()})",
+                    method_name="get_stats_deseq2",
+                    df_type=df_type,
+                    parameters={
+                        "group1": group1,
+                        "group2": group2,
+                        "condition": condition,
+                        "add_covariates": deseq2_covariates,
+                        "invert_transform": transform_method if is_inverted else None,
+                    },
+                    output_name="df_deseq2",
+                ),
+                **deseq2_params
+            )
 
         except Exception as e:
             error_message = traceback.format_exc()
@@ -7094,6 +7921,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                     width=width, height=height, dot_size=dot_size,
                                                     theme = theme)
 
+            self._record_gui_action(
+                title=f"Plot DESeq2 Volcano ({table_name})",
+                action_name="plot_deseq2_volcano",
+                step_type="plot",
+                data_source="statistical_result_table",
+                parameters={
+                    "table_name": table_name,
+                    "group1": group1,
+                    "group2": group2,
+                    "log2fc_min": log2fc_min,
+                    "log2fc_max": log2fc_max,
+                    "pvalue": pvalue,
+                    "p_type": p_type,
+                    "width": width,
+                    "height": height,
+                    "font_size": font_size,
+                    "dot_size": dot_size,
+                    "plot_js": plot_js,
+                },
+            )
+
         except Exception:
             error_message = traceback.format_exc()
             self.logger.write_log(f'plot_deseq2_volcano error: {error_message}', 'e')
@@ -7162,6 +8010,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                 show_all_labels=show_all_labels,
                                                 linecolor=linecolor,
                                                 )
+                self._record_gui_action(
+                    title=f"Plot Co-expression Heatmap ({df_type})",
+                    action_name="plot_co_expr",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "heatmap",
+                        "df_type": df_type,
+                        "corr_method": corr_method,
+                        "corr_threshold": corr_threshold,
+                        "width": width,
+                        "height": height,
+                        "focus_list": list(focus_list) if focus_list else [],
+                        "plot_list_only": plot_list_only,
+                        "rename_taxa": rename_taxa,
+                        "font_size": font_size,
+                        "show_all_labels": show_all_labels,
+                        "linecolor": linecolor,
+                        "cmap": cmap,
+                        "sample_list": sample_list,
+                    }
+                )
                                                         
             except Exception:
                 error_message = traceback.format_exc()
@@ -7186,6 +8055,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                     plot_list_only=plot_list_only)
                 self.save_and_show_js_plot(pic, 'co-expression network')
                 self.update_table_dict(f'co-expression_network({df_type})', corr_df)
+                self._record_gui_action(
+                    title=f"Plot Co-expression Network ({df_type})",
+                    action_name="plot_co_expr",
+                    step_type="plot",
+                    parameters={
+                        "plot_type": "network",
+                        "df_type": df_type,
+                        "corr_method": corr_method,
+                        "corr_threshold": corr_threshold,
+                        "width": width,
+                        "height": height,
+                        "focus_list": list(focus_list) if focus_list else [],
+                        "plot_list_only": plot_list_only,
+                        "show_labels": show_labels,
+                        "rename_taxa": rename_taxa,
+                        "font_size": font_size,
+                        "sample_list": sample_list,
+                        "tf_link_net_params": self.tf_link_net_params_dict,
+                    }
+                )
                 
             except ValueError as e:
                 if 'sample_list should have at least 2' in str(e):
@@ -7435,6 +8324,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.save_and_show_js_plot(pic, 'taxa-func link Network')
             self.update_table_dict('taxa-func_network', network_df)
             self.update_table_dict('taxa-func_network_attributes', attributes_df)
+            self._record_gui_action(
+                title="Plot Taxa-Func Link Network",
+                action_name="plot_network",
+                step_type="plot",
+                parameters={
+                    "width": width,
+                    "height": height,
+                    "sample_list": sample_list,
+                    "focus_list": list(focus_list) if focus_list else [],
+                    "plot_list_only": plot_list_only,
+                    "show_labels": show_labels,
+                    "rename_taxa": rename_taxa,
+                    "font_size": font_size,
+                    "list_only_no_link": list_only_no_link,
+                    "tf_link_net_params": self.tf_link_net_params_dict,
+                }
+            )
             
         except Exception:
             error_message = traceback.format_exc()
@@ -7590,6 +8496,30 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if return_type == 'table':
                 self.show_table(fig_res, title=title.replace('\n', '-'))
+            self._record_gui_action(
+                title=f"Plot Taxa-Func Link Heatmap",
+                action_name="plot_tflink_heatmap",
+                step_type="plot",
+                parameters={
+                    "taxa": taxa,
+                    "func": func,
+                    "width": width,
+                    "height": height,
+                    "font_size": font_size,
+                    "scale": scale,
+                    "cmap": cmap,
+                    "rename_taxa": rename_taxa,
+                    "show_all_labels": show_all_labels,
+                    "plot_mean": plot_mean,
+                    "rename_sample": rename_sample,
+                    "row_cluster": row_cluster,
+                    "col_cluster": col_cluster,
+                    "sub_meta": sub_meta,
+                    "linecolor": linecolor,
+                    "return_type": return_type,
+                    "sample_list": params['sample_list'],
+                }
+            )
             
         except Exception:
             error_message = traceback.format_exc()
@@ -7692,6 +8622,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_message('Plotting bar plot, please wait...')
             pic = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_js(**params)
             self.save_and_show_js_plot(pic, 'Intensity Bar Plot')
+            self._record_gui_action(
+                title=f"Plot Taxa-Func Link Intensity Bar",
+                action_name="plot_tflink_bar",
+                step_type="plot",
+                parameters={
+                    "taxa": taxa,
+                    "func": func,
+                    "width": width,
+                    "height": height,
+                    "font_size": font_size,
+                    "rename_taxa": rename_taxa,
+                    "show_legend": show_legend,
+                    "plot_mean": plot_mean,
+                    "show_all_labels": show_all_labels,
+                    "sub_meta": sub_meta,
+                    "rename_sample": self.checkBox_tflink_hetatmap_rename_sample.isChecked(),
+                    "plot_percent": self.checkBox_tflink_bar_plot_percent.isChecked(),
+                    "sample_list": params['sample_list'],
+                }
+            )
 
 
         except ValueError as e:
