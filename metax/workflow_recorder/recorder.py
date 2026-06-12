@@ -623,6 +623,7 @@ def _gui_action_replay_helper_code() -> str:
                 )
 
             if action_name == "plot_basic_list":
+                from metax.taxafunc_ploter.basic_plot import BasicPlot
                 from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
 
                 plot_type = parameters["plot_type"]

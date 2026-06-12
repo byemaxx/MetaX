@@ -2182,24 +2182,29 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "sample_count": len(getattr(self.tfa, "sample_list", []) or []),
         }
 
+    def _add_current_group_to_workflow_step(self, step):
+        if not step or not hasattr(self, 'tfa') or self.tfa is None or not self.tfa.meta_name:
+            return step
+        set_group_code = f"tfa.set_group({repr(self.tfa.meta_name)})"
+        if set_group_code in step.code:
+            return step
+        lines = step.code.split('\n')
+        for i, line in enumerate(lines):
+            if not line.startswith('#') and line.strip():
+                lines.insert(i, set_group_code)
+                break
+        else:
+            lines.append(set_group_code)
+        step.code = '\n'.join(lines)
+        return step
+
     def _record_workflow_step(self, step):
         recorder = getattr(self, "workflow_recorder", None)
         if recorder is None:
             return
         self._record_current_taxafunc_if_needed()
         try:
-            if hasattr(self, 'tfa') and self.tfa is not None and self.tfa.meta_name:
-                set_group_code = f"tfa.set_group({repr(self.tfa.meta_name)})"
-                if set_group_code not in step.code:
-                    lines = step.code.split('\n')
-                    for i, line in enumerate(lines):
-                        if not line.startswith('#') and line.strip():
-                            lines.insert(i, set_group_code)
-                            break
-                    else:
-                        lines.append(set_group_code)
-                    step.code = '\n'.join(lines)
-                    
+            step = self._add_current_group_to_workflow_step(step)
             recorder.add_step(step)
             self.logger.write_log(f"recorded GUI workflow step: {getattr(step, 'title', step)}", "i")
         except Exception:
@@ -3076,6 +3081,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 step = AnalysisStep(**workflow_step)
             else:
                 step = workflow_step
+            step = self._add_current_group_to_workflow_step(step)
             recorder.add_step(step)
             self.logger.write_log(f"recorded GUI workflow step: {getattr(step, 'title', step)}", "i")
         except Exception:
