@@ -354,7 +354,83 @@ def deseq2_step(
         parameters={"df_type": df_type, **safe_params},
         outputs={"python_variable": output_name},
         code=code,
-        notes=["Run DESeq2 differential analysis using PyDESeq2."],
+        notes=["Run DESeq2 differential analysis using InMoose."],
+    )
+
+
+def limma_step(
+    *,
+    title: str,
+    method_name: str,
+    df_type: str,
+    parameters: dict[str, Any],
+    output_name: str = "df_limma",
+) -> AnalysisStep:
+    safe_params = _safe_parameters(parameters)
+    recorded_params = {"df_type": df_type, **safe_params}
+    if method_name == "get_stats_limma_against_control":
+        key_expr = f"'limmaall(' + df_type.lower() + ')'"
+    elif method_name == "get_stats_limma_against_control_with_conditon":
+        key_expr = f"'limmaallinCondition(' + df_type.lower() + ')'"
+    else:
+        key_expr = f"'limma(' + df_type.lower() + ')'"
+
+    code_lines = [
+        "# Requires `tfa` from the OTF loading step.",
+        "import numpy as np",
+        "import pandas as pd",
+        f"df_type = {_python_literal(df_type)}",
+        "df_map = {",
+        "    'taxa': getattr(tfa, 'taxa_df', None),",
+        "    'functions': getattr(tfa, 'func_df', None),",
+        "    'taxa-functions': getattr(tfa, 'taxa_func_df', None),",
+        "    'peptides': getattr(tfa, 'peptide_df', None),",
+        "    'proteins': getattr(tfa, 'protein_df', None),",
+        "    'custom': getattr(tfa, 'custom_df', None),",
+        "}",
+        "df = df_map[df_type.lower()]",
+        "sample_cols = [col for col in getattr(tfa, 'sample_list', []) if col in df.columns]",
+        "",
+    ]
+
+    if safe_params.get("invert_transform"):
+        code_lines.extend([
+            f"invert_method = {_python_literal(safe_params['invert_transform'])}",
+            "df = tfa.invert_transform(df.copy(), invert_method)",
+            "",
+        ])
+    if safe_params.get("log2_transform"):
+        code_lines.extend([
+            "df = df.copy()",
+            "df.loc[:, sample_cols] = np.log2(df.loc[:, sample_cols].apply(pd.to_numeric, errors='coerce') + 1)",
+            "",
+        ])
+    if safe_params.get("zero_to_nan", True):
+        code_lines.extend([
+            "df = df.copy()",
+            "df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors='coerce').replace(0, np.nan)",
+            "",
+        ])
+
+    for runtime_key in ("invert_transform", "log2_transform", "zero_to_nan"):
+        if runtime_key in safe_params:
+            del safe_params[runtime_key]
+
+    code_lines.extend([
+        _assignment("limma_params", safe_params),
+        f"{output_name} = tfa.CrossTest.{method_name}(df=df, **limma_params)",
+        f"stats_results[{key_expr}] = {output_name}",
+        f"print(type({output_name}))",
+    ])
+
+    code = _join_code(*code_lines)
+    return AnalysisStep(
+        title=title,
+        step_type="limma_test",
+        parameters=recorded_params,
+        outputs={"python_variable": output_name},
+        code=code,
+        notes=["Run limma differential analysis using log2-transformed data with zeros replaced by NaN."],
     )
 
 
