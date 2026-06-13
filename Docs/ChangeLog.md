@@ -1,3 +1,9 @@
+# Version: 2.23.0
+## Date: 2026-06-13
+### Changes:
+- New: Added `limma` for the DE analysis as the default method.
+- Change: Use `inmoose` as the backend for the DE analysis, and removed the `pydeseq2` dependency. 
+
 # Version: 2.2.0
 ## Date: 2026-06-12
 ### Changes:
