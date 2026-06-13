@@ -10,6 +10,9 @@ from .table_builder import DEFAULT_EXCLUDED_FUNCTION_COLUMNS
 from .workflow import AutoOTFReport
 
 
+NON_FUNCTION_COLUMNS = {"Taxon"}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate a MetaX Auto OTF HTML report.")
     parser.add_argument("--otf", help="Path to the OTF table.")
@@ -165,7 +168,7 @@ def _detect_available_function_columns(otf_path: str | Path) -> list[str]:
     seen: set[str] = set()
     ordered: list[str] = []
     for name in available:
-        if name == "Taxon" or name in seen:
+        if name in NON_FUNCTION_COLUMNS or name in seen:
             continue
         ordered.append(name)
         seen.add(name)
@@ -173,14 +176,9 @@ def _detect_available_function_columns(otf_path: str | Path) -> list[str]:
 
 
 def _read_tsv_header(path: Path) -> list[str]:
-    try:
-        with path.open("r", encoding="utf-8", newline="") as handle:
-            reader = csv.reader(handle, delimiter="\t")
-            return next(reader)
-    except UnicodeDecodeError:
-        with path.open("r", encoding="utf-8-sig", newline="") as handle:
-            reader = csv.reader(handle, delimiter="\t")
-            return next(reader)
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.reader(handle, delimiter="\t")
+        return next(reader)
 
 
 def _prompt_function_columns(otf_path: str | Path) -> list[str]:
