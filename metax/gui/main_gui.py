@@ -7007,7 +7007,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
             self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
             if 'No significant' in str(e):
-                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results. \n\n{error_message}')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{str(e)}')
+            elif 'empty after filter' in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{str(e)}')
             else:
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
     
@@ -7119,7 +7121,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(
                     self.MainWindow,
                     "Warning",
-                    f"No significant results.\n\n{e}",
+                    f"{e}",
+                )
+            elif "empty after filter" in str(e):
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Warning",
+                    f"{e}",
                 )
             else:
                 QMessageBox.warning(self.MainWindow, "Error", f"{error_message}")
