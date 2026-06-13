@@ -3,6 +3,12 @@ from pathlib import Path
 from metax.report.config import AutoReportConfig, load_config_from_yaml, save_config_to_yaml
 from metax.report.paths import ReportPaths
 from metax.report.registry import ResultRegistry
+from metax.report.reproducibility import (
+    CONFIG_FILE_NAME,
+    PYTHON_SCRIPT_NAME,
+    WINDOWS_SCRIPT_NAME,
+    save_reproducibility_artifacts,
+)
 
 
 def test_yaml_config_roundtrip(tmp_path: Path):
@@ -65,6 +71,30 @@ def test_result_registry_records_outputs(tmp_path: Path):
     assert data["tables"][0]["key"] == "table"
     assert data["figures"][0]["figure_type"] == "png"
     assert data["warnings"][0]["message"] == "warning"
+
+
+def test_reproducibility_artifacts_export_rerunnable_scripts(tmp_path: Path):
+    config = AutoReportConfig()
+    artifacts = save_reproducibility_artifacts(config, tmp_path)
+
+    python_script = tmp_path / PYTHON_SCRIPT_NAME
+    windows_script = tmp_path / WINDOWS_SCRIPT_NAME
+
+    assert artifacts["python_script"] == python_script
+    assert artifacts["windows_script"] == windows_script
+    assert artifacts["config"] == tmp_path / CONFIG_FILE_NAME
+    assert artifacts["config"].exists()
+    assert python_script.exists()
+    assert windows_script.exists()
+
+    python_text = python_script.read_text(encoding="utf-8")
+    assert f'with_name("{CONFIG_FILE_NAME}")' in python_text
+    assert "load_config_from_yaml(config_path)" in python_text
+    assert "AutoOTFReport(config).run()" in python_text
+
+    windows_text = windows_script.read_text(encoding="utf-8")
+    assert "METAX_PYTHON" in windows_text
+    assert PYTHON_SCRIPT_NAME in windows_text
 
 
 def test_cli_function_detection_excludes_taxon(tmp_path: Path):
