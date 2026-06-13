@@ -732,6 +732,10 @@ class HeatmapPlot:
 
 
         dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
+        
+        if dft is None or dft.empty:
+            raise ValueError(f"No significant differences Results in {p_type} < {pvalue} in Dunnett test")
+
         # fill na with 0
         dft = dft.fillna(0, inplace=False)
 
@@ -741,6 +745,9 @@ class HeatmapPlot:
         dft = self.tfa.replace_if_two_index(dft)
         
         dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
+
+        if dft is None or dft.empty or dft.shape[1] == 0:
+            raise ValueError("Dunnett heatmap table is empty after filtering/removing zero rows.")
 
         if len(dft) < 2:
             row_cluster = False
@@ -834,6 +841,9 @@ class HeatmapPlot:
         
         dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
 
+        if dft is None or dft.empty:
+            raise ValueError(f"No significant differences Results in {p_type} < {pvalue} in Dunnett test")
+
         # fill na with 0
         dft_table = dft.copy()
         dft_plot = dft.fillna(0, inplace=False)
@@ -849,6 +859,8 @@ class HeatmapPlot:
         dft_table = self.filter_data_by_x_y(dft_table, x_filter_list, y_filter_list, filter_by_regex)
         dft_plot = self.filter_data_by_x_y(dft_plot, x_filter_list, y_filter_list, filter_by_regex)
             
+        if dft_plot is None or dft_plot.empty or dft_plot.shape[1] == 0:
+            raise ValueError("Dunnett heatmap table is empty after filtering/removing zero rows.")
 
         if len(dft_plot) < 2:
             row_cluster = False
