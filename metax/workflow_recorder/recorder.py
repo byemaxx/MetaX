@@ -350,6 +350,7 @@ def deseq2_step(
             ""
         ])
 
+    safe_params["input_prepared"] = True
     code_lines.extend([
         _assignment("deseq2_params", safe_params),
         f"{output_name} = tfa.CrossTest.{method_name}(df=df, **deseq2_params)",
