@@ -8319,7 +8319,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
-        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-functions)']:
+        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-functions)', 'limma(taxa)', 'limma(taxa-functions)']:
             QMessageBox.warning(self.MainWindow, 'Error', f'{table_name} table is not supported for Sankey plot!')
             return None
         try:
