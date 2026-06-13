@@ -7304,7 +7304,99 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return self.group_control_test('limma')
         QMessageBox.warning(self.MainWindow, 'Warning', f'Unknown group-control method: {method}')
         return None
-        return df, False, None
+
+    def _guard_and_prepare_counts_for_deseq2(self, df):
+        """
+        One-stop guard before running DESeq2.
+        - Warn if normalization was applied (cannot invert): Continue or Cancel.
+        - If transformed: offer three choices -> Invert & Run / Run without Inverting / Cancel.
+        - Return the (possibly inverted) df, or None if user cancels.
+
+        Usage:
+            df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
+            if df_checked is None:
+                # (optional) re-enable UI here
+                return None, False, None
+            df = df_checked
+        """
+
+        def _warn(title, text):
+            QMessageBox.warning(self.MainWindow, title, text)
+
+        # Apply optional style if present
+        def _style_box(box):
+            try:
+                box.setStyleSheet(self.msgbox_style)
+            except Exception:
+                pass
+
+        # ------- 1) Normalization check (non-invertible) -------
+        norm_method = self.tfa.preprocess_methods.get('normalize_method', None)
+        if norm_method and norm_method != 'None':
+            box = QMessageBox(self.MainWindow)
+            _style_box(box)
+            box.setWindowTitle('Warning')
+            box.setText(f'The data has been normalized by [{norm_method}].\n'
+                        'DESeq2 requires raw counts data.\n\n'
+                        'Continue anyway? (Not recommended)')
+            btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
+            btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
+            box.setDefaultButton(btn_cancel)
+            box.exec_()
+            if box.clickedButton() is btn_cancel:
+                return None, False, None
+            print('User chose to continue with normalized data.')
+
+        # ------- 2) Transform check (invertible: 3-way) -------
+        transform_method = self.tfa.preprocess_methods.get('transform_method', None)
+        if transform_method and transform_method != 'None':
+            if transform_method == 'boxcox':
+                _warn('Warning', 'The data has been transformed by Box-Cox, which cannot be inverted.\nDESeq2 requires raw counts data.\nPlease recreate the table with raw data before running DESeq2.')
+                return None, False, None
+            # transform is invertible
+            box = QMessageBox(self.MainWindow)
+            _style_box(box)
+            box.setWindowTitle("Warning")
+            box.setText(
+                f"The data has been transformed by [{transform_method}].\n\n"
+                "DESeq2 requires raw counts. What would you like to do?"
+            )
+            btn_invert  = QPushButton("Invert & Run")
+            btn_run_raw = QPushButton("Run without Inverting")
+            btn_cancel  = QPushButton("Cancel")
+            box.addButton(btn_invert,  QMessageBox.YesRole)
+            box.addButton(btn_run_raw, QMessageBox.NoRole)
+            box.addButton(btn_cancel,  QMessageBox.RejectRole)
+            box.setDefaultButton(btn_invert)
+            box.exec_()
+
+            clicked = box.clickedButton()
+            if clicked is btn_invert:
+                try:
+                    df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=transform_method, validate=True)
+                    print(f'Applied inverse transform for [{transform_method}] and will proceed.')
+                    return df, True, transform_method
+                except Exception as e:
+                    _warn('Error', f'Failed to prepare data for DESeq2: {e}')
+                    return None, False, None
+            elif clicked is btn_run_raw:
+                try:
+                    df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=None, validate=True)
+                    print('User chose to run without inverting transformation.')
+                    return df, False, None
+                except Exception as e:
+                    _warn('Error', f'Failed to prepare data for DESeq2: {e}')
+                    return None, False, None
+            else:
+                return None, False, None
+
+        # validate anyway
+        try:
+            df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=None, validate=True)
+            return df, False, None
+        except Exception as e:
+            _warn('Error', f'Failed to prepare data for DESeq2: {e}')
+            return None, False, None
 
     def _guard_and_prepare_log2_for_limma(self, df):
         def _style_box(box):
