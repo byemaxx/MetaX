@@ -1746,7 +1746,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.comboBox_deseq2_tables.addItems(comboBox_deseq2_tables_list)
                 self.comboBox_deseq2_tables.setEnabled(True)
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
-                self.pushButton_deseq2_plot_sankey.setEnabled(any(name.startswith('deseq2(') for name in comboBox_deseq2_tables_list))
+                self.pushButton_deseq2_plot_sankey.setEnabled(any(name.startswith('deseq2(') or name.startswith('limma(') for name in comboBox_deseq2_tables_list))
                 self.comboBox_deseq2_tables_list = comboBox_deseq2_tables_list
     
     def restore_settings_after_load_taxafunc_obj(self):
@@ -8076,7 +8076,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
             
             self.pushButton_deseq2_plot_vocano.setEnabled(True)
-            self.pushButton_deseq2_plot_sankey.setEnabled(method == 'deseq2')
+            self.pushButton_deseq2_plot_sankey.setEnabled(method in ['deseq2', 'limma'])
 
         else:
             QMessageBox.warning(self.MainWindow, 'Error', str(result))
