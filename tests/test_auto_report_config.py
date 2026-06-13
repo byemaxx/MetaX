@@ -123,6 +123,19 @@ def test_cli_function_detection_handles_utf8_bom(tmp_path: Path):
     assert _detect_available_function_columns(otf_path) == ["Gene"]
 
 
+def test_cli_function_detection_requires_matching_prop_pair(tmp_path: Path):
+    from metax.report.cli import _detect_available_function_columns
+
+    otf_path = tmp_path / "otf.tsv"
+    otf_path.write_text(
+        "Sequence\tGene\tKEGG_ko_name_prop\tTaxon\tTaxon_prop\n"
+        "pep1\tgeneA\tkoA\td__Bacteria\t1\n",
+        encoding="utf-8",
+    )
+
+    assert _detect_available_function_columns(otf_path) == []
+
+
 def test_cli_func_all_excludes_taxon_from_config(tmp_path: Path):
     from metax.report.cli import build_parser, config_from_args
 
