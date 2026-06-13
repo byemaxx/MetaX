@@ -26,6 +26,18 @@ class HeatmapPlot:
         sns.set_theme()
         plt.style.use('default')
         
+    def _apply_clustermap_order_to_table(self, table_df, fig, row_cluster, col_cluster):
+        if row_cluster and not col_cluster:
+            return table_df.iloc[fig.dendrogram_row.reordered_ind, :]
+        if col_cluster and not row_cluster:
+            return table_df.iloc[:, fig.dendrogram_col.reordered_ind]
+        if row_cluster and col_cluster:
+            return table_df.iloc[
+                fig.dendrogram_row.reordered_ind,
+                fig.dendrogram_col.reordered_ind,
+            ]
+        return table_df
+        
     def get_x_labels_ha(self):
         x_rotation = self.x_labels_rotation
         if x_rotation > 0:
@@ -144,6 +156,7 @@ class HeatmapPlot:
             
             df_top = self.filter_data_by_x_y(df_top, x_filter_list, y_filter_list, filter_by_regex)
             
+            df_table = df_top.copy()
             df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
             
@@ -170,14 +183,7 @@ class HeatmapPlot:
             
             if return_type == 'table':
                 # get the sorted dataframe
-                if row_cluster and not col_cluster:
-                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, :]
-                elif col_cluster and not row_cluster:
-                    sorted_df = df_plot.iloc[:, fig.dendrogram_col.reordered_ind]
-                elif row_cluster and col_cluster:
-                    sorted_df = df_plot.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
-                else:
-                    sorted_df = df_plot
+                sorted_df = self._apply_clustermap_order_to_table(df_table, fig, row_cluster, col_cluster)
                 plt.close(fig.figure)
                 return sorted_df
             
@@ -575,19 +581,24 @@ class HeatmapPlot:
     
             
         # fill na with 0
-        dft = dft.fillna(0, inplace=False)
+        dft_table = dft.copy()
+        dft_plot = dft.fillna(0, inplace=False)
         
         if remove_zero_col:
-            print(f"The shape of the dataframe is {dft.shape}")
-            dft = dft.loc[:, (dft != 0).any(axis=0)]
-            print(f"Remove all zero columns, the shape of the dataframe is {dft.shape}")
+            print(f"The shape of the dataframe is {dft_plot.shape}")
+            keep_cols = dft_table.notna().any(axis=0)
+            dft_table = dft_table.loc[:, keep_cols]
+            dft_plot = dft_plot.loc[:, keep_cols]
+            dft_plot = dft_plot.loc[:, (dft_plot != 0).any(axis=0)]
+            dft_table = dft_table.loc[:, dft_plot.columns]
+            print(f"Remove all zero columns, the shape of the dataframe is {dft_plot.shape}")
         
         
         
-        if len(dft) < 2:
+        if len(dft_plot) < 2:
             row_cluster = False
             print('Warning: There is only one row in the dataframe, row_cluster is set to False')
-        if len(dft.columns) < 2:
+        if len(dft_plot.columns) < 2:
             col_cluster = False
             print('Warning: There is only one column in the dataframe, col_cluster is set to False')
 
@@ -595,17 +606,18 @@ class HeatmapPlot:
 
         try:
             if rename_taxa:
-                dft = self.rename_taxa(dft)
+                dft_table = self.rename_taxa(dft_table)
+                dft_plot = self.rename_taxa(dft_plot)
             # scale the data
             if scale:
-                dft = self.scale_data(df = dft, scale_by = scale, method = scale_method)
+                dft_plot = self.scale_data(df = dft_plot, scale_by = scale, method = scale_method)
             
             if cmap is None:
                 cmap = sns.color_palette("vlag", as_cmap=True, n_colors=30) # type: ignore
             
             # 标准化颜色映射以使 0 处为白色
             from matplotlib.colors import TwoSlopeNorm
-            vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
+            vmax = np.max(np.abs(dft_plot.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
             sns_params = {
@@ -631,7 +643,7 @@ class HeatmapPlot:
             }
 
             if return_type == 'fig':
-                fig = sns.clustermap(dft, **sns_params)
+                fig = sns.clustermap(dft_plot, **sns_params)
 
                 fig.ax_heatmap.set_xticklabels(
                     fig.ax_heatmap.get_xmajorticklabels(),
@@ -677,17 +689,10 @@ class HeatmapPlot:
                     "method": self.linkage_method,
                     "metric": self.distance_metric,
                 }
-                fig = sns.clustermap(dft, **sns_params)
+                fig = sns.clustermap(dft_plot, **sns_params)
 
                 # get the sorted dataframe
-                if row_cluster and not col_cluster:
-                    sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
-                elif col_cluster and not row_cluster:
-                    sorted_df = dft.iloc[:, fig.dendrogram_col.reordered_ind]
-                elif row_cluster and col_cluster:
-                    sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
-                else:
-                    sorted_df = dft
+                sorted_df = self._apply_clustermap_order_to_table(dft_table, fig, row_cluster, col_cluster)
                 
                 plt.close(fig.figure)
 
@@ -816,20 +821,25 @@ class HeatmapPlot:
         dft = self.tfa.CrossTest.extrcat_significant_stat_from_dunnett(df, p_value=pvalue, p_type=p_type)
 
         # fill na with 0
-        dft = dft.fillna(0, inplace=False)
+        dft_table = dft.copy()
+        dft_plot = dft.fillna(0, inplace=False)
 
         # remove all 0 rows
-        dft = dft.loc[~(dft==0).all(axis=1)]
+        keep_rows = ~(dft_plot==0).all(axis=1)
+        dft_table = dft_table.loc[keep_rows]
+        dft_plot = dft_plot.loc[keep_rows]
         
-        dft = self.tfa.replace_if_two_index(dft)
+        dft_table = self.tfa.replace_if_two_index(dft_table)
+        dft_plot = self.tfa.replace_if_two_index(dft_plot)
         
-        dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
+        dft_table = self.filter_data_by_x_y(dft_table, x_filter_list, y_filter_list, filter_by_regex)
+        dft_plot = self.filter_data_by_x_y(dft_plot, x_filter_list, y_filter_list, filter_by_regex)
             
 
-        if len(dft) < 2:
+        if len(dft_plot) < 2:
             row_cluster = False
             print('Warning: There is only one row in the dataframe, row_cluster is set to False')
-        if len(dft.columns) < 2:
+        if len(dft_plot.columns) < 2:
             col_cluster = False
             print('Warning: There is only one column in the dataframe, col_cluster is set to False')
 
@@ -838,16 +848,17 @@ class HeatmapPlot:
         try:
 
             if rename_taxa:
-                dft = self.rename_taxa(dft)
+                dft_table = self.rename_taxa(dft_table)
+                dft_plot = self.rename_taxa(dft_plot)
 
 
             # scale the data
             if scale:
-                dft = self.scale_data(df = dft, scale_by = scale, method = scale_method)
+                dft_plot = self.scale_data(df = dft_plot, scale_by = scale, method = scale_method)
                 
             
             from matplotlib.colors import TwoSlopeNorm
-            vmax = np.max(np.abs(dft.values))  # 获取数据的最大绝对值
+            vmax = np.max(np.abs(dft_plot.values))  # 获取数据的最大绝对值
             norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
             
             sns_params = {
@@ -858,20 +869,16 @@ class HeatmapPlot:
                 "metric": self.distance_metric,
                 "cbar_kws": {"label": "t-statistic"},
             }
-            fig = sns.clustermap(dft, **sns_params)
+            fig = sns.clustermap(dft_plot, **sns_params)
             
             # get the sorted dataframe
-            if row_cluster and not col_cluster:
-                sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, :]
-            elif col_cluster and not row_cluster:
-                sorted_df = dft.iloc[:, fig.dendrogram_col.reordered_ind]
-            elif row_cluster and col_cluster:
-                sorted_df = dft.iloc[fig.dendrogram_row.reordered_ind, fig.dendrogram_col.reordered_ind]
-            else:
-                sorted_df = dft
+            sorted_df = self._apply_clustermap_order_to_table(dft_table, fig, row_cluster, col_cluster)
             
             
-            plt.close(fig.fig)
+            if hasattr(fig, 'fig'):
+                plt.close(fig.fig)
+            elif hasattr(fig, 'figure'):
+                plt.close(fig.figure)
 
             return sorted_df
         except Exception as e:
