@@ -39,6 +39,7 @@ from pathlib import Path
 
 # import third-party modules
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 # import pyqt5 scripts
@@ -98,6 +99,7 @@ try:
         auto_otf_report_step,
         deseq2_step,
         gui_action_step,
+        limma_step,
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
@@ -169,6 +171,7 @@ except (ImportError, ValueError):
         auto_otf_report_step,
         deseq2_step,
         gui_action_step,
+        limma_step,
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
@@ -1718,6 +1721,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             comboBox_top_heatmap_table_list = []
             top_heatmap_match_list = ['t_test(', 'anova_test(', 'dunnettAllCondtion(', 
                                         'dunnett_test(', 'deseq2allinCondition(', 'deseq2all(',
+                                        'limmaallinCondition(', 'limmaall(',
                                         'NonSigTaxa_SigFuncs(taxa-functions)', 'SigTaxa_NonSigFuncs(taxa-functions)']
             comboBox_deseq2_tables_list = []
             
@@ -1725,7 +1729,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for name in current_table_name_list:
                 if any([match in name for match in top_heatmap_match_list]) and 'Cross_Test[' not in name:
                     comboBox_top_heatmap_table_list.append(name)
-                elif 'deseq2(' in name:
+                elif 'deseq2(' in name or 'limma(' in name:
                     comboBox_deseq2_tables_list.append(name)
                     
                     
@@ -1742,7 +1746,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.comboBox_deseq2_tables.addItems(comboBox_deseq2_tables_list)
                 self.comboBox_deseq2_tables.setEnabled(True)
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
-                self.pushButton_deseq2_plot_sankey.setEnabled(True)
+                self.pushButton_deseq2_plot_sankey.setEnabled(any(name.startswith('deseq2(') for name in comboBox_deseq2_tables_list))
                 self.comboBox_deseq2_tables_list = comboBox_deseq2_tables_list
     
     def restore_settings_after_load_taxafunc_obj(self):
@@ -3835,7 +3839,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_pd_to_QTableWidget(self, df, tableWidget):
         tableWidget.setRowCount(df.shape[0])
         tableWidget.setColumnCount(df.shape[1])
-        tableWidget.setHorizontalHeaderLabels(df.columns)
+        tableWidget.setHorizontalHeaderLabels([str(c) for c in df.columns])
         # convert the DataFrame's index to string before calling `tolist()`
         tableWidget.setVerticalHeaderLabels(df.index.astype(str).tolist())
         for i in range(df.shape[0]):
@@ -4062,21 +4066,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         selected_table_name = self.comboBox_top_heatmap_table.currentText()
         
         
-        if 'dunnett' in selected_table_name or 'deseq2' in selected_table_name:
+        if 'dunnett' in selected_table_name or 'deseq2' in selected_table_name or 'limma' in selected_table_name:
             self.spinBox_top_heatmap_number.setEnabled(False)
             self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
 
             
-            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
+            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name or 'limma' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
 
-            if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('dunnettAllCondtion'):
+            if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('limmaallin') or selected_table_name.startswith('dunnettAllCondtion'):
                 self.comboBox_cross_3_level_plot_df_type.setEnabled(True)
             else:
                 self.comboBox_cross_3_level_plot_df_type.setEnabled(False)
             
-            if selected_table_name.startswith('deseq2'):
+            if selected_table_name.startswith('deseq2') or selected_table_name.startswith('limma'):
 
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
@@ -6879,11 +6883,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                filter_by_regex = filter_by_regex,
                                                                                linecolor = linecolor
                                                                                )
-            elif table_name.startswith('deseq2all'):
+            elif table_name.startswith('deseq2all') or table_name.startswith('limmaall'):
                 
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                res_df_type = 'limma' if table_name.startswith('limmaall') else 'deseq2'
 
-                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type=res_df_type,
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -7052,9 +7057,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                       x_filter_list = x_filter_list, 
                                                                                       y_filter_list = y_filter_list,
                                                                                       filter_by_regex = filter_by_regex)
-            elif 'deseq2all' in table_name:
+            elif 'deseq2all' in table_name or 'limmaall' in table_name:
                 p_type = self.comboBox_top_heatmap_sort_type.currentText()
-                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
+                res_df_type = 'limma' if 'limmaall' in table_name else 'deseq2'
+                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type=res_df_type,
                                                                                    pvalue=pvalue,scale = scale, 
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -7392,6 +7398,81 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         return df, False, None
 
+    def _replace_zeros_with_nan_for_limma(self, df):
+        df = df.copy()
+        sample_cols = [col for col in getattr(self.tfa, "sample_list", []) if col in df.columns]
+        if not sample_cols:
+            return df
+        df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce").replace(0, np.nan)
+        return df
+
+    def _apply_log2_transform_for_limma(self, df):
+        df = df.copy()
+        sample_cols = [col for col in getattr(self.tfa, "sample_list", []) if col in df.columns]
+        if not sample_cols:
+            return df
+        values = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce")
+        if (values < 0).any().any():
+            raise ValueError("Cannot apply log2(x + 1) because negative values exist in the selected table.")
+        df.loc[:, sample_cols] = np.log2(values + 1)
+        return df
+
+    def _guard_and_prepare_log2_for_limma(self, df):
+        def _style_box(box):
+            try:
+                box.setStyleSheet(self.msgbox_style)
+            except Exception:
+                pass
+
+        transform_method = self.tfa.preprocess_methods.get('transform_method', None)
+        if transform_method == 'log2':
+            return self._replace_zeros_with_nan_for_limma(df), False, None
+
+        box = QMessageBox(self.MainWindow)
+        _style_box(box)
+        box.setWindowTitle("Warning")
+        box.setText(
+            f"The data has not been transformed by [log2] (current: [{transform_method or 'None'}]).\n\n"
+            "limma should be run on log2-transformed data.\n"
+            "Zeros will be replaced with NaN before limma runs.\n\n"
+            "What would you like to do?"
+        )
+        btn_transform = QPushButton("Transform to log2 & Run")
+        btn_run_current = QPushButton("Run Current Data")
+        btn_cancel = QPushButton("Cancel")
+        box.addButton(btn_transform, QMessageBox.YesRole)
+        box.addButton(btn_run_current, QMessageBox.NoRole)
+        box.addButton(btn_cancel, QMessageBox.RejectRole)
+        box.setDefaultButton(btn_transform)
+        box.exec_()
+
+        clicked = box.clickedButton()
+        if clicked is btn_transform:
+            try:
+                df_for_limma = df.copy()
+                if transform_method not in [None, 'None']:
+                    if transform_method == 'boxcox':
+                        QMessageBox.warning(
+                            self.MainWindow,
+                            'Warning',
+                            'The data has been transformed by Box-Cox, which cannot be inverted.\n'
+                            'Please recreate the table with log2 transformation before running limma.'
+                        )
+                        return None, False, None
+                    df_for_limma = self.tfa.invert_transform(df_for_limma, transform_method)
+                    print(f'Applied inverse transform for [{transform_method}] before limma log2 conversion.')
+                df_for_limma = self._apply_log2_transform_for_limma(df_for_limma)
+                df_for_limma = self._replace_zeros_with_nan_for_limma(df_for_limma)
+                print('Applied log2(x + 1) transform and replaced zeros with NaN before limma.')
+                return df_for_limma, True, transform_method if transform_method not in [None, 'None'] else None
+            except Exception as e:
+                QMessageBox.warning(self.MainWindow, 'Error', f'Failed to prepare log2 data for limma: {e}')
+                return None, False, None
+        if clicked is btn_run_current:
+            print('User chose to run limma on the current non-log2 data; zeros will still be replaced with NaN.')
+            return self._replace_zeros_with_nan_for_limma(df), False, None
+        return None, False, None
+
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
         method = self._normalize_de_method_name(method)
@@ -7558,6 +7639,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             elif method == 'limma':
                 df = self.get_table_by_df_type(df_type=df_type)
+                df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
+                if df_checked is None:
+                    for combobox in self.meta_combobox_list:
+                        combobox.setEnabled(True)
+                    return
+                df = df_checked
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     method_name = 'get_stats_limma_against_control_with_conditon'
                     limma_method = getattr(self.tfa.CrossTest, method_name)
@@ -7566,19 +7653,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     self.run_in_new_window(
                         limma_method,
                         callback=self.callback_after_group_control_test,
-                        workflow_step=method_call_step(
+                        workflow_step=limma_step(
                             title=f"Run Limma Against Control with Condition ({df_type})",
-                            step_type="limma_test",
-                            target="tfa.CrossTest",
                             method_name=method_name,
+                            df_type=df_type,
                             parameters={
                                 "control_group": control_group,
                                 "group_list": group_list,
                                 "condition": all_condition_meta,
                                 "add_covariates": model_covariates,
+                                "invert_transform": limma_invert_transform,
+                                "log2_transform": log2_transformed,
+                                "zero_to_nan": True,
                             },
                             output_name="df_limma_cond",
-                            gui_table_names=[table_name],
                         ),
                         df=df,
                         control_group=control_group,
@@ -7595,19 +7683,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     self.run_in_new_window(
                         limma_method,
                         callback=self.callback_after_group_control_test,
-                        workflow_step=method_call_step(
+                        workflow_step=limma_step(
                             title=f"Run Limma Against Control ({df_type})",
-                            step_type="limma_test",
-                            target="tfa.CrossTest",
                             method_name=method_name,
+                            df_type=df_type,
                             parameters={
                                 "control_group": control_group,
                                 "group_list": group_list,
                                 "condition": condition,
                                 "add_covariates": model_covariates,
+                                "invert_transform": limma_invert_transform,
+                                "log2_transform": log2_transformed,
+                                "zero_to_nan": True,
                             },
                             output_name="df_limma_control",
-                            gui_table_names=[table_name],
                         ),
                         df=df,
                         control_group=control_group,
@@ -7878,6 +7967,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     combobox.setEnabled(True)
                 return
             df = df_checked
+        elif method == 'limma':
+            df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
+            if df_checked is None:
+                for combobox in self.meta_combobox_list:
+                    combobox.setEnabled(True)
+                return
+            df = df_checked
+        else:
+            log2_transformed = False
+            limma_invert_transform = None
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
@@ -7931,19 +8030,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "invert_transform": transform_method if is_inverted else None,
                 },
                 output_name="df_deseq2",
-            ) if method == 'deseq2' else method_call_step(
+            ) if method == 'deseq2' else limma_step(
                 title=f"Run Limma ({df_type.lower()})",
-                step_type="limma_test",
-                target="tfa.CrossTest",
                 method_name=method_name,
+                df_type=df_type,
                 parameters={
                     "group1": group1,
                     "group2": group2,
                     "condition": condition,
                     "add_covariates": model_covariates,
+                    "invert_transform": limma_invert_transform,
+                    "log2_transform": log2_transformed,
+                    "zero_to_nan": True,
                 },
                 output_name="df_limma",
-                gui_table_names=[f'limma({df_type.lower()})'],
             )
             self.temp_params_dict = {'method': method, 'df_type': df_type}
             self.run_in_new_window(
@@ -8818,10 +8918,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         view_action.triggered.connect(lambda: self.show_table_in_list())
         context_menu.addAction(view_action)
         
-        # Add DESeq2 extractor action if item contains "deseq2allinCondition"
-        if  item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all('):
+        # Add differential results extractor action for multi-group DE result tables.
+        if (item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all(')
+                or item_text.startswith('limmaallinCondition(') or item_text.startswith('limmaall(')):
             context_menu.addSeparator()
-            deseq2_action = QAction("Open in DESeq2 Results Extractor", self.listWidget_table_list)
+            deseq2_action = QAction("Open in Differential Results Extractor", self.listWidget_table_list)
             deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))
             context_menu.addAction(deseq2_action)
         
@@ -8829,7 +8930,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
 
     def open_deseq2_extractor(self, table_name):
-        """Open DESeq2 Results Extractor with the selected table"""
+        """Open the differential results extractor with the selected table."""
         try:
             # Get the table data
             if table_name not in self.table_dict:
@@ -8853,16 +8954,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.deseq2_extractors = []
             self.deseq2_extractors.append(extractor_window)
             
-            self.logger.write_log(f"Opened DESeq2 Results Extractor for table: {table_name}", 'i')
+            self.logger.write_log(f"Opened Differential Results Extractor for table: {table_name}", 'i')
             
         except ImportError as e:
             QMessageBox.critical(self.MainWindow, 'Import Error', 
-                               f'Failed to import DESeq2 Results Extractor:\n{str(e)}')
-            self.logger.write_log(f"Failed to import DESeq2 Results Extractor: {str(e)}", 'e')
+                               f'Failed to import Differential Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to import Differential Results Extractor: {str(e)}", 'e')
         except Exception as e:
             QMessageBox.critical(self.MainWindow, 'Error', 
-                               f'Failed to open DESeq2 Results Extractor:\n{str(e)}')
-            self.logger.write_log(f"Failed to open DESeq2 Results Extractor: {str(e)}", 'e')
+                               f'Failed to open Differential Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to open Differential Results Extractor: {str(e)}", 'e')
 
 ###############   Class MetaXGUI End   ###############
 

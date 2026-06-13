@@ -540,7 +540,7 @@ class HeatmapPlot:
         pvalue = round(pvalue, 4)
         color_list = None
         if df.columns.nlevels == 2:
-            if res_df_type == 'deseq2':
+            if res_df_type in ['deseq2', 'limma']:
                 dft = self.tfa.CrossTest.extrcat_significant_fc_from_deseq2all(df, p_value=pvalue, log2fc_min=log2fc_min, 
                                                                 log2fc_max=log2fc_max, p_type=p_type)
             elif res_df_type == 'dunnet':
@@ -564,8 +564,9 @@ class HeatmapPlot:
         dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
                     
         if dft.empty or dft is None:
-            if res_df_type == 'deseq2':
-                error_msg = f"No significant differences Results in {p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in DESeq2All"
+            if res_df_type in ['deseq2', 'limma']:
+                method_label = "LimmaAll" if res_df_type == 'limma' else "DESeq2All"
+                error_msg = f"No significant differences Results in {p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in {method_label}"
             else:
                 error_msg = f"No significant differences Results in  {p_type} < {pvalue} for {three_levels_df_type} in Dunnett test"
             if x_filter_list or y_filter_list:
@@ -620,7 +621,7 @@ class HeatmapPlot:
                 "metric": self.distance_metric,
                 "cbar_kws": {
                     "label": "log2FoldChange"
-                    if res_df_type == "deseq2"
+                    if res_df_type in ["deseq2", "limma"]
                     else "t-statistic",
                     "shrink": 0.5,
                 },
@@ -645,15 +646,16 @@ class HeatmapPlot:
                     ha = 'left',
                     va = self.get_y_labels_va()
                 )
-                if res_df_type == 'deseq2':
-                    title = f"The Heatmap of log2FoldChange calculated by DESeq2 ({p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
+                if res_df_type in ['deseq2', 'limma']:
+                    method_label = "limma" if res_df_type == 'limma' else "DESeq2"
+                    title = f"The Heatmap of log2FoldChange calculated by {method_label} ({p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max}, scaled by {scale})"
                 else:
                     title = f"The Heatmap of t-statistic calculated by Dunnett test ({p_type} < {pvalue}, scaled by {scale})"                
                 
                 plt.suptitle(title, weight='bold')
                 
                 cbar = fig.ax_heatmap.collections[0].colorbar
-                cbar.set_label("log2FC" if res_df_type == 'deseq2' else 't-statistic', 
+                cbar.set_label("log2FC" if res_df_type in ['deseq2', 'limma'] else 't-statistic',
                                rotation=90, labelpad=1)
                 cbar.ax.yaxis.set_ticks_position('left')
                 cbar.ax.yaxis.set_label_position('left')

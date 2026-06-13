@@ -1,5 +1,9 @@
 import pytest
 import pandas as pd
+import sys
+from types import ModuleType, SimpleNamespace
+
+from metax.taxafunc_analyzer.analyzer_utils.cross_test import CrossTest
 
 def test_cross_test_ttest(tfa_object):
     """
@@ -7,13 +11,13 @@ def test_cross_test_ttest(tfa_object):
     without crashing and returns a valid DataFrame.
     """
     # Ensure tables are generated
-    if not hasattr(tfa_object, 'taxa_df'):
+    if getattr(tfa_object, 'taxa_df', None) is None:
         tfa_object.set_multi_tables(level='s', quant_method='sum', split_func=False)
         
     ct = tfa_object.CrossTest
     
     # Needs exactly 2 groups for t-test
-    group_list_all = tfa_object.group_list
+    group_list_all = list(dict.fromkeys(tfa_object.group_list))
     assert len(group_list_all) >= 2, "Test dataset must have at least 2 groups for t-test"
     test_groups = group_list_all[:2]
     
@@ -35,12 +39,12 @@ def test_cross_test_anova(tfa_object):
     without crashing and returns a valid DataFrame.
     """
     # Ensure tables are generated
-    if not hasattr(tfa_object, 'func_df'):
+    if getattr(tfa_object, 'func_df', None) is None:
         tfa_object.set_multi_tables(level='s', quant_method='sum', split_func=False)
         
     ct = tfa_object.CrossTest
     
-    group_list_all = tfa_object.group_list
+    group_list_all = list(dict.fromkeys(tfa_object.group_list))
     if len(group_list_all) > 2:
         # Run anova on func level
         res_df = ct.get_stats_anova(group_list=group_list_all, df_type='func')
@@ -51,3 +55,135 @@ def test_cross_test_anova(tfa_object):
         assert 'f-statistic' in res_df.columns
     else:
         pytest.skip("Not enough groups to run ANOVA test (requires >2 groups).")
+
+
+def test_run_inmoose_deseq_retries_mean_fit_on_unimplemented_local_fallback():
+    ct = CrossTest(tfa=None)
+    calls = []
+    dds_count = 0
+
+    def dds_factory():
+        nonlocal dds_count
+        dds_count += 1
+        calls.append("factory")
+        return {"id": dds_count}
+
+    def fake_deseq(dds, quiet=False, fitType="parametric"):
+        calls.append((dds["id"], quiet, fitType))
+        if fitType == "parametric":
+            raise NotImplementedError()
+        return {"fitType": fitType, "dds": dds}
+
+    result = ct._run_inmoose_deseq(fake_deseq, dds_factory, quiet=True)
+
+    assert result["fitType"] == "mean"
+    assert calls == ["factory", (1, True, "parametric"), "factory", (2, True, "mean")]
+
+
+def test_restore_limma_fit_column_names_aligns_fit_with_design_columns():
+    ct = CrossTest(tfa=None)
+    fit = SimpleNamespace(
+        coefficients=pd.DataFrame([[1.0, 2.0]], columns=["column0", "column1"]),
+        stdev_unscaled=pd.DataFrame([[0.1, 0.2]], columns=["column0", "column1"]),
+        cov_coefficients=pd.DataFrame(
+            [[1.0, 0.0], [0.0, 1.0]],
+            index=["column0", "column1"],
+            columns=["column0", "column1"],
+        ),
+    )
+
+    ct._restore_limma_fit_column_names(fit, ["group_V1", "group_V2"])
+
+    assert fit.coefficients.columns.tolist() == ["group_V1", "group_V2"]
+    assert fit.stdev_unscaled.columns.tolist() == ["group_V1", "group_V2"]
+    assert fit.cov_coefficients.index.tolist() == ["group_V1", "group_V2"]
+    assert fit.cov_coefficients.columns.tolist() == ["group_V1", "group_V2"]
+
+
+def test_run_inmoose_ebayes_retries_scalar_df_prior_compatibility():
+    ct = CrossTest(tfa=None)
+    module_name = "_fake_inmoose_ebayes_for_test"
+    fake_module = ModuleType(module_name)
+
+    def squeeze_var(values):
+        return {"df_prior": float("inf")}
+
+    fake_module.squeezeVar = squeeze_var
+    sys.modules[module_name] = fake_module
+    calls = []
+
+    def fake_ebayes(fit):
+        calls.append("eBayes")
+        if len(calls) == 1:
+            raise KeyError(-2)
+        return fake_module.squeezeVar([1.0, 2.0, 3.0])
+
+    fake_ebayes.__module__ = module_name
+
+    try:
+        result = ct._run_inmoose_ebayes(fake_ebayes, fit=object())
+    finally:
+        sys.modules.pop(module_name, None)
+
+    assert calls == ["eBayes", "eBayes"]
+    assert result["df_prior"].tolist() == [float("inf"), float("inf"), float("inf")]
+
+
+def test_normalize_deseq2_results_adds_padj_when_inmoose_omits_it():
+    ct = CrossTest(tfa=None)
+    res = pd.DataFrame(
+        {
+            "baseMean": [10.0, 20.0, 30.0],
+            "log2FoldChange": [1.5, -2.0, 0.2],
+            "lfcSE": [0.1, 0.2, 0.3],
+            "stat": [3.0, -4.0, 0.5],
+            "pvalue": [0.01, 0.04, 0.5],
+        },
+        index=["a", "b", "c"],
+    )
+
+    normalized = ct._normalize_deseq2_results(res)
+
+    assert normalized.columns.tolist()[:6] == [
+        "baseMean",
+        "log2FoldChange",
+        "lfcSE",
+        "stat",
+        "pvalue",
+        "padj",
+    ]
+    assert "padj" in normalized.columns
+    assert normalized["padj"].between(0, 1).all()
+
+
+def test_normalize_limma_results_preserves_logfc_from_log2_input():
+    ct = CrossTest(tfa=None)
+    dft = pd.DataFrame(
+        {
+            "c1": [6.0, 8.0],
+            "c2": [6.0, 8.0],
+            "t1": [8.0, 6.0],
+            "t2": [8.0, 6.0],
+        },
+        index=["feature_up", "feature_down"],
+    )
+    res = pd.DataFrame(
+        {
+            "logFC": [2.0, -2.0],
+            "P.Value": [0.01, 0.02],
+        },
+        index=dft.index,
+    )
+
+    normalized = ct._normalize_limma_results(
+        res,
+        dft,
+        sample_list=dft.columns.tolist(),
+        concat_sample_to_result=False,
+        group1_sample=["c1", "c2"],
+        group2_sample=["t1", "t2"],
+    )
+
+    assert normalized.loc["feature_up", "log2FoldChange"] == pytest.approx(2.0)
+    assert normalized.loc["feature_down", "log2FoldChange"] == pytest.approx(-2.0)
+    assert "padj" in normalized.columns

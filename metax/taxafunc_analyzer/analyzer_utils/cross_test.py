@@ -1,14 +1,13 @@
-# T-Test , ANOVA, Tukey HSD, Deseq2
+# T-Test , ANOVA, Tukey HSD, DESeq2, limma
 import pandas as pd
 import numpy as np
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from scipy.stats import f_oneway
 from scipy.stats import ttest_ind
 from tqdm.auto import tqdm
-from pydeseq2.ds import DeseqStats
-from pydeseq2.dds import DeseqDataSet
 from scipy.stats import dunnett
 from statsmodels.stats.multitest import multipletests
+import re
 
 class CrossTest:
     def __init__(self, tfa):
@@ -315,28 +314,14 @@ class CrossTest:
         self,
         df,
         control_group,
-        condition,                          # e.g. 'Individual' or 'Sex'
+        condition,
         group_list=None,
         quiet=False,
-        # ---- NEW (all optional, backward-compatible) ----
-        add_covariates: list[str] | None = None,          # e.g. ['Age','Batch'] ; will be applied within each condition level
-        interactions: list[tuple[str, str]] | None = None,# e.g. [('Sugar_name','Age')]
-        test_mode: str = "categorical",                   # 'categorical' (default) or 'continuous'
-        continuous_term: str | None = None,               # e.g. 'Age' or 'Sugar_name[T.ISO]:Age' (only for test_mode='continuous')
-        lfc_null: float = 0.0,                            # effect-size threshold for continuous tests
-        alt_hypothesis: str | None = None                 # 'greaterAbs'/'lessAbs'/'greater'/'less'
+        add_covariates: list[str] | None = None,
     ) -> pd.DataFrame:
         """
         Run DESeq2 comparisons within each level of a given condition (stratified analysis).
-        Backward-compatible; now supports in-stratum covariates/interactions and continuous-term tests.
-
-        Notes:
-        - The 'condition' is used to subset data per level: i.e., for each level L in meta[condition],
-            we run get_stats_deseq2_against_control(..., condition=[condition, L], ...)
-        - To avoid collinearity, if 'condition' appears in add_covariates, it will be dropped with a warning.
-        - For population-level paired design, prefer the unified model:
-                get_stats_deseq2_against_control(..., add_covariates=['Individual'])
-            rather than stratifying by Individual here.
+        The condition is used for subsetting; covariates are applied within each condition level.
         """
         import warnings
 
@@ -372,16 +357,10 @@ class CrossTest:
                 df=df,
                 control_group=control_group,
                 group_list=group_list,
-                concat_sample_to_result=True,  # keep your previous default behavior here
+                concat_sample_to_result=True,
                 quiet=quiet,
-                condition=[condition, cond_level],     # subset to this stratum
-                # pass-through new parameters into the unified engine
-                add_covariates=covs,                   # covariates INSIDE this stratum (must not include 'condition')
-                interactions=interactions,
-                test_mode=test_mode,
-                continuous_term=continuous_term,
-                lfc_null=lfc_null,
-                alt_hypothesis=alt_hypothesis
+                condition=[condition, cond_level],
+                add_covariates=covs,
             )
             if dft is not None and not dft.empty:
                 res_dict[cond_level] = dft
@@ -401,30 +380,229 @@ class CrossTest:
         """Make names formula-safe: replace '-' with '_' only for metadata names/levels."""
         return str(s).replace('-', '_')
 
-    def _find_coef_index(self, dds, term: str) -> int:
-        """
-        Find column index of a coefficient in design matrix for continuous tests.
-        term examples:
-        - 'Age'                        (main effect of Age)
-        - 'Sugar_name[T.ISO]:Age'      (interaction: factor level ISO with Age)
-        """
-        import re
-        cols = list(dds.design_matrix.columns)
-        # exact match first
-        if term in cols:
-            return cols.index(term)
-        # tolerant search: e.g., 'Age' may appear in interactions/encodings
-        candidates = [c for c in cols if c == term or c.endswith(':' + term) or c.endswith(term)]
-        if len(candidates) == 1:
-            return cols.index(candidates[0])
-        # try regex end match
-        patt = re.compile(re.escape(term) + r"$")
-        for i, c in enumerate(cols):
-            if patt.search(c):
-                return i
-        raise KeyError(f"Could not find coefficient column for term '{term}'. "
-                    f"Available: {cols}")
-        
+    def _safe_design_token(self, s: str) -> str:
+        """Create a stable, formula-friendly token for design matrix columns."""
+        token = re.sub(r"\W+", "_", str(s)).strip("_")
+        if not token:
+            token = "level"
+        if token[0].isdigit():
+            token = f"x_{token}"
+        return token
+
+    def _require_inmoose_deseq2(self):
+        try:
+            from inmoose.deseq2 import DESeq, DESeqDataSet
+        except ImportError as exc:
+            raise ImportError(
+                "InMoose is required for DESeq2 analysis. Install it with `pip install inmoose`."
+            ) from exc
+        return DESeq, DESeqDataSet
+
+    def _require_inmoose_limma(self):
+        try:
+            from inmoose.limma import lmFit, contrasts_fit, eBayes, topTable
+        except ImportError as exc:
+            raise ImportError(
+                "InMoose is required for limma analysis. Install it with `pip install inmoose`."
+            ) from exc
+        return lmFit, contrasts_fit, eBayes, topTable
+
+    def _run_inmoose_deseq(self, DESeq, dds_factory, quiet=False):
+        dds = dds_factory()
+        try:
+            return DESeq(dds, quiet=quiet)
+        except NotImplementedError:
+            print(
+                "[DESeq2] InMoose local dispersion fallback is not implemented; "
+                "retrying with fitType='mean'."
+            )
+            return DESeq(dds_factory(), quiet=quiet, fitType="mean")
+
+    def _restore_limma_fit_column_names(self, fit, design_columns):
+        design_columns = list(design_columns)
+        for attr_name in ("coefficients", "stdev_unscaled"):
+            value = getattr(fit, attr_name, None)
+            if isinstance(value, pd.DataFrame) and value.shape[1] == len(design_columns):
+                value.columns = design_columns
+
+        cov = getattr(fit, "cov_coefficients", None)
+        if isinstance(cov, pd.DataFrame) and cov.shape == (len(design_columns), len(design_columns)):
+            cov.index = design_columns
+            cov.columns = design_columns
+        return fit
+
+    def _run_inmoose_ebayes(self, eBayes, fit):
+        try:
+            return eBayes(fit)
+        except KeyError as exc:
+            if exc.args != (-2,):
+                raise
+
+            # InMoose can return a scalar df_prior=inf from squeezeVar. Its
+            # eBayes then evaluates ~True as -2 and indexes a DataFrame column.
+            # Broadcasting df_prior to per-feature values preserves the intended
+            # row-mask semantics without patching the installed package.
+            import importlib
+
+            ebayes_module = importlib.import_module(eBayes.__module__)
+            original_squeeze_var = ebayes_module.squeezeVar
+
+            def squeeze_var_compat(*args, **kwargs):
+                out = original_squeeze_var(*args, **kwargs)
+                df_prior = out.get("df_prior")
+                if np.isscalar(df_prior):
+                    out["df_prior"] = np.repeat(df_prior, len(np.asarray(args[0])))
+                return out
+
+            ebayes_module.squeezeVar = squeeze_var_compat
+            try:
+                return eBayes(fit)
+            finally:
+                ebayes_module.squeezeVar = original_squeeze_var
+
+    def _prepare_de_metadata(self, sample_list, group1, group2, add_covariates=None):
+        meta_df = self.tfa.meta_df.copy()
+        meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
+        meta_df.set_index('Sample', inplace=True)
+        meta_df = meta_df.rename(columns=lambda c: c.replace('-', '_'))
+
+        design_factor = self._safe_name(self.tfa.meta_name)
+        if design_factor not in meta_df.columns:
+            raise KeyError(
+                f"Design factor '{design_factor}' not found in metadata columns: {list(meta_df.columns)}. "
+                f"Original meta_name: '{self.tfa.meta_name}'. Make sure it matches a metadata column."
+            )
+
+        g1 = self._safe_name(group1)
+        g2 = self._safe_name(group2)
+        meta_df[design_factor] = meta_df[design_factor].astype(str).str.replace('-', '_', regex=False)
+        meta_df[design_factor] = pd.Categorical(meta_df[design_factor], categories=[g1, g2])
+
+        covs = []
+        if add_covariates:
+            covs = [self._safe_name(c) for c in add_covariates]
+            for c_old, c_new in zip(add_covariates, covs):
+                if c_new not in meta_df.columns and c_old in meta_df.columns:
+                    meta_df.rename(columns={c_old: c_new}, inplace=True)
+                if c_new not in meta_df.columns:
+                    raise KeyError(f"Covariate '{c_old}' not found in metadata columns: {list(meta_df.columns)}")
+                if not pd.api.types.is_numeric_dtype(meta_df[c_new]):
+                    meta_df[c_new] = meta_df[c_new].astype(str).str.replace('-', '_', regex=False)
+                    meta_df[c_new] = pd.Categorical(meta_df[c_new])
+
+        return meta_df, design_factor, covs, g1, g2
+
+    def _align_assay_and_metadata(self, assay_df, meta_df):
+        assay_df = assay_df.sort_index()
+        meta_df = meta_df.sort_index()
+        if not assay_df.index.equals(meta_df.index):
+            shared = assay_df.index.intersection(meta_df.index)
+            assay_df = assay_df.loc[shared]
+            meta_df = meta_df.loc[shared]
+            if assay_df.shape[0] == 0:
+                raise ValueError("No overlapping samples between assay data and metadata after alignment.")
+        return assay_df, meta_df
+
+    def _build_limma_design(self, meta_df, design_factor, covs, g1, g2):
+        group_values = meta_df[design_factor].astype(str)
+        group_columns = {
+            level: f"group_{self._safe_design_token(level)}"
+            for level in [g1, g2]
+        }
+        design_parts = []
+        group_design = pd.DataFrame(index=meta_df.index)
+        for level, col_name in group_columns.items():
+            group_design[col_name] = (group_values == level).astype(float)
+        design_parts.append(group_design)
+
+        for cov in covs:
+            values = meta_df[cov]
+            if pd.api.types.is_numeric_dtype(values):
+                cov_values = pd.to_numeric(values, errors="coerce")
+                if cov_values.isna().any():
+                    raise ValueError(f"Covariate '{cov}' contains non-numeric values after numeric conversion.")
+                design_parts.append(pd.DataFrame({self._safe_design_token(cov): cov_values.astype(float)}, index=meta_df.index))
+            else:
+                dummies = pd.get_dummies(values.astype(str), prefix=self._safe_design_token(cov), drop_first=True, dtype=float)
+                dummies.index = meta_df.index
+                design_parts.append(dummies)
+
+        design = pd.concat(design_parts, axis=1)
+        contrast_name = f"{group_columns[g2]}_vs_{group_columns[g1]}"
+        contrast = pd.DataFrame(0.0, index=design.columns, columns=[contrast_name])
+        contrast.loc[group_columns[g2], contrast_name] = 1.0
+        contrast.loc[group_columns[g1], contrast_name] = -1.0
+        return design, contrast, contrast_name
+
+    def _normalize_limma_results(
+        self,
+        res,
+        dft,
+        sample_list,
+        concat_sample_to_result,
+        group1_sample=None,
+        group2_sample=None,
+    ):
+        res = pd.DataFrame(res).copy()
+        rename_map = {}
+        candidates = {
+            "logFC": "log2FoldChange",
+            "P.Value": "pvalue",
+            "PValue": "pvalue",
+            "p_value": "pvalue",
+            "adj.P.Val": "padj",
+            "adj_P_Val": "padj",
+            "adj_pvalue": "padj",
+            "FDR": "padj",
+            "t": "stat",
+            "T": "stat",
+        }
+        for old_name, new_name in candidates.items():
+            if old_name in res.columns and new_name not in res.columns:
+                rename_map[old_name] = new_name
+        if rename_map:
+            res.rename(columns=rename_map, inplace=True)
+
+        if "baseMean" not in res.columns:
+            res["baseMean"] = dft[sample_list].mean(axis=1)
+        if "padj" not in res.columns and "pvalue" in res.columns:
+            res["padj"] = multipletests(res["pvalue"].fillna(1), method="fdr_bh")[1]
+
+        preferred = ["baseMean", "log2FoldChange", "stat", "pvalue", "padj"]
+        ordered = [c for c in preferred if c in res.columns] + [c for c in res.columns if c not in preferred]
+        res = res[ordered]
+
+        if concat_sample_to_result:
+            return pd.merge(res, dft[sample_list], left_index=True, right_index=True)
+        return res
+
+    def _normalize_deseq2_results(self, res):
+        res = pd.DataFrame(res).copy()
+        rename_map = {}
+        candidates = {
+            "logFC": "log2FoldChange",
+            "log2FoldChange": "log2FoldChange",
+            "lfcSE": "lfcSE",
+            "P.Value": "pvalue",
+            "PValue": "pvalue",
+            "p_value": "pvalue",
+            "adj.P.Val": "padj",
+            "adj_P_Val": "padj",
+            "adj_pvalue": "padj",
+            "FDR": "padj",
+        }
+        for old_name, new_name in candidates.items():
+            if old_name in res.columns and new_name not in res.columns:
+                rename_map[old_name] = new_name
+        if rename_map:
+            res.rename(columns=rename_map, inplace=True)
+
+        if "padj" not in res.columns and "pvalue" in res.columns:
+            res["padj"] = multipletests(res["pvalue"].fillna(1), method="fdr_bh")[1]
+
+        preferred = ["baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj"]
+        ordered = [c for c in preferred if c in res.columns] + [c for c in res.columns if c not in preferred]
+        return res[ordered]
 
     def get_stats_deseq2_against_control(
         self,
@@ -434,17 +612,10 @@ class CrossTest:
         concat_sample_to_result: bool = False,
         quiet: bool = False,
         condition: list | None = None,
-        # NEW: pass-throughs for covariates/continuous tests (all optional, backward-compatible)
         add_covariates: list[str] | None = None,
-        interactions: list[tuple[str, str]] | None = None,
-        test_mode: str = "categorical",           # "categorical" (default) or "continuous"
-        continuous_term: str | None = None,       # e.g. "Age" or "Sugar_name[T.ISO]:Age" when test_mode="continuous"
-        lfc_null: float = 0.0,                    # effect-size threshold for continuous tests (optional)
-        alt_hypothesis: str | None = None          # "greaterAbs"/"lessAbs"/"greater"/"less"
     ) -> pd.DataFrame:
         """
         Run DESeq2 for multiple group-vs-control comparisons and column-bind results.
-        Backward-compatible; supports optional continuous covariates & interactions.
         """
         all_group_list = sorted(set(self.tfa.group_list))
         if group_list is None:
@@ -470,11 +641,6 @@ class CrossTest:
                 quiet=quiet,
                 condition=condition,
                 add_covariates=add_covariates,
-                interactions=interactions,
-                test_mode=test_mode,
-                continuous_term=continuous_term,
-                lfc_null=lfc_null,
-                alt_hypothesis=alt_hypothesis
             )
             if df_res is not None:
                 res_dict[group2] = df_res
@@ -498,23 +664,11 @@ class CrossTest:
         concat_sample_to_result: bool = True,
         quiet: bool = False,
         condition: list | None = None,
-        # NEW (all optional; keep backward compatibility)
-        add_covariates: list[str] | None = None,         # e.g. ["Age","BMI"]
-        interactions: list[tuple[str, str]] | None = None,   # e.g. [("Sugar_name","Age")]
-        test_mode: str = "categorical",                  # "categorical" (default) or "continuous"
-        continuous_term: str | None = None,              # e.g. "Age" or "Sugar_name[T.ISO]:Age"
-        lfc_null: float = 0.0,
-        alt_hypothesis: str | None = None
+        add_covariates: list[str] | None = None,
     ) -> pd.DataFrame:
         """
-        Run DESeq2 for group2 vs group1 using PyDESeq2 >= 0.5.x with formulaic design.
-        Backward-compatible defaults:
-        - by default, categorical group comparison with contrast=[factor, group2, group1]
-        - log2FoldChange = group2 / group1
-        Optional:
-        - add_covariates: add continuous/categorical covariates into the design
-        - interactions: list of (factor_like, covariate_like) to include factor:covariate
-        - test_mode="continuous": test a continuous term / interaction by contrast vector
+        Run DESeq2 for group2 vs group1 using InMoose DESeq2 with formulaic design.
+        The reported log2FoldChange is group2 / group1.
         """
         print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
 
@@ -546,115 +700,50 @@ class CrossTest:
             print(f'[Scaling] no scaling applied (max {raw_max:.3g} ≤ target_max {target_max:.0f})')
         counts_df = (counts_df / scale).round().astype(int)
 
-        # Build metadata
-        meta_df = self.tfa.meta_df.copy()
-        meta_df = meta_df[meta_df['Sample'].isin(sample_list)]
-        meta_df.set_index('Sample', inplace=True)
-
-        # Patsy/formulaic-safe: replace '-' with '_' ONLY for metadata columns
-        meta_df = meta_df.rename(columns=lambda c: c.replace('-', '_'))
-
-        # Design factor name (variable in formula)
-        design_factor = self._safe_name(self.tfa.meta_name)
-
-        # Ensure the design factor exists
-        if design_factor not in meta_df.columns:
-            raise KeyError(
-                f"Design factor '{design_factor}' not found in metadata columns: {list(meta_df.columns)}. "
-                f"Original meta_name: '{self.tfa.meta_name}'. Make sure it matches a metadata column."
-            )
-
-        # Replace '-' with '_' in the *values* of design factor (levels)
-        meta_df[design_factor] = meta_df[design_factor].astype(str).str.replace('-', '_', regex=False)
-
-        # Also normalize covariate column names and (for safety) ensure numeric types where intended
-        covs = []
-        if add_covariates:
-            covs = [self._safe_name(c) for c in add_covariates]
-            for c_old, c_new in zip(add_covariates, covs):
-                if c_new not in meta_df.columns and c_old in meta_df.columns:
-                    # If user passed old name containing '-', it was renamed above
-                    meta_df.rename(columns={c_old: c_new}, inplace=True)
-
-        # Normalize interaction terms (name only; design will be built as formula)
-        ints = []
-        if interactions:
-            ints = [f"{self._safe_name(a)}:{self._safe_name(b)}" for (a, b) in interactions]
-
-        # Align indices
-        counts_df = counts_df.sort_index()
-        meta_df = meta_df.sort_index()
-        if not counts_df.index.equals(meta_df.index):
-            shared = counts_df.index.intersection(meta_df.index)
-            counts_df = counts_df.loc[shared]
-            meta_df = meta_df.loc[shared]
-            if counts_df.shape[0] == 0:
-                raise ValueError("No overlapping samples between counts and metadata after alignment.")
+        meta_df, design_factor, covs, g1, g2 = self._prepare_de_metadata(
+            sample_list=sample_list,
+            group1=group1,
+            group2=group2,
+            add_covariates=add_covariates,
+        )
+        counts_df, meta_df = self._align_assay_and_metadata(counts_df, meta_df)
 
         # Build formulaic design
-        rhs_terms = [design_factor] + covs + ints
+        rhs_terms = covs + [design_factor]
         design_formula = "~" + " + ".join(rhs_terms) if rhs_terms else "~ 1"
         print(f"[Design] {design_formula}")
 
-        dds = DeseqDataSet(
-            counts=counts_df,
-            metadata=meta_df,
-            design=design_formula,
-            quiet=quiet
-        )
-        dds.deseq2()
+        DESeq, DESeqDataSet = self._require_inmoose_deseq2()
 
-        # Build contrast
-        if test_mode == "categorical":
-            # Backward-compatible: log2FC = group2 / group1
-            g1 = self._safe_name(group1)
-            g2 = self._safe_name(group2)
-            contrast = [design_factor, g2, g1]
-            print(f"Contrast used: {contrast}  => log2FoldChange = {g2} / {g1}")
-        elif test_mode == "continuous":
-            if not continuous_term:
-                raise ValueError("For test_mode='continuous', please provide 'continuous_term', "
-                                "e.g., 'Age' or 'Sugar_name[T.ISO]:Age'.")
-            coef_idx = self._find_coef_index(dds, continuous_term)
-            cvec = np.zeros(len(dds.design_matrix.columns))
-            cvec[coef_idx] = 1.0
-            contrast = cvec
-            print(f"Continuous contrast vector built for term '{continuous_term}' "
-                f"(coef index {coef_idx}); alt_hypothesis={alt_hypothesis}, lfc_null={lfc_null}")
-        else:
-            raise ValueError("test_mode must be 'categorical' or 'continuous'.")
-
-        # Run stats
-        try:
-            stat_res = DeseqStats(
-                dds,
-                contrast=contrast,
-                alpha=0.05,
-                cooks_filter=True,
-                independent_filter=True,
-                quiet=quiet,
-                alt_hypothesis=alt_hypothesis,
-                lfc_null=lfc_null
+        def dds_factory():
+            return DESeqDataSet(
+                countData=counts_df,
+                clinicalData=meta_df,
+                design=design_formula
             )
-            stat_res.summary()
+
+        dds = self._run_inmoose_deseq(DESeq, dds_factory, quiet=quiet)
+
+        contrast = [design_factor, g2, g1]
+        print(f"Contrast used: {contrast}  => log2FoldChange = {g2} / {g1}")
+
+        result_kwargs = {
+            "contrast": contrast,
+            "alpha": 0.05,
+            "independentFiltering": True,
+        }
+
+        try:
+            res = dds.results(**result_kwargs)
         except KeyError as e:
-            if 'cooks' in str(e):
-                print('cooks_filter is not available, use cooks_filter=False')
-                stat_res = DeseqStats(
-                    dds,
-                    contrast=contrast,
-                    alpha=0.05,
-                    cooks_filter=False,
-                    independent_filter=True,
-                    quiet=quiet,
-                    alt_hypothesis=alt_hypothesis,
-                    lfc_null=lfc_null
-                )
-                stat_res.summary()
+            if 'cooks' in str(e).lower():
+                print('cooksCutoff is not available, use cooksCutoff=False')
+                result_kwargs["cooksCutoff"] = False
+                res = dds.results(**result_kwargs)
             else:
                 raise e
 
-        res = stat_res.results_df
+        res = self._normalize_deseq2_results(res)
 
         # Optionally merge raw sample columns back for convenience
         if concat_sample_to_result:
@@ -663,6 +752,198 @@ class CrossTest:
             res_merged = res
 
         return res_merged
+
+    def get_stats_limma_against_control_with_conditon(
+        self,
+        df,
+        control_group,
+        condition,
+        group_list=None,
+        quiet=False,
+        add_covariates: list[str] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Run limma comparisons within each level of a given condition (stratified analysis).
+        The output shape mirrors get_stats_deseq2_against_control_with_conditon.
+        """
+        import warnings
+
+        meta_df = self.tfa.meta_df.copy()
+        if condition not in meta_df.columns:
+            raise KeyError(f"Condition '{condition}' not found in metadata. Available: {list(meta_df.columns)}")
+
+        condition_list = list(meta_df[condition].dropna().unique())
+        print(f'------------------ Start Limma Comparisons (stratified by [{condition}]) ------------------')
+        print(f'Levels: {condition_list}')
+
+        covs = list(add_covariates) if add_covariates else None
+        if covs and condition in covs:
+            warnings.warn(
+                f"[MetaX] '{condition}' is used for stratification and cannot be used as a covariate simultaneously; "
+                f"removing it from add_covariates."
+            )
+            covs = [c for c in covs if c != condition]
+        if covs is not None and len(covs) == 0:
+            covs = None
+
+        res_dict = {}
+        for cond_level in condition_list:
+            print(f'-- Start limma level [{cond_level}] (condition: {condition}) --')
+            dft = self.get_stats_limma_against_control(
+                df=df,
+                control_group=control_group,
+                group_list=group_list,
+                concat_sample_to_result=True,
+                quiet=quiet,
+                condition=[condition, cond_level],
+                add_covariates=covs,
+            )
+            if dft is not None and not dft.empty:
+                res_dict[cond_level] = dft
+            print(f'-- Done limma level [{cond_level}] --')
+
+        if not res_dict:
+            print(f"No valid limma results found across any levels for condition {condition}.")
+            return pd.DataFrame()
+
+        res_df = pd.concat(res_dict.values(), keys=res_dict.keys(), axis=1)
+        print(f'------------------ Done Limma (stratified by [{condition}]) ------------------')
+        return res_df
+
+    def get_stats_limma_against_control(
+        self,
+        df,
+        control_group,
+        group_list: list | None = None,
+        concat_sample_to_result: bool = False,
+        quiet: bool = False,
+        condition: list | None = None,
+        add_covariates: list[str] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Run limma for multiple group-vs-control comparisons and column-bind results.
+        """
+        all_group_list = sorted(set(self.tfa.group_list))
+        if group_list is None:
+            group_list = all_group_list
+        else:
+            group_list = list(group_list)
+
+        if control_group not in all_group_list:
+            raise ValueError(f"control_group must be in {all_group_list}")
+        if any(i not in all_group_list for i in group_list):
+            raise ValueError(f"groups must be in {all_group_list}")
+
+        if control_group in group_list:
+            group_list.remove(control_group)
+
+        res_dict = {}
+        for group2 in group_list:
+            print(f'\n-------------Start limma compare [{control_group}] and [{group2}]----------------\n')
+            df_res = self.get_stats_limma(
+                df=df,
+                group1=control_group,
+                group2=group2,
+                concat_sample_to_result=concat_sample_to_result,
+                quiet=quiet,
+                condition=condition,
+                add_covariates=add_covariates,
+            )
+            if df_res is not None:
+                res_dict[group2] = df_res
+            print(f'\n------------- Done limma for [{control_group}] and [{group2}]----------------\n')
+
+        print('Concatenating limma results...')
+        if not res_dict:
+            print("No valid limma comparisons were performed.")
+            return pd.DataFrame()
+        combined_df = pd.concat(res_dict, axis=1)
+        print('Done for all limma comparisons')
+        return combined_df
+
+    def get_stats_limma(
+        self,
+        df,
+        group1,
+        group2,
+        concat_sample_to_result: bool = True,
+        quiet: bool = False,
+        condition: list | None = None,
+        add_covariates: list[str] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Run limma for group2 vs group1 using InMoose.
+        The input matrix is the current MetaX table as shown/selected by the GUI; use the GUI
+        preprocessing controls to choose whether data should be log-transformed before limma.
+        """
+        print(f'\n--Running limma [{group1}] vs [{group2}] with condition: [{condition}]--')
+
+        group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
+        group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
+        sample_list = group1_sample + group2_sample
+
+        print(f'group1 [{group1}]:\n{group1_sample}\n')
+        print(f'group2 [{group2}]:\n{group2_sample}\n')
+
+        if not group1_sample or not group2_sample:
+            print(f"Skipping limma for [{group1}] vs [{group2}] because one of the groups has no samples under condition {condition}.")
+            return None
+
+        dft = df.copy()
+        dft = dft[sample_list]
+        dft = self.tfa.replace_if_two_index(dft)
+        dft = dft.apply(pd.to_numeric, errors="coerce").replace([np.inf, -np.inf], np.nan)
+        
+        # 保护机制：无论 GUI 是否传入 log 数据，都将 0 替换为 NaN 避免后续计算无意义的效应
+        dft = dft.replace(0.0, np.nan)
+
+        meta_df, design_factor, covs, g1, g2 = self._prepare_de_metadata(
+            sample_list=sample_list,
+            group1=group1,
+            group2=group2,
+            add_covariates=add_covariates,
+        )
+
+        design, contrast, contrast_name = self._build_limma_design(meta_df, design_factor, covs, g1, g2)
+        print(f"[Limma design] columns={list(design.columns)}")
+        print(f"[Limma contrast] {contrast_name}: {g2} / {g1}")
+
+        # Filter out features that don't have enough valid samples to fit the model
+        valid_g1 = dft[group1_sample].notna().sum(axis=1)
+        valid_g2 = dft[group2_sample].notna().sum(axis=1)
+        # We need at least one sample per group and total samples >= number of coefficients
+        valid_mask = (valid_g1 > 0) & (valid_g2 > 0) & (dft.notna().sum(axis=1) >= len(design.columns))
+        dft = dft[valid_mask]
+
+        if dft.empty:
+            print("No valid features left after filtering for missing values. Skipping limma.")
+            return pd.DataFrame()
+
+        expression_df = dft.T
+        expression_df, meta_df = self._align_assay_and_metadata(expression_df, meta_df)
+        dft = dft[expression_df.index]
+
+        lmFit, contrasts_fit, eBayes, topTable = self._require_inmoose_limma()
+        fit = lmFit(expression_df.T, design=design)
+        fit = self._restore_limma_fit_column_names(fit, design.columns)
+        fit = contrasts_fit(fit, contrast)
+        fit = self._run_inmoose_ebayes(eBayes, fit)
+        try:
+            res = topTable(fit, coef=contrast_name, number=np.inf, sort_by="P")
+        except (KeyError, ValueError, TypeError):
+            res = topTable(fit, coef=0, number=np.inf, sort_by="P")
+
+        if not quiet:
+            print(f"limma returned {len(res)} rows.")
+
+        return self._normalize_limma_results(
+            res,
+            dft,
+            list(expression_df.index),
+            concat_sample_to_result,
+            group1_sample=group1_sample,
+            group2_sample=group2_sample,
+        )
 
 
     # Get the Tukey test result of a taxon or a function
@@ -980,10 +1261,10 @@ class CrossTest:
             print(f"\nExtracting significant Stats from '{value}':")
             if df_type == 'dunnett':
                 dft = self.extrcat_significant_stat_from_dunnett(sub_df, p_value=p_value, p_type=p_type)
-            elif df_type == 'deseq2':
+            elif df_type in ['deseq2', 'limma']:
                 dft = self.extrcat_significant_fc_from_deseq2all(sub_df, p_value=p_value, log2fc_min=log2fc_min, log2fc_max=log2fc_max, p_type=p_type)
             else:
-                raise ValueError("df_type must be in ['dunnett', 'deseq2']")
+                raise ValueError("df_type must be in ['dunnett', 'deseq2', 'limma']")
             
             res_dict[value] = dft
         df_combined = pd.concat(res_dict, axis=1)
