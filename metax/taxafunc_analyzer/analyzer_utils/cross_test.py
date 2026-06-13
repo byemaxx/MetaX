@@ -360,7 +360,6 @@ class CrossTest:
 
         return res_df
         
-        
     def get_stats_deseq2_against_control_with_conditon(
         self,
         df,
@@ -369,12 +368,16 @@ class CrossTest:
         group_list=None,
         quiet=False,
         add_covariates: list[str] | None = None,
+        input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run DESeq2 comparisons within each level of a given condition (stratified analysis).
         The condition is used for subsetting; covariates are applied within each condition level.
         """
         import warnings
+
+        if not input_prepared:
+            df = self.prepare_deseq2_input(df, validate=True)
 
         meta_df = self.tfa.meta_df.copy()
 
@@ -412,6 +415,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=[condition, cond_level],
                 add_covariates=covs,
+                input_prepared=True,
             )
             if dft is not None and not dft.empty:
                 res_dict[cond_level] = dft
@@ -664,6 +668,7 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run DESeq2 for multiple group-vs-control comparisons and column-bind results.
@@ -680,6 +685,9 @@ class CrossTest:
         if control_group in group_list:
             group_list.remove(control_group)
 
+        if not input_prepared:
+            df = self.prepare_deseq2_input(df, validate=True)
+
         res_dict = {}
 
         for group2 in group_list:
@@ -692,6 +700,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=condition,
                 add_covariates=add_covariates,
+                input_prepared=True,
             )
             if df_res is not None:
                 res_dict[group2] = df_res
@@ -716,6 +725,7 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run DESeq2 for group2 vs group1 using InMoose DESeq2 with formulaic design.
@@ -738,6 +748,9 @@ class CrossTest:
             return None
 
         # Build intensity matrix for selected samples
+        if not input_prepared:
+            df = self.prepare_deseq2_input(df, validate=True)
+            
         dft = df.copy()
         dft = dft[sample_list]
         dft = self.tfa.replace_if_two_index(dft)  # keep your original helper
@@ -914,6 +927,19 @@ class CrossTest:
         print('Done for all limma comparisons')
         return combined_df
 
+    def _filter_limma_rank_aware(self, dft, group1_sample, group2_sample, design):
+        valid_g1 = dft[group1_sample].notna().sum(axis=1)
+        valid_g2 = dft[group2_sample].notna().sum(axis=1)
+        
+        design_rank = np.linalg.matrix_rank(design.values)
+        if design.shape[0] <= design_rank:
+            raise ValueError("Not enough samples to fit the limma design matrix.")
+            
+        # Note: A global design-rank check is used here. 
+        # Per-feature rank checking may be added later for sparse missingness patterns.
+        valid_mask = (valid_g1 > 0) & (valid_g2 > 0) & (dft.notna().sum(axis=1) > design_rank)
+        return dft[valid_mask]
+
     def get_stats_limma(
         self,
         df,
@@ -962,17 +988,7 @@ class CrossTest:
         print(f"[Limma contrast] {contrast_name}: {g2} / {g1}")
 
         # Filter out features that don't have enough valid samples to fit the model
-        valid_g1 = dft[group1_sample].notna().sum(axis=1)
-        valid_g2 = dft[group2_sample].notna().sum(axis=1)
-        
-        design_rank = np.linalg.matrix_rank(design.values)
-        if design.shape[0] <= design_rank:
-            raise ValueError("Not enough samples to fit the limma design matrix.")
-            
-        # Note: A global design-rank check is used here. 
-        # Per-feature rank checking may be added later for sparse missingness patterns.
-        valid_mask = (valid_g1 > 0) & (valid_g2 > 0) & (dft.notna().sum(axis=1) > design_rank)
-        dft = dft[valid_mask]
+        dft = self._filter_limma_rank_aware(dft, group1_sample, group2_sample, design)
 
         if dft.empty:
             print("No valid features left after filtering for missing values. Skipping limma.")
