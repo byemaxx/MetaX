@@ -158,11 +158,17 @@ class HeatmapPlot:
             
             df_top = self.filter_data_by_x_y(df_top, x_filter_list, y_filter_list, filter_by_regex)
             
+            if df_top is None or df_top.empty or df_top.shape[1] == 0:
+                raise ValueError("Dataframe is empty after filtering/removing columns.")
+            
             df_table = df_top.copy()
             df_plot = df_top.fillna(1) if plot_type in ['pvalue', 'padj'] else df_top.fillna(0)
             df_plot = self.scale_data(df = df_plot, scale_by = scale, method = scale_method)
             
             data_include_negative_and_positive = True if (df_plot.min().min() < 0 and df_plot.max().max() > 0) else False
+
+            effective_col_cluster = col_cluster if df_plot.shape[1] > 1 else False
+            effective_row_cluster = row_cluster if df_plot.shape[0] > 1 else False
 
             sns_params = {
                 'center': 0 if data_include_negative_and_positive else None,
@@ -171,8 +177,8 @@ class HeatmapPlot:
                 "linecolor": None if linecolor == 'none' else linecolor,
                 "dendrogram_ratio": (0.1, 0.2),
                 "figsize": fig_size if return_type == 'fig' else None,
-                "col_cluster": col_cluster if df_plot.shape[1] > 1 else False,
-                "row_cluster": row_cluster if df_plot.shape[0] > 1 else False,
+                "col_cluster": effective_col_cluster,
+                "row_cluster": effective_row_cluster,
                 "method": self.linkage_method,
                 "metric": self.distance_metric,
                 "cbar_kws": {"label": plot_type, "shrink": 0.5},
@@ -185,7 +191,7 @@ class HeatmapPlot:
             
             if return_type == 'table':
                 # get the sorted dataframe
-                sorted_df = self._apply_clustermap_order_to_table(df_table, fig, row_cluster, col_cluster)
+                sorted_df = self._apply_clustermap_order_to_table(df_table, fig, effective_row_cluster, effective_col_cluster)
                 plt.close(fig.figure)
                 return sorted_df
             
@@ -408,6 +414,9 @@ class HeatmapPlot:
             df = df.loc[:, (df != 0).any(axis=0)] if col_cluster else df
             print(f"Remove all 0 rows and columns after calculating the mean of the data:\n{row_num - len(df)} rows are removed\n{col_num - len(df.columns)} columns are removed")
         
+        if df is None or df.empty or df.shape[1] == 0:
+            raise ValueError("Dataframe is empty after filtering/removing zero columns.")
+            
         if len(df) < 2:
             row_cluster = False
         if len(df.columns) < 2:
@@ -571,7 +580,7 @@ class HeatmapPlot:
 
         dft = self.filter_data_by_x_y(dft, x_filter_list, y_filter_list, filter_by_regex)
                     
-        if dft.empty or dft is None:
+        if dft is None or dft.empty:
             if res_df_type in ['deseq2', 'limma']:
                 method_label = "LimmaAll" if res_df_type == 'limma' else "DESeq2All"
                 error_msg = f"No significant differences Results in {p_type} < {pvalue}, {log2fc_min} <= log2fc <= {log2fc_max} for {three_levels_df_type} in {method_label}"
@@ -594,6 +603,9 @@ class HeatmapPlot:
             dft_plot = dft_plot.loc[:, (dft_plot != 0).any(axis=0)]
             dft_table = dft_table.loc[:, dft_plot.columns]
             print(f"Remove all zero columns, the shape of the dataframe is {dft_plot.shape}")
+            
+        if dft_plot.empty or dft_plot.shape[1] == 0:
+            raise ValueError("Dataframe is empty after filtering/removing zero columns.")
         
         
         
