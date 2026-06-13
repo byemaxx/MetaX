@@ -12,7 +12,58 @@ import re
 class CrossTest:
     def __init__(self, tfa):
         self.tfa = tfa
-        
+
+    def _get_sample_columns(self, df):
+        return [col for col in getattr(self.tfa, "sample_list", []) if col in df.columns]
+
+    def prepare_limma_input(
+        self,
+        df,
+        invert_transform=None,
+        log2_transform=False,
+        zero_to_nan=True,
+    ):
+        """
+        Prepare dataframe for limma.
+        Zeros will be treated as missing values and converted to NaN before limma runs.
+        """
+        df = df.copy()
+        sample_cols = self._get_sample_columns(df)
+        if not sample_cols:
+            raise ValueError("No sample columns found in the dataframe.")
+        if invert_transform is not None:
+            df = self.tfa.invert_transform(df, invert_transform)
+        if log2_transform:
+            values = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce")
+            if (values < 0).any().any():
+                raise ValueError("Cannot apply log2(x + 1) because negative values exist in the selected table.")
+            df.loc[:, sample_cols] = np.log2(values + 1)
+        if zero_to_nan:
+            df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce").replace(0, np.nan)
+        df.loc[:, sample_cols] = df.loc[:, sample_cols].replace([np.inf, -np.inf], np.nan)
+        return df
+
+    def prepare_deseq2_input(
+        self,
+        df,
+        invert_transform=None,
+        validate=True,
+    ):
+        df = df.copy()
+        sample_cols = self._get_sample_columns(df)
+        if not sample_cols:
+            raise ValueError("No sample columns found in the dataframe.")
+        if invert_transform is not None:
+            df = self.tfa.invert_transform(df, invert_transform)
+        df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce")
+        df.loc[:, sample_cols] = df.loc[:, sample_cols].replace([np.inf, -np.inf], np.nan)
+        if validate:
+            if df.loc[:, sample_cols].isna().any().any():
+                raise ValueError("Cannot run DESeq2 because NaN values exist in the sample columns.")
+            if (df.loc[:, sample_cols] < 0).any().any():
+                raise ValueError("Cannot run DESeq2 because negative values exist in the sample columns.")
+        return df
+
     def convert_df_name_to_simple_name(self, name: str) -> str:
         name = name.lower()
         if name in ['taxa', 'taxon']:
@@ -669,6 +720,8 @@ class CrossTest:
         """
         Run DESeq2 for group2 vs group1 using InMoose DESeq2 with formulaic design.
         The reported log2FoldChange is group2 / group1.
+
+        Current InMoose backend supports categorical group2-vs-group1 contrasts with optional additive covariates. Continuous-term and interaction-specific tests are not currently supported.
         """
         print(f'\n--Running Deseq2 [{group1}] vs [{group2}] with condition: [{condition}]--')
 
@@ -911,8 +964,14 @@ class CrossTest:
         # Filter out features that don't have enough valid samples to fit the model
         valid_g1 = dft[group1_sample].notna().sum(axis=1)
         valid_g2 = dft[group2_sample].notna().sum(axis=1)
-        # We need at least one sample per group and total samples >= number of coefficients
-        valid_mask = (valid_g1 > 0) & (valid_g2 > 0) & (dft.notna().sum(axis=1) >= len(design.columns))
+        
+        design_rank = np.linalg.matrix_rank(design.values)
+        if design.shape[0] <= design_rank:
+            raise ValueError("Not enough samples to fit the limma design matrix.")
+            
+        # Note: A global design-rank check is used here. 
+        # Per-feature rank checking may be added later for sparse missingness patterns.
+        valid_mask = (valid_g1 > 0) & (valid_g2 > 0) & (dft.notna().sum(axis=1) > design_rank)
         dft = dft[valid_mask]
 
         if dft.empty:

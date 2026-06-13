@@ -235,15 +235,18 @@ def test_all_gui_actions_generation():
     assert "stats_results['deseq2(' + df_type.lower() + ')']" in deseq2_cells[0]
     assert "stats_results['deseq2all(' + df_type.lower() + ')']" in deseq2_cells[1]
     assert "stats_results['deseq2allinCondition(' + df_type.lower() + ')']" in deseq2_cells[2]
+    # Verify new helper
+    assert "prepare_deseq2_input" in deseq2_cells[0]
+    assert "_get_metax_df_by_type" in deseq2_cells[0]
 
     limma_cells = [code for code in code_cells if "tfa.CrossTest.get_stats_limma" in code]
     assert len(limma_cells) == 3
-    assert "np.log2" in limma_cells[0]
-    assert "replace(0, np.nan)" in limma_cells[0]
     assert "stats_results['limma(' + df_type.lower() + ')']" in limma_cells[0]
     assert "stats_results['limmaall(' + df_type.lower() + ')']" in limma_cells[1]
-    assert "tfa.invert_transform(df.copy(), invert_method)" in limma_cells[2]
     assert "stats_results['limmaallinCondition(' + df_type.lower() + ')']" in limma_cells[2]
+    # Verify new helper
+    assert "prepare_limma_input" in limma_cells[0]
+    assert "_get_metax_df_by_type" in limma_cells[0]
 
 
 def test_plot_basic_list_pca_replay_imports_basic_plot():

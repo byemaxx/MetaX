@@ -187,3 +187,68 @@ def test_normalize_limma_results_preserves_logfc_from_log2_input():
     assert normalized.loc["feature_up", "log2FoldChange"] == pytest.approx(2.0)
     assert normalized.loc["feature_down", "log2FoldChange"] == pytest.approx(-2.0)
     assert "padj" in normalized.columns
+
+
+def test_prepare_limma_input_handles_zeros_and_log2():
+    import numpy as np
+    tfa = SimpleNamespace(sample_list=["S1", "S2"], invert_transform=lambda df, m: df)
+    ct = CrossTest(tfa=tfa)
+    df = pd.DataFrame({"Feature": ["A", "B"], "S1": [0, 2], "S2": [3, 0]})
+    
+    res = ct.prepare_limma_input(df, log2_transform=True, zero_to_nan=True)
+    assert pd.isna(res.loc[0, "S1"])
+    assert res.loc[0, "S2"] == np.log2(4)
+    assert res.loc[1, "S1"] == np.log2(3)
+    assert pd.isna(res.loc[1, "S2"])
+
+
+def test_prepare_deseq2_input_raises_on_nan_or_negative():
+    import numpy as np
+    tfa = SimpleNamespace(sample_list=["S1"], invert_transform=lambda df, m: df)
+    ct = CrossTest(tfa=tfa)
+    
+    df1 = pd.DataFrame({"Feature": ["A"], "S1": [-1]})
+    with pytest.raises(ValueError, match="Cannot run DESeq2 because negative values exist"):
+        ct.prepare_deseq2_input(df1, validate=True)
+        
+    df2 = pd.DataFrame({"Feature": ["A"], "S1": [np.nan]})
+    with pytest.raises(ValueError, match="Cannot run DESeq2 because NaN values exist"):
+        ct.prepare_deseq2_input(df2, validate=True)
+
+
+def test_get_stats_limma_rank_aware_filtering():
+    import numpy as np
+    tfa = SimpleNamespace(
+        sample_list=["S1", "S2", "S3"],
+        meta_df=pd.DataFrame({"Group": ["A", "A", "B"]}, index=["S1", "S2", "S3"]),
+        meta_name="Group",
+        get_sample_list_in_a_group=lambda g, condition=None: ["S1", "S2"] if g == "A" else ["S3"],
+        get_meta_list=lambda x: ["A", "A", "B"],
+        check_if_condition_valid=lambda *args, **kwargs: None,
+    )
+    ct = CrossTest(tfa=tfa)
+    ct.convert_df_name_to_simple_name = lambda x: x
+    ct._get_df_primary_secondary = lambda x: (
+        pd.DataFrame({
+            "Feature": ["F1", "F2", "F3"],
+            "S1": [1.0, 1.0, np.nan],
+            "S2": [1.0, np.nan, np.nan],
+            "S3": [1.0, 1.0, 1.0]
+        }).set_index("Feature"), "Feature", None
+    )
+    
+    ct._run_inmoose_ebayes = lambda *args, **kwargs: {"df_prior": pd.Series([1.0]), "p_value": pd.DataFrame([[0.01]], index=["F1"], columns=["group_B"])}
+    ct._run_inmoose_lmFit = lambda *args, **kwargs: SimpleNamespace(
+        coefficients=pd.DataFrame([[1.0]], index=["F1"], columns=["group_B"]),
+        stdev_unscaled=pd.DataFrame([[1.0]], index=["F1"], columns=["group_B"]),
+        sigma=pd.Series([1.0], index=["F1"]),
+        df_residual=pd.Series([1], index=["F1"]),
+        cov_coefficients=pd.DataFrame([[1.0]], index=["group_B"], columns=["group_B"])
+    )
+    
+    res = ct.get_stats_limma("A", "B", df_type="taxa")
+    
+    # F3 and F2 should be filtered out
+    assert "F1" in res.index
+    assert "F2" not in res.index
+    assert "F3" not in res.index

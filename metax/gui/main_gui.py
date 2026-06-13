@@ -7304,118 +7304,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return self.group_control_test('limma')
         QMessageBox.warning(self.MainWindow, 'Warning', f'Unknown group-control method: {method}')
         return None
-        
-        
-    def _guard_and_prepare_counts_for_deseq2(self, df):
-        """
-        One-stop guard before running DESeq2.
-        - Warn if normalization was applied (cannot invert): Continue or Cancel.
-        - If transformed: offer three choices -> Invert & Run / Run without Inverting / Cancel.
-        - Return the (possibly inverted) df, or None if user cancels.
-
-        Usage:
-            df_checked = self._guard_and_prepare_counts_for_deseq2(df)
-            if df_checked is None:
-                # (optional) re-enable UI here
-                return
-            df = df_checked
-        """
-
-        def _warn(title, text):
-            QMessageBox.warning(self.MainWindow, title, text)
-
-        # Apply optional style if present
-        def _style_box(box):
-            try:
-                box.setStyleSheet(self.msgbox_style)
-            except Exception:
-                pass
-
-        # ------- 1) Normalization check (non-invertible) -------
-        norm_method = self.tfa.preprocess_methods.get('normalize_method', None)
-        if norm_method and norm_method != 'None':
-            box = QMessageBox(self.MainWindow)
-            _style_box(box)
-            box.setWindowTitle('Warning')
-            box.setText(f'The data has been normalized by [{norm_method}].\n'
-                        'DESeq2 requires raw counts data.\n\n'
-                        'Continue anyway? (Not recommended)')
-            btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
-            btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
-            box.setDefaultButton(btn_cancel)
-            box.exec_()
-            if box.clickedButton() is btn_cancel:
-                return None, False, None
-            print('User chose to continue with normalized data.')
-
-        # ------- 2) Transform check (invertible: 3-way) -------
-        transform_method = self.tfa.preprocess_methods.get('transform_method', None)
-        if transform_method and transform_method != 'None':
-            if transform_method == 'boxcox': # cannot invert boxcox , and or ask user to confirm
-                _warn('Warning', 'The data has been transformed by Box-Cox, which cannot be inverted.\nDESeq2 requires raw counts data.')
-                box = QMessageBox(self.MainWindow)
-                _style_box(box)
-                box.setWindowTitle('Warning')
-                box.setText('The data has been transformed by [boxcox].\n\nContinue anyway? (Not recommended)')
-                btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
-                btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
-                box.setDefaultButton(btn_cancel)
-                box.exec_()
-                if box.clickedButton() is btn_cancel:
-                    return None, False, None
-                print('User chose to continue with Box-Cox transformed data.')
-                return df, False, None
-            # transform is invertible
-            box = QMessageBox(self.MainWindow)
-            _style_box(box)
-            box.setWindowTitle("Warning")
-            box.setText(
-                f"The data has been transformed by [{transform_method}].\n\n"
-                "DESeq2 requires raw counts. What would you like to do?"
-            )
-            btn_invert  = QPushButton("Invert & Run")
-            btn_run_raw = QPushButton("Run without Inverting")
-            btn_cancel  = QPushButton("Cancel")
-            box.addButton(btn_invert,  QMessageBox.YesRole)
-            box.addButton(btn_run_raw, QMessageBox.NoRole)
-            box.addButton(btn_cancel,  QMessageBox.RejectRole)
-            box.setDefaultButton(btn_invert)
-            box.exec_()
-
-            clicked = box.clickedButton()
-            if clicked is btn_invert:
-                try:
-                    df = self.tfa.invert_transform(df, transform_method)
-                    print(f'Applied inverse transform for [{transform_method}] and will proceed.')
-                    return df, True, transform_method
-                except Exception as e:
-                    _warn('Error', f'Failed to invert transformation [{transform_method}]: {e}')
-                    return None, False, None
-            elif clicked is btn_run_raw:
-                print('User chose to run without inverting transformation.')
-            else:
-                return None, False, None
-
         return df, False, None
-
-    def _replace_zeros_with_nan_for_limma(self, df):
-        df = df.copy()
-        sample_cols = [col for col in getattr(self.tfa, "sample_list", []) if col in df.columns]
-        if not sample_cols:
-            return df
-        df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce").replace(0, np.nan)
-        return df
-
-    def _apply_log2_transform_for_limma(self, df):
-        df = df.copy()
-        sample_cols = [col for col in getattr(self.tfa, "sample_list", []) if col in df.columns]
-        if not sample_cols:
-            return df
-        values = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce")
-        if (values < 0).any().any():
-            raise ValueError("Cannot apply log2(x + 1) because negative values exist in the selected table.")
-        df.loc[:, sample_cols] = np.log2(values + 1)
-        return df
 
     def _guard_and_prepare_log2_for_limma(self, df):
         def _style_box(box):
@@ -7424,9 +7313,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             except Exception:
                 pass
 
+        def _warn(title, text):
+            QMessageBox.warning(self.MainWindow, title, text)
+
         transform_method = self.tfa.preprocess_methods.get('transform_method', None)
         if transform_method == 'log2':
-            return self._replace_zeros_with_nan_for_limma(df), False, None
+            try:
+                df = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
+                return df, False, None
+            except Exception as e:
+                _warn('Error', f'Failed to prepare data for limma: {e}')
+                return None, False, None
 
         box = QMessageBox(self.MainWindow)
         _style_box(box)
@@ -7434,7 +7331,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         box.setText(
             f"The data has not been transformed by [log2] (current: [{transform_method or 'None'}]).\n\n"
             "limma should be run on log2-transformed data.\n"
-            "Zeros will be replaced with NaN before limma runs.\n\n"
+            "Zeros will be treated as missing values and converted to NaN before limma runs.\n\n"
             "What would you like to do?"
         )
         btn_transform = QPushButton("Transform to log2 & Run")
@@ -7449,28 +7346,31 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         clicked = box.clickedButton()
         if clicked is btn_transform:
             try:
-                df_for_limma = df.copy()
                 if transform_method not in [None, 'None']:
                     if transform_method == 'boxcox':
-                        QMessageBox.warning(
-                            self.MainWindow,
+                        _warn(
                             'Warning',
                             'The data has been transformed by Box-Cox, which cannot be inverted.\n'
                             'Please recreate the table with log2 transformation before running limma.'
                         )
                         return None, False, None
-                    df_for_limma = self.tfa.invert_transform(df_for_limma, transform_method)
+                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=transform_method, log2_transform=True, zero_to_nan=True)
                     print(f'Applied inverse transform for [{transform_method}] before limma log2 conversion.')
-                df_for_limma = self._apply_log2_transform_for_limma(df_for_limma)
-                df_for_limma = self._replace_zeros_with_nan_for_limma(df_for_limma)
+                else:
+                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=True, zero_to_nan=True)
                 print('Applied log2(x + 1) transform and replaced zeros with NaN before limma.')
                 return df_for_limma, True, transform_method if transform_method not in [None, 'None'] else None
             except Exception as e:
-                QMessageBox.warning(self.MainWindow, 'Error', f'Failed to prepare log2 data for limma: {e}')
+                _warn('Error', f'Failed to prepare log2 data for limma: {e}')
                 return None, False, None
         if clicked is btn_run_current:
             print('User chose to run limma on the current non-log2 data; zeros will still be replaced with NaN.')
-            return self._replace_zeros_with_nan_for_limma(df), False, None
+            try:
+                df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
+                return df_for_limma, False, None
+            except Exception as e:
+                _warn('Error', f'Failed to prepare data for limma: {e}')
+                return None, False, None
         return None, False, None
 
     # Dunett test and DESeq2 test
