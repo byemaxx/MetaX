@@ -923,6 +923,57 @@ class GeneExtractorApp(QMainWindow):
             return '2-level'  # Default fallback
 
 
+def generate_long_table_from_df(df):
+    """
+    Generate a long format DataFrame from a 2-level or 3-level wide format DE result DataFrame.
+    """
+    import pandas as pd
+    from functools import reduce
+    
+    cols = ["log2FoldChange", "padj", "pvalue"]
+    # Check if columns are MultiIndex
+    if not isinstance(df.columns, pd.MultiIndex):
+        raise ValueError('Table does not have MultiIndex columns.')
+    
+    # Check if all required cols exist in the deepest level
+    if not all(col in df.columns.get_level_values(-1) for col in cols):
+        raise ValueError('Missing required columns (log2FoldChange, padj, pvalue).')
+
+    dfs = {}
+    if df.columns.nlevels == 3:
+        for col in cols:
+            df_sub = df.loc[:, (slice(None), slice(None), col)].copy()
+            df_sub.columns = df_sub.columns.droplevel(2)
+            df_sub.columns = ["~".join(c) for c in df_sub.columns.values]
+            dfs[col] = df_sub
+    elif df.columns.nlevels == 2:
+        for col in cols:
+            df_sub = df.loc[:, (slice(None), col)].copy()
+            df_sub.columns = df_sub.columns.droplevel(1)
+            dfs[col] = df_sub
+    else:
+        raise ValueError('Unsupported column levels. Only 2-level or 3-level columns are supported.')
+
+    long_dfs = {}
+    for col_name, df_sub in dfs.items():
+        df_long = df_sub.melt(ignore_index=False).reset_index()
+        df_long.columns = ["items", "condition", col_name]
+        long_dfs[col_name] = df_long
+    
+    df_long = reduce(
+        lambda left, right: pd.merge(left, right, on=["items", "condition"]),
+        long_dfs.values()
+    )
+    
+    if df.columns.nlevels == 3:
+        df_long['cond1'] = df_long['condition'].str.split("~").str[0]
+        df_long['cond2'] = df_long['condition'].str.split("~").str[1]
+    
+    df_long = df_long[~df_long['log2FoldChange'].isna()]
+    df_long.set_index('items', inplace=True)
+    
+    return df_long
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GeneExtractorApp()

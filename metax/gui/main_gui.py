@@ -8924,9 +8924,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             deseq2_action = QAction("Open in Differential Results Extractor", self.listWidget_table_list)
             deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))
             context_menu.addAction(deseq2_action)
+            
+            long_table_action = QAction("Generate long Table", self.listWidget_table_list)
+            long_table_action.triggered.connect(lambda: self.generate_long_table(item_text))
+            context_menu.addAction(long_table_action)
         
         # Show menu
         context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
+
+    def generate_long_table(self, table_name):
+        """Generate long format table from DE result table."""
+        try:
+            if table_name not in self.table_dict:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'Table "{table_name}" not found!')
+                return
+            
+            df = self.table_dict[table_name].copy()
+            from metax.utils.deseq2_res_extractor import generate_long_table_from_df
+            
+            df_long = generate_long_table_from_df(df)
+            
+            new_table_name = f"Long_{table_name}"
+            self.update_table_dict(new_table_name, df_long)
+            self.show_message(f'Successfully generated long table: {new_table_name}')
+            self.show_table(df_long, title=new_table_name)
+            
+        except ValueError as ve:
+            QMessageBox.warning(self.MainWindow, 'Warning', str(ve))
+        except Exception as e:
+            import traceback
+            error_message = traceback.format_exc()
+            self.logger.write_log(f"Failed to generate long table: {error_message}", 'e')
+            QMessageBox.critical(self.MainWindow, 'Error', f'Failed to generate long table:\n{str(e)}')
 
     def open_deseq2_extractor(self, table_name):
         """Open the differential results extractor with the selected table."""
