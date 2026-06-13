@@ -216,39 +216,31 @@ def test_prepare_deseq2_input_raises_on_nan_or_negative():
         ct.prepare_deseq2_input(df2, validate=True)
 
 
-def test_get_stats_limma_rank_aware_filtering():
+def test_filter_limma_rank_aware():
     import numpy as np
-    tfa = SimpleNamespace(
-        sample_list=["S1", "S2", "S3"],
-        meta_df=pd.DataFrame({"Group": ["A", "A", "B"]}, index=["S1", "S2", "S3"]),
-        meta_name="Group",
-        get_sample_list_in_a_group=lambda g, condition=None: ["S1", "S2"] if g == "A" else ["S3"],
-        get_meta_list=lambda x: ["A", "A", "B"],
-        check_if_condition_valid=lambda *args, **kwargs: None,
-    )
-    ct = CrossTest(tfa=tfa)
-    ct.convert_df_name_to_simple_name = lambda x: x
-    ct._get_df_primary_secondary = lambda x: (
-        pd.DataFrame({
-            "Feature": ["F1", "F2", "F3"],
-            "S1": [1.0, 1.0, np.nan],
-            "S2": [1.0, np.nan, np.nan],
-            "S3": [1.0, 1.0, 1.0]
-        }).set_index("Feature"), "Feature", None
-    )
+    ct = CrossTest(tfa=None)
     
-    ct._run_inmoose_ebayes = lambda *args, **kwargs: {"df_prior": pd.Series([1.0]), "p_value": pd.DataFrame([[0.01]], index=["F1"], columns=["group_B"])}
-    ct._run_inmoose_lmFit = lambda *args, **kwargs: SimpleNamespace(
-        coefficients=pd.DataFrame([[1.0]], index=["F1"], columns=["group_B"]),
-        stdev_unscaled=pd.DataFrame([[1.0]], index=["F1"], columns=["group_B"]),
-        sigma=pd.Series([1.0], index=["F1"]),
-        df_residual=pd.Series([1], index=["F1"]),
-        cov_coefficients=pd.DataFrame([[1.0]], index=["group_B"], columns=["group_B"])
-    )
+    dft = pd.DataFrame({
+        "Feature": ["F1", "F2", "F3"],
+        "S1": [1.0, 1.0, np.nan],
+        "S2": [1.0, np.nan, np.nan],
+        "S3": [1.0, 1.0, 1.0]
+    }).set_index("Feature")
     
-    res = ct.get_stats_limma("A", "B", df_type="taxa")
+    group1_sample = ["S1", "S2"]
+    group2_sample = ["S3"]
+    
+    # rank is 2
+    design = pd.DataFrame({"Intercept": [1, 1, 1], "GroupB": [0, 0, 1]})
+    
+    res = ct._filter_limma_rank_aware(dft, group1_sample, group2_sample, design)
     
     # F3 and F2 should be filtered out
     assert "F1" in res.index
     assert "F2" not in res.index
     assert "F3" not in res.index
+
+    # If rank is 3, F1 would be filtered too (only 3 total samples)
+    design3 = pd.DataFrame({"Intercept": [1, 1, 1], "GroupB": [0, 0, 1], "Cov": [1, 2, 3]})
+    with pytest.raises(ValueError, match="Not enough samples to fit the limma design matrix."):
+        ct._filter_limma_rank_aware(dft, group1_sample, group2_sample, design3)
