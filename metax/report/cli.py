@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 from pathlib import Path
-
-import csv
 
 from .config import AutoReportConfig, load_config_from_yaml
 from .table_builder import DEFAULT_EXCLUDED_FUNCTION_COLUMNS
@@ -166,9 +165,10 @@ def _detect_available_function_columns(otf_path: str | Path) -> list[str]:
     seen: set[str] = set()
     ordered: list[str] = []
     for name in available:
-        if name not in seen:
-            ordered.append(name)
-            seen.add(name)
+        if name == "Taxon" or name in seen:
+            continue
+        ordered.append(name)
+        seen.add(name)
     return ordered
 
 

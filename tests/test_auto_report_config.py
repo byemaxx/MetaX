@@ -65,3 +65,33 @@ def test_result_registry_records_outputs(tmp_path: Path):
     assert data["tables"][0]["key"] == "table"
     assert data["figures"][0]["figure_type"] == "png"
     assert data["warnings"][0]["message"] == "warning"
+
+
+def test_cli_function_detection_excludes_taxon(tmp_path: Path):
+    from metax.report.cli import _detect_available_function_columns
+
+    otf_path = tmp_path / "otf.tsv"
+    otf_path.write_text(
+        "Sequence\tTaxon\tTaxon_prop\tGene\tGene_prop\tKEGG_ko_name\tKEGG_ko_name_prop\n"
+        "pep1\td__Bacteria\t1\tgeneA\t1\tkoA\t1\n",
+        encoding="utf-8",
+    )
+
+    assert _detect_available_function_columns(otf_path) == ["Gene", "KEGG_ko_name"]
+
+
+def test_cli_func_all_excludes_taxon_from_config(tmp_path: Path):
+    from metax.report.cli import build_parser, config_from_args
+
+    otf_path = tmp_path / "otf.tsv"
+    otf_path.write_text(
+        "Sequence\tTaxon\tTaxon_prop\tGene\tGene_prop\n"
+        "pep1\td__Bacteria\t1\tgeneA\t1\n",
+        encoding="utf-8",
+    )
+
+    parser = build_parser()
+    args = parser.parse_args(["--otf", str(otf_path), "--out", str(tmp_path / "report"), "--func", "all"])
+    config = config_from_args(args, parser)
+
+    assert config.tables.function_columns == ["Gene"]
