@@ -7060,7 +7060,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                       y_filter_list = y_filter_list,
                                                                                       filter_by_regex = filter_by_regex)
             elif 'deseq2all' in table_name or 'limmaall' in table_name:
-                p_type = self.comboBox_top_heatmap_sort_type.currentText()
                 res_df_type = 'limma' if 'limmaall' in table_name else 'deseq2'
                 df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type=res_df_type,
                                                                                    pvalue=pvalue,scale = scale, 

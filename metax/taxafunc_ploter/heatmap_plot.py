@@ -80,6 +80,8 @@ class HeatmapPlot:
 
 
     def filter_data_by_x_y(self, df, x_filter_list: list = [], y_filter_list: list = [], filter_by_regex:bool = False):
+        if df is None or df.empty:
+            return df
         if x_filter_list:
             if filter_by_regex:
                 cols = [col for col in df.columns if any(re.search(x, col) for x in x_filter_list)]
