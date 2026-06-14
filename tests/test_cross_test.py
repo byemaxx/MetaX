@@ -100,6 +100,21 @@ def test_restore_limma_fit_column_names_aligns_fit_with_design_columns():
     assert fit.cov_coefficients.columns.tolist() == ["group_V1", "group_V2"]
 
 
+def test_align_limma_design_to_assay_reorders_rows_by_sample_name():
+    ct = CrossTest(tfa=None)
+    assay_df = pd.DataFrame({"feature_a": [1.0, 2.0]}, index=["sample_a", "sample_b"])
+    design = pd.DataFrame(
+        {"group_control": [0.0, 1.0], "group_treatment": [1.0, 0.0]},
+        index=["sample_b", "sample_a"],
+    )
+
+    aligned = ct._align_limma_design_to_assay(design, assay_df)
+
+    assert aligned.index.tolist() == ["sample_a", "sample_b"]
+    assert aligned.loc["sample_a", "group_control"] == 1.0
+    assert aligned.loc["sample_b", "group_treatment"] == 1.0
+
+
 def test_run_inmoose_ebayes_retries_scalar_df_prior_compatibility():
     ct = CrossTest(tfa=None)
     module_name = "_fake_inmoose_ebayes_for_test"
