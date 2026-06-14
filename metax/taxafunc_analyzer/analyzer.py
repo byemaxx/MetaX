@@ -879,6 +879,7 @@ class TaxaFuncAnalyzer:
         
         if df_type == 'taxa_func':
             item_col = 'taxa_func'
+            df = df.copy()
             df['taxa_func'] = df['Taxon'] + '&&&&' + df[func_name]
         else:
             item_col = 'Taxon' if df_type == 'taxa' else func_name
@@ -1243,7 +1244,7 @@ class TaxaFuncAnalyzer:
 
 
         # ----- create taxa_func table -----
-        df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list] # type: ignore
+        df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list].copy() # type: ignore
         df_taxa_func['peptide_num'] = 1
         if not split_func:
             df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')

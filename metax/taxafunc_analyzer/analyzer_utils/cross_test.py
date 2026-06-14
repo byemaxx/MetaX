@@ -33,14 +33,16 @@ class CrossTest:
             raise ValueError("No sample columns found in the dataframe.")
         if invert_transform is not None:
             df = self.tfa.invert_transform(df, invert_transform)
+        sample_values = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce").astype(float)
         if log2_transform:
-            values = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce")
-            if (values < 0).any().any():
+            if (sample_values < 0).any().any():
                 raise ValueError("Cannot apply log2(x + 1) because negative values exist in the selected table.")
-            df.loc[:, sample_cols] = np.log2(values + 1)
+            sample_values = np.log2(sample_values + 1)
         if zero_to_nan:
-            df.loc[:, sample_cols] = df.loc[:, sample_cols].apply(pd.to_numeric, errors="coerce").replace(0, np.nan)
-        df.loc[:, sample_cols] = df.loc[:, sample_cols].replace([np.inf, -np.inf], np.nan)
+            sample_values = sample_values.replace(0, np.nan)
+        sample_values = sample_values.replace([np.inf, -np.inf], np.nan)
+        for col in sample_cols:
+            df[col] = sample_values[col]
         return df
 
     def prepare_deseq2_input(
