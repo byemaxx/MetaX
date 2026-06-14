@@ -1,3 +1,8 @@
+# Version: 2.3.1
+## Date: 2026-06-13
+### Changes:
+- feat: enabled Differential Expression (DE) extractor for 2 groups comparison result tables in table view.
+
 # Version: 2.3.0
 ## Date: 2026-06-13
 ### Changes:

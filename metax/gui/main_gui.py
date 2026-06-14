@@ -8917,9 +8917,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         view_action.triggered.connect(lambda: self.show_table_in_list())
         context_menu.addAction(view_action)
         
-        # Add differential results extractor action for multi-group DE result tables.
-        if (item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all(')
-                or item_text.startswith('limmaallinCondition(') or item_text.startswith('limmaall(')):
+        # Both ordinary DE and against-control DE outputs use the same extractor input format.
+        if self._is_supported_de_result_table(item_text):
             context_menu.addSeparator()
             deseq2_action = QAction("Open in Differential Results Extractor", self.listWidget_table_list)
             deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))
@@ -8932,6 +8931,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # Show menu
         context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
 
+    def _is_supported_de_result_table(self, table_name):
+        """Return True for DE result tables supported by extractor and long-table actions."""
+        return table_name.startswith((
+            'deseq2(',
+            'limma(',
+            'deseq2all(',
+            'deseq2allinCondition(',
+            'limmaall(',
+            'limmaallinCondition(',
+        ))
+
     def generate_long_table(self, table_name):
         """Generate long format table from DE result table."""
         try:
@@ -8940,6 +8950,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return
             
             df = self.table_dict[table_name].copy()
+            df.attrs["de_result_label"] = table_name
             from metax.utils.deseq2_res_extractor import generate_long_table_from_df
             
             df_long = generate_long_table_from_df(df)
