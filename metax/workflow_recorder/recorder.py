@@ -316,30 +316,41 @@ def deseq2_step(
 
     code_lines = [
         "# Requires `tfa` from the OTF loading step.",
+        "def _get_metax_df_by_type(tfa, df_type):",
+        "    key = df_type.lower()",
+        "    if key == 'taxa': return getattr(tfa, 'taxa_df', None)",
+        "    if key in {'func', 'function', 'functions'}: return getattr(tfa, 'func_df', None)",
+        "    if key in {'taxa-func', 'taxa-function', 'taxa-functions'}: return getattr(tfa, 'taxa_func_df', None)",
+        "    if key in {'peptide', 'peptides'}: return getattr(tfa, 'peptide_df', None)",
+        "    if key in {'protein', 'proteins'}: return getattr(tfa, 'protein_df', None)",
+        "    if key == 'custom': return getattr(tfa, 'custom_df', None)",
+        "    raise ValueError(f'Unsupported df_type: {df_type}')",
+        "",
         f"df_type = {_python_literal(df_type)}",
-        "df_map = {",
-        "    'taxa': getattr(tfa, 'taxa_df', None),",
-        "    'functions': getattr(tfa, 'func_df', None),",
-        "    'taxa-functions': getattr(tfa, 'taxa_func_df', None),",
-        "    'peptides': getattr(tfa, 'peptide_df', None),",
-        "    'proteins': getattr(tfa, 'protein_df', None),",
-        "    'custom': getattr(tfa, 'custom_df', None),",
-        "}",
-        "df = df_map[df_type.lower()]",
+        "df = _get_metax_df_by_type(tfa, df_type)",
+        "if df is None:",
+        "    raise ValueError(f'Could not find table for {df_type}.')",
         "",
     ]
     
-    if safe_params.get("invert_transform"):
+    # Store parameters that should be recorded
+    recorded_params = {"df_type": df_type, **safe_params}
+    
+    # Handle invert_transform in generated code
+    if "invert_transform" in safe_params:
+        invert_val = safe_params.pop("invert_transform")
         code_lines.extend([
-            f"invert_method = {_python_literal(safe_params['invert_transform'])}",
-            "df = tfa.invert_transform(df, invert_method)",
+            f"invert_method = {_python_literal(invert_val)}",
+            "df = tfa.CrossTest.prepare_deseq2_input(df, invert_transform=invert_method, validate=True)",
             ""
         ])
-        
-    # Remove invert_transform from params since CrossTest methods don't take it
-    if "invert_transform" in safe_params:
-        del safe_params["invert_transform"]
+    else:
+        code_lines.extend([
+            "df = tfa.CrossTest.prepare_deseq2_input(df, invert_transform=None, validate=True)",
+            ""
+        ])
 
+    safe_params["input_prepared"] = True
     code_lines.extend([
         _assignment("deseq2_params", safe_params),
         f"{output_name} = tfa.CrossTest.{method_name}(df=df, **deseq2_params)",
@@ -351,10 +362,73 @@ def deseq2_step(
     return AnalysisStep(
         title=title,
         step_type="deseq2_test",
-        parameters={"df_type": df_type, **safe_params},
+        parameters=recorded_params,
         outputs={"python_variable": output_name},
         code=code,
-        notes=["Run DESeq2 differential analysis using PyDESeq2."],
+        notes=["Run DESeq2 differential analysis using InMoose."],
+    )
+
+
+def limma_step(
+    *,
+    title: str,
+    method_name: str,
+    df_type: str,
+    parameters: dict[str, Any],
+    output_name: str = "df_limma",
+) -> AnalysisStep:
+    safe_params = _safe_parameters(parameters)
+    recorded_params = {"df_type": df_type, **safe_params}
+    if method_name == "get_stats_limma_against_control":
+        key_expr = f"'limmaall(' + df_type.lower() + ')'"
+    elif method_name == "get_stats_limma_against_control_with_conditon":
+        key_expr = f"'limmaallinCondition(' + df_type.lower() + ')'"
+    else:
+        key_expr = f"'limma(' + df_type.lower() + ')'"
+
+    code_lines = [
+        "# Requires `tfa` from the OTF loading step.",
+        "def _get_metax_df_by_type(tfa, df_type):",
+        "    key = df_type.lower()",
+        "    if key == 'taxa': return getattr(tfa, 'taxa_df', None)",
+        "    if key in {'func', 'function', 'functions'}: return getattr(tfa, 'func_df', None)",
+        "    if key in {'taxa-func', 'taxa-function', 'taxa-functions'}: return getattr(tfa, 'taxa_func_df', None)",
+        "    if key in {'peptide', 'peptides'}: return getattr(tfa, 'peptide_df', None)",
+        "    if key in {'protein', 'proteins'}: return getattr(tfa, 'protein_df', None)",
+        "    if key == 'custom': return getattr(tfa, 'custom_df', None)",
+        "    raise ValueError(f'Unsupported df_type: {df_type}')",
+        "",
+        f"df_type = {_python_literal(df_type)}",
+        "df = _get_metax_df_by_type(tfa, df_type)",
+        "if df is None:",
+        "    raise ValueError(f'Could not find table for {df_type}.')",
+        "",
+    ]
+
+    invert_val = safe_params.pop("invert_transform", None)
+    log2_val = safe_params.pop("log2_transform", False)
+    zero_to_nan_val = safe_params.pop("zero_to_nan", True)
+
+    code_lines.extend([
+        f"df = tfa.CrossTest.prepare_limma_input(df, invert_transform={_python_literal(invert_val)}, log2_transform={_python_literal(log2_val)}, zero_to_nan={_python_literal(zero_to_nan_val)})",
+        "",
+    ])
+
+    code_lines.extend([
+        _assignment("limma_params", safe_params),
+        f"{output_name} = tfa.CrossTest.{method_name}(df=df, **limma_params)",
+        f"stats_results[{key_expr}] = {output_name}",
+        f"print(type({output_name}))",
+    ])
+
+    code = _join_code(*code_lines)
+    return AnalysisStep(
+        title=title,
+        step_type="limma_test",
+        parameters=recorded_params,
+        outputs={"python_variable": output_name},
+        code=code,
+        notes=["Run limma differential analysis using log2-transformed data with zeros replaced by NaN."],
     )
 
 

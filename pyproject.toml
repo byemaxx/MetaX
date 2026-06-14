@@ -17,14 +17,14 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 keywords = ["MetaX", "MetaXTools", "metaproteomics", "peptide", "OTF", "Operational Taxa-Functions", "visualization", "analysis"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "distinctipy>=1.2.2",
     "matplotlib>=3.7.2",
     "numpy>=1.25.1",
     "pandas>=2.0.3",
     "pyarrow>=15.0.0",
-    "pydeseq2==0.4.12",
+    "inmoose==0.9.1",
     "pyecharts>=2.0.6",
     "PyQt5>=5.15.9",
     "PyQt5-Qt5>=5.15.2",

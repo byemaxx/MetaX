@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1039</width>
-    <height>705</height>
+    <width>1575</width>
+    <height>1103</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -369,8 +369,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>486</width>
-                 <height>484</height>
+                 <width>566</width>
+                 <height>116</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -494,8 +494,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>311</width>
-                 <height>49</height>
+                 <width>450</width>
+                 <height>71</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -538,8 +538,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>261</width>
-                 <height>75</height>
+                 <width>389</width>
+                 <height>105</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1452,8 +1452,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>977</width>
-                 <height>171</height>
+                 <width>1070</width>
+                 <height>238</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_37">
@@ -1783,7 +1783,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_12">
                <attribute name="title">
@@ -1987,8 +1987,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>936</width>
-                     <height>267</height>
+                     <width>1168</width>
+                     <height>364</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_34">
@@ -3771,8 +3771,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>936</width>
-                     <height>157</height>
+                     <width>960</width>
+                     <height>213</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_50">
@@ -4551,7 +4551,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>3</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -4880,32 +4880,6 @@
                 <string>Group-Control TEST </string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_33">
-                <item row="10" column="2">
-                 <widget class="QPushButton" name="pushButton_multi_deseq2">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Run Deseq2</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="1">
-                 <widget class="QPushButton" name="pushButton_dunnett_test">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Run Dunnett's TEST</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="4" column="1" colspan="2">
                  <layout class="QGridLayout" name="gridLayout_72">
                   <item row="0" column="1">
@@ -4969,7 +4943,7 @@
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string>Covariates for Deseq2</string>
+                       <string>Covariates for model:</string>
                       </property>
                      </widget>
                     </item>
@@ -4983,13 +4957,6 @@
                    </layout>
                   </item>
                  </layout>
-                </item>
-                <item row="3" column="1" colspan="2">
-                 <widget class="Line" name="line_25">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
                 </item>
                 <item row="1" column="1" colspan="2">
                  <layout class="QHBoxLayout" name="horizontalLayout_39">
@@ -5089,184 +5056,78 @@
                   </property>
                  </widget>
                 </item>
-               </layout>
-              </widget>
-              <widget class="QWidget" name="tab_19">
-               <attribute name="title">
-                <string>DESeq2</string>
-               </attribute>
-               <layout class="QGridLayout" name="gridLayout_16">
-                <item row="4" column="1" colspan="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_22">
+                <item row="3" column="1" colspan="2">
+                 <widget class="Line" name="line_25">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_143">
                   <item>
-                   <widget class="QLabel" name="label_2">
+                   <widget class="QLabel" name="label_251">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Method:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_multi_de_method">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="text">
-                     <string>Group 1</string>
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>0</height>
+                     </size>
                     </property>
+                    <item>
+                     <property name="text">
+                      <string>Limma</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Deseq2</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Dunnett's</string>
+                     </property>
+                    </item>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_deseq2_group1">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_3">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Group 2</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_deseq2_group2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="5" column="0" colspan="3">
-                 <widget class="Line" name="line_14">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0" colspan="3">
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_4">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Table</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0">
-                 <widget class="QLabel" name="label_166">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Groups</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="0" colspan="3">
-                 <widget class="QPushButton" name="pushButton_deseq2">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>33</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Run DESeq2</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_40">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_deseq2_comparing_in_condition">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="autoFillBackground">
+                   <widget class="QPushButton" name="pushButton_run_multi_de">
+                    <property name="enabled">
                      <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>In Condition</string>
+                     <string>Run</string>
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_75">
-                    <item>
-                     <widget class="QComboBox" name="comboBox_deseq2_condition_meta">
-                      <property name="enabled">
-                       <bool>true</bool>
-                      </property>
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="comboBox_deseq2_condition_group">
-                      <property name="enabled">
-                       <bool>true</bool>
-                      </property>
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
                  </layout>
                 </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_19">
+               <attribute name="title">
+                <string>Differential Expression</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_16">
                 <item row="0" column="1">
                  <layout class="QHBoxLayout" name="horizontalLayout_61">
                   <item>
@@ -5327,7 +5188,174 @@
                   </item>
                  </layout>
                 </item>
-                <item row="7" column="0" colspan="3">
+                <item row="4" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_22">
+                  <item>
+                   <widget class="QLabel" name="label_2">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Group 1</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_deseq2_group1">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_3">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Group 2</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_deseq2_group2">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="1" column="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_137">
+                  <item>
+                   <widget class="QLabel" name="label_247">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Covariates</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_138">
+                    <item>
+                     <widget class="QComboBox" name="comboBox_deseq2_covariates"/>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_4">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Table</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="3">
+                 <widget class="Line" name="line">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_40">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_deseq2_comparing_in_condition">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="layoutDirection">
+                     <enum>Qt::LeftToRight</enum>
+                    </property>
+                    <property name="autoFillBackground">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>In Condition</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_75">
+                    <item>
+                     <widget class="QComboBox" name="comboBox_deseq2_condition_meta">
+                      <property name="enabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_deseq2_condition_group">
+                      <property name="enabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_166">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Groups</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0" colspan="3">
+                 <widget class="Line" name="line_14">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0" colspan="3">
                  <widget class="QGroupBox" name="groupBox">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
@@ -5351,75 +5379,6 @@
                    <string>Plot</string>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_55">
-                   <item row="0" column="1">
-                    <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Plot Volcano</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="0">
-                    <layout class="QHBoxLayout" name="horizontalLayout_92">
-                     <item>
-                      <widget class="QLabel" name="label_64">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="text">
-                        <string>Tables</string>
-                       </property>
-                       <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="comboBox_deseq2_tables">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QPushButton" name="pushButton_deseq2_plot_sankey">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Plot Sankey</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QCheckBox" name="checkBox_3">
-                     <property name="text">
-                      <string>Show Plotting Parameter</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="2" column="0" colspan="2">
                     <widget class="QScrollArea" name="scrollArea_deseq2_plot_settings">
                      <property name="widgetResizable">
@@ -5430,8 +5389,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>933</width>
-                        <height>95</height>
+                        <width>1429</width>
+                        <height>130</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
@@ -5699,13 +5658,82 @@
                      </widget>
                     </widget>
                    </item>
+                   <item row="0" column="0">
+                    <layout class="QHBoxLayout" name="horizontalLayout_92">
+                     <item>
+                      <widget class="QLabel" name="label_64">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Tables</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="comboBox_deseq2_tables">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QPushButton" name="pushButton_deseq2_plot_vocano">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Plot Volcano</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="checkBox_3">
+                     <property name="text">
+                      <string>Show Plotting Parameter</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QPushButton" name="pushButton_deseq2_plot_sankey">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Plot Sankey</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </widget>
                 </item>
-                <item row="1" column="2">
-                 <layout class="QHBoxLayout" name="horizontalLayout_137">
+                <item row="6" column="1" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_141">
                   <item>
-                   <widget class="QLabel" name="label_247">
+                   <widget class="QLabel" name="label_252">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -5713,16 +5741,45 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Covariates</string>
+                     <string>Method:</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_138">
+                   <widget class="QComboBox" name="comboBox_de_method">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <item>
-                     <widget class="QComboBox" name="comboBox_deseq2_covariates"/>
+                     <property name="text">
+                      <string>Limma</string>
+                     </property>
                     </item>
-                   </layout>
+                    <item>
+                     <property name="text">
+                      <string>DESeq2</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_run_de">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Run</string>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -6081,8 +6138,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>940</width>
-                    <height>154</height>
+                    <width>1461</width>
+                    <height>211</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_38">
@@ -7537,8 +7594,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>513</width>
-                     <height>128</height>
+                     <width>736</width>
+                     <height>175</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_49">
@@ -8164,8 +8221,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>953</width>
-                     <height>109</height>
+                     <width>909</width>
+                     <height>90</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -9459,8 +9516,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>810</width>
-                     <height>102</height>
+                     <width>1188</width>
+                     <height>138</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_69">
@@ -10009,8 +10066,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>953</width>
-                     <height>145</height>
+                     <width>563</width>
+                     <height>95</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10778,8 +10835,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>701</width>
-                    <height>210</height>
+                    <width>985</width>
+                    <height>295</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11297,8 +11354,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>706</width>
-                    <height>144</height>
+                    <width>1050</width>
+                    <height>198</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11549,8 +11606,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
-                    <height>41</height>
+                    <width>452</width>
+                    <height>60</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -11591,8 +11648,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>259</width>
-                    <height>128</height>
+                    <width>373</width>
+                    <height>189</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -12167,8 +12224,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1039</width>
-     <height>21</height>
+     <width>1575</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

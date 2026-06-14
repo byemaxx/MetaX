@@ -39,6 +39,7 @@ from pathlib import Path
 
 # import third-party modules
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 # import pyqt5 scripts
@@ -98,6 +99,7 @@ try:
         auto_otf_report_step,
         deseq2_step,
         gui_action_step,
+        limma_step,
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
@@ -169,6 +171,7 @@ except (ImportError, ValueError):
         auto_otf_report_step,
         deseq2_step,
         gui_action_step,
+        limma_step,
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
@@ -579,14 +582,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         ### ANOVA
         self.pushButton_anova_test.clicked.connect(self.anova_test)
         
-        # self.hiddenTab = self.tabWidget_3.widget(3)
-        # self.tabWidget_3.removeTab(3)
-        
-        # Hide button of DESeq2 in Group Control Test
-        self.hide_show_multi_deseq2_button(method='hide') if self.like_times < 2 else None
-
-        self.pushButton_dunnett_test.clicked.connect(lambda: self.group_control_test('dunnett'))
-        self.pushButton_multi_deseq2.clicked.connect(lambda: self.group_control_test('deseq2'))
+        self.pushButton_run_multi_de.clicked.connect(self.run_multi_de_by_method)
+        self.comboBox_multi_de_method.currentIndexChanged.connect(self.update_multi_de_method_ui)
         
         
         # ### Tukey
@@ -602,8 +599,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_ttest.clicked.connect(self.t_test)
 
         ## Differential Analysis
-        # ### DESeq2
-        self.pushButton_deseq2.clicked.connect(self.deseq2_test)
+        self.pushButton_run_de.clicked.connect(self.run_de_by_method)
+        self.comboBox_de_method.currentIndexChanged.connect(self.update_de_method_ui)
         self.pushButton_deseq2_plot_vocano.clicked.connect(self.plot_deseq2_volcano)
         self.pushButton_deseq2_plot_sankey.clicked.connect(self.deseq2_plot_sankey)
 
@@ -705,6 +702,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # set default tab index as 0 for all tabWidget
         self.set_default_tab_index()
+        self.update_de_method_ui()
+        self.update_multi_de_method_ui()
         
         ## create settings widget instance
         self.settings_dialog = None
@@ -1722,6 +1721,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             comboBox_top_heatmap_table_list = []
             top_heatmap_match_list = ['t_test(', 'anova_test(', 'dunnettAllCondtion(', 
                                         'dunnett_test(', 'deseq2allinCondition(', 'deseq2all(',
+                                        'limmaallinCondition(', 'limmaall(',
                                         'NonSigTaxa_SigFuncs(taxa-functions)', 'SigTaxa_NonSigFuncs(taxa-functions)']
             comboBox_deseq2_tables_list = []
             
@@ -1729,7 +1729,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for name in current_table_name_list:
                 if any([match in name for match in top_heatmap_match_list]) and 'Cross_Test[' not in name:
                     comboBox_top_heatmap_table_list.append(name)
-                elif 'deseq2(' in name:
+                elif 'deseq2(' in name or 'limma(' in name:
                     comboBox_deseq2_tables_list.append(name)
                     
                     
@@ -1746,7 +1746,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.comboBox_deseq2_tables.addItems(comboBox_deseq2_tables_list)
                 self.comboBox_deseq2_tables.setEnabled(True)
                 self.pushButton_deseq2_plot_vocano.setEnabled(True)
-                self.pushButton_deseq2_plot_sankey.setEnabled(True)
+                self.pushButton_deseq2_plot_sankey.setEnabled(any(name.startswith('deseq2(') or name.startswith('limma(') for name in comboBox_deseq2_tables_list))
                 self.comboBox_deseq2_tables_list = comboBox_deseq2_tables_list
     
     def restore_settings_after_load_taxafunc_obj(self):
@@ -2262,24 +2262,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         dialog.exec_()
         
 
-    def hide_show_multi_deseq2_button(self, method='hide'):
-        if method == 'hide':
-            show = False
-        else:
-            show = True
-        self.pushButton_multi_deseq2.setVisible(show)
-        self.hide_or_show_all_items_in_layout(self.horizontalLayout_136, hide=not show)
-
     def like_us(self):
         if 0 <= self.like_times < 1:
             QMessageBox.information(self.MainWindow, "Thank you!", "Thank you for your support!")
             self.like_times += 1
             
         elif self.like_times >= 1:
-            QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!\n\nYou have unlocked the hidden function!")
+            QMessageBox.information(self.MainWindow, "Thank you!", "Wow! You like us again!")
             self.like_times += 1
-            self.hide_show_multi_deseq2_button(method='show')
-            print("Hidden Button of DESeq2 in Group Control Test is shown.")
             
         else:
             QMessageBox.information(self.MainWindow, "Thank you!", "There is no more hidden function.\n\nYou can like us again next time.")
@@ -3849,7 +3839,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_pd_to_QTableWidget(self, df, tableWidget):
         tableWidget.setRowCount(df.shape[0])
         tableWidget.setColumnCount(df.shape[1])
-        tableWidget.setHorizontalHeaderLabels(df.columns)
+        tableWidget.setHorizontalHeaderLabels([str(c) for c in df.columns])
         # convert the DataFrame's index to string before calling `tolist()`
         tableWidget.setVerticalHeaderLabels(df.index.astype(str).tolist())
         for i in range(df.shape[0]):
@@ -4076,21 +4066,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         selected_table_name = self.comboBox_top_heatmap_table.currentText()
         
         
-        if 'dunnett' in selected_table_name or 'deseq2' in selected_table_name:
+        if 'dunnett' in selected_table_name or 'deseq2' in selected_table_name or 'limma' in selected_table_name:
             self.spinBox_top_heatmap_number.setEnabled(False)
             self.pushButton_plot_top_heatmap.setText('Plot Heatmap')
             self.pushButton_get_top_cross_table.setText('Get Heatmap Table')
 
             
-            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name:
+            if 'dunnett_test' in selected_table_name or 'deseq2' in selected_table_name or 'limma' in selected_table_name:
                 self.comboBox_top_heatmap_sort_type.setEnabled(False)      
 
-            if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('dunnettAllCondtion'):
+            if selected_table_name.startswith('deseq2allin') or selected_table_name.startswith('limmaallin') or selected_table_name.startswith('dunnettAllCondtion'):
                 self.comboBox_cross_3_level_plot_df_type.setEnabled(True)
             else:
                 self.comboBox_cross_3_level_plot_df_type.setEnabled(False)
             
-            if selected_table_name.startswith('deseq2'):
+            if selected_table_name.startswith('deseq2') or selected_table_name.startswith('limma'):
 
                 self.doubleSpinBox_mini_log2fc_heatmap.setEnabled(True)
                 self.doubleSpinBox_max_log2fc_heatmap.setEnabled(True)
@@ -4869,11 +4859,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_plot_corr,
         self.pushButton_plot_box_sns,
         self.pushButton_anova_test,
-        self.pushButton_dunnett_test,
-        self.pushButton_multi_deseq2,
+        self.pushButton_run_multi_de,
         self.pushButton_tukey_test,
         self.pushButton_ttest,
-        self.pushButton_deseq2,
+        self.pushButton_run_de,
         self.pushButton_others_get_intensity_matrix,
         self.pushButton_others_plot_heatmap,
         self.pushButton_others_plot_line,
@@ -6894,11 +6883,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                filter_by_regex = filter_by_regex,
                                                                                linecolor = linecolor
                                                                                )
-            elif table_name.startswith('deseq2all'):
+            elif table_name.startswith('deseq2all') or table_name.startswith('limmaall'):
                 
                 three_levels_df_type = self.comboBox_cross_3_level_plot_df_type.currentText()
+                res_df_type = 'limma' if table_name.startswith('limmaall') else 'deseq2'
 
-                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type='deseq2',
+                fig = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df=df, res_df_type=res_df_type,
                                                                                fig_size=fig_size, pvalue=pvalue, cmap=cmap,
                                                                                log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -7017,7 +7007,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'plot_top_heatmap error: {error_message}')
             self.logger.write_log(f'plot_top_heatmap: table_name: {table_name}, top_num: {top_num}, value_type: {value_type}, fig_size: {fig_size}, pvalue: {pvalue}, sort_by: {sort_by}, cmap: {cmap}, scale: {scale}', 'e')
             if 'No significant' in str(e):
-                QMessageBox.warning(self.MainWindow, 'Warning', f'No significant results. \n\n{error_message}')
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{str(e)}')
+            elif 'empty after filter' in str(e):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'{str(e)}')
             else:
                 QMessageBox.warning(self.MainWindow, 'Error', f'{error_message}')
     
@@ -7067,9 +7059,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                                                                       x_filter_list = x_filter_list, 
                                                                                       y_filter_list = y_filter_list,
                                                                                       filter_by_regex = filter_by_regex)
-            elif 'deseq2all' in table_name:
-                p_type = self.comboBox_top_heatmap_sort_type.currentText()
-                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type='deseq2',
+            elif 'deseq2all' in table_name or 'limmaall' in table_name:
+                res_df_type = 'limma' if 'limmaall' in table_name else 'deseq2'
+                df_top_cross = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_heatmap_of_all_condition_res(df = df,  res_df_type=res_df_type,
                                                                                    pvalue=pvalue,scale = scale, 
                                                                                    log2fc_min =self.doubleSpinBox_mini_log2fc_heatmap.value(),
                                                                                    log2fc_max =self.doubleSpinBox_max_log2fc_heatmap.value(),
@@ -7128,7 +7120,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(
                     self.MainWindow,
                     "Warning",
-                    f"No significant results.\n\n{e}",
+                    f"{e}",
+                )
+            elif "empty after filter" in str(e):
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Warning",
+                    f"{e}",
                 )
             else:
                 QMessageBox.warning(self.MainWindow, "Error", f"{error_message}")
@@ -7271,8 +7269,49 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return True
         else:
             return False
-        
-        
+
+    def _normalize_de_method_name(self, method: str) -> str:
+        method = method.strip().lower()
+        if method in {'deseq2', 'deseq'}:
+            return 'deseq2'
+        if method in {'dunnett', "dunnett's", 'dunnetts'}:
+            return 'dunnett'
+        if method == 'limma':
+            return 'limma'
+        return method
+
+    def _set_de_covariates_visible(self, visible: bool):
+        self.hide_or_show_all_items_in_layout(self.horizontalLayout_138, hide=not visible)
+
+    def _set_multi_de_covariates_visible(self, visible: bool):
+        self.hide_or_show_all_items_in_layout(self.horizontalLayout_136, hide=not visible)
+
+    def update_de_method_ui(self):
+        method = self._normalize_de_method_name(self.comboBox_de_method.currentText())
+        self._set_de_covariates_visible(method in {'deseq2', 'limma'})
+
+    def update_multi_de_method_ui(self):
+        method = self._normalize_de_method_name(self.comboBox_multi_de_method.currentText())
+        self._set_multi_de_covariates_visible(method in {'deseq2', 'limma'})
+
+    def run_de_by_method(self):
+        method = self._normalize_de_method_name(self.comboBox_de_method.currentText())
+        if method in {'deseq2', 'limma'}:
+            return self.de_test(method)
+        QMessageBox.warning(self.MainWindow, 'Warning', f'Unknown differential expression method: {method}')
+        return None
+
+    def run_multi_de_by_method(self):
+        method = self._normalize_de_method_name(self.comboBox_multi_de_method.currentText())
+        if method == 'deseq2':
+            return self.group_control_test('deseq2')
+        if method == 'dunnett':
+            return self.group_control_test('dunnett')
+        if method == 'limma':
+            return self.group_control_test('limma')
+        QMessageBox.warning(self.MainWindow, 'Warning', f'Unknown group-control method: {method}')
+        return None
+
     def _guard_and_prepare_counts_for_deseq2(self, df):
         """
         One-stop guard before running DESeq2.
@@ -7281,10 +7320,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         - Return the (possibly inverted) df, or None if user cancels.
 
         Usage:
-            df_checked = self._guard_and_prepare_counts_for_deseq2(df)
+            df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
             if df_checked is None:
                 # (optional) re-enable UI here
-                return
+                return None, False, None
             df = df_checked
         """
 
@@ -7318,20 +7357,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # ------- 2) Transform check (invertible: 3-way) -------
         transform_method = self.tfa.preprocess_methods.get('transform_method', None)
         if transform_method and transform_method != 'None':
-            if transform_method == 'boxcox': # cannot invert boxcox , and or ask user to confirm
-                _warn('Warning', 'The data has been transformed by Box-Cox, which cannot be inverted.\nDESeq2 requires raw counts data.')
-                box = QMessageBox(self.MainWindow)
-                _style_box(box)
-                box.setWindowTitle('Warning')
-                box.setText('The data has been transformed by [boxcox].\n\nContinue anyway? (Not recommended)')
-                btn_ok = box.addButton("Continue", QMessageBox.AcceptRole)
-                btn_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
-                box.setDefaultButton(btn_cancel)
-                box.exec_()
-                if box.clickedButton() is btn_cancel:
-                    return None, False, None
-                print('User chose to continue with Box-Cox transformed data.')
-                return df, False, None
+            if transform_method == 'boxcox':
+                _warn('Warning', 'The data has been transformed by Box-Cox, which cannot be inverted.\nDESeq2 requires raw counts data.\nPlease recreate the table with raw data before running DESeq2.')
+                return None, False, None
             # transform is invertible
             box = QMessageBox(self.MainWindow)
             _style_box(box)
@@ -7352,21 +7380,101 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             clicked = box.clickedButton()
             if clicked is btn_invert:
                 try:
-                    df = self.tfa.invert_transform(df, transform_method)
+                    df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=transform_method, validate=True)
                     print(f'Applied inverse transform for [{transform_method}] and will proceed.')
                     return df, True, transform_method
                 except Exception as e:
-                    _warn('Error', f'Failed to invert transformation [{transform_method}]: {e}')
+                    _warn('Error', f'Failed to prepare data for DESeq2: {e}')
                     return None, False, None
             elif clicked is btn_run_raw:
-                print('User chose to run without inverting transformation.')
+                try:
+                    df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=None, validate=True)
+                    print('User chose to run without inverting transformation.')
+                    return df, False, None
+                except Exception as e:
+                    _warn('Error', f'Failed to prepare data for DESeq2: {e}')
+                    return None, False, None
             else:
                 return None, False, None
 
-        return df, False, None
+        # validate anyway
+        try:
+            df = self.tfa.CrossTest.prepare_deseq2_input(df, invert_transform=None, validate=True)
+            return df, False, None
+        except Exception as e:
+            _warn('Error', f'Failed to prepare data for DESeq2: {e}')
+            return None, False, None
+
+    def _guard_and_prepare_log2_for_limma(self, df):
+        def _style_box(box):
+            try:
+                box.setStyleSheet(self.msgbox_style)
+            except Exception:
+                pass
+
+        def _warn(title, text):
+            QMessageBox.warning(self.MainWindow, title, text)
+
+        transform_method = self.tfa.preprocess_methods.get('transform_method', None)
+        if transform_method == 'log2':
+            try:
+                df = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
+                return df, False, None
+            except Exception as e:
+                _warn('Error', f'Failed to prepare data for limma: {e}')
+                return None, False, None
+
+        box = QMessageBox(self.MainWindow)
+        _style_box(box)
+        box.setWindowTitle("Warning")
+        box.setText(
+            f"The data has not been transformed by [log2] (current: [{transform_method or 'None'}]).\n\n"
+            "limma should be run on log2-transformed data.\n"
+            "Zeros will be treated as missing values and converted to NaN before limma runs.\n\n"
+            "What would you like to do?"
+        )
+        btn_transform = QPushButton("Transform to log2 & Run")
+        btn_run_current = QPushButton("Run Current Data")
+        btn_cancel = QPushButton("Cancel")
+        box.addButton(btn_transform, QMessageBox.YesRole)
+        box.addButton(btn_run_current, QMessageBox.NoRole)
+        box.addButton(btn_cancel, QMessageBox.RejectRole)
+        box.setDefaultButton(btn_transform)
+        box.exec_()
+
+        clicked = box.clickedButton()
+        if clicked is btn_transform:
+            try:
+                if transform_method not in [None, 'None']:
+                    if transform_method == 'boxcox':
+                        _warn(
+                            'Warning',
+                            'The data has been transformed by Box-Cox, which cannot be inverted.\n'
+                            'Please recreate the table with log2 transformation before running limma.'
+                        )
+                        return None, False, None
+                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=transform_method, log2_transform=True, zero_to_nan=True)
+                    print(f'Applied inverse transform for [{transform_method}] before limma log2 conversion.')
+                else:
+                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=True, zero_to_nan=True)
+                print('Applied log2(x + 1) transform and replaced zeros with NaN before limma.')
+                return df_for_limma, True, transform_method if transform_method not in [None, 'None'] else None
+            except Exception as e:
+                _warn('Error', f'Failed to prepare log2 data for limma: {e}')
+                return None, False, None
+        if clicked is btn_run_current:
+            print('User chose to run limma on the current non-log2 data; zeros will still be replaced with NaN.')
+            try:
+                df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
+                return df_for_limma, False, None
+            except Exception as e:
+                _warn('Error', f'Failed to prepare data for limma: {e}')
+                return None, False, None
+        return None, False, None
 
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
+        method = self._normalize_de_method_name(method)
         control_group = self.comboBox_dunnett_control_group.currentText()
         group_list = self.comboBox_dunnett_group.getCheckedItems()
         df_type = self.comboBox_table_for_dunnett.currentText().lower()
@@ -7378,8 +7486,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             
         group_list = group_list if group_list != [] else sorted(set(self.tfa.group_list))
         
-        deseq2_covariates = self.comboBox_group_control_condition_deseq2_covariates.getCheckedItems()
-        if deseq2_covariates:
+        model_covariates = self.comboBox_group_control_condition_deseq2_covariates.getCheckedItems()
+        if method in {'deseq2', 'limma'} and model_covariates:
             #! Seems like do not need to check this. e.g. condition can be ['v1', 'v2'] in 'individual'
             # 1) Not allowed to be the same as the condition metadata
             # if self.checkBox_group_control_in_condition.isChecked() and condition is not None:
@@ -7393,18 +7501,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             # 2) Not allowed to be the same as the metadata selected for "Comparing Each Condition"
             if self.checkBox_comparing_group_control_in_condition.isChecked():
-                if all_condition_meta and any(cov == all_condition_meta for cov in deseq2_covariates):
+                if all_condition_meta and any(cov == all_condition_meta for cov in model_covariates):
                     QMessageBox.warning(
                         self.MainWindow, 'Warning',
-                        f'The DESeq2 covariates should not contain the [{all_condition_meta}] meta!'
+                        f'The covariates should not contain the [{all_condition_meta}] meta!'
                     )
                     return None
 
             # 3) Not allowed to be the same as the main group metadata
-            if any(cov == self.tfa.meta_name for cov in deseq2_covariates):
+            if any(cov == self.tfa.meta_name for cov in model_covariates):
                 QMessageBox.warning(
                     self.MainWindow, 'Warning',
-                    f'The DESeq2 covariates should not contain the [{self.tfa.meta_name}]!'
+                    f'The covariates should not contain the [{self.tfa.meta_name}]!'
                 )
                 return None
             
@@ -7497,13 +7605,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "control_group": control_group,
                                 "group_list": group_list,
                                 "condition": all_condition_meta,
-                                "add_covariates": deseq2_covariates,
+                                "add_covariates": model_covariates,
                                 "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_cond",
                         ),
                         df = df, control_group=control_group, group_list=group_list,
-                        condition=all_condition_meta, add_covariates=deseq2_covariates
+                        condition=all_condition_meta, add_covariates=model_covariates
                     )
 
                 else:
@@ -7519,13 +7627,81 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "control_group": control_group,
                                 "group_list": group_list,
                                 "condition": condition,
-                                "add_covariates": deseq2_covariates,
+                                "add_covariates": model_covariates,
                                 "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_control",
                         ),
                         df = df,control_group=control_group, group_list=group_list, 
-                        condition=condition, add_covariates=deseq2_covariates
+                        condition=condition, add_covariates=model_covariates
+                    )
+
+            elif method == 'limma':
+                df = self.get_table_by_df_type(df_type=df_type)
+                df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
+                if df_checked is None:
+                    for combobox in self.meta_combobox_list:
+                        combobox.setEnabled(True)
+                    return
+                df = df_checked
+                if self.checkBox_comparing_group_control_in_condition.isChecked():
+                    method_name = 'get_stats_limma_against_control_with_conditon'
+                    limma_method = getattr(self.tfa.CrossTest, method_name)
+                    table_name = f'limmaallinCondition({df_type})'
+                    self.temp_params_dict = {'table_name': table_name}
+                    self.run_in_new_window(
+                        limma_method,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=limma_step(
+                            title=f"Run Limma Against Control with Condition ({df_type})",
+                            method_name=method_name,
+                            df_type=df_type,
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "condition": all_condition_meta,
+                                "add_covariates": model_covariates,
+                                "invert_transform": limma_invert_transform,
+                                "log2_transform": log2_transformed,
+                                "zero_to_nan": True,
+                            },
+                            output_name="df_limma_cond",
+                        ),
+                        df=df,
+                        control_group=control_group,
+                        group_list=group_list,
+                        condition=all_condition_meta,
+                        add_covariates=model_covariates,
+                    )
+
+                else:
+                    method_name = 'get_stats_limma_against_control'
+                    limma_method = getattr(self.tfa.CrossTest, method_name)
+                    table_name = f'limmaall({df_type})'
+                    self.temp_params_dict = {'table_name': table_name}
+                    self.run_in_new_window(
+                        limma_method,
+                        callback=self.callback_after_group_control_test,
+                        workflow_step=limma_step(
+                            title=f"Run Limma Against Control ({df_type})",
+                            method_name=method_name,
+                            df_type=df_type,
+                            parameters={
+                                "control_group": control_group,
+                                "group_list": group_list,
+                                "condition": condition,
+                                "add_covariates": model_covariates,
+                                "invert_transform": limma_invert_transform,
+                                "log2_transform": log2_transformed,
+                                "zero_to_nan": True,
+                            },
+                            output_name="df_limma_control",
+                        ),
+                        df=df,
+                        control_group=control_group,
+                        group_list=group_list,
+                        condition=condition,
+                        add_covariates=model_covariates,
                     )
 
             else:
@@ -7533,6 +7709,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
         
         except Exception as e:
+            for combobox in self.meta_combobox_list:
+                combobox.setEnabled(True)
             if 'is not in meta_df, must be one of' in str(e) or 'not a subset of the groups in condition' in str(e):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{e}')
                 return None
@@ -7555,7 +7733,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     
         if success:
 
-            res_df = result        
+            res_df = result
 
             self.update_table_dict(table_name, res_df)
             self.show_table(res_df, title=table_name)
@@ -7773,20 +7951,35 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         
 
-    #DESeq2 
-    def deseq2_test(self):
-        
+    # Differential expression
+    def de_test(self, method: str):
+        method = self._normalize_de_method_name(method)
         df_type = self.comboBox_table_for_deseq2.currentText()
         df = self.get_table_by_df_type(df_type=df_type)
-        df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
-        if df_checked is None:
-            for combobox in self.meta_combobox_list:
-                combobox.setEnabled(True)
-            return
-        df = df_checked
+
+        is_inverted = False
+        transform_method = None
+        if method == 'deseq2':
+            df_checked, is_inverted, transform_method = self._guard_and_prepare_counts_for_deseq2(df)
+            if df_checked is None:
+                for combobox in self.meta_combobox_list:
+                    combobox.setEnabled(True)
+                return
+            df = df_checked
+        elif method == 'limma':
+            df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
+            if df_checked is None:
+                for combobox in self.meta_combobox_list:
+                    combobox.setEnabled(True)
+                return
+            df = df_checked
+        else:
+            log2_transformed = False
+            limma_invert_transform = None
+
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
-        deseq2_covariates = self.comboBox_deseq2_covariates.getCheckedItems()
+        model_covariates = self.comboBox_deseq2_covariates.getCheckedItems()
 
         if self.checkBox_deseq2_comparing_in_condition.isChecked():
             condition = [self.comboBox_deseq2_condition_meta.currentText(), self.comboBox_deseq2_condition_group.getCheckedItems()]
@@ -7806,7 +7999,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please select two different groups!')
             return None
         
-        if deseq2_covariates:
+        if model_covariates:
             # condition same as covariates
             # if self.checkBox_deseq2_comparing_in_condition.isChecked() and condition is not None:
             #     cond_meta = condition[0]
@@ -7814,49 +8007,69 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             #         QMessageBox.warning(self.MainWindow, 'Warning', f'The DESeq2 covariates should not contain the condition meta [{cond_meta}]!')
             #         return None
             # main group meta same as covariates
-            if any(cov == self.tfa.meta_name for cov in deseq2_covariates):
-                QMessageBox.warning(self.MainWindow, 'Warning', f'The DESeq2 covariates should not contain the [{self.tfa.meta_name}]!')
+            if any(cov == self.tfa.meta_name for cov in model_covariates):
+                QMessageBox.warning(self.MainWindow, 'Warning', f'The covariates should not contain the [{self.tfa.meta_name}]!')
                 return None
             
-        # self.show_message('DESeq2 is running...\n\n It may take a long time! Please wait...')
         try:
             if self.check_if_last_test_not_finish():
                 return None
-            deseq2_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': deseq2_covariates}
+            method_name = 'get_stats_deseq2' if method == 'deseq2' else 'get_stats_limma'
+            cross_test_method = getattr(self.tfa.CrossTest, method_name)
+            de_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': model_covariates}
+            workflow_step = deseq2_step(
+                title=f"Run DESeq2 ({df_type.lower()})",
+                method_name=method_name,
+                df_type=df_type,
+                parameters={
+                    "group1": group1,
+                    "group2": group2,
+                    "condition": condition,
+                    "add_covariates": model_covariates,
+                    "invert_transform": transform_method if is_inverted else None,
+                },
+                output_name="df_deseq2",
+            ) if method == 'deseq2' else limma_step(
+                title=f"Run Limma ({df_type.lower()})",
+                method_name=method_name,
+                df_type=df_type,
+                parameters={
+                    "group1": group1,
+                    "group2": group2,
+                    "condition": condition,
+                    "add_covariates": model_covariates,
+                    "invert_transform": limma_invert_transform,
+                    "log2_transform": log2_transformed,
+                    "zero_to_nan": True,
+                },
+                output_name="df_limma",
+            )
+            self.temp_params_dict = {'method': method, 'df_type': df_type}
             self.run_in_new_window(
-                self.tfa.CrossTest.get_stats_deseq2,
-                callback=self.callback_after_deseq2,
-                workflow_step=deseq2_step(
-                    title=f"Run DESeq2 ({df_type.lower()})",
-                    method_name="get_stats_deseq2",
-                    df_type=df_type,
-                    parameters={
-                        "group1": group1,
-                        "group2": group2,
-                        "condition": condition,
-                        "add_covariates": deseq2_covariates,
-                        "invert_transform": transform_method if is_inverted else None,
-                    },
-                    output_name="df_deseq2",
-                ),
-                **deseq2_params
+                cross_test_method,
+                callback=self.callback_after_de,
+                workflow_step=workflow_step,
+                **de_params
             )
 
         except Exception as e:
             error_message = traceback.format_exc()
-            self.logger.write_log(f'deseq2_test error: {error_message}', 'e')
-            self.logger.write_log(f'deseq2_test: groups: {[group1, group2]}', 'e')
+            self.temp_params_dict = {}
+            self.logger.write_log(f'de_test error: {error_message}', 'e')
+            self.logger.write_log(f'de_test: method: {method}, groups: {[group1, group2]}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', f'{e}\n\nPlease check your setting!')
             return None
                 
-    def callback_after_deseq2(self, result, success):
+    def callback_after_de(self, result, success):
+        method = self.temp_params_dict.get('method', self._normalize_de_method_name(self.comboBox_de_method.currentText()))
+        df_type = self.temp_params_dict.get('df_type', self.comboBox_table_for_deseq2.currentText())
         self.temp_params_dict = {}
             
         if success:
-            df_deseq2 = result
-            self.show_table(df_deseq2, title=f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})')
-            res_table_name = f'deseq2({self.comboBox_table_for_deseq2.currentText().lower()})'
-            self.update_table_dict(res_table_name, df_deseq2)
+            df_de = result
+            res_table_name = f'{method}({df_type.lower()})'
+            self.show_table(df_de, title=res_table_name)
+            self.update_table_dict(res_table_name, df_de)
             if res_table_name not in self.comboBox_deseq2_tables_list:
                 self.comboBox_deseq2_tables_list.append(res_table_name)
                 self.comboBox_deseq2_tables_list.reverse()
@@ -7870,7 +8083,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_deseq2_tables.addItems(self.comboBox_deseq2_tables_list)
             
             self.pushButton_deseq2_plot_vocano.setEnabled(True)
-            self.pushButton_deseq2_plot_sankey.setEnabled(True)
+            self.pushButton_deseq2_plot_sankey.setEnabled(method in ['deseq2', 'limma'])
 
         else:
             QMessageBox.warning(self.MainWindow, 'Error', str(result))
@@ -8113,7 +8326,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             error_message = traceback.format_exc()
             QMessageBox.warning(self.MainWindow, 'Error', f'{error_message} \n\nPlease check your input!')
             return None
-        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-functions)']:
+        if table_name not in ['deseq2(taxa)', 'deseq2(taxa-functions)', 'limma(taxa)', 'limma(taxa-functions)']:
             QMessageBox.warning(self.MainWindow, 'Error', f'{table_name} table is not supported for Sankey plot!')
             return None
         try:
@@ -8704,18 +8917,48 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         view_action.triggered.connect(lambda: self.show_table_in_list())
         context_menu.addAction(view_action)
         
-        # Add DESeq2 extractor action if item contains "deseq2allinCondition"
-        if  item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all('):
+        # Add differential results extractor action for multi-group DE result tables.
+        if (item_text.startswith('deseq2allinCondition(') or item_text.startswith('deseq2all(')
+                or item_text.startswith('limmaallinCondition(') or item_text.startswith('limmaall(')):
             context_menu.addSeparator()
-            deseq2_action = QAction("Open in DESeq2 Results Extractor", self.listWidget_table_list)
+            deseq2_action = QAction("Open in Differential Results Extractor", self.listWidget_table_list)
             deseq2_action.triggered.connect(lambda: self.open_deseq2_extractor(item_text))
             context_menu.addAction(deseq2_action)
+            
+            long_table_action = QAction("Generate long Table", self.listWidget_table_list)
+            long_table_action.triggered.connect(lambda: self.generate_long_table(item_text))
+            context_menu.addAction(long_table_action)
         
         # Show menu
         context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
 
+    def generate_long_table(self, table_name):
+        """Generate long format table from DE result table."""
+        try:
+            if table_name not in self.table_dict:
+                QMessageBox.warning(self.MainWindow, 'Warning', f'Table "{table_name}" not found!')
+                return
+            
+            df = self.table_dict[table_name].copy()
+            from metax.utils.deseq2_res_extractor import generate_long_table_from_df
+            
+            df_long = generate_long_table_from_df(df)
+            
+            new_table_name = f"Long_{table_name}"
+            self.update_table_dict(new_table_name, df_long)
+            self.show_message(f'Successfully generated long table: {new_table_name}')
+            self.show_table(df_long, title=new_table_name)
+            
+        except ValueError as ve:
+            QMessageBox.warning(self.MainWindow, 'Warning', str(ve))
+        except Exception as e:
+            import traceback
+            error_message = traceback.format_exc()
+            self.logger.write_log(f"Failed to generate long table: {error_message}", 'e')
+            QMessageBox.critical(self.MainWindow, 'Error', f'Failed to generate long table:\n{str(e)}')
+
     def open_deseq2_extractor(self, table_name):
-        """Open DESeq2 Results Extractor with the selected table"""
+        """Open the differential results extractor with the selected table."""
         try:
             # Get the table data
             if table_name not in self.table_dict:
@@ -8739,16 +8982,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.deseq2_extractors = []
             self.deseq2_extractors.append(extractor_window)
             
-            self.logger.write_log(f"Opened DESeq2 Results Extractor for table: {table_name}", 'i')
+            self.logger.write_log(f"Opened Differential Results Extractor for table: {table_name}", 'i')
             
         except ImportError as e:
             QMessageBox.critical(self.MainWindow, 'Import Error', 
-                               f'Failed to import DESeq2 Results Extractor:\n{str(e)}')
-            self.logger.write_log(f"Failed to import DESeq2 Results Extractor: {str(e)}", 'e')
+                               f'Failed to import Differential Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to import Differential Results Extractor: {str(e)}", 'e')
         except Exception as e:
             QMessageBox.critical(self.MainWindow, 'Error', 
-                               f'Failed to open DESeq2 Results Extractor:\n{str(e)}')
-            self.logger.write_log(f"Failed to open DESeq2 Results Extractor: {str(e)}", 'e')
+                               f'Failed to open Differential Results Extractor:\n{str(e)}')
+            self.logger.write_log(f"Failed to open Differential Results Extractor: {str(e)}", 'e')
 
 ###############   Class MetaXGUI End   ###############
 

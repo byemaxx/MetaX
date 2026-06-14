@@ -12,6 +12,7 @@ from metax.workflow_recorder import (
     set_multi_tables_step,
     taxafunc_analyzer_step,
     deseq2_step,
+    limma_step,
 )
 
 
@@ -189,6 +190,37 @@ def test_all_gui_actions_generation():
             parameters={"control_group": "A", "group_list": ["B", "C"], "condition": "Cond1"},
         )
     )
+    recorder.add_step(
+        limma_step(
+            title="Run Limma Two Group",
+            method_name="get_stats_limma",
+            df_type="taxa",
+            parameters={"group1": "A", "group2": "B", "log2_transform": True, "zero_to_nan": True},
+        )
+    )
+    recorder.add_step(
+        limma_step(
+            title="Run Limma Against Control",
+            method_name="get_stats_limma_against_control",
+            df_type="taxa",
+            parameters={"control_group": "A", "group_list": ["B", "C"], "zero_to_nan": True},
+        )
+    )
+    recorder.add_step(
+        limma_step(
+            title="Run Limma Against Control with Condition",
+            method_name="get_stats_limma_against_control_with_conditon",
+            df_type="taxa",
+            parameters={
+                "control_group": "A",
+                "group_list": ["B", "C"],
+                "condition": "Cond1",
+                "invert_transform": "log10",
+                "log2_transform": True,
+                "zero_to_nan": True,
+            },
+        )
+    )
 
     notebook = recorder.to_notebook()
     code_cells = ["".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"]
@@ -198,11 +230,23 @@ def test_all_gui_actions_generation():
         compile(code, "<workflow-notebook-cell>", "exec")
         
     # Verify DESeq2 key logic is present in generated cells
-    deseq2_cells = [code for code in code_cells if "tfa.CrossTest" in code]
+    deseq2_cells = [code for code in code_cells if "tfa.CrossTest.get_stats_deseq2" in code]
     assert len(deseq2_cells) == 3
     assert "stats_results['deseq2(' + df_type.lower() + ')']" in deseq2_cells[0]
     assert "stats_results['deseq2all(' + df_type.lower() + ')']" in deseq2_cells[1]
     assert "stats_results['deseq2allinCondition(' + df_type.lower() + ')']" in deseq2_cells[2]
+    # Verify new helper
+    assert "prepare_deseq2_input" in deseq2_cells[0]
+    assert "_get_metax_df_by_type" in deseq2_cells[0]
+
+    limma_cells = [code for code in code_cells if "tfa.CrossTest.get_stats_limma" in code]
+    assert len(limma_cells) == 3
+    assert "stats_results['limma(' + df_type.lower() + ')']" in limma_cells[0]
+    assert "stats_results['limmaall(' + df_type.lower() + ')']" in limma_cells[1]
+    assert "stats_results['limmaallinCondition(' + df_type.lower() + ')']" in limma_cells[2]
+    # Verify new helper
+    assert "prepare_limma_input" in limma_cells[0]
+    assert "_get_metax_df_by_type" in limma_cells[0]
 
 
 def test_plot_basic_list_pca_replay_imports_basic_plot():
