@@ -152,7 +152,7 @@ class MissingGenesDialog(QDialog):
 class GeneExtractorApp(QMainWindow):
     def __init__(self, deseq2_df=None, deseq2_df_name=None):
         super().__init__()
-        self.setWindowTitle("DESeq2 Results Extractor")
+        self.setWindowTitle("Differential Results Extractor")
         self.resize(1000, 800)
         
         # Store data
@@ -162,7 +162,7 @@ class GeneExtractorApp(QMainWindow):
         self.df_padj = None
         self.df_long = None
         
-        # Store external deseq2 dataframe and name
+        # Store external differential-analysis dataframe and name
         self.external_deseq2_df = deseq2_df
         self.external_deseq2_df_name = deseq2_df_name
         
@@ -177,9 +177,9 @@ class GeneExtractorApp(QMainWindow):
             if self._validate_deseq2_dataframe(self.external_deseq2_df):
                 self.df_res = self.external_deseq2_df.copy()
                 if self.external_deseq2_df_name:
-                    self.file_path_edit.setPlaceholderText(f"Using external DESeq2 DataFrame: {self.external_deseq2_df_name}")
+                    self.file_path_edit.setPlaceholderText(f"Using external differential results DataFrame: {self.external_deseq2_df_name}")
                 else:
-                    self.file_path_edit.setPlaceholderText("Using external DESeq2 DataFrame")
+                    self.file_path_edit.setPlaceholderText("Using external differential results DataFrame")
             else:
                 # If validation fails, reset the external dataframe
                 self.external_deseq2_df = None
@@ -187,10 +187,10 @@ class GeneExtractorApp(QMainWindow):
     
     def _validate_deseq2_dataframe(self, df):
         """
-        Validate if the passed DataFrame has the correct format for DESeq2 results.
+        Validate if the passed DataFrame has the correct format for differential results.
         Support both formats:
-        - 3-level columns from get_stats_deseq2_against_control_with_conditon
-        - 2-level columns from get_stats_deseq2_against_control
+        - 3-level columns from get_stats_*_against_control_with_conditon
+        - 2-level columns from get_stats_*_against_control
         """
         try:
             # Check if it's a DataFrame
@@ -203,12 +203,12 @@ class GeneExtractorApp(QMainWindow):
             if not isinstance(df.columns, pd.MultiIndex):
                 QMessageBox.critical(self, "DataFrame Format Error", 
                                    "The DataFrame must have MultiIndex columns.\n"
-                                   "Expected format: 2-level or 3-level columns from DESeq2 functions.")
+                                   "Expected format: 2-level or 3-level columns from DESeq2/limma functions.")
                 return False
             
             # Support both 2-level and 3-level columns
             if df.columns.nlevels == 3:
-                # 3-level format from get_stats_deseq2_against_control_with_conditon
+                # 3-level format from get_stats_*_against_control_with_conditon
                 third_level_cols = df.columns.get_level_values(2).unique()
                 expected_cols = {'log2FoldChange', 'padj', 'pvalue'}
                 
@@ -217,17 +217,17 @@ class GeneExtractorApp(QMainWindow):
                     QMessageBox.critical(self, "DataFrame Format Error", 
                                        f"Missing required columns in the third level: {missing_cols}\n"
                                        f"Found columns: {list(third_level_cols)}\n"
-                                       "Expected format: columns from get_stats_deseq2_against_control_with_conditon function.")
+                                       "Expected format: columns from get_stats_*_against_control_with_conditon function.")
                     return False
                 
                 self.data_format_type = '3-level'
-                print(f"Successfully validated external DESeq2 DataFrame with 3-level columns, shape: {df.shape}")
+                print(f"Successfully validated external differential results DataFrame with 3-level columns, shape: {df.shape}")
                 print(f"First level (conditions): {list(df.columns.get_level_values(0).unique())}")
                 print(f"Second level (groups): {list(df.columns.get_level_values(1).unique())}")
                 print(f"Third level (metrics): {list(df.columns.get_level_values(2).unique())}")
                 
             elif df.columns.nlevels == 2:
-                # 2-level format from get_stats_deseq2_against_control
+                # 2-level format from get_stats_*_against_control
                 second_level_cols = df.columns.get_level_values(1).unique()
                 expected_cols = {'log2FoldChange', 'padj', 'pvalue'}
                 
@@ -236,18 +236,18 @@ class GeneExtractorApp(QMainWindow):
                     QMessageBox.critical(self, "DataFrame Format Error", 
                                        f"Missing required columns in the second level: {missing_cols}\n"
                                        f"Found columns: {list(second_level_cols)}\n"
-                                       "Expected format: columns from get_stats_deseq2_against_control function.")
+                                       "Expected format: columns from get_stats_*_against_control function.")
                     return False
                 
                 self.data_format_type = '2-level'
-                print(f"Successfully validated external DESeq2 DataFrame with 2-level columns, shape: {df.shape}")
+                print(f"Successfully validated external differential results DataFrame with 2-level columns, shape: {df.shape}")
                 print(f"First level (groups): {list(df.columns.get_level_values(0).unique())}")
                 print(f"Second level (metrics): {list(df.columns.get_level_values(1).unique())}")
                 
             else:
                 QMessageBox.critical(self, "DataFrame Format Error", 
                                    f"The DataFrame must have exactly 2 or 3 levels in column index, but got {df.columns.nlevels} levels.\n"
-                                   "Expected format: 2-level or 3-level columns from DESeq2 functions.")
+                                   "Expected format: 2-level or 3-level columns from DESeq2/limma functions.")
                 return False
             
             # Check if DataFrame is not empty
@@ -262,8 +262,8 @@ class GeneExtractorApp(QMainWindow):
             QMessageBox.critical(self, "DataFrame Validation Error", 
                                f"Error validating DataFrame format:\n{str(e)}\n\n"
                                "Please ensure the DataFrame is generated by:\n"
-                               "- cross_test.get_stats_deseq2_against_control_with_conditon() (3-level)\n"
-                               "- cross_test.get_stats_deseq2_against_control() (2-level)")
+                               "- cross_test.get_stats_*_against_control_with_conditon() (3-level)\n"
+                               "- cross_test.get_stats_*_against_control() (2-level)")
             return False
     
     def setup_ui(self):
@@ -281,7 +281,7 @@ class GeneExtractorApp(QMainWindow):
         # File selection part
         file_layout = QHBoxLayout()
         self.file_path_edit = QLineEdit()
-        self.file_path_edit.setPlaceholderText("Select deseq2allinCondition(XXX).tsv or deseq2all(XXX).tsv file...")
+        self.file_path_edit.setPlaceholderText("Select deseq2/limma all-condition or all-group result TSV file...")
         self.file_path_edit.setReadOnly(True)
         browse_button = QPushButton("Browse...")
         browse_button.clicked.connect(self.browse_file)
@@ -349,8 +349,8 @@ class GeneExtractorApp(QMainWindow):
 
         prefix_label = QLabel("File prefix:")
         self.output_prefix_edit = QLineEdit()
-        self.output_prefix_edit.setText("deseq2_")
-        self.output_prefix_edit.setPlaceholderText("deseq2_")
+        self.output_prefix_edit.setText("de_")
+        self.output_prefix_edit.setPlaceholderText("de_")
 
         output_browse_button = QPushButton("Browse...")
         output_browse_button.clicked.connect(self.browse_output_dir)
@@ -368,7 +368,7 @@ class GeneExtractorApp(QMainWindow):
     
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Select deseq2 file", "", "TSV Files (*.tsv)"
+            self, "Select differential results file", "", "TSV Files (*.tsv)"
         )
         if file_path:
             self.file_path_edit.setText(file_path)
@@ -439,7 +439,7 @@ class GeneExtractorApp(QMainWindow):
         else:
             file_path = self.file_path_edit.text()
             if not file_path:
-                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                QMessageBox.warning(self, "Warning", "Please select a differential results file first!")
                 return
             try:
                 # Read data file
@@ -468,7 +468,7 @@ class GeneExtractorApp(QMainWindow):
         else:
             file_path = self.file_path_edit.text()
             if not file_path:
-                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                QMessageBox.warning(self, "Warning", "Please select a differential results file first!")
                 return
             try:
                 # Read data file
@@ -529,7 +529,7 @@ class GeneExtractorApp(QMainWindow):
             # Check if file is selected
             file_path = self.file_path_edit.text()
             if not file_path:
-                QMessageBox.warning(self, "Warning", "Please select a deseq2 file first!")
+                QMessageBox.warning(self, "Warning", "Please select a differential results file first!")
                 return
             
             try:
@@ -839,7 +839,7 @@ class GeneExtractorApp(QMainWindow):
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
-            prefix = "deseq2_"
+            prefix = "de_"
             if hasattr(self, "output_prefix_edit"):
                 user_prefix = self.output_prefix_edit.text().strip()
                 if user_prefix:
@@ -922,6 +922,57 @@ class GeneExtractorApp(QMainWindow):
             print(f"Error detecting file format: {e}")
             return '2-level'  # Default fallback
 
+
+def generate_long_table_from_df(df):
+    """
+    Generate a long format DataFrame from a 2-level or 3-level wide format DE result DataFrame.
+    """
+    import pandas as pd
+    from functools import reduce
+    
+    cols = ["log2FoldChange", "padj", "pvalue"]
+    # Check if columns are MultiIndex
+    if not isinstance(df.columns, pd.MultiIndex):
+        raise ValueError('Table does not have MultiIndex columns.')
+    
+    # Check if all required cols exist in the deepest level
+    if not all(col in df.columns.get_level_values(-1) for col in cols):
+        raise ValueError('Missing required columns (log2FoldChange, padj, pvalue).')
+
+    dfs = {}
+    if df.columns.nlevels == 3:
+        for col in cols:
+            df_sub = df.loc[:, (slice(None), slice(None), col)].copy()
+            df_sub.columns = df_sub.columns.droplevel(2)
+            df_sub.columns = ["~".join(c) for c in df_sub.columns.values]
+            dfs[col] = df_sub
+    elif df.columns.nlevels == 2:
+        for col in cols:
+            df_sub = df.loc[:, (slice(None), col)].copy()
+            df_sub.columns = df_sub.columns.droplevel(1)
+            dfs[col] = df_sub
+    else:
+        raise ValueError('Unsupported column levels. Only 2-level or 3-level columns are supported.')
+
+    long_dfs = {}
+    for col_name, df_sub in dfs.items():
+        df_long = df_sub.melt(ignore_index=False).reset_index()
+        df_long.columns = ["items", "condition", col_name]
+        long_dfs[col_name] = df_long
+    
+    df_long = reduce(
+        lambda left, right: pd.merge(left, right, on=["items", "condition"]),
+        long_dfs.values()
+    )
+    
+    if df.columns.nlevels == 3:
+        df_long['cond1'] = df_long['condition'].str.split("~").str[0]
+        df_long['cond2'] = df_long['condition'].str.split("~").str[1]
+    
+    df_long = df_long[~df_long['log2FoldChange'].isna()]
+    df_long.set_index('items', inplace=True)
+    
+    return df_long
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

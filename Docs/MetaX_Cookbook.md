@@ -6,7 +6,7 @@ This guidebook is for the MetaX **GUI version**. If you are using the CLI, we re
 
 **[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for linking peptide sequences with taxonomic and functional information in **Metaproteomics**. We introduce the ***Operational Taxon-Function (OTF)*** concept to explore microbial roles and interactions ("**who is doing what and how**") within ecosystems. 
 
-MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.
+MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups, and can now export recorded GUI analysis steps as runnable workflow notebooks for reproducible downstream use.
 
 
 ![abstract](./MetaX_Cookbook.assets/abstract.png)
@@ -357,7 +357,7 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 - **Add items to Top List:** Select the top items to plot using a statistical method.
 
-  - Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of DESeq2 results (configured on the corresponding page).
+  - Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of differential expression results from DESeq2 or Limma (configured on the corresponding page).
 
   <img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  />
 
@@ -495,19 +495,28 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
   - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
   - Result of Dunnett's Test:
     - T- Statistic value shown in the heatmap
-  <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
+    <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
+
+- **Limma / DESeq2 Group-Control Analysis**
+
+  - After unlocking the differential expression tools, choose **Method** to run either **Limma** or **DESeq2** for group-vs-control comparisons.
+  - **Limma** is the default method. It works on log2-style quantitative data; zeros are treated as missing values during preparation.
+  - **DESeq2** is intended for raw count-like input. If the current table was transformed earlier, MetaX will try to guide you through safe preparation before running the test.
+  - Both methods support optional covariates and the **Comparing in Each Condition** workflow.
 
 
+### Differential Expression (Limma / DESeq2)
 
-### DESeq2
-
-- Select two groups to calculate fold change with [<u>PyDESeq2</u>](https://github.com/owkin/PyDESeq2).
+- Select **Method** to run differential expression with **Limma** or **DESeq2**.
+- **Limma** is the default method for this page.
+- MetaX now uses [<u>InMoose</u>](https://github.com/epigenelabs/inmoose) as the differential expression backend.
+- Use **Limma** for log2-transformed quantitative tables, and use **DESeq2** for raw count-style tables.
 
   
 
-<img src="./MetaX_Cookbook.assets/deseq2.png">
+<img src="./MetaX_Cookbook.assets/Differential_Expression.png">
 
-- Select <u>p-adjust</u>, <u>log2FC</u> to plot
+- Select <u>p-adjust</u>, <u>log2FC</u> to plot significant results from either method.
 
   (**Ultra-Up(Down):** |log2FC| > Max log2FC)
 
@@ -517,9 +526,14 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
   - Sankey:
 
-    - The last node level is the functions linked to each Taxon (When plotting Taxa-Func)
+    - The last node level is the functions linked to each Taxon (when plotting Taxa-Func).
+    - Sankey plotting is available for both **DESeq2** and **Limma** result tables on **Taxa** and **Taxa-Func** comparisons.
 
     <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" />
+
+- Differential result tables generated from **group-control** analyses can be right-clicked in the table list to:
+  - Open them in the **Differential Results Extractor**
+  - Generate a **long-format table** for downstream filtering, export, or plotting
 
 
 ### Tukey Test
@@ -681,7 +695,7 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 - Once you create TaxaFunc, the <u>TaxaFunc Object</u> is saved automatically, and you can restore it next time.
 - You can also export the current MetaX object to a file and reload it later.
-  <img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" />
+  <img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore"/>
 
 
 
@@ -823,6 +837,15 @@ These peptide results come from the **MetaLab 2.3** MaxQuant workflow.
 
   - You can export the log file for debugging or reporting the issue.
   - ![dev_menu](MetaX_Cookbook.assets/dev_menu.png)
+
+- **Export Workflow Notebook**
+
+  - MetaX records GUI analysis steps during the current session and can export selected steps as a runnable workflow package.
+  - Use **Developer Tools -> Export Workflow Notebook** to save:
+    - a Jupyter notebook (`.ipynb`)
+    - a Python script (`.py`)
+    - a workflow description file (`.yaml`)
+  - This is useful when you want to reproduce a GUI analysis, review the exact parameters used, or continue the workflow in code.
 
 - **Show or Hide the Console**
 
