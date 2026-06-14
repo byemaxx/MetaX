@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>2</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -1452,8 +1452,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1070</width>
-                 <height>238</height>
+                 <width>1489</width>
+                 <height>245</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_37">
@@ -1495,6 +1495,9 @@
                     <property name="text">
                      <string>Share intensity between split functions</string>
                     </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
@@ -1510,6 +1513,9 @@
                     </property>
                     <property name="text">
                      <string>Split function terms by</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -1987,7 +1993,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1168</width>
+                     <width>1457</width>
                      <height>364</height>
                     </rect>
                    </property>
@@ -5389,8 +5395,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1429</width>
-                        <height>130</height>
+                        <width>790</width>
+                        <height>129</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
