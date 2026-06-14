@@ -1,4 +1,4 @@
-# Version: 2.23.0
+# Version: 2.3.0
 ## Date: 2026-06-13
 ### Changes:
 - New: Added `limma` for the DE analysis as the default method.
