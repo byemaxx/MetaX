@@ -558,6 +558,15 @@ class CrossTest:
                 raise ValueError("No overlapping samples between assay data and metadata after alignment.")
         return assay_df, meta_df
 
+    def _align_limma_design_to_assay(self, design, assay_df):
+        missing_samples = assay_df.index.difference(design.index)
+        if not missing_samples.empty:
+            raise ValueError(
+                "Limma design matrix is missing samples after assay/metadata alignment: "
+                f"{missing_samples.tolist()}"
+            )
+        return design.loc[assay_df.index]
+
     def _build_limma_design(self, meta_df, design_factor, covs, g1, g2):
         group_values = meta_df[design_factor].astype(str)
         group_columns = {
@@ -996,7 +1005,8 @@ class CrossTest:
 
         expression_df = dft.T
         expression_df, meta_df = self._align_assay_and_metadata(expression_df, meta_df)
-        dft = dft[expression_df.index]
+        design = self._align_limma_design_to_assay(design, expression_df)
+        dft = dft.loc[:, expression_df.index]
 
         lmFit, contrasts_fit, eBayes, topTable = self._require_inmoose_limma()
         fit = lmFit(expression_df.T, design=design)
