@@ -7286,13 +7286,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def _set_multi_de_covariates_visible(self, visible: bool):
         self.hide_or_show_all_items_in_layout(self.horizontalLayout_136, hide=not visible)
 
+    def _set_limma_zero_to_nan_checkbox_visible(self, checkbox, visible: bool):
+        checkbox.setVisible(visible)
+        checkbox.setEnabled(visible)
+
     def update_de_method_ui(self):
         method = self._normalize_de_method_name(self.comboBox_de_method.currentText())
         self._set_de_covariates_visible(method in {'deseq2', 'limma'})
+        self._set_limma_zero_to_nan_checkbox_visible(
+            self.checkBox_de_convert_zero_to_nan_before_limma,
+            method == 'limma',
+        )
 
     def update_multi_de_method_ui(self):
         method = self._normalize_de_method_name(self.comboBox_multi_de_method.currentText())
         self._set_multi_de_covariates_visible(method in {'deseq2', 'limma'})
+        self._set_limma_zero_to_nan_checkbox_visible(
+            self.checkBox_multi_de_convert_zero_to_nan_before_limma,
+            method == 'limma',
+        )
 
     def run_de_by_method(self):
         method = self._normalize_de_method_name(self.comboBox_de_method.currentText())
@@ -7405,7 +7417,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             _warn('Error', f'Failed to prepare data for DESeq2: {e}')
             return None, False, None
 
-    def _guard_and_prepare_log2_for_limma(self, df):
+    def _collect_limma_preprocess_options(self, zero_to_nan: bool):
         def _style_box(box):
             try:
                 box.setStyleSheet(self.msgbox_style)
@@ -7417,12 +7429,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         transform_method = self.tfa.preprocess_methods.get('transform_method', None)
         if transform_method == 'log2':
-            try:
-                df = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
-                return df, False, None
-            except Exception as e:
-                _warn('Error', f'Failed to prepare data for limma: {e}')
-                return None, False, None
+            print(
+                "Running limma on log2-transformed data "
+                f"with{'out' if not zero_to_nan else ''} zero-to-NaN conversion."
+            )
+            return True, False, None, zero_to_nan
 
         box = QMessageBox(self.MainWindow)
         _style_box(box)
@@ -7430,7 +7441,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         box.setText(
             f"The data has not been transformed by [log2] (current: [{transform_method or 'None'}]).\n\n"
             "limma should be run on log2-transformed data.\n"
-            "Zeros will be treated as missing values and converted to NaN before limma runs.\n\n"
+            f"Zero-to-NaN handling currently is set to [{'enabled' if zero_to_nan else 'disabled'}].\n\n"
             "What would you like to do?"
         )
         btn_transform = QPushButton("Transform to log2 & Run")
@@ -7452,25 +7463,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                             'The data has been transformed by Box-Cox, which cannot be inverted.\n'
                             'Please recreate the table with log2 transformation before running limma.'
                         )
-                        return None, False, None
-                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=transform_method, log2_transform=True, zero_to_nan=True)
+                        return None, False, None, False
                     print(f'Applied inverse transform for [{transform_method}] before limma log2 conversion.')
-                else:
-                    df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=True, zero_to_nan=True)
-                print('Applied log2(x + 1) transform and replaced zeros with NaN before limma.')
-                return df_for_limma, True, transform_method if transform_method not in [None, 'None'] else None
+                print(
+                    "Will apply log2(x + 1) transform "
+                    f"with{'out' if not zero_to_nan else ''} zero-to-NaN conversion before limma."
+                )
+                return True, True, transform_method if transform_method not in [None, 'None'] else None, zero_to_nan
             except Exception as e:
-                _warn('Error', f'Failed to prepare log2 data for limma: {e}')
-                return None, False, None
+                _warn('Error', f'Failed to prepare limma options: {e}')
+                return None, False, None, False
         if clicked is btn_run_current:
-            print('User chose to run limma on the current non-log2 data; zeros will still be replaced with NaN.')
-            try:
-                df_for_limma = self.tfa.CrossTest.prepare_limma_input(df, invert_transform=None, log2_transform=False, zero_to_nan=True)
-                return df_for_limma, False, None
-            except Exception as e:
-                _warn('Error', f'Failed to prepare data for limma: {e}')
-                return None, False, None
-        return None, False, None
+            print(
+                "User chose to run limma on the current non-log2 data "
+                f"with{'out' if not zero_to_nan else ''} zero-to-NaN conversion."
+            )
+            return True, False, None, zero_to_nan
+        return None, False, None, False
 
     # Dunett test and DESeq2 test
     def group_control_test(self, method:str = 'dunnett'):
@@ -7638,12 +7647,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             elif method == 'limma':
                 df = self.get_table_by_df_type(df_type=df_type)
-                df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
-                if df_checked is None:
+                zero_to_nan = self.checkBox_multi_de_convert_zero_to_nan_before_limma.isChecked()
+                should_run_limma, log2_transformed, limma_invert_transform, zero_to_nan = self._collect_limma_preprocess_options(zero_to_nan)
+                if should_run_limma is None:
                     for combobox in self.meta_combobox_list:
                         combobox.setEnabled(True)
                     return
-                df = df_checked
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
                     method_name = 'get_stats_limma_against_control_with_conditon'
                     limma_method = getattr(self.tfa.CrossTest, method_name)
@@ -7663,7 +7672,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "add_covariates": model_covariates,
                                 "invert_transform": limma_invert_transform,
                                 "log2_transform": log2_transformed,
-                                "zero_to_nan": True,
+                                "zero_to_nan": zero_to_nan,
                             },
                             output_name="df_limma_cond",
                         ),
@@ -7672,6 +7681,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         group_list=group_list,
                         condition=all_condition_meta,
                         add_covariates=model_covariates,
+                        invert_transform=limma_invert_transform,
+                        log2_transform=log2_transformed,
+                        zero_to_nan=zero_to_nan,
                     )
 
                 else:
@@ -7693,7 +7705,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "add_covariates": model_covariates,
                                 "invert_transform": limma_invert_transform,
                                 "log2_transform": log2_transformed,
-                                "zero_to_nan": True,
+                                "zero_to_nan": zero_to_nan,
                             },
                             output_name="df_limma_control",
                         ),
@@ -7702,6 +7714,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         group_list=group_list,
                         condition=condition,
                         add_covariates=model_covariates,
+                        invert_transform=limma_invert_transform,
+                        log2_transform=log2_transformed,
+                        zero_to_nan=zero_to_nan,
                     )
 
             else:
@@ -7967,15 +7982,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return
             df = df_checked
         elif method == 'limma':
-            df_checked, log2_transformed, limma_invert_transform = self._guard_and_prepare_log2_for_limma(df)
-            if df_checked is None:
+            zero_to_nan = self.checkBox_de_convert_zero_to_nan_before_limma.isChecked()
+            should_run_limma, log2_transformed, limma_invert_transform, zero_to_nan = self._collect_limma_preprocess_options(zero_to_nan)
+            if should_run_limma is None:
                 for combobox in self.meta_combobox_list:
                     combobox.setEnabled(True)
                 return
-            df = df_checked
         else:
             log2_transformed = False
             limma_invert_transform = None
+            zero_to_nan = False
 
         group1 = self.comboBox_deseq2_group1.currentText()
         group2 = self.comboBox_deseq2_group2.currentText()
@@ -8017,6 +8033,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             method_name = 'get_stats_deseq2' if method == 'deseq2' else 'get_stats_limma'
             cross_test_method = getattr(self.tfa.CrossTest, method_name)
             de_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': model_covariates}
+            if method == 'limma':
+                de_params['invert_transform'] = limma_invert_transform
+                de_params['log2_transform'] = log2_transformed
+                de_params['zero_to_nan'] = zero_to_nan
             workflow_step = deseq2_step(
                 title=f"Run DESeq2 ({df_type.lower()})",
                 method_name=method_name,
@@ -8040,7 +8060,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "add_covariates": model_covariates,
                     "invert_transform": limma_invert_transform,
                     "log2_transform": log2_transformed,
-                    "zero_to_nan": True,
+                    "zero_to_nan": zero_to_nan,
                 },
                 output_name="df_limma",
             )

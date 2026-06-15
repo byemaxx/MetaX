@@ -21,11 +21,11 @@ class CrossTest:
         df,
         invert_transform=None,
         log2_transform=False,
-        zero_to_nan=True,
+        zero_to_nan=False,
     ):
         """
         Prepare dataframe for limma.
-        Zeros will be treated as missing values and converted to NaN before limma runs.
+        Optionally convert zeros to NaN before limma runs.
         """
         df = df.copy()
         sample_cols = self._get_sample_columns(df)
@@ -838,6 +838,10 @@ class CrossTest:
         group_list=None,
         quiet=False,
         add_covariates: list[str] | None = None,
+        invert_transform=None,
+        log2_transform: bool = False,
+        zero_to_nan: bool = False,
+        _input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run limma comparisons within each level of a given condition (stratified analysis).
@@ -862,6 +866,13 @@ class CrossTest:
             covs = [c for c in covs if c != condition]
         if covs is not None and len(covs) == 0:
             covs = None
+        if not _input_prepared:
+            df = self.prepare_limma_input(
+                df,
+                invert_transform=invert_transform,
+                log2_transform=log2_transform,
+                zero_to_nan=zero_to_nan,
+            )
 
         res_dict = {}
         for cond_level in condition_list:
@@ -874,6 +885,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=[condition, cond_level],
                 add_covariates=covs,
+                _input_prepared=True,
             )
             if dft is not None and not dft.empty:
                 res_dict[cond_level] = dft
@@ -896,6 +908,10 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        invert_transform=None,
+        log2_transform: bool = False,
+        zero_to_nan: bool = False,
+        _input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run limma for multiple group-vs-control comparisons and column-bind results.
@@ -913,6 +929,13 @@ class CrossTest:
 
         if control_group in group_list:
             group_list.remove(control_group)
+        if not _input_prepared:
+            df = self.prepare_limma_input(
+                df,
+                invert_transform=invert_transform,
+                log2_transform=log2_transform,
+                zero_to_nan=zero_to_nan,
+            )
 
         res_dict = {}
         for group2 in group_list:
@@ -925,6 +948,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=condition,
                 add_covariates=add_covariates,
+                _input_prepared=True,
             )
             if df_res is not None:
                 res_dict[group2] = df_res
@@ -960,6 +984,10 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        invert_transform=None,
+        log2_transform: bool = False,
+        zero_to_nan: bool = False,
+        _input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
         Run limma for group2 vs group1 using InMoose.
@@ -968,6 +996,13 @@ class CrossTest:
         """
         print(f'\n--Running limma [{group1}] vs [{group2}] with condition: [{condition}]--')
 
+        if not _input_prepared:
+            df = self.prepare_limma_input(
+                df,
+                invert_transform=invert_transform,
+                log2_transform=log2_transform,
+                zero_to_nan=zero_to_nan,
+            )
         group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
         group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
         sample_list = group1_sample + group2_sample
@@ -983,9 +1018,6 @@ class CrossTest:
         dft = dft[sample_list]
         dft = self.tfa.replace_if_two_index(dft)
         dft = dft.apply(pd.to_numeric, errors="coerce").replace([np.inf, -np.inf], np.nan)
-        
-        # 保护机制：无论 GUI 是否传入 log 数据，都将 0 替换为 NaN 避免后续计算无意义的效应
-        dft = dft.replace(0.0, np.nan)
 
         meta_df, design_factor, covs, g1, g2 = self._prepare_de_metadata(
             sample_list=sample_list,
