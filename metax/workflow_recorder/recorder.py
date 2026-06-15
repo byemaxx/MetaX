@@ -403,16 +403,17 @@ def limma_step(
         "if df is None:",
         "    raise ValueError(f'Could not find table for {df_type}.')",
         "",
-    ]
+    ] 
 
-    invert_val = safe_params.pop("invert_transform", None)
-    log2_val = safe_params.pop("log2_transform", False)
-    zero_to_nan_val = safe_params.pop("zero_to_nan", True)
-
-    code_lines.extend([
-        f"df = tfa.CrossTest.prepare_limma_input(df, invert_transform={_python_literal(invert_val)}, log2_transform={_python_literal(log2_val)}, zero_to_nan={_python_literal(zero_to_nan_val)})",
-        "",
-    ])
+    invert_val = safe_params.get("invert_transform", None)
+    log2_val = safe_params.get("log2_transform", False)
+    zero_to_nan_val = safe_params.get("zero_to_nan", False)
+    safe_params.setdefault("invert_transform", invert_val)
+    safe_params.setdefault("log2_transform", log2_val)
+    safe_params.setdefault("zero_to_nan", zero_to_nan_val)
+    recorded_params.setdefault("invert_transform", invert_val)
+    recorded_params.setdefault("log2_transform", log2_val)
+    recorded_params.setdefault("zero_to_nan", zero_to_nan_val)
 
     code_lines.extend([
         _assignment("limma_params", safe_params),
@@ -428,7 +429,7 @@ def limma_step(
         parameters=recorded_params,
         outputs={"python_variable": output_name},
         code=code,
-        notes=["Run limma differential analysis using log2-transformed data with zeros replaced by NaN."],
+        notes=["Run limma differential analysis using log2-transformed data with optional zero-to-NaN conversion."],
     )
 
 

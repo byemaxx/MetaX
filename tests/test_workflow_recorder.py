@@ -244,8 +244,9 @@ def test_all_gui_actions_generation():
     assert "stats_results['limma(' + df_type.lower() + ')']" in limma_cells[0]
     assert "stats_results['limmaall(' + df_type.lower() + ')']" in limma_cells[1]
     assert "stats_results['limmaallinCondition(' + df_type.lower() + ')']" in limma_cells[2]
-    # Verify new helper
-    assert "prepare_limma_input" in limma_cells[0]
+    assert "prepare_limma_input" not in limma_cells[0]
+    assert "'log2_transform': True" in limma_cells[0]
+    assert "'zero_to_nan': True" in limma_cells[0]
     assert "_get_metax_df_by_type" in limma_cells[0]
 
 
@@ -270,6 +271,20 @@ def test_plot_basic_list_pca_replay_imports_basic_plot():
 
     assert "from metax.taxafunc_ploter.basic_plot import BasicPlot" in plot_basic_list_branch
     assert "return BasicPlot(tfa).plot_pca_sns" in plot_basic_list_branch
+
+
+def test_limma_step_defaults_zero_to_nan_false():
+    step = limma_step(
+        title="Run Limma Two Group",
+        method_name="get_stats_limma",
+        df_type="taxa",
+        parameters={"group1": "A", "group2": "B"},
+    )
+
+    assert "'zero_to_nan': False" in step.code
+    assert "'log2_transform': False" in step.code
+    assert "'invert_transform': None" in step.code
+    assert "zero_to_nan" in step.parameters
 
 
 def test_async_workflow_step_preserves_current_tfa_group():

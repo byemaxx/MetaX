@@ -217,6 +217,58 @@ def test_prepare_limma_input_handles_zeros_and_log2():
     assert pd.isna(res.loc[1, "S2"])
 
 
+def test_prepare_limma_input_default_keeps_zeros():
+    tfa = SimpleNamespace(sample_list=["S1", "S2"], invert_transform=lambda df, m: df)
+    ct = CrossTest(tfa=tfa)
+    df = pd.DataFrame({"Feature": ["A"], "S1": [0], "S2": [3]})
+
+    res = ct.prepare_limma_input(df)
+
+    assert res.loc[0, "S1"] == 0
+    assert res.loc[0, "S2"] == 3
+
+
+def test_get_stats_limma_respects_zero_to_nan_flag():
+    tfa = SimpleNamespace(
+        sample_list=["S1", "S2"],
+        get_sample_list_in_a_group=lambda group, condition=None: ["S1"] if group == "A" else ["S2"],
+        replace_if_two_index=lambda df: df,
+    )
+    ct = CrossTest(tfa=tfa)
+    df = pd.DataFrame({"S1": [0.0], "S2": [5.0]}, index=["feature_a"])
+
+    ct._prepare_de_metadata = lambda sample_list, group1, group2, add_covariates: (
+        pd.DataFrame(index=sample_list),
+        "group",
+        None,
+        group1,
+        group2,
+    )
+    ct._build_limma_design = lambda meta_df, design_factor, covs, g1, g2: (
+        pd.DataFrame({"Intercept": [1.0, 1.0], "group_B": [0.0, 1.0]}, index=["S1", "S2"]),
+        "group_B",
+        "group_B",
+    )
+    ct._filter_limma_rank_aware = lambda dft, group1_sample, group2_sample, design: dft
+    ct._align_assay_and_metadata = lambda expression_df, meta_df: (expression_df, meta_df)
+    ct._align_limma_design_to_assay = lambda design, expression_df: design.loc[expression_df.index]
+    ct._restore_limma_fit_column_names = lambda fit, cols: fit
+    ct._run_inmoose_ebayes = lambda eBayes, fit: fit
+    ct._require_inmoose_limma = lambda: (
+        lambda expr, design=None: SimpleNamespace(),
+        lambda fit, contrast: fit,
+        lambda fit: fit,
+        lambda fit, coef=None, number=None, sort_by=None: pd.DataFrame({"logFC": [1.0], "P.Value": [0.05]}, index=["feature_a"]),
+    )
+    ct._normalize_limma_results = lambda res, dft, sample_list, concat_sample_to_result, group1_sample, group2_sample: dft
+
+    kept = ct.get_stats_limma(df=df, group1="A", group2="B", zero_to_nan=False)
+    converted = ct.get_stats_limma(df=df, group1="A", group2="B", zero_to_nan=True)
+
+    assert kept.loc["feature_a", "S1"] == 0.0
+    assert pd.isna(converted.loc["feature_a", "S1"])
+
+
 def test_prepare_deseq2_input_raises_on_nan_or_negative():
     import numpy as np
     tfa = SimpleNamespace(sample_list=["S1"], invert_transform=lambda df, m: df)

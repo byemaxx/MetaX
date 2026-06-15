@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1575</width>
-    <height>1103</height>
+    <width>1339</width>
+    <height>1123</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>4</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -4557,7 +4557,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>3</number>
               </property>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
@@ -5116,6 +5116,19 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="checkBox_multi_de_convert_zero_to_nan_before_limma">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Convert zeros to NaN</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QPushButton" name="pushButton_run_multi_de">
                     <property name="enabled">
                      <bool>false</bool>
@@ -5395,8 +5408,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>790</width>
-                        <height>129</height>
+                        <width>1193</width>
+                        <height>130</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
@@ -5778,6 +5791,22 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="checkBox_de_convert_zero_to_nan_before_limma">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Convert zeros to NaN before limma runs</string>
+                    </property>
+                    <property name="text">
+                     <string>Convert zeros to NaN</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QPushButton" name="pushButton_run_de">
                     <property name="enabled">
                      <bool>false</bool>
@@ -6144,7 +6173,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1461</width>
+                    <width>1263</width>
                     <height>211</height>
                    </rect>
                   </property>
@@ -12230,7 +12259,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1575</width>
+     <width>1339</width>
      <height>30</height>
     </rect>
    </property>

@@ -1,3 +1,9 @@
+# Version: 2.3.2
+## Date: 2026-06-15
+### Changes:
+- feat: add optional zero-to-NaN handling for limma
+
+
 # Version: 2.3.1
 ## Date: 2026-06-13
 ### Changes:
