@@ -78,7 +78,13 @@ try:
     from .metax_gui import web_dialog
     from .metax_gui.matplotlib_figure_canvas import MatplotlibWidget
     from .metax_gui.checkable_combo_box import CheckableComboBox
-    from .metax_gui.ui_table_view import Ui_Table_view
+    from .metax_gui.ui_table_view import (
+        Ui_Table_view,
+        copy_table_widget_selection_to_clipboard,
+        export_dataframe_to_path,
+        export_dataframe_with_dialog,
+        table_widget_to_dataframe,
+    )
     from .metax_gui.drag_line_edit import FileDragDropLineEdit
     from .metax_gui.extended_combo_box import ExtendedComboBox
     from .metax_gui.show_plt import ExportablePlotDialog
@@ -142,7 +148,13 @@ except (ImportError, ValueError):
     from metax.gui.metax_gui import web_dialog
     from metax.gui.metax_gui.matplotlib_figure_canvas import MatplotlibWidget
     from metax.gui.metax_gui.checkable_combo_box import CheckableComboBox
-    from metax.gui.metax_gui.ui_table_view import Ui_Table_view
+    from metax.gui.metax_gui.ui_table_view import (
+        Ui_Table_view,
+        copy_table_widget_selection_to_clipboard,
+        export_dataframe_to_path,
+        export_dataframe_with_dialog,
+        table_widget_to_dataframe,
+    )
     from metax.gui.metax_gui.drag_line_edit import FileDragDropLineEdit
     from metax.gui.metax_gui.extended_combo_box import ExtendedComboBox
     from metax.gui.metax_gui.show_plt import ExportablePlotDialog
@@ -3846,6 +3858,62 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for j in range(df.shape[1]):
                 item = str(df.iat[i, j])
                 tableWidget.setItem(i, j, QTableWidgetItem(item))
+        self.setup_table_widget_context_menu(tableWidget)
+
+    def setup_table_widget_context_menu(self, tableWidget):
+        """Enable copy/export right-click actions for embedded table widgets."""
+        if tableWidget.property("metax_table_context_menu_enabled"):
+            return
+        tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        tableWidget.customContextMenuRequested.connect(
+            lambda position, widget=tableWidget: self.show_table_widget_context_menu(widget, position)
+        )
+        tableWidget.setProperty("metax_table_context_menu_enabled", True)
+
+    def show_table_widget_context_menu(self, tableWidget, position):
+        context_menu = QMenu(tableWidget)
+        has_selection = bool(tableWidget.selectedIndexes())
+
+        copy_action = QAction("Copy Selection", tableWidget)
+        copy_action.setEnabled(has_selection)
+        context_menu.addAction(copy_action)
+
+        export_selection_action = QAction("Export Selected Cells", tableWidget)
+        export_selection_action.setEnabled(has_selection)
+        context_menu.addAction(export_selection_action)
+
+        context_menu.addSeparator()
+        export_table_action = QAction("Export Table", tableWidget)
+        context_menu.addAction(export_table_action)
+
+        action = context_menu.exec_(tableWidget.mapToGlobal(position))
+        if action == copy_action:
+            if not copy_table_widget_selection_to_clipboard(tableWidget):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No cells selected!')
+        elif action == export_selection_action:
+            self.export_qtablewidget(tableWidget, selected_only=True)
+        elif action == export_table_action:
+            self.export_qtablewidget(tableWidget, selected_only=False)
+
+    def export_qtablewidget(self, tableWidget, selected_only=False):
+        try:
+            df = table_widget_to_dataframe(tableWidget, selected_only=selected_only)
+            if df is None:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No cells selected!')
+                return
+            title = tableWidget.objectName() or 'Table'
+            if selected_only:
+                title = f'{title}_selected_cells'
+            self.last_path, _ = export_dataframe_with_dialog(
+                self.MainWindow,
+                df,
+                title,
+                self.last_path,
+            )
+        except Exception as e:
+            QMessageBox.critical(self.MainWindow, 'Error', str(e))
 
     def set_lineEdit_taxafunc_path(self):
         taxafunc_path = QFileDialog.getOpenFileName(self.MainWindow, 'Select OTF Table', self.last_path, 'tsv (*.tsv *.txt)')[0]
@@ -8918,6 +8986,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     def setup_table_list_context_menu(self):
         """Setup context menu for table list widget"""
+        self.listWidget_table_list.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.listWidget_table_list.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
         self.listWidget_table_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.listWidget_table_list.customContextMenuRequested.connect(self.show_table_list_context_menu)
 
@@ -8928,14 +8998,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return
         
         item_text = item.text()
+        if not item.isSelected():
+            self.listWidget_table_list.setCurrentItem(item, QtCore.QItemSelectionModel.NoUpdate)
+            item.setSelected(True)
+        selected_table_names = self.get_selected_table_list_names(item_text)
         
         # Create context menu
         context_menu = QMenu(self.listWidget_table_list)
         
         # Add default action
-        view_action = QAction("View Table", self.listWidget_table_list)
-        view_action.triggered.connect(lambda: self.show_table_in_list())
+        view_action = QAction("View Table" if len(selected_table_names) == 1 else "View Selected Tables", self.listWidget_table_list)
+        view_action.triggered.connect(lambda: self.show_selected_tables(selected_table_names))
         context_menu.addAction(view_action)
+
+        export_action = QAction(
+            "Export Table" if len(selected_table_names) == 1 else "Export Selected Tables",
+            self.listWidget_table_list,
+        )
+        export_action.triggered.connect(lambda: self.export_table_list_tables(selected_table_names))
+        context_menu.addAction(export_action)
         
         # Both ordinary DE and against-control DE outputs use the same extractor input format.
         if self._is_supported_de_result_table(item_text):
@@ -8950,6 +9031,140 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         # Show menu
         context_menu.exec_(self.listWidget_table_list.mapToGlobal(position))
+
+    def get_selected_table_list_names(self, fallback_table_name=None):
+        selected_names = []
+        for row in range(self.listWidget_table_list.count()):
+            item = self.listWidget_table_list.item(row)
+            if item is not None and item.isSelected() and item.text() in self.table_dict:
+                selected_names.append(item.text())
+        if not selected_names and fallback_table_name in self.table_dict:
+            selected_names = [fallback_table_name]
+        return selected_names
+
+    def show_selected_tables(self, table_names):
+        for table_name in table_names:
+            if table_name in self.table_dict:
+                self.show_table(self.table_dict[table_name], title=table_name)
+
+    def export_table_list_tables(self, table_names):
+        try:
+            table_names = [table_name for table_name in table_names if table_name in self.table_dict]
+            if not table_names:
+                QMessageBox.warning(self.MainWindow, 'Warning', 'No table selected!')
+                return
+
+            if len(table_names) == 1:
+                df = self.table_dict[table_names[0]].copy().reset_index()
+                self.last_path, _ = export_dataframe_with_dialog(
+                    self.MainWindow,
+                    df,
+                    table_names[0],
+                    self.last_path,
+                )
+                return
+
+            export_options = self.get_batch_table_export_options()
+            if export_options is None:
+                return
+            export_dir, filetype, extension = export_options
+
+            progress = QtWidgets.QProgressDialog(
+                'Exporting selected tables...',
+                'Cancel',
+                0,
+                len(table_names),
+                self.MainWindow,
+            )
+            progress.setWindowTitle('Export Tables')
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+
+            exported_count = 0
+            for index, table_name in enumerate(table_names, start=1):
+                if progress.wasCanceled():
+                    break
+                progress.setLabelText(f'Exporting {index}/{len(table_names)}: {table_name}')
+                progress.setValue(index - 1)
+                QApplication.processEvents()
+                filename = self._safe_export_table_name(table_name) + extension
+                export_path = os.path.join(export_dir, filename)
+                df = self.table_dict[table_name].copy().reset_index()
+                export_dataframe_to_path(df, export_path, filetype, save_index=False)
+                exported_count += 1
+
+            progress.setValue(len(table_names))
+            self.last_path = export_dir
+            QMessageBox.information(
+                self.MainWindow,
+                'Information',
+                f'Exported {exported_count} tables to:\n{export_dir}',
+            )
+        except Exception as e:
+            QMessageBox.critical(self.MainWindow, 'Error', str(e))
+
+    def get_batch_table_export_options(self):
+        dialog = QDialog(self.MainWindow)
+        dialog.setWindowTitle('Export Selected Tables')
+        dialog.resize(560, 160)
+
+        layout = QVBoxLayout(dialog)
+
+        folder_row = QtWidgets.QHBoxLayout()
+        folder_label = QtWidgets.QLabel('Save folder:', dialog)
+        folder_edit = QtWidgets.QLineEdit(self.last_path, dialog)
+        browse_button = QPushButton('Browse...', dialog)
+        folder_row.addWidget(folder_label)
+        folder_row.addWidget(folder_edit)
+        folder_row.addWidget(browse_button)
+        layout.addLayout(folder_row)
+
+        format_row = QtWidgets.QHBoxLayout()
+        format_label = QtWidgets.QLabel('Format:', dialog)
+        format_combo = QtWidgets.QComboBox(dialog)
+        format_combo.addItem('TSV (*.tsv)', ('Text Files (*.tsv)', '.tsv'))
+        format_combo.addItem('CSV (*.csv)', ('CSV Files (*.csv)', '.csv'))
+        format_combo.addItem('Excel (*.xlsx)', ('Excel Files (*.xlsx)', '.xlsx'))
+        format_row.addWidget(format_label)
+        format_row.addWidget(format_combo)
+        format_row.addStretch()
+        layout.addLayout(format_row)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
+            parent=dialog,
+        )
+        layout.addWidget(buttons)
+
+        def browse_export_folder():
+            export_dir = QFileDialog.getExistingDirectory(
+                dialog,
+                'Export Selected Tables',
+                folder_edit.text().strip() or self.last_path,
+            )
+            if export_dir:
+                folder_edit.setText(export_dir)
+
+        browse_button.clicked.connect(browse_export_folder)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+
+        if dialog.exec_() != QDialog.Accepted:
+            return None
+
+        export_dir = folder_edit.text().strip()
+        if not export_dir:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'No save folder selected!')
+            return None
+        if not os.path.isdir(export_dir):
+            QMessageBox.warning(self.MainWindow, 'Warning', f'Save folder does not exist:\n{export_dir}')
+            return None
+
+        filetype, extension = format_combo.currentData()
+        return export_dir, filetype, extension
+
+    def _safe_export_table_name(self, table_name):
+        return str(table_name).translate(str.maketrans({char: '_' for char in '/\\:*?"<>|'}))
 
     def _is_supported_de_result_table(self, table_name):
         """Return True for DE result tables supported by extractor and long-table actions."""
