@@ -10,6 +10,100 @@ import csv
 import sys
 import subprocess
 
+
+def _safe_table_filename(title):
+    return str(title).translate(str.maketrans({char: '_' for char in '/\\:*?"<>|'}))
+
+
+def table_widget_to_dataframe(table_widget, selected_only=False):
+    if selected_only:
+        indexes = table_widget.selectedIndexes()
+        if not indexes:
+            return None
+        rows = sorted({index.row() for index in indexes})
+        columns = sorted({index.column() for index in indexes})
+        selected_positions = {(index.row(), index.column()) for index in indexes}
+    else:
+        rows = list(range(table_widget.rowCount()))
+        columns = list(range(table_widget.columnCount()))
+        selected_positions = {(row, column) for row in rows for column in columns}
+
+    headers = []
+    for column in columns:
+        header_item = table_widget.horizontalHeaderItem(column)
+        headers.append(header_item.text() if header_item is not None else str(column + 1))
+
+    data = []
+    for row in rows:
+        values = []
+        for column in columns:
+            if (row, column) not in selected_positions:
+                values.append('')
+                continue
+            item = table_widget.item(row, column)
+            values.append(item.text() if item is not None else '')
+        data.append(values)
+
+    return pd.DataFrame(data, columns=headers)
+
+
+def copy_table_widget_selection_to_clipboard(table_widget):
+    df = table_widget_to_dataframe(table_widget, selected_only=True)
+    if df is None:
+        return False
+    stream = io.StringIO()
+    csv.writer(stream).writerows(df.values.tolist())
+    QtWidgets.QApplication.clipboard().setText(stream.getvalue())
+    return True
+
+
+def export_dataframe_with_dialog(parent, df, title, last_path, save_index=False):
+    filename = _safe_table_filename(title)
+    default_filename = os.path.join(last_path, filename + '.tsv')
+    export_path, filetype = QFileDialog.getSaveFileName(
+        parent,
+        'Export Table',
+        default_filename,
+        'Text Files (*.tsv);;CSV Files (*.csv);;Excel Files (*.xlsx)',
+    )
+
+    if export_path == '':
+        return last_path, False
+
+    if not export_dataframe_to_path(df, export_path, filetype, save_index=save_index):
+        QMessageBox.critical(parent, 'Error', 'Filetype not supported.')
+        return last_path, False
+
+    new_last_path = os.path.dirname(export_path)
+    reply = QMessageBox.question(
+        parent,
+        'Information',
+        'Export successfully!\n\nDo you want to open the exported file?',
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.No,
+    )
+    if reply == QMessageBox.Yes:
+        if sys.platform == "win32":
+            os.startfile(export_path, 'open')
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.call([opener, export_path])
+
+    return new_last_path, True
+
+
+def export_dataframe_to_path(df, export_path, filetype, save_index=False):
+    if filetype == 'Text Files (*.tsv)':
+        df.to_csv(export_path, sep='\t', index=save_index)
+    elif filetype == 'CSV Files (*.csv)':
+        df.to_csv(export_path, sep=',', index=save_index)
+    elif filetype == 'Excel Files (*.xlsx)':
+        df.to_excel(export_path, index=save_index)
+    else:
+        return False
+    return True
+
+
 class Ui_Table_view(QtWidgets.QDialog):
     last_path_updated = QtCore.pyqtSignal(str) # signal to update last_path in main window
 
@@ -53,9 +147,14 @@ class Ui_Table_view(QtWidgets.QDialog):
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
+        self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
         self.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)  # set right-click menu policy
         self.tableWidget.customContextMenuRequested.connect(self.openMenu)  # set right-click menu
         self.verticalLayout_2.addWidget(self.tableWidget)
+        header = self.tableWidget.horizontalHeader()
+        header.setContextMenuPolicy(Qt.CustomContextMenu)
+        header.customContextMenuRequested.connect(self.headerMenu)
 
         self.previous_page_button.clicked.connect(self.previous_page)  
         self.next_page_button.clicked.connect(self.next_page)  
@@ -103,13 +202,6 @@ class Ui_Table_view(QtWidgets.QDialog):
         for i in range(subset_df.shape[0]):
             for j in range(subset_df.shape[1]):
                 table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(subset_df.iat[i, j])))
-
-
-        header = table_widget.horizontalHeader()
-        header.setContextMenuPolicy(Qt.CustomContextMenu)
-        header.customContextMenuRequested.connect(self.headerMenu)
-        
-        
 
     def headerMenu(self, position):
         menu = QMenu(self)
@@ -159,38 +251,15 @@ class Ui_Table_view(QtWidgets.QDialog):
 
     def export_tsv(self):
         try:
-            # make sure the file name is valid
-            filename = self.title.replace('/', '_').replace('\\', '_').replace(':', '_').replace('*', '_').replace('?', '_').replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_')
-            default_filename = os.path.join(self.last_path, filename + '.tsv')
-            export_path, filetype = QFileDialog.getSaveFileName(self, 'Export Table', default_filename, 
-                                                            'Text Files (*.tsv);;CSV Files (*.csv);;Excel Files (*.xlsx)')
-
-            if export_path == '':
-                return
-            if filetype == 'Text Files (*.tsv)':
-                self.df.to_csv(export_path, sep='\t', index=self.save_index)
-            elif filetype == 'CSV Files (*.csv)':
-                self.df.to_csv(export_path, sep=',', index=self.save_index)
-            elif filetype == 'Excel Files (*.xlsx)':
-                self.df.to_excel(export_path, index=self.save_index)
-            else:
-                QMessageBox.critical(self, 'Error', 'Filetype not supported.')
-                return
-
-            # update last_path
-            self.last_path = os.path.dirname(export_path)
-            self.last_path_updated.emit(self.last_path)  # 发射信号
-
-            reply = QMessageBox.question(self, 'Information', 'Export successfully!\n\nDo you want to open the exported file?',
-                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                if sys.platform == "win32":
-                    os.startfile(export_path, 'open') # open the file with default application
-                else:
-                    # use default application to open the file
-                    opener = "open" if sys.platform == "darwin" else "xdg-open"
-                    subprocess.call([opener, export_path])
-                    
+            self.last_path, exported = export_dataframe_with_dialog(
+                self,
+                self.df,
+                self.title,
+                self.last_path,
+                save_index=self.save_index,
+            )
+            if exported:
+                self.last_path_updated.emit(self.last_path)  # 发射信号
 
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
@@ -198,25 +267,55 @@ class Ui_Table_view(QtWidgets.QDialog):
     
     def openMenu(self, position):
         menu = QtWidgets.QMenu()
-        copy_action = menu.addAction("Copy")
+        has_selection = bool(self.tableWidget.selectedIndexes())
+        copy_action = menu.addAction("Copy Selection")
+        export_selection_action = menu.addAction("Export Selected Cells")
+        export_selection_action.setEnabled(has_selection)
+        menu.addSeparator()
+        export_page_action = menu.addAction("Export Current Page")
+        export_table_action = menu.addAction("Export Full Table")
         action = menu.exec_(self.tableWidget.mapToGlobal(position))
 
         if action == copy_action:
             self.copy_selection_to_clipboard()
+        elif action == export_selection_action:
+            self.export_selection()
+        elif action == export_page_action:
+            self.export_current_page()
+        elif action == export_table_action:
+            self.export_tsv()
+
+    def export_selection(self):
+        try:
+            df = table_widget_to_dataframe(self.tableWidget, selected_only=True)
+            if df is None:
+                QMessageBox.warning(self, 'Warning', 'No cells selected!')
+                return
+            self.last_path, exported = export_dataframe_with_dialog(
+                self,
+                df,
+                f'{self.title}_selected_cells',
+                self.last_path,
+            )
+            if exported:
+                self.last_path_updated.emit(self.last_path)
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+
+    def export_current_page(self):
+        try:
+            df = table_widget_to_dataframe(self.tableWidget, selected_only=False)
+            self.last_path, exported = export_dataframe_with_dialog(
+                self,
+                df,
+                f'{self.title}_current_page',
+                self.last_path,
+            )
+            if exported:
+                self.last_path_updated.emit(self.last_path)
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
 
     def copy_selection_to_clipboard(self):
-        selection = self.tableWidget.selectedIndexes()
-        if selection:
-            rows = sorted(index.row() for index in selection)
-            columns = sorted(index.column() for index in selection)
-            rowcount = rows[-1] - rows[0] + 1
-            colcount = columns[-1] - columns[0] + 1
-            table = [[''] * colcount for _ in range(rowcount)]
-            for index in selection:
-                row = index.row() - rows[0]
-                column = index.column() - columns[0]
-                table[row][column] = index.data()
-            stream = io.StringIO()
-            csv.writer(stream).writerows(table)
-            QtWidgets.QApplication.clipboard().setText(stream.getvalue())
-
+        if not copy_table_widget_selection_to_clipboard(self.tableWidget):
+            QMessageBox.warning(self, 'Warning', 'No cells selected!')

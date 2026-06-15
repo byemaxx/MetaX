@@ -1,3 +1,9 @@
+# Version: 2.3.3
+## Date: 2026-06-15
+### Changes:
+- feat: add table review right-click export with multi-table selection, export format options, and export progress.
+
+
 # Version: 2.3.2
 ## Date: 2026-06-15
 ### Changes:
