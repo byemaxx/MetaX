@@ -62,6 +62,7 @@ def test_unit_aware_gui_config_defaults_and_override():
         "on_missing_sample": "error",
         "on_empty_unit": "warn-skip",
         "save_per_unit_outputs": False,
+        "n_jobs": None,
     }
 
     config = UnitAwareGuiConfig(
@@ -71,6 +72,7 @@ def test_unit_aware_gui_config_defaults_and_override():
         on_missing_sample="warn-skip",
         on_empty_unit="error",
         save_per_unit_outputs=True,
+        n_jobs=4,
     )
 
     assert config.manifest_path == "unit_aware_manifest.json"
@@ -79,6 +81,7 @@ def test_unit_aware_gui_config_defaults_and_override():
     assert config.on_missing_sample == "warn-skip"
     assert config.on_empty_unit == "error"
     assert config.save_per_unit_outputs is True
+    assert config.n_jobs == 4
 
 
 def test_unit_aware_gui_validation_missing_manifest_points_to_main_window():
@@ -103,6 +106,7 @@ def test_unit_aware_settings_dialog_uses_main_window_owned_values():
     assert not hasattr(dialog, "comboBox_genome_threshold")
     assert dialog.get_config().genome_threshold == "q0.01"
     assert dialog.tabs.count() == 1
+    assert dialog.spinBox_n_jobs.specialValueText() == "Auto"
 
     dialog.close()
     app.processEvents()

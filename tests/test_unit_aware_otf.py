@@ -1,10 +1,12 @@
 import json
 import sqlite3
+import inspect
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
+import metax.cli.annotate as annotate_cli
 from metax.cli.annotate import build_parser
 from metax.peptide_annotator.unit_aware_otf import (
     UnitAwareOTFAnnotator,
@@ -242,6 +244,9 @@ def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
     parser = build_parser()
     args = parser.parse_args(["--unit-aware"])
     assert args.distinct_genome_threshold == 0
+    assert args.duplicate_peptide_handling_mode == "sum"
+    assert args.include_unit_aware_sequence is False
+    assert args.output_sample_col_prefix == "Intensity_"
 
     with pytest.raises(ValueError, match="duplicate_peptide_handling_mode"):
         UnitAwareOTFAnnotator(
@@ -448,6 +453,7 @@ def test_nested_digested_scanner_reads_each_union_genome_once(monkeypatch, tmp_p
         peptide_list=["PEPA", "PEPB", "ABSENT"],
         selected_genomes_set={"g1", "g2", "g3"},
         n_jobs=2,
+        parallel_backend="thread",
     )
 
     assert sorted(Path(path).stem for path in scanned_files) == ["g1", "g2", "g3"]
@@ -461,6 +467,125 @@ def test_nested_digested_scanner_reads_each_union_genome_once(monkeypatch, tmp_p
             "g3": {"g3_p5"},
         },
     }
+
+
+def test_nested_scanner_defaults_to_subprocess(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_subprocess(**kwargs):
+        calls.append(kwargs)
+        return {"PEPA": {"g1": {"g1_p1"}}}
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.pep_table_to_otf._query_peptide_proteins_nested_via_subprocess",
+        fake_subprocess,
+    )
+    result = query_peptide_proteins_from_digested_genome_folders_nested(
+        digested_genome_folders=str(tmp_path),
+        peptide_list=["PEPA"],
+        selected_genomes_set={"g1"},
+    )
+
+    assert inspect.signature(
+        query_peptide_proteins_from_digested_genome_folders_nested
+    ).parameters["parallel_backend"].default == "subprocess"
+    assert len(calls) == 1
+    assert result == {"PEPA": {"g1": {"g1_p1"}}}
+
+
+def test_nested_scanner_subprocess_matches_direct_backends(tmp_path):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame(
+        [("p1;p2", "PEPA"), ("p3", "PEPB")],
+        columns=["Protein", "Peptide"],
+    ).to_csv(digested_dir / "g1.tsv", sep="\t", index=False)
+    expected = {
+        "PEPA": {"g1": {"g1_p1", "g1_p2"}},
+        "PEPB": {"g1": {"g1_p3"}},
+    }
+
+    results = {
+        backend: query_peptide_proteins_from_digested_genome_folders_nested(
+            digested_genome_folders=str(digested_dir),
+            peptide_list=["PEPA", "PEPB"],
+            selected_genomes_set={"g1"},
+            n_jobs=1,
+            parallel_backend=backend,
+        )
+        for backend in ("thread", "process", "subprocess")
+    }
+
+    assert results == {backend: expected for backend in results}
+
+
+def test_nested_scanner_warns_for_malformed_genome(tmp_path, capsys):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame({"Wrong": ["x"], "Columns": ["y"]}).to_csv(
+        digested_dir / "z_bad.tsv",
+        sep="\t",
+        index=False,
+    )
+    pd.DataFrame({"Protein": ["p1"], "Peptide": ["PEPA"]}).to_csv(
+        digested_dir / "a_good.tsv",
+        sep="\t",
+        index=False,
+    )
+
+    result = query_peptide_proteins_from_digested_genome_folders_nested(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA"],
+        selected_genomes_set={"z_bad", "a_good"},
+        digested_peptide_col="Peptide",
+        digested_protein_col="Protein",
+        n_jobs=1,
+        parallel_backend="thread",
+    )
+
+    assert result == {"PEPA": {"a_good": {"a_good_p1"}}}
+    output = capsys.readouterr().out
+    assert "Warning: skipped malformed genome TSV" in output
+    assert "z_bad.tsv" in output
+    assert "ValueError" in output
+
+
+def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
+    captured = {}
+
+    class FakeAnnotator:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def run(self):
+            return pd.DataFrame()
+
+    monkeypatch.setattr(annotate_cli, "UnitAwareOTFAnnotator", FakeAnnotator)
+    result = annotate_cli.main(
+        [
+            "--unit-aware",
+            "--peptide-table",
+            str(tmp_path / "peptides.tsv"),
+            "--unit-aware-manifest",
+            str(tmp_path / "manifest.json"),
+            "--taxafunc-db",
+            str(tmp_path / "taxafunc.db"),
+            "--output",
+            str(tmp_path / "out.tsv"),
+            "--peptide-db",
+            str(tmp_path / "peptide.db"),
+            "--duplicate-peptide-handling-mode",
+            "max",
+            "--include-unit-aware-sequence",
+            "--output-sample-col-prefix",
+            "Abundance_",
+        ]
+    )
+
+    assert result == 0
+    assert captured["duplicate_peptide_handling_mode"] == "max"
+    assert captured["include_unit_aware_sequence"] is True
+    assert captured["output_sample_col_prefix"] == "Abundance_"
 
 
 def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatch, tmp_path):

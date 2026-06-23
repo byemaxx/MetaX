@@ -32,6 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--genome-threshold", default="auto", help="q0.05, q0.01, or auto")
     parser.add_argument("--peptide-col", default="Sequence")
+    parser.add_argument("--output-sample-col-prefix", default="Intensity_")
     parser.add_argument(
         "--input-sample-col-prefix",
         help="Optional prefix to strip when matching manifest sample_columns to peptide table columns",
@@ -57,6 +58,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--protein-separator", default=";")
     parser.add_argument("--protein-genome-separator", default="_")
     parser.add_argument("--save-per-unit-outputs", action="store_true")
+    parser.add_argument("--include-unit-aware-sequence", action="store_true")
+    parser.add_argument(
+        "--duplicate-peptide-handling-mode",
+        choices=["sum", "max", "min", "mean", "first", "keep"],
+        default="sum",
+    )
     parser.add_argument("--on-missing-sample", choices=["error", "warn-skip"], default="error")
     parser.add_argument("--on-empty-unit", choices=["error", "warn-skip"], default="warn-skip")
     parser.add_argument("--n-jobs", type=int)
@@ -102,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         genome_threshold=args.genome_threshold,
         peptide_col=args.peptide_col,
         input_sample_col_prefix=args.input_sample_col_prefix,
+        output_sample_col_prefix=args.output_sample_col_prefix,
         table_separator=_decode_separator(args.table_separator),
         lca_threshold=args.lca_threshold,
         genome_mode=args.genome_mode,
@@ -110,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
         protein_separator=args.protein_separator,
         protein_genome_separator=args.protein_genome_separator,
         save_per_unit_outputs=args.save_per_unit_outputs,
+        include_unit_aware_sequence=args.include_unit_aware_sequence,
+        duplicate_peptide_handling_mode=args.duplicate_peptide_handling_mode,
         on_missing_sample=args.on_missing_sample,
         on_empty_unit=args.on_empty_unit,
         n_jobs=args.n_jobs,

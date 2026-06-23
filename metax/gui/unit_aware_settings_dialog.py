@@ -28,6 +28,7 @@ class UnitAwareGuiConfig:
     on_missing_sample: str = "error"
     on_empty_unit: str = "warn-skip"
     save_per_unit_outputs: bool = False
+    n_jobs: int | None = None
 
 
 @dataclass
@@ -329,6 +330,12 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self.checkBox_save_per_unit_outputs = QtWidgets.QCheckBox("Save per-unit OTFs", manifest_tab)
         form.addRow("", self.checkBox_save_per_unit_outputs)
 
+        self.spinBox_n_jobs = QtWidgets.QSpinBox(manifest_tab)
+        self.spinBox_n_jobs.setRange(0, 1024)
+        self.spinBox_n_jobs.setSpecialValueText("Auto")
+        self.spinBox_n_jobs.setToolTip("0 uses automatic worker selection.")
+        form.addRow("Digested scan workers", self.spinBox_n_jobs)
+
         action_row = QtWidgets.QHBoxLayout()
         self.pushButton_validate = QtWidgets.QPushButton("Validate", manifest_tab)
         self.pushButton_validate.clicked.connect(self._validate_manifest)
@@ -354,6 +361,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self.comboBox_on_missing_sample.setCurrentText(config.on_missing_sample or "error")
         self.comboBox_on_empty_unit.setCurrentText(config.on_empty_unit or "warn-skip")
         self.checkBox_save_per_unit_outputs.setChecked(bool(config.save_per_unit_outputs))
+        self.spinBox_n_jobs.setValue(0 if config.n_jobs is None else max(1, int(config.n_jobs)))
 
     def _validate_manifest(self) -> bool:
         result = validate_unit_aware_manifest_for_gui(
@@ -375,6 +383,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         super().accept()
 
     def get_config(self) -> UnitAwareGuiConfig:
+        n_jobs_value = self.spinBox_n_jobs.value()
         return UnitAwareGuiConfig(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             genome_threshold=self._config.genome_threshold,
@@ -382,4 +391,5 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip() or "error",
             on_empty_unit=self.comboBox_on_empty_unit.currentText().strip() or "warn-skip",
             save_per_unit_outputs=self.checkBox_save_per_unit_outputs.isChecked(),
+            n_jobs=None if n_jobs_value == 0 else n_jobs_value,
         )

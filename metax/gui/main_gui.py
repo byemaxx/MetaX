@@ -110,6 +110,7 @@ try:
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
+        unit_aware_otf_step,
     )
 
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
@@ -211,6 +212,7 @@ except (ImportError, ValueError):
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
+        unit_aware_otf_step,
     )
 
 
@@ -2984,6 +2986,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             on_missing_sample=config.on_missing_sample,
             on_empty_unit=config.on_empty_unit,
             save_per_unit_outputs=config.save_per_unit_outputs,
+            n_jobs=config.n_jobs,
         )
 
     def open_pep_direct_to_otf_unit_aware_settings(self):
@@ -3612,7 +3615,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         env.setdefault("PYTHONIOENCODING", "utf-8")
         return repo_root, env
 
-    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.2.0") -> None:
+    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.3.6") -> None:
         proc = subprocess.run(
             [sys.executable, '-m', 'metaumbra', '--version'],
             stdout=subprocess.PIPE,
@@ -3841,6 +3844,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         genome_threshold = None if config.genome_threshold == "auto" else config.genome_threshold
         input_sample_col_prefix = config.input_sample_col_prefix or None
+        n_jobs = config.n_jobs
 
         try:
             self.logger.write_log(
@@ -3848,34 +3852,42 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
                 f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_aware_manifest_path} '
                 f'genome_threshold:{genome_threshold or "auto"} '
-                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode}'
+                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode} '
+                f'n_jobs:{n_jobs if n_jobs is not None else "auto"}'
             )
 
+            workflow_params = {
+                "peptide_table_path": peptide_table_path,
+                "unit_aware_manifest_path": unit_aware_manifest_path,
+                "taxafunc_anno_db_path": taxafunc_anno_db_path,
+                "output_path": output_path,
+                "digested_genome_folders": digested_genome_folder_path,
+                "genome_threshold": genome_threshold,
+                "peptide_col": peptide_col,
+                "input_sample_col_prefix": input_sample_col_prefix,
+                "output_sample_col_prefix": "Intensity_",
+                "table_separator": table_separator,
+                "lca_threshold": lca_threshold,
+                "genome_mode": True,
+                "distinct_genome_threshold": 0,
+                "protein_genome_separator": protein_genome_separator,
+                "save_per_unit_outputs": config.save_per_unit_outputs,
+                "include_unit_aware_sequence": False,
+                "duplicate_peptide_handling_mode": duplicate_peptide_handling_mode,
+                "on_missing_sample": config.on_missing_sample,
+                "on_empty_unit": config.on_empty_unit,
+                "n_jobs": n_jobs,
+            }
+
             def pep_direct_to_otf_unit_aware_wrapper():
-                # TODO(unit-aware GUI): record unit-aware Peptide Direct to OTF parameters in WorkflowRecorder
-                # once this tab is added to replay/export.
-                annotator = UnitAwareOTFAnnotator(
-                    peptide_table_path=peptide_table_path,
-                    unit_aware_manifest_path=unit_aware_manifest_path,
-                    taxafunc_anno_db_path=taxafunc_anno_db_path,
-                    output_path=output_path,
-                    digested_genome_folders=digested_genome_folder_path,
-                    genome_threshold=genome_threshold,
-                    peptide_col=peptide_col,
-                    input_sample_col_prefix=input_sample_col_prefix,
-                    table_separator=table_separator,
-                    lca_threshold=lca_threshold,
-                    genome_mode=True,
-                    distinct_genome_threshold=0,
-                    protein_genome_separator=protein_genome_separator,
-                    save_per_unit_outputs=config.save_per_unit_outputs,
-                    duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-                    on_missing_sample=config.on_missing_sample,
-                    on_empty_unit=config.on_empty_unit,
-                )
+                annotator = UnitAwareOTFAnnotator(**workflow_params)
                 return annotator.run()
 
-            self.run_in_new_window(pep_direct_to_otf_unit_aware_wrapper, show_msg=True)
+            self.run_in_new_window(
+                pep_direct_to_otf_unit_aware_wrapper,
+                show_msg=True,
+                workflow_step=unit_aware_otf_step(workflow_params),
+            )
         except Exception as e:
             self.logger.write_log(f'run_pep_direct_to_otf_unit_aware error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
