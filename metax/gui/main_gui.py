@@ -3904,6 +3904,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
 
             def pep_direct_to_otf_unit_aware_wrapper():
+                # TODO(unit-aware GUI): record unit-aware Peptide Direct to OTF parameters in WorkflowRecorder
+                # once this tab is added to replay/export.
                 annotator = UnitAwareOTFAnnotator(
                     peptide_table_path=peptide_table_path,
                     unit_aware_manifest_path=unit_aware_manifest_path,

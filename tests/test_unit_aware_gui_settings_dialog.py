@@ -1,6 +1,7 @@
 from dataclasses import asdict
 import json
 
+import metax.gui.unit_aware_settings_dialog as unit_aware_settings_dialog
 from metax.gui.unit_aware_settings_dialog import (
     UnitAwareGuiConfig,
     validate_unit_aware_manifest_for_gui,
@@ -147,3 +148,29 @@ def test_unit_aware_gui_validation_fails_for_missing_peptide_column(tmp_path):
 
     assert result.ok is False
     assert "Peptide column 'Sequence' was not found" in result.message
+
+
+def test_unit_aware_gui_validation_marks_parquet_header_skip_as_not_checked(tmp_path, monkeypatch):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = tmp_path / "peptides.parquet"
+    peptide_path.write_bytes(b"not a real parquet file")
+    monkeypatch.setattr(
+        unit_aware_settings_dialog,
+        "_read_peptide_table_header_columns",
+        lambda peptide_table_path, separator: None,
+    )
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Sequence",
+        peptide_table_separator="\t",
+    )
+
+    assert result.ok is True
+    assert result.mapped_samples == {}
+    assert result.missing_samples == []
+    assert "Peptide table header validation: skipped" in result.message
+    assert "Mapped peptide table samples: not checked" in result.message
+    assert "Missing samples: not checked" in result.message
+    assert "Reason: parquet header metadata could not be read without pyarrow" in result.message
