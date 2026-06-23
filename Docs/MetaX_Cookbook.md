@@ -826,6 +826,8 @@ The merged unit-aware OTF table includes `analysis_unit_id` and the original `Se
 
 In the GUI, unit-aware mode uses an existing MetaUmbra `unit_aware_manifest.json`, disables the legacy global genome scoring controls, and validates manifest samples against the current peptide table header when possible. The duplicate peptide handling selector still applies in unit-aware mode.
 
+The Unit-aware Settings dialog currently supports existing manifests only. The manual manifest builder tab is a disabled placeholder.
+
 Example:
 
 ```bash

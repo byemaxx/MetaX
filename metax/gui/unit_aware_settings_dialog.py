@@ -89,7 +89,8 @@ def validate_unit_aware_manifest_for_gui(
     manifest_samples = _all_manifest_samples(manifest)
     mapped_samples: dict[str, str] = {}
     missing_samples: list[str] = []
-    header_note = ""
+    header_validation_skipped = False
+    header_skip_reason = ""
 
     peptide_table_path = str(peptide_table_path or "").strip()
     if peptide_table_path:
@@ -113,10 +114,8 @@ def validate_unit_aware_manifest_for_gui(
             )
 
         if peptide_columns is None:
-            header_note = (
-                "\nPeptide table header validation was skipped for parquet because no lightweight "
-                "metadata reader is available in this environment."
-            )
+            header_validation_skipped = True
+            header_skip_reason = "parquet header metadata could not be read without pyarrow"
         else:
             if peptide_col not in peptide_columns:
                 return UnitAwareManifestValidationResult(
@@ -161,17 +160,26 @@ def validate_unit_aware_manifest_for_gui(
         unit_lines.append(
             f"  - {unit.analysis_unit_id}: samples={len(unit.sample_columns)}, genomes={len(unit.genome_ids)}"
         )
-    missing_text = "None" if not missing_samples else ", ".join(missing_samples)
+    mapped_text = "not checked" if header_validation_skipped else str(len(mapped_samples))
+    missing_text = "not checked" if header_validation_skipped else ("None" if not missing_samples else ", ".join(missing_samples))
+    header_status_lines = []
+    if header_validation_skipped:
+        header_status_lines.extend(
+            [
+                "Peptide table header validation: skipped",
+                f"Reason: {header_skip_reason}",
+            ]
+        )
     message = (
         "Manifest schema: valid\n"
         f"Selected genome threshold: {manifest.selected_genome_threshold}\n"
         f"Units: {len(manifest.units)}\n"
         f"Manifest samples: {len(manifest_samples)}\n"
-        f"Mapped peptide table samples: {len(mapped_samples)}\n"
+        + ("\n".join(header_status_lines) + "\n" if header_status_lines else "")
+        + f"Mapped peptide table samples: {mapped_text}\n"
         f"Missing samples: {missing_text}\n"
         "Per-unit summary:\n"
         + "\n".join(unit_lines)
-        + header_note
     )
     ok = not missing_samples or on_missing_sample == "warn-skip"
     return UnitAwareManifestValidationResult(ok, message, manifest_samples, mapped_samples, missing_samples)
