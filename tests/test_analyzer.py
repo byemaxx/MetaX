@@ -97,10 +97,12 @@ def _write_unit_aware_otf(tmp_path, include_unit_sequence=False, include_analysi
         {
             "analysis_unit_id": ["u1", "u2"],
             "Sequence": ["PEPA", "PEPA"],
-            "Proteins": ["g1_p1", "g2_p1"],
+            "Proteins": ["g1_p1", "g2_p2"],
             "LCA_level": ["genome", "genome"],
             "Taxon": ["d__Bacteria|m__g1", "d__Bacteria|m__g2"],
             "Taxon_prop": [1.0, 1.0],
+            "KEGG_ko": ["K00001", "K00002"],
+            "KEGG_ko_prop": [1.0, 1.0],
             "None_func": ["none_func", "none_func"],
             "None_func_prop": [1.0, 1.0],
             "Intensity_s1": [10.0, 0.0],
@@ -151,8 +153,103 @@ def test_old_unit_aware_sequence_otf_remains_supported(tmp_path):
     assert tfa.peptide_identity_col == "UnitAwareSequence"
 
 
+def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    common_params = {
+        "level": "m",
+        "quant_method": "sum",
+        "taxa_and_func_only_from_otf": False,
+        "data_preprocess_params": {
+            "normalize_method": "None",
+            "transform_method": "None",
+            "batch_meta": "None",
+            "processing_order": [],
+        },
+        "outlier_params": {"detect_method": "none", "handle_method": "drop+drop"},
+    }
+
+    tfa.set_multi_tables(sum_protein=False, **common_params)
+
+    assert tfa.unit_aware_mode is True
+    assert tfa.peptide_identity_col == "_MetaXUnitAwarePeptideID"
+    assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
+    assert tfa.peptide_df["Sequence"].tolist() == ["PEPA", "PEPA"]
+    assert tfa.taxa_df["peptide_num"].sum() == 2
+    assert tfa.func_df["peptide_num"].sum() == 2
+    assert tfa.taxa_func_df["peptide_num"].sum() == 2
+
+    tfa.set_multi_tables(
+        sum_protein=True,
+        sum_protein_params={
+            "method": "razor",
+            "by_sample": False,
+            "rank_method": "unique_counts",
+            "greedy_method": "heap",
+            "peptide_num_threshold": 1,
+        },
+        **common_params,
+    )
+
+    assert set(tfa.protein_df.index) == {"g1_p1", "g2_p2"}
+    assert tfa.protein_df.loc["g1_p1", ["s1", "s2"]].tolist() == [10.0, 0.0]
+    assert tfa.protein_df.loc["g2_p2", ["s1", "s2"]].tolist() == [0.0, 20.0]
+    assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
+
+
+def test_unit_aware_sequence_is_used_for_all_summarization_paths(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_aware_otf(
+        tmp_path,
+        include_unit_sequence=True,
+        include_analysis_unit=False,
+    )
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    tfa.set_multi_tables(
+        level="m",
+        quant_method="sum",
+        sum_protein=True,
+        sum_protein_params={
+            "method": "razor",
+            "by_sample": False,
+            "rank_method": "unique_counts",
+            "greedy_method": "heap",
+            "peptide_num_threshold": 1,
+        },
+        taxa_and_func_only_from_otf=False,
+        data_preprocess_params={
+            "normalize_method": "None",
+            "transform_method": "None",
+            "batch_meta": "None",
+            "processing_order": [],
+        },
+        outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
+    )
+
+    assert tfa.unit_aware_mode is True
+    assert tfa.peptide_identity_col == "UnitAwareSequence"
+    assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
+    assert tfa.taxa_df["peptide_num"].sum() == 2
+    assert tfa.func_df["peptide_num"].sum() == 2
+    assert tfa.taxa_func_df["peptide_num"].sum() == 2
+    assert set(tfa.protein_df.index) == {"g1_p1", "g2_p2"}
+    assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
+
+
+def test_non_unit_aware_otf_keeps_sequence_as_peptide_identity(tfa_object):
+    assert tfa_object.unit_aware_mode is False
+    assert tfa_object.peptide_identity_col == tfa_object.peptide_col_name
+    assert tfa_object.peptide_identity_col == "Sequence"
+
+
 def test_unit_aware_lfq_uses_internal_unit_aware_identity(monkeypatch, tmp_path):
     import metax.taxafunc_analyzer.analyzer as analyzer_module
+    import metax.taxafunc_analyzer.analyzer_utils.lfq as lfq_module
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
     quant_ids = []
@@ -167,12 +264,21 @@ def test_unit_aware_lfq_uses_internal_unit_aware_identity(monkeypatch, tmp_path)
         return df.groupby(protein_id, as_index=False)[sample_cols].sum(), None
 
     monkeypatch.setattr(analyzer_module, "run_lfq", fake_run_lfq)
+    monkeypatch.setattr(lfq_module, "run_lfq", fake_run_lfq)
     path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     tfa.set_func("None_func")
     tfa.set_multi_tables(
         level="m",
         quant_method="lfq",
+        sum_protein=True,
+        sum_protein_params={
+            "method": "razor",
+            "by_sample": False,
+            "rank_method": "unique_counts",
+            "greedy_method": "heap",
+            "peptide_num_threshold": 1,
+        },
         taxa_and_func_only_from_otf=False,
         data_preprocess_params={"normalize_method": "None", "transform_method": "None", "batch_meta": "None", "processing_order": []},
         outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
