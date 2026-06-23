@@ -824,9 +824,7 @@ Sample columns are matched from manifest `sample_columns` to peptide-table colum
 
 The merged unit-aware OTF table includes `analysis_unit_id` and the original `Sequence` column. MetaX internally derives the unit-aware peptide evidence ID as `analysis_unit_id + "||" + Sequence` when downstream analysis needs a unique peptide identity; `UnitAwareSequence` is not written by default. Do not deduplicate unit-aware output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
 
-In the GUI, unit-aware mode uses an existing MetaUmbra `unit_aware_manifest.json`, disables the legacy global genome scoring controls, and validates manifest samples against the current peptide table header when possible. The duplicate peptide handling selector still applies in unit-aware mode.
-
-The Unit-aware Settings dialog currently supports existing manifests only. The manual manifest builder tab is a disabled placeholder.
+In the GUI, select the MetaUmbra `unit_aware_manifest.json` in the main Peptide Direct to OTF window. The Unit-aware Settings dialog does not select a separate manifest; it configures the genome threshold, sample-column matching behavior, missing/empty unit handling, and validates the selected manifest against the current peptide table when possible. Unit-aware mode disables the legacy global genome scoring controls, and the duplicate peptide handling selector still applies. A manual manifest builder is not implemented yet.
 
 Example:
 
