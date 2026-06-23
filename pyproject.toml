@@ -52,6 +52,7 @@ dependencies = [
 
 [project.scripts]
 metax = "metax.gui.main_gui:runGUI"
+metax-annotate = "metax.cli.annotate:main"
 metax-report = "metax.report.cli:main"
 
 [tool.setuptools.packages.find]

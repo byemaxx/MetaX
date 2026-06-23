@@ -484,10 +484,12 @@ class peptideProteinsMapper:
                  n_jobs: int | None = None,
                  digested_parallel_backend: str = "subprocess",
                  genome_list: Iterable[str] | None = None,
+                 peptide_df: pd.DataFrame | None = None,
                  duplicate_peptide_handling_mode: str = 'sum',
                  ):
 
         self.peptide_table_path = peptide_table_path
+        self.peptide_df = peptide_df
         self.db_file = db_path
         self.digested_genome_folders = digested_genome_folders
         self.digested_peptide_col = digested_peptide_col
@@ -510,6 +512,7 @@ class peptideProteinsMapper:
         
         self.has_intensity = False
         self.protein_ranked_table = None
+        self.genome_ranked_table = None
         self.final_peptide_table = None
         
         self.selected_proteins_num = 0
@@ -519,7 +522,10 @@ class peptideProteinsMapper:
         self.removed_peptides_no_matched = 0
         
         self.set_temp_dir(temp_dir)
-        self.peptide_table = self.load_peptide_table()
+        if self.peptide_df is not None:
+            self.peptide_table = self.load_peptide_dataframe(self.peptide_df)
+        else:
+            self.peptide_table = self.load_peptide_table()
 
     @staticmethod
     def _log_save(df: pd.DataFrame, path: str, desc: str) -> None:
@@ -605,18 +611,54 @@ class peptideProteinsMapper:
             else self.genome_list
         )
 
-        if effective_genome_list is None:
-            raise ValueError(
-                "genome_list is required. The old MetaX genome ranking workflow has been removed; "
-                "provide genomes selected by MetaUmbra or by an explicit selected genome list."
-            )
-
-        if not effective_genome_list:
+        if effective_genome_list is not None and not effective_genome_list:
             print("Warning: genome_list is provided but empty; no genomes will be selected.")
             self.selected_genomes_num = 0
             return []
 
         available_genomes = self._collect_genomes_from_df(df)
+
+        if effective_genome_list is None:
+            if 'Genomes' not in df.columns:
+                raise ValueError("The peptide table should have a column named 'Genomes' for automatic genome ranking")
+
+            print("No genome_list provided; ranking genomes by peptide coverage.")
+            from metax.peptide_annotator.peptide_coverage_ranker import PeptideCoverageRanker
+
+            ranker = PeptideCoverageRanker(
+                df=df,
+                peptide_column=self.peptide_col,
+                target_column='Genomes',
+                target_separator=';',
+            )
+            df_results_rank = ranker.get_ranked_coverage_df(
+                rank_method='combined',
+                iters=self.protein_rank_iters,
+                target_coverage=self.protein_peptide_coverage_cutoff,
+                stop_when_selected_stable=True,
+            )
+            self.genome_ranked_table = df_results_rank
+            if df_results_rank.empty:
+                print("Warning: no genomes were found by automatic genome ranking.")
+                self.selected_genomes_num = 0
+                return []
+
+            cutoff_index = PeptideCoverageRanker._get_cutoff_index(
+                df_results_rank,
+                self.protein_peptide_coverage_cutoff,
+            )
+            selected_genomes = (
+                df_results_rank if cutoff_index is None else df_results_rank.loc[:cutoff_index]
+            )
+            selected_genomes_list = selected_genomes['Genomes'].tolist()
+            print(f'Original genomes: [{df_results_rank.shape[0]}]')
+            print(
+                f"The number of selected genomes: [{len(selected_genomes_list)}].\n"
+                f"The last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}"
+            )
+            self.selected_genomes_num = len(selected_genomes_list)
+            return selected_genomes_list
+
         selected_genomes_list = list(effective_genome_list)
 
         if available_genomes:
@@ -655,8 +697,29 @@ class peptideProteinsMapper:
         print(f"Reading columns: {required_cols[:10]}{'...' if len(required_cols) > 10 else ''}")
         
         self.peptide_table = pd.read_csv(self.peptide_table_path, sep=self.table_separator, usecols=required_cols)
-        
+        return self._prepare_loaded_peptide_table(intensity_cols)
+
+    def load_peptide_dataframe(self, peptide_df: pd.DataFrame) -> pd.DataFrame:
+        print("Loading peptide table from DataFrame...")
+        peptide_df = peptide_df.copy()
+        self._check_columns(peptide_df.columns)
+
+        required_cols = [self.peptide_col]
+        intensity_cols = [col for col in peptide_df.columns if col.startswith(self.intensity_col_prefix)]
+        if self.continue_base_on_annotaied_peptide_table:
+            required_cols.extend(['Genomes', 'Proteins'])
+        required_cols.extend(intensity_cols)
+
+        self.peptide_table = peptide_df.loc[:, required_cols].copy()
+        return self._prepare_loaded_peptide_table(intensity_cols)
+
+    def _prepare_loaded_peptide_table(self, intensity_cols: list[str]) -> pd.DataFrame:
         if intensity_cols:
+            self.peptide_table[intensity_cols] = (
+                self.peptide_table[intensity_cols]
+                .apply(pd.to_numeric, errors='coerce')
+                .fillna(0)
+            )
             self.has_intensity = True
             print("Intensity columns found and will be kept in the output")
             self.sum_duplicates_peptides()
@@ -1007,7 +1070,13 @@ class peptideProteinsMapper:
             stop_when_selected_stable=True,
         )
         self.protein_ranked_table = df_results_rank
-        cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.protein_peptide_coverage_cutoff].index[0]
+        cutoff_index = PeptideCoverageRanker._get_cutoff_index(
+            df_results_rank,
+            self.protein_peptide_coverage_cutoff,
+        )
+        if cutoff_index is None:
+            self.selected_proteins_num = 0
+            return []
         selected_proteins = df_results_rank.loc[:cutoff_index]
         selected_proteins_list = selected_proteins['Proteins'].tolist()
         print(f'Original proteins: [{df_results_rank.shape[0]}]')
@@ -1091,6 +1160,7 @@ class peptideProteinsMapper:
                    genome_mode = True, 
                    distinct_genome_threshold = 1, # usually 3
                    exclude_protein_startwith = None, #Usually 'REV_;XXX_' 
+                   protein_separator = ';',
                    protein_genome_separator = '_',
                    genome_list: Iterable[str] | None = None,
                    duplicate_peptide_handling_mode: str | None = None,
@@ -1107,7 +1177,11 @@ class peptideProteinsMapper:
         
         genome_selection_info = dict(genome_selection_metadata or {})
         if "genome_selection_method" not in genome_selection_info:
-            genome_selection_info["genome_selection_method"] = "provided_genome_list"
+            genome_selection_info["genome_selection_method"] = (
+                "automatic_genome_ranking"
+                if genome_list is None and self.genome_list is None
+                else "provided_genome_list"
+            )
 
         # collect additional running information
         additional_running_info = {
@@ -1145,7 +1219,7 @@ class peptideProteinsMapper:
             output_path=self.output_path,
             threshold=lca_threshold,
             genome_mode=genome_mode,
-            protein_separator=';',
+            protein_separator=protein_separator,
             protein_genome_separator= protein_genome_separator,
             protein_col='Proteins',
             peptide_col=self.peptide_col,
@@ -1155,8 +1229,9 @@ class peptideProteinsMapper:
             additional_running_info=additional_running_info,
             duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
         )
-        annotator.run_annotate()
+        df_res = annotator.run_annotate()
         print("OTF annotation finished")
+        return df_res
         
         
 if __name__ == "__main__":
