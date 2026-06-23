@@ -146,6 +146,73 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert "2 units total, 2 completed, 0 skipped" in progress_log
 
 
+@pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
+def test_unit_aware_otf_prepares_diann_parquet_with_shared_alias_rules(
+    tmp_path,
+    intensity_col,
+):
+    peptide_table = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1.raw", "s2.raw"],
+            "Stripped.Sequence": ["PEPA", "PEPA"],
+            intensity_col: [10.0, 20.0],
+        }
+    ).to_parquet(peptide_table)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    taxafunc_db.write_text("", encoding="utf-8")
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+
+    annotator = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "OTF.tsv"),
+        digested_genome_folders=str(digested_dir),
+        peptide_col="Stripped.Sequence",
+    )
+
+    prepared = annotator._read_peptide_table()
+
+    assert annotator.peptide_col == "Stripped.Sequence"
+    assert prepared.loc[0, "s1"] == 10.0
+    assert prepared.loc[0, "s2"] == 20.0
+    assert annotator.peptide_table_prepare_metadata["diann_intensity_column"] == intensity_col
+
+
+def test_unit_aware_otf_keeps_wide_parquet_compatible(tmp_path):
+    peptide_table = tmp_path / "wide.parquet"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "Intensity_s1": [10.0],
+            "Intensity_s2": [20.0],
+        }
+    ).to_parquet(peptide_table)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    taxafunc_db.write_text("", encoding="utf-8")
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+
+    annotator = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "OTF.tsv"),
+        digested_genome_folders=str(digested_dir),
+    )
+
+    prepared = annotator._read_peptide_table()
+
+    assert prepared.columns.tolist() == ["Sequence", "Intensity_s1", "Intensity_s2"]
+    assert annotator.peptide_table_prepare_metadata["input_peptide_table_format"] == "parquet"
+
+
 def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10]}).to_csv(peptide_table, sep="\t", index=False)

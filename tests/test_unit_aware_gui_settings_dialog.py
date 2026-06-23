@@ -5,6 +5,8 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import metax.gui.unit_aware_settings_dialog as unit_aware_settings_dialog
+import pandas as pd
+import pytest
 from PyQt5 import QtWidgets
 from metax.gui.main_gui import MetaXGUI
 from metax.gui.unit_aware_settings_dialog import (
@@ -175,14 +177,19 @@ def test_unit_aware_gui_validation_fails_for_missing_sample_by_default(tmp_path)
     assert result.details == "Missing manifest samples:\ns3"
 
 
-def test_unit_aware_gui_validation_supports_long_format_parquet(tmp_path, monkeypatch):
+@pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
+def test_unit_aware_gui_validation_supports_long_format_parquet(
+    tmp_path,
+    monkeypatch,
+    intensity_col,
+):
     manifest_path = _write_manifest(tmp_path)
     peptide_path = tmp_path / "report.parquet"
     peptide_path.write_bytes(b"parquet placeholder")
     monkeypatch.setattr(
         unit_aware_settings_dialog,
         "_read_peptide_table_header_columns",
-        lambda peptide_table_path, separator: ["Stripped.Sequence", "Run", "Precursor.Quantity"],
+        lambda peptide_table_path, separator: ["Stripped.Sequence", "Run", intensity_col],
     )
     monkeypatch.setattr(
         unit_aware_settings_dialog,
@@ -201,6 +208,35 @@ def test_unit_aware_gui_validation_supports_long_format_parquet(tmp_path, monkey
     assert result.missing_samples == []
     assert "long-format DIA-NN parquet" in result.message
     assert "Run values validated as sample columns" in result.message
+    assert f"intensity={intensity_col}" in result.message
+
+
+def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1.raw"],
+            "Stripped.Sequence": ["PEPA"],
+            "Evidence": [2.0],
+            "Q.Value": [0.01],
+            "Precursor.Quantity": [10.0],
+        }
+    ).to_parquet(parquet_path)
+    gui = object.__new__(MetaXGUI)
+
+    prepared_path, separator, peptide_col, intensity_prefix, metadata = (
+        gui._prepare_diann_parquet_for_pep_direct_to_otf(
+            str(parquet_path),
+            str(tmp_path / "OTF.tsv"),
+        )
+    )
+
+    prepared_df = pd.read_csv(prepared_path, sep="\t")
+    assert separator == "\t"
+    assert peptide_col == "Stripped.Sequence"
+    assert intensity_prefix == "Precursor.Quantity."
+    assert prepared_df.loc[0, "Precursor.Quantity.s1"] == 10.0
+    assert metadata["diann_intensity_column"] == "Precursor.Quantity"
 
 
 def test_validation_result_dialog_is_scrollable_and_screen_bounded():

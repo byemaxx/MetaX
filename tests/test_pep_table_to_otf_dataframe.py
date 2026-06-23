@@ -46,6 +46,37 @@ def test_mapper_accepts_dataframe_and_selected_genomes(tmp_path):
     assert annotated["Proteins"].tolist() == ["g1_p1"]
 
 
+def test_sqlite_mapper_respects_custom_protein_genome_separator(tmp_path):
+    db_path = tmp_path / "peptide.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("CREATE TABLE peptide_proteins (peptide TEXT PRIMARY KEY, proteins TEXT)")
+        conn.execute(
+            "INSERT INTO peptide_proteins VALUES (?, ?)",
+            ("PEPA", json.dumps(["g1|p1", "g2|p2"])),
+        )
+
+    mapper = peptideProteinsMapper(
+        peptide_table_path=str(tmp_path / "unused.tsv"),
+        peptide_df=pd.DataFrame(
+            {
+                "Sequence": ["PEPA"],
+                "Intensity_s1": [10],
+            }
+        ),
+        db_path=str(db_path),
+        output_path=str(tmp_path / "out.tsv"),
+        peptide_col="Sequence",
+        intensity_col_prefix="Intensity_",
+        selected_genomes_set={"g1"},
+        genome_list=["g1"],
+        protein_genome_separator="|",
+    )
+
+    annotated = mapper.annotate_peptides()
+
+    assert annotated["Proteins"].tolist() == ["g1|p1"]
+
+
 def test_all_in_one_returns_otf_dataframe(monkeypatch, tmp_path):
     import metax.peptide_annotator.peptable_annotator as peptable_annotator
 

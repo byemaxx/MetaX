@@ -58,7 +58,8 @@ _ensure_project_root_on_syspath()
 def query_peptide_proteins(db_file, peptide_list, 
                            chunk_size=10000, 
                            removed_genomes_set:set|None = None,
-                           selected_genomes_set:set|None = None):
+                           selected_genomes_set:set|None = None,
+                           protein_genome_separator: str = "_"):
     """
     Query peptide to protein mapping from a database with progress tracking.
 
@@ -68,6 +69,7 @@ def query_peptide_proteins(db_file, peptide_list,
         chunk_size (int): The number of peptides to query in one batch (default: 10000).
         removed_genomes_set (set[str] | None): Genomes to exclude. None means no exclusion; empty set means exclude nothing.
         selected_genomes_set (set[str] | None): Genomes to include. None means no inclusion filter; empty set means include none.
+        protein_genome_separator (str): Separator between the genome and protein portions of a protein ID.
 
     Note:
         If a genome appears in both selected and removed sets, removal takes precedence.
@@ -122,9 +124,17 @@ def query_peptide_proteins(db_file, peptide_list,
 
                 # filtering by selected/removed genomes
                 if sel_set is not None:
-                    proteins = [p for p in proteins if p.split('_', 1)[0] in sel_set]
+                    proteins = [
+                        p
+                        for p in proteins
+                        if p.split(protein_genome_separator, 1)[0] in sel_set
+                    ]
                 if rm_set is not None:
-                    proteins = [p for p in proteins if p.split('_', 1)[0] not in rm_set]
+                    proteins = [
+                        p
+                        for p in proteins
+                        if p.split(protein_genome_separator, 1)[0] not in rm_set
+                    ]
 
                 peptide_proteins[peptide] = ';'.join(proteins) if proteins else ""
 
@@ -869,6 +879,7 @@ class peptideProteinsMapper:
                 unique_peptides,
                 removed_genomes_set=self.removed_genomes_set,
                 selected_genomes_set=self._get_effective_selected_genomes_set(),
+                protein_genome_separator=self.protein_genome_separator,
             )
 
         self.peptide_table["Proteins"] = self.peptide_table[self.peptide_col].map(peptide_proteins_dict)

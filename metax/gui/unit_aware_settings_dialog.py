@@ -8,6 +8,12 @@ import warnings
 import pandas as pd
 from PyQt5 import QtWidgets
 
+from metax.peptide_annotator.peptide_table_prepare import (
+    DIANN_RUN_COLUMN,
+    has_diann_core_columns,
+    is_parquet_path,
+    select_diann_intensity_column,
+)
 from metax.peptide_annotator.unit_aware_manifest import (
     load_unit_aware_manifest,
     resolve_manifest_sample_columns,
@@ -75,8 +81,7 @@ class UnitAwareValidationResultDialog(QtWidgets.QDialog):
 
 def _read_peptide_table_header_columns(peptide_table_path: str, separator: str) -> list[str] | None:
     path = Path(peptide_table_path)
-    suffix = path.suffix.lower()
-    if suffix in {".parquet", ".pq"}:
+    if is_parquet_path(path):
         try:
             import pyarrow.parquet as pq
 
@@ -181,12 +186,13 @@ def validate_unit_aware_manifest_for_gui(
                 )
             candidate_sample_columns = peptide_columns
             if (
-                Path(peptide_table_path).suffix.lower() in {".parquet", ".pq"}
-                and {"Run", "Precursor.Quantity"}.issubset(peptide_columns)
+                is_parquet_path(peptide_table_path)
+                and has_diann_core_columns(peptide_columns)
             ):
                 try:
                     candidate_sample_columns = _read_long_format_run_columns(peptide_table_path)
                     long_format_detected = True
+                    intensity_column = select_diann_intensity_column(peptide_columns)
                 except Exception as exc:
                     return UnitAwareManifestValidationResult(
                         False,
@@ -256,7 +262,9 @@ def validate_unit_aware_manifest_for_gui(
         )
     elif long_format_detected:
         header_status_lines.append(
-            "Peptide table format: long-format DIA-NN parquet (Run values validated as sample columns)"
+            "Peptide table format: long-format DIA-NN parquet "
+            f"({DIANN_RUN_COLUMN} values validated as sample columns; "
+            f"intensity={intensity_column})"
         )
     message = (
         "Manifest schema: valid\n"
