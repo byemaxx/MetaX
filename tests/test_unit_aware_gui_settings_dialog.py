@@ -6,6 +6,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import metax.gui.unit_aware_settings_dialog as unit_aware_settings_dialog
 from PyQt5 import QtWidgets
+from metax.gui.main_gui import MetaXGUI
 from metax.gui.unit_aware_settings_dialog import (
     UnitAwareGuiConfig,
     UnitAwareSettingsDialog,
@@ -84,18 +85,45 @@ def test_unit_aware_gui_validation_missing_manifest_points_to_main_window():
     assert "main Peptide Direct to OTF window" in result.message
 
 
-def test_unit_aware_settings_dialog_manifest_path_is_read_only():
+def test_unit_aware_settings_dialog_uses_main_window_owned_values():
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     dialog = UnitAwareSettingsDialog(
-        current_config=UnitAwareGuiConfig(manifest_path="unit_aware_manifest.json")
+        current_config=UnitAwareGuiConfig(
+            manifest_path="unit_aware_manifest.json",
+            genome_threshold="q0.01",
+        )
     )
 
     assert dialog.lineEdit_current_manifest_path.text() == "unit_aware_manifest.json"
     assert dialog.lineEdit_current_manifest_path.isReadOnly() is True
     assert not hasattr(dialog, "pushButton_browse_manifest")
+    assert not hasattr(dialog, "comboBox_genome_threshold")
+    assert dialog.get_config().genome_threshold == "q0.01"
     assert dialog.tabs.count() == 1
 
     dialog.close()
+    app.processEvents()
+
+
+def test_main_window_controls_own_genome_threshold():
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    gui = object.__new__(MetaXGUI)
+    gui.unit_aware_gui_config = UnitAwareGuiConfig(
+        manifest_path="old.json",
+        genome_threshold="q0.05",
+        on_missing_sample="warn-skip",
+    )
+    gui.lineEdit_pep_direct_to_otf_unit_aware_manifest_path = QtWidgets.QLineEdit()
+    gui.lineEdit_pep_direct_to_otf_unit_aware_manifest_path.setText("current.json")
+    gui.comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold = QtWidgets.QComboBox()
+    gui.comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold.addItems(["q0.05", "q0.01"])
+    gui.comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold.setCurrentText("q0.01")
+
+    config = gui._get_unit_aware_gui_config_from_controls()
+
+    assert config.manifest_path == "current.json"
+    assert config.genome_threshold == "q0.01"
+    assert config.on_missing_sample == "warn-skip"
     app.processEvents()
 
 

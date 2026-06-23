@@ -2048,6 +2048,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "pushButton_open_pep_direct_to_otf_unit_aware_mainfest_path",
                 "pushButton_open_pep_direct_to_otf_unit_aware_manifest_path",
                 "pushButton_pep_direct_to_otf_unit_aware_settings",
+                "label_pep_direct_to_otf_use_unit_aware_genome_threshold",
+                "comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold",
             ],
             enabled,
         )
@@ -3027,11 +3029,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def _get_unit_aware_gui_config_from_controls(self) -> UnitAwareGuiConfig:
         config = getattr(self, "unit_aware_gui_config", UnitAwareGuiConfig())
         manifest_path = ""
+        genome_threshold = config.genome_threshold
         if hasattr(self, "lineEdit_pep_direct_to_otf_unit_aware_manifest_path"):
             manifest_path = self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path.text().strip()
+        if hasattr(self, "comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold"):
+            genome_threshold = (
+                self.comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold.currentText().strip()
+                or genome_threshold
+            )
         return UnitAwareGuiConfig(
             manifest_path=manifest_path or config.manifest_path,
-            genome_threshold=config.genome_threshold,
+            genome_threshold=genome_threshold,
             input_sample_col_prefix=config.input_sample_col_prefix,
             on_missing_sample=config.on_missing_sample,
             on_empty_unit=config.on_empty_unit,
