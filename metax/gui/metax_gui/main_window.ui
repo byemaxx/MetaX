@@ -369,8 +369,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>623</width>
-                 <height>818</height>
+                 <width>566</width>
+                 <height>116</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1452,8 +1452,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1253</width>
-                 <height>253</height>
+                 <width>1070</width>
+                 <height>238</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_37">
@@ -1993,7 +1993,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1221</width>
+                     <width>1168</width>
                      <height>364</height>
                     </rect>
                    </property>
@@ -5408,8 +5408,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>1193</width>
-                        <height>130</height>
+                        <width>790</width>
+                        <height>129</height>
                        </rect>
                       </property>
                       <layout class="QGridLayout" name="gridLayout_68">
@@ -8256,8 +8256,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1221</width>
-                     <height>369</height>
+                     <width>909</width>
+                     <height>90</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_57">
@@ -10101,8 +10101,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1221</width>
-                     <height>316</height>
+                     <width>563</width>
+                     <height>95</height>
                     </rect>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_66">
@@ -10827,7 +10827,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>1227</width>
-                    <height>490</height>
+                    <height>488</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11334,10 +11334,33 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_254">
-                   <property name="text">
-                    <string/>
+                  <widget class="QLabel" name="label_pep_direct_to_otf_use_unit_aware_genome_threshold">
+                   <property name="enabled">
+                    <bool>false</bool>
                    </property>
+                   <property name="text">
+                    <string>Genome threshold</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>q0.05</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>q0.01</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                 </layout>
@@ -11448,7 +11471,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>1227</width>
-                    <height>627</height>
+                    <height>625</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11700,7 +11723,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>1229</width>
-                    <height>761</height>
+                    <height>753</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -12457,12 +12480,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>130</y>
+     <x>113</x>
+     <y>108</y>
     </hint>
     <hint type="destinationlabel">
-     <x>125</x>
-     <y>131</y>
+     <x>123</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -12473,12 +12496,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>130</y>
+     <x>113</x>
+     <y>108</y>
     </hint>
     <hint type="destinationlabel">
-     <x>132</x>
-     <y>131</y>
+     <x>130</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -12633,12 +12656,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>73</x>
-     <y>152</y>
+     <x>295</x>
+     <y>822</y>
     </hint>
     <hint type="destinationlabel">
-     <x>99</x>
-     <y>152</y>
+     <x>969</x>
+     <y>825</y>
     </hint>
    </hints>
   </connection>
@@ -12649,12 +12672,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>94</x>
-     <y>105</y>
+     <x>109</x>
+     <y>597</y>
     </hint>
     <hint type="destinationlabel">
-     <x>114</x>
-     <y>110</y>
+     <x>129</x>
+     <y>760</y>
     </hint>
    </hints>
   </connection>
@@ -12665,12 +12688,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>73</x>
-     <y>152</y>
+     <x>295</x>
+     <y>822</y>
     </hint>
     <hint type="destinationlabel">
-     <x>73</x>
-     <y>144</y>
+     <x>295</x>
+     <y>751</y>
     </hint>
    </hints>
   </connection>
@@ -12681,12 +12704,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>73</x>
-     <y>152</y>
+     <x>295</x>
+     <y>822</y>
     </hint>
     <hint type="destinationlabel">
-     <x>99</x>
-     <y>144</y>
+     <x>969</x>
+     <y>751</y>
     </hint>
    </hints>
   </connection>
@@ -12713,12 +12736,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>309</x>
-     <y>1018</y>
+     <x>350</x>
+     <y>326</y>
     </hint>
     <hint type="destinationlabel">
-     <x>474</x>
-     <y>1021</y>
+     <x>551</x>
+     <y>329</y>
     </hint>
    </hints>
   </connection>
@@ -12729,12 +12752,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>675</x>
-     <y>1018</y>
+     <x>710</x>
+     <y>326</y>
     </hint>
     <hint type="destinationlabel">
-     <x>834</x>
-     <y>1021</y>
+     <x>1122</x>
+     <y>329</y>
     </hint>
    </hints>
   </connection>
@@ -12793,12 +12816,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>118</x>
-     <y>809</y>
+     <x>73</x>
+     <y>147</y>
     </hint>
     <hint type="destinationlabel">
-     <x>129</x>
-     <y>918</y>
+     <x>100</x>
+     <y>131</y>
     </hint>
    </hints>
   </connection>
@@ -12809,12 +12832,12 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>416</y>
+     <x>86</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
-     <x>144</x>
-     <y>523</y>
+     <x>113</x>
+     <y>142</y>
     </hint>
    </hints>
   </connection>
@@ -13151,6 +13174,38 @@
     <hint type="destinationlabel">
      <x>1189</x>
      <y>401</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_pep_direct_to_otf_use_unit_aware_genome_threshold</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>142</x>
+     <y>360</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>718</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>152</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>891</x>
+     <y>357</y>
     </hint>
    </hints>
   </connection>

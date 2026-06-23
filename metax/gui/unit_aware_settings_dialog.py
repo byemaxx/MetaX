@@ -225,10 +225,6 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self.lineEdit_current_manifest_path.setReadOnly(True)
         form.addRow("Current manifest JSON", self.lineEdit_current_manifest_path)
 
-        self.comboBox_genome_threshold = QtWidgets.QComboBox(manifest_tab)
-        self.comboBox_genome_threshold.addItems(["auto", "q0.05", "q0.01"])
-        form.addRow("Genome threshold", self.comboBox_genome_threshold)
-
         self.lineEdit_input_prefix = QtWidgets.QLineEdit(manifest_tab)
         form.addRow("Input sample column prefix", self.lineEdit_input_prefix)
 
@@ -264,7 +260,6 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
 
     def _load_config(self, config: UnitAwareGuiConfig) -> None:
         self.lineEdit_current_manifest_path.setText(config.manifest_path)
-        self.comboBox_genome_threshold.setCurrentText(config.genome_threshold or "auto")
         self.lineEdit_input_prefix.setText(config.input_sample_col_prefix or "")
         self.comboBox_on_missing_sample.setCurrentText(config.on_missing_sample or "error")
         self.comboBox_on_empty_unit.setCurrentText(config.on_empty_unit or "warn-skip")
@@ -276,7 +271,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             peptide_table_path=self.peptide_table_path,
             peptide_col=self.peptide_col,
             peptide_table_separator=self.peptide_table_separator,
-            genome_threshold=self.comboBox_genome_threshold.currentText().strip(),
+            genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
         )
@@ -296,7 +291,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
     def get_config(self) -> UnitAwareGuiConfig:
         return UnitAwareGuiConfig(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
-            genome_threshold=self.comboBox_genome_threshold.currentText().strip() or "auto",
+            genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text(),
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip() or "error",
             on_empty_unit=self.comboBox_on_empty_unit.currentText().strip() or "warn-skip",
