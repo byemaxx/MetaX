@@ -3,13 +3,17 @@ from __future__ import annotations
 import json
 import re
 import tempfile
+import time
 import warnings
 from pathlib import Path
 from typing import Iterable
 
 import pandas as pd
 
-from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+from metax.peptide_annotator.pep_table_to_otf import (
+    peptideProteinsMapper,
+    query_peptide_proteins_from_digested_genome_folders_nested,
+)
 from metax.peptide_annotator.peptide_table_prepare import (
     has_diann_core_columns,
     is_parquet_path,
@@ -26,6 +30,42 @@ from metax.peptide_annotator.unit_aware_manifest import (
 
 def _safe_filename(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", str(value)).strip("._") or "unit"
+
+
+def build_global_unit_aware_peptide_protein_map(
+    peptide_df: pd.DataFrame,
+    peptide_col: str,
+    manifest: UnitAwareManifest,
+    digested_genome_folders: str | list[str],
+    protein_genome_separator: str = "_",
+    n_jobs: int | None = None,
+    digested_peptide_col: str | None = None,
+    digested_protein_col: str | None = None,
+) -> dict[str, dict[str, set[str]]]:
+    """Scan the manifest genome union once into an in-memory nested mapping."""
+    global_genome_set = {
+        str(genome_id)
+        for unit in manifest.units.values()
+        for genome_id in unit.genome_ids
+    }
+    global_peptide_list = (
+        peptide_df[peptide_col]
+        .dropna()
+        .astype(str)
+        .loc[lambda values: values.str.len() > 0]
+        .drop_duplicates()
+        .tolist()
+    )
+    return query_peptide_proteins_from_digested_genome_folders_nested(
+        digested_genome_folders=digested_genome_folders,
+        peptide_list=global_peptide_list,
+        selected_genomes_set=global_genome_set,
+        protein_genome_separator=protein_genome_separator,
+        sep="\t",
+        n_jobs=n_jobs,
+        digested_peptide_col=digested_peptide_col,
+        digested_protein_col=digested_protein_col,
+    )
 
 
 class UnitAwareOTFAnnotator:
@@ -162,6 +202,32 @@ class UnitAwareOTFAnnotator:
             return per_unit_dir / f"{_safe_filename(analysis_unit_id)}_OTF.tsv"
         return tmpdir / f"{_safe_filename(analysis_unit_id)}_OTF.tsv"
 
+    def _add_unit_protein_mapping(
+        self,
+        unit_df: pd.DataFrame,
+        global_mapping: dict[str, dict[str, set[str]]],
+        unit_genome_ids: Iterable[str],
+    ) -> pd.DataFrame:
+        unit_genomes = [str(genome_id) for genome_id in unit_genome_ids]
+
+        def unit_candidates(peptide: object) -> tuple[str, str]:
+            genome_map = global_mapping.get(str(peptide), {})
+            proteins = {
+                protein_id
+                for genome_id in unit_genomes
+                for protein_id in genome_map.get(genome_id, set())
+            }
+            mapped_genomes = [
+                genome_id for genome_id in unit_genomes if genome_map.get(genome_id)
+            ]
+            return ";".join(sorted(proteins)), ";".join(mapped_genomes)
+
+        result = unit_df.copy()
+        candidates = result[self.peptide_col].map(unit_candidates)
+        result["Proteins"] = candidates.map(lambda value: value[0])
+        result["Genomes"] = candidates.map(lambda value: value[1])
+        return result.loc[result["Proteins"].ne("")].copy()
+
     def _write_manifest_used(self) -> None:
         target = self.artifacts_dir / "unit_aware_manifest_used.json"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -281,6 +347,41 @@ class UnitAwareOTFAnnotator:
             f"{len(manifest_samples)} manifest samples mapped.",
             flush=True,
         )
+        global_genome_set = {
+            str(genome_id)
+            for unit in manifest.units.values()
+            for genome_id in unit.genome_ids
+        }
+        global_peptides = peptide_df[self.peptide_col].dropna().astype(str)
+        global_peptide_count = int(global_peptides.loc[global_peptides.str.len() > 0].nunique())
+        print(
+            f"[Unit-aware] Global candidates: {len(global_genome_set)} unique manifest genomes, "
+            f"{global_peptide_count} unique input peptides.",
+            flush=True,
+        )
+
+        global_mapping: dict[str, dict[str, set[str]]] | None = None
+        if self.digested_genome_folders is not None:
+            mapping_started = time.perf_counter()
+            global_mapping = build_global_unit_aware_peptide_protein_map(
+                peptide_df=peptide_df,
+                peptide_col=self.peptide_col,
+                manifest=manifest,
+                digested_genome_folders=self.digested_genome_folders,
+                protein_genome_separator=self.protein_genome_separator,
+                n_jobs=self.n_jobs,
+            )
+            mapped_protein_count = sum(
+                len(proteins)
+                for genome_map in global_mapping.values()
+                for proteins in genome_map.values()
+            )
+            print(
+                f"[Unit-aware] Global peptide-protein map built once: "
+                f"{len(global_mapping)} mapped peptides, {mapped_protein_count} candidates in "
+                f"{time.perf_counter() - mapping_started:.2f}s.",
+                flush=True,
+            )
 
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
         self._write_manifest_used()
@@ -351,7 +452,41 @@ class UnitAwareOTFAnnotator:
                     print(f"{progress_prefix} skipped: {message}", flush=True)
                     continue
 
+                peptides_before_protein_mapping = len(unit_df)
+                if global_mapping is not None:
+                    unit_df = self._add_unit_protein_mapping(
+                        unit_df,
+                        global_mapping=global_mapping,
+                        unit_genome_ids=unit.genome_ids,
+                    )
+                    print(
+                        f"{progress_prefix} protein mapping: "
+                        f"{peptides_before_protein_mapping} -> {len(unit_df)} peptides.",
+                        flush=True,
+                    )
+                    if unit_df.empty:
+                        message = "unit has no peptides mapped to proteins in its manifest genomes"
+                        if self.on_empty_unit == "error":
+                            print(f"{progress_prefix} failed: {message}", flush=True)
+                            raise ValueError(f"{unit.analysis_unit_id}: {message}")
+                        warnings.warn(f"{unit.analysis_unit_id}: {message}", stacklevel=2)
+                        self._record_summary(
+                            summary_rows,
+                            unit.analysis_unit_id,
+                            len(unit.sample_columns),
+                            len(mapped_samples),
+                            len(peptide_df),
+                            peptides_before_protein_mapping,
+                            len(unit.genome_ids),
+                            0,
+                            "skipped",
+                            message,
+                        )
+                        print(f"{progress_prefix} skipped: {message}", flush=True)
+                        continue
+
                 unit_output_path = self._unit_output_path(unit.analysis_unit_id, tmpdir)
+                unit_started = time.perf_counter()
                 mapper = peptideProteinsMapper(
                     peptide_table_path=str(self.peptide_table_path),
                     peptide_df=unit_df,
@@ -364,11 +499,17 @@ class UnitAwareOTFAnnotator:
                     temp_dir=str(tmpdir),
                     selected_genomes_set=set(unit.genome_ids),
                     genome_list=unit.genome_ids,
-                    continue_base_on_annotaied_peptide_table=False,
+                    continue_base_on_annotaied_peptide_table=global_mapping is not None,
                     protein_genome_separator=self.protein_genome_separator,
                     duplicate_peptide_handling_mode=self.duplicate_peptide_handling_mode,
                     n_jobs=self.n_jobs,
                 )
+                if global_mapping is not None:
+                    mapper.original_peptides_before_mapping = peptides_before_protein_mapping
+                    mapper.peptides_after_mapping = len(mapper.peptide_table)
+                    mapper.removed_peptides_no_matched = (
+                        peptides_before_protein_mapping - mapper.peptides_after_mapping
+                    )
                 unit_otf_df = mapper.all_in_one(
                     taxafunc_anno_db_path=str(self.taxafunc_anno_db_path),
                     lca_threshold=self.lca_threshold,
@@ -409,7 +550,8 @@ class UnitAwareOTFAnnotator:
                 )
                 print(
                     f"{progress_prefix} completed "
-                    f"({len(unit_df)} peptides, {len(unit_otf_df)} OTF rows).",
+                    f"({len(unit_df)} mapped peptides, {len(unit_otf_df)} OTF rows, "
+                    f"{time.perf_counter() - unit_started:.2f}s downstream).",
                     flush=True,
                 )
 
