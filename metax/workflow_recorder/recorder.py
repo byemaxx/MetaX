@@ -209,6 +209,32 @@ def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> 
     )
 
 
+def unit_aware_otf_step(params: dict[str, Any]) -> AnalysisStep:
+    parameters = dict(params)
+    code = _join_code(
+        "from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator",
+        "",
+        _assignment("unit_aware_otf_params", parameters),
+        "unit_aware_otf = UnitAwareOTFAnnotator(**unit_aware_otf_params)",
+        "unit_aware_otf_result = unit_aware_otf.run()",
+        'print(f"Saved unit-aware OTF: {unit_aware_otf.output_path}")',
+    )
+    return AnalysisStep(
+        title="Run Unit-aware Peptide Direct to OTF",
+        step_type="unit_aware_peptide_direct_to_otf",
+        inputs={
+            "peptide_table_path": parameters.get("peptide_table_path"),
+            "digested_genome_folders": parameters.get("digested_genome_folders"),
+            "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
+            "unit_aware_manifest_path": parameters.get("unit_aware_manifest_path"),
+        },
+        outputs={"output_path": parameters.get("output_path")},
+        parameters=parameters,
+        code=code,
+        notes=["Recorded from the MetaX GUI unit-aware direct-to-OTF workflow."],
+    )
+
+
 def taxafunc_analyzer_step(
     params: dict[str, Any],
     group_name: str | None = None,
