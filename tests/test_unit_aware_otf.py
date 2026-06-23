@@ -119,12 +119,19 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path):
         output_path=str(output),
         db_path=str(peptide_db),
         peptide_col="Sequence",
+        duplicate_peptide_handling_mode="max",
     ).run()
 
     assert [call["genome_list"] for call in calls] == [["g1"], ["g2"]]
     assert calls[0]["selected_genomes_set"] == {"g1"}
     assert calls[1]["selected_genomes_set"] == {"g2"}
-    assert result["UnitAwareSequence"].tolist() == ["u1||PEPA", "u2||PEPA", "u2||PEPB"]
+    assert [call["duplicate_peptide_handling_mode"] for call in calls] == ["max", "max"]
+    assert "UnitAwareSequence" not in result.columns
+    assert result[["analysis_unit_id", "Sequence"]].drop_duplicates().values.tolist() == [
+        ["u1", "PEPA"],
+        ["u2", "PEPA"],
+        ["u2", "PEPB"],
+    ]
     assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
     assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
     assert output.is_file()
@@ -154,6 +161,16 @@ def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
     parser = build_parser()
     args = parser.parse_args(["--unit-aware"])
     assert args.distinct_genome_threshold == 0
+
+    with pytest.raises(ValueError, match="duplicate_peptide_handling_mode"):
+        UnitAwareOTFAnnotator(
+            peptide_table_path=str(peptide_table),
+            unit_aware_manifest_path=str(manifest),
+            taxafunc_anno_db_path=str(taxafunc_db),
+            output_path=str(tmp_path / "out.tsv"),
+            db_path=str(peptide_db),
+            duplicate_peptide_handling_mode="bad-mode",
+        )
 
     with pytest.raises(FileNotFoundError, match="db_path"):
         UnitAwareOTFAnnotator(
@@ -202,8 +219,35 @@ def test_unit_aware_otf_real_sqlite_integration(tmp_path):
         peptide_col="Sequence",
     ).run()
 
-    assert result["UnitAwareSequence"].tolist() == ["u1||PEPA", "u2||PEPA", "u2||PEPB"]
+    assert "UnitAwareSequence" not in result.columns
     assert result["Sequence"].tolist() == ["PEPA", "PEPA", "PEPB"]
     assert result.loc[result["analysis_unit_id"] == "u1", "Proteins"].tolist() == ["g1_p1"]
     assert result.loc[result["analysis_unit_id"] == "u2", "Proteins"].tolist() == ["g2_p2", "g2_p3"]
     assert output.is_file()
+
+
+def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10], "Intensity_s2": [0]}).to_csv(
+        peptide_table,
+        sep="\t",
+        index=False,
+    )
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    peptide_db = tmp_path / "peptide.db"
+    _write_peptide_protein_db(peptide_db)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(taxafunc_db)
+
+    result = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "OTF_unit_aware.tsv"),
+        db_path=str(peptide_db),
+        include_unit_aware_sequence=True,
+    ).run()
+
+    assert "UnitAwareSequence" in result.columns
+    assert result["UnitAwareSequence"].tolist() == ["u1||PEPA"]

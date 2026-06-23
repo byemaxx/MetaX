@@ -822,7 +822,9 @@ The unit-aware distinct-genome filter defaults to `0`, so MetaX trusts the manif
 
 Sample columns are matched from manifest `sample_columns` to peptide-table columns in this order: exact name, `Intensity_` prefix, configured output prefix, configured input prefix, stripped `Intensity_`, stripped output prefix, stripped input prefix, leading underscores removed, and raw-file basename without `.raw`, `.mzML`, or `.mzXML`. Use `--input-sample-col-prefix` for inputs such as `LFQ intensity sample_1`.
 
-The merged unit-aware OTF table includes `analysis_unit_id` and `UnitAwareSequence`. `UnitAwareSequence` is an internal peptide evidence ID built as `analysis_unit_id + "||" + Sequence`; MetaX preserves the original `Sequence` column for peptide-level inspection while using `UnitAwareSequence` as the peptide index in unit-aware analysis. Do not deduplicate unit-aware output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
+The merged unit-aware OTF table includes `analysis_unit_id` and the original `Sequence` column. MetaX internally derives the unit-aware peptide evidence ID as `analysis_unit_id + "||" + Sequence` when downstream analysis needs a unique peptide identity; `UnitAwareSequence` is not written by default. Do not deduplicate unit-aware output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
+
+In the GUI, unit-aware mode uses an existing MetaUmbra `unit_aware_manifest.json`, disables the legacy global genome scoring controls, and validates manifest samples against the current peptide table header when possible. The duplicate peptide handling selector still applies in unit-aware mode.
 
 Example:
 

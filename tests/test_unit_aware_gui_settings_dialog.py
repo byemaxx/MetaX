@@ -1,6 +1,46 @@
 from dataclasses import asdict
+import json
 
-from metax.gui.unit_aware_settings_dialog import UnitAwareGuiConfig
+from metax.gui.unit_aware_settings_dialog import (
+    UnitAwareGuiConfig,
+    validate_unit_aware_manifest_for_gui,
+)
+
+
+def _write_manifest(tmp_path):
+    path = tmp_path / "unit_aware_manifest.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "metaumbra.unit_aware_manifest.v1",
+                "generated_by": {"tool": "MetaUmbra", "version": "1.3.5"},
+                "default_genome_threshold": "q0.05",
+                "files": {},
+                "units": {
+                    "u1": {
+                        "sample_columns": ["s1", "s2"],
+                        "n_samples": 2,
+                        "genome_ids_q005": ["g1", "g2"],
+                        "genome_ids_q001": ["g1"],
+                    },
+                    "u2": {
+                        "sample_columns": ["s3"],
+                        "n_samples": 1,
+                        "genome_ids_q005": ["g3"],
+                        "genome_ids_q001": ["g3"],
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_peptide_table(tmp_path, columns):
+    path = tmp_path / "peptides.tsv"
+    path.write_text("\t".join(columns) + "\n", encoding="utf-8")
+    return path
 
 
 def test_unit_aware_gui_config_defaults_and_override():
@@ -29,3 +69,81 @@ def test_unit_aware_gui_config_defaults_and_override():
     assert config.on_missing_sample == "warn-skip"
     assert config.on_empty_unit == "error"
     assert config.save_per_unit_outputs is True
+
+
+def test_unit_aware_gui_validation_passes_with_matching_peptide_header(tmp_path):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = _write_peptide_table(
+        tmp_path,
+        ["Sequence", "Intensity_s1", "Intensity_s2", "Intensity_s3"],
+    )
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Sequence",
+        peptide_table_separator="\t",
+        genome_threshold="q0.01",
+    )
+
+    assert result.ok is True
+    assert result.manifest_samples == ["s1", "s2", "s3"]
+    assert result.mapped_samples == {
+        "s1": "Intensity_s1",
+        "s2": "Intensity_s2",
+        "s3": "Intensity_s3",
+    }
+    assert result.missing_samples == []
+    assert "Selected genome threshold: q0.01" in result.message
+    assert "u1: samples=2, genomes=1" in result.message
+
+
+def test_unit_aware_gui_validation_fails_for_missing_sample_by_default(tmp_path):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = _write_peptide_table(tmp_path, ["Sequence", "Intensity_s1", "Intensity_s2"])
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Sequence",
+        peptide_table_separator="\t",
+        on_missing_sample="error",
+    )
+
+    assert result.ok is False
+    assert result.missing_samples == ["s3"]
+    assert "Manifest sample-column validation failed" in result.message
+    assert "s3" in result.message
+
+
+def test_unit_aware_gui_validation_warn_skip_passes_with_missing_sample(tmp_path):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = _write_peptide_table(tmp_path, ["Sequence", "Intensity_s1", "Intensity_s2"])
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Sequence",
+        peptide_table_separator="\t",
+        on_missing_sample="warn-skip",
+    )
+
+    assert result.ok is True
+    assert result.mapped_samples == {"s1": "Intensity_s1", "s2": "Intensity_s2"}
+    assert result.missing_samples == ["s3"]
+    assert "Missing samples: s3" in result.message
+
+
+def test_unit_aware_gui_validation_fails_for_missing_peptide_column(tmp_path):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = _write_peptide_table(tmp_path, ["Modified sequence", "Intensity_s1"])
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Sequence",
+        peptide_table_separator="\t",
+    )
+
+    assert result.ok is False
+    assert "Peptide column 'Sequence' was not found" in result.message

@@ -43,6 +43,8 @@ class UnitAwareOTFAnnotator:
         protein_separator: str = ";",
         protein_genome_separator: str = "_",
         save_per_unit_outputs: bool = False,
+        include_unit_aware_sequence: bool = False,
+        duplicate_peptide_handling_mode: str = "sum",
         on_missing_sample: str = "error",
         on_empty_unit: str = "warn-skip",
         n_jobs: int | None = None,
@@ -53,6 +55,13 @@ class UnitAwareOTFAnnotator:
             raise ValueError("on_missing_sample must be 'error' or 'warn-skip'")
         if on_empty_unit not in {"error", "warn-skip"}:
             raise ValueError("on_empty_unit must be 'error' or 'warn-skip'")
+        duplicate_peptide_handling_mode = (duplicate_peptide_handling_mode or "sum").strip().lower()
+        valid_duplicate_modes = {"sum", "max", "min", "mean", "first", "keep"}
+        if duplicate_peptide_handling_mode not in valid_duplicate_modes:
+            raise ValueError(
+                "duplicate_peptide_handling_mode must be one of "
+                f"{sorted(valid_duplicate_modes)}"
+            )
 
         self.peptide_table_path = Path(peptide_table_path)
         self.unit_aware_manifest_path = Path(unit_aware_manifest_path)
@@ -72,6 +81,8 @@ class UnitAwareOTFAnnotator:
         self.protein_separator = protein_separator
         self.protein_genome_separator = protein_genome_separator
         self.save_per_unit_outputs = save_per_unit_outputs
+        self.include_unit_aware_sequence = include_unit_aware_sequence
+        self.duplicate_peptide_handling_mode = duplicate_peptide_handling_mode
         self.on_missing_sample = on_missing_sample
         self.on_empty_unit = on_empty_unit
         self.n_jobs = n_jobs
@@ -222,7 +233,6 @@ class UnitAwareOTFAnnotator:
         merged = pd.concat(aligned, ignore_index=True, sort=False)
         leading_cols = [
             "analysis_unit_id",
-            "UnitAwareSequence",
             "Sequence",
             "Proteins",
             "LCA_level",
@@ -327,6 +337,7 @@ class UnitAwareOTFAnnotator:
                     genome_list=unit.genome_ids,
                     continue_base_on_annotaied_peptide_table=False,
                     protein_genome_separator=self.protein_genome_separator,
+                    duplicate_peptide_handling_mode=self.duplicate_peptide_handling_mode,
                     n_jobs=self.n_jobs,
                 )
                 unit_otf_df = mapper.all_in_one(
@@ -338,6 +349,7 @@ class UnitAwareOTFAnnotator:
                     protein_separator=self.protein_separator,
                     protein_genome_separator=self.protein_genome_separator,
                     genome_list=unit.genome_ids,
+                    duplicate_peptide_handling_mode=self.duplicate_peptide_handling_mode,
                     genome_selection_metadata={
                         "genome_selection_method": "metaumbra_unit_aware_manifest",
                         "unit_aware_manifest_path": str(self.unit_aware_manifest_path),
@@ -348,8 +360,9 @@ class UnitAwareOTFAnnotator:
 
                 unit_otf_df = unit_otf_df.copy()
                 unit_otf_df.insert(0, "analysis_unit_id", unit.analysis_unit_id)
-                sequence_values = unit_otf_df["Sequence"].astype(str)
-                unit_otf_df.insert(1, "UnitAwareSequence", unit.analysis_unit_id + "||" + sequence_values)
+                if self.include_unit_aware_sequence:
+                    sequence_values = unit_otf_df["Sequence"].astype(str)
+                    unit_otf_df.insert(1, "UnitAwareSequence", unit.analysis_unit_id + "||" + sequence_values)
                 unit_otf_dfs.append(unit_otf_df)
                 self._record_summary(
                     summary_rows,
