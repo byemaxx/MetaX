@@ -7,7 +7,7 @@ import warnings
 
 import pandas as pd
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 
 from metax.peptide_annotator.unit_aware_manifest import (
     load_unit_aware_manifest,
@@ -76,7 +76,13 @@ def validate_unit_aware_manifest_for_gui(
             [],
         )
     if not manifest_path:
-        return UnitAwareManifestValidationResult(False, "Please select a unit-aware manifest JSON.", [], {}, [])
+        return UnitAwareManifestValidationResult(
+            False,
+            "Please select a unit-aware manifest JSON in the main Peptide Direct to OTF window.",
+            [],
+            {},
+            [],
+        )
     if not Path(manifest_path).is_file():
         return UnitAwareManifestValidationResult(False, f"Manifest JSON not found:\n{manifest_path}", [], {}, [])
 
@@ -215,13 +221,9 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         manifest_tab = QtWidgets.QWidget(self)
         form = QtWidgets.QFormLayout(manifest_tab)
 
-        manifest_row = QtWidgets.QHBoxLayout()
-        self.lineEdit_manifest_path = QtWidgets.QLineEdit(manifest_tab)
-        self.pushButton_browse_manifest = QtWidgets.QPushButton("Open", manifest_tab)
-        self.pushButton_browse_manifest.clicked.connect(self._browse_manifest)
-        manifest_row.addWidget(self.lineEdit_manifest_path)
-        manifest_row.addWidget(self.pushButton_browse_manifest)
-        form.addRow("Manifest path", manifest_row)
+        self.lineEdit_current_manifest_path = QtWidgets.QLineEdit(manifest_tab)
+        self.lineEdit_current_manifest_path.setReadOnly(True)
+        form.addRow("Current manifest JSON", self.lineEdit_current_manifest_path)
 
         self.comboBox_genome_threshold = QtWidgets.QComboBox(manifest_tab)
         self.comboBox_genome_threshold.addItems(["auto", "q0.05", "q0.01"])
@@ -244,27 +246,14 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         action_row = QtWidgets.QHBoxLayout()
         self.pushButton_validate = QtWidgets.QPushButton("Validate", manifest_tab)
         self.pushButton_validate.clicked.connect(self._validate_manifest)
-        self.pushButton_use_manifest = QtWidgets.QPushButton("Use this manifest", manifest_tab)
-        self.pushButton_use_manifest.clicked.connect(self.accept)
+        self.pushButton_use_settings = QtWidgets.QPushButton("Use these settings", manifest_tab)
+        self.pushButton_use_settings.clicked.connect(self.accept)
         action_row.addWidget(self.pushButton_validate)
         action_row.addStretch(1)
-        action_row.addWidget(self.pushButton_use_manifest)
+        action_row.addWidget(self.pushButton_use_settings)
         form.addRow("", action_row)
 
         self.tabs.addTab(manifest_tab, "Existing manifest")
-
-        manual_tab = QtWidgets.QWidget(self)
-        manual_tab.setEnabled(False)
-        manual_layout = QtWidgets.QVBoxLayout(manual_tab)
-        manual_label = QtWidgets.QLabel(
-            "Manual manifest builder is not enabled in this first version. "
-            "Use an existing MetaUmbra unit_aware_manifest.json.",
-            manual_tab,
-        )
-        manual_label.setWordWrap(True)
-        manual_layout.addWidget(manual_label)
-        manual_layout.addStretch(1)
-        self.tabs.addTab(manual_tab, "Manual builder (coming soon)")
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Cancel,
@@ -274,28 +263,16 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         layout.addWidget(buttons)
 
     def _load_config(self, config: UnitAwareGuiConfig) -> None:
-        self.lineEdit_manifest_path.setText(config.manifest_path)
+        self.lineEdit_current_manifest_path.setText(config.manifest_path)
         self.comboBox_genome_threshold.setCurrentText(config.genome_threshold or "auto")
         self.lineEdit_input_prefix.setText(config.input_sample_col_prefix or "")
         self.comboBox_on_missing_sample.setCurrentText(config.on_missing_sample or "error")
         self.comboBox_on_empty_unit.setCurrentText(config.on_empty_unit or "warn-skip")
         self.checkBox_save_per_unit_outputs.setChecked(bool(config.save_per_unit_outputs))
 
-    def _browse_manifest(self) -> None:
-        current = self.lineEdit_manifest_path.text().strip()
-        start_dir = str(Path(current).parent) if current else ""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open MetaUmbra unit-aware manifest JSON",
-            start_dir,
-            "JSON files (*.json);;All files (*)",
-        )
-        if file_path:
-            self.lineEdit_manifest_path.setText(file_path)
-
     def _validate_manifest(self) -> bool:
         result = validate_unit_aware_manifest_for_gui(
-            manifest_path=self.lineEdit_manifest_path.text().strip(),
+            manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             peptide_table_path=self.peptide_table_path,
             peptide_col=self.peptide_col,
             peptide_table_separator=self.peptide_table_separator,
@@ -318,7 +295,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
 
     def get_config(self) -> UnitAwareGuiConfig:
         return UnitAwareGuiConfig(
-            manifest_path=self.lineEdit_manifest_path.text().strip(),
+            manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             genome_threshold=self.comboBox_genome_threshold.currentText().strip() or "auto",
             input_sample_col_prefix=self.lineEdit_input_prefix.text(),
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip() or "error",

@@ -1,9 +1,14 @@
 from dataclasses import asdict
 import json
+import os
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import metax.gui.unit_aware_settings_dialog as unit_aware_settings_dialog
+from PyQt5 import QtWidgets
 from metax.gui.unit_aware_settings_dialog import (
     UnitAwareGuiConfig,
+    UnitAwareSettingsDialog,
     validate_unit_aware_manifest_for_gui,
 )
 
@@ -70,6 +75,28 @@ def test_unit_aware_gui_config_defaults_and_override():
     assert config.on_missing_sample == "warn-skip"
     assert config.on_empty_unit == "error"
     assert config.save_per_unit_outputs is True
+
+
+def test_unit_aware_gui_validation_missing_manifest_points_to_main_window():
+    result = validate_unit_aware_manifest_for_gui(manifest_path="")
+
+    assert result.ok is False
+    assert "main Peptide Direct to OTF window" in result.message
+
+
+def test_unit_aware_settings_dialog_manifest_path_is_read_only():
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    dialog = UnitAwareSettingsDialog(
+        current_config=UnitAwareGuiConfig(manifest_path="unit_aware_manifest.json")
+    )
+
+    assert dialog.lineEdit_current_manifest_path.text() == "unit_aware_manifest.json"
+    assert dialog.lineEdit_current_manifest_path.isReadOnly() is True
+    assert not hasattr(dialog, "pushButton_browse_manifest")
+    assert dialog.tabs.count() == 1
+
+    dialog.close()
+    app.processEvents()
 
 
 def test_unit_aware_gui_validation_passes_with_matching_peptide_header(tmp_path):
