@@ -87,6 +87,7 @@ class TaxaFuncAnalyzer:
         self.preprocess_methods: Optional[Dict] = None # store the data preprocess methods
         self.analysis_unit_col = "analysis_unit_id"
         self.unit_peptide_col = "UnitAwareSequence"
+        self.internal_unit_peptide_col = "_MetaXUnitAwarePeptideID"
         self.unit_aware_mode = False
         self.peptide_identity_col = self.peptide_col_name
         
@@ -219,20 +220,23 @@ class TaxaFuncAnalyzer:
             self.peptide_identity_col = self.peptide_col_name
             return
 
-        if self.unit_peptide_col in self.original_df.columns:
-            self.unit_aware_mode = True
-            self.peptide_identity_col = self.unit_peptide_col
-        elif (
+        if (
             self.analysis_unit_col in self.original_df.columns
             and self.peptide_col_name in self.original_df.columns
         ):
             self.unit_aware_mode = True
-            self.original_df[self.unit_peptide_col] = (
-                self.original_df[self.analysis_unit_col].astype(str)
-                + "||"
-                + self.original_df[self.peptide_col_name].astype(str)
-            )
+            self.peptide_identity_col = self.internal_unit_peptide_col
+            if self.peptide_identity_col not in self.original_df.columns:
+                self.original_df[self.peptide_identity_col] = (
+                    self.original_df[self.analysis_unit_col].astype(str)
+                    + "||"
+                    + self.original_df[self.peptide_col_name].astype(str)
+                )
+        elif self.unit_peptide_col in self.original_df.columns:
+            self.unit_aware_mode = True
             self.peptide_identity_col = self.unit_peptide_col
+            if self.peptide_col_name not in self.original_df.columns:
+                self.original_df[self.peptide_col_name] = self.original_df[self.unit_peptide_col].astype(str)
         else:
             self.unit_aware_mode = False
             self.peptide_identity_col = self.peptide_col_name

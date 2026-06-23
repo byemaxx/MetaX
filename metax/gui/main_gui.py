@@ -3838,6 +3838,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text().strip()
+        duplicate_peptide_handling_mode = (
+            self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip() or "sum"
+        )
 
         required_values = [
             ("Peptide table", peptide_table_path),
@@ -3880,6 +3883,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if lca_threshold < 0 or lca_threshold > 1:
             QMessageBox.warning(self.MainWindow, "Warning", "LCA threshold must be between 0 and 1.")
             return None
+        if duplicate_peptide_handling_mode not in {"sum", "max", "min", "mean", "first", "keep"}:
+            QMessageBox.warning(
+                self.MainWindow,
+                "Warning",
+                f"Unsupported duplicate peptide handling mode: {duplicate_peptide_handling_mode}",
+            )
+            return None
 
         genome_threshold = None if config.genome_threshold == "auto" else config.genome_threshold
         input_sample_col_prefix = config.input_sample_col_prefix or None
@@ -3889,7 +3899,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 f'run_pep_direct_to_otf_unit_aware: peptide_table_path:{peptide_table_path} '
                 f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
                 f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_aware_manifest_path} '
-                f'genome_threshold:{genome_threshold or "auto"}'
+                f'genome_threshold:{genome_threshold or "auto"} '
+                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode}'
             )
 
             def pep_direct_to_otf_unit_aware_wrapper():
@@ -3908,6 +3919,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     distinct_genome_threshold=0,
                     protein_genome_separator=protein_genome_separator,
                     save_per_unit_outputs=config.save_per_unit_outputs,
+                    duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
                     on_missing_sample=config.on_missing_sample,
                     on_empty_unit=config.on_empty_unit,
                 )
