@@ -10,6 +10,12 @@ from typing import Iterable
 import pandas as pd
 
 from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+from metax.peptide_annotator.peptide_table_prepare import (
+    has_diann_core_columns,
+    is_parquet_path,
+    prepare_diann_parquet_for_direct_otf,
+    read_parquet_columns,
+)
 from metax.peptide_annotator.unit_aware_manifest import (
     UnitAwareManifest,
     load_unit_aware_manifest,
@@ -86,6 +92,7 @@ class UnitAwareOTFAnnotator:
         self.on_missing_sample = on_missing_sample
         self.on_empty_unit = on_empty_unit
         self.n_jobs = n_jobs
+        self.peptide_table_prepare_metadata: dict = {}
 
         for path, label in [
             (self.peptide_table_path, "peptide_table_path"),
@@ -161,28 +168,26 @@ class UnitAwareOTFAnnotator:
         target.write_text(self.unit_aware_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _read_peptide_table(self) -> pd.DataFrame:
-        suffix = self.peptide_table_path.suffix.lower()
-        if suffix in {".parquet", ".pq"}:
-            df = pd.read_parquet(self.peptide_table_path)
-            if {"Run", "Precursor.Quantity"}.issubset(df.columns) and self.peptide_col in df.columns:
-                print(
-                    "Detected long-format DIA-NN parquet; pivoting "
-                    f"{self.peptide_col} x Run using Precursor.Quantity"
-                )
-                wide = (
-                    df.pivot_table(
-                        index=self.peptide_col,
-                        columns="Run",
-                        values="Precursor.Quantity",
-                        aggfunc="sum",
-                        fill_value=0,
-                    )
-                    .reset_index()
-                    .rename_axis(None, axis=1)
-                )
-                wide.columns = [str(col) for col in wide.columns]
-                return wide
-            return df
+        if is_parquet_path(self.peptide_table_path):
+            parquet_columns = read_parquet_columns(self.peptide_table_path)
+            if not has_diann_core_columns(parquet_columns):
+                self.peptide_table_prepare_metadata = {
+                    "input_peptide_table_format": "parquet",
+                    "input_peptide_table_original_path": str(self.peptide_table_path),
+                }
+                return pd.read_parquet(self.peptide_table_path)
+            prepared = prepare_diann_parquet_for_direct_otf(
+                self.peptide_table_path,
+                sample_column_prefix="",
+            )
+            self.peptide_col = prepared.peptide_col
+            self.peptide_table_prepare_metadata = dict(prepared.metadata)
+            print(
+                "Detected long-format DIA-NN parquet; pivoting "
+                f"{prepared.peptide_col} x Run using {prepared.intensity_col}"
+            )
+            return prepared.dataframe
+        self.peptide_table_prepare_metadata = {}
         return pd.read_csv(self.peptide_table_path, sep=self.table_separator)
 
     def _record_summary(
@@ -379,6 +384,7 @@ class UnitAwareOTFAnnotator:
                         "unit_aware_manifest_path": str(self.unit_aware_manifest_path),
                         "analysis_unit_id": unit.analysis_unit_id,
                         "selected_genome_threshold": manifest.selected_genome_threshold,
+                        **self.peptide_table_prepare_metadata,
                     },
                 )
 
@@ -443,6 +449,7 @@ class UnitAwareOTFAnnotator:
             "n_units": len(manifest.units),
             "n_manifest_samples": len(manifest_samples),
             "output_path": str(self.output_path),
+            **self.peptide_table_prepare_metadata,
         }
         (self.artifacts_dir / "run_summary.json").write_text(
             json.dumps(manifest_summary, indent=2),

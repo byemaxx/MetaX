@@ -115,6 +115,16 @@ try:
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
     from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+    from ..peptide_annotator.peptide_table_prepare import (
+        DIANN_ERROR_COLUMN,
+        DIANN_PEPTIDE_COLUMN,
+        DIANN_SCORE_COLUMN,
+        diann_parquet_intensity_prefix,
+        diann_parquet_required_columns,
+        is_parquet_path,
+        prepare_diann_parquet_for_direct_otf,
+        select_diann_intensity_column,
+    )
     from ..peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
 
     from ..database_builder.database_builder_own import build_db
@@ -176,6 +186,16 @@ except (ImportError, ValueError):
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
     from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+    from metax.peptide_annotator.peptide_table_prepare import (
+        DIANN_ERROR_COLUMN,
+        DIANN_PEPTIDE_COLUMN,
+        DIANN_SCORE_COLUMN,
+        diann_parquet_intensity_prefix,
+        diann_parquet_required_columns,
+        is_parquet_path,
+        prepare_diann_parquet_for_direct_otf,
+        select_diann_intensity_column,
+    )
     from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
 
     from metax.database_builder.database_builder_own import build_db
@@ -2545,23 +2565,23 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     @staticmethod
     def _is_parquet_path(file_path: str) -> bool:
-        return str(file_path).lower().endswith(('.parquet', '.parq'))
+        return is_parquet_path(file_path)
 
     @staticmethod
-    def _diann_parquet_required_columns() -> list[str]:
-        return ['Run', 'Stripped.Sequence', 'Evidence', 'Q.Value', 'Precursor.Normalised']
+    def _diann_parquet_required_columns(columns: list[str]) -> list[str]:
+        return diann_parquet_required_columns(columns, require_score_columns=True)
 
     @staticmethod
-    def _diann_parquet_intensity_prefix() -> str:
-        return 'Precursor.Normalised.'
+    def _diann_parquet_intensity_prefix(intensity_col: str) -> str:
+        return diann_parquet_intensity_prefix(intensity_col)
 
     @staticmethod
     def _diann_parquet_score_col() -> str:
-        return 'Evidence'
+        return DIANN_SCORE_COLUMN
 
     @staticmethod
     def _diann_parquet_error_col() -> str:
-        return 'Q.Value'
+        return DIANN_ERROR_COLUMN
 
     def _apply_diann_parquet_metaumbra_columns(self) -> None:
         self.lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col.setText(
@@ -2828,11 +2848,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             columns, preview_df = self._read_pep_direct_to_otf_peptide_table_preview(peptide_table_path)
             peptide_col = self._infer_pep_direct_to_otf_peptide_column(columns)
             if self._is_parquet_path(peptide_table_path):
-                missing = [col for col in self._diann_parquet_required_columns() if col not in columns]
-                if missing:
-                    raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
-                peptide_col = 'Stripped.Sequence'
-                sample_prefix = self._diann_parquet_intensity_prefix()
+                self._diann_parquet_required_columns(columns)
+                peptide_col = DIANN_PEPTIDE_COLUMN
+                intensity_col = select_diann_intensity_column(columns)
+                sample_prefix = self._diann_parquet_intensity_prefix(intensity_col)
                 self._apply_diann_parquet_metaumbra_columns()
             else:
                 sample_prefix = self._infer_pep_direct_to_otf_sample_prefix(columns, preview_df)
@@ -2860,117 +2879,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 f"Auto-detected prefix from peptide table: {sample_prefix}"
             )
 
-    @staticmethod
-    def _safe_sample_column_name(prefix: str, run: str) -> str:
-        run = str(run).strip()
-        run_name = os.path.splitext(ntpath.basename(run))[0] if run else 'unknown_run'
-        run_name = re.sub(r'[^A-Za-z0-9_.-]+', '_', run_name).strip('_')
-        return f'{prefix}{run_name or "unknown_run"}'
-
     def _prepare_diann_parquet_for_pep_direct_to_otf(
         self,
         parquet_path: str,
         output_path: str,
     ) -> tuple[str, str, str, str, dict]:
-        required_columns = self._diann_parquet_required_columns()
         output_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
         output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'pep_direct_to_otf'
         prepared_path = os.path.join(output_dir, f'{output_stem}_diann_parquet_peptide_table.tsv')
 
         print(f"Preparing DIA-NN parquet peptide table: {parquet_path}")
-        try:
-            df = pd.read_parquet(parquet_path, columns=required_columns)
-        except Exception as exc:
-            raise RuntimeError(
-                "Failed to read DIA-NN parquet. Make sure the file is a DIA-NN report parquet "
-                f"with columns {required_columns}."
-            ) from exc
-
-        missing = [col for col in required_columns if col not in df.columns]
-        if missing:
-            raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
-
-        df = df.dropna(subset=['Run', 'Stripped.Sequence'])
-        if df.empty:
-            raise ValueError("DIA-NN parquet contains no rows with both Run and Stripped.Sequence.")
-
-        df['Run'] = df['Run'].astype(str)
-        df['Stripped.Sequence'] = df['Stripped.Sequence'].astype(str)
-        for col in ['Evidence', 'Q.Value', 'Precursor.Normalised']:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-
-        grouped = (
-            df.groupby(['Run', 'Stripped.Sequence'], as_index=False)
-            .agg(
-                Evidence=('Evidence', 'max'),
-                **{
-                    'Q.Value': ('Q.Value', 'min'),
-                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
-                },
-            )
+        prepared = prepare_diann_parquet_for_direct_otf(
+            parquet_path,
+            require_score_columns=True,
         )
-
-        intensity_prefix = self._diann_parquet_intensity_prefix()
-        run_to_column: dict[str, str] = {}
-        used_columns: set[str] = set()
-        for run in sorted(grouped['Run'].dropna().astype(str).unique()):
-            base_column = self._safe_sample_column_name(intensity_prefix, run)
-            column = base_column
-            suffix = 2
-            while column in used_columns:
-                column = f'{base_column}_{suffix}'
-                suffix += 1
-            used_columns.add(column)
-            run_to_column[run] = column
-
-        grouped['sample_col'] = grouped['Run'].map(run_to_column)
-        wide = (
-            grouped.pivot_table(
-                index='Stripped.Sequence',
-                columns='sample_col',
-                values='Precursor.Normalised',
-                aggfunc='sum',
-                fill_value=0,
-            )
-            .reset_index()
-        )
-        wide.columns.name = None
-
-        summary = (
-            grouped.groupby('Stripped.Sequence', as_index=False)
-            .agg(
-                Run=('Run', lambda values: ';'.join(sorted(set(map(str, values))))),
-                Evidence=('Evidence', 'max'),
-                **{
-                    'Q.Value': ('Q.Value', 'min'),
-                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
-                },
-            )
-        )
-
-        prepared_df = summary.merge(wide, on='Stripped.Sequence', how='left')
-        ordered_cols = [
-            'Run',
-            'Stripped.Sequence',
-            'Evidence',
-            'Q.Value',
-            'Precursor.Normalised',
-        ] + [col for col in prepared_df.columns if col.startswith(intensity_prefix)]
-        prepared_df = prepared_df.loc[:, ordered_cols]
-        prepared_df.to_csv(prepared_path, sep='\t', index=False)
-
+        prepared.dataframe.to_csv(prepared_path, sep='\t', index=False)
         metadata = {
-            "input_peptide_table_format": "diann_parquet",
-            "input_peptide_table_original_path": parquet_path,
+            **prepared.metadata,
             "prepared_peptide_table_path": prepared_path,
-            "prepared_peptide_rows": int(prepared_df.shape[0]),
-            "prepared_sample_columns": len(run_to_column),
         }
         print(
             "Prepared DIA-NN parquet peptide table: "
-            f"{prepared_path} (peptides={prepared_df.shape[0]}, runs={len(run_to_column)})"
+            f"{prepared_path} (peptides={prepared.dataframe.shape[0]}, "
+            f"runs={prepared.metadata['prepared_sample_columns']}, "
+            f"intensity={prepared.intensity_col})"
         )
-        return prepared_path, '\t', 'Stripped.Sequence', intensity_prefix, metadata
+        return (
+            prepared_path,
+            '\t',
+            prepared.peptide_col,
+            prepared.intensity_col_prefix,
+            metadata,
+        )
         
     def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
         digested_genome_folder_path = QFileDialog.getExistingDirectory(
@@ -3964,8 +3904,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         parquet_conversion_metadata = {}
         if self._is_parquet_path(peptide_table_path):
             table_separator = '\t'
-            peptide_col = peptide_col or 'Stripped.Sequence'
-            intensity_col_prefix = intensity_col_prefix or self._diann_parquet_intensity_prefix()
+            peptide_col = peptide_col or DIANN_PEPTIDE_COLUMN
+            if not intensity_col_prefix:
+                parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+                intensity_col_prefix = self._diann_parquet_intensity_prefix(
+                    select_diann_intensity_column(parquet_columns)
+                )
             self._apply_diann_parquet_metaumbra_columns()
 
         for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
