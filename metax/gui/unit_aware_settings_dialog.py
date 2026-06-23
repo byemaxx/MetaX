@@ -7,7 +7,6 @@ import warnings
 
 import pandas as pd
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMessageBox
 
 from metax.peptide_annotator.unit_aware_manifest import (
     load_unit_aware_manifest,
@@ -32,6 +31,46 @@ class UnitAwareManifestValidationResult:
     manifest_samples: list[str]
     mapped_samples: dict[str, str]
     missing_samples: list[str]
+    details: str = ""
+
+
+class UnitAwareValidationResultDialog(QtWidgets.QDialog):
+    def __init__(self, result: UnitAwareManifestValidationResult, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Unit-aware Manifest Validation")
+        self.setModal(True)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        status_label = QtWidgets.QLabel(
+            "Validation passed." if result.ok else "Validation failed.",
+            self,
+        )
+        status_label.setStyleSheet(
+            "font-weight: bold; color: #176b36;" if result.ok else "font-weight: bold; color: #a12828;"
+        )
+        layout.addWidget(status_label)
+
+        self.result_text = QtWidgets.QPlainTextEdit(self)
+        self.result_text.setReadOnly(True)
+        self.result_text.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        text = result.message
+        if result.details:
+            text += "\n\nDetails:\n" + result.details
+        self.result_text.setPlainText(text)
+        layout.addWidget(self.result_text, 1)
+
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close, self)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+        screen = QtWidgets.QApplication.primaryScreen()
+        available = screen.availableGeometry() if screen is not None else None
+        if available is not None:
+            width = min(760, max(320, int(available.width() * 0.85)), available.width())
+            height = min(520, max(240, int(available.height() * 0.80)), available.height())
+        else:
+            width, height = 760, 520
+        self.resize(width, height)
 
 
 def _read_peptide_table_header_columns(peptide_table_path: str, separator: str) -> list[str] | None:
@@ -46,6 +85,14 @@ def _read_peptide_table_header_columns(peptide_table_path: str, separator: str) 
             # TODO: Add an optional fastparquet fallback if this becomes needed.
             return None
     return [str(col) for col in pd.read_csv(path, sep=separator, nrows=0).columns]
+
+
+def _read_long_format_run_columns(peptide_table_path: str) -> list[str]:
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+
+    run_column = pq.read_table(peptide_table_path, columns=["Run"]).column("Run")
+    return [str(value) for value in pc.unique(run_column).to_pylist() if value is not None]
 
 
 def _all_manifest_samples(manifest) -> list[str]:
@@ -97,6 +144,7 @@ def validate_unit_aware_manifest_for_gui(
     missing_samples: list[str] = []
     header_validation_skipped = False
     header_skip_reason = ""
+    long_format_detected = False
 
     peptide_table_path = str(peptide_table_path or "").strip()
     if peptide_table_path:
@@ -131,11 +179,27 @@ def validate_unit_aware_manifest_for_gui(
                     {},
                     manifest_samples,
                 )
+            candidate_sample_columns = peptide_columns
+            if (
+                Path(peptide_table_path).suffix.lower() in {".parquet", ".pq"}
+                and {"Run", "Precursor.Quantity"}.issubset(peptide_columns)
+            ):
+                try:
+                    candidate_sample_columns = _read_long_format_run_columns(peptide_table_path)
+                    long_format_detected = True
+                except Exception as exc:
+                    return UnitAwareManifestValidationResult(
+                        False,
+                        f"Could not read DIA-NN Run values from the parquet file:\n{exc}",
+                        manifest_samples,
+                        {},
+                        manifest_samples,
+                    )
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
                     mapped_samples = resolve_manifest_sample_columns(
-                        peptide_columns=peptide_columns,
+                        peptide_columns=candidate_sample_columns,
                         manifest_sample_columns=manifest_samples,
                         output_sample_col_prefix="Intensity_",
                         input_sample_col_prefix=input_sample_col_prefix or None,
@@ -151,14 +215,28 @@ def validate_unit_aware_manifest_for_gui(
                 )
             missing_samples = [sample for sample in manifest_samples if sample not in mapped_samples]
             if missing_samples and on_missing_sample == "error":
-                missing_text = ", ".join(missing_samples)
+                example_count = min(8, len(missing_samples))
+                missing_examples = ", ".join(missing_samples[:example_count])
+                remaining_count = len(missing_samples) - example_count
+                if remaining_count:
+                    missing_examples += f", ... ({remaining_count} more)"
+                long_format_hint = ""
+                if long_format_detected:
+                    long_format_hint = (
+                        "\nLong-format DIA-NN parquet detected. Run values were treated as sample columns; "
+                        "check that the manifest sample names match the Run names."
+                    )
                 return UnitAwareManifestValidationResult(
                     False,
-                    "Manifest sample-column validation failed:\n"
-                    f"Missing peptide table columns for manifest samples: {missing_text}",
+                    "Manifest sample-column validation failed.\n"
+                    f"Mapped samples: {len(mapped_samples)}/{len(manifest_samples)}\n"
+                    f"Missing samples: {len(missing_samples)}\n"
+                    f"Examples: {missing_examples}"
+                    f"{long_format_hint}",
                     manifest_samples,
                     mapped_samples,
                     missing_samples,
+                    "Missing manifest samples:\n" + "\n".join(missing_samples),
                 )
 
     unit_lines = []
@@ -175,6 +253,10 @@ def validate_unit_aware_manifest_for_gui(
                 "Peptide table header validation: skipped",
                 f"Reason: {header_skip_reason}",
             ]
+        )
+    elif long_format_detected:
+        header_status_lines.append(
+            "Peptide table format: long-format DIA-NN parquet (Run values validated as sample columns)"
         )
     message = (
         "Manifest schema: valid\n"
@@ -275,12 +357,8 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
         )
-        if not result.ok:
-            QMessageBox.warning(self, "Validation", result.message)
-            return False
-
-        QMessageBox.information(self, "Validation", result.message)
-        return True
+        UnitAwareValidationResultDialog(result, self).exec_()
+        return result.ok
 
     def accept(self) -> None:
         if not self._validate_manifest():
