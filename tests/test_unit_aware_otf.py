@@ -66,7 +66,7 @@ def _write_taxafunc_db(path):
         conn.commit()
 
 
-def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path):
+def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys):
     calls = []
 
     class FakeMapper:
@@ -137,6 +137,13 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path):
     assert output.is_file()
     assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_sample_column_mapping.tsv").is_file()
     assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_annotation_summary.tsv").is_file()
+    progress_log = capsys.readouterr().out
+    assert "[Unit-aware] Preparing annotation for 2 units" in progress_log
+    assert "[Unit-aware] Unit 1 of 2: u1 started" in progress_log
+    assert "[Unit-aware] Unit 1 of 2: u1 completed" in progress_log
+    assert "[Unit-aware] Unit 2 of 2: u2 started" in progress_log
+    assert "[Unit-aware] Unit 2 of 2: u2 completed" in progress_log
+    assert "2 units total, 2 completed, 0 skipped" in progress_log
 
 
 def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
@@ -226,7 +233,7 @@ def test_unit_aware_otf_real_sqlite_integration(tmp_path):
     assert output.is_file()
 
 
-def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path):
+def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path, capsys):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10], "Intensity_s2": [0]}).to_csv(
         peptide_table,
@@ -251,3 +258,6 @@ def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path):
 
     assert "UnitAwareSequence" in result.columns
     assert result["UnitAwareSequence"].tolist() == ["u1||PEPA"]
+    progress_log = capsys.readouterr().out
+    assert "[Unit-aware] Unit 2 of 2: u2 skipped" in progress_log
+    assert "2 units total, 1 completed, 1 skipped" in progress_log

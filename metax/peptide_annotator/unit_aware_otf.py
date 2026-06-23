@@ -253,6 +253,12 @@ class UnitAwareOTFAnnotator:
             genome_threshold=self.genome_threshold,
             strict=True,
         )
+        total_units = len(manifest.units)
+        print(
+            f"[Unit-aware] Preparing annotation for {total_units} units "
+            f"(genome threshold: {manifest.selected_genome_threshold}).",
+            flush=True,
+        )
         peptide_df = self._read_peptide_table()
         if self.peptide_col not in peptide_df.columns:
             raise ValueError(f"Peptide column {self.peptide_col!r} not found in peptide table")
@@ -264,6 +270,11 @@ class UnitAwareOTFAnnotator:
             output_sample_col_prefix=self.output_sample_col_prefix,
             input_sample_col_prefix=self.input_sample_col_prefix,
             on_missing=self.on_missing_sample,
+        )
+        print(
+            f"[Unit-aware] Sample mapping complete: {len(sample_mapping)} of "
+            f"{len(manifest_samples)} manifest samples mapped.",
+            flush=True,
         )
 
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -281,12 +292,22 @@ class UnitAwareOTFAnnotator:
 
         with tempfile.TemporaryDirectory(prefix="metax_unit_aware_") as tmp:
             tmpdir = Path(tmp)
-            for unit in manifest.units.values():
+            for unit_index, unit in enumerate(manifest.units.values(), start=1):
+                progress_prefix = (
+                    f"[Unit-aware] Unit {unit_index} of {total_units}: "
+                    f"{unit.analysis_unit_id}"
+                )
+                print(
+                    f"{progress_prefix} started "
+                    f"({len(unit.sample_columns)} samples, {len(unit.genome_ids)} genomes).",
+                    flush=True,
+                )
                 mapped_samples = [sample for sample in unit.sample_columns if sample in sample_mapping]
                 try:
                     unit_df, _ = self._build_unit_dataframe(peptide_df, unit.sample_columns, sample_mapping)
                 except ValueError as exc:
                     if self.on_empty_unit == "error":
+                        print(f"{progress_prefix} failed: {exc}", flush=True)
                         raise
                     warnings.warn(str(exc), stacklevel=2)
                     self._record_summary(
@@ -301,11 +322,13 @@ class UnitAwareOTFAnnotator:
                         "skipped",
                         str(exc),
                     )
+                    print(f"{progress_prefix} skipped: {exc}", flush=True)
                     continue
 
                 if unit_df.empty:
                     message = "unit has no peptides with non-zero mapped sample intensity"
                     if self.on_empty_unit == "error":
+                        print(f"{progress_prefix} failed: {message}", flush=True)
                         raise ValueError(f"{unit.analysis_unit_id}: {message}")
                     warnings.warn(f"{unit.analysis_unit_id}: {message}", stacklevel=2)
                     self._record_summary(
@@ -320,6 +343,7 @@ class UnitAwareOTFAnnotator:
                         "skipped",
                         message,
                     )
+                    print(f"{progress_prefix} skipped: {message}", flush=True)
                     continue
 
                 unit_output_path = self._unit_output_path(unit.analysis_unit_id, tmpdir)
@@ -377,6 +401,11 @@ class UnitAwareOTFAnnotator:
                     "",
                     mapper=mapper,
                 )
+                print(
+                    f"{progress_prefix} completed "
+                    f"({len(unit_df)} peptides, {len(unit_otf_df)} OTF rows).",
+                    flush=True,
+                )
 
         merged = self._merge_unit_outputs(unit_otf_dfs, canonical_sample_cols)
         merged.to_csv(self.output_path, sep="\t", index=False)
@@ -399,6 +428,14 @@ class UnitAwareOTFAnnotator:
             ],
         )
         summary_df.to_csv(self.artifacts_dir / "unit_annotation_summary.tsv", sep="\t", index=False)
+        completed_units = int((summary_df["status"] == "ok").sum()) if not summary_df.empty else 0
+        skipped_units = int((summary_df["status"] == "skipped").sum()) if not summary_df.empty else 0
+        print(
+            f"[Unit-aware] Annotation complete: {total_units} units total, "
+            f"{completed_units} completed, {skipped_units} skipped, "
+            f"{len(merged)} merged OTF rows.",
+            flush=True,
+        )
 
         manifest_summary = {
             "unit_aware_manifest_path": str(self.unit_aware_manifest_path),
