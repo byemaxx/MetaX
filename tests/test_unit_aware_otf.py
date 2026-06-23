@@ -1,11 +1,18 @@
 import json
 import sqlite3
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
 from metax.cli.annotate import build_parser
-from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
+from metax.peptide_annotator.unit_aware_otf import (
+    UnitAwareOTFAnnotator,
+    build_global_unit_aware_peptide_protein_map,
+)
+from metax.peptide_annotator.pep_table_to_otf import (
+    query_peptide_proteins_from_digested_genome_folders_nested,
+)
 
 
 def _write_manifest(path):
@@ -328,3 +335,279 @@ def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path, caps
     progress_log = capsys.readouterr().out
     assert "[Unit-aware] Unit 2 of 2: u2 skipped" in progress_log
     assert "2 units total, 1 completed, 1 skipped" in progress_log
+
+
+def _write_shared_genome_manifest(path):
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "metaumbra.unit_aware_manifest.v1",
+                "generated_by": {"tool": "MetaUmbra", "version": "1.3.5"},
+                "default_genome_threshold": "q0.05",
+                "files": {},
+                "units": {
+                    "u1": {
+                        "sample_columns": ["s1"],
+                        "n_samples": 1,
+                        "genome_ids_q005": ["g1", "g2"],
+                        "genome_ids_q001": ["g1", "g2"],
+                    },
+                    "u2": {
+                        "sample_columns": ["s2"],
+                        "n_samples": 1,
+                        "genome_ids_q005": ["g2", "g3"],
+                        "genome_ids_q001": ["g2", "g3"],
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_global_unit_aware_mapping_scans_shared_genomes_once(monkeypatch, tmp_path):
+    manifest_path = tmp_path / "manifest.json"
+    _write_shared_genome_manifest(manifest_path)
+    from metax.peptide_annotator.unit_aware_manifest import load_unit_aware_manifest
+
+    manifest = load_unit_aware_manifest(manifest_path)
+    calls = []
+
+    def fake_query(**kwargs):
+        calls.append(kwargs)
+        return {
+            "PEPA": {
+                "g1": {"g1_p1"},
+                "g2": {"g2_p2"},
+                "g3": {"g3_p3"},
+            },
+            "PEPB": {"g2": {"g2_p4"}},
+        }
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        fake_query,
+    )
+    result = build_global_unit_aware_peptide_protein_map(
+        peptide_df=pd.DataFrame(
+            {
+                "Sequence": ["PEPA", "PEPB", "PEPC"],
+                "s1": [1, 0, 0],
+                "s2": [0, 1, 0],
+            }
+        ),
+        peptide_col="Sequence",
+        manifest=manifest,
+        digested_genome_folders=str(tmp_path),
+    )
+
+    assert len(calls) == 1
+    assert calls[0]["selected_genomes_set"] == {"g1", "g2", "g3"}
+    assert calls[0]["peptide_list"] == ["PEPA", "PEPB", "PEPC"]
+    assert result == {
+        "PEPA": {
+            "g1": {"g1_p1"},
+            "g2": {"g2_p2"},
+            "g3": {"g3_p3"},
+        },
+        "PEPB": {"g2": {"g2_p4"}},
+    }
+
+
+def test_nested_digested_scanner_reads_each_union_genome_once(monkeypatch, tmp_path):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    for genome_id, rows in {
+        "g1": [("p1", "PEPA")],
+        "g2": [("p2;p3", "PEPA"), ("p4", "PEPB")],
+        "g3": [("g3_p5", "PEPB")],
+        "unused": [("p6", "PEPA")],
+    }.items():
+        pd.DataFrame(rows, columns=["Protein", "Peptide"]).to_csv(
+            digested_dir / f"{genome_id}.tsv",
+            sep="\t",
+            index=False,
+        )
+
+    import metax.peptide_annotator.pep_table_to_otf as mapping_module
+
+    original_processor = mapping_module._process_digested_genome_batch_for_nested_mapping
+    scanned_files = []
+
+    def recording_processor(file_paths, *args, **kwargs):
+        scanned_files.extend(file_paths)
+        return original_processor(file_paths, *args, **kwargs)
+
+    monkeypatch.setattr(
+        mapping_module,
+        "_process_digested_genome_batch_for_nested_mapping",
+        recording_processor,
+    )
+    result = query_peptide_proteins_from_digested_genome_folders_nested(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA", "PEPB", "ABSENT"],
+        selected_genomes_set={"g1", "g2", "g3"},
+        n_jobs=2,
+    )
+
+    assert sorted(Path(path).stem for path in scanned_files) == ["g1", "g2", "g3"]
+    assert result == {
+        "PEPA": {
+            "g1": {"g1_p1"},
+            "g2": {"g2_p2", "g2_p3"},
+        },
+        "PEPB": {
+            "g2": {"g2_p4"},
+            "g3": {"g3_p5"},
+        },
+    }
+
+
+def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatch, tmp_path):
+    manifest = tmp_path / "manifest.json"
+    _write_shared_genome_manifest(manifest)
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "s1": [10, 0],
+            "s2": [20, 5],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    taxafunc_db.write_text("", encoding="utf-8")
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    calls = []
+    mapper_inputs = []
+
+    def fake_query(**kwargs):
+        calls.append(kwargs)
+        return {
+            "PEPA": {
+                "g1": {"g1_p1"},
+                "g2": {"g2_p2"},
+                "g3": {"g3_p3"},
+            },
+            "PEPB": {"g3": {"g3_p4"}},
+        }
+
+    class FakeMapper:
+        def __init__(self, **kwargs):
+            assert kwargs["continue_base_on_annotaied_peptide_table"] is True
+            self.peptide_table = kwargs["peptide_df"].copy()
+            self.final_peptide_table = self.peptide_table.copy()
+            self.peptides_after_mapping = len(self.peptide_table)
+            self.selected_genomes_num = len(kwargs["genome_list"])
+            self.kwargs = kwargs
+            mapper_inputs.append(self.peptide_table.copy())
+
+        def all_in_one(self, **kwargs):
+            sample_cols = [c for c in self.peptide_table if c.startswith("Intensity_")]
+            unit_genomes = self.kwargs["genome_list"]
+            unit_label = "+".join(unit_genomes)
+            return pd.DataFrame(
+                {
+                    "Sequence": self.peptide_table["Sequence"],
+                    "Proteins": self.peptide_table["Proteins"],
+                    "LCA_level": ["genome"] * len(self.peptide_table),
+                    "Taxon": [f"d__Bacteria|m__{unit_label}"] * len(self.peptide_table),
+                    "Taxon_prop": [1.0] * len(self.peptide_table),
+                    "Mock_func": [f"func_{unit_label}"] * len(self.peptide_table),
+                    **{col: self.peptide_table[col].tolist() for col in sample_cols},
+                }
+            )
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        fake_query,
+    )
+    monkeypatch.setattr("metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper", FakeMapper)
+
+    result = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "out.tsv"),
+        digested_genome_folders=str(digested_dir),
+    ).run()
+
+    assert len(calls) == 1
+    assert mapper_inputs[0]["Proteins"].tolist() == ["g1_p1;g2_p2"]
+    assert mapper_inputs[1]["Proteins"].tolist() == ["g2_p2;g3_p3", "g3_p4"]
+    assert result.loc[result["analysis_unit_id"] == "u1", "Proteins"].tolist() == ["g1_p1;g2_p2"]
+    assert result.loc[result["analysis_unit_id"] == "u2", "Proteins"].tolist() == [
+        "g2_p2;g3_p3",
+        "g3_p4",
+    ]
+    pepa = result.loc[result["Sequence"] == "PEPA"].set_index("analysis_unit_id")
+    assert pepa.loc["u1", "Taxon"] != pepa.loc["u2", "Taxon"]
+    assert pepa.loc["u1", "Mock_func"] != pepa.loc["u2", "Mock_func"]
+    artifacts_dir = tmp_path / "out_artifacts"
+    assert not list(artifacts_dir.rglob("*.db"))
+    assert not list(artifacts_dir.rglob("*.parquet"))
+    assert not list(artifacts_dir.rglob("*global*map*"))
+
+
+@pytest.mark.parametrize("on_empty_unit", ["warn-skip", "error"])
+def test_unit_aware_folder_mode_handles_unit_without_mapped_proteins(
+    monkeypatch,
+    tmp_path,
+    on_empty_unit,
+):
+    manifest = tmp_path / "manifest.json"
+    _write_manifest(manifest)
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "s1": [10],
+            "s2": [10],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    taxafunc_db.write_text("", encoding="utf-8")
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        lambda **kwargs: {"PEPA": {"g1": {"g1_p1"}}},
+    )
+
+    class FakeMapper:
+        def __init__(self, **kwargs):
+            self.peptide_table = kwargs["peptide_df"].copy()
+            self.final_peptide_table = self.peptide_table.copy()
+            self.peptides_after_mapping = len(self.peptide_table)
+            self.selected_genomes_num = len(kwargs["genome_list"])
+
+        def all_in_one(self, **kwargs):
+            return pd.DataFrame(
+                {
+                    "Sequence": self.peptide_table["Sequence"],
+                    "Proteins": self.peptide_table["Proteins"],
+                    "LCA_level": ["genome"],
+                    "Taxon": ["d__Bacteria"],
+                    "Taxon_prop": [1.0],
+                    "Intensity_s1": self.peptide_table.get("Intensity_s1", 0),
+                }
+            )
+
+    monkeypatch.setattr("metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper", FakeMapper)
+    annotator = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "out.tsv"),
+        digested_genome_folders=str(digested_dir),
+        on_empty_unit=on_empty_unit,
+    )
+
+    if on_empty_unit == "error":
+        with pytest.raises(ValueError, match="u2: unit has no peptides mapped"):
+            annotator.run()
+    else:
+        with pytest.warns(UserWarning, match="u2: unit has no peptides mapped"):
+            result = annotator.run()
+        assert result["analysis_unit_id"].tolist() == ["u1"]

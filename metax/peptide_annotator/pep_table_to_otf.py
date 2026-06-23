@@ -338,6 +338,156 @@ def _process_digested_genome_batch_for_mapping(
     return mapping
 
 
+def _process_digested_genome_batch_for_nested_mapping(
+    file_paths: list[str],
+    peptide_set: set[str],
+    protein_genome_separator: str,
+    digested_peptide_col: str,
+    digested_protein_col: str,
+    sep: str = "\t",
+    chunksize: int = 500_000,
+) -> dict[str, dict[str, set[str]]]:
+    """Process digested genome TSVs into peptide -> genome -> proteins."""
+    mapping: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+
+    for file_path in file_paths:
+        genome_id = pathlib.Path(file_path).stem
+        try:
+            for chunk in pd.read_csv(
+                file_path,
+                sep=sep,
+                usecols=[digested_peptide_col, digested_protein_col],
+                dtype={digested_peptide_col: "string", digested_protein_col: "string"},
+                chunksize=chunksize,
+                engine="c",
+            ):
+                chunk = chunk.dropna(subset=[digested_peptide_col, digested_protein_col])
+                if chunk.empty:
+                    continue
+
+                hit = chunk[chunk[digested_peptide_col].astype(str).isin(peptide_set)]
+                if hit.empty:
+                    continue
+
+                for peptide, protein_value in zip(
+                    hit[digested_peptide_col].astype(str),
+                    hit[digested_protein_col].astype(str),
+                ):
+                    mapping[peptide][genome_id].update(
+                        _normalize_protein_ids(
+                            genome_id=genome_id,
+                            protein_value=protein_value,
+                            protein_genome_separator=protein_genome_separator,
+                        )
+                    )
+        except Exception:
+            # Match the existing scanner's robustness: skip a malformed genome file.
+            continue
+
+    return {
+        peptide: {genome_id: set(proteins) for genome_id, proteins in genome_map.items()}
+        for peptide, genome_map in mapping.items()
+    }
+
+
+def query_peptide_proteins_from_digested_genome_folders_nested(
+    digested_genome_folders: str | list[str],
+    peptide_list: list[str],
+    selected_genomes_set: set[str],
+    protein_genome_separator: str = "_",
+    sep: str = "\t",
+    n_jobs: int | None = None,
+    digested_peptide_col: str | None = None,
+    digested_protein_col: str | None = None,
+) -> dict[str, dict[str, set[str]]]:
+    """Scan selected genome TSVs once into an in-memory nested mapping."""
+    t0 = time.time()
+    folders = (
+        [digested_genome_folders]
+        if isinstance(digested_genome_folders, str)
+        else list(digested_genome_folders)
+    )
+    valid_folders = [folder for folder in folders if folder and os.path.isdir(folder)]
+    if not valid_folders:
+        raise ValueError(f"No valid digested genome folders found: {folders}")
+
+    selected_genomes = {str(genome_id) for genome_id in selected_genomes_set}
+    all_files = [
+        str(path)
+        for folder in valid_folders
+        for path in pathlib.Path(folder).glob("*.tsv")
+        if path.stem in selected_genomes
+    ]
+    if not all_files:
+        print(
+            "[UnitAwareDigestedScan] No genome TSV files match the manifest genome union.",
+            flush=True,
+        )
+        return {}
+
+    resolved_peptide_col, resolved_protein_col = _resolve_digest_columns_once(
+        first_file=all_files[0],
+        sep=sep,
+        digested_peptide_col=digested_peptide_col,
+        digested_protein_col=digested_protein_col,
+    )
+    peptide_set = {str(peptide) for peptide in peptide_list if str(peptide)}
+    if not peptide_set:
+        return {}
+
+    if n_jobs is None:
+        n_jobs = max(1, (os.cpu_count() or 1) - 1)
+    else:
+        n_jobs = max(1, int(n_jobs))
+    batch_count = max(1, n_jobs * 4)
+    batches = [all_files[index::batch_count] for index in range(batch_count)]
+    batches = [batch for batch in batches if batch]
+    print(
+        f"[UnitAwareDigestedScan] Scanning {len(all_files)} union genome TSVs for "
+        f"{len(peptide_set)} peptides with n_jobs={n_jobs}.",
+        flush=True,
+    )
+
+    merged: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
+        futures = [
+            executor.submit(
+                _process_digested_genome_batch_for_nested_mapping,
+                batch,
+                peptide_set,
+                protein_genome_separator,
+                resolved_peptide_col,
+                resolved_protein_col,
+                sep,
+            )
+            for batch in batches
+        ]
+        for future in tqdm(
+            concurrent.futures.as_completed(futures),
+            total=len(futures),
+            desc="Scanning unit-aware genome union",
+        ):
+            for peptide, genome_map in future.result().items():
+                for genome_id, proteins in genome_map.items():
+                    merged[peptide][genome_id].update(proteins)
+
+    result = {
+        peptide: {genome_id: set(proteins) for genome_id, proteins in genome_map.items()}
+        for peptide, genome_map in merged.items()
+    }
+    protein_count = sum(
+        len(proteins)
+        for genome_map in result.values()
+        for proteins in genome_map.values()
+    )
+    print(
+        f"[UnitAwareDigestedScan] Mapped {len(result)}/{len(peptide_set)} peptides "
+        f"to {protein_count} peptide/genome/protein candidates in {time.time() - t0:.2f}s.",
+        flush=True,
+    )
+    return result
+
+
 def query_peptide_proteins_from_digested_genome_folders(
     digested_genome_folders: str | list[str],
     peptide_list: list[str],
