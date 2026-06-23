@@ -812,7 +812,34 @@ These peptide results use metagenome-assembled genomes (MAGs) as the reference d
 
     ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
 
-### 2. Results from MaxQuant Workflow
+### 2. MetaUmbra Unit-Aware Backend Annotation
+
+MetaX can consume a MetaUmbra `unit_aware_manifest.json` as the preferred backend interface for unit-aware OTF annotation. In this mode, MetaX uses `sample_columns` from each analysis unit to split the peptide intensity table, and uses `genome_ids_q005` or `genome_ids_q001` to restrict peptide-to-protein mapping per unit. If `--genome-threshold` is not provided, the manifest `default_genome_threshold` is used.
+
+This backend is additive to the original/global peptide annotation workflow. If no unit-aware manifest or explicit genome list is provided, the legacy workflow still ranks genomes automatically by peptide coverage before protein reduction. Unit-aware mode does not use that global genome ranking step: each analysis unit receives its own genome list directly from the MetaUmbra manifest.
+
+The unit-aware distinct-genome filter defaults to `0`, so MetaX trusts the manifest-selected genome list. Set `--distinct-genome-threshold` to a value greater than `0` only when you want an additional MetaX-side filter requiring that many distinct peptides per genome after mapping.
+
+Sample columns are matched from manifest `sample_columns` to peptide-table columns in this order: exact name, `Intensity_` prefix, configured output prefix, configured input prefix, stripped `Intensity_`, stripped output prefix, stripped input prefix, leading underscores removed, and raw-file basename without `.raw`, `.mzML`, or `.mzXML`. Use `--input-sample-col-prefix` for inputs such as `LFQ intensity sample_1`.
+
+The merged unit-aware OTF table includes `analysis_unit_id` and `UnitAwareSequence`. `UnitAwareSequence` is an internal peptide evidence ID built as `analysis_unit_id + "||" + Sequence`; MetaX preserves the original `Sequence` column for peptide-level inspection while using `UnitAwareSequence` as the peptide index in unit-aware analysis. Do not deduplicate unit-aware output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
+
+Example:
+
+```bash
+metax-annotate \
+  --unit-aware \
+  --peptide-table report.tsv \
+  --unit-aware-manifest unit_aware_manifest.json \
+  --genome-threshold q0.05 \
+  --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders digested_genomes/ \
+  --output OTF_unit_aware.tsv \
+  --peptide-col Sequence \
+  --input-sample-col-prefix "LFQ intensity "
+```
+
+### 3. Results from MaxQuant Workflow
 
 These peptide results come from the **MetaLab 2.3** MaxQuant workflow.
 

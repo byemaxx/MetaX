@@ -85,6 +85,10 @@ class TaxaFuncAnalyzer:
         self.peptide_num_used = {'taxa': 0, 'func': 0, 'taxa_func': 0, 'protein': 0}
         self.distinct_peptides_list: list|None = None
         self.preprocess_methods: Optional[Dict] = None # store the data preprocess methods
+        self.analysis_unit_col = "analysis_unit_id"
+        self.unit_peptide_col = "UnitAwareSequence"
+        self.unit_aware_mode = False
+        self.peptide_identity_col = self.peptide_col_name
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
@@ -101,6 +105,7 @@ class TaxaFuncAnalyzer:
 
 
         self._set_original_df(df_path)
+        self._configure_peptide_identity()
         self._set_meta(meta_path)
         self._check_if_intensity_cols_numberic()
         self._remove_all_zero_row()
@@ -207,6 +212,48 @@ class TaxaFuncAnalyzer:
         original_col_names = [i.replace(' ', '_') for i in original_col_names]
         original_col_names = [i.replace(self.sample_col_prefix, '') for i in original_col_names]
         self.original_df.columns = original_col_names
+
+    def _configure_peptide_identity(self) -> None:
+        if self.original_df is None or self.any_df_mode:
+            self.unit_aware_mode = False
+            self.peptide_identity_col = self.peptide_col_name
+            return
+
+        if self.unit_peptide_col in self.original_df.columns:
+            self.unit_aware_mode = True
+            self.peptide_identity_col = self.unit_peptide_col
+        elif (
+            self.analysis_unit_col in self.original_df.columns
+            and self.peptide_col_name in self.original_df.columns
+        ):
+            self.unit_aware_mode = True
+            self.original_df[self.unit_peptide_col] = (
+                self.original_df[self.analysis_unit_col].astype(str)
+                + "||"
+                + self.original_df[self.peptide_col_name].astype(str)
+            )
+            self.peptide_identity_col = self.unit_peptide_col
+        else:
+            self.unit_aware_mode = False
+            self.peptide_identity_col = self.peptide_col_name
+
+    def _cols_with_peptide_identity(self, *cols: str) -> list[str]:
+        out: list[str] = []
+        for col in [self.peptide_identity_col, *cols]:
+            if col not in out:
+                out.append(col)
+        return out
+
+    def _cols_for_peptide_table(self, *cols: str) -> list[str]:
+        out = self._cols_with_peptide_identity(*cols)
+        if (
+            self.unit_aware_mode
+            and self.peptide_identity_col != self.peptide_col_name
+            and self.peptide_col_name in self.original_df.columns
+            and self.peptide_col_name not in out
+        ):
+            out.insert(1, self.peptide_col_name)
+        return out
 
 
     def _set_meta(self, meta_path=None) -> None:
@@ -711,7 +758,7 @@ class TaxaFuncAnalyzer:
             self.peptides_linked_dict (dict): A dictionary containing the peptides in taxa, func, and taxa_func.
         """
         print("Creating peptides_linked_dict in taxa, func, and taxa_func...")
-        df = df.copy()[[self.peptide_col_name, 'Taxon', self.func_name]]
+        df = df.copy()[self._cols_with_peptide_identity('Taxon', self.func_name)]
 
         # Use defaultdict for automatic key initialization
         peptides_in_taxa_func = defaultdict(list)
@@ -783,9 +830,9 @@ class TaxaFuncAnalyzer:
         return df[filter_conditions]
     
     def run_lfq_for_taxa_or_func(self, df, target_col: str):
-        target_pep_num_dict = df.groupby(target_col).size().to_dict()
+        target_pep_num_dict = df.groupby(target_col)[self.peptide_identity_col].nunique().to_dict()
         df.drop(['peptide_num'], axis=1, inplace=True)
-        df, _ = run_lfq(df, protein_id=target_col, quant_id=self.peptide_col_name)
+        df, _ = run_lfq(df, protein_id=target_col, quant_id=self.peptide_identity_col)
         df['peptide_num'] = df[target_col].map(target_pep_num_dict)
         df.set_index(target_col, inplace=True)
         return df
@@ -795,9 +842,9 @@ class TaxaFuncAnalyzer:
         df_taxa_func_t = df_taxa_func.copy()
         df_taxa_func_t["taxa_func"] = df_taxa_func_t["Taxon"] + "&&&&" + df_taxa_func_t[self.func_name]
         # create the dict of taxa_func_linked_peptide_num
-        taxa_func_pep_num_dict = df_taxa_func_t.groupby("taxa_func").size().to_dict()
+        taxa_func_pep_num_dict = df_taxa_func_t.groupby("taxa_func")[self.peptide_identity_col].nunique().to_dict()
         df_taxa_func_t = df_taxa_func_t.drop(["Taxon", self.func_name, 'peptide_num'], axis=1)
-        df_taxa_func_t, _ = run_lfq(df_taxa_func_t, protein_id="taxa_func", quant_id=self.peptide_col_name)
+        df_taxa_func_t, _ = run_lfq(df_taxa_func_t, protein_id="taxa_func", quant_id=self.peptide_identity_col)
         # add the peptide_num to the df_taxa_func_t
         df_taxa_func_t["peptide_num"] = df_taxa_func_t["taxa_func"].map(taxa_func_pep_num_dict)
         # expand the taxa_func to Taxon and Function
@@ -811,12 +858,12 @@ class TaxaFuncAnalyzer:
     def calculate_distinct_peptides(self): #! NOT USED YET
         # extract the peptide column and protein_col_name
         print("Calculating distinct peptides list...")
-        extract_cols = [self.peptide_col_name, self.protein_col_name]
+        extract_cols = [self.peptide_identity_col, self.protein_col_name]
         df = self.original_df[extract_cols]
         separate_protein = self.protein_separator
         df['protein_num'] = df[self.protein_col_name].apply(lambda x: len(x.split(separate_protein)))
         df = df[df['protein_num'] == 1]
-        distinct_peptides = df[self.peptide_col_name].tolist()
+        distinct_peptides = df[self.peptide_identity_col].tolist()
         self.distinct_peptides_list = distinct_peptides
         
     
@@ -928,7 +975,7 @@ class TaxaFuncAnalyzer:
 
         # else:                
         # Group by item_col and filter based on peptide number
-        dict_item_pep_num = df.groupby(item_col).size().to_dict()
+        dict_item_pep_num = df.groupby(item_col)[self.peptide_identity_col].nunique().to_dict()
         remove_list = [k for k, v in dict_item_pep_num.items() if v < peptide_num]
 
         # Remove rows based on peptide number threshold
@@ -999,7 +1046,7 @@ class TaxaFuncAnalyzer:
 
         
         # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
-        df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list] # type: ignore
+        df_taxa_pep = df_filtered_peptides[self._cols_with_peptide_identity('Taxon') + self.sample_list] # type: ignore
         print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
         df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
         #TODO: use the peptide number after filtering the minimum peptide number 
@@ -1045,7 +1092,7 @@ class TaxaFuncAnalyzer:
             
         df_func_pep = self.filter_peptides_by_taxa_func(df= self.original_df, func_threshold=func_threshold,
                                     keep_unknow_func=keep_unknow_func, filter_taxa=False, func_name=func_name)
-        df_func_pep = df_func_pep[[self.peptide_col_name, func_name] + self.sample_list] # type: ignore
+        df_func_pep = df_func_pep[self._cols_with_peptide_identity(func_name) + self.sample_list] # type: ignore
         print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
         df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
         if not split_func:
@@ -1189,7 +1236,7 @@ class TaxaFuncAnalyzer:
         
         if not taxa_and_func_only_from_otf:
             # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
-            df_taxa_pep = df_filtered_peptides[[self.peptide_col_name,'Taxon'] + self.sample_list] # type: ignore
+            df_taxa_pep = df_filtered_peptides[self._cols_with_peptide_identity('Taxon') + self.sample_list] # type: ignore
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
             df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
             #TODO: use the peptide number after filtering the minimum peptide number 
@@ -1234,17 +1281,17 @@ class TaxaFuncAnalyzer:
         #Create finalpeptide table
         # do rest of data preprocess, e.g. normalize, transform, batch effect correction
         print("\n-----Starting to perform transformation, normalization, and batch effect correction for [Peptide] table...-----")
-        self.processed_original_df = self.data_preprocess(df=df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list], 
+        self.processed_original_df = self.data_preprocess(df=df_half_processed_peptides[self._cols_for_peptide_table('Taxon', self.func_name) + self.sample_list],
                                                           df_name = 'peptide', **data_preprocess_params)
         # processed_original_df is the peptide table after selected taxa level, func_threshold, outlier detection and handling, then do the rest of data preprocess
         self.peptide_df = self.processed_original_df.drop(['Taxon', self.func_name], axis=1)
-        self.peptide_df = self.peptide_df.set_index(self.peptide_col_name)
+        self.peptide_df = self.peptide_df.set_index(self.peptide_identity_col)
         ###------Peptide Table End------###
         
 
 
         # ----- create taxa_func table -----
-        df_taxa_func = df_half_processed_peptides[[self.peptide_col_name, 'Taxon', self.func_name] + self.sample_list].copy() # type: ignore
+        df_taxa_func = df_half_processed_peptides[self._cols_with_peptide_identity('Taxon', self.func_name) + self.sample_list].copy() # type: ignore
         df_taxa_func['peptide_num'] = 1
         if not split_func:
             df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')
@@ -1316,7 +1363,7 @@ class TaxaFuncAnalyzer:
         Get the dataframe of taxa_func_linked_peptide_num
         Taxa | Function | PepNum
         """
-        dft = self.processed_original_df[[self.peptide_col_name, "Taxon", self.func_name]]
+        dft = self.processed_original_df[[self.peptide_identity_col, "Taxon", self.func_name]]
         taxa_list = dft["Taxon"].unique().tolist()
         temp_dict = {'Taxon': [], 'Function': [], 'PepNum': []}
 
@@ -1324,7 +1371,7 @@ class TaxaFuncAnalyzer:
             df_taxa = dft[dft["Taxon"] == tax]
             func_list = df_taxa[self.func_name].unique().tolist()
             for func in func_list:
-                pep_num = len(df_taxa[df_taxa[self.func_name] == func])
+                pep_num = df_taxa.loc[df_taxa[self.func_name] == func, self.peptide_identity_col].nunique()
                 if pep_num > 0:
                     temp_dict['Taxon'].append(tax)
                     temp_dict['Function'].append(func)
