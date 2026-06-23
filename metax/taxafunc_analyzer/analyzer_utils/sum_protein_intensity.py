@@ -25,7 +25,7 @@ class SumProteinIntensity:
         self.res_intensity_dict = {}  # store all sample to output
         self.rank_dict = {}  # store the rank of protein intensity for each sample temporarily
         self.rank_method = None  # only used for rank method
-        self.extract_col_name = [self.tfa.peptide_col_name, self.tfa.protein_col_name] + self.tfa.sample_list
+        self.extract_col_name = [self.tfa.peptide_identity_col, self.tfa.protein_col_name] + self.tfa.sample_list
         self.df = self.tfa.original_df.loc[:, self.extract_col_name] if df is None else df.loc[:, self.extract_col_name]
         self._init_dicts()
         self.greedy_method = None  # only used for razor method
@@ -46,7 +46,7 @@ class SumProteinIntensity:
     def get_razor_pep_df(self, greedy_method='heap'):
         razor_integrator = RazorSum(df=self.df, 
                             column_map={
-                                        'peptide': self.tfa.peptide_col_name,
+                                        'peptide': self.tfa.peptide_identity_col,
                                         'target': self.tfa.protein_col_name,
                                         'sample_list': self.tfa.sample_list,
                                     }, 
@@ -111,7 +111,7 @@ class SumProteinIntensity:
             # use teh methood in RazorSum
             razor_integrator = RazorSum(df=self.df, 
                                         column_map={
-                                                    'peptide': self.tfa.peptide_col_name,
+                                                    'peptide': self.tfa.peptide_identity_col,
                                                     'target': self.tfa.protein_col_name,
                                                     'sample_list': self.tfa.sample_list,
                                                 }, 
@@ -126,7 +126,11 @@ class SumProteinIntensity:
                 from .lfq import run_lfq
                 df_pep = razor_integrator.get_razor_pep_df(greedy_method = greedy_method)
                 df_pep.drop(columns=['Proteins_group'], inplace=True)
-                df_protein, _ = run_lfq(df_pep, protein_id=self.tfa.protein_col_name, quant_id=self.tfa.peptide_col_name)
+                df_protein, _ = run_lfq(
+                    df_pep,
+                    protein_id=self.tfa.protein_col_name,
+                    quant_id=self.tfa.peptide_identity_col,
+                )
                 res_df = df_protein.set_index(self.tfa.protein_col_name)
                 #add a column of all peptide of the protein
                 res_df['peptides'] = res_df.index.map(lambda x: ';'.join(razor_integrator.filtered_target_to_peptides[x]))
@@ -167,7 +171,7 @@ class SumProteinIntensity:
         if self.peptide_num_threshold < 2:
             return self.df
         else:
-            peptide_col_name = self.tfa.peptide_col_name
+            peptide_col_name = self.tfa.peptide_identity_col
             protein_col_name = self.tfa.protein_col_name
             df= self.df.copy()
             target_to_peptides = defaultdict(set)
@@ -259,14 +263,15 @@ class SumProteinIntensity:
             value: a list of proteins
         """
         
-        df = self.df.loc[:, [self.tfa.peptide_col_name, self.tfa.protein_col_name]]
+        peptide_identity_col = self.tfa.peptide_identity_col
+        df = self.df.loc[:, [peptide_identity_col, self.tfa.protein_col_name]]
         # Create a dictionary mapping proteins to peptides
         protein_to_peptides = defaultdict(set)
-        peptides = set(df[self.tfa.peptide_col_name])
+        peptides = set(df[peptide_identity_col])
 
         separator = self.protein_separator
         for _, row in tqdm(df.iterrows(), total=df.shape[0], desc="Creating protein to peptides mapping"):
-            sequence = row[self.tfa.peptide_col_name]
+            sequence = row[peptide_identity_col]
             proteins = row[self.tfa.protein_col_name].split(separator)
             for protein in proteins:
                 protein_to_peptides[protein].add(sequence)
@@ -292,9 +297,9 @@ class SumProteinIntensity:
         
         for sample in tqdm(self.tfa.sample_list):
             print(f'Assigning protein intensity for [{sample}]')
-            df = self.df.loc[:,[ self.tfa.peptide_col_name, sample]]
+            df = self.df.loc[:, [self.tfa.peptide_identity_col, sample]]
             # create a dict to store the intensity of each peptide
-            df.set_index(self.tfa.peptide_col_name, inplace=True)
+            df.set_index(self.tfa.peptide_identity_col, inplace=True)
             peptide_intensity_dict = df.to_dict()[sample]
             for peptide, proteins in peptide_to_protein.items():
                 intensity = peptide_intensity_dict[peptide]
