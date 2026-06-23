@@ -10,6 +10,7 @@ from metax.gui.main_gui import MetaXGUI
 from metax.gui.unit_aware_settings_dialog import (
     UnitAwareGuiConfig,
     UnitAwareSettingsDialog,
+    UnitAwareValidationResultDialog,
     validate_unit_aware_manifest_for_gui,
 )
 
@@ -169,7 +170,60 @@ def test_unit_aware_gui_validation_fails_for_missing_sample_by_default(tmp_path)
     assert result.ok is False
     assert result.missing_samples == ["s3"]
     assert "Manifest sample-column validation failed" in result.message
+    assert "Missing samples: 1" in result.message
     assert "s3" in result.message
+    assert result.details == "Missing manifest samples:\ns3"
+
+
+def test_unit_aware_gui_validation_supports_long_format_parquet(tmp_path, monkeypatch):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = tmp_path / "report.parquet"
+    peptide_path.write_bytes(b"parquet placeholder")
+    monkeypatch.setattr(
+        unit_aware_settings_dialog,
+        "_read_peptide_table_header_columns",
+        lambda peptide_table_path, separator: ["Stripped.Sequence", "Run", "Precursor.Quantity"],
+    )
+    monkeypatch.setattr(
+        unit_aware_settings_dialog,
+        "_read_long_format_run_columns",
+        lambda peptide_table_path: ["s1.raw", "s2.raw", "s3.raw"],
+    )
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Stripped.Sequence",
+    )
+
+    assert result.ok is True
+    assert result.mapped_samples == {"s1": "s1.raw", "s2": "s2.raw", "s3": "s3.raw"}
+    assert result.missing_samples == []
+    assert "long-format DIA-NN parquet" in result.message
+    assert "Run values validated as sample columns" in result.message
+
+
+def test_validation_result_dialog_is_scrollable_and_screen_bounded():
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    result = unit_aware_settings_dialog.UnitAwareManifestValidationResult(
+        ok=False,
+        message="Missing samples: 1000",
+        manifest_samples=[],
+        mapped_samples={},
+        missing_samples=[],
+        details="\n".join(f"sample_{index}" for index in range(1000)),
+    )
+    dialog = UnitAwareValidationResultDialog(result)
+
+    assert dialog.result_text.isReadOnly()
+    assert dialog.result_text.lineWrapMode() == QtWidgets.QPlainTextEdit.NoWrap
+    assert dialog.result_text.toPlainText().endswith("sample_999")
+    available = app.primaryScreen().availableGeometry()
+    assert dialog.width() <= available.width()
+    assert dialog.height() <= available.height()
+
+    dialog.close()
+    app.processEvents()
 
 
 def test_unit_aware_gui_validation_warn_skip_passes_with_missing_sample(tmp_path):

@@ -826,6 +826,8 @@ The merged unit-aware OTF table includes `analysis_unit_id` and the original `Se
 
 In the GUI, select the MetaUmbra `unit_aware_manifest.json` and genome threshold in the main Peptide Direct to OTF window. The Unit-aware Settings dialog does not select a separate manifest or threshold; it configures sample-column matching behavior and missing/empty unit handling, and validates the selected manifest against the current peptide table when possible. Unit-aware mode disables the legacy global genome scoring controls, and the duplicate peptide handling selector still applies. A manual manifest builder is not implemented yet.
 
+Unit-aware annotation accepts either a wide peptide-intensity table with one sample intensity column per manifest sample or a long-format DIA-NN parquet containing `Run`, `Precursor.Quantity`, and the selected peptide column. Long-format parquet input is pivoted automatically, and common raw-file suffixes such as `.raw` are ignored when matching `Run` values to manifest samples.
+
 Example:
 
 ```bash
