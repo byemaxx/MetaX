@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import re
-import tempfile
+import shutil
 import time
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
@@ -30,6 +31,17 @@ from metax.peptide_annotator.unit_aware_manifest import (
 
 def _safe_filename(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", str(value)).strip("._") or "unit"
+
+
+def _create_temporary_unit_directory(parent: Path, analysis_unit_id: str) -> Path:
+    base_name = f"run_{_safe_filename(analysis_unit_id)}"
+    run_dir = parent / base_name
+    if run_dir.exists():
+        run_dir = parent / (
+            f"{base_name}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+        )
+    run_dir.mkdir(parents=True, exist_ok=False)
+    return run_dir
 
 
 def build_global_unit_aware_peptide_protein_map(
@@ -164,6 +176,10 @@ class UnitAwareOTFAnnotator:
     @property
     def artifacts_dir(self) -> Path:
         return self.output_path.parent / f"{self.output_path.stem}_artifacts"
+
+    @property
+    def temporary_unit_otf_dir(self) -> Path:
+        return self.artifacts_dir / "per_unit" / "unit_otf"
 
     def _all_manifest_samples(self, manifest: UnitAwareManifest) -> list[str]:
         samples: list[str] = []
@@ -396,9 +412,15 @@ class UnitAwareOTFAnnotator:
         unit_otf_dfs: list[pd.DataFrame] = []
         summary_rows: list[dict] = []
 
-        with tempfile.TemporaryDirectory(prefix="metax_unit_aware_") as tmp:
-            tmpdir = Path(tmp)
+        self.temporary_unit_otf_dir.mkdir(parents=True, exist_ok=True)
+        temporary_unit_dirs: list[Path] = []
+        try:
             for unit_index, unit in enumerate(manifest.units.values(), start=1):
+                tmpdir = _create_temporary_unit_directory(
+                    self.temporary_unit_otf_dir,
+                    unit.analysis_unit_id,
+                )
+                temporary_unit_dirs.append(tmpdir)
                 progress_prefix = (
                     f"[Unit-aware] Unit {unit_index} of {total_units}: "
                     f"{unit.analysis_unit_id}"
@@ -554,6 +576,9 @@ class UnitAwareOTFAnnotator:
                     f"{time.perf_counter() - unit_started:.2f}s downstream).",
                     flush=True,
                 )
+        finally:
+            for temporary_unit_dir in temporary_unit_dirs:
+                shutil.rmtree(temporary_unit_dir, ignore_errors=True)
 
         merged = self._merge_unit_outputs(unit_otf_dfs, canonical_sample_cols)
         merged.to_csv(self.output_path, sep="\t", index=False)
