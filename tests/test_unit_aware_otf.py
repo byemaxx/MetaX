@@ -90,6 +90,10 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
                 Path(previous_call["output_path"]).parent.is_dir()
                 for previous_call in calls
             )
+            assert all(
+                Path(previous_call["output_path"]).is_file()
+                for previous_call in calls
+            )
             calls.append(kwargs)
 
         def all_in_one(self, **kwargs):
@@ -162,6 +166,13 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
     assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
     assert output.is_file()
+    info_path = tmp_path / "OTF_unit_aware_info.txt"
+    assert info_path.is_file()
+    info_text = info_path.read_text(encoding="utf-8")
+    assert "MetaX PeptideAnnotator Results" in info_text
+    assert "Software: MetaX (UnitAwareOTFAnnotator)" in info_text
+    assert "Completed units: 2" in info_text
+    assert "Shape: 3 rows" in info_text
     assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_sample_column_mapping.tsv").is_file()
     assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_annotation_summary.tsv").is_file()
     progress_log = capsys.readouterr().out
