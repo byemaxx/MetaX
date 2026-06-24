@@ -10,6 +10,7 @@ import metax.cli.annotate as annotate_cli
 from metax.cli.annotate import build_parser
 from metax.peptide_annotator.unit_aware_otf import (
     UnitAwareOTFAnnotator,
+    _create_temporary_unit_directory,
     build_global_unit_aware_peptide_protein_map,
 )
 from metax.peptide_annotator.pep_table_to_otf import (
@@ -85,6 +86,10 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
             self.final_peptide_table = self.peptide_df.copy()
             self.peptides_after_mapping = len(self.peptide_df)
             self.selected_genomes_num = len(kwargs["genome_list"])
+            assert all(
+                Path(previous_call["output_path"]).parent.is_dir()
+                for previous_call in calls
+            )
             calls.append(kwargs)
 
         def all_in_one(self, **kwargs):
@@ -135,6 +140,19 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert calls[0]["selected_genomes_set"] == {"g1"}
     assert calls[1]["selected_genomes_set"] == {"g2"}
     assert [call["duplicate_peptide_handling_mode"] for call in calls] == ["max", "max"]
+    expected_temp_root = (
+        tmp_path / "OTF_unit_aware_artifacts" / "per_unit" / "unit_otf"
+    )
+    assert all(
+        Path(call["output_path"]).parent.parent == expected_temp_root
+        for call in calls
+    )
+    assert [Path(call["output_path"]).parent.name for call in calls] == [
+        "run_u1",
+        "run_u2",
+    ]
+    assert expected_temp_root.is_dir()
+    assert list(expected_temp_root.iterdir()) == []
     assert "UnitAwareSequence" not in result.columns
     assert result[["analysis_unit_id", "Sequence"]].drop_duplicates().values.tolist() == [
         ["u1", "PEPA"],
@@ -153,6 +171,20 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert "[Unit-aware] Unit 2 of 2: u2 started" in progress_log
     assert "[Unit-aware] Unit 2 of 2: u2 completed" in progress_log
     assert "2 units total, 2 completed, 0 skipped" in progress_log
+
+
+def test_temporary_unit_directory_adds_timestamp_only_on_conflict(tmp_path):
+    parent = tmp_path / "unit_otf"
+    parent.mkdir()
+
+    run_dir = _create_temporary_unit_directory(parent, "u1")
+    assert run_dir.name == "run_u1"
+    assert run_dir.is_dir()
+
+    conflicting_run_dir = _create_temporary_unit_directory(parent, "u1")
+    assert conflicting_run_dir.name.startswith("run_u1_")
+    assert conflicting_run_dir.name != "run_u1"
+    assert conflicting_run_dir.is_dir()
 
 
 @pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
