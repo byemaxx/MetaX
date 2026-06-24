@@ -251,11 +251,61 @@ def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
     assert isinstance(result, UnitAwareOTFRunResult)
     assert result.output_path == str(output)
     assert result.rows == 3
+    assert result.column_count == len(result.column_names)
+    assert result.column_names == original_read_csv(
+        output,
+        sep="\t",
+        nrows=0,
+    ).columns.tolist()
     assert result.completed_units == 2
     assert result.skipped_units == 0
     info_text = Path(result.info_path).read_text(encoding="utf-8")
     assert "Unique sequences: NA" in info_text
     assert "Unique protein groups: NA" in info_text
+
+
+def test_return_dataframe_explicitly_reads_merged_output(monkeypatch, tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "Intensity_s1": [10],
+            "Intensity_s2": [5],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    peptide_db = tmp_path / "peptide.db"
+    _write_peptide_protein_db(peptide_db)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(taxafunc_db)
+    output = tmp_path / "OTF_unit_aware.tsv"
+
+    output_reads = 0
+    original_read_csv = pd.read_csv
+
+    def tracking_read_csv(path, *args, **kwargs):
+        nonlocal output_reads
+        if Path(path) == output:
+            output_reads += 1
+        return original_read_csv(path, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.unit_aware_otf.pd.read_csv",
+        tracking_read_csv,
+    )
+
+    result = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(output),
+        db_path=str(peptide_db),
+    ).run(return_dataframe=True)
+
+    assert isinstance(result, pd.DataFrame)
+    assert output_reads == 1
+    assert result["analysis_unit_id"].tolist() == ["u1", "u2"]
 
 
 def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
@@ -317,8 +367,17 @@ def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
     assert annotator._last_unique_sequences == 3
     assert annotator._last_unique_protein_groups == 3
     assert merged.columns.tolist() == columns
+    assert columns == [
+        "analysis_unit_id",
+        "Sequence",
+        "Proteins",
+        "Mock_func",
+        "Intensity_s1",
+        "Intensity_s2",
+    ]
     assert merged.loc[merged["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
     assert merged.loc[merged["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
+    assert merged.loc[merged["analysis_unit_id"] == "u1", "Mock_func"].isna().all()
     assert (
         annotator.output_path.read_text(encoding="utf-8").count("analysis_unit_id")
         == 1
@@ -355,6 +414,11 @@ def test_saved_per_unit_output_is_final_unit_aware_table(tmp_path):
     per_unit = pd.read_csv(per_unit_path, sep="\t")
     assert per_unit["analysis_unit_id"].tolist() == ["u1"]
     assert per_unit["UnitAwareSequence"].tolist() == ["u1||PEPA"]
+    temporary_unit_root = (
+        tmp_path / "out_artifacts" / "per_unit" / "unit_otf"
+    )
+    assert temporary_unit_root.is_dir()
+    assert list(temporary_unit_root.iterdir()) == []
 
 
 @pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
@@ -754,6 +818,9 @@ def test_nested_scanner_warns_for_malformed_genome(tmp_path, capsys):
 
 def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
     captured = {}
+    defaults = build_parser().parse_args([])
+    assert defaults.merge_chunksize == 100_000
+    assert defaults.collect_unique_stats is False
 
     class FakeAnnotator:
         def __init__(self, **kwargs):
@@ -781,6 +848,9 @@ def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
             "--include-unit-aware-sequence",
             "--output-sample-col-prefix",
             "Abundance_",
+            "--merge-chunksize",
+            "7",
+            "--collect-unique-stats",
         ]
     )
 
@@ -788,6 +858,8 @@ def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
     assert captured["duplicate_peptide_handling_mode"] == "max"
     assert captured["include_unit_aware_sequence"] is True
     assert captured["output_sample_col_prefix"] == "Abundance_"
+    assert captured["merge_chunksize"] == 7
+    assert captured["collect_unique_stats"] is True
 
 
 def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatch, tmp_path):

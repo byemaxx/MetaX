@@ -3877,6 +3877,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "on_missing_sample": config.on_missing_sample,
                 "on_empty_unit": config.on_empty_unit,
                 "n_jobs": n_jobs,
+                "merge_chunksize": 100_000,
+                "collect_unique_stats": False,
             }
 
             def pep_direct_to_otf_unit_aware_wrapper():
