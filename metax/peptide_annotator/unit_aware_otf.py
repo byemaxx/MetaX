@@ -37,7 +37,8 @@ class UnitAwareOTFRunResult:
     info_path: str
     summary_path: str
     rows: int
-    columns: int
+    column_count: int
+    column_names: list[str]
     completed_units: int
     skipped_units: int
 
@@ -728,7 +729,6 @@ class UnitAwareOTFAnnotator:
                     save_output=False,
                 )
 
-                unit_otf_df = unit_otf_df.copy()
                 unit_otf_df.insert(0, "analysis_unit_id", unit.analysis_unit_id)
                 if self.include_unit_aware_sequence:
                     sequence_values = unit_otf_df["Sequence"].astype(str)
@@ -845,7 +845,8 @@ class UnitAwareOTFAnnotator:
             info_path=str(self.info_path),
             summary_path=str(summary_path),
             rows=merged_rows,
-            columns=len(merged_columns),
+            column_count=len(merged_columns),
+            column_names=merged_columns,
             completed_units=completed_units,
             skipped_units=skipped_units,
         )

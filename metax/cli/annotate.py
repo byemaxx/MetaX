@@ -67,6 +67,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--on-missing-sample", choices=["error", "warn-skip"], default="error")
     parser.add_argument("--on-empty-unit", choices=["error", "warn-skip"], default="warn-skip")
     parser.add_argument("--n-jobs", type=int)
+    parser.add_argument(
+        "--merge-chunksize",
+        type=int,
+        default=100_000,
+        help="Rows per chunk when merging unit OTF files.",
+    )
+    parser.add_argument(
+        "--collect-unique-stats",
+        action="store_true",
+        help=(
+            "Collect unique sequence/protein-group counts during streaming merge. "
+            "May use extra memory for large outputs."
+        ),
+    )
     return parser
 
 
@@ -123,6 +137,8 @@ def main(argv: list[str] | None = None) -> int:
         on_missing_sample=args.on_missing_sample,
         on_empty_unit=args.on_empty_unit,
         n_jobs=args.n_jobs,
+        merge_chunksize=args.merge_chunksize,
+        collect_unique_stats=args.collect_unique_stats,
     )
     annotator.run()
     return 0
