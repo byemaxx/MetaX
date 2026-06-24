@@ -1475,6 +1475,7 @@ class peptideProteinsMapper:
                    genome_list: Iterable[str] | None = None,
                    duplicate_peptide_handling_mode: str | None = None,
                    genome_selection_metadata: dict | None = None,
+                   save_output: bool = True,
                    ): # run peptide to OTF
         duplicate_peptide_handling_mode = (
             duplicate_peptide_handling_mode or self.duplicate_peptide_handling_mode
@@ -1539,7 +1540,7 @@ class peptideProteinsMapper:
             additional_running_info=additional_running_info,
             duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
         )
-        df_res = annotator.run_annotate()
+        df_res = annotator.run_annotate(save_output=save_output)
         print("OTF annotation finished")
         return df_res
         
