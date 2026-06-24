@@ -3,7 +3,37 @@ import pytest
 
 from metax.peptide_annotator.peptide_table_prepare import (
     prepare_diann_parquet_for_direct_otf,
+    resolve_diann_parquet_schema,
 )
+
+
+def test_resolve_diann_parquet_schema_exposes_column_roles():
+    schema = resolve_diann_parquet_schema(
+        [
+            "Run",
+            "Stripped.Sequence",
+            "Evidence",
+            "Q.Value",
+            "Precursor.Quantity",
+        ],
+        require_score_columns=True,
+    )
+
+    assert schema.sample_col == "Run"
+    assert schema.peptide_col == "Stripped.Sequence"
+    assert schema.score_col == "Evidence"
+    assert schema.error_col == "Q.Value"
+    assert schema.intensity_col == "Precursor.Quantity"
+    assert schema.intensity_col_prefix == "Precursor.Quantity."
+
+
+def test_resolve_diann_parquet_schema_allows_optional_score_columns():
+    schema = resolve_diann_parquet_schema(
+        ["Run", "Stripped.Sequence", "Precursor.Normalised"]
+    )
+
+    assert schema.score_col is None
+    assert schema.error_col is None
 
 
 @pytest.mark.parametrize(
