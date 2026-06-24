@@ -465,7 +465,7 @@ class PeptideAnnotator:
         print(f'Handling duplicate peptides with mode [{mode}]: from [{row_count}] -> [{df.shape[0]}] (removed: {removed})')
         return df
 
-    def run_annotate(self):
+    def run_annotate(self, save_output: bool = True):
         print('Start running Peptide Annotator...')
         if self.peptide_df is not None:
             print(f'Peptide Table was provided with shape: {self.peptide_df.shape}')
@@ -521,7 +521,8 @@ class PeptideAnnotator:
         
         df_res = self.rename_columns(df_res)
         
-        self.save_result(df_res)
+        if save_output:
+            self.save_result(df_res)
         
         return df_res
 

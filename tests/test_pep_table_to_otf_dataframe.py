@@ -80,11 +80,14 @@ def test_sqlite_mapper_respects_custom_protein_genome_separator(tmp_path):
 def test_all_in_one_returns_otf_dataframe(monkeypatch, tmp_path):
     import metax.peptide_annotator.peptable_annotator as peptable_annotator
 
+    captured = {}
+
     class FakePeptideAnnotator:
         def __init__(self, **kwargs):
             self.peptide_df = kwargs["peptide_df"]
 
-        def run_annotate(self):
+        def run_annotate(self, save_output=True):
+            captured["save_output"] = save_output
             out = self.peptide_df.copy()
             out["LCA_level"] = "genome"
             out["Taxon"] = "d__Bacteria|m__g1"
@@ -114,6 +117,46 @@ def test_all_in_one_returns_otf_dataframe(monkeypatch, tmp_path):
 
     assert isinstance(result, pd.DataFrame)
     assert result.loc[0, "Sequence"] == "PEPA"
+    assert captured["save_output"] is True
+
+
+def test_all_in_one_can_skip_mapper_level_output(monkeypatch, tmp_path):
+    import metax.peptide_annotator.peptable_annotator as peptable_annotator
+
+    captured = {}
+
+    class FakePeptideAnnotator:
+        def __init__(self, **kwargs):
+            self.peptide_df = kwargs["peptide_df"]
+
+        def run_annotate(self, save_output=True):
+            captured["save_output"] = save_output
+            return self.peptide_df.copy()
+
+    monkeypatch.setattr(peptable_annotator, "PeptideAnnotator", FakePeptideAnnotator)
+    mapper = peptideProteinsMapper(
+        peptide_table_path=str(tmp_path / "missing.tsv"),
+        peptide_df=pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10]}),
+        db_path=str(tmp_path / "unused.db"),
+        output_path=str(tmp_path / "out.tsv"),
+        peptide_col="Sequence",
+        intensity_col_prefix="Intensity_",
+        genome_list=["g1"],
+    )
+    mapper.process_peptides_to_proteins = lambda genome_list=None: setattr(
+        mapper,
+        "final_peptide_table",
+        pd.DataFrame(
+            {"Sequence": ["PEPA"], "Proteins": ["g1_p1"], "Intensity_s1": [10]}
+        ),
+    )
+
+    mapper.all_in_one(
+        taxafunc_anno_db_path=str(tmp_path / "taxafunc.db"),
+        save_output=False,
+    )
+
+    assert captured["save_output"] is False
 
 
 def test_mapper_restores_automatic_genome_ranking_without_genome_list(tmp_path):

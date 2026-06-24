@@ -10,6 +10,7 @@ import metax.cli.annotate as annotate_cli
 from metax.cli.annotate import build_parser
 from metax.peptide_annotator.unit_aware_otf import (
     UnitAwareOTFAnnotator,
+    UnitAwareOTFRunResult,
     _create_temporary_unit_directory,
     build_global_unit_aware_peptide_protein_map,
 )
@@ -78,6 +79,16 @@ def _write_taxafunc_db(path):
 
 def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys):
     calls = []
+    numeric_apply_calls = 0
+    original_dataframe_apply = pd.DataFrame.apply
+
+    def tracking_dataframe_apply(self, func, *args, **kwargs):
+        nonlocal numeric_apply_calls
+        if func is pd.to_numeric:
+            numeric_apply_calls += 1
+        return original_dataframe_apply(self, func, *args, **kwargs)
+
+    monkeypatch.setattr(pd.DataFrame, "apply", tracking_dataframe_apply)
 
     class FakeMapper:
         def __init__(self, **kwargs):
@@ -97,6 +108,7 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
             calls.append(kwargs)
 
         def all_in_one(self, **kwargs):
+            assert kwargs["save_output"] is False
             genome = self.kwargs["genome_list"][0]
             sample_cols = [c for c in self.peptide_df.columns if c.startswith("Intensity_")]
             return pd.DataFrame(
@@ -138,12 +150,13 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
         db_path=str(peptide_db),
         peptide_col="Sequence",
         duplicate_peptide_handling_mode="max",
-    ).run()
+    ).run(return_dataframe=True)
 
     assert [call["genome_list"] for call in calls] == [["g1"], ["g2"]]
     assert calls[0]["selected_genomes_set"] == {"g1"}
     assert calls[1]["selected_genomes_set"] == {"g2"}
     assert [call["duplicate_peptide_handling_mode"] for call in calls] == ["max", "max"]
+    assert numeric_apply_calls == 1
     expected_temp_root = (
         tmp_path / "OTF_unit_aware_artifacts" / "per_unit" / "unit_otf"
     )
@@ -196,6 +209,152 @@ def test_temporary_unit_directory_adds_timestamp_only_on_conflict(tmp_path):
     assert conflicting_run_dir.name.startswith("run_u1_")
     assert conflicting_run_dir.name != "run_u1"
     assert conflicting_run_dir.is_dir()
+
+
+def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "Intensity_s1": [10, 0],
+            "Intensity_s2": [20, 5],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    peptide_db = tmp_path / "peptide.db"
+    _write_peptide_protein_db(peptide_db)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(taxafunc_db)
+    output = tmp_path / "OTF_unit_aware.tsv"
+
+    original_read_csv = pd.read_csv
+
+    def guarded_read_csv(path, *args, **kwargs):
+        if Path(path) == output:
+            raise AssertionError("default run must not read the merged output")
+        return original_read_csv(path, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "metax.peptide_annotator.unit_aware_otf.pd.read_csv",
+        guarded_read_csv,
+    )
+
+    result = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(output),
+        db_path=str(peptide_db),
+    ).run()
+
+    assert isinstance(result, UnitAwareOTFRunResult)
+    assert result.output_path == str(output)
+    assert result.rows == 3
+    assert result.completed_units == 2
+    assert result.skipped_units == 0
+    info_text = Path(result.info_path).read_text(encoding="utf-8")
+    assert "Unique sequences: NA" in info_text
+    assert "Unique protein groups: NA" in info_text
+
+
+def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    manifest = tmp_path / "manifest.json"
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    for path in [peptide_table, manifest, taxafunc_db, peptide_db]:
+        path.write_text("", encoding="utf-8")
+
+    annotator = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "merged.tsv"),
+        db_path=str(peptide_db),
+    )
+    unit1 = tmp_path / "u1.tsv"
+    unit2 = tmp_path / "u2.tsv"
+    pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u1"],
+            "Sequence": ["PEPA", "PEPB"],
+            "Proteins": ["g1_p1", "g1_p2"],
+            "Intensity_s1": [10, 20],
+        }
+    ).to_csv(unit1, sep="\t", index=False)
+    pd.DataFrame(
+        {
+            "analysis_unit_id": ["u2"],
+            "Sequence": ["PEPC"],
+            "Proteins": ["g2_p1"],
+            "Mock_func": ["K00001"],
+            "Intensity_s2": [30],
+        }
+    ).to_csv(unit2, sep="\t", index=False)
+    records = [
+        {
+            "path": str(unit1),
+            "columns": pd.read_csv(unit1, sep="\t", nrows=0).columns.tolist(),
+            "temporary": False,
+        },
+        {
+            "path": str(unit2),
+            "columns": pd.read_csv(unit2, sep="\t", nrows=0).columns.tolist(),
+            "temporary": False,
+        },
+    ]
+
+    columns, rows = annotator._stream_merge_unit_outputs(
+        records,
+        ["Intensity_s1", "Intensity_s2"],
+        merge_chunksize=1,
+        collect_unique_stats=True,
+    )
+
+    merged = pd.read_csv(annotator.output_path, sep="\t")
+    assert rows == 3
+    assert annotator._last_unique_sequences == 3
+    assert annotator._last_unique_protein_groups == 3
+    assert merged.columns.tolist() == columns
+    assert merged.loc[merged["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
+    assert merged.loc[merged["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
+    assert (
+        annotator.output_path.read_text(encoding="utf-8").count("analysis_unit_id")
+        == 1
+    )
+
+
+def test_saved_per_unit_output_is_final_unit_aware_table(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "Intensity_s1": [10],
+            "Intensity_s2": [0],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    peptide_db = tmp_path / "peptide.db"
+    _write_peptide_protein_db(peptide_db)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(taxafunc_db)
+
+    UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "out.tsv"),
+        db_path=str(peptide_db),
+        save_per_unit_outputs=True,
+        include_unit_aware_sequence=True,
+    ).run()
+
+    per_unit_path = tmp_path / "out_artifacts" / "per_unit" / "u1_OTF.tsv"
+    per_unit = pd.read_csv(per_unit_path, sep="\t")
+    assert per_unit["analysis_unit_id"].tolist() == ["u1"]
+    assert per_unit["UnitAwareSequence"].tolist() == ["u1||PEPA"]
 
 
 @pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
@@ -346,7 +505,7 @@ def test_unit_aware_otf_real_sqlite_integration(tmp_path):
         output_path=str(output),
         db_path=str(peptide_db),
         peptide_col="Sequence",
-    ).run()
+    ).run(return_dataframe=True)
 
     assert "UnitAwareSequence" not in result.columns
     assert result["Sequence"].tolist() == ["PEPA", "PEPA", "PEPB"]
@@ -376,7 +535,7 @@ def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path, caps
         output_path=str(tmp_path / "OTF_unit_aware.tsv"),
         db_path=str(peptide_db),
         include_unit_aware_sequence=True,
-    ).run()
+    ).run(return_dataframe=True)
 
     assert "UnitAwareSequence" in result.columns
     assert result["UnitAwareSequence"].tolist() == ["u1||PEPA"]
@@ -698,7 +857,7 @@ def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatc
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         digested_genome_folders=str(digested_dir),
-    ).run()
+    ).run(return_dataframe=True)
 
     assert len(calls) == 1
     assert mapper_inputs[0]["Proteins"].tolist() == ["g1_p1;g2_p2"]
@@ -777,5 +936,5 @@ def test_unit_aware_folder_mode_handles_unit_without_mapped_proteins(
             annotator.run()
     else:
         with pytest.warns(UserWarning, match="u2: unit has no peptides mapped"):
-            result = annotator.run()
+            result = annotator.run(return_dataframe=True)
         assert result["analysis_unit_id"].tolist() == ["u1"]
