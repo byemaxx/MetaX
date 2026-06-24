@@ -27,6 +27,7 @@ from metax.peptide_annotator.unit_aware_manifest import (
     resolve_manifest_sample_columns,
     write_unit_sample_column_mapping,
 )
+from metax.utils.version import __version__
 
 
 def _safe_filename(value: str) -> str:
@@ -305,19 +306,14 @@ class UnitAwareOTFAnnotator:
             }
         )
 
-    def _merge_unit_outputs(self, unit_otf_dfs: list[pd.DataFrame], canonical_sample_cols: list[str]) -> pd.DataFrame:
-        if not unit_otf_dfs:
+    def _merged_column_order(
+        self,
+        unit_output_records: list[dict],
+        canonical_sample_cols: list[str],
+    ) -> list[str]:
+        if not unit_output_records:
             raise ValueError("No unit-aware OTF rows were produced")
 
-        aligned = []
-        for df in unit_otf_dfs:
-            df = df.copy()
-            for col in canonical_sample_cols:
-                if col not in df.columns:
-                    df[col] = 0
-            aligned.append(df)
-
-        merged = pd.concat(aligned, ignore_index=True, sort=False)
         leading_cols = [
             "analysis_unit_id",
             "Sequence",
@@ -326,15 +322,135 @@ class UnitAwareOTFAnnotator:
             "Taxon",
             "Taxon_prop",
         ]
+        all_columns: list[str] = []
+        for record in unit_output_records:
+            for column in record["columns"]:
+                if column not in all_columns:
+                    all_columns.append(column)
         middle_cols = [
-            col
-            for col in merged.columns
-            if col not in leading_cols and col not in canonical_sample_cols
+            column
+            for column in all_columns
+            if column not in leading_cols and column not in canonical_sample_cols
         ]
-        ordered_cols = [col for col in leading_cols if col in merged.columns] + middle_cols + canonical_sample_cols
-        return merged.loc[:, ordered_cols]
+        return (
+            [column for column in leading_cols if column in all_columns]
+            + middle_cols
+            + canonical_sample_cols
+        )
+
+    def _stream_merge_unit_outputs(
+        self,
+        unit_output_records: list[dict],
+        canonical_sample_cols: list[str],
+    ) -> tuple[list[str], int]:
+        ordered_columns = self._merged_column_order(
+            unit_output_records,
+            canonical_sample_cols,
+        )
+        total_rows = 0
+        wrote_header = False
+        for record in unit_output_records:
+            unit_path = Path(record["path"])
+            unit_df = pd.read_csv(unit_path, sep="\t")
+            for column in canonical_sample_cols:
+                if column not in unit_df.columns:
+                    unit_df[column] = 0
+            for column in ordered_columns:
+                if column not in unit_df.columns:
+                    unit_df[column] = pd.NA
+            unit_df = unit_df.loc[:, ordered_columns]
+            unit_df.to_csv(
+                self.output_path,
+                sep="\t",
+                index=False,
+                mode="a" if wrote_header else "w",
+                header=not wrote_header,
+            )
+            wrote_header = True
+            total_rows += len(unit_df)
+            del unit_df
+            if record.get("temporary", False):
+                unit_path.unlink(missing_ok=True)
+        return ordered_columns, total_rows
+
+    @property
+    def info_path(self) -> Path:
+        return self.output_path.with_name(f"{self.output_path.stem}_info.txt")
+
+    def _write_merged_info(
+        self,
+        *,
+        manifest: UnitAwareManifest,
+        manifest_samples: list[str],
+        sample_mapping: dict[str, str],
+        summary_df: pd.DataFrame,
+        merged_columns: list[str],
+        merged_rows: int,
+        unique_sequences: int,
+        unique_protein_groups: int,
+        started_at: datetime,
+    ) -> None:
+        completed_at = datetime.now()
+        completed_units = int((summary_df["status"] == "ok").sum()) if not summary_df.empty else 0
+        skipped_units = int((summary_df["status"] == "skipped").sum()) if not summary_df.empty else 0
+        sample_columns = [
+            column
+            for column in merged_columns
+            if column.startswith(self.output_sample_col_prefix)
+        ]
+        with self.info_path.open("w", encoding="utf-8") as handle:
+            handle.write("MetaX PeptideAnnotator Results\n")
+            handle.write("=" * 50 + "\n")
+            handle.write(f"Software: MetaX (UnitAwareOTFAnnotator) v{__version__}\n")
+            handle.write(f"Run time: {started_at.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Parameters:\n")
+            handle.write(f"  - Threshold: {self.lca_threshold}\n")
+            handle.write(f"  - Genome mode: {self.genome_mode}\n")
+            handle.write(f"  - Distinct genome threshold: {self.distinct_genome_threshold}\n")
+            handle.write(f"  - Exclude proteins: {self.exclude_protein_startwith}\n")
+            handle.write(f"  - Protein separator: '{self.protein_separator}'\n")
+            handle.write(f"  - Protein-genome separator: '{self.protein_genome_separator}'\n")
+            handle.write(f"  - Peptide column: '{self.peptide_col}'\n")
+            handle.write(f"  - Sample prefix (output): '{self.output_sample_col_prefix}'\n")
+            handle.write(f"  - Duplicate handling mode: {self.duplicate_peptide_handling_mode}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Unit-aware configuration:\n")
+            handle.write(f"  - Manifest: {self.unit_aware_manifest_path}\n")
+            handle.write(f"  - Selected genome threshold: {manifest.selected_genome_threshold}\n")
+            handle.write(f"  - Units: {len(manifest.units)}\n")
+            handle.write(f"  - Manifest samples: {len(manifest_samples)}\n")
+            handle.write(f"  - Mapped samples: {len(sample_mapping)}\n")
+            handle.write(f"  - On missing sample: {self.on_missing_sample}\n")
+            handle.write(f"  - On empty unit: {self.on_empty_unit}\n")
+            handle.write(f"  - Include UnitAwareSequence: {self.include_unit_aware_sequence}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Input/Output:\n")
+            handle.write(f"  - Input: {self.peptide_table_path}\n")
+            handle.write(f"  - Database: {self.taxafunc_anno_db_path}\n")
+            handle.write(f"  - Output (TSV): {self.output_path}\n")
+            handle.write(f"  - Output (info): {self.info_path}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Processing summary:\n")
+            handle.write(f"  - Completed units: {completed_units}\n")
+            handle.write(f"  - Skipped units: {skipped_units}\n")
+            handle.write(f"  - Unit summary: {self.artifacts_dir / 'unit_annotation_summary.tsv'}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Result summary:\n")
+            handle.write(f"  - Shape: {merged_rows} rows × {len(merged_columns)} columns\n")
+            handle.write(f"  - Unique sequences: {unique_sequences}\n")
+            handle.write(f"  - Unique protein groups: {unique_protein_groups}\n")
+            handle.write(f"  - Sample columns: {len(sample_columns)}\n")
+            if sample_columns:
+                shown = sample_columns[:10] + (["..."] if len(sample_columns) > 10 else [])
+                handle.write(f"  - Samples: {', '.join(shown)}\n")
+            handle.write("-" * 50 + "\n")
+            handle.write("Completion:\n")
+            handle.write(f"  - Completion time: {completed_at.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            handle.write(f"  - Processing duration: {str(completed_at - started_at).split('.')[0]}\n")
 
     def run(self) -> pd.DataFrame:
+        started_at = datetime.now()
         manifest = load_unit_aware_manifest(
             self.unit_aware_manifest_path,
             genome_threshold=self.genome_threshold,
@@ -409,7 +525,7 @@ class UnitAwareOTFAnnotator:
         )
 
         canonical_sample_cols = [f"{self.output_sample_col_prefix}{sample}" for sample in manifest_samples]
-        unit_otf_dfs: list[pd.DataFrame] = []
+        unit_output_records: list[dict] = []
         summary_rows: list[dict] = []
 
         self.temporary_unit_otf_dir.mkdir(parents=True, exist_ok=True)
@@ -556,7 +672,8 @@ class UnitAwareOTFAnnotator:
                 if self.include_unit_aware_sequence:
                     sequence_values = unit_otf_df["Sequence"].astype(str)
                     unit_otf_df.insert(1, "UnitAwareSequence", unit.analysis_unit_id + "||" + sequence_values)
-                unit_otf_dfs.append(unit_otf_df)
+                temporary_unit_output_path = tmpdir / f"{_safe_filename(unit.analysis_unit_id)}_OTF.tsv"
+                unit_otf_df.to_csv(temporary_unit_output_path, sep="\t", index=False)
                 self._record_summary(
                     summary_rows,
                     unit.analysis_unit_id,
@@ -570,43 +687,79 @@ class UnitAwareOTFAnnotator:
                     "",
                     mapper=mapper,
                 )
+                unit_otf_rows = len(unit_otf_df)
+                unit_output_records.append(
+                    {
+                        "analysis_unit_id": unit.analysis_unit_id,
+                        "path": str(temporary_unit_output_path),
+                        "columns": unit_otf_df.columns.tolist(),
+                        "rows": unit_otf_rows,
+                        "summary": dict(summary_rows[-1]),
+                        "temporary": True,
+                    }
+                )
+                unit_mapped_peptides = len(unit_df)
+                del unit_otf_df
+                del mapper
+                del unit_df
                 print(
                     f"{progress_prefix} completed "
-                    f"({len(unit_df)} mapped peptides, {len(unit_otf_df)} OTF rows, "
+                    f"({unit_mapped_peptides} mapped peptides, {unit_otf_rows} OTF rows, "
                     f"{time.perf_counter() - unit_started:.2f}s downstream).",
                     flush=True,
                 )
+
+            summary_df = pd.DataFrame(
+                summary_rows,
+                columns=[
+                    "analysis_unit_id",
+                    "n_manifest_sample_columns",
+                    "n_mapped_sample_columns",
+                    "n_input_peptides",
+                    "n_peptides_after_unit_filter",
+                    "n_genomes_from_manifest",
+                    "n_peptides_mapped_to_proteins",
+                    "n_peptides_after_genome_filter",
+                    "n_selected_genomes",
+                    "n_final_otf_rows",
+                    "status",
+                    "message",
+                ],
+            )
+            merged_columns, merged_rows = self._stream_merge_unit_outputs(
+                unit_output_records,
+                canonical_sample_cols,
+            )
+            summary_df.to_csv(
+                self.artifacts_dir / "unit_annotation_summary.tsv",
+                sep="\t",
+                index=False,
+            )
+            merged = pd.read_csv(self.output_path, sep="\t")
+            sequence_column = "Sequence" if "Sequence" in merged.columns else self.peptide_col
+            unique_sequences = int(merged[sequence_column].nunique(dropna=True))
+            unique_protein_groups = int(merged["Proteins"].nunique(dropna=True))
+            self._write_merged_info(
+                manifest=manifest,
+                manifest_samples=manifest_samples,
+                sample_mapping=sample_mapping,
+                summary_df=summary_df,
+                merged_columns=merged_columns,
+                merged_rows=merged_rows,
+                unique_sequences=unique_sequences,
+                unique_protein_groups=unique_protein_groups,
+                started_at=started_at,
+            )
         finally:
             for temporary_unit_dir in temporary_unit_dirs:
                 shutil.rmtree(temporary_unit_dir, ignore_errors=True)
 
-        merged = self._merge_unit_outputs(unit_otf_dfs, canonical_sample_cols)
-        merged.to_csv(self.output_path, sep="\t", index=False)
-
-        summary_df = pd.DataFrame(
-            summary_rows,
-            columns=[
-                "analysis_unit_id",
-                "n_manifest_sample_columns",
-                "n_mapped_sample_columns",
-                "n_input_peptides",
-                "n_peptides_after_unit_filter",
-                "n_genomes_from_manifest",
-                "n_peptides_mapped_to_proteins",
-                "n_peptides_after_genome_filter",
-                "n_selected_genomes",
-                "n_final_otf_rows",
-                "status",
-                "message",
-            ],
-        )
-        summary_df.to_csv(self.artifacts_dir / "unit_annotation_summary.tsv", sep="\t", index=False)
         completed_units = int((summary_df["status"] == "ok").sum()) if not summary_df.empty else 0
         skipped_units = int((summary_df["status"] == "skipped").sum()) if not summary_df.empty else 0
         print(
             f"[Unit-aware] Annotation complete: {total_units} units total, "
             f"{completed_units} completed, {skipped_units} skipped, "
-            f"{len(merged)} merged OTF rows.",
+            f"{merged_rows} merged OTF rows.",
             flush=True,
         )
 
