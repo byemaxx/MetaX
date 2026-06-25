@@ -141,7 +141,10 @@ class TableBuilder:
             path = self.context.paths.taxa_tables_dir / f"taxa_table_{level}.tsv"
             try:
                 df = self.tfa._create_taxa_table_only_from_otf(level=level, **kwargs)
-                df = df.drop(columns=["peptide_num"], errors="ignore")
+                df = df.drop(
+                    columns=["peptide_num", "unit_peptide_num", "bare_sequence_num"],
+                    errors="ignore",
+                )
                 self._save_table(df, path)
                 self._register_table(
                     "taxa",
@@ -183,7 +186,10 @@ class TableBuilder:
                     },
                     **kwargs,
                 )
-                df = df.drop(columns=["peptide_num"], errors="ignore")
+                df = df.drop(
+                    columns=["peptide_num", "unit_peptide_num", "bare_sequence_num"],
+                    errors="ignore",
+                )
                 self._save_table(df, path)
                 self._register_table(
                     "function",
