@@ -19,7 +19,20 @@ except ImportError:
     from proteins_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
 
-        
+
+def _prepare_otf_for_output(
+    df: pd.DataFrame,
+    sample_cols: list[str],
+) -> pd.DataFrame:
+    """Return an OTF output copy with exact sample-intensity zeros made sparse."""
+    output_df = df.copy()
+    existing_sample_cols = [col for col in sample_cols if col in output_df.columns]
+    for col in existing_sample_cols:
+        numeric_values = pd.to_numeric(output_df[col], errors="coerce")
+        output_df[col] = numeric_values.mask(numeric_values.eq(0))
+    return output_df
+
+
 class PeptideAnnotator:
     """
     A class to annotate peptides with taxonomic and functional information.
@@ -241,7 +254,9 @@ class PeptideAnnotator:
         
         # save the dataframe to the output file (clean TSV without comments)
         print('Saving result dataframe to output file...')
-        df.to_csv(self.output_path, sep='\t', index=False)
+        sample_cols = [c for c in df.columns if c.startswith('Intensity_')]
+        output_df = _prepare_otf_for_output(df, sample_cols)
+        output_df.to_csv(self.output_path, sep='\t', index=False)
         
         # save metadata to a separate info file
         base_path = os.path.splitext(self.output_path)[0]
@@ -279,6 +294,11 @@ class PeptideAnnotator:
             f.write("-"*50 + "\n")
             # 处理流程摘要
             f.write("Processing summary:\n")
+            f.write("  - sparse_zero_intensity_output: True\n")
+            f.write(
+                "  - Zero intensity values in sample columns are serialized as empty fields "
+                "and should be interpreted as zero by MetaX Analyzer defaults.\n"
+            )
             rs = self.run_stats if hasattr(self, 'run_stats') else {}
             if rs:
                 if 'read_rows' in rs:

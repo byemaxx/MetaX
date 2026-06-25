@@ -22,6 +22,7 @@ from metax.peptide_annotator.peptide_table_prepare import (
     prepare_diann_parquet_for_direct_otf,
     read_parquet_columns,
 )
+from metax.peptide_annotator.peptable_annotator import _prepare_otf_for_output
 from metax.peptide_annotator.unit_aware_manifest import (
     UnitAwareManifest,
     load_unit_aware_manifest,
@@ -459,6 +460,7 @@ class UnitAwareOTFAnnotator:
                 chunk = chunk.reindex(columns=ordered_columns)
                 if missing_sample_cols:
                     chunk[missing_sample_cols] = 0
+                chunk = _prepare_otf_for_output(chunk, canonical_sample_cols)
                 if unique_sequences is not None:
                     sequence_column = "Sequence" if "Sequence" in chunk.columns else self.peptide_col
                     unique_sequences.update(
@@ -547,6 +549,11 @@ class UnitAwareOTFAnnotator:
             handle.write(f"  - Output (info): {self.info_path}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Processing summary:\n")
+            handle.write("  - sparse_zero_intensity_output: True\n")
+            handle.write(
+                "  - Zero intensity values in sample columns are serialized as empty fields "
+                "and should be interpreted as zero by MetaX Analyzer defaults.\n"
+            )
             handle.write(f"  - Completed units: {completed_units}\n")
             handle.write(f"  - Skipped units: {skipped_units}\n")
             handle.write(f"  - Unit summary: {self.artifacts_dir / 'unit_annotation_summary.tsv'}\n")
@@ -925,6 +932,7 @@ class UnitAwareOTFAnnotator:
             "n_units": len(manifest.units),
             "n_manifest_samples": len(manifest_samples),
             "output_path": str(self.output_path),
+            "sparse_zero_intensity_output": True,
             **self.peptide_table_prepare_metadata,
         }
         (self.artifacts_dir / "run_summary.json").write_text(

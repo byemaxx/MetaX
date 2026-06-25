@@ -147,6 +147,83 @@ def test_set_multi_tables(tfa_object):
     assert set(tfa_object.sample_list).issubset(set(tfa_object.func_df.columns))
 
 
+def _write_sparse_analyzer_otf(path, sparse):
+    df = pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "Proteins": ["g1_p1", "g1_p2"],
+            "LCA_level": ["genome", "genome"],
+            "Taxon": ["d__Bacteria|m__g1", "d__Bacteria|m__g1"],
+            "Taxon_prop": [1.0, 1.0],
+            "KEGG_ko": ["K00001", "K00001"],
+            "KEGG_ko_prop": [1.0, 1.0],
+            "Intensity_s1": [10.0, 0.0],
+            "Intensity_s2": [0.0, 20.0],
+        }
+    )
+    if sparse:
+        df[["Intensity_s1", "Intensity_s2"]] = df[
+            ["Intensity_s1", "Intensity_s2"]
+        ].mask(lambda values: values.eq(0))
+    df.to_csv(path, sep="\t", index=False)
+
+
+def test_direct_analyzer_defaults_fill_sparse_zero_intensities(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    sparse_path = tmp_path / "sparse.tsv"
+    dense_path = tmp_path / "dense.tsv"
+    _write_sparse_analyzer_otf(sparse_path, sparse=True)
+    _write_sparse_analyzer_otf(dense_path, sparse=False)
+    analyzers = []
+    for path in [sparse_path, dense_path]:
+        tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+        tfa.set_func("KEGG_ko")
+        tfa.set_multi_tables(
+            level="m",
+            quant_method="sum",
+            data_preprocess_params={
+                "normalize_method": "None",
+                "transform_method": "None",
+                "batch_meta": "None",
+                "processing_order": [],
+            },
+        )
+        analyzers.append(tfa)
+
+    sparse_tfa, dense_tfa = analyzers
+    for table_name in ["taxa_df", "func_df", "taxa_func_df"]:
+        pd.testing.assert_frame_equal(
+            getattr(sparse_tfa, table_name),
+            getattr(dense_tfa, table_name),
+        )
+
+
+def test_remove_all_zero_row_removes_zero_nan_mixtures(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = tmp_path / "zero_nan_rows.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["all_zero", "all_nan", "mixed", "positive"],
+            "Proteins": ["p1", "p2", "p3", "p4"],
+            "LCA_level": ["genome"] * 4,
+            "Taxon": ["d__Bacteria|m__g1"] * 4,
+            "Taxon_prop": [1.0] * 4,
+            "KEGG_ko": ["K00001"] * 4,
+            "KEGG_ko_prop": [1.0] * 4,
+            "metadata_count": [1, 2, 3, 0],
+            "Intensity_s1": [0.0, None, 0.0, 0.0],
+            "Intensity_s2": [0.0, None, None, 5.0],
+        }
+    ).to_csv(path, sep="\t", index=False)
+
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+
+    assert tfa.original_df["Sequence"].tolist() == ["positive"]
+    assert tfa.original_df["metadata_count"].tolist() == [0]
+
+
 def _write_unit_aware_otf(tmp_path, include_unit_sequence=False, include_analysis_unit=True):
     df = pd.DataFrame(
         {

@@ -458,7 +458,9 @@ class TaxaFuncAnalyzer:
         df = self.original_df.copy()
         print(f'original df shape: {df.shape}')
         self.original_row_num = df.shape[0]
-        df = df.drop(df[(df[self.sample_list] == 0).all(axis=1)].index)
+        sample_df = df[self.sample_list]
+        all_zero_or_na = ((sample_df == 0) | sample_df.isna()).all(axis=1)
+        df = df.drop(df[all_zero_or_na].index)
         print(f'after remove all zero row: {df.shape}')
         self.original_df = df
 
@@ -1045,7 +1047,7 @@ class TaxaFuncAnalyzer:
         return df
 
     def _create_taxa_table_only_from_otf(self, level: str = 's',
-                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                         outlier_params: dict = {'detect_method': 'missing-value', 'handle_method': 'fillzero',
                                                  "detection_by_group" : None, "handle_by_group": None},
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
@@ -1131,7 +1133,7 @@ class TaxaFuncAnalyzer:
 
             
     def _create_func_table_only_from_otf(self,  func_name:str = None,func_threshold:float = 1.00,
-                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                         outlier_params: dict = {'detect_method': 'missing-value', 'handle_method': 'fillzero',
                                                  "detection_by_group" : None, "handle_by_group": None},
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},
@@ -1191,7 +1193,7 @@ class TaxaFuncAnalyzer:
         
         
     def set_multi_tables(self, level: str = 's', func_threshold:float = 1.00,
-                         outlier_params: dict = {'detect_method': None, 'handle_method': None,
+                         outlier_params: dict = {'detect_method': 'missing-value', 'handle_method': 'fillzero',
                                                  "detection_by_group" : None, "handle_by_group": None},
                          data_preprocess_params: dict = {'normalize_method': None, 'transform_method': None,
                                                             'batch_meta': None, 'processing_order': ['transform', 'normalize', 'batch']},

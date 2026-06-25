@@ -166,3 +166,32 @@ def test_run_annotate_preserves_otf_output_contract_and_row_order(
         "Intensity_s1",
         "Intensity_s2",
     }.issubset(result.columns)
+
+
+def test_save_result_serializes_only_zero_sample_intensities_as_empty(tmp_path):
+    output_path = tmp_path / "otf.tsv"
+    annotator = PeptideAnnotator(
+        db_path="unused.db",
+        output_path=str(output_path),
+        peptide_df=pd.DataFrame(),
+    )
+    result = pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "Taxon_prop": [0.0, 1.0],
+            "KEGG_ko_prop": [0.0, 1.0],
+            "peptide_num": [0, 2],
+            "Intensity_s1": [0.0, 12.5],
+            "Intensity_s2": [3.0, 0.0],
+        }
+    )
+    expected = result.copy()
+
+    annotator.save_result(result)
+
+    raw_rows = output_path.read_text(encoding="utf-8").splitlines()
+    assert raw_rows[1].split("\t") == ["PEPA", "0.0", "0.0", "0", "", "3.0"]
+    assert raw_rows[2].split("\t") == ["PEPB", "1.0", "1.0", "2", "12.5", ""]
+    pd.testing.assert_frame_equal(result, expected)
+    info_text = output_path.with_name("otf_info.txt").read_text(encoding="utf-8")
+    assert "sparse_zero_intensity_output: True" in info_text

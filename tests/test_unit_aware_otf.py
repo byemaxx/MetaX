@@ -176,8 +176,8 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
         ["u2", "PEPA"],
         ["u2", "PEPB"],
     ]
-    assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
-    assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
+    assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].isna().all()
+    assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].isna().all()
     assert output.is_file()
     info_path = tmp_path / "OTF_unit_aware_info.txt"
     assert info_path.is_file()
@@ -377,9 +377,12 @@ def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
         "Intensity_s1",
         "Intensity_s2",
     ]
-    assert merged.loc[merged["analysis_unit_id"] == "u1", "Intensity_s2"].eq(0).all()
-    assert merged.loc[merged["analysis_unit_id"] == "u2", "Intensity_s1"].eq(0).all()
+    assert merged.loc[merged["analysis_unit_id"] == "u1", "Intensity_s2"].isna().all()
+    assert merged.loc[merged["analysis_unit_id"] == "u2", "Intensity_s1"].isna().all()
     assert merged.loc[merged["analysis_unit_id"] == "u1", "Mock_func"].isna().all()
+    raw_rows = annotator.output_path.read_text(encoding="utf-8").splitlines()
+    assert raw_rows[1].endswith("\t10\t")
+    assert raw_rows[3].endswith("\t\t30")
     assert (
         annotator.output_path.read_text(encoding="utf-8").count("analysis_unit_id")
         == 1
@@ -635,7 +638,7 @@ def test_build_unit_dataframe_filters_before_copy_and_preserves_column_order(tmp
     ]
 
 
-def test_warn_skip_missing_sample_keeps_zero_filled_canonical_column(tmp_path):
+def test_warn_skip_missing_sample_writes_sparse_canonical_column(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(
         {
@@ -667,7 +670,7 @@ def test_warn_skip_missing_sample_keeps_zero_filled_canonical_column(tmp_path):
     )
     assert result["analysis_unit_id"].tolist() == ["u1"]
     assert result.columns[-2:].tolist() == ["Intensity_s1", "Intensity_s2"]
-    assert result["Intensity_s2"].eq(0).all()
+    assert result["Intensity_s2"].isna().all()
 
 
 def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
@@ -788,6 +791,43 @@ def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path, caps
     progress_log = capsys.readouterr().out
     assert "[Unit-aware] Unit 2 of 2: u2 skipped" in progress_log
     assert "2 units total, 1 completed, 1 skipped" in progress_log
+
+
+def test_unit_aware_run_summary_records_sparse_zero_output(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "Intensity_s1": [10, 0],
+            "Intensity_s2": [0, 20],
+        }
+    ).to_csv(peptide_table, sep="\t", index=False)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    peptide_db = tmp_path / "peptide.db"
+    _write_peptide_protein_db(peptide_db)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(taxafunc_db)
+    output = tmp_path / "OTF_unit_aware.tsv"
+
+    result = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(output),
+        db_path=str(peptide_db),
+    ).run(return_dataframe=True)
+
+    assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].isna().all()
+    assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].isna().all()
+    summary = json.loads(
+        (tmp_path / "OTF_unit_aware_artifacts" / "run_summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert summary["sparse_zero_intensity_output"] is True
+    info_text = (tmp_path / "OTF_unit_aware_info.txt").read_text(encoding="utf-8")
+    assert "sparse_zero_intensity_output: True" in info_text
 
 
 def _write_shared_genome_manifest(path):
