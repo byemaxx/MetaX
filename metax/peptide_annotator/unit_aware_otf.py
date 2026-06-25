@@ -166,6 +166,7 @@ class UnitAwareOTFAnnotator:
         self.collect_unique_stats = collect_unique_stats
         self._last_unique_sequences: int | None = None
         self._last_unique_protein_groups: int | None = None
+        self._last_sample_mapping: dict[str, str] | None = None
         self.peptide_table_prepare_metadata: dict = {}
 
         for path, label in [
@@ -226,10 +227,14 @@ class UnitAwareOTFAnnotator:
         if not canonical_cols:
             raise ValueError("No manifest sample columns were mapped for this unit")
 
-        unit_df = peptide_df[[self.peptide_col] + list(rename_map.keys())].copy()
+        mapped_input_cols = list(rename_map.keys())
+        nonzero_mask = peptide_df[mapped_input_cols].sum(axis=1) > 0
+        unit_df = peptide_df.loc[
+            nonzero_mask,
+            [self.peptide_col] + mapped_input_cols,
+        ].copy()
         unit_df = unit_df.rename(columns=rename_map)
         unit_df = unit_df[[self.peptide_col] + canonical_cols]
-        unit_df = unit_df.loc[unit_df[canonical_cols].sum(axis=1) > 0].copy()
         return unit_df, canonical_cols
 
     def _unit_output_path(self, analysis_unit_id: str, tmpdir: Path) -> Path:
@@ -270,7 +275,42 @@ class UnitAwareOTFAnnotator:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(self.unit_aware_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
 
-    def _read_peptide_table(self) -> pd.DataFrame:
+    def _resolve_sample_mapping(
+        self,
+        peptide_columns: Iterable[object],
+        manifest_sample_columns: list[str],
+    ) -> dict[str, str]:
+        return resolve_manifest_sample_columns(
+            peptide_columns=[str(column) for column in peptide_columns],
+            manifest_sample_columns=manifest_sample_columns,
+            output_sample_col_prefix=self.output_sample_col_prefix,
+            input_sample_col_prefix=self.input_sample_col_prefix,
+            on_missing=self.on_missing_sample,
+        )
+
+    def _required_peptide_table_columns(
+        self,
+        peptide_columns: Iterable[object],
+        manifest_sample_columns: list[str],
+    ) -> list[str]:
+        peptide_columns = [str(column) for column in peptide_columns]
+        if self.peptide_col not in peptide_columns:
+            raise ValueError(f"Peptide column {self.peptide_col!r} not found in peptide table")
+        self._last_sample_mapping = self._resolve_sample_mapping(
+            peptide_columns,
+            manifest_sample_columns,
+        )
+        return list(
+            dict.fromkeys(
+                [self.peptide_col, *self._last_sample_mapping.values()]
+            )
+        )
+
+    def _read_peptide_table(
+        self,
+        manifest_sample_columns: list[str] | None = None,
+    ) -> pd.DataFrame:
+        self._last_sample_mapping = None
         if is_parquet_path(self.peptide_table_path):
             parquet_columns = read_parquet_columns(self.peptide_table_path)
             if not has_diann_core_columns(parquet_columns):
@@ -278,7 +318,16 @@ class UnitAwareOTFAnnotator:
                     "input_peptide_table_format": "parquet",
                     "input_peptide_table_original_path": str(self.peptide_table_path),
                 }
-                return pd.read_parquet(self.peptide_table_path)
+                if manifest_sample_columns is None:
+                    return pd.read_parquet(self.peptide_table_path)
+                required_columns = self._required_peptide_table_columns(
+                    parquet_columns,
+                    manifest_sample_columns,
+                )
+                return pd.read_parquet(
+                    self.peptide_table_path,
+                    columns=required_columns,
+                )
             prepared = prepare_diann_parquet_for_direct_otf(
                 self.peptide_table_path,
                 sample_column_prefix="",
@@ -289,9 +338,29 @@ class UnitAwareOTFAnnotator:
                 "Detected long-format DIA-NN parquet; pivoting "
                 f"{prepared.peptide_col} x Run using {prepared.intensity_col}"
             )
+            if manifest_sample_columns is not None:
+                self._last_sample_mapping = self._resolve_sample_mapping(
+                    prepared.dataframe.columns,
+                    manifest_sample_columns,
+                )
             return prepared.dataframe
         self.peptide_table_prepare_metadata = {}
-        return pd.read_csv(self.peptide_table_path, sep=self.table_separator)
+        if manifest_sample_columns is None:
+            return pd.read_csv(self.peptide_table_path, sep=self.table_separator)
+        header_columns = pd.read_csv(
+            self.peptide_table_path,
+            sep=self.table_separator,
+            nrows=0,
+        ).columns
+        required_columns = self._required_peptide_table_columns(
+            header_columns,
+            manifest_sample_columns,
+        )
+        return pd.read_csv(
+            self.peptide_table_path,
+            sep=self.table_separator,
+            usecols=required_columns,
+        )
 
     def _record_summary(
         self,
@@ -382,13 +451,14 @@ class UnitAwareOTFAnnotator:
         for record in unit_output_records:
             unit_path = Path(record["path"])
             for chunk in pd.read_csv(unit_path, sep="\t", chunksize=merge_chunksize):
-                for column in canonical_sample_cols:
-                    if column not in chunk.columns:
-                        chunk[column] = 0
-                for column in ordered_columns:
-                    if column not in chunk.columns:
-                        chunk[column] = pd.NA
-                chunk = chunk.loc[:, ordered_columns]
+                missing_sample_cols = [
+                    column
+                    for column in canonical_sample_cols
+                    if column not in chunk.columns
+                ]
+                chunk = chunk.reindex(columns=ordered_columns)
+                if missing_sample_cols:
+                    chunk[missing_sample_cols] = 0
                 if unique_sequences is not None:
                     sequence_column = "Sequence" if "Sequence" in chunk.columns else self.peptide_col
                     unique_sequences.update(
@@ -516,18 +586,17 @@ class UnitAwareOTFAnnotator:
             f"(genome threshold: {manifest.selected_genome_threshold}).",
             flush=True,
         )
-        peptide_df = self._read_peptide_table()
+        manifest_samples = self._all_manifest_samples(manifest)
+        peptide_df = self._read_peptide_table(manifest_samples)
         if self.peptide_col not in peptide_df.columns:
             raise ValueError(f"Peptide column {self.peptide_col!r} not found in peptide table")
 
-        manifest_samples = self._all_manifest_samples(manifest)
-        sample_mapping = resolve_manifest_sample_columns(
-            peptide_columns=[str(col) for col in peptide_df.columns],
-            manifest_sample_columns=manifest_samples,
-            output_sample_col_prefix=self.output_sample_col_prefix,
-            input_sample_col_prefix=self.input_sample_col_prefix,
-            on_missing=self.on_missing_sample,
-        )
+        sample_mapping = self._last_sample_mapping
+        if sample_mapping is None:
+            sample_mapping = self._resolve_sample_mapping(
+                peptide_df.columns,
+                manifest_samples,
+            )
         mapped_input_cols = sorted(set(sample_mapping.values()))
         if mapped_input_cols:
             peptide_df[mapped_input_cols] = (
@@ -556,8 +625,32 @@ class UnitAwareOTFAnnotator:
         global_mapping: dict[str, dict[str, set[str]]] | None = None
         if self.digested_genome_folders is not None:
             mapping_started = time.perf_counter()
+            globally_nonzero_mask = (
+                peptide_df[mapped_input_cols].sum(axis=1) > 0
+                if mapped_input_cols
+                else pd.Series(False, index=peptide_df.index)
+            )
+            digested_scan_peptides = (
+                peptide_df.loc[globally_nonzero_mask, self.peptide_col]
+                .dropna()
+                .astype(str)
+            )
+            digested_scan_peptide_count = int(
+                digested_scan_peptides.loc[
+                    digested_scan_peptides.str.len() > 0
+                ].nunique()
+            )
+            print(
+                "[Unit-aware] Digested scan candidates: "
+                f"{digested_scan_peptide_count} unique peptides with nonzero "
+                "intensity in mapped manifest samples.",
+                flush=True,
+            )
             global_mapping = build_global_unit_aware_peptide_protein_map(
-                peptide_df=peptide_df,
+                peptide_df=peptide_df.loc[
+                    globally_nonzero_mask,
+                    [self.peptide_col],
+                ],
                 peptide_col=self.peptide_col,
                 manifest=manifest,
                 digested_genome_folders=self.digested_genome_folders,
