@@ -259,6 +259,65 @@ class TaxaFuncAnalyzer:
             out.insert(1, self.peptide_col_name)
         return out
 
+    def _expand_function_rows(
+        self,
+        df: pd.DataFrame,
+        func_name: str = None,
+        split_by: str = None,
+    ) -> pd.DataFrame:
+        func_col = self.func_name if func_name is None else func_name
+        separator = self.split_func_sep if split_by is None else split_by
+        expanded = df.copy()
+        expanded[func_col] = expanded[func_col].str.split(separator)
+        expanded = expanded.explode(func_col)
+        expanded[func_col] = expanded[func_col].str.strip()
+        return expanded
+
+    def _add_peptide_count_columns(
+        self,
+        summary_df: pd.DataFrame,
+        peptide_df: pd.DataFrame,
+        group_cols: list[str],
+        split_func: bool = False,
+        func_name: str = None,
+        split_by: str = None,
+    ) -> pd.DataFrame:
+        """
+        Add peptide counts based on unique peptide identities.
+
+        ``peptide_num`` is retained for compatibility. In unit-aware mode,
+        ``unit_peptide_num`` makes its analysis-unit-aware semantics explicit,
+        while ``bare_sequence_num`` reports unique unqualified sequences.
+        """
+        result = summary_df.copy()
+        if not self.unit_aware_mode:
+            return result
+
+        count_source = peptide_df.copy()
+        if split_func:
+            count_source = self._expand_function_rows(
+                count_source,
+                func_name=func_name,
+                split_by=split_by,
+            )
+
+        identity_counts = count_source.groupby(group_cols)[self.peptide_identity_col].nunique()
+        result["peptide_num"] = identity_counts.reindex(result.index).fillna(0).astype(int)
+        result["unit_peptide_num"] = result["peptide_num"]
+        bare_sequence_col = self.peptide_col_name
+        if bare_sequence_col not in count_source.columns:
+            bare_sequence_col = "_MetaXBareSequence"
+            count_source[bare_sequence_col] = (
+                count_source[self.peptide_identity_col]
+                .astype(str)
+                .str.rsplit("||", n=1)
+                .str[-1]
+            )
+        bare_counts = count_source.groupby(group_cols)[bare_sequence_col].nunique()
+        result["bare_sequence_num"] = bare_counts.reindex(result.index).fillna(0).astype(int)
+
+        return result
+
 
     def _set_meta(self, meta_path=None) -> None:
         if meta_path is None:
@@ -1067,6 +1126,11 @@ class TaxaFuncAnalyzer:
             df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, target_col='Taxon')
         else: # sum
             df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
+        df_taxa = self._add_peptide_count_columns(
+            df_taxa,
+            df_taxa_pep,
+            group_cols=['Taxon'],
+        )
             
         print("\n-----Starting to perform data pre-processing for Taxa table...-----")
         df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
@@ -1112,7 +1176,22 @@ class TaxaFuncAnalyzer:
         if split_func:
             self.peptide_num_used['func'] = len(df_func_pep)
             df_func = self.split_func(df=df_func, split_func_params=split_func_params, df_type='func', func_name=func_name)
+            df_func = self._add_peptide_count_columns(
+                df_func,
+                df_func_pep,
+                group_cols=[func_name],
+                split_func=True,
+                func_name=func_name,
+                split_by=split_func_params['split_by'],
+            )
             df_func = self.filter_peptides_num_for_splited_func(df=df_func, peptide_num_threshold=peptide_num_threshold, df_type='func')
+        else:
+            df_func = self._add_peptide_count_columns(
+                df_func,
+                df_func_pep,
+                group_cols=[func_name],
+                func_name=func_name,
+            )
 
         df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
         print(f"Function table created successfully! Number of functions: {len(df_func)}")
@@ -1256,6 +1335,11 @@ class TaxaFuncAnalyzer:
                 df_taxa = self.run_lfq_for_taxa_or_func(df_taxa_pep, target_col='Taxon')
             else: # sum
                 df_taxa = df_taxa_pep.groupby('Taxon').sum(numeric_only=True)
+            df_taxa = self._add_peptide_count_columns(
+                df_taxa,
+                df_taxa_pep,
+                group_cols=['Taxon'],
+            )
                 
             print("\n-----Starting to perform data pre-processing for Taxa table...-----")
             df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
@@ -1299,6 +1383,7 @@ class TaxaFuncAnalyzer:
         df_taxa_func['peptide_num'] = 1
         if not split_func:
             df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')
+        df_taxa_func_peptides = df_taxa_func.copy()
         
         for key in ['taxa_func', 'taxa', 'func']:
             self.peptide_num_used[key] = len(df_taxa_func) if self.peptide_num_used[key] == 0 else self.peptide_num_used[key]
@@ -1311,8 +1396,21 @@ class TaxaFuncAnalyzer:
         # split the function before data preprocess
         if split_func:
             df_taxa_func = self.split_func( df=df_taxa_func, split_func_params=split_func_params, df_type='taxa_func')
+            df_taxa_func = self._add_peptide_count_columns(
+                df_taxa_func,
+                df_taxa_func_peptides,
+                group_cols=['Taxon', self.func_name],
+                split_func=True,
+                split_by=split_func_params['split_by'],
+            )
             df_taxa_func = self.filter_peptides_num_for_splited_func(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, 
                                                                      df_type='taxa_func')
+        else:
+            df_taxa_func = self._add_peptide_count_columns(
+                df_taxa_func,
+                df_taxa_func_peptides,
+                group_cols=['Taxon', self.func_name],
+            )
             
             
         print("\n-----Starting to perform data pre-processing for [Taxa-Function] table...-----")
@@ -1329,15 +1427,40 @@ class TaxaFuncAnalyzer:
         
         #----- create taxa and func table if not generate_taxa_and_func_before_filtering
         if taxa_and_func_only_from_otf:
+            derived_peptide_source = df_taxa_func_peptides
+            function_count_source = derived_peptide_source
+            if split_func:
+                expanded_source = self._expand_function_rows(
+                    derived_peptide_source,
+                    split_by=split_func_params['split_by'],
+                )
+                expanded_pairs = pd.MultiIndex.from_frame(
+                    expanded_source[['Taxon', self.func_name]]
+                )
+                valid_rows = expanded_pairs.isin(df_taxa_func.index)
+                function_count_source = expanded_source.loc[valid_rows].copy()
+                valid_source_indices = function_count_source.index.unique()
+                derived_peptide_source = derived_peptide_source.loc[valid_source_indices].copy()
+
             print("Starting to set Taxa table...")
-            df_taxa = df_taxa_func.groupby('Taxon').sum(numeric_only=True)
+            df_taxa = derived_peptide_source.groupby('Taxon').sum(numeric_only=True)
+            df_taxa = self._add_peptide_count_columns(
+                df_taxa,
+                derived_peptide_source,
+                group_cols=['Taxon'],
+            )
             print("\n-----Starting to perform data pre-processing for [Taxa] table...-----")
             df_taxa = self.data_preprocess(df=df_taxa,df_name = 'taxa', **data_preprocess_params)
             self.taxa_df = df_taxa
             
             # ----- create func table -----
             print("Starting to set Function table...")
-            df_func = df_taxa_func.groupby(self.func_name).sum(numeric_only=True)            
+            df_func = df_taxa_func.groupby(self.func_name).sum(numeric_only=True)
+            df_func = self._add_peptide_count_columns(
+                df_func,
+                function_count_source,
+                group_cols=[self.func_name],
+            )
             print("\n-----Starting to perform data pre-processing for [Function] table...-----")
             df_func = self.data_preprocess(df=df_func,df_name = 'func', **data_preprocess_params)
             self.func_df = df_func
@@ -1418,9 +1541,11 @@ class TaxaFuncAnalyzer:
         }
         table_name = table_name.lower()
         dft = getattr(self, name_dict[table_name])
-        # remove peptide_num column if exists
-        if "peptide_num" in dft.columns:
-            dft = dft.drop(columns="peptide_num", errors='ignore')
+        # remove peptide count diagnostic columns if they exist
+        dft = dft.drop(
+            columns=["peptide_num", "unit_peptide_num", "bare_sequence_num"],
+            errors='ignore',
+        )
         
         if table_name in ['protein', 'proteins']:
             dft = dft.drop(columns='peptides', errors='ignore')

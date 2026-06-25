@@ -181,6 +181,10 @@ def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_pa
     assert tfa.taxa_df["peptide_num"].sum() == 2
     assert tfa.func_df["peptide_num"].sum() == 2
     assert tfa.taxa_func_df["peptide_num"].sum() == 2
+    assert tfa.taxa_df["unit_peptide_num"].sum() == 2
+    assert tfa.func_df["unit_peptide_num"].sum() == 2
+    assert tfa.taxa_func_df["unit_peptide_num"].sum() == 2
+    assert tfa.taxa_df["bare_sequence_num"].sum() == 2
 
     tfa.set_multi_tables(
         sum_protein=True,
@@ -198,6 +202,62 @@ def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_pa
     assert tfa.protein_df.loc["g1_p1", ["s1", "s2"]].tolist() == [10.0, 0.0]
     assert tfa.protein_df.loc["g2_p2", ["s1", "s2"]].tolist() == [0.0, 20.0]
     assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
+
+
+def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = tmp_path / "unit_aware_split_otf.tsv"
+    pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u2"],
+            "Sequence": ["PEPA", "PEPA"],
+            "Proteins": ["g1_p1", "g1_p2"],
+            "LCA_level": ["genome", "genome"],
+            "Taxon": ["d__Bacteria|m__g1", "d__Bacteria|m__g1"],
+            "Taxon_prop": [1.0, 1.0],
+            "KEGG_ko": ["K00001|K00002", "K00001|K00002"],
+            "KEGG_ko_prop": [1.0, 1.0],
+            "Intensity_s1": [10.0, 0.0],
+            "Intensity_s2": [0.0, 20.0],
+        }
+    ).to_csv(path, sep="\t", index=False)
+
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    tfa.set_multi_tables(
+        level="m",
+        quant_method="sum",
+        split_func=True,
+        split_func_params={"split_by": "|", "share_intensity": False},
+        taxa_and_func_only_from_otf=True,
+        data_preprocess_params={
+            "normalize_method": "None",
+            "transform_method": "None",
+            "batch_meta": "None",
+            "processing_order": [],
+        },
+        outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
+    )
+
+    taxon = "d__Bacteria|m__g1"
+    assert tfa.taxa_df.loc[taxon, ["s1", "s2"]].tolist() == [10.0, 20.0]
+    assert tfa.taxa_df.loc[taxon, "peptide_num"] == 2
+    assert tfa.taxa_df.loc[taxon, "unit_peptide_num"] == 2
+    assert tfa.taxa_df.loc[taxon, "bare_sequence_num"] == 1
+
+    for func in ["K00001", "K00002"]:
+        assert tfa.func_df.loc[func, ["s1", "s2"]].tolist() == [10.0, 20.0]
+        assert tfa.func_df.loc[func, "unit_peptide_num"] == 2
+        assert tfa.func_df.loc[func, "bare_sequence_num"] == 1
+        assert tfa.taxa_func_df.loc[(taxon, func), ["s1", "s2"]].tolist() == [10.0, 20.0]
+        assert tfa.taxa_func_df.loc[(taxon, func), "unit_peptide_num"] == 2
+        assert tfa.taxa_func_df.loc[(taxon, func), "bare_sequence_num"] == 1
+
+    assert tfa.processed_original_df["KEGG_ko"].tolist() == [
+        "K00001|K00002",
+        "K00001|K00002",
+    ]
 
 
 def test_unit_aware_sequence_is_used_for_all_summarization_paths(tmp_path):
