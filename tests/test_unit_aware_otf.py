@@ -466,6 +466,43 @@ def test_unit_aware_otf_prepares_diann_parquet_with_shared_alias_rules(
     assert annotator.peptide_table_prepare_metadata["diann_intensity_column"] == intensity_col
 
 
+def test_unit_aware_otf_uses_selected_diann_intensity_column(tmp_path):
+    peptide_table = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1.raw", "s2.raw"],
+            "Stripped.Sequence": ["PEPA", "PEPA"],
+            "Precursor.Normalised": [10.0, 20.0],
+            "Precursor.Quantity": [100.0, 200.0],
+        }
+    ).to_parquet(peptide_table)
+    manifest = tmp_path / "unit_aware_manifest.json"
+    _write_manifest(manifest)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    taxafunc_db.write_text("", encoding="utf-8")
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+
+    annotator = UnitAwareOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_aware_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "OTF.tsv"),
+        digested_genome_folders=str(digested_dir),
+        peptide_col="Stripped.Sequence",
+        diann_intensity_col="Precursor.Quantity",
+    )
+
+    prepared = annotator._read_peptide_table(["s1", "s2"])
+
+    assert prepared.loc[0, "s1"] == 100.0
+    assert prepared.loc[0, "s2"] == 200.0
+    assert (
+        annotator.peptide_table_prepare_metadata["diann_intensity_column"]
+        == "Precursor.Quantity"
+    )
+
+
 def test_unit_aware_otf_keeps_wide_parquet_compatible(tmp_path):
     peptide_table = tmp_path / "wide.parquet"
     pd.DataFrame(

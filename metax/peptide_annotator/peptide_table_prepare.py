@@ -63,11 +63,38 @@ def read_parquet_columns(parquet_path: str | Path) -> list[str]:
         ) from exc
 
 
-def select_diann_intensity_column(columns: Iterable[str]) -> str:
+def available_diann_intensity_columns(columns: Iterable[str]) -> list[str]:
     available = {str(column) for column in columns}
-    for candidate in DIANN_INTENSITY_CANDIDATES:
-        if candidate in available:
-            return candidate
+    return [
+        candidate
+        for candidate in DIANN_INTENSITY_CANDIDATES
+        if candidate in available
+    ]
+
+
+def select_diann_intensity_column(
+    columns: Iterable[str],
+    intensity_col: str | None = None,
+) -> str:
+    available = {str(column) for column in columns}
+    if intensity_col is not None:
+        intensity_col = str(intensity_col).strip()
+        if intensity_col not in DIANN_INTENSITY_CANDIDATES:
+            raise ValueError(
+                f"Unsupported DIA-NN intensity column: {intensity_col!r}. "
+                "Expected one of: "
+                + ", ".join(DIANN_INTENSITY_CANDIDATES)
+            )
+        if intensity_col not in available:
+            raise ValueError(
+                f"Selected DIA-NN intensity column {intensity_col!r} "
+                "was not found in the parquet file."
+            )
+        return intensity_col
+
+    available_candidates = available_diann_intensity_columns(available)
+    if available_candidates:
+        return available_candidates[0]
     raise ValueError(
         "DIA-NN parquet is missing an intensity column. Expected one of: "
         + ", ".join(DIANN_INTENSITY_CANDIDATES)
@@ -91,6 +118,7 @@ def resolve_diann_parquet_schema(
     columns: Iterable[str],
     *,
     require_score_columns: bool = False,
+    intensity_col: str | None = None,
 ) -> PeptideTableSchema:
     available = {str(column) for column in columns}
     required = [DIANN_RUN_COLUMN, DIANN_PEPTIDE_COLUMN]
@@ -100,7 +128,7 @@ def resolve_diann_parquet_schema(
     if missing:
         raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
 
-    intensity_col = select_diann_intensity_column(available)
+    intensity_col = select_diann_intensity_column(available, intensity_col)
     return PeptideTableSchema(
         peptide_col=DIANN_PEPTIDE_COLUMN,
         intensity_col=intensity_col,
@@ -115,10 +143,12 @@ def diann_parquet_required_columns(
     columns: Iterable[str],
     *,
     require_score_columns: bool = False,
+    intensity_col: str | None = None,
 ) -> list[str]:
     schema = resolve_diann_parquet_schema(
         columns,
         require_score_columns=require_score_columns,
+        intensity_col=intensity_col,
     )
     required = [schema.sample_col, schema.peptide_col]
     if require_score_columns:
@@ -142,12 +172,14 @@ def prepare_diann_parquet_for_direct_otf(
     *,
     require_score_columns: bool = False,
     sample_column_prefix: str | None = None,
+    intensity_col: str | None = None,
 ) -> PreparedDIANNPeptideTable:
     parquet_path = str(parquet_path)
     available_columns = read_parquet_columns(parquet_path)
     schema = resolve_diann_parquet_schema(
         available_columns,
         require_score_columns=require_score_columns,
+        intensity_col=intensity_col,
     )
     required_columns = [schema.sample_col, schema.peptide_col]
     if require_score_columns:

@@ -10802,16 +10802,27 @@
                   </widget>
                  </item>
                  <item row="0" column="3">
-                  <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_sample_col_prefix">
+                  <widget class="QComboBox" name="comboBox_pep_direct_to_otf_intensity_column">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="toolTip">
                     <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06</string>
                    </property>
                    <property name="statusTip">
                     <string>e.g. &quot;Intensity&quot; in Intensity_V2_05, Intensity_V2_06 or may startwith Path like &quot;D:\&quot;</string>
                    </property>
-                   <property name="text">
-                    <string>Intensity</string>
+                   <property name="editable">
+                    <bool>true</bool>
                    </property>
+                   <item>
+                    <property name="text">
+                     <string>Intensity</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                 </layout>
@@ -11470,8 +11481,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1227</width>
-                    <height>625</height>
+                    <width>1050</width>
+                    <height>198</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11722,8 +11733,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1229</width>
-                    <height>753</height>
+                    <width>452</width>
+                    <height>60</height>
                    </rect>
                   </property>
                   <attribute name="label">

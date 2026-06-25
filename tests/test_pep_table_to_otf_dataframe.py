@@ -183,3 +183,31 @@ def test_mapper_restores_automatic_genome_ranking_without_genome_list(tmp_path):
     assert mapper.selected_genomes_num > 0
     assert mapper.genome_ranked_table is not None
     assert not result.empty
+
+
+def test_load_peptide_table_supports_wide_parquet(tmp_path):
+    peptide_table = tmp_path / "peptides.parquet"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA", "PEPB"],
+            "Intensity_s1": [10.0, 20.0],
+            "Intensity_s2": [30.0, 40.0],
+        }
+    ).to_parquet(peptide_table)
+    mapper = peptideProteinsMapper(
+        peptide_table_path=str(peptide_table),
+        db_path=str(tmp_path / "unused.db"),
+        table_separator="\t",
+        peptide_col="Sequence",
+        intensity_col_prefix="Intensity_",
+        output_path=str(tmp_path / "out.tsv"),
+    )
+
+    loaded = mapper.load_peptide_table()
+
+    assert loaded.columns.tolist() == [
+        "Sequence",
+        "Intensity_s1",
+        "Intensity_s2",
+    ]
+    assert loaded["Intensity_s1"].tolist() == [10.0, 20.0]

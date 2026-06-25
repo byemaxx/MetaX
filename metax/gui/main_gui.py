@@ -118,6 +118,8 @@ try:
     from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
     from ..peptide_annotator.peptide_table_prepare import (
         PeptideTableSchema,
+        available_diann_intensity_columns,
+        is_diann_parquet,
         is_parquet_path,
         prepare_diann_parquet_for_direct_otf,
         resolve_diann_parquet_schema,
@@ -185,6 +187,8 @@ except (ImportError, ValueError):
     from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
     from metax.peptide_annotator.peptide_table_prepare import (
         PeptideTableSchema,
+        available_diann_intensity_columns,
+        is_diann_parquet,
         is_parquet_path,
         prepare_diann_parquet_for_direct_otf,
         resolve_diann_parquet_schema,
@@ -2825,7 +2829,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             columns, preview_df = self._read_pep_direct_to_otf_peptide_table_preview(peptide_table_path)
             peptide_col = self._infer_pep_direct_to_otf_peptide_column(columns)
-            if self._is_parquet_path(peptide_table_path):
+            diann_parquet_detected = (
+                self._is_parquet_path(peptide_table_path)
+                and is_diann_parquet(columns)
+            )
+            if diann_parquet_detected:
                 schema = resolve_diann_parquet_schema(
                     columns,
                     require_score_columns=True,
@@ -2853,16 +2861,33 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_pep_direct_to_otf_peptide_col_name.setCurrentText(peptide_col)
         self.comboBox_pep_direct_to_otf_peptide_col_name.blockSignals(False)
 
-        if sample_prefix:
-            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setText(sample_prefix)
-            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setStatusTip(
-                f"Auto-detected prefix from peptide table: {sample_prefix}"
+        intensity_selector = self.comboBox_pep_direct_to_otf_intensity_column
+        intensity_selector.blockSignals(True)
+        intensity_selector.clear()
+        if diann_parquet_detected:
+            intensity_selector.setEditable(False)
+            intensity_selector.addItems(available_diann_intensity_columns(columns))
+            intensity_selector.setCurrentText(schema.intensity_col)
+            self.label_227.setText("DIA-NN Intensity Column")
+            intensity_selector.setStatusTip(
+                "Select the DIA-NN parquet column used to build sample intensities."
             )
+        else:
+            intensity_selector.setEditable(True)
+            if sample_prefix:
+                intensity_selector.addItem(sample_prefix)
+                intensity_selector.setCurrentText(sample_prefix)
+            self.label_227.setText("Prefix of Intensity Column")
+            intensity_selector.setStatusTip(
+                "Prefix used to identify intensity columns in the peptide table."
+            )
+        intensity_selector.blockSignals(False)
 
     def _prepare_diann_parquet_for_pep_direct_to_otf(
         self,
         parquet_path: str,
         output_path: str,
+        intensity_col: str,
     ) -> tuple[str, str, str, str, dict]:
         output_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
         output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'pep_direct_to_otf'
@@ -2872,6 +2897,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         prepared = prepare_diann_parquet_for_direct_otf(
             parquet_path,
             require_score_columns=True,
+            intensity_col=intensity_col,
         )
         prepared.dataframe.to_csv(prepared_path, sep='\t', index=False)
         metadata = {
@@ -2976,7 +3002,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             peptide_table_separator=self._decode_pep_direct_to_otf_separator(
                 self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
             ),
-            intensity_col_prefix=self.lineEdit_pep_direct_to_otf_sample_col_prefix.text().strip(),
+            intensity_col_prefix=self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip(),
             current_config=config,
         )
         if dialog.exec_() == QDialog.Accepted:
@@ -3770,6 +3796,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         duplicate_peptide_handling_mode = (
             self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip() or "sum"
         )
+        diann_intensity_col = None
+        if self._is_parquet_path(peptide_table_path):
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            if is_diann_parquet(parquet_columns):
+                diann_intensity_col = (
+                    self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+                    or None
+                )
 
         required_values = [
             ("Peptide table", peptide_table_path),
@@ -3857,6 +3891,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "n_jobs": n_jobs,
                 "merge_chunksize": 100_000,
                 "collect_unique_stats": False,
+                "diann_intensity_col": diann_intensity_col,
             }
 
             def pep_direct_to_otf_unit_aware_wrapper():
@@ -3883,7 +3918,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
         table_separator = self._decode_pep_direct_to_otf_separator(self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip())
         peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
-        intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text().strip()
+        intensity_col_prefix = self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
         protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
@@ -3894,16 +3929,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
         original_peptide_table_path = peptide_table_path
         parquet_conversion_metadata = {}
+        diann_parquet_detected = False
         if self._is_parquet_path(peptide_table_path):
             table_separator = '\t'
             parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
-            schema = resolve_diann_parquet_schema(
-                parquet_columns,
-                require_score_columns=True,
-            )
-            peptide_col = schema.peptide_col
-            intensity_col_prefix = schema.intensity_col_prefix
-            self._apply_metaumbra_columns(schema)
+            diann_parquet_detected = is_diann_parquet(parquet_columns)
+            if diann_parquet_detected:
+                schema = resolve_diann_parquet_schema(
+                    parquet_columns,
+                    require_score_columns=True,
+                    intensity_col=intensity_col_prefix,
+                )
+                peptide_col = schema.peptide_col
+                intensity_col_prefix = schema.intensity_col_prefix
+                self._apply_metaumbra_columns(schema)
 
         for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
             if value == '':
@@ -3935,7 +3974,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
             return None
 
-        if self._is_parquet_path(peptide_table_path):
+        if diann_parquet_detected:
             try:
                 (
                     peptide_table_path,
@@ -3946,6 +3985,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 ) = self._prepare_diann_parquet_for_pep_direct_to_otf(
                     parquet_path=original_peptide_table_path,
                     output_path=output_path,
+                    intensity_col=schema.intensity_col,
                 )
             except Exception:
                 error_message = traceback.format_exc()

@@ -123,6 +123,7 @@ class UnitAwareOTFAnnotator:
         n_jobs: int | None = None,
         merge_chunksize: int = 100_000,
         collect_unique_stats: bool = False,
+        diann_intensity_col: str | None = None,
     ):
         if (db_path is None) == (digested_genome_folders is None):
             raise ValueError("Exactly one of db_path or digested_genome_folders must be provided")
@@ -165,6 +166,11 @@ class UnitAwareOTFAnnotator:
         self.n_jobs = n_jobs
         self.merge_chunksize = merge_chunksize
         self.collect_unique_stats = collect_unique_stats
+        self.diann_intensity_col = (
+            diann_intensity_col.strip()
+            if isinstance(diann_intensity_col, str) and diann_intensity_col.strip()
+            else None
+        )
         self._last_unique_sequences: int | None = None
         self._last_unique_protein_groups: int | None = None
         self._last_sample_mapping: dict[str, str] | None = None
@@ -332,6 +338,7 @@ class UnitAwareOTFAnnotator:
             prepared = prepare_diann_parquet_for_direct_otf(
                 self.peptide_table_path,
                 sample_column_prefix="",
+                intensity_col=self.diann_intensity_col,
             )
             self.peptide_col = prepared.peptide_col
             self.peptide_table_prepare_metadata = dict(prepared.metadata)
