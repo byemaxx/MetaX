@@ -90,10 +90,22 @@ class Pep2TaxaFunc:
         if self.db_path is None:
             raise ValueError('Database path is required to open a new connection')
         conn = sqlite3.connect(self.db_path)
-        conn.execute('PRAGMA query_only = ON')
-        conn.execute('PRAGMA temp_store = MEMORY')
-        conn.execute('PRAGMA cache_size = -200000')
+        self._configure_readonly_connection(conn)
         return conn
+
+    @staticmethod
+    def _configure_readonly_connection(conn):
+        for pragma in (
+            'PRAGMA query_only = ON',
+            'PRAGMA temp_store = MEMORY',
+            'PRAGMA cache_size = -200000',
+        ):
+            try:
+                conn.execute(pragma)
+            except sqlite3.DatabaseError:
+                # These are optional connection-local optimizations. Query
+                # failures outside this setup must still propagate normally.
+                pass
 
     def _ensure_annotation_query(self):
         if self._annotation_col_names is not None:
@@ -241,15 +253,30 @@ class Pep2TaxaFunc:
         return len(protein_ids), len(genome_ids)
 
     # return a list of taxonomic levels of each protein
-    def query_taxon_from_db(self, protein_list, genome_mode = True):
+    def query_taxon_from_db(self, protein_list, genome_mode=None):
+        if genome_mode is None:
+            genome_mode = self.genome_mode
         self._ensure_id2taxa_table()
         genome_ids = [
             protein.split(self.protein_genome_separator)[0]
             for protein in protein_list
         ]
         self.prefetch_genome_taxa(genome_ids)
+        return self.query_taxon_from_cache(
+            protein_list,
+            genome_mode=genome_mode,
+        )
+
+    def query_taxon_from_cache(self, protein_list, genome_mode=None):
+        if genome_mode is None:
+            genome_mode = self.genome_mode
         taxa = []
-        for genome_id in genome_ids:
+        for protein in protein_list:
+            genome_id = protein.split(self.protein_genome_separator)[0]
+            if genome_id not in self._genome_taxon_cache:
+                raise KeyError(
+                    f'Genome ID was not prefetched: {genome_id}'
+                )
             taxa_str = self._genome_taxon_cache[genome_id]
             if taxa_str != 'not_found':
                 if genome_mode:
@@ -303,23 +330,36 @@ class Pep2TaxaFunc:
     def query_protein_from_db(self, protein_list):
         try:
             self._ensure_annotation_query()
-            col_name = list(self._annotation_col_names)
-            re_dict = {i: [] for i in col_name}
             self.prefetch_protein_annotations(protein_list)
-
-            for protein_id in protein_list:
-                annotation_values = self._protein_annotation_cache[protein_id]
-                for column, value in zip(col_name, annotation_values):
-                    re_dict[column].append(value)
-            # add the protein_id as a function            
-            re_dict['protein_id'] = protein_list
-
-            return re_dict
+            return self.query_protein_from_cache(protein_list)
             
         except Exception as e:
             print(f"Error in query_protein_from_db: {e}")
-            print(f"Columns found: {col_name if 'col_name' in locals() else 'Unknown'}")
+            print(
+                "Columns found: "
+                f"{list(self._annotation_col_names) if self._annotation_col_names else 'Unknown'}"
+            )
             return {'protein_id': protein_list}
+
+    def query_protein_from_cache(self, protein_list):
+        if self._annotation_col_names is None:
+            raise ValueError(
+                'Protein annotation metadata was not initialized; '
+                'prefetch protein annotations first'
+            )
+
+        col_name = list(self._annotation_col_names)
+        re_dict = {column: [] for column in col_name}
+        for protein_id in protein_list:
+            if protein_id not in self._protein_annotation_cache:
+                raise KeyError(
+                    f'Protein ID was not prefetched: {protein_id}'
+                )
+            annotation_values = self._protein_annotation_cache[protein_id]
+            for column, value in zip(col_name, annotation_values):
+                re_dict[column].append(value)
+        re_dict['protein_id'] = protein_list
+        return re_dict
 
 
     # find the most common annotation and its percentage
@@ -340,16 +380,24 @@ class Pep2TaxaFunc:
         return re_out
 
         
+    def proteins_to_taxa_func_from_cache(self, protein_list: list) -> dict:
+        re_dict = self.query_protein_from_cache(protein_list)
+        fun_re = self.stats_fun(re_dict=re_dict)
+        taxa_list = self.query_taxon_from_cache(
+            protein_list,
+            genome_mode=self.genome_mode,
+        )
+        taxa_re = self.find_LCA(taxa_list=taxa_list)
+        return self.create_dict_out(fun_re, taxa_re)
+
     def proteins_to_taxa_func(self,protein_list: list ) -> dict:
-
-        re_dict = self.query_protein_from_db( protein_list)
-
-        fun_re = self.stats_fun(re_dict = re_dict)
-
-        taxa_list = self.query_taxon_from_db( protein_list = protein_list)
-
-        taxa_re = self.find_LCA(taxa_list = taxa_list)
-
+        re_dict = self.query_protein_from_db(protein_list)
+        fun_re = self.stats_fun(re_dict=re_dict)
+        taxa_list = self.query_taxon_from_db(
+            protein_list=protein_list,
+            genome_mode=self.genome_mode,
+        )
+        taxa_re = self.find_LCA(taxa_list=taxa_list)
         return self.create_dict_out(fun_re, taxa_re)
 
 

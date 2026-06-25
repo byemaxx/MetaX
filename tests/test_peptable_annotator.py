@@ -1,8 +1,11 @@
 import sqlite3
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor as RealThreadPoolExecutor
 
 import pandas as pd
+import pytest
 
+from metax.peptide_annotator import peptable_annotator as annotator_module
 from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
 from metax.peptide_annotator.proteins_to_taxafunc import Pep2TaxaFunc
 
@@ -50,13 +53,17 @@ def test_run_2_result_annotates_unique_protein_strings_once(
         peptide_df=pd.DataFrame(),
     )
     calls = []
-    original_run = Pep2TaxaFunc.proteins_to_taxa_func
+    original_run = Pep2TaxaFunc.proteins_to_taxa_func_from_cache
 
     def tracked_run(self, proteins):
         calls.append(tuple(proteins))
         return original_run(self, proteins)
 
-    monkeypatch.setattr(Pep2TaxaFunc, "proteins_to_taxa_func", tracked_run)
+    monkeypatch.setattr(
+        Pep2TaxaFunc,
+        "proteins_to_taxa_func_from_cache",
+        tracked_run,
+    )
     monkeypatch.setattr(annotator, "add_additional_columns", lambda df: df)
     peptide_df = pd.DataFrame(
         {
@@ -111,6 +118,85 @@ def test_prefetch_output_matches_direct_annotation(tmp_path):
 
     assert counts == (3, 3)
     assert prefetched_results == direct_results
+
+
+def test_genome_mode_controls_taxon_and_lca_after_prefetch(tmp_path):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    group = ["g1_p1"]
+
+    with sqlite3.connect(db_path) as conn:
+        genome_annotator = Pep2TaxaFunc(conn=conn, genome_mode=True)
+        assert genome_annotator.prefetch_for_protein_groups([group]) == (1, 1)
+        genome_result = genome_annotator.proteins_to_taxa_func(group)
+
+    with sqlite3.connect(db_path) as conn:
+        species_annotator = Pep2TaxaFunc(conn=conn, genome_mode=False)
+        assert species_annotator.prefetch_for_protein_groups([group]) == (1, 1)
+        species_result = species_annotator.proteins_to_taxa_func(group)
+
+    assert "m__g1" in genome_result["Taxon"]
+    assert genome_result["LCA_level"] == "genome"
+    assert "m__" not in species_result["Taxon"]
+    assert species_result["LCA_level"] == "species"
+
+
+def test_db_path_initialization_matches_existing_connection(tmp_path):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    groups = [["g1_p1", "g2_p2"], ["g1_p1"]]
+
+    with sqlite3.connect(db_path) as conn:
+        existing = Pep2TaxaFunc(conn=conn)
+        existing.prefetch_for_protein_groups(groups)
+        expected = [
+            existing.proteins_to_taxa_func_from_cache(group)
+            for group in groups
+        ]
+
+    from_path = Pep2TaxaFunc(db_path=str(db_path))
+    try:
+        from_path.prefetch_for_protein_groups(groups)
+        actual = [
+            from_path.proteins_to_taxa_func_from_cache(group)
+            for group in groups
+        ]
+        selected = from_path.conn.execute(
+            'SELECT "ID" FROM id2taxa ORDER BY "ID"'
+        ).fetchall()
+        query_only = from_path.conn.execute(
+            "PRAGMA query_only"
+        ).fetchone()[0]
+    finally:
+        from_path.conn.close()
+
+    assert actual == expected
+    assert selected == [("g1",), ("g2",)]
+    assert query_only == 1
+
+
+def test_optional_pragma_failure_does_not_hide_query_failures(
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+
+    class PragmaFailingConnection:
+        def __init__(self, conn):
+            self._conn = conn
+
+        def execute(self, sql, parameters=()):
+            if sql.startswith("PRAGMA"):
+                raise sqlite3.OperationalError("unsupported pragma")
+            return self._conn.execute(sql, parameters)
+
+    conn = sqlite3.connect(db_path)
+    wrapped = PragmaFailingConnection(conn)
+    Pep2TaxaFunc._configure_readonly_connection(wrapped)
+    assert wrapped.execute("SELECT COUNT(*) FROM id2taxa").fetchone() == (2,)
+    with pytest.raises(sqlite3.OperationalError):
+        wrapped.execute("SELECT missing_column FROM id2taxa")
+    conn.close()
 
 
 def test_prefetch_preserves_empty_dash_and_not_found_values(tmp_path):
@@ -224,6 +310,118 @@ def test_prefetch_batches_sql_and_cached_annotation_uses_no_lookup_selects(
         or "from sqlite_master" in sql.lower()
         for sql in cached_trace
     )
+
+
+def test_cache_only_annotation_matches_database_path_and_uses_no_sql(
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    groups = [
+        ["g1_p1", "g2_p2"],
+        ["g2_p2", "missing_p"],
+    ]
+    sql_trace = []
+    conn = sqlite3.connect(db_path)
+    conn.set_trace_callback(sql_trace.append)
+    annotator = Pep2TaxaFunc(conn=conn)
+
+    try:
+        annotator.prefetch_for_protein_groups(groups)
+        database_results = [
+            annotator.proteins_to_taxa_func(group)
+            for group in groups
+        ]
+        sql_trace.clear()
+        cache_results = [
+            annotator.proteins_to_taxa_func_from_cache(group)
+            for group in groups
+            for _ in range(2)
+        ]
+    finally:
+        conn.close()
+
+    assert cache_results == [
+        database_results[0],
+        database_results[0],
+        database_results[1],
+        database_results[1],
+    ]
+    assert not any(
+        "from id2annotation" in sql.lower()
+        or "from id2taxa" in sql.lower()
+        or "from sqlite_master" in sql.lower()
+        for sql in sql_trace
+    )
+
+
+def test_cache_only_annotation_requires_complete_prefetch(tmp_path):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    with sqlite3.connect(db_path) as conn:
+        annotator = Pep2TaxaFunc(conn=conn)
+        annotator.prefetch_for_protein_groups([["g1_p1"]])
+        with pytest.raises(KeyError, match="Protein ID was not prefetched"):
+            annotator.proteins_to_taxa_func_from_cache(["g2_p2"])
+        with pytest.raises(KeyError, match="Genome ID was not prefetched"):
+            annotator.query_taxon_from_cache(["g2_p2"])
+
+
+def test_run_2_result_parallel_cache_path_matches_single_thread(
+    monkeypatch,
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    peptide_df = pd.DataFrame(
+        {
+            "Sequence": ["PEP3", "PEP1", "PEP2", "PEP4"],
+            "Proteins": ["g1_p1", "g1_p1", "g2_p2", "g1_p1;g2_p2"],
+            "Intensity_s1": [3, 1, 2, 4],
+        },
+        index=[30, 10, 20, 40],
+    )
+
+    def make_annotator():
+        annotator = PeptideAnnotator(
+            db_path=str(db_path),
+            output_path="unused.tsv",
+            peptide_df=pd.DataFrame(),
+        )
+        monkeypatch.setattr(
+            annotator,
+            "add_additional_columns",
+            lambda df: df,
+        )
+        return annotator
+
+    single = make_annotator()
+    monkeypatch.setattr(single, "parallel_cache_annotation_min_groups", 1000)
+    expected = single.run_2_result(peptide_df)
+
+    executor_calls = []
+
+    class RecordingThreadPoolExecutor(RealThreadPoolExecutor):
+        def __init__(self, *args, **kwargs):
+            executor_calls.append(kwargs["max_workers"])
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(
+        annotator_module,
+        "ThreadPoolExecutor",
+        RecordingThreadPoolExecutor,
+    )
+    monkeypatch.setattr(annotator_module.os, "cpu_count", lambda: 4)
+    parallel = make_annotator()
+    monkeypatch.setattr(parallel, "parallel_cache_annotation_min_groups", 1)
+    monkeypatch.setattr(parallel, "parallel_cache_annotation_max_workers", 2)
+    actual = parallel.run_2_result(peptide_df)
+
+    assert executor_calls == [2]
+    pd.testing.assert_frame_equal(actual, expected)
+    assert actual.index.tolist() == peptide_df.index.tolist()
+    assert actual.loc[30, "Taxon"] == actual.loc[10, "Taxon"]
+    assert actual["Intensity_s1"].tolist() == [3, 1, 2, 4]
 
 
 def test_run_annotate_preserves_otf_output_contract_and_row_order(
