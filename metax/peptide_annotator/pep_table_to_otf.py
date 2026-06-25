@@ -383,7 +383,7 @@ def _process_digested_genome_batch_for_nested_mapping(
                     )
         except Exception as exc:
             warnings_list.append(
-                "[UnitAwareDigestedScan] Warning: skipped malformed genome TSV: "
+                "[UnitSpecificDigestedScan] Warning: skipped malformed genome TSV: "
                 f"{file_path} ({type(exc).__name__}: {exc})"
             )
             continue
@@ -432,7 +432,7 @@ def _query_peptide_proteins_nested_via_subprocess(
         if isinstance(digested_genome_folders, str)
         else list(digested_genome_folders)
     )
-    with tempfile.TemporaryDirectory(prefix="metax_unit_aware_digested_scan_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="metax_unit_specific_digested_scan_") as tmp:
         tmp_path = pathlib.Path(tmp)
         peptides_file = tmp_path / "peptides.txt"
         selected_file = tmp_path / "selected_genomes.txt"
@@ -479,7 +479,7 @@ def _query_peptide_proteins_nested_via_subprocess(
         env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
         env.setdefault("PYTHONIOENCODING", "utf-8")
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        print("[UnitAwareDigestedScan/Subprocess] Launching isolated process.", flush=True)
+        print("[UnitSpecificDigestedScan/Subprocess] Launching isolated process.", flush=True)
         proc = subprocess.Popen(
             cmd,
             cwd=str(repo_root),
@@ -503,12 +503,12 @@ def _query_peptide_proteins_nested_via_subprocess(
         if return_code != 0:
             tail = "".join(last_lines[-20:])
             raise RuntimeError(
-                f"Unit-aware digested scan subprocess failed (exit={return_code}). "
+                f"Unit-specific digested scan subprocess failed (exit={return_code}). "
                 f"Last output:\n{tail}"
             )
         if not out_mapping.is_file():
             raise RuntimeError(
-                "Unit-aware digested scan subprocess finished without nested_mapping.tsv"
+                "Unit-specific digested scan subprocess finished without nested_mapping.tsv"
             )
         return _read_nested_mapping_tsv(out_mapping)
 
@@ -561,7 +561,7 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
     ]
     if not all_files:
         print(
-            "[UnitAwareDigestedScan] No genome TSV files match the manifest genome union.",
+            "[UnitSpecificDigestedScan] No genome TSV files match the manifest genome union.",
             flush=True,
         )
         return {}
@@ -584,7 +584,7 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
     batches = [all_files[index::batch_count] for index in range(batch_count)]
     batches = [batch for batch in batches if batch]
     print(
-        f"[UnitAwareDigestedScan] Scanning {len(all_files)} union genome TSVs for "
+        f"[UnitSpecificDigestedScan] Scanning {len(all_files)} union genome TSVs for "
         f"{len(peptide_set)} peptides with n_jobs={n_jobs}.",
         flush=True,
     )
@@ -611,7 +611,7 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
         for future in tqdm(
             concurrent.futures.as_completed(futures),
             total=len(futures),
-            desc="Scanning unit-aware genome union",
+            desc="Scanning unit-specific genome union",
         ):
             batch_mapping, batch_warnings = future.result()
             for warning_message in batch_warnings:
@@ -630,7 +630,7 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
         for proteins in genome_map.values()
     )
     print(
-        f"[UnitAwareDigestedScan] Mapped {len(result)}/{len(peptide_set)} peptides "
+        f"[UnitSpecificDigestedScan] Mapped {len(result)}/{len(peptide_set)} peptides "
         f"to {protein_count} peptide/genome/protein candidates in {time.time() - t0:.2f}s.",
         flush=True,
     )

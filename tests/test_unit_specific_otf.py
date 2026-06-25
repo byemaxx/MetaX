@@ -8,11 +8,11 @@ import pytest
 
 import metax.cli.annotate as annotate_cli
 from metax.cli.annotate import build_parser
-from metax.peptide_annotator.unit_aware_otf import (
-    UnitAwareOTFAnnotator,
-    UnitAwareOTFRunResult,
+from metax.peptide_annotator.unit_specific_otf import (
+    UnitSpecificOTFAnnotator,
+    UnitSpecificOTFRunResult,
     _create_temporary_unit_directory,
-    build_global_unit_aware_peptide_protein_map,
+    build_global_unit_specific_peptide_protein_map,
 )
 from metax.peptide_annotator.pep_table_to_otf import (
     query_peptide_proteins_from_digested_genome_folders_nested,
@@ -23,7 +23,7 @@ def _write_manifest(path):
     path.write_text(
         json.dumps(
             {
-                "schema_version": "metaumbra.unit_aware_manifest.v1",
+                "schema_version": "metaumbra.unit_specific_manifest.v1",
                 "generated_by": {"tool": "MetaUmbra", "version": "1.3.5"},
                 "default_genome_threshold": "q0.05",
                 "files": {},
@@ -77,7 +77,7 @@ def _write_taxafunc_db(path):
         conn.commit()
 
 
-def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys):
+def test_unit_specific_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys):
     calls = []
     numeric_apply_calls = 0
     original_dataframe_apply = pd.DataFrame.apply
@@ -124,7 +124,7 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
                 }
             )
 
-    monkeypatch.setattr("metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper", FakeMapper)
+    monkeypatch.setattr("metax.peptide_annotator.unit_specific_otf.peptideProteinsMapper", FakeMapper)
 
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(
@@ -134,17 +134,17 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
             "s2": [20, 5],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
     peptide_db = tmp_path / "peptide.db"
     peptide_db.write_text("", encoding="utf-8")
-    output = tmp_path / "OTF_unit_aware.tsv"
+    output = tmp_path / "OTF_unit_specific.tsv"
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(output),
         db_path=str(peptide_db),
@@ -158,7 +158,7 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert [call["duplicate_peptide_handling_mode"] for call in calls] == ["max", "max"]
     assert numeric_apply_calls == 1
     expected_temp_root = (
-        tmp_path / "OTF_unit_aware_artifacts" / "per_unit" / "unit_otf"
+        tmp_path / "OTF_unit_specific_artifacts" / "per_unit" / "unit_otf"
     )
     assert all(
         Path(call["output_path"]).parent.parent == expected_temp_root
@@ -170,7 +170,7 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     ]
     assert expected_temp_root.is_dir()
     assert list(expected_temp_root.iterdir()) == []
-    assert "UnitAwareSequence" not in result.columns
+    assert "UnitSpecificSequence" not in result.columns
     assert result[["analysis_unit_id", "Sequence"]].drop_duplicates().values.tolist() == [
         ["u1", "PEPA"],
         ["u2", "PEPA"],
@@ -179,21 +179,21 @@ def test_unit_aware_otf_builds_units_and_artifacts(monkeypatch, tmp_path, capsys
     assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].isna().all()
     assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].isna().all()
     assert output.is_file()
-    info_path = tmp_path / "OTF_unit_aware_info.txt"
+    info_path = tmp_path / "OTF_unit_specific_info.txt"
     assert info_path.is_file()
     info_text = info_path.read_text(encoding="utf-8")
     assert "MetaX PeptideAnnotator Results" in info_text
-    assert "Software: MetaX (UnitAwareOTFAnnotator)" in info_text
+    assert "Software: MetaX (UnitSpecificOTFAnnotator)" in info_text
     assert "Completed units: 2" in info_text
     assert "Shape: 3 rows" in info_text
-    assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_sample_column_mapping.tsv").is_file()
-    assert (tmp_path / "OTF_unit_aware_artifacts" / "unit_annotation_summary.tsv").is_file()
+    assert (tmp_path / "OTF_unit_specific_artifacts" / "unit_sample_column_mapping.tsv").is_file()
+    assert (tmp_path / "OTF_unit_specific_artifacts" / "unit_annotation_summary.tsv").is_file()
     progress_log = capsys.readouterr().out
-    assert "[Unit-aware] Preparing annotation for 2 units" in progress_log
-    assert "[Unit-aware] Unit 1 of 2: u1 started" in progress_log
-    assert "[Unit-aware] Unit 1 of 2: u1 completed" in progress_log
-    assert "[Unit-aware] Unit 2 of 2: u2 started" in progress_log
-    assert "[Unit-aware] Unit 2 of 2: u2 completed" in progress_log
+    assert "[Unit-specific] Preparing annotation for 2 units" in progress_log
+    assert "[Unit-specific] Unit 1 of 2: u1 started" in progress_log
+    assert "[Unit-specific] Unit 1 of 2: u1 completed" in progress_log
+    assert "[Unit-specific] Unit 2 of 2: u2 started" in progress_log
+    assert "[Unit-specific] Unit 2 of 2: u2 completed" in progress_log
     assert "2 units total, 2 completed, 0 skipped" in progress_log
 
 
@@ -220,13 +220,13 @@ def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
             "Intensity_s2": [20, 5],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
-    output = tmp_path / "OTF_unit_aware.tsv"
+    output = tmp_path / "OTF_unit_specific.tsv"
 
     original_read_csv = pd.read_csv
 
@@ -236,19 +236,19 @@ def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
         return original_read_csv(path, *args, **kwargs)
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.pd.read_csv",
+        "metax.peptide_annotator.unit_specific_otf.pd.read_csv",
         guarded_read_csv,
     )
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(output),
         db_path=str(peptide_db),
     ).run()
 
-    assert isinstance(result, UnitAwareOTFRunResult)
+    assert isinstance(result, UnitSpecificOTFRunResult)
     assert result.output_path == str(output)
     assert result.rows == 3
     assert result.column_count == len(result.column_names)
@@ -275,13 +275,13 @@ def test_return_dataframe_explicitly_reads_merged_output(monkeypatch, tmp_path):
             "Intensity_s2": [5],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
-    output = tmp_path / "OTF_unit_aware.tsv"
+    output = tmp_path / "OTF_unit_specific.tsv"
 
     output_reads = 0
     original_read_csv = pd.read_csv
@@ -293,13 +293,13 @@ def test_return_dataframe_explicitly_reads_merged_output(monkeypatch, tmp_path):
         return original_read_csv(path, *args, **kwargs)
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.pd.read_csv",
+        "metax.peptide_annotator.unit_specific_otf.pd.read_csv",
         tracking_read_csv,
     )
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(output),
         db_path=str(peptide_db),
@@ -318,9 +318,9 @@ def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
     for path in [peptide_table, manifest, taxafunc_db, peptide_db]:
         path.write_text("", encoding="utf-8")
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "merged.tsv"),
         db_path=str(peptide_db),
@@ -391,7 +391,7 @@ def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
     assert not unit2.exists()
 
 
-def test_saved_per_unit_output_is_final_unit_aware_table(tmp_path):
+def test_saved_per_unit_output_is_final_unit_specific_table(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(
         {
@@ -400,27 +400,27 @@ def test_saved_per_unit_output_is_final_unit_aware_table(tmp_path):
             "Intensity_s2": [0],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
 
-    UnitAwareOTFAnnotator(
+    UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         db_path=str(peptide_db),
         save_per_unit_outputs=True,
-        include_unit_aware_sequence=True,
+        include_unit_specific_sequence=True,
     ).run()
 
     per_unit_path = tmp_path / "out_artifacts" / "per_unit" / "u1_OTF.tsv"
     per_unit = pd.read_csv(per_unit_path, sep="\t")
     assert per_unit["analysis_unit_id"].tolist() == ["u1"]
-    assert per_unit["UnitAwareSequence"].tolist() == ["u1||PEPA"]
+    assert per_unit["UnitSpecificSequence"].tolist() == ["u1||PEPA"]
     temporary_unit_root = (
         tmp_path / "out_artifacts" / "per_unit" / "unit_otf"
     )
@@ -429,7 +429,7 @@ def test_saved_per_unit_output_is_final_unit_aware_table(tmp_path):
 
 
 @pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
-def test_unit_aware_otf_prepares_diann_parquet_with_shared_alias_rules(
+def test_unit_specific_otf_prepares_diann_parquet_with_shared_alias_rules(
     tmp_path,
     intensity_col,
 ):
@@ -441,16 +441,16 @@ def test_unit_aware_otf_prepares_diann_parquet_with_shared_alias_rules(
             intensity_col: [10.0, 20.0],
         }
     ).to_parquet(peptide_table)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
     digested_dir = tmp_path / "digested"
     digested_dir.mkdir()
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -466,7 +466,7 @@ def test_unit_aware_otf_prepares_diann_parquet_with_shared_alias_rules(
     assert annotator.peptide_table_prepare_metadata["diann_intensity_column"] == intensity_col
 
 
-def test_unit_aware_otf_uses_selected_diann_intensity_column(tmp_path):
+def test_unit_specific_otf_uses_selected_diann_intensity_column(tmp_path):
     peptide_table = tmp_path / "report.parquet"
     pd.DataFrame(
         {
@@ -476,16 +476,16 @@ def test_unit_aware_otf_uses_selected_diann_intensity_column(tmp_path):
             "Precursor.Quantity": [100.0, 200.0],
         }
     ).to_parquet(peptide_table)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
     digested_dir = tmp_path / "digested"
     digested_dir.mkdir()
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -503,7 +503,7 @@ def test_unit_aware_otf_uses_selected_diann_intensity_column(tmp_path):
     )
 
 
-def test_unit_aware_otf_keeps_wide_parquet_compatible(tmp_path):
+def test_unit_specific_otf_keeps_wide_parquet_compatible(tmp_path):
     peptide_table = tmp_path / "wide.parquet"
     pd.DataFrame(
         {
@@ -512,16 +512,16 @@ def test_unit_aware_otf_keeps_wide_parquet_compatible(tmp_path):
             "Intensity_s2": [20.0],
         }
     ).to_parquet(peptide_table)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
     digested_dir = tmp_path / "digested"
     digested_dir.mkdir()
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -533,7 +533,7 @@ def test_unit_aware_otf_keeps_wide_parquet_compatible(tmp_path):
     assert annotator.peptide_table_prepare_metadata["input_peptide_table_format"] == "parquet"
 
 
-def test_unit_aware_otf_reads_only_required_tsv_columns_with_prefix_aliases(
+def test_unit_specific_otf_reads_only_required_tsv_columns_with_prefix_aliases(
     monkeypatch,
     tmp_path,
 ):
@@ -546,7 +546,7 @@ def test_unit_aware_otf_reads_only_required_tsv_columns_with_prefix_aliases(
             "Irrelevant": ["unused"],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
@@ -561,12 +561,12 @@ def test_unit_aware_otf_reads_only_required_tsv_columns_with_prefix_aliases(
         return original_read_csv(path, *args, **kwargs)
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.pd.read_csv",
+        "metax.peptide_annotator.unit_specific_otf.pd.read_csv",
         tracking_read_csv,
     )
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -585,7 +585,7 @@ def test_unit_aware_otf_reads_only_required_tsv_columns_with_prefix_aliases(
     assert read_calls[1]["usecols"] == ["Sequence", "Input_s1", "Input_s2"]
 
 
-def test_unit_aware_otf_reads_only_required_wide_parquet_columns(
+def test_unit_specific_otf_reads_only_required_wide_parquet_columns(
     monkeypatch,
     tmp_path,
 ):
@@ -598,7 +598,7 @@ def test_unit_aware_otf_reads_only_required_wide_parquet_columns(
             "Irrelevant": ["unused"],
         }
     ).to_parquet(peptide_table)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
@@ -613,12 +613,12 @@ def test_unit_aware_otf_reads_only_required_wide_parquet_columns(
         return original_read_parquet(path, *args, **kwargs)
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.pd.read_parquet",
+        "metax.peptide_annotator.unit_specific_otf.pd.read_parquet",
         tracking_read_parquet,
     )
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -639,9 +639,9 @@ def test_build_unit_dataframe_filters_before_copy_and_preserves_column_order(tmp
     peptide_db = tmp_path / "peptide.db"
     for path in [peptide_table, manifest, taxafunc_db, peptide_db]:
         path.write_text("", encoding="utf-8")
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         db_path=str(peptide_db),
@@ -684,7 +684,7 @@ def test_warn_skip_missing_sample_writes_sparse_canonical_column(tmp_path):
             "Irrelevant": ["unused"],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
@@ -692,9 +692,9 @@ def test_warn_skip_missing_sample_writes_sparse_canonical_column(tmp_path):
     _write_taxafunc_db(taxafunc_db)
 
     with pytest.warns(UserWarning) as warning_records:
-        result = UnitAwareOTFAnnotator(
+        result = UnitSpecificOTFAnnotator(
             peptide_table_path=str(peptide_table),
-            unit_aware_manifest_path=str(manifest),
+            unit_specific_manifest_path=str(manifest),
             taxafunc_anno_db_path=str(taxafunc_db),
             output_path=str(tmp_path / "out.tsv"),
             db_path=str(peptide_db),
@@ -710,19 +710,19 @@ def test_warn_skip_missing_sample_writes_sparse_canonical_column(tmp_path):
     assert result["Intensity_s2"].isna().all()
 
 
-def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
+def test_unit_specific_otf_defaults_and_path_validation(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10]}).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     taxafunc_db = tmp_path / "taxafunc.db"
     taxafunc_db.write_text("", encoding="utf-8")
     peptide_db = tmp_path / "peptide.db"
     peptide_db.write_text("", encoding="utf-8")
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         db_path=str(peptide_db),
@@ -730,16 +730,16 @@ def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
     assert annotator.distinct_genome_threshold == 0
 
     parser = build_parser()
-    args = parser.parse_args(["--unit-aware"])
+    args = parser.parse_args(["--unit-specific"])
     assert args.distinct_genome_threshold == 0
     assert args.duplicate_peptide_handling_mode == "sum"
-    assert args.include_unit_aware_sequence is False
+    assert args.include_unit_specific_sequence is False
     assert args.output_sample_col_prefix == "Intensity_"
 
     with pytest.raises(ValueError, match="duplicate_peptide_handling_mode"):
-        UnitAwareOTFAnnotator(
+        UnitSpecificOTFAnnotator(
             peptide_table_path=str(peptide_table),
-            unit_aware_manifest_path=str(manifest),
+            unit_specific_manifest_path=str(manifest),
             taxafunc_anno_db_path=str(taxafunc_db),
             output_path=str(tmp_path / "out.tsv"),
             db_path=str(peptide_db),
@@ -747,9 +747,9 @@ def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
         )
 
     with pytest.raises(FileNotFoundError, match="db_path"):
-        UnitAwareOTFAnnotator(
+        UnitSpecificOTFAnnotator(
             peptide_table_path=str(peptide_table),
-            unit_aware_manifest_path=str(manifest),
+            unit_specific_manifest_path=str(manifest),
             taxafunc_anno_db_path=str(taxafunc_db),
             output_path=str(tmp_path / "out.tsv"),
             db_path=str(tmp_path / "missing.db"),
@@ -758,16 +758,16 @@ def test_unit_aware_otf_defaults_and_path_validation(tmp_path):
     not_a_dir = tmp_path / "not_a_dir.tsv"
     not_a_dir.write_text("", encoding="utf-8")
     with pytest.raises(FileNotFoundError, match="digested_genome_folders"):
-        UnitAwareOTFAnnotator(
+        UnitSpecificOTFAnnotator(
             peptide_table_path=str(peptide_table),
-            unit_aware_manifest_path=str(manifest),
+            unit_specific_manifest_path=str(manifest),
             taxafunc_anno_db_path=str(taxafunc_db),
             output_path=str(tmp_path / "out.tsv"),
             digested_genome_folders=[str(not_a_dir)],
         )
 
 
-def test_unit_aware_otf_real_sqlite_integration(tmp_path):
+def test_unit_specific_otf_real_sqlite_integration(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(
         {
@@ -776,61 +776,61 @@ def test_unit_aware_otf_real_sqlite_integration(tmp_path):
             "Intensity_s2": [20, 5],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
-    output = tmp_path / "OTF_unit_aware.tsv"
+    output = tmp_path / "OTF_unit_specific.tsv"
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(output),
         db_path=str(peptide_db),
         peptide_col="Sequence",
     ).run(return_dataframe=True)
 
-    assert "UnitAwareSequence" not in result.columns
+    assert "UnitSpecificSequence" not in result.columns
     assert result["Sequence"].tolist() == ["PEPA", "PEPA", "PEPB"]
     assert result.loc[result["analysis_unit_id"] == "u1", "Proteins"].tolist() == ["g1_p1"]
     assert result.loc[result["analysis_unit_id"] == "u2", "Proteins"].tolist() == ["g2_p2", "g2_p3"]
     assert output.is_file()
 
 
-def test_unit_aware_otf_can_include_unit_aware_sequence_for_debug(tmp_path, capsys):
+def test_unit_specific_otf_can_include_unit_specific_sequence_for_debug(tmp_path, capsys):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame({"Sequence": ["PEPA"], "Intensity_s1": [10], "Intensity_s2": [0]}).to_csv(
         peptide_table,
         sep="\t",
         index=False,
     )
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
-        output_path=str(tmp_path / "OTF_unit_aware.tsv"),
+        output_path=str(tmp_path / "OTF_unit_specific.tsv"),
         db_path=str(peptide_db),
-        include_unit_aware_sequence=True,
+        include_unit_specific_sequence=True,
     ).run(return_dataframe=True)
 
-    assert "UnitAwareSequence" in result.columns
-    assert result["UnitAwareSequence"].tolist() == ["u1||PEPA"]
+    assert "UnitSpecificSequence" in result.columns
+    assert result["UnitSpecificSequence"].tolist() == ["u1||PEPA"]
     progress_log = capsys.readouterr().out
-    assert "[Unit-aware] Unit 2 of 2: u2 skipped" in progress_log
+    assert "[Unit-specific] Unit 2 of 2: u2 skipped" in progress_log
     assert "2 units total, 1 completed, 1 skipped" in progress_log
 
 
-def test_unit_aware_run_summary_records_sparse_zero_output(tmp_path):
+def test_unit_specific_run_summary_records_sparse_zero_output(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(
         {
@@ -839,17 +839,17 @@ def test_unit_aware_run_summary_records_sparse_zero_output(tmp_path):
             "Intensity_s2": [0, 20],
         }
     ).to_csv(peptide_table, sep="\t", index=False)
-    manifest = tmp_path / "unit_aware_manifest.json"
+    manifest = tmp_path / "unit_specific_manifest.json"
     _write_manifest(manifest)
     peptide_db = tmp_path / "peptide.db"
     _write_peptide_protein_db(peptide_db)
     taxafunc_db = tmp_path / "taxafunc.db"
     _write_taxafunc_db(taxafunc_db)
-    output = tmp_path / "OTF_unit_aware.tsv"
+    output = tmp_path / "OTF_unit_specific.tsv"
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(output),
         db_path=str(peptide_db),
@@ -858,12 +858,12 @@ def test_unit_aware_run_summary_records_sparse_zero_output(tmp_path):
     assert result.loc[result["analysis_unit_id"] == "u1", "Intensity_s2"].isna().all()
     assert result.loc[result["analysis_unit_id"] == "u2", "Intensity_s1"].isna().all()
     summary = json.loads(
-        (tmp_path / "OTF_unit_aware_artifacts" / "run_summary.json").read_text(
+        (tmp_path / "OTF_unit_specific_artifacts" / "run_summary.json").read_text(
             encoding="utf-8"
         )
     )
     assert summary["sparse_zero_intensity_output"] is True
-    info_text = (tmp_path / "OTF_unit_aware_info.txt").read_text(encoding="utf-8")
+    info_text = (tmp_path / "OTF_unit_specific_info.txt").read_text(encoding="utf-8")
     assert "sparse_zero_intensity_output: True" in info_text
 
 
@@ -871,7 +871,7 @@ def _write_shared_genome_manifest(path):
     path.write_text(
         json.dumps(
             {
-                "schema_version": "metaumbra.unit_aware_manifest.v1",
+                "schema_version": "metaumbra.unit_specific_manifest.v1",
                 "generated_by": {"tool": "MetaUmbra", "version": "1.3.5"},
                 "default_genome_threshold": "q0.05",
                 "files": {},
@@ -895,12 +895,12 @@ def _write_shared_genome_manifest(path):
     )
 
 
-def test_global_unit_aware_mapping_scans_shared_genomes_once(monkeypatch, tmp_path):
+def test_global_unit_specific_mapping_scans_shared_genomes_once(monkeypatch, tmp_path):
     manifest_path = tmp_path / "manifest.json"
     _write_shared_genome_manifest(manifest_path)
-    from metax.peptide_annotator.unit_aware_manifest import load_unit_aware_manifest
+    from metax.peptide_annotator.unit_specific_manifest import load_unit_specific_manifest
 
-    manifest = load_unit_aware_manifest(manifest_path)
+    manifest = load_unit_specific_manifest(manifest_path)
     calls = []
 
     def fake_query(**kwargs):
@@ -915,10 +915,10 @@ def test_global_unit_aware_mapping_scans_shared_genomes_once(monkeypatch, tmp_pa
         }
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        "metax.peptide_annotator.unit_specific_otf.query_peptide_proteins_from_digested_genome_folders_nested",
         fake_query,
     )
-    result = build_global_unit_aware_peptide_protein_map(
+    result = build_global_unit_specific_peptide_protein_map(
         peptide_df=pd.DataFrame(
             {
                 "Sequence": ["PEPA", "PEPB", "PEPC"],
@@ -1075,7 +1075,7 @@ def test_nested_scanner_warns_for_malformed_genome(tmp_path, capsys):
     assert "ValueError" in output
 
 
-def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
+def test_unit_specific_cli_passes_extended_options(monkeypatch, tmp_path):
     captured = {}
     defaults = build_parser().parse_args([])
     assert defaults.merge_chunksize == 100_000
@@ -1088,13 +1088,13 @@ def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
         def run(self):
             return pd.DataFrame()
 
-    monkeypatch.setattr(annotate_cli, "UnitAwareOTFAnnotator", FakeAnnotator)
+    monkeypatch.setattr(annotate_cli, "UnitSpecificOTFAnnotator", FakeAnnotator)
     result = annotate_cli.main(
         [
-            "--unit-aware",
+            "--unit-specific",
             "--peptide-table",
             str(tmp_path / "peptides.tsv"),
-            "--unit-aware-manifest",
+            "--unit-specific-manifest",
             str(tmp_path / "manifest.json"),
             "--taxafunc-db",
             str(tmp_path / "taxafunc.db"),
@@ -1104,7 +1104,7 @@ def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
             str(tmp_path / "peptide.db"),
             "--duplicate-peptide-handling-mode",
             "max",
-            "--include-unit-aware-sequence",
+            "--include-unit-specific-sequence",
             "--output-sample-col-prefix",
             "Abundance_",
             "--merge-chunksize",
@@ -1115,7 +1115,7 @@ def test_unit_aware_cli_passes_extended_options(monkeypatch, tmp_path):
 
     assert result == 0
     assert captured["duplicate_peptide_handling_mode"] == "max"
-    assert captured["include_unit_aware_sequence"] is True
+    assert captured["include_unit_specific_sequence"] is True
     assert captured["output_sample_col_prefix"] == "Abundance_"
     assert captured["merge_chunksize"] == 7
     assert captured["collect_unique_stats"] is True
@@ -1177,17 +1177,17 @@ def test_run_prefilters_globally_zero_peptides_before_global_mapping(
             )
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.build_global_unit_aware_peptide_protein_map",
+        "metax.peptide_annotator.unit_specific_otf.build_global_unit_specific_peptide_protein_map",
         fake_build_global_map,
     )
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper",
+        "metax.peptide_annotator.unit_specific_otf.peptideProteinsMapper",
         FakeMapper,
     )
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -1197,13 +1197,13 @@ def test_run_prefilters_globally_zero_peptides_before_global_mapping(
     assert result["Sequence"].tolist() == ["PEPA", "PEPB"]
     assert "PEPC" not in result["Sequence"].tolist()
     assert (
-        "[Unit-aware] Digested scan candidates: 2 unique peptides with nonzero "
+        "[Unit-specific] Digested scan candidates: 2 unique peptides with nonzero "
         "intensity in mapped manifest samples."
         in capsys.readouterr().out
     )
 
 
-def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatch, tmp_path):
+def test_unit_specific_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatch, tmp_path):
     manifest = tmp_path / "manifest.json"
     _write_shared_genome_manifest(manifest)
     peptide_table = tmp_path / "peptides.tsv"
@@ -1259,14 +1259,14 @@ def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatc
             )
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        "metax.peptide_annotator.unit_specific_otf.query_peptide_proteins_from_digested_genome_folders_nested",
         fake_query,
     )
-    monkeypatch.setattr("metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper", FakeMapper)
+    monkeypatch.setattr("metax.peptide_annotator.unit_specific_otf.peptideProteinsMapper", FakeMapper)
 
-    result = UnitAwareOTFAnnotator(
+    result = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         digested_genome_folders=str(digested_dir),
@@ -1292,7 +1292,7 @@ def test_unit_aware_folder_mode_reuses_global_map_and_filters_by_unit(monkeypatc
 
 
 @pytest.mark.parametrize("on_empty_unit", ["warn-skip", "error"])
-def test_unit_aware_folder_mode_handles_unit_without_mapped_proteins(
+def test_unit_specific_folder_mode_handles_unit_without_mapped_proteins(
     monkeypatch,
     tmp_path,
     on_empty_unit,
@@ -1313,7 +1313,7 @@ def test_unit_aware_folder_mode_handles_unit_without_mapped_proteins(
     digested_dir.mkdir()
 
     monkeypatch.setattr(
-        "metax.peptide_annotator.unit_aware_otf.query_peptide_proteins_from_digested_genome_folders_nested",
+        "metax.peptide_annotator.unit_specific_otf.query_peptide_proteins_from_digested_genome_folders_nested",
         lambda **kwargs: {"PEPA": {"g1": {"g1_p1"}}},
     )
 
@@ -1336,10 +1336,10 @@ def test_unit_aware_folder_mode_handles_unit_without_mapped_proteins(
                 }
             )
 
-    monkeypatch.setattr("metax.peptide_annotator.unit_aware_otf.peptideProteinsMapper", FakeMapper)
-    annotator = UnitAwareOTFAnnotator(
+    monkeypatch.setattr("metax.peptide_annotator.unit_specific_otf.peptideProteinsMapper", FakeMapper)
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=str(peptide_table),
-        unit_aware_manifest_path=str(manifest),
+        unit_specific_manifest_path=str(manifest),
         taxafunc_anno_db_path=str(taxafunc_db),
         output_path=str(tmp_path / "out.tsv"),
         digested_genome_folders=str(digested_dir),

@@ -812,33 +812,33 @@ These peptide results use metagenome-assembled genomes (MAGs) as the reference d
 
     ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
 
-### 2. MetaUmbra Unit-Aware Backend Annotation
+### 2. MetaUmbra Unit-Specific Backend Annotation
 
-MetaX can consume a MetaUmbra `unit_aware_manifest.json` as the preferred backend interface for unit-aware OTF annotation. In this mode, MetaX uses `sample_columns` from each analysis unit to split the peptide intensity table, and uses `genome_ids_q005` or `genome_ids_q001` to restrict peptide-to-protein mapping per unit. If `--genome-threshold` is not provided, the manifest `default_genome_threshold` is used.
+MetaX can consume a MetaUmbra `unit_specific_manifest.json` as the preferred backend interface for unit-specific OTF annotation. In this mode, MetaX uses `sample_columns` from each analysis unit to split the peptide intensity table, and uses `genome_ids_q005` or `genome_ids_q001` to restrict peptide-to-protein mapping per unit. If `--genome-threshold` is not provided, the manifest `default_genome_threshold` is used.
 
-This backend is additive to the original/global peptide annotation workflow. If no unit-aware manifest or explicit genome list is provided, the legacy workflow still ranks genomes automatically by peptide coverage before protein reduction. Unit-aware mode does not use that global genome ranking step: each analysis unit receives its own genome list directly from the MetaUmbra manifest.
+This backend is additive to the original/global peptide annotation workflow. If no unit-specific manifest or explicit genome list is provided, the legacy workflow still ranks genomes automatically by peptide coverage before protein reduction. Unit-specific mode does not use that global genome ranking step: each analysis unit receives its own genome list directly from the MetaUmbra manifest.
 
-The unit-aware distinct-genome filter defaults to `0`, so MetaX trusts the manifest-selected genome list. Set `--distinct-genome-threshold` to a value greater than `0` only when you want an additional MetaX-side filter requiring that many distinct peptides per genome after mapping.
+The unit-specific distinct-genome filter defaults to `0`, so MetaX trusts the manifest-selected genome list. Set `--distinct-genome-threshold` to a value greater than `0` only when you want an additional MetaX-side filter requiring that many distinct peptides per genome after mapping.
 
 Sample columns are matched from manifest `sample_columns` to peptide-table columns in this order: exact name, `Intensity_` prefix, configured output prefix, configured input prefix, stripped `Intensity_`, stripped output prefix, stripped input prefix, leading underscores removed, and raw-file basename without `.raw`, `.mzML`, or `.mzXML`. Use `--input-sample-col-prefix` for inputs such as `LFQ intensity sample_1`.
 
-The merged unit-aware OTF table includes `analysis_unit_id` and the original `Sequence` column. MetaX internally derives the unit-aware peptide evidence ID as `analysis_unit_id + "||" + Sequence` when downstream analysis needs a unique peptide identity; `UnitAwareSequence` is not written by default. Do not deduplicate unit-aware output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
+The merged unit-specific OTF table includes `analysis_unit_id` and the original `Sequence` column. MetaX internally derives the unit-specific peptide evidence ID as `analysis_unit_id + "||" + Sequence` when downstream analysis needs a unique peptide identity; `UnitSpecificSequence` is not written by default. Do not deduplicate unit-specific output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
 
-In the GUI, select the MetaUmbra `unit_aware_manifest.json` and genome threshold in the main Peptide Direct to OTF window. The Unit-aware Settings dialog does not select a separate manifest or threshold; it configures sample-column matching behavior and missing/empty unit handling, and validates the selected manifest against the current peptide table when possible. Unit-aware mode disables the legacy global genome scoring controls, and the duplicate peptide handling selector still applies. A manual manifest builder is not implemented yet.
+In the GUI, select the MetaUmbra `unit_specific_manifest.json` and genome threshold in the main Peptide Direct to OTF window. The Unit-specific Settings dialog does not select a separate manifest or threshold; it configures sample-column matching behavior and missing/empty unit handling, and validates the selected manifest against the current peptide table when possible. Unit-specific mode disables the legacy global genome scoring controls, and the duplicate peptide handling selector still applies. A manual manifest builder is not implemented yet.
 
-Unit-aware annotation accepts either a wide peptide-intensity table with one sample intensity column per manifest sample or a long-format DIA-NN parquet containing `Run`, `Precursor.Quantity`, and the selected peptide column. Long-format parquet input is pivoted automatically, and common raw-file suffixes such as `.raw` are ignored when matching `Run` values to manifest samples.
+Unit-specific annotation accepts either a wide peptide-intensity table with one sample intensity column per manifest sample or a long-format DIA-NN parquet containing `Run`, `Precursor.Quantity`, and the selected peptide column. Long-format parquet input is pivoted automatically, and common raw-file suffixes such as `.raw` are ignored when matching `Run` values to manifest samples.
 
 Example:
 
 ```bash
 metax-annotate \
-  --unit-aware \
+  --unit-specific \
   --peptide-table report.tsv \
-  --unit-aware-manifest unit_aware_manifest.json \
+  --unit-specific-manifest unit_specific_manifest.json \
   --genome-threshold q0.05 \
   --taxafunc-db MetaX_taxafunc.db \
   --digested-genome-folders digested_genomes/ \
-  --output OTF_unit_aware.tsv \
+  --output OTF_unit_specific.tsv \
   --peptide-col Sequence \
   --input-sample-col-prefix "LFQ intensity "
 ```

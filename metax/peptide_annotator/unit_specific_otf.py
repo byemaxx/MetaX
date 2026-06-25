@@ -23,9 +23,9 @@ from metax.peptide_annotator.peptide_table_prepare import (
     read_parquet_columns,
 )
 from metax.peptide_annotator.peptable_annotator import _prepare_otf_for_output
-from metax.peptide_annotator.unit_aware_manifest import (
-    UnitAwareManifest,
-    load_unit_aware_manifest,
+from metax.peptide_annotator.unit_specific_manifest import (
+    UnitSpecificManifest,
+    load_unit_specific_manifest,
     resolve_manifest_sample_columns,
     write_unit_sample_column_mapping,
 )
@@ -33,7 +33,7 @@ from metax.utils.version import __version__
 
 
 @dataclass(frozen=True)
-class UnitAwareOTFRunResult:
+class UnitSpecificOTFRunResult:
     output_path: str
     info_path: str
     summary_path: str
@@ -59,10 +59,10 @@ def _create_temporary_unit_directory(parent: Path, analysis_unit_id: str) -> Pat
     return run_dir
 
 
-def build_global_unit_aware_peptide_protein_map(
+def build_global_unit_specific_peptide_protein_map(
     peptide_df: pd.DataFrame,
     peptide_col: str,
-    manifest: UnitAwareManifest,
+    manifest: UnitSpecificManifest,
     digested_genome_folders: str | list[str],
     protein_genome_separator: str = "_",
     n_jobs: int | None = None,
@@ -95,11 +95,11 @@ def build_global_unit_aware_peptide_protein_map(
     )
 
 
-class UnitAwareOTFAnnotator:
+class UnitSpecificOTFAnnotator:
     def __init__(
         self,
         peptide_table_path: str,
-        unit_aware_manifest_path: str,
+        unit_specific_manifest_path: str,
         taxafunc_anno_db_path: str,
         output_path: str,
         db_path: str | None = None,
@@ -116,7 +116,7 @@ class UnitAwareOTFAnnotator:
         protein_separator: str = ";",
         protein_genome_separator: str = "_",
         save_per_unit_outputs: bool = False,
-        include_unit_aware_sequence: bool = False,
+        include_unit_specific_sequence: bool = False,
         duplicate_peptide_handling_mode: str = "sum",
         on_missing_sample: str = "error",
         on_empty_unit: str = "warn-skip",
@@ -142,7 +142,7 @@ class UnitAwareOTFAnnotator:
             )
 
         self.peptide_table_path = Path(peptide_table_path)
-        self.unit_aware_manifest_path = Path(unit_aware_manifest_path)
+        self.unit_specific_manifest_path = Path(unit_specific_manifest_path)
         self.taxafunc_anno_db_path = Path(taxafunc_anno_db_path)
         self.output_path = Path(output_path)
         self.db_path = db_path
@@ -159,7 +159,7 @@ class UnitAwareOTFAnnotator:
         self.protein_separator = protein_separator
         self.protein_genome_separator = protein_genome_separator
         self.save_per_unit_outputs = save_per_unit_outputs
-        self.include_unit_aware_sequence = include_unit_aware_sequence
+        self.include_unit_specific_sequence = include_unit_specific_sequence
         self.duplicate_peptide_handling_mode = duplicate_peptide_handling_mode
         self.on_missing_sample = on_missing_sample
         self.on_empty_unit = on_empty_unit
@@ -178,7 +178,7 @@ class UnitAwareOTFAnnotator:
 
         for path, label in [
             (self.peptide_table_path, "peptide_table_path"),
-            (self.unit_aware_manifest_path, "unit_aware_manifest_path"),
+            (self.unit_specific_manifest_path, "unit_specific_manifest_path"),
             (self.taxafunc_anno_db_path, "taxafunc_anno_db_path"),
         ]:
             if not path.is_file():
@@ -211,7 +211,7 @@ class UnitAwareOTFAnnotator:
     def temporary_unit_otf_dir(self) -> Path:
         return self.artifacts_dir / "per_unit" / "unit_otf"
 
-    def _all_manifest_samples(self, manifest: UnitAwareManifest) -> list[str]:
+    def _all_manifest_samples(self, manifest: UnitSpecificManifest) -> list[str]:
         samples: list[str] = []
         for unit in manifest.units.values():
             for sample in unit.sample_columns:
@@ -278,9 +278,9 @@ class UnitAwareOTFAnnotator:
         return result.loc[result["Proteins"].ne("")].copy()
 
     def _write_manifest_used(self) -> None:
-        target = self.artifacts_dir / "unit_aware_manifest_used.json"
+        target = self.artifacts_dir / "unit_specific_manifest_used.json"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(self.unit_aware_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
+        target.write_text(self.unit_specific_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _resolve_sample_mapping(
         self,
@@ -409,7 +409,7 @@ class UnitAwareOTFAnnotator:
         canonical_sample_cols: list[str],
     ) -> list[str]:
         if not unit_output_records:
-            raise ValueError("No unit-aware OTF rows were produced")
+            raise ValueError("No unit-specific OTF rows were produced")
 
         leading_cols = [
             "analysis_unit_id",
@@ -504,7 +504,7 @@ class UnitAwareOTFAnnotator:
     def _write_merged_info(
         self,
         *,
-        manifest: UnitAwareManifest,
+        manifest: UnitSpecificManifest,
         manifest_samples: list[str],
         sample_mapping: dict[str, str],
         summary_df: pd.DataFrame,
@@ -525,7 +525,7 @@ class UnitAwareOTFAnnotator:
         with self.info_path.open("w", encoding="utf-8") as handle:
             handle.write("MetaX PeptideAnnotator Results\n")
             handle.write("=" * 50 + "\n")
-            handle.write(f"Software: MetaX (UnitAwareOTFAnnotator) v{__version__}\n")
+            handle.write(f"Software: MetaX (UnitSpecificOTFAnnotator) v{__version__}\n")
             handle.write(f"Run time: {started_at.strftime('%Y-%m-%d %H:%M:%S')}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Parameters:\n")
@@ -539,15 +539,15 @@ class UnitAwareOTFAnnotator:
             handle.write(f"  - Sample prefix (output): '{self.output_sample_col_prefix}'\n")
             handle.write(f"  - Duplicate handling mode: {self.duplicate_peptide_handling_mode}\n")
             handle.write("-" * 50 + "\n")
-            handle.write("Unit-aware configuration:\n")
-            handle.write(f"  - Manifest: {self.unit_aware_manifest_path}\n")
+            handle.write("Unit-specific configuration:\n")
+            handle.write(f"  - Manifest: {self.unit_specific_manifest_path}\n")
             handle.write(f"  - Selected genome threshold: {manifest.selected_genome_threshold}\n")
             handle.write(f"  - Units: {len(manifest.units)}\n")
             handle.write(f"  - Manifest samples: {len(manifest_samples)}\n")
             handle.write(f"  - Mapped samples: {len(sample_mapping)}\n")
             handle.write(f"  - On missing sample: {self.on_missing_sample}\n")
             handle.write(f"  - On empty unit: {self.on_empty_unit}\n")
-            handle.write(f"  - Include UnitAwareSequence: {self.include_unit_aware_sequence}\n")
+            handle.write(f"  - Include UnitSpecificSequence: {self.include_unit_specific_sequence}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Input/Output:\n")
             handle.write(f"  - Input: {self.peptide_table_path}\n")
@@ -587,16 +587,16 @@ class UnitAwareOTFAnnotator:
     def run(
         self,
         return_dataframe: bool = False,
-    ) -> UnitAwareOTFRunResult | pd.DataFrame:
+    ) -> UnitSpecificOTFRunResult | pd.DataFrame:
         started_at = datetime.now()
-        manifest = load_unit_aware_manifest(
-            self.unit_aware_manifest_path,
+        manifest = load_unit_specific_manifest(
+            self.unit_specific_manifest_path,
             genome_threshold=self.genome_threshold,
             strict=True,
         )
         total_units = len(manifest.units)
         print(
-            f"[Unit-aware] Preparing annotation for {total_units} units "
+            f"[Unit-specific] Preparing annotation for {total_units} units "
             f"(genome threshold: {manifest.selected_genome_threshold}).",
             flush=True,
         )
@@ -619,7 +619,7 @@ class UnitAwareOTFAnnotator:
                 .fillna(0)
             )
         print(
-            f"[Unit-aware] Sample mapping complete: {len(sample_mapping)} of "
+            f"[Unit-specific] Sample mapping complete: {len(sample_mapping)} of "
             f"{len(manifest_samples)} manifest samples mapped.",
             flush=True,
         )
@@ -631,7 +631,7 @@ class UnitAwareOTFAnnotator:
         global_peptides = peptide_df[self.peptide_col].dropna().astype(str)
         global_peptide_count = int(global_peptides.loc[global_peptides.str.len() > 0].nunique())
         print(
-            f"[Unit-aware] Global candidates: {len(global_genome_set)} unique manifest genomes, "
+            f"[Unit-specific] Global candidates: {len(global_genome_set)} unique manifest genomes, "
             f"{global_peptide_count} unique input peptides.",
             flush=True,
         )
@@ -655,12 +655,12 @@ class UnitAwareOTFAnnotator:
                 ].nunique()
             )
             print(
-                "[Unit-aware] Digested scan candidates: "
+                "[Unit-specific] Digested scan candidates: "
                 f"{digested_scan_peptide_count} unique peptides with nonzero "
                 "intensity in mapped manifest samples.",
                 flush=True,
             )
-            global_mapping = build_global_unit_aware_peptide_protein_map(
+            global_mapping = build_global_unit_specific_peptide_protein_map(
                 peptide_df=peptide_df.loc[
                     globally_nonzero_mask,
                     [self.peptide_col],
@@ -677,7 +677,7 @@ class UnitAwareOTFAnnotator:
                 for proteins in genome_map.values()
             )
             print(
-                f"[Unit-aware] Global peptide-protein map built once: "
+                f"[Unit-specific] Global peptide-protein map built once: "
                 f"{len(global_mapping)} mapped peptides, {mapped_protein_count} candidates in "
                 f"{time.perf_counter() - mapping_started:.2f}s.",
                 flush=True,
@@ -706,7 +706,7 @@ class UnitAwareOTFAnnotator:
                 )
                 temporary_unit_dirs.append(tmpdir)
                 progress_prefix = (
-                    f"[Unit-aware] Unit {unit_index} of {total_units}: "
+                    f"[Unit-specific] Unit {unit_index} of {total_units}: "
                     f"{unit.analysis_unit_id}"
                 )
                 print(
@@ -827,8 +827,8 @@ class UnitAwareOTFAnnotator:
                     genome_list=unit.genome_ids,
                     duplicate_peptide_handling_mode=self.duplicate_peptide_handling_mode,
                     genome_selection_metadata={
-                        "genome_selection_method": "metaumbra_unit_aware_manifest",
-                        "unit_aware_manifest_path": str(self.unit_aware_manifest_path),
+                        "genome_selection_method": "metaumbra_unit_specific_manifest",
+                        "unit_specific_manifest_path": str(self.unit_specific_manifest_path),
                         "analysis_unit_id": unit.analysis_unit_id,
                         "selected_genome_threshold": manifest.selected_genome_threshold,
                         **self.peptide_table_prepare_metadata,
@@ -837,9 +837,9 @@ class UnitAwareOTFAnnotator:
                 )
 
                 unit_otf_df.insert(0, "analysis_unit_id", unit.analysis_unit_id)
-                if self.include_unit_aware_sequence:
+                if self.include_unit_specific_sequence:
                     sequence_values = unit_otf_df["Sequence"].astype(str)
-                    unit_otf_df.insert(1, "UnitAwareSequence", unit.analysis_unit_id + "||" + sequence_values)
+                    unit_otf_df.insert(1, "UnitSpecificSequence", unit.analysis_unit_id + "||" + sequence_values)
                 final_unit_output_path = self._unit_output_path(
                     unit.analysis_unit_id,
                     tmpdir,
@@ -927,14 +927,14 @@ class UnitAwareOTFAnnotator:
         completed_units = int((summary_df["status"] == "ok").sum()) if not summary_df.empty else 0
         skipped_units = int((summary_df["status"] == "skipped").sum()) if not summary_df.empty else 0
         print(
-            f"[Unit-aware] Annotation complete: {total_units} units total, "
+            f"[Unit-specific] Annotation complete: {total_units} units total, "
             f"{completed_units} completed, {skipped_units} skipped, "
             f"{merged_rows} merged OTF rows.",
             flush=True,
         )
 
         manifest_summary = {
-            "unit_aware_manifest_path": str(self.unit_aware_manifest_path),
+            "unit_specific_manifest_path": str(self.unit_specific_manifest_path),
             "selected_genome_threshold": manifest.selected_genome_threshold,
             "n_units": len(manifest.units),
             "n_manifest_samples": len(manifest_samples),
@@ -948,7 +948,7 @@ class UnitAwareOTFAnnotator:
         )
         if return_dataframe:
             return pd.read_csv(self.output_path, sep="\t")
-        return UnitAwareOTFRunResult(
+        return UnitSpecificOTFRunResult(
             output_path=str(self.output_path),
             info_path=str(self.info_path),
             summary_path=str(summary_path),

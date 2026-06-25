@@ -14,14 +14,14 @@ from metax.peptide_annotator.peptide_table_prepare import (
     is_parquet_path,
     select_diann_intensity_column,
 )
-from metax.peptide_annotator.unit_aware_manifest import (
-    load_unit_aware_manifest,
+from metax.peptide_annotator.unit_specific_manifest import (
+    load_unit_specific_manifest,
     resolve_manifest_sample_columns,
 )
 
 
 @dataclass
-class UnitAwareGuiConfig:
+class UnitSpecificGuiConfig:
     manifest_path: str = ""
     genome_threshold: str = "auto"
     input_sample_col_prefix: str = ""
@@ -32,7 +32,7 @@ class UnitAwareGuiConfig:
 
 
 @dataclass
-class UnitAwareManifestValidationResult:
+class UnitSpecificManifestValidationResult:
     ok: bool
     message: str
     manifest_samples: list[str]
@@ -41,10 +41,10 @@ class UnitAwareManifestValidationResult:
     details: str = ""
 
 
-class UnitAwareValidationResultDialog(QtWidgets.QDialog):
-    def __init__(self, result: UnitAwareManifestValidationResult, parent=None):
+class UnitSpecificValidationResultDialog(QtWidgets.QDialog):
+    def __init__(self, result: UnitSpecificManifestValidationResult, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Unit-aware Manifest Validation")
+        self.setWindowTitle("Unit-specific Manifest Validation")
         self.setModal(True)
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -110,7 +110,7 @@ def _all_manifest_samples(manifest) -> list[str]:
     return samples
 
 
-def validate_unit_aware_manifest_for_gui(
+def validate_unit_specific_manifest_for_gui(
     manifest_path: str,
     peptide_table_path: str = "",
     peptide_col: str = "Sequence",
@@ -119,10 +119,10 @@ def validate_unit_aware_manifest_for_gui(
     input_sample_col_prefix: str | None = None,
     on_missing_sample: str = "error",
     diann_intensity_col: str | None = None,
-) -> UnitAwareManifestValidationResult:
+) -> UnitSpecificManifestValidationResult:
     manifest_path = str(manifest_path or "").strip()
     if on_missing_sample not in {"error", "warn-skip"}:
-        return UnitAwareManifestValidationResult(
+        return UnitSpecificManifestValidationResult(
             False,
             "On missing sample must be 'error' or 'warn-skip'.",
             [],
@@ -130,21 +130,21 @@ def validate_unit_aware_manifest_for_gui(
             [],
         )
     if not manifest_path:
-        return UnitAwareManifestValidationResult(
+        return UnitSpecificManifestValidationResult(
             False,
-            "Please select a unit-aware manifest JSON in the main Peptide Direct to OTF window.",
+            "Please select a unit-specific manifest JSON in the main Peptide Direct to OTF window.",
             [],
             {},
             [],
         )
     if not Path(manifest_path).is_file():
-        return UnitAwareManifestValidationResult(False, f"Manifest JSON not found:\n{manifest_path}", [], {}, [])
+        return UnitSpecificManifestValidationResult(False, f"Manifest JSON not found:\n{manifest_path}", [], {}, [])
 
     threshold_arg = None if (genome_threshold or "auto") == "auto" else genome_threshold
     try:
-        manifest = load_unit_aware_manifest(manifest_path, genome_threshold=threshold_arg, strict=True)
+        manifest = load_unit_specific_manifest(manifest_path, genome_threshold=threshold_arg, strict=True)
     except Exception as exc:
-        return UnitAwareManifestValidationResult(False, f"Manifest validation failed:\n{exc}", [], {}, [])
+        return UnitSpecificManifestValidationResult(False, f"Manifest validation failed:\n{exc}", [], {}, [])
 
     manifest_samples = _all_manifest_samples(manifest)
     mapped_samples: dict[str, str] = {}
@@ -156,7 +156,7 @@ def validate_unit_aware_manifest_for_gui(
     peptide_table_path = str(peptide_table_path or "").strip()
     if peptide_table_path:
         if not Path(peptide_table_path).is_file():
-            return UnitAwareManifestValidationResult(
+            return UnitSpecificManifestValidationResult(
                 False,
                 f"Peptide table not found:\n{peptide_table_path}",
                 manifest_samples,
@@ -166,7 +166,7 @@ def validate_unit_aware_manifest_for_gui(
         try:
             peptide_columns = _read_peptide_table_header_columns(peptide_table_path, peptide_table_separator)
         except Exception as exc:
-            return UnitAwareManifestValidationResult(
+            return UnitSpecificManifestValidationResult(
                 False,
                 f"Could not read peptide table header:\n{exc}",
                 manifest_samples,
@@ -179,7 +179,7 @@ def validate_unit_aware_manifest_for_gui(
             header_skip_reason = "parquet header metadata could not be read without pyarrow"
         else:
             if peptide_col not in peptide_columns:
-                return UnitAwareManifestValidationResult(
+                return UnitSpecificManifestValidationResult(
                     False,
                     f"Peptide column {peptide_col!r} was not found in the peptide table header.",
                     manifest_samples,
@@ -199,7 +199,7 @@ def validate_unit_aware_manifest_for_gui(
                         diann_intensity_col,
                     )
                 except Exception as exc:
-                    return UnitAwareManifestValidationResult(
+                    return UnitSpecificManifestValidationResult(
                         False,
                         f"Could not read DIA-NN Run values from the parquet file:\n{exc}",
                         manifest_samples,
@@ -217,7 +217,7 @@ def validate_unit_aware_manifest_for_gui(
                         on_missing="warn-skip",
                     )
             except Exception as exc:
-                return UnitAwareManifestValidationResult(
+                return UnitSpecificManifestValidationResult(
                     False,
                     f"Manifest sample-column validation failed:\n{exc}",
                     manifest_samples,
@@ -237,7 +237,7 @@ def validate_unit_aware_manifest_for_gui(
                         "\nLong-format DIA-NN parquet detected. Run values were treated as sample columns; "
                         "check that the manifest sample names match the Run names."
                     )
-                return UnitAwareManifestValidationResult(
+                return UnitSpecificManifestValidationResult(
                     False,
                     "Manifest sample-column validation failed.\n"
                     f"Mapped samples: {len(mapped_samples)}/{len(manifest_samples)}\n"
@@ -283,10 +283,10 @@ def validate_unit_aware_manifest_for_gui(
         + "\n".join(unit_lines)
     )
     ok = not missing_samples or on_missing_sample == "warn-skip"
-    return UnitAwareManifestValidationResult(ok, message, manifest_samples, mapped_samples, missing_samples)
+    return UnitSpecificManifestValidationResult(ok, message, manifest_samples, mapped_samples, missing_samples)
 
 
-class UnitAwareSettingsDialog(QtWidgets.QDialog):
+class UnitSpecificSettingsDialog(QtWidgets.QDialog):
     def __init__(
         self,
         parent=None,
@@ -295,17 +295,17 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         peptide_table_separator: str = "\t",
         input_intensity_prefix: str | None = None,
         diann_intensity_col: str | None = None,
-        current_config: UnitAwareGuiConfig | None = None,
+        current_config: UnitSpecificGuiConfig | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Unit-aware Settings")
+        self.setWindowTitle("Unit-specific Settings")
         self.resize(720, 360)
         self.peptide_table_path = peptide_table_path
         self.peptide_col = peptide_col
         self.peptide_table_separator = peptide_table_separator
         self.input_intensity_prefix = input_intensity_prefix
         self.diann_intensity_col = diann_intensity_col
-        self._config = current_config or UnitAwareGuiConfig()
+        self._config = current_config or UnitSpecificGuiConfig()
 
         self._build_ui()
         self._load_config(self._config)
@@ -361,7 +361,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
-    def _load_config(self, config: UnitAwareGuiConfig) -> None:
+    def _load_config(self, config: UnitSpecificGuiConfig) -> None:
         self.lineEdit_current_manifest_path.setText(config.manifest_path)
         self.lineEdit_input_prefix.setText(config.input_sample_col_prefix or "")
         self.comboBox_on_missing_sample.setCurrentText(config.on_missing_sample or "error")
@@ -370,7 +370,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self.spinBox_n_jobs.setValue(0 if config.n_jobs is None else max(1, int(config.n_jobs)))
 
     def _validate_manifest(self) -> bool:
-        result = validate_unit_aware_manifest_for_gui(
+        result = validate_unit_specific_manifest_for_gui(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             peptide_table_path=self.peptide_table_path,
             peptide_col=self.peptide_col,
@@ -380,7 +380,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
             diann_intensity_col=self.diann_intensity_col,
         )
-        UnitAwareValidationResultDialog(result, self).exec_()
+        UnitSpecificValidationResultDialog(result, self).exec_()
         return result.ok
 
     def accept(self) -> None:
@@ -389,9 +389,9 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self._config = self.get_config()
         super().accept()
 
-    def get_config(self) -> UnitAwareGuiConfig:
+    def get_config(self) -> UnitSpecificGuiConfig:
         n_jobs_value = self.spinBox_n_jobs.value()
-        return UnitAwareGuiConfig(
+        return UnitSpecificGuiConfig(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text(),

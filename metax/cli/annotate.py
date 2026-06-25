@@ -6,7 +6,7 @@ import sys
 from metax.peptide_annotator.peptide_table_prepare import (
     DIANN_INTENSITY_CANDIDATES,
 )
-from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
+from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
 
 def _decode_separator(value: str) -> str:
@@ -22,9 +22,16 @@ def build_parser() -> argparse.ArgumentParser:
         prog="metax-annotate",
         description="Run MetaX backend peptide annotation workflows.",
     )
-    parser.add_argument("--unit-aware", action="store_true", help="Use MetaUmbra unit-aware manifest mode")
+    parser.add_argument(
+        "--unit-specific",
+        action="store_true",
+        help="Use MetaUmbra unit-specific manifest mode",
+    )
     parser.add_argument("--peptide-table", help="Input peptide intensity table")
-    parser.add_argument("--unit-aware-manifest", help="MetaUmbra unit_aware_manifest.json")
+    parser.add_argument(
+        "--unit-specific-manifest",
+        help="MetaUmbra unit_specific_manifest.json",
+    )
     parser.add_argument("--taxafunc-db", help="MetaX taxa-function annotation SQLite database")
     parser.add_argument("--output", help="Output merged OTF TSV")
     parser.add_argument("--peptide-db", help="SQLite peptide-to-protein database")
@@ -54,14 +61,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help=(
             "Minimum distinct peptides required to keep a genome after peptide-to-protein annotation. "
-            "Unit-aware mode defaults to 0 to trust the MetaUmbra manifest genome list; set >0 for an additional filter."
+            "Unit-specific mode defaults to 0 to trust the MetaUmbra manifest genome list; set >0 for an additional filter."
         ),
     )
     parser.add_argument("--exclude-protein-startwith")
     parser.add_argument("--protein-separator", default=";")
     parser.add_argument("--protein-genome-separator", default="_")
     parser.add_argument("--save-per-unit-outputs", action="store_true")
-    parser.add_argument("--include-unit-aware-sequence", action="store_true")
+    parser.add_argument("--include-unit-specific-sequence", action="store_true")
     parser.add_argument(
         "--duplicate-peptide-handling-mode",
         choices=["sum", "max", "min", "mean", "first", "keep"],
@@ -95,38 +102,38 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _require_unit_aware_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+def _require_unit_specific_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     missing = [
         flag
         for flag, value in [
             ("--peptide-table", args.peptide_table),
-            ("--unit-aware-manifest", args.unit_aware_manifest),
+            ("--unit-specific-manifest", args.unit_specific_manifest),
             ("--taxafunc-db", args.taxafunc_db),
             ("--output", args.output),
         ]
         if not value
     ]
     if missing:
-        parser.error(f"--unit-aware requires: {', '.join(missing)}")
+        parser.error(f"--unit-specific requires: {', '.join(missing)}")
     if bool(args.peptide_db) == bool(args.digested_genome_folders):
-        parser.error("--unit-aware requires exactly one of --peptide-db or --digested-genome-folders")
+        parser.error("--unit-specific requires exactly one of --peptide-db or --digested-genome-folders")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if not args.unit_aware:
-        parser.error("Global/non-unit-aware CLI annotation is not implemented yet; use the GUI or pass --unit-aware")
+    if not args.unit_specific:
+        parser.error("Global/non-unit-specific CLI annotation is not implemented yet; use the GUI or pass --unit-specific")
 
-    _require_unit_aware_args(args, parser)
+    _require_unit_specific_args(args, parser)
     digested_folders = args.digested_genome_folders
     if digested_folders is not None and len(digested_folders) == 1:
         digested_folders = digested_folders[0]
 
-    annotator = UnitAwareOTFAnnotator(
+    annotator = UnitSpecificOTFAnnotator(
         peptide_table_path=args.peptide_table,
-        unit_aware_manifest_path=args.unit_aware_manifest,
+        unit_specific_manifest_path=args.unit_specific_manifest,
         taxafunc_anno_db_path=args.taxafunc_db,
         output_path=args.output,
         db_path=args.peptide_db,
@@ -143,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
         protein_separator=args.protein_separator,
         protein_genome_separator=args.protein_genome_separator,
         save_per_unit_outputs=args.save_per_unit_outputs,
-        include_unit_aware_sequence=args.include_unit_aware_sequence,
+        include_unit_specific_sequence=args.include_unit_specific_sequence,
         duplicate_peptide_handling_mode=args.duplicate_peptide_handling_mode,
         on_missing_sample=args.on_missing_sample,
         on_empty_unit=args.on_empty_unit,

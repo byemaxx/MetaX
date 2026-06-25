@@ -75,7 +75,7 @@ def _parse_args(argv: Iterable[str]) -> argparse.Namespace:
     parser.add_argument(
         "--nested-output",
         action="store_true",
-        help="Write long-form Peptide/Genome/Protein output for unit-aware mapping.",
+        help="Write long-form Peptide/Genome/Protein output for unit-specific mapping.",
     )
 
     parser.add_argument("--sep", default="\t", help="TSV separator (default: tab).")

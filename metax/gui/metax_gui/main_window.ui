@@ -11182,9 +11182,9 @@
                 </widget>
                </item>
                <item row="5" column="0">
-                <widget class="QCheckBox" name="checkBox_pep_direct_to_otf_use_unit_aware_annotate">
+                <widget class="QCheckBox" name="checkBox_pep_direct_to_otf_use_unit_specific_annotate">
                  <property name="text">
-                  <string>Use unit-aware annotation</string>
+                  <string>Use unit-specific annotation</string>
                  </property>
                 </widget>
                </item>
@@ -11206,7 +11206,7 @@
                 </widget>
                </item>
                <item row="6" column="2">
-                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_unit_aware_manifest_path">
+                <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_unit_specific_manifest_path">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -11276,9 +11276,9 @@
                 </widget>
                </item>
                <item row="6" column="0">
-                <widget class="QLabel" name="label_unit_aware_manifest">
+                <widget class="QLabel" name="label_unit_specific_manifest">
                  <property name="text">
-                  <string>MetaUmbra unit-aware manifest</string>
+                  <string>MetaUmbra unit-specific manifest</string>
                  </property>
                 </widget>
                </item>
@@ -11317,7 +11317,7 @@
                 </widget>
                </item>
                <item row="6" column="3">
-                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_unit_aware_manifest_path">
+                <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_unit_specific_manifest_path">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -11329,7 +11329,7 @@
                <item row="5" column="2">
                 <layout class="QHBoxLayout" name="horizontalLayout_140">
                  <item>
-                  <widget class="QPushButton" name="pushButton_pep_direct_to_otf_unit_aware_settings">
+                  <widget class="QPushButton" name="pushButton_pep_direct_to_otf_unit_specific_settings">
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
@@ -11340,12 +11340,12 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Unit-aware Settings...</string>
+                    <string>Unit-specific Settings...</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_pep_direct_to_otf_use_unit_aware_genome_threshold">
+                  <widget class="QLabel" name="label_pep_direct_to_otf_use_unit_specific_genome_threshold">
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
@@ -11358,7 +11358,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold">
+                  <widget class="QComboBox" name="comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold">
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
@@ -11481,8 +11481,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1050</width>
-                    <height>198</height>
+                    <width>1227</width>
+                    <height>625</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11733,8 +11733,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>452</width>
-                    <height>60</height>
+                    <width>1229</width>
+                    <height>753</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -13141,9 +13141,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <sender>checkBox_pep_direct_to_otf_use_unit_specific_annotate</sender>
    <signal>toggled(bool)</signal>
-   <receiver>pushButton_pep_direct_to_otf_unit_aware_settings</receiver>
+   <receiver>pushButton_pep_direct_to_otf_unit_specific_settings</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -13157,9 +13157,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <sender>checkBox_pep_direct_to_otf_use_unit_specific_annotate</sender>
    <signal>toggled(bool)</signal>
-   <receiver>lineEdit_pep_direct_to_otf_unit_aware_manifest_path</receiver>
+   <receiver>lineEdit_pep_direct_to_otf_unit_specific_manifest_path</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -13173,9 +13173,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <sender>checkBox_pep_direct_to_otf_use_unit_specific_annotate</sender>
    <signal>toggled(bool)</signal>
-   <receiver>pushButton_open_pep_direct_to_otf_unit_aware_manifest_path</receiver>
+   <receiver>pushButton_open_pep_direct_to_otf_unit_specific_manifest_path</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -13189,9 +13189,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <sender>checkBox_pep_direct_to_otf_use_unit_specific_annotate</sender>
    <signal>toggled(bool)</signal>
-   <receiver>label_pep_direct_to_otf_use_unit_aware_genome_threshold</receiver>
+   <receiver>label_pep_direct_to_otf_use_unit_specific_genome_threshold</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -13205,9 +13205,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_pep_direct_to_otf_use_unit_aware_annotate</sender>
+   <sender>checkBox_pep_direct_to_otf_use_unit_specific_annotate</sender>
    <signal>toggled(bool)</signal>
-   <receiver>comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold</receiver>
+   <receiver>comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
