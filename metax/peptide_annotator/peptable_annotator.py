@@ -1,8 +1,10 @@
+from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import re
 from tqdm import tqdm
 import time
 import os
+from functools import partial
 import threading
 import sqlite3
 from datetime import datetime
@@ -55,6 +57,9 @@ class PeptideAnnotator:
         run_annotate():
             Runs the entire annotation process and returns the annotated dataframe.
     """
+    parallel_cache_annotation_min_groups = 1000
+    parallel_cache_annotation_max_workers = 8
+
     def __init__(self, db_path:str,  output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
@@ -116,6 +121,15 @@ class PeptideAnnotator:
         result = {}
         try:
             result = p2tf.proteins_to_taxa_func(protein_list)
+        except Exception as e:
+            print(f"Error: {protein_list}")
+            print(e)
+        return result
+
+    def run_pep2taxafunc_from_cache(self, protein_list, p2tf) -> dict:
+        result = {}
+        try:
+            result = p2tf.proteins_to_taxa_func_from_cache(protein_list)
         except Exception as e:
             print(f"Error: {protein_list}")
             print(e)
@@ -195,16 +209,38 @@ class PeptideAnnotator:
             print(f'  - batch prefetch: {prefetch_seconds:.1f} s')
 
             annotation_start = time.perf_counter()
-            unique_results = [
-                self.run_pep2taxafunc_with_instance(
-                    protein_groups[protein],
-                    p2tf,
-                )
-                for protein in tqdm(
-                    unique_proteins,
-                    total=len(unique_proteins),
-                )
+            ordered_groups = [
+                protein_groups[protein]
+                for protein in unique_proteins
             ]
+            if (
+                len(unique_proteins)
+                >= self.parallel_cache_annotation_min_groups
+                and (os.cpu_count() or 1) > 1
+            ):
+                max_workers = min(
+                    os.cpu_count() or 1,
+                    self.parallel_cache_annotation_max_workers,
+                )
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    unique_results = list(tqdm(
+                        executor.map(
+                            partial(
+                                self.run_pep2taxafunc_from_cache,
+                                p2tf=p2tf,
+                            ),
+                            ordered_groups,
+                        ),
+                        total=len(ordered_groups),
+                    ))
+            else:
+                unique_results = [
+                    self.run_pep2taxafunc_from_cache(group, p2tf)
+                    for group in tqdm(
+                        ordered_groups,
+                        total=len(ordered_groups),
+                    )
+                ]
             annotation_seconds = time.perf_counter() - annotation_start
             print(f'  - in-memory annotation: {annotation_seconds:.1f} s')
 
