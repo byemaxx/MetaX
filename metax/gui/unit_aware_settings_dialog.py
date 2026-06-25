@@ -293,7 +293,8 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         peptide_table_path: str = "",
         peptide_col: str = "Sequence",
         peptide_table_separator: str = "\t",
-        intensity_col_prefix: str = "Intensity",
+        input_intensity_prefix: str | None = None,
+        diann_intensity_col: str | None = None,
         current_config: UnitAwareGuiConfig | None = None,
     ):
         super().__init__(parent)
@@ -302,7 +303,8 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
         self.peptide_table_path = peptide_table_path
         self.peptide_col = peptide_col
         self.peptide_table_separator = peptide_table_separator
-        self.intensity_col_prefix = intensity_col_prefix
+        self.input_intensity_prefix = input_intensity_prefix
+        self.diann_intensity_col = diann_intensity_col
         self._config = current_config or UnitAwareGuiConfig()
 
         self._build_ui()
@@ -376,7 +378,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
-            diann_intensity_col=self.intensity_col_prefix or None,
+            diann_intensity_col=self.diann_intensity_col,
         )
         UnitAwareValidationResultDialog(result, self).exec_()
         return result.ok

@@ -2995,14 +2995,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     def open_pep_direct_to_otf_unit_aware_settings(self):
         config = self._get_unit_aware_gui_config_from_controls()
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
+        intensity_selector_value = (
+            self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+        )
+        input_intensity_prefix = intensity_selector_value or None
+        diann_intensity_col = None
+        if peptide_table_path and self._is_parquet_path(peptide_table_path):
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            if is_diann_parquet(parquet_columns):
+                input_intensity_prefix = None
+                diann_intensity_col = intensity_selector_value or None
         dialog = UnitAwareSettingsDialog(
             parent=self.MainWindow,
-            peptide_table_path=self.lineEdit_pep_direct_to_otf_peptide_path.text().strip(),
+            peptide_table_path=peptide_table_path,
             peptide_col=self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip(),
             peptide_table_separator=self._decode_pep_direct_to_otf_separator(
                 self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
             ),
-            intensity_col_prefix=self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip(),
+            input_intensity_prefix=input_intensity_prefix,
+            diann_intensity_col=diann_intensity_col,
             current_config=config,
         )
         if dialog.exec_() == QDialog.Accepted:
@@ -3918,7 +3930,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
         table_separator = self._decode_pep_direct_to_otf_separator(self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip())
         peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
-        intensity_col_prefix = self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+        intensity_selector_value = (
+            self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+        )
+        input_intensity_prefix = intensity_selector_value
+        diann_intensity_col = None
+        mapper_intensity_col_prefix = input_intensity_prefix
         protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
@@ -3935,16 +3952,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
             diann_parquet_detected = is_diann_parquet(parquet_columns)
             if diann_parquet_detected:
+                diann_intensity_col = intensity_selector_value
                 schema = resolve_diann_parquet_schema(
                     parquet_columns,
                     require_score_columns=True,
-                    intensity_col=intensity_col_prefix,
+                    intensity_col=diann_intensity_col,
                 )
                 peptide_col = schema.peptide_col
-                intensity_col_prefix = schema.intensity_col_prefix
+                mapper_intensity_col_prefix = schema.intensity_col_prefix
                 self._apply_metaumbra_columns(schema)
 
-        for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
+        for value in [
+            peptide_table_path,
+            digested_genome_folder_path,
+            output_path,
+            table_separator,
+            peptide_col,
+            mapper_intensity_col_prefix,
+        ]:
             if value == '':
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
                 return None
@@ -3980,12 +4005,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     peptide_table_path,
                     table_separator,
                     peptide_col,
-                    intensity_col_prefix,
+                    mapper_intensity_col_prefix,
                     parquet_conversion_metadata,
                 ) = self._prepare_diann_parquet_for_pep_direct_to_otf(
                     parquet_path=original_peptide_table_path,
                     output_path=output_path,
-                    intensity_col=schema.intensity_col,
+                    intensity_col=diann_intensity_col,
                 )
             except Exception:
                 error_message = traceback.format_exc()
@@ -4024,7 +4049,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         digested_genome_folder_path=digested_genome_folder_path,
                         table_separator=table_separator,
                         peptide_col=peptide_col,
-                        intensity_col_prefix=intensity_col_prefix,
+                        intensity_col_prefix=mapper_intensity_col_prefix,
                         protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
                         output_path=output_path,
                         taxafunc_anno_db_path=taxafunc_anno_db_path,
@@ -4072,7 +4097,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     digested_genome_folder_path=digested_genome_folder_path,
                     table_separator=table_separator,
                     peptide_col=peptide_col,
-                    intensity_col_prefix=intensity_col_prefix,
+                    intensity_col_prefix=mapper_intensity_col_prefix,
                     protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
                     output_path=output_path,
                     taxafunc_anno_db_path=taxafunc_anno_db_path,
