@@ -66,6 +66,61 @@ def test_split_func(tfa_object):
     assert 'FuncB' in func_names
     assert 'FuncC' in func_names
 
+
+@pytest.mark.parametrize("df_type", ["func", "taxa_func"])
+@pytest.mark.parametrize(
+    ("share_intensity", "expected_a", "expected_b"),
+    [
+        (False, [24.0, 12.0, 4], [15.0, 15.0, 3]),
+        (True, [8.0, 4.0, 4], [7.0, 11.0, 3]),
+    ],
+)
+def test_split_func_vectorized_preserves_legacy_aggregation(
+    tfa_object,
+    df_type,
+    share_intensity,
+    expected_a,
+    expected_b,
+):
+    data = {
+        "KEGG_ko_name": [" FuncA | FuncB | FuncA ", "FuncB"],
+        "peptide_num": [2, 1],
+    }
+    data.update({sample: [0.0, 0.0] for sample in tfa_object.sample_list})
+    data[tfa_object.sample_list[0]] = [12.0, 3.0]
+    data[tfa_object.sample_list[1]] = [6.0, 9.0]
+    index_cols = ["KEGG_ko_name"]
+    if df_type == "taxa_func":
+        data["Taxon"] = ["d__Bacteria", "d__Bacteria"]
+        index_cols.insert(0, "Taxon")
+    df = pd.DataFrame(data).set_index(index_cols)
+
+    result = tfa_object.split_func(
+        df,
+        split_func_params={
+            "split_by": "|",
+            "share_intensity": share_intensity,
+        },
+        df_type=df_type,
+        func_name="KEGG_ko_name",
+    )
+
+    func_a_index = (
+        ("d__Bacteria", "FuncA") if df_type == "taxa_func" else "FuncA"
+    )
+    func_b_index = (
+        ("d__Bacteria", "FuncB") if df_type == "taxa_func" else "FuncB"
+    )
+    value_cols = [
+        tfa_object.sample_list[0],
+        tfa_object.sample_list[1],
+        "peptide_num",
+    ]
+    assert result.index.names == index_cols
+    assert result.loc[func_a_index, value_cols].tolist() == expected_a
+    assert result.loc[func_b_index, value_cols].tolist() == expected_b
+
+
 def test_set_multi_tables(tfa_object):
     """
     Test that set_multi_tables successfully generates taxa, func, and taxa_func
@@ -204,7 +259,15 @@ def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_pa
     assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
 
 
-def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(tmp_path):
+@pytest.mark.parametrize(
+    ("share_intensity", "expected_intensity"),
+    [(False, [10.0, 20.0]), (True, [5.0, 10.0])],
+)
+def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(
+    tmp_path,
+    share_intensity,
+    expected_intensity,
+):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
     path = tmp_path / "unit_aware_split_otf.tsv"
@@ -229,7 +292,10 @@ def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(tmp_path):
         level="m",
         quant_method="sum",
         split_func=True,
-        split_func_params={"split_by": "|", "share_intensity": False},
+        split_func_params={
+            "split_by": "|",
+            "share_intensity": share_intensity,
+        },
         taxa_and_func_only_from_otf=True,
         data_preprocess_params={
             "normalize_method": "None",
@@ -247,16 +313,115 @@ def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(tmp_path):
     assert tfa.taxa_df.loc[taxon, "bare_sequence_num"] == 1
 
     for func in ["K00001", "K00002"]:
-        assert tfa.func_df.loc[func, ["s1", "s2"]].tolist() == [10.0, 20.0]
+        assert tfa.func_df.loc[func, ["s1", "s2"]].tolist() == expected_intensity
         assert tfa.func_df.loc[func, "unit_peptide_num"] == 2
         assert tfa.func_df.loc[func, "bare_sequence_num"] == 1
-        assert tfa.taxa_func_df.loc[(taxon, func), ["s1", "s2"]].tolist() == [10.0, 20.0]
+        assert (
+            tfa.taxa_func_df.loc[(taxon, func), ["s1", "s2"]].tolist()
+            == expected_intensity
+        )
         assert tfa.taxa_func_df.loc[(taxon, func), "unit_peptide_num"] == 2
         assert tfa.taxa_func_df.loc[(taxon, func), "bare_sequence_num"] == 1
 
     assert tfa.processed_original_df["KEGG_ko"].tolist() == [
         "K00001|K00002",
         "K00001|K00002",
+    ]
+
+
+def test_unit_aware_count_columns_derive_missing_bare_sequence(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    peptide_df = pd.DataFrame(
+        {
+            "_MetaXUnitAwarePeptideID": ["u1||PEPA", "u2||PEPA", "u2||PEPB"],
+            "Taxon": ["taxon_a", "taxon_a", "taxon_a"],
+        }
+    )
+    summary_df = pd.DataFrame(
+        {"s1": [1.0], "peptide_num": [3]},
+        index=pd.Index(["taxon_a"], name="Taxon"),
+    )
+
+    result = tfa._add_peptide_count_columns(
+        summary_df,
+        peptide_df,
+        group_cols=["Taxon"],
+    )
+
+    assert result.loc["taxon_a", "peptide_num"] == 3
+    assert result.loc["taxon_a", "unit_peptide_num"] == 3
+    assert result.loc["taxon_a", "bare_sequence_num"] == 2
+
+
+def test_non_unit_aware_count_columns_remain_unchanged(tfa_object):
+    summary_df = pd.DataFrame(
+        {"s1": [4.0], "peptide_num": [2]},
+        index=pd.Index(["taxon_a"], name="Taxon"),
+    )
+    peptide_df = pd.DataFrame(
+        {"Sequence": ["PEPA", "PEPB"], "Taxon": ["taxon_a", "taxon_a"]}
+    )
+
+    result = tfa_object._add_peptide_count_columns(
+        summary_df,
+        peptide_df,
+        group_cols=["Taxon"],
+    )
+
+    pd.testing.assert_frame_equal(result, summary_df)
+    assert "unit_peptide_num" not in result.columns
+    assert "bare_sequence_num" not in result.columns
+
+
+def test_filter_taxa_func_uses_unit_aware_pair_counts(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    df = pd.DataFrame(
+        {
+            "_MetaXUnitAwarePeptideID": [
+                "u1||PEPA",
+                "u2||PEPA",
+                "u1||PEPA",
+                "u1||PEPA",
+                "u3||PEPB",
+                "u4||PEPC",
+            ],
+            "Taxon": [
+                "taxon_a",
+                "taxon_a",
+                "taxon_b",
+                "taxon_b",
+                "taxon_b",
+                "taxon_c",
+            ],
+            "KEGG_ko": ["func_1", "func_1", "func_1", "func_2", "func_2", "func_3"],
+            "Intensity_s1": [1.0, 2.0, 1.0, 1.0, 3.0, 4.0],
+        }
+    )
+
+    result = tfa.filter_peptides_num(
+        df,
+        peptide_num_threshold={"taxa": 1, "func": 1, "taxa_func": 2},
+        df_type="taxa_func",
+    )
+
+    assert list(zip(result["Taxon"], result["KEGG_ko"])) == [
+        ("taxon_a", "func_1"),
+        ("taxon_a", "func_1"),
+        ("taxon_b", "func_2"),
+        ("taxon_b", "func_2"),
+    ]
+    assert result["_MetaXUnitAwarePeptideID"].tolist() == [
+        "u1||PEPA",
+        "u2||PEPA",
+        "u1||PEPA",
+        "u3||PEPB",
     ]
 
 
