@@ -259,6 +259,8 @@ def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
     ).columns.tolist()
     assert result.completed_units == 2
     assert result.skipped_units == 0
+    assert "KEGG_ko" in result.column_names
+    assert "KEGG_ko_prop" in result.column_names
     info_text = Path(result.info_path).read_text(encoding="utf-8")
     assert "Unique sequences: NA" in info_text
     assert "Unique protein groups: NA" in info_text

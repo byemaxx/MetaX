@@ -77,6 +77,10 @@ class Pep2TaxaFunc:
         self.genome_mode = genome_mode
         self.protein_genome_separator = protein_genome_separator
         self.conn = conn or self.open_eggnog_db()
+        self._annotation_col_names = None
+        self._annotation_select_sql = None
+        self._protein_annotation_cache = {}
+        self._genome_taxon_cache = {}
                 
             
     # open the database of eggNOG animation of MGYG and return the connection
@@ -96,13 +100,18 @@ class Pep2TaxaFunc:
             raise ValueError('The table "id2taxa" does not exist in the database')
         taxa = []
         sql = 'SELECT Taxa from id2taxa where ID = ?'
-        for i in protein_list:
-            i = i.split(self.protein_genome_separator)[0]
-            if re := c.execute(sql, (i,)).fetchone():
-                taxa_str = re[0]
+        for protein in protein_list:
+            genome_id = protein.split(self.protein_genome_separator)[0]
+            if genome_id not in self._genome_taxon_cache:
+                re = c.execute(sql, (genome_id,)).fetchone()
+                self._genome_taxon_cache[genome_id] = (
+                    re[0] if re is not None else 'not_found'
+                )
+
+            taxa_str = self._genome_taxon_cache[genome_id]
+            if taxa_str != 'not_found':
                 if genome_mode:
-                    taxa_genome = f'{taxa_str};m__{i}'
-                    taxa.append(taxa_genome)
+                    taxa.append(f'{taxa_str};m__{genome_id}')
                 else:
                     taxa.append(taxa_str)
             else:
@@ -152,33 +161,49 @@ class Pep2TaxaFunc:
     def query_protein_from_db(self, protein_list):
         c = self.conn.cursor()
         try:
-            # get all columns name using LIMIT 1 to be more efficient
-            c.execute('select * from id2annotation limit 1')
-            col_name = [desc[0] for desc in c.description]
-            # remove the columns that not need
-            for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
-                if i in col_name:
-                    col_name.remove(i)
-        
-            # 使用双引号包围列名以处理特殊字符
-            safe_col_names = [f'"{col}"' for col in col_name]
-            sql = 'SELECT ' + ','.join(safe_col_names) + ' from id2annotation where "ID" = ?'
-            re_dict = {i: [] for i in col_name}
-            
-            for i in protein_list:
-                re = c.execute(sql, (i,)).fetchone()
-                if re is not None:
-                    for j in range(len(re)):
-                        func = re[j]
-                        if func not in ['', '-']:
-                            re_dict[list(re_dict.keys())[j]].append(func)
-                        else:
-                            re_dict[list(re_dict.keys())[j]].append('-')
+            if self._annotation_col_names is None:
+                # get all columns name using LIMIT 1 to be more efficient
+                c.execute('select * from id2annotation limit 1')
+                col_name = [desc[0] for desc in c.description]
+                # remove the columns that not need
+                for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
+                    if i in col_name:
+                        col_name.remove(i)
 
-                else:
-                    for v in re_dict.values():
+                # 使用双引号包围列名以处理特殊字符
+                safe_col_names = [
+                    f'"{col.replace(chr(34), chr(34) * 2)}"'
+                    for col in col_name
+                ]
+                self._annotation_col_names = tuple(col_name)
+                self._annotation_select_sql = (
+                    'SELECT '
+                    + ','.join(safe_col_names)
+                    + ' from id2annotation where "ID" = ?'
+                )
+
+            col_name = list(self._annotation_col_names)
+            sql = self._annotation_select_sql
+            re_dict = {i: [] for i in col_name}
+
+            for protein_id in protein_list:
+                if protein_id not in self._protein_annotation_cache:
+                    re = c.execute(sql, (protein_id,)).fetchone()
+                    if re is not None:
+                        annotation_values = tuple(
+                            func if func not in ['', '-'] else '-'
+                            for func in re
+                        )
+                    else:
                         # if the protein is not found in the database, return 'not_found'
-                        v.append('not_found')
+                        annotation_values = tuple(
+                            'not_found' for _ in col_name
+                        )
+                    self._protein_annotation_cache[protein_id] = annotation_values
+
+                annotation_values = self._protein_annotation_cache[protein_id]
+                for column, value in zip(col_name, annotation_values):
+                    re_dict[column].append(value)
             # add the protein_id as a function            
             re_dict['protein_id'] = protein_list
 

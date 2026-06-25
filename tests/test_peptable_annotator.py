@@ -1,0 +1,168 @@
+import sqlite3
+from collections import Counter
+
+import pandas as pd
+
+from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
+from metax.peptide_annotator.proteins_to_taxafunc import Pep2TaxaFunc
+
+
+def _write_taxafunc_db(path):
+    with sqlite3.connect(path) as conn:
+        conn.execute("CREATE TABLE id2taxa (ID TEXT PRIMARY KEY, Taxa TEXT)")
+        conn.execute(
+            """
+            CREATE TABLE id2annotation (
+                ID TEXT PRIMARY KEY,
+                seed_ortholog TEXT,
+                evalue REAL,
+                score REAL,
+                KEGG_ko TEXT
+            )
+            """
+        )
+        conn.executemany(
+            "INSERT INTO id2taxa VALUES (?, ?)",
+            [
+                ("g1", "d__Bacteria;p__P1;c__C1;o__O1;f__F1;g__G1;s__S1"),
+                ("g2", "d__Bacteria;p__P2;c__C2;o__O2;f__F2;g__G2;s__S2"),
+            ],
+        )
+        conn.executemany(
+            "INSERT INTO id2annotation VALUES (?, ?, ?, ?, ?)",
+            [
+                ("g1_p1", "seed1", 1e-20, 100.0, "K00001"),
+                ("g2_p2", "seed2", 1e-10, 90.0, "K00002"),
+            ],
+        )
+
+
+def test_run_2_result_annotates_unique_protein_strings_once(monkeypatch):
+    annotator = PeptideAnnotator(
+        db_path="unused.db",
+        output_path="unused.tsv",
+        peptide_df=pd.DataFrame(),
+    )
+    calls = []
+
+    def fake_run(proteins):
+        calls.append(proteins)
+        return {
+            "LCA_level": "genome",
+            "Taxon": f"taxon:{proteins}",
+            "Taxon_prop": 1.0,
+        }
+
+    monkeypatch.setattr(annotator, "run_pep2taxafunc", fake_run)
+    monkeypatch.setattr(annotator, "add_additional_columns", lambda df: df)
+    peptide_df = pd.DataFrame(
+        {
+            "Sequence": ["PEP3", "PEP1", "PEP2", "PEP4"],
+            "Proteins": ["g1_p1", "g1_p1", "g2_p2", "g1_p1"],
+            "Intensity_s1": [3, 1, 2, 4],
+        },
+        index=[30, 10, 20, 40],
+    )
+
+    result = annotator.run_2_result(peptide_df)
+
+    assert Counter(calls) == Counter({"g1_p1": 1, "g2_p2": 1})
+    assert result.index.tolist() == peptide_df.index.tolist()
+    assert result["Sequence"].tolist() == peptide_df["Sequence"].tolist()
+    assert result["Taxon"].tolist() == [
+        "taxon:g1_p1",
+        "taxon:g1_p1",
+        "taxon:g2_p2",
+        "taxon:g1_p1",
+    ]
+    assert result["Intensity_s1"].tolist() == [3, 1, 2, 4]
+
+
+def test_pep2taxafunc_reuses_annotation_sql_and_lookup_caches(tmp_path):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    sql_trace = []
+    conn = sqlite3.connect(db_path)
+    conn.set_trace_callback(sql_trace.append)
+    annotator = Pep2TaxaFunc(conn=conn, genome_mode=True)
+
+    try:
+        first = annotator.proteins_to_taxa_func(["g1_p1", "g2_p2"])
+        overlapping = annotator.proteins_to_taxa_func(["g2_p2", "missing_p"])
+        repeated = annotator.proteins_to_taxa_func(["g1_p1", "g2_p2"])
+    finally:
+        conn.close()
+
+    assert repeated == first
+    assert overlapping["KEGG_ko"] == "K00002"
+    assert annotator._annotation_col_names == ("KEGG_ko",)
+    assert annotator._annotation_select_sql == (
+        'SELECT "KEGG_ko" from id2annotation where "ID" = ?'
+    )
+    assert annotator._protein_annotation_cache == {
+        "g1_p1": ("K00001",),
+        "g2_p2": ("K00002",),
+        "missing_p": ("not_found",),
+    }
+    assert set(annotator._genome_taxon_cache) == {"g1", "g2", "missing"}
+    assert annotator._genome_taxon_cache["missing"] == "not_found"
+    assert sum(
+        sql.lower() == "select * from id2annotation limit 1"
+        for sql in sql_trace
+    ) == 1
+    assert sum(
+        sql.startswith('SELECT "KEGG_ko" from id2annotation')
+        for sql in sql_trace
+    ) == 3
+    assert sum(
+        sql.startswith("SELECT Taxa from id2taxa where ID")
+        for sql in sql_trace
+    ) == 3
+
+
+def test_run_annotate_preserves_otf_output_contract_and_row_order(
+    monkeypatch,
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    monkeypatch.setattr(
+        PeptideAnnotator,
+        "add_additional_columns",
+        lambda self, df: df,
+    )
+    peptide_df = pd.DataFrame(
+        {
+            "Sequence": ["PEP_B", "PEP_A", "PEP_C"],
+            "Proteins": ["g1_p1;g2_p2", "g1_p1;g2_p2", "g1_p1"],
+            "Intensity_s1": [20, 10, 30],
+            "Intensity_s2": [2, 1, 3],
+        }
+    )
+    annotator = PeptideAnnotator(
+        db_path=str(db_path),
+        output_path=str(tmp_path / "unused.tsv"),
+        peptide_df=peptide_df,
+        duplicate_peptide_handling_mode="keep",
+        exclude_protein_startwith=None,
+    )
+
+    result = annotator.run_annotate(save_output=False)
+
+    assert result["Sequence"].tolist() == peptide_df["Sequence"].tolist()
+    assert result["Proteins"].tolist() == peptide_df["Proteins"].tolist()
+    assert result["Intensity_s1"].tolist() == [20, 10, 30]
+    assert result["Intensity_s2"].tolist() == [2, 1, 3]
+    assert {
+        "Sequence",
+        "Proteins",
+        "LCA_level",
+        "Taxon",
+        "Taxon_prop",
+        "KEGG_ko",
+        "KEGG_ko_prop",
+        "None_func",
+        "None_func_prop",
+        "Intensity_s1",
+        "Intensity_s2",
+    }.issubset(result.columns)
