@@ -268,7 +268,7 @@ class TaxaFuncAnalyzer:
         func_col = self.func_name if func_name is None else func_name
         separator = self.split_func_sep if split_by is None else split_by
         expanded = df.copy()
-        expanded[func_col] = expanded[func_col].str.split(separator)
+        expanded[func_col] = expanded[func_col].str.split(separator, regex=False)
         expanded = expanded.explode(func_col)
         expanded[func_col] = expanded[func_col].str.strip()
         return expanded
@@ -289,11 +289,11 @@ class TaxaFuncAnalyzer:
         ``unit_peptide_num`` makes its analysis-unit-aware semantics explicit,
         while ``bare_sequence_num`` reports unique unqualified sequences.
         """
-        result = summary_df.copy()
         if not self.unit_aware_mode:
-            return result
+            return summary_df.copy()
 
-        count_source = peptide_df.copy()
+        result = summary_df.copy()
+        count_source = peptide_df
         if split_func:
             count_source = self._expand_function_rows(
                 count_source,
@@ -301,20 +301,28 @@ class TaxaFuncAnalyzer:
                 split_by=split_by,
             )
 
-        identity_counts = count_source.groupby(group_cols)[self.peptide_identity_col].nunique()
-        result["peptide_num"] = identity_counts.reindex(result.index).fillna(0).astype(int)
-        result["unit_peptide_num"] = result["peptide_num"]
         bare_sequence_col = self.peptide_col_name
         if bare_sequence_col not in count_source.columns:
             bare_sequence_col = "_MetaXBareSequence"
-            count_source[bare_sequence_col] = (
-                count_source[self.peptide_identity_col]
-                .astype(str)
-                .str.rsplit("||", n=1)
-                .str[-1]
+            count_source = count_source[group_cols + [self.peptide_identity_col]].assign(
+                **{
+                    bare_sequence_col: (
+                        count_source[self.peptide_identity_col]
+                        .astype(str)
+                        .str.rsplit("||", n=1)
+                        .str[-1]
+                    )
+                }
             )
-        bare_counts = count_source.groupby(group_cols)[bare_sequence_col].nunique()
-        result["bare_sequence_num"] = bare_counts.reindex(result.index).fillna(0).astype(int)
+
+        counts = count_source.groupby(group_cols).agg(
+            unit_peptide_num=(self.peptide_identity_col, "nunique"),
+            bare_sequence_num=(bare_sequence_col, "nunique"),
+        )
+        counts = counts.reindex(result.index).fillna(0).astype(int)
+        result["peptide_num"] = counts["unit_peptide_num"]
+        result["unit_peptide_num"] = counts["unit_peptide_num"]
+        result["bare_sequence_num"] = counts["bare_sequence_num"]
 
         return result
 
@@ -774,39 +782,26 @@ class TaxaFuncAnalyzer:
         
         split_by = split_func_params['split_by']
         share_intensity = split_func_params['share_intensity']
-        df = df.copy()
-        
         print(f'Start splitting function for {df_type} by [ {split_by} ], share_intensity={share_intensity}, it may take a while...')
         
         df = df.reset_index()
         func_col = self.func_name if func_name is None else func_name
         sample_list = self.sample_list
         taxon_col = 'Taxon' if df_type == 'taxa_func' else None
-        
-        # Prepare result storage
-        result_rows = []
+        groupby_cols = [func_col] if df_type == 'func' else [taxon_col, func_col]
+        df = df[groupby_cols + sample_list + ['peptide_num']].copy()
 
-        for _, row in tqdm(df.iterrows(), total=len(df), desc="Splitting functions"):
-            split_funcs_list = row[func_col].split(split_by)
-            num_splits = len(split_funcs_list)
-            
-            for new_func in split_funcs_list:
-                new_func = new_func.strip()
-                split_row = row[sample_list] / num_splits if share_intensity else row[sample_list].copy()
-                split_row[func_col] = new_func
-                if taxon_col:
-                    split_row[taxon_col] = row[taxon_col]
-                
-                # Use the peptide_num of the original row
-                split_row['peptide_num'] = row['peptide_num']
-                
-                result_rows.append(split_row)
-
-        # Create a new DataFrame
-        new_data = pd.DataFrame(result_rows)
+        split_functions = df[func_col].str.split(split_by, regex=False)
+        if share_intensity:
+            df[sample_list] = df[sample_list].div(
+                split_functions.str.len(),
+                axis=0,
+            )
+        df[func_col] = split_functions
+        new_data = df.explode(func_col)
+        new_data[func_col] = new_data[func_col].str.strip()
         
         # Group and sum based on the type of DataFrame
-        groupby_cols = [func_col] if df_type == 'func' else [taxon_col, func_col]
         new_data = new_data.groupby(groupby_cols).sum(numeric_only=True)
 
         return new_data
@@ -987,12 +982,7 @@ class TaxaFuncAnalyzer:
         if func_name is None:
             func_name = self.func_name
         
-        if df_type == 'taxa_func':
-            item_col = 'taxa_func'
-            df = df.copy()
-            df['taxa_func'] = df['Taxon'] + '&&&&' + df[func_name]
-        else:
-            item_col = 'Taxon' if df_type == 'taxa' else func_name
+        item_col = 'Taxon' if df_type == 'taxa' else func_name
 
         # # if True: #! Need to be implemented
         # if distinct_threshold_mode:
@@ -1038,14 +1028,16 @@ class TaxaFuncAnalyzer:
 
         # else:                
         # Group by item_col and filter based on peptide number
-        dict_item_pep_num = df.groupby(item_col)[self.peptide_identity_col].nunique().to_dict()
-        remove_list = [k for k, v in dict_item_pep_num.items() if v < peptide_num]
-
-        # Remove rows based on peptide number threshold
-        df = df[~df[item_col].isin(remove_list)]
-
         if df_type == 'taxa_func':
-            df = df.drop('taxa_func', axis=1)
+            group_cols = ['Taxon', func_name]
+            peptide_counts = df.groupby(group_cols)[self.peptide_identity_col].nunique()
+            remove_list = peptide_counts[peptide_counts < peptide_num].index
+            row_pairs = pd.MultiIndex.from_frame(df[group_cols])
+            df = df.loc[~row_pairs.isin(remove_list)]
+        else:
+            peptide_counts = df.groupby(item_col)[self.peptide_identity_col].nunique()
+            remove_list = peptide_counts[peptide_counts < peptide_num].index
+            df = df.loc[~df[item_col].isin(remove_list)]
 
         self.peptide_num_used[df_type] = len(df)
         print(f"Removed [{len(set((remove_list)))} {df_type}] from [{df_original_len - len(df)} Peptides] with less than [{peptide_num}] peptides.")
