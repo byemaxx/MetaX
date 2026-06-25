@@ -232,6 +232,7 @@ def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
         gui._prepare_diann_parquet_for_pep_direct_to_otf(
             str(parquet_path),
             str(tmp_path / "OTF.tsv"),
+            "Precursor.Quantity",
         )
     )
 
@@ -241,6 +242,158 @@ def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
     assert intensity_prefix == "Precursor.Quantity."
     assert prepared_df.loc[0, "Precursor.Quantity.s1"] == 10.0
     assert metadata["diann_intensity_column"] == "Precursor.Quantity"
+
+
+def test_direct_otf_gui_lists_diann_intensity_columns_and_defaults_to_normalised(
+    tmp_path,
+):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1.raw"],
+            "Stripped.Sequence": ["PEPA"],
+            "Evidence": [2.0],
+            "Q.Value": [0.01],
+            "Precursor.Normalised": [10.0],
+            "Precursor.Quantity": [99.0],
+        }
+    ).to_parquet(parquet_path)
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    gui = object.__new__(MetaXGUI)
+    gui.lineEdit_pep_direct_to_otf_peptide_path = QtWidgets.QLineEdit(
+        str(parquet_path)
+    )
+    gui.lineEdit_pep_direct_to_otf_pep_table_sep = QtWidgets.QLineEdit("\\t")
+    gui.comboBox_pep_direct_to_otf_peptide_col_name = QtWidgets.QComboBox()
+    gui.comboBox_pep_direct_to_otf_intensity_column = QtWidgets.QComboBox()
+    gui.label_227 = QtWidgets.QLabel()
+    gui._last_pep_direct_to_otf_peptide_table_signature = ""
+    gui._apply_metaumbra_columns = lambda schema: None
+    gui.logger = type(
+        "Logger",
+        (),
+        {"write_log": lambda self, message, level: None},
+    )()
+
+    gui.update_pep_direct_to_otf_peptide_table_columns()
+
+    assert gui.comboBox_pep_direct_to_otf_intensity_column.isEditable() is False
+    assert [
+        gui.comboBox_pep_direct_to_otf_intensity_column.itemText(index)
+        for index in range(gui.comboBox_pep_direct_to_otf_intensity_column.count())
+    ] == ["Precursor.Normalised", "Precursor.Quantity"]
+    assert (
+        gui.comboBox_pep_direct_to_otf_intensity_column.currentText()
+        == "Precursor.Normalised"
+    )
+    assert gui.label_227.text() == "DIA-NN Intensity Column"
+    assert app is not None
+
+
+def test_direct_otf_gui_keeps_editable_prefix_for_wide_tables(tmp_path):
+    peptide_path = tmp_path / "peptides.tsv"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "Intensity_s1": [10.0],
+            "Intensity_s2": [20.0],
+        }
+    ).to_csv(peptide_path, sep="\t", index=False)
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    gui = object.__new__(MetaXGUI)
+    gui.lineEdit_pep_direct_to_otf_peptide_path = QtWidgets.QLineEdit(
+        str(peptide_path)
+    )
+    gui.lineEdit_pep_direct_to_otf_pep_table_sep = QtWidgets.QLineEdit("\\t")
+    gui.comboBox_pep_direct_to_otf_peptide_col_name = QtWidgets.QComboBox()
+    gui.comboBox_pep_direct_to_otf_intensity_column = QtWidgets.QComboBox()
+    gui.label_227 = QtWidgets.QLabel()
+    gui._last_pep_direct_to_otf_peptide_table_signature = ""
+    gui.logger = type(
+        "Logger",
+        (),
+        {"write_log": lambda self, message, level: None},
+    )()
+
+    gui.update_pep_direct_to_otf_peptide_table_columns()
+
+    assert gui.comboBox_pep_direct_to_otf_intensity_column.isEditable() is True
+    assert (
+        gui.comboBox_pep_direct_to_otf_intensity_column.currentText()
+        == "Intensity"
+    )
+    assert gui.label_227.text() == "Prefix of Intensity Column"
+    assert app is not None
+
+
+def test_direct_otf_gui_does_not_label_generic_parquet_as_diann(tmp_path):
+    peptide_path = tmp_path / "peptides.parquet"
+    pd.DataFrame(
+        {
+            "Sequence": ["PEPA"],
+            "Intensity_s1": [10.0],
+            "Intensity_s2": [20.0],
+        }
+    ).to_parquet(peptide_path)
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    gui = object.__new__(MetaXGUI)
+    gui.lineEdit_pep_direct_to_otf_peptide_path = QtWidgets.QLineEdit(
+        str(peptide_path)
+    )
+    gui.lineEdit_pep_direct_to_otf_pep_table_sep = QtWidgets.QLineEdit("\\t")
+    gui.comboBox_pep_direct_to_otf_peptide_col_name = QtWidgets.QComboBox()
+    gui.comboBox_pep_direct_to_otf_intensity_column = QtWidgets.QComboBox()
+    gui.label_227 = QtWidgets.QLabel()
+    gui._last_pep_direct_to_otf_peptide_table_signature = ""
+    gui.logger = type(
+        "Logger",
+        (),
+        {"write_log": lambda self, message, level: None},
+    )()
+
+    gui.update_pep_direct_to_otf_peptide_table_columns()
+
+    assert gui.comboBox_pep_direct_to_otf_intensity_column.isEditable() is True
+    assert (
+        gui.comboBox_pep_direct_to_otf_intensity_column.currentText()
+        == "Intensity"
+    )
+    assert gui.label_227.text() == "Prefix of Intensity Column"
+    assert app is not None
+
+
+def test_unit_aware_gui_validation_reports_selected_diann_intensity(
+    tmp_path,
+    monkeypatch,
+):
+    manifest_path = _write_manifest(tmp_path)
+    peptide_path = tmp_path / "report.parquet"
+    peptide_path.write_bytes(b"parquet placeholder")
+    monkeypatch.setattr(
+        unit_aware_settings_dialog,
+        "_read_peptide_table_header_columns",
+        lambda peptide_table_path, separator: [
+            "Stripped.Sequence",
+            "Run",
+            "Precursor.Normalised",
+            "Precursor.Quantity",
+        ],
+    )
+    monkeypatch.setattr(
+        unit_aware_settings_dialog,
+        "_read_long_format_run_columns",
+        lambda peptide_table_path: ["s1.raw", "s2.raw", "s3.raw"],
+    )
+
+    result = validate_unit_aware_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Stripped.Sequence",
+        diann_intensity_col="Precursor.Quantity",
+    )
+
+    assert result.ok is True
+    assert "intensity=Precursor.Quantity" in result.message
 
 
 def test_validation_result_dialog_is_scrollable_and_screen_bounded():

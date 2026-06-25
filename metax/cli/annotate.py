@@ -81,6 +81,14 @@ def build_parser() -> argparse.ArgumentParser:
             "May use extra memory for large outputs."
         ),
     )
+    parser.add_argument(
+        "--diann-intensity-col",
+        choices=["Precursor.Normalised", "Precursor.Quantity"],
+        help=(
+            "DIA-NN parquet intensity column. Defaults to Precursor.Normalised "
+            "when both supported columns are present."
+        ),
+    )
     return parser
 
 
@@ -139,6 +147,7 @@ def main(argv: list[str] | None = None) -> int:
         n_jobs=args.n_jobs,
         merge_chunksize=args.merge_chunksize,
         collect_unique_stats=args.collect_unique_stats,
+        diann_intensity_col=args.diann_intensity_col,
     )
     annotator.run()
     return 0

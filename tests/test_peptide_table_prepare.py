@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from metax.peptide_annotator.peptide_table_prepare import (
+    available_diann_intensity_columns,
     prepare_diann_parquet_for_direct_otf,
     resolve_diann_parquet_schema,
 )
@@ -91,6 +92,43 @@ def test_prepare_diann_parquet_prefers_normalised_when_both_aliases_exist(tmp_pa
 
     assert prepared.intensity_col == "Precursor.Normalised"
     assert prepared.dataframe.loc[0, "s1"] == 10.0
+
+
+def test_prepare_diann_parquet_uses_explicit_quantity_when_both_aliases_exist(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1"],
+            "Stripped.Sequence": ["PEPA"],
+            "Precursor.Normalised": [10.0],
+            "Precursor.Quantity": [99.0],
+        }
+    ).to_parquet(parquet_path)
+
+    assert available_diann_intensity_columns(
+        pd.read_parquet(parquet_path).columns
+    ) == ["Precursor.Normalised", "Precursor.Quantity"]
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        sample_column_prefix="",
+        intensity_col="Precursor.Quantity",
+    )
+
+    assert prepared.intensity_col == "Precursor.Quantity"
+    assert prepared.dataframe.loc[0, "s1"] == 99.0
+    assert prepared.metadata["diann_intensity_column"] == "Precursor.Quantity"
+
+
+def test_resolve_diann_parquet_schema_rejects_missing_selected_intensity():
+    with pytest.raises(
+        ValueError,
+        match="Selected DIA-NN intensity column.*Precursor.Quantity.*not found",
+    ):
+        resolve_diann_parquet_schema(
+            ["Run", "Stripped.Sequence", "Precursor.Normalised"],
+            intensity_col="Precursor.Quantity",
+        )
 
 
 def test_prepare_diann_parquet_reports_missing_intensity_alias(tmp_path):

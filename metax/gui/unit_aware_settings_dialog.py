@@ -118,6 +118,7 @@ def validate_unit_aware_manifest_for_gui(
     genome_threshold: str = "auto",
     input_sample_col_prefix: str | None = None,
     on_missing_sample: str = "error",
+    diann_intensity_col: str | None = None,
 ) -> UnitAwareManifestValidationResult:
     manifest_path = str(manifest_path or "").strip()
     if on_missing_sample not in {"error", "warn-skip"}:
@@ -193,7 +194,10 @@ def validate_unit_aware_manifest_for_gui(
                 try:
                     candidate_sample_columns = _read_long_format_run_columns(peptide_table_path)
                     long_format_detected = True
-                    intensity_column = select_diann_intensity_column(peptide_columns)
+                    intensity_column = select_diann_intensity_column(
+                        peptide_columns,
+                        diann_intensity_col,
+                    )
                 except Exception as exc:
                     return UnitAwareManifestValidationResult(
                         False,
@@ -372,6 +376,7 @@ class UnitAwareSettingsDialog(QtWidgets.QDialog):
             genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
+            diann_intensity_col=self.intensity_col_prefix or None,
         )
         UnitAwareValidationResultDialog(result, self).exec_()
         return result.ok

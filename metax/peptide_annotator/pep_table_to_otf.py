@@ -990,12 +990,38 @@ class peptideProteinsMapper:
     
     def load_peptide_table(self):
         print("Loading peptide table...")
-        
-        header_df = pd.read_csv(self.peptide_table_path, sep=self.table_separator, nrows=0)
-        self._check_columns(header_df.columns)
+
+        is_parquet = str(self.peptide_table_path).lower().endswith(
+            (".parquet", ".parq", ".pq")
+        )
+        if is_parquet:
+            try:
+                import pyarrow.parquet as pq
+
+                header_columns = [
+                    str(name)
+                    for name in pq.ParquetFile(self.peptide_table_path).schema.names
+                ]
+            except Exception as exc:
+                raise RuntimeError(
+                    "Failed to read parquet metadata for the peptide table."
+                ) from exc
+        else:
+            header_columns = list(
+                pd.read_csv(
+                    self.peptide_table_path,
+                    sep=self.table_separator,
+                    nrows=0,
+                ).columns
+            )
+        self._check_columns(header_columns)
         
         required_cols = [self.peptide_col]
-        intensity_cols = [col for col in header_df.columns if col.startswith(self.intensity_col_prefix)]
+        intensity_cols = [
+            col
+            for col in header_columns
+            if col.startswith(self.intensity_col_prefix)
+        ]
         
         if self.continue_base_on_annotaied_peptide_table:
             required_cols.extend(['Genomes', 'Proteins'])
@@ -1005,7 +1031,17 @@ class peptideProteinsMapper:
         # only print first 10 columns if too many
         print(f"Reading columns: {required_cols[:10]}{'...' if len(required_cols) > 10 else ''}")
         
-        self.peptide_table = pd.read_csv(self.peptide_table_path, sep=self.table_separator, usecols=required_cols)
+        if is_parquet:
+            self.peptide_table = pd.read_parquet(
+                self.peptide_table_path,
+                columns=required_cols,
+            )
+        else:
+            self.peptide_table = pd.read_csv(
+                self.peptide_table_path,
+                sep=self.table_separator,
+                usecols=required_cols,
+            )
         return self._prepare_loaded_peptide_table(intensity_cols)
 
     def load_peptide_dataframe(self, peptide_df: pd.DataFrame) -> pd.DataFrame:
