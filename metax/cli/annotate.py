@@ -3,6 +3,9 @@ from __future__ import annotations
 import argparse
 import sys
 
+from metax.peptide_annotator.peptide_table_prepare import (
+    DIANN_INTENSITY_CANDIDATES,
+)
 from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
 
 
@@ -83,7 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--diann-intensity-col",
-        choices=["Precursor.Normalised", "Precursor.Quantity"],
+        choices=DIANN_INTENSITY_CANDIDATES,
         help=(
             "DIA-NN parquet intensity column. Defaults to Precursor.Normalised "
             "when both supported columns are present."

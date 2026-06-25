@@ -94,6 +94,8 @@ def test_unit_aware_gui_validation_missing_manifest_points_to_main_window():
 def test_unit_aware_settings_dialog_uses_main_window_owned_values():
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     dialog = UnitAwareSettingsDialog(
+        input_intensity_prefix="Intensity_",
+        diann_intensity_col="Precursor.Quantity",
         current_config=UnitAwareGuiConfig(
             manifest_path="unit_aware_manifest.json",
             genome_threshold="q0.01",
@@ -107,6 +109,8 @@ def test_unit_aware_settings_dialog_uses_main_window_owned_values():
     assert dialog.get_config().genome_threshold == "q0.01"
     assert dialog.tabs.count() == 1
     assert dialog.spinBox_n_jobs.specialValueText() == "Auto"
+    assert dialog.input_intensity_prefix == "Intensity_"
+    assert dialog.diann_intensity_col == "Precursor.Quantity"
 
     dialog.close()
     app.processEvents()
