@@ -57,6 +57,7 @@
 # Version:0.2.13
 # Add "" to column names to handle special characters in SQLite
 
+from collections.abc import Iterable
 from collections import Counter
 import sqlite3
 
@@ -81,6 +82,7 @@ class Pep2TaxaFunc:
         self._annotation_select_sql = None
         self._protein_annotation_cache = {}
         self._genome_taxon_cache = {}
+        self._id2taxa_checked = False
                 
             
     # open the database of eggNOG animation of MGYG and return the connection
@@ -88,26 +90,166 @@ class Pep2TaxaFunc:
         if self.db_path is None:
             raise ValueError('Database path is required to open a new connection')
         conn = sqlite3.connect(self.db_path)
+        conn.execute('PRAGMA query_only = ON')
+        conn.execute('PRAGMA temp_store = MEMORY')
+        conn.execute('PRAGMA cache_size = -200000')
         return conn
-        
+
+    def _ensure_annotation_query(self):
+        if self._annotation_col_names is not None:
+            return
+
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM id2annotation LIMIT 1')
+        col_names = [desc[0] for desc in c.description]
+        excluded_columns = {'ID', 'seed_ortholog', 'evalue', 'score'}
+        annotation_col_names = [
+            col for col in col_names
+            if col not in excluded_columns
+        ]
+        safe_col_names = [
+            f'"{col.replace(chr(34), chr(34) * 2)}"'
+            for col in annotation_col_names
+        ]
+        self._annotation_col_names = tuple(annotation_col_names)
+        self._annotation_select_sql = (
+            'SELECT '
+            + ','.join(safe_col_names)
+            + ' from id2annotation where "ID" = ?'
+        )
+
+    def _ensure_id2taxa_table(self):
+        if self._id2taxa_checked:
+            return
+
+        c = self.conn.cursor()
+        c.execute(
+            'SELECT name FROM sqlite_master '
+            'WHERE type="table" AND name="id2taxa"'
+        )
+        if not c.fetchone():
+            raise ValueError('The table "id2taxa" does not exist in the database')
+        self._id2taxa_checked = True
+
+    @staticmethod
+    def _iter_chunks(values, chunk_size):
+        if chunk_size < 1:
+            raise ValueError('chunk_size must be at least 1')
+        for start in range(0, len(values), chunk_size):
+            yield values[start:start + chunk_size]
+
+    def prefetch_protein_annotations(
+        self,
+        protein_ids: Iterable[str],
+        chunk_size: int = 900,
+    ):
+        self._ensure_annotation_query()
+        protein_ids = list(dict.fromkeys(protein_ids))
+        missing_ids = [
+            protein_id for protein_id in protein_ids
+            if protein_id not in self._protein_annotation_cache
+        ]
+        if not missing_ids:
+            return
+
+        annotation_col_names = self._annotation_col_names
+        safe_col_names = [
+            f'"{col.replace(chr(34), chr(34) * 2)}"'
+            for col in annotation_col_names
+        ]
+        select_columns = (
+            f', {",".join(safe_col_names)}'
+            if safe_col_names
+            else ''
+        )
+        c = self.conn.cursor()
+        for chunk in self._iter_chunks(missing_ids, chunk_size):
+            placeholders = ','.join('?' for _ in chunk)
+            sql = (
+                f'SELECT "ID"{select_columns} '
+                f'FROM id2annotation WHERE "ID" IN ({placeholders})'
+            )
+            found_ids = set()
+            for row in c.execute(sql, chunk):
+                protein_id = row[0]
+                annotation_values = tuple(
+                    value if value not in ['', '-'] else '-'
+                    for value in row[1:]
+                )
+                self._protein_annotation_cache[protein_id] = annotation_values
+                found_ids.add(protein_id)
+
+            not_found = tuple(
+                'not_found' for _ in annotation_col_names
+            )
+            for protein_id in chunk:
+                if protein_id not in found_ids:
+                    self._protein_annotation_cache[protein_id] = not_found
+
+    def prefetch_genome_taxa(
+        self,
+        genome_ids: Iterable[str],
+        chunk_size: int = 900,
+    ):
+        self._ensure_id2taxa_table()
+        genome_ids = list(dict.fromkeys(genome_ids))
+        missing_ids = [
+            genome_id for genome_id in genome_ids
+            if genome_id not in self._genome_taxon_cache
+        ]
+        if not missing_ids:
+            return
+
+        c = self.conn.cursor()
+        for chunk in self._iter_chunks(missing_ids, chunk_size):
+            placeholders = ','.join('?' for _ in chunk)
+            sql = (
+                'SELECT "ID", "Taxa" FROM id2taxa '
+                f'WHERE "ID" IN ({placeholders})'
+            )
+            found_ids = set()
+            for genome_id, taxa in c.execute(sql, chunk):
+                self._genome_taxon_cache[genome_id] = taxa
+                found_ids.add(genome_id)
+
+            for genome_id in chunk:
+                if genome_id not in found_ids:
+                    self._genome_taxon_cache[genome_id] = 'not_found'
+
+    def prefetch_for_protein_groups(
+        self,
+        protein_groups: Iterable[list[str]],
+    ):
+        protein_ids = []
+        genome_ids = []
+        seen_proteins = set()
+        seen_genomes = set()
+        for protein_group in protein_groups:
+            for protein in protein_group:
+                if protein not in seen_proteins:
+                    seen_proteins.add(protein)
+                    protein_ids.append(protein)
+                genome_id = protein.split(
+                    self.protein_genome_separator
+                )[0]
+                if genome_id not in seen_genomes:
+                    seen_genomes.add(genome_id)
+                    genome_ids.append(genome_id)
+
+        self.prefetch_protein_annotations(protein_ids)
+        self.prefetch_genome_taxa(genome_ids)
+        return len(protein_ids), len(genome_ids)
 
     # return a list of taxonomic levels of each protein
     def query_taxon_from_db(self, protein_list, genome_mode = True):
-        c = self.conn.cursor()
-        # check if the id2taxa table exist
-        c.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="id2taxa"')
-        if not c.fetchone():
-            raise ValueError('The table "id2taxa" does not exist in the database')
+        self._ensure_id2taxa_table()
+        genome_ids = [
+            protein.split(self.protein_genome_separator)[0]
+            for protein in protein_list
+        ]
+        self.prefetch_genome_taxa(genome_ids)
         taxa = []
-        sql = 'SELECT Taxa from id2taxa where ID = ?'
-        for protein in protein_list:
-            genome_id = protein.split(self.protein_genome_separator)[0]
-            if genome_id not in self._genome_taxon_cache:
-                re = c.execute(sql, (genome_id,)).fetchone()
-                self._genome_taxon_cache[genome_id] = (
-                    re[0] if re is not None else 'not_found'
-                )
-
+        for genome_id in genome_ids:
             taxa_str = self._genome_taxon_cache[genome_id]
             if taxa_str != 'not_found':
                 if genome_mode:
@@ -159,48 +301,13 @@ class Pep2TaxaFunc:
             
     # return a dict of anatation of each protein
     def query_protein_from_db(self, protein_list):
-        c = self.conn.cursor()
         try:
-            if self._annotation_col_names is None:
-                # get all columns name using LIMIT 1 to be more efficient
-                c.execute('select * from id2annotation limit 1')
-                col_name = [desc[0] for desc in c.description]
-                # remove the columns that not need
-                for i in ['ID', 'seed_ortholog', 'evalue', 'score']:
-                    if i in col_name:
-                        col_name.remove(i)
-
-                # 使用双引号包围列名以处理特殊字符
-                safe_col_names = [
-                    f'"{col.replace(chr(34), chr(34) * 2)}"'
-                    for col in col_name
-                ]
-                self._annotation_col_names = tuple(col_name)
-                self._annotation_select_sql = (
-                    'SELECT '
-                    + ','.join(safe_col_names)
-                    + ' from id2annotation where "ID" = ?'
-                )
-
+            self._ensure_annotation_query()
             col_name = list(self._annotation_col_names)
-            sql = self._annotation_select_sql
             re_dict = {i: [] for i in col_name}
+            self.prefetch_protein_annotations(protein_list)
 
             for protein_id in protein_list:
-                if protein_id not in self._protein_annotation_cache:
-                    re = c.execute(sql, (protein_id,)).fetchone()
-                    if re is not None:
-                        annotation_values = tuple(
-                            func if func not in ['', '-'] else '-'
-                            for func in re
-                        )
-                    else:
-                        # if the protein is not found in the database, return 'not_found'
-                        annotation_values = tuple(
-                            'not_found' for _ in col_name
-                        )
-                    self._protein_annotation_cache[protein_id] = annotation_values
-
                 annotation_values = self._protein_annotation_cache[protein_id]
                 for column, value in zip(col_name, annotation_values):
                     re_dict[column].append(value)
@@ -217,8 +324,10 @@ class Pep2TaxaFunc:
 
     # find the most common annotation and its percentage
     def stats_fun(self,re_dict):
-        for i in re_dict:
-            re_dict[i] = Counter(re_dict[i]).most_common(1)[0][0], Counter(re_dict[i]).most_common(1)[0][1]/len(re_dict[i])
+        for key, values in re_dict.items():
+            counter = Counter(values)
+            most_value, count = counter.most_common(1)[0]
+            re_dict[key] = most_value, count / len(values)
         return re_dict
 
     # return a dict of taxonomic level and annotation and their percentage    

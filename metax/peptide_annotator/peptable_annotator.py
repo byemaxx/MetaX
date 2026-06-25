@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import re
 from tqdm import tqdm
@@ -108,9 +107,14 @@ class PeptideAnnotator:
 
     def run_pep2taxafunc(self, row) -> dict:
         protein_list = str(row).split(self.protein_separator)
+        return self.run_pep2taxafunc_with_instance(
+            protein_list,
+            self.get_pep2taxafunc(),
+        )
+
+    def run_pep2taxafunc_with_instance(self, protein_list, p2tf) -> dict:
         result = {}
         try:
-            p2tf = self.get_pep2taxafunc()
             result = p2tf.proteins_to_taxa_func(protein_list)
         except Exception as e:
             print(f"Error: {protein_list}")
@@ -167,23 +171,55 @@ class PeptideAnnotator:
             .drop_duplicates()
             .tolist()
         )
-        with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(self.run_pep2taxafunc, protein)
-                for protein in unique_proteins
-            ]
-            unique_results = [
-                future.result()
-                for future in tqdm(futures, total=len(futures))
-            ]
+        protein_groups = {
+            protein: str(protein).split(self.protein_separator)
+            for protein in unique_proteins
+        }
+        print(f'  - rows: {len(df_t)}')
+        print(f'  - unique protein groups: {len(unique_proteins)}')
 
-        annotations_by_protein = dict(zip(unique_proteins, unique_results))
-        results = [
-            annotations_by_protein[protein]
-            if pd.notna(protein)
-            else self.run_pep2taxafunc(protein)
-            for protein in df_t[self.protein_col]
-        ]
+        p2tf = Pep2TaxaFunc(
+            db_path=self.db_path,
+            threshold=self.threshold,
+            genome_mode=self.genome_mode,
+            protein_genome_separator=self.protein_genome_separator,
+        )
+        try:
+            prefetch_start = time.perf_counter()
+            unique_protein_count, unique_genome_count = (
+                p2tf.prefetch_for_protein_groups(protein_groups.values())
+            )
+            prefetch_seconds = time.perf_counter() - prefetch_start
+            print(f'  - unique proteins: {unique_protein_count}')
+            print(f'  - unique genomes: {unique_genome_count}')
+            print(f'  - batch prefetch: {prefetch_seconds:.1f} s')
+
+            annotation_start = time.perf_counter()
+            unique_results = [
+                self.run_pep2taxafunc_with_instance(
+                    protein_groups[protein],
+                    p2tf,
+                )
+                for protein in tqdm(
+                    unique_proteins,
+                    total=len(unique_proteins),
+                )
+            ]
+            annotation_seconds = time.perf_counter() - annotation_start
+            print(f'  - in-memory annotation: {annotation_seconds:.1f} s')
+
+            annotations_by_protein = dict(zip(unique_proteins, unique_results))
+            results = [
+                annotations_by_protein[protein]
+                if pd.notna(protein)
+                else self.run_pep2taxafunc_with_instance(
+                    str(protein).split(self.protein_separator),
+                    p2tf,
+                )
+                for protein in df_t[self.protein_col]
+            ]
+        finally:
+            p2tf.conn.close()
 
         df_t0 = pd.DataFrame(results, index=df_t.index)
         df_t0 = self.add_additional_columns(df_t0)

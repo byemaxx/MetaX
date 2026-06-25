@@ -37,23 +37,26 @@ def _write_taxafunc_db(path):
         )
 
 
-def test_run_2_result_annotates_unique_protein_strings_once(monkeypatch):
+def test_run_2_result_annotates_unique_protein_strings_once(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
     annotator = PeptideAnnotator(
-        db_path="unused.db",
+        db_path=str(db_path),
         output_path="unused.tsv",
         peptide_df=pd.DataFrame(),
     )
     calls = []
+    original_run = Pep2TaxaFunc.proteins_to_taxa_func
 
-    def fake_run(proteins):
-        calls.append(proteins)
-        return {
-            "LCA_level": "genome",
-            "Taxon": f"taxon:{proteins}",
-            "Taxon_prop": 1.0,
-        }
+    def tracked_run(self, proteins):
+        calls.append(tuple(proteins))
+        return original_run(self, proteins)
 
-    monkeypatch.setattr(annotator, "run_pep2taxafunc", fake_run)
+    monkeypatch.setattr(Pep2TaxaFunc, "proteins_to_taxa_func", tracked_run)
     monkeypatch.setattr(annotator, "add_additional_columns", lambda df: df)
     peptide_df = pd.DataFrame(
         {
@@ -66,19 +69,101 @@ def test_run_2_result_annotates_unique_protein_strings_once(monkeypatch):
 
     result = annotator.run_2_result(peptide_df)
 
-    assert Counter(calls) == Counter({"g1_p1": 1, "g2_p2": 1})
+    assert Counter(calls) == Counter({("g1_p1",): 1, ("g2_p2",): 1})
     assert result.index.tolist() == peptide_df.index.tolist()
     assert result["Sequence"].tolist() == peptide_df["Sequence"].tolist()
-    assert result["Taxon"].tolist() == [
-        "taxon:g1_p1",
-        "taxon:g1_p1",
-        "taxon:g2_p2",
-        "taxon:g1_p1",
-    ]
+    assert result.loc[30, "Taxon"] == result.loc[10, "Taxon"]
+    assert result.loc[30, "Taxon"] == result.loc[40, "Taxon"]
+    assert result.loc[20, "Taxon"] != result.loc[30, "Taxon"]
     assert result["Intensity_s1"].tolist() == [3, 1, 2, 4]
+    output = capsys.readouterr().out
+    assert "  - rows: 4" in output
+    assert "  - unique protein groups: 2" in output
+    assert "  - unique proteins: 2" in output
+    assert "  - unique genomes: 2" in output
+    assert "  - batch prefetch:" in output
+    assert "  - in-memory annotation:" in output
 
 
-def test_pep2taxafunc_reuses_annotation_sql_and_lookup_caches(tmp_path):
+def test_prefetch_output_matches_direct_annotation(tmp_path):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    groups = [
+        ["g1_p1", "g2_p2"],
+        ["g1_p1", "missing_p"],
+        ["g2_p2"],
+    ]
+
+    with sqlite3.connect(db_path) as direct_conn:
+        direct = Pep2TaxaFunc(conn=direct_conn, genome_mode=True)
+        direct_results = [
+            direct.proteins_to_taxa_func(group)
+            for group in groups
+        ]
+
+    with sqlite3.connect(db_path) as prefetched_conn:
+        prefetched = Pep2TaxaFunc(conn=prefetched_conn, genome_mode=True)
+        counts = prefetched.prefetch_for_protein_groups(groups)
+        prefetched_results = [
+            prefetched.proteins_to_taxa_func(group)
+            for group in groups
+        ]
+
+    assert counts == (3, 3)
+    assert prefetched_results == direct_results
+
+
+def test_prefetch_preserves_empty_dash_and_not_found_values(tmp_path):
+    db_path = tmp_path / "taxafunc_values.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("CREATE TABLE id2taxa (ID TEXT PRIMARY KEY, Taxa TEXT)")
+        conn.execute(
+            """
+            CREATE TABLE id2annotation (
+                ID TEXT PRIMARY KEY,
+                seed_ortholog TEXT,
+                evalue REAL,
+                score REAL,
+                "annotation value" TEXT
+            )
+            """
+        )
+        conn.executemany(
+            'INSERT INTO id2annotation VALUES (?, ?, ?, ?, ?)',
+            [
+                ("g1|p1", "seed1", 1.0, 1.0, ""),
+                ("g1|p2", "seed2", 1.0, 1.0, "-"),
+            ],
+        )
+        conn.execute(
+            "INSERT INTO id2taxa VALUES (?, ?)",
+            ("g1", "d__Bacteria;p__;c__;o__;f__;g__;s__"),
+        )
+
+    with sqlite3.connect(db_path) as conn:
+        annotator = Pep2TaxaFunc(
+            conn=conn,
+            protein_genome_separator="|",
+        )
+        counts = annotator.prefetch_for_protein_groups(
+            [["g1|p1", "g1|p2", "g1|missing"]],
+        )
+
+    assert counts == (3, 1)
+    assert annotator._protein_annotation_cache == {
+        "g1|p1": ("-",),
+        "g1|p2": ("-",),
+        "g1|missing": ("not_found",),
+    }
+    assert set(annotator._genome_taxon_cache) == {"g1"}
+    assert annotator._annotation_select_sql == (
+        'SELECT "annotation value" from id2annotation where "ID" = ?'
+    )
+
+
+def test_prefetch_batches_sql_and_cached_annotation_uses_no_lookup_selects(
+    tmp_path,
+):
     db_path = tmp_path / "taxafunc.db"
     _write_taxafunc_db(db_path)
     sql_trace = []
@@ -87,9 +172,24 @@ def test_pep2taxafunc_reuses_annotation_sql_and_lookup_caches(tmp_path):
     annotator = Pep2TaxaFunc(conn=conn, genome_mode=True)
 
     try:
-        first = annotator.proteins_to_taxa_func(["g1_p1", "g2_p2"])
-        overlapping = annotator.proteins_to_taxa_func(["g2_p2", "missing_p"])
-        repeated = annotator.proteins_to_taxa_func(["g1_p1", "g2_p2"])
+        groups = [
+            ["g1_p1", "g2_p2"],
+            ["g2_p2", "missing_p"],
+        ]
+        annotator.prefetch_protein_annotations(
+            ["g1_p1", "g2_p2", "missing_p"],
+            chunk_size=2,
+        )
+        annotator.prefetch_genome_taxa(
+            ["g1", "g2", "missing"],
+            chunk_size=2,
+        )
+        prefetch_trace = list(sql_trace)
+        sql_trace.clear()
+        first = annotator.proteins_to_taxa_func(groups[0])
+        overlapping = annotator.proteins_to_taxa_func(groups[1])
+        repeated = annotator.proteins_to_taxa_func(groups[0])
+        cached_trace = list(sql_trace)
     finally:
         conn.close()
 
@@ -108,16 +208,22 @@ def test_pep2taxafunc_reuses_annotation_sql_and_lookup_caches(tmp_path):
     assert annotator._genome_taxon_cache["missing"] == "not_found"
     assert sum(
         sql.lower() == "select * from id2annotation limit 1"
-        for sql in sql_trace
+        for sql in prefetch_trace
     ) == 1
     assert sum(
-        sql.startswith('SELECT "KEGG_ko" from id2annotation')
-        for sql in sql_trace
-    ) == 3
+        "from id2annotation" in sql.lower() and " in (" in sql.lower()
+        for sql in prefetch_trace
+    ) == 2
     assert sum(
-        sql.startswith("SELECT Taxa from id2taxa where ID")
-        for sql in sql_trace
-    ) == 3
+        "from id2taxa" in sql.lower() and " in (" in sql.lower()
+        for sql in prefetch_trace
+    ) == 2
+    assert not any(
+        "from id2annotation" in sql.lower()
+        or "from id2taxa" in sql.lower()
+        or "from sqlite_master" in sql.lower()
+        for sql in cached_trace
+    )
 
 
 def test_run_annotate_preserves_otf_output_contract_and_row_order(
@@ -153,7 +259,7 @@ def test_run_annotate_preserves_otf_output_contract_and_row_order(
     assert result["Proteins"].tolist() == peptide_df["Proteins"].tolist()
     assert result["Intensity_s1"].tolist() == [20, 10, 30]
     assert result["Intensity_s2"].tolist() == [2, 1, 3]
-    assert {
+    assert result.columns.tolist() == [
         "Sequence",
         "Proteins",
         "LCA_level",
@@ -161,11 +267,13 @@ def test_run_annotate_preserves_otf_output_contract_and_row_order(
         "Taxon_prop",
         "KEGG_ko",
         "KEGG_ko_prop",
+        "protein_id",
+        "protein_id_prop",
         "None_func",
         "None_func_prop",
         "Intensity_s1",
         "Intensity_s2",
-    }.issubset(result.columns)
+    ]
 
 
 def test_save_result_serializes_only_zero_sample_intensities_as_empty(tmp_path):
