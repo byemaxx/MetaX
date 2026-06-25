@@ -99,7 +99,7 @@ try:
     from .metax_gui.resources import icon_rc # noqa: F401
     from .metax_gui.console_window import ConsoleOutputWindow
     from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
-    from .unit_aware_settings_dialog import UnitAwareGuiConfig, UnitAwareSettingsDialog
+    from .unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
     from ..workflow_recorder import (
         AnalysisStep,
         WorkflowRecorder,
@@ -110,7 +110,7 @@ try:
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
-        unit_aware_otf_step,
+        unit_specific_otf_step,
     )
 
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
@@ -124,7 +124,7 @@ try:
         prepare_diann_parquet_for_direct_otf,
         resolve_diann_parquet_schema,
     )
-    from ..peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
+    from ..peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
@@ -180,7 +180,7 @@ except (ImportError, ValueError):
     from metax.gui.metax_gui.resources import icon_rc
     from metax.gui.metax_gui.console_window import ConsoleOutputWindow
     from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
-    from metax.gui.unit_aware_settings_dialog import UnitAwareGuiConfig, UnitAwareSettingsDialog
+    from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
@@ -193,7 +193,7 @@ except (ImportError, ValueError):
         prepare_diann_parquet_for_direct_otf,
         resolve_diann_parquet_schema,
     )
-    from metax.peptide_annotator.unit_aware_otf import UnitAwareOTFAnnotator
+    from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
@@ -208,7 +208,7 @@ except (ImportError, ValueError):
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
-        unit_aware_otf_step,
+        unit_specific_otf_step,
     )
 
 
@@ -310,7 +310,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.last_path = QDir.homePath() # init last path as home path
         self.pep_direct_to_otf_selected_genomes = []
         self.pep_direct_to_otf_selected_genome_source = ""
-        self.unit_aware_gui_config = UnitAwareGuiConfig()
+        self.unit_specific_gui_config = UnitSpecificGuiConfig()
         self.metaumbra_gui_process = None
         
         # init the check update status
@@ -457,9 +457,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path, 'folder')
         self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 'file')
         self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_direct_anno.tsv')
-        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_aware_manifest_path"):
-            self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path = self.make_line_edit_drag_drop(
-                self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path,
+        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path = self.make_line_edit_drag_drop(
+                self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path,
                 'file',
             )
 
@@ -507,17 +507,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_pep_direct_to_otf_reset_selected_genome_list.clicked.connect(self.reset_pep_direct_to_otf_selected_genome_list)
         self.pushButton_pep_direct_to_otf_open_metaumbra_gui.clicked.connect(self.open_metaumbra_gui)
         for manifest_button_name in [
-            "pushButton_open_pep_direct_to_otf_unit_aware_manifest_path",
-            "pushButton_open_pep_direct_to_otf_unit_aware_mainfest_path",
+            "pushButton_open_pep_direct_to_otf_unit_specific_manifest_path",
+            "pushButton_open_pep_direct_to_otf_unit_specific_mainfest_path",
         ]:
             manifest_button = getattr(self, manifest_button_name, None)
             if manifest_button is not None:
-                manifest_button.clicked.connect(self.set_lineEdit_pep_direct_to_otf_unit_aware_manifest_path)
-        unit_aware_settings_button = self._get_unit_aware_settings_button()
-        if unit_aware_settings_button is not None:
-            unit_aware_settings_button.clicked.connect(self.open_pep_direct_to_otf_unit_aware_settings)
-        if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_aware_annotate"):
-            self.checkBox_pep_direct_to_otf_use_unit_aware_annotate.toggled.connect(
+                manifest_button.clicked.connect(self.set_lineEdit_pep_direct_to_otf_unit_specific_manifest_path)
+        unit_specific_settings_button = self._get_unit_specific_settings_button()
+        if unit_specific_settings_button is not None:
+            unit_specific_settings_button.clicked.connect(self.open_pep_direct_to_otf_unit_specific_settings)
+        if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.toggled.connect(
                 self.update_pep_direct_to_otf_mode_state
             )
         self.checkBox_pep_direct_to_otf_use_selected_genome_list.toggled.connect(
@@ -2045,33 +2045,33 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if widget is not None:
                 widget.setEnabled(enabled)
 
-    def _get_unit_aware_settings_button(self):
-        widget = getattr(self, "pushButton_pep_direct_to_otf_unit_aware_settings", None)
+    def _get_unit_specific_settings_button(self):
+        widget = getattr(self, "pushButton_pep_direct_to_otf_unit_specific_settings", None)
         if widget is not None:
             return widget
         try:
             for button in self.MainWindow.findChildren(QtWidgets.QPushButton):
-                if button.text().strip() == "Unit-aware Settings...":
+                if button.text().strip() == "Unit-specific Settings...":
                     return button
         except Exception:
             return None
         return None
 
-    def _set_unit_aware_controls_enabled(self, enabled: bool):
+    def _set_unit_specific_controls_enabled(self, enabled: bool):
         self._set_widgets_enabled(
             [
-                "label_unit_aware_mainfest",
-                "label_unit_aware_manifest",
-                "lineEdit_pep_direct_to_otf_unit_aware_manifest_path",
-                "pushButton_open_pep_direct_to_otf_unit_aware_mainfest_path",
-                "pushButton_open_pep_direct_to_otf_unit_aware_manifest_path",
-                "pushButton_pep_direct_to_otf_unit_aware_settings",
-                "label_pep_direct_to_otf_use_unit_aware_genome_threshold",
-                "comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold",
+                "label_unit_specific_mainfest",
+                "label_unit_specific_manifest",
+                "lineEdit_pep_direct_to_otf_unit_specific_manifest_path",
+                "pushButton_open_pep_direct_to_otf_unit_specific_mainfest_path",
+                "pushButton_open_pep_direct_to_otf_unit_specific_manifest_path",
+                "pushButton_pep_direct_to_otf_unit_specific_settings",
+                "label_pep_direct_to_otf_use_unit_specific_genome_threshold",
+                "comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold",
             ],
             enabled,
         )
-        settings_button = self._get_unit_aware_settings_button()
+        settings_button = self._get_unit_specific_settings_button()
         if settings_button is not None:
             settings_button.setEnabled(enabled)
 
@@ -2108,12 +2108,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
 
     def update_pep_direct_to_otf_mode_state(self):
-        use_unit_aware = (
-            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_aware_annotate")
-            and self.checkBox_pep_direct_to_otf_use_unit_aware_annotate.isChecked()
+        use_unit_specific = (
+            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
+            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
         )
 
-        if use_unit_aware:
+        if use_unit_specific:
             with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_use_selected_genome_list):
                 self.checkBox_pep_direct_to_otf_use_selected_genome_list.setChecked(False)
             with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_stop_after_metaumbra):
@@ -2124,7 +2124,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             self._set_selected_genome_list_controls_enabled(False)
             self._set_metaumbra_scoring_controls_enabled(False)
-            self._set_unit_aware_controls_enabled(True)
+            self._set_unit_specific_controls_enabled(True)
             self._set_otf_annotation_controls_enabled(True)
 
             self.label_224.setText('OTFs Save To')
@@ -2133,7 +2133,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.lineEdit_pep_direct_to_otf_output_path.default_filename = 'OTF_direct_anno.tsv'
             return
 
-        self._set_unit_aware_controls_enabled(False)
+        self._set_unit_specific_controls_enabled(False)
 
         use_selected = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
         stop_after = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
@@ -2952,17 +2952,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pep_direct_to_otf_output_path = os.path.normpath(pep_direct_to_otf_output_path)
         self.lineEdit_pep_direct_to_otf_output_path.setText(pep_direct_to_otf_output_path)
 
-    def set_lineEdit_pep_direct_to_otf_unit_aware_manifest_path(self):
+    def set_lineEdit_pep_direct_to_otf_unit_specific_manifest_path(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self.MainWindow,
-            'Open MetaUmbra unit-aware manifest JSON',
+            'Open MetaUmbra unit-specific manifest JSON',
             self.last_path,
             'JSON files (*.json);;All files (*)',
         )
         if file_path:
-            self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path.setText(os.path.normpath(file_path))
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.setText(os.path.normpath(file_path))
             self.last_path = os.path.dirname(file_path)
-            self.unit_aware_gui_config.manifest_path = os.path.normpath(file_path)
+            self.unit_specific_gui_config.manifest_path = os.path.normpath(file_path)
 
     def _decode_pep_direct_to_otf_separator(self, separator: str) -> str:
         separator = separator or ''
@@ -2972,18 +2972,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return r'\s+'
         return separator
 
-    def _get_unit_aware_gui_config_from_controls(self) -> UnitAwareGuiConfig:
-        config = getattr(self, "unit_aware_gui_config", UnitAwareGuiConfig())
+    def _get_unit_specific_gui_config_from_controls(self) -> UnitSpecificGuiConfig:
+        config = getattr(self, "unit_specific_gui_config", UnitSpecificGuiConfig())
         manifest_path = ""
         genome_threshold = config.genome_threshold
-        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_aware_manifest_path"):
-            manifest_path = self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path.text().strip()
-        if hasattr(self, "comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold"):
+        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+            manifest_path = self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.text().strip()
+        if hasattr(self, "comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold"):
             genome_threshold = (
-                self.comboBox_pep_direct_to_otf_use_unit_aware_genome_threshold.currentText().strip()
+                self.comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold.currentText().strip()
                 or genome_threshold
             )
-        return UnitAwareGuiConfig(
+        return UnitSpecificGuiConfig(
             manifest_path=manifest_path or config.manifest_path,
             genome_threshold=genome_threshold,
             input_sample_col_prefix=config.input_sample_col_prefix,
@@ -2993,8 +2993,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             n_jobs=config.n_jobs,
         )
 
-    def open_pep_direct_to_otf_unit_aware_settings(self):
-        config = self._get_unit_aware_gui_config_from_controls()
+    def open_pep_direct_to_otf_unit_specific_settings(self):
+        config = self._get_unit_specific_gui_config_from_controls()
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         intensity_selector_value = (
             self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
@@ -3006,7 +3006,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if is_diann_parquet(parquet_columns):
                 input_intensity_prefix = None
                 diann_intensity_col = intensity_selector_value or None
-        dialog = UnitAwareSettingsDialog(
+        dialog = UnitSpecificSettingsDialog(
             parent=self.MainWindow,
             peptide_table_path=peptide_table_path,
             peptide_col=self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip(),
@@ -3018,13 +3018,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             current_config=config,
         )
         if dialog.exec_() == QDialog.Accepted:
-            self.unit_aware_gui_config = dialog.get_config()
-            if hasattr(self, "lineEdit_pep_direct_to_otf_unit_aware_manifest_path"):
-                self.lineEdit_pep_direct_to_otf_unit_aware_manifest_path.setText(
-                    self.unit_aware_gui_config.manifest_path
+            self.unit_specific_gui_config = dialog.get_config()
+            if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+                self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.setText(
+                    self.unit_specific_gui_config.manifest_path
                 )
-            if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_aware_annotate"):
-                self.checkBox_pep_direct_to_otf_use_unit_aware_annotate.setChecked(True)
+            if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
+                self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.setChecked(True)
             self.update_pep_direct_to_otf_mode_state()
 
     def _parse_pep_direct_to_otf_genome_text(self, text: str) -> list[str]:
@@ -3792,13 +3792,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             genome_selection_metadata=genome_selection_metadata,
         )
 
-    def run_pep_direct_to_otf_unit_aware(self):
-        config = self._get_unit_aware_gui_config_from_controls()
+    def run_pep_direct_to_otf_unit_specific(self):
+        config = self._get_unit_specific_gui_config_from_controls()
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
-        unit_aware_manifest_path = config.manifest_path
+        unit_specific_manifest_path = config.manifest_path
         peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
         table_separator = self._decode_pep_direct_to_otf_separator(
             self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
@@ -3822,7 +3822,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             ("Digested genome folder", digested_genome_folder_path),
             ("Protein to TaxaFunc database", taxafunc_anno_db_path),
             ("OTFs Save To", output_path),
-            ("Unit-aware manifest", unit_aware_manifest_path),
+            ("Unit-specific manifest", unit_specific_manifest_path),
             ("Peptide column", peptide_col),
             ("Separator of peptide table", table_separator),
             ("Genome separator in protein ID", protein_genome_separator),
@@ -3835,7 +3835,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         file_checks = [
             ("Peptide table", peptide_table_path),
             ("Protein to TaxaFunc database", taxafunc_anno_db_path),
-            ("Unit-aware manifest", unit_aware_manifest_path),
+            ("Unit-specific manifest", unit_specific_manifest_path),
         ]
         for label, path in file_checks:
             if not os.path.isfile(path):
@@ -3872,9 +3872,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             self.logger.write_log(
-                f'run_pep_direct_to_otf_unit_aware: peptide_table_path:{peptide_table_path} '
+                f'run_pep_direct_to_otf_unit_specific: peptide_table_path:{peptide_table_path} '
                 f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
-                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_aware_manifest_path} '
+                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_specific_manifest_path} '
                 f'genome_threshold:{genome_threshold or "auto"} '
                 f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode} '
                 f'n_jobs:{n_jobs if n_jobs is not None else "auto"}'
@@ -3882,7 +3882,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             workflow_params = {
                 "peptide_table_path": peptide_table_path,
-                "unit_aware_manifest_path": unit_aware_manifest_path,
+                "unit_specific_manifest_path": unit_specific_manifest_path,
                 "taxafunc_anno_db_path": taxafunc_anno_db_path,
                 "output_path": output_path,
                 "digested_genome_folders": digested_genome_folder_path,
@@ -3896,7 +3896,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "distinct_genome_threshold": 0,
                 "protein_genome_separator": protein_genome_separator,
                 "save_per_unit_outputs": config.save_per_unit_outputs,
-                "include_unit_aware_sequence": False,
+                "include_unit_specific_sequence": False,
                 "duplicate_peptide_handling_mode": duplicate_peptide_handling_mode,
                 "on_missing_sample": config.on_missing_sample,
                 "on_empty_unit": config.on_empty_unit,
@@ -3906,25 +3906,25 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "diann_intensity_col": diann_intensity_col,
             }
 
-            def pep_direct_to_otf_unit_aware_wrapper():
-                annotator = UnitAwareOTFAnnotator(**workflow_params)
+            def pep_direct_to_otf_unit_specific_wrapper():
+                annotator = UnitSpecificOTFAnnotator(**workflow_params)
                 return annotator.run()
 
             self.run_in_new_window(
-                pep_direct_to_otf_unit_aware_wrapper,
+                pep_direct_to_otf_unit_specific_wrapper,
                 show_msg=True,
-                workflow_step=unit_aware_otf_step(workflow_params),
+                workflow_step=unit_specific_otf_step(workflow_params),
             )
         except Exception as e:
-            self.logger.write_log(f'run_pep_direct_to_otf_unit_aware error: {e}', 'e')
+            self.logger.write_log(f'run_pep_direct_to_otf_unit_specific error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
     def run_pep_dircet_to_otf(self):
         if (
-            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_aware_annotate")
-            and self.checkBox_pep_direct_to_otf_use_unit_aware_annotate.isChecked()
+            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
+            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
         ):
-            return self.run_pep_direct_to_otf_unit_aware()
+            return self.run_pep_direct_to_otf_unit_specific()
 
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()

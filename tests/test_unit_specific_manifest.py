@@ -2,18 +2,18 @@ import json
 
 import pytest
 
-from metax.peptide_annotator.unit_aware_manifest import (
-    load_unit_aware_manifest,
+from metax.peptide_annotator.unit_specific_manifest import (
+    load_unit_specific_manifest,
     resolve_manifest_sample_columns,
 )
 
 
 def _write_manifest(tmp_path, units):
-    path = tmp_path / "unit_aware_manifest.json"
+    path = tmp_path / "unit_specific_manifest.json"
     path.write_text(
         json.dumps(
             {
-                "schema_version": "metaumbra.unit_aware_manifest.v1",
+                "schema_version": "metaumbra.unit_specific_manifest.v1",
                 "generated_by": {"tool": "MetaUmbra", "version": "1.3.5"},
                 "default_genome_threshold": "q0.05",
                 "files": {
@@ -43,11 +43,11 @@ def test_load_manifest_default_and_switch_thresholds(tmp_path):
         },
     )
 
-    manifest = load_unit_aware_manifest(path)
+    manifest = load_unit_specific_manifest(path)
     assert manifest.selected_genome_threshold == "q0.05"
     assert manifest.units["u1"].genome_ids == ["MGYG000001456.1", "g2"]
 
-    manifest = load_unit_aware_manifest(path, genome_threshold="q001")
+    manifest = load_unit_specific_manifest(path, genome_threshold="q001")
     assert manifest.selected_genome_threshold == "q0.01"
     assert manifest.units["u1"].genome_ids == ["MGYG000001456.1"]
 
@@ -61,7 +61,7 @@ def test_manifest_rejects_duplicate_samples(tmp_path):
         },
     )
     with pytest.raises(ValueError, match="multiple units"):
-        load_unit_aware_manifest(path)
+        load_unit_specific_manifest(path)
 
 
 def test_manifest_subset_warning_or_error(tmp_path):
@@ -77,9 +77,9 @@ def test_manifest_subset_warning_or_error(tmp_path):
         },
     )
     with pytest.raises(ValueError, match="not present"):
-        load_unit_aware_manifest(path, strict=True)
+        load_unit_specific_manifest(path, strict=True)
     with pytest.warns(UserWarning, match="not present"):
-        load_unit_aware_manifest(path, strict=False)
+        load_unit_specific_manifest(path, strict=False)
 
 
 def test_resolve_manifest_sample_columns_auto_modes():

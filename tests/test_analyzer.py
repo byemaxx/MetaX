@@ -224,7 +224,7 @@ def test_remove_all_zero_row_removes_zero_nan_mixtures(tmp_path):
     assert tfa.original_df["metadata_count"].tolist() == [0]
 
 
-def _write_unit_aware_otf(tmp_path, include_unit_sequence=False, include_analysis_unit=True):
+def _write_unit_specific_otf(tmp_path, include_unit_sequence=False, include_analysis_unit=True):
     df = pd.DataFrame(
         {
             "analysis_unit_id": ["u1", "u2"],
@@ -245,16 +245,16 @@ def _write_unit_aware_otf(tmp_path, include_unit_sequence=False, include_analysi
         df = df.drop(columns=["analysis_unit_id"])
     if include_unit_sequence:
         unit_ids = ["u1", "u2"] if "analysis_unit_id" not in df.columns else df["analysis_unit_id"]
-        df.insert(1, "UnitAwareSequence", pd.Series(unit_ids).astype(str) + "||" + df["Sequence"])
-    path = tmp_path / "unit_aware_otf.tsv"
+        df.insert(1, "UnitSpecificSequence", pd.Series(unit_ids).astype(str) + "||" + df["Sequence"])
+    path = tmp_path / "unit_specific_otf.tsv"
     df.to_csv(path, sep="\t", index=False)
     return path
 
 
-def test_unit_aware_identity_is_generated_from_analysis_unit_and_sequence(tmp_path):
+def test_unit_specific_identity_is_generated_from_analysis_unit_and_sequence(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     tfa.set_func("None_func")
     tfa.set_multi_tables(
@@ -265,30 +265,30 @@ def test_unit_aware_identity_is_generated_from_analysis_unit_and_sequence(tmp_pa
         outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
     )
 
-    assert tfa.unit_aware_mode is True
-    assert tfa.peptide_identity_col == "_MetaXUnitAwarePeptideID"
-    assert "UnitAwareSequence" not in tfa.original_df.columns
+    assert tfa.unit_specific_mode is True
+    assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
+    assert "UnitSpecificSequence" not in tfa.original_df.columns
     assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
-    assert tfa.peptide_df.index.name == "_MetaXUnitAwarePeptideID"
+    assert tfa.peptide_df.index.name == "_MetaXUnitSpecificPeptideID"
     assert tfa.peptide_df["Sequence"].tolist() == ["PEPA", "PEPA"]
     assert tfa.taxa_func_df.index.names == ["Taxon", "None_func"]
 
 
-def test_old_unit_aware_sequence_otf_remains_supported(tmp_path):
+def test_explicit_unit_specific_sequence_otf_remains_supported(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=True, include_analysis_unit=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=True, include_analysis_unit=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
 
-    assert tfa.unit_aware_mode is True
-    assert "UnitAwareSequence" in tfa.original_df.columns
-    assert tfa.peptide_identity_col == "UnitAwareSequence"
+    assert tfa.unit_specific_mode is True
+    assert "UnitSpecificSequence" in tfa.original_df.columns
+    assert tfa.peptide_identity_col == "UnitSpecificSequence"
 
 
-def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_path):
+def test_unit_specific_tables_and_proteins_keep_duplicate_sequences_separate(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     tfa.set_func("KEGG_ko")
     common_params = {
@@ -306,8 +306,8 @@ def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_pa
 
     tfa.set_multi_tables(sum_protein=False, **common_params)
 
-    assert tfa.unit_aware_mode is True
-    assert tfa.peptide_identity_col == "_MetaXUnitAwarePeptideID"
+    assert tfa.unit_specific_mode is True
+    assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
     assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
     assert tfa.peptide_df["Sequence"].tolist() == ["PEPA", "PEPA"]
     assert tfa.taxa_df["peptide_num"].sum() == 2
@@ -340,14 +340,14 @@ def test_unit_aware_tables_and_proteins_keep_duplicate_sequences_separate(tmp_pa
     ("share_intensity", "expected_intensity"),
     [(False, [10.0, 20.0]), (True, [5.0, 10.0])],
 )
-def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(
+def test_unit_specific_otf_split_func_uses_unsplit_taxa_source(
     tmp_path,
     share_intensity,
     expected_intensity,
 ):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = tmp_path / "unit_aware_split_otf.tsv"
+    path = tmp_path / "unit_specific_split_otf.tsv"
     pd.DataFrame(
         {
             "analysis_unit_id": ["u1", "u2"],
@@ -406,14 +406,14 @@ def test_unit_aware_otf_split_func_uses_unsplit_taxa_source(
     ]
 
 
-def test_unit_aware_count_columns_derive_missing_bare_sequence(tmp_path):
+def test_unit_specific_count_columns_derive_missing_bare_sequence(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     peptide_df = pd.DataFrame(
         {
-            "_MetaXUnitAwarePeptideID": ["u1||PEPA", "u2||PEPA", "u2||PEPB"],
+            "_MetaXUnitSpecificPeptideID": ["u1||PEPA", "u2||PEPA", "u2||PEPB"],
             "Taxon": ["taxon_a", "taxon_a", "taxon_a"],
         }
     )
@@ -433,7 +433,7 @@ def test_unit_aware_count_columns_derive_missing_bare_sequence(tmp_path):
     assert result.loc["taxon_a", "bare_sequence_num"] == 2
 
 
-def test_non_unit_aware_count_columns_remain_unchanged(tfa_object):
+def test_non_unit_specific_count_columns_remain_unchanged(tfa_object):
     summary_df = pd.DataFrame(
         {"s1": [4.0], "peptide_num": [2]},
         index=pd.Index(["taxon_a"], name="Taxon"),
@@ -453,15 +453,15 @@ def test_non_unit_aware_count_columns_remain_unchanged(tfa_object):
     assert "bare_sequence_num" not in result.columns
 
 
-def test_filter_taxa_func_uses_unit_aware_pair_counts(tmp_path):
+def test_filter_taxa_func_uses_unit_specific_pair_counts(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     tfa.set_func("KEGG_ko")
     df = pd.DataFrame(
         {
-            "_MetaXUnitAwarePeptideID": [
+            "_MetaXUnitSpecificPeptideID": [
                 "u1||PEPA",
                 "u2||PEPA",
                 "u1||PEPA",
@@ -494,7 +494,7 @@ def test_filter_taxa_func_uses_unit_aware_pair_counts(tmp_path):
         ("taxon_b", "func_2"),
         ("taxon_b", "func_2"),
     ]
-    assert result["_MetaXUnitAwarePeptideID"].tolist() == [
+    assert result["_MetaXUnitSpecificPeptideID"].tolist() == [
         "u1||PEPA",
         "u2||PEPA",
         "u1||PEPA",
@@ -502,10 +502,10 @@ def test_filter_taxa_func_uses_unit_aware_pair_counts(tmp_path):
     ]
 
 
-def test_unit_aware_sequence_is_used_for_all_summarization_paths(tmp_path):
+def test_unit_specific_sequence_is_used_for_all_summarization_paths(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
-    path = _write_unit_aware_otf(
+    path = _write_unit_specific_otf(
         tmp_path,
         include_unit_sequence=True,
         include_analysis_unit=False,
@@ -533,8 +533,8 @@ def test_unit_aware_sequence_is_used_for_all_summarization_paths(tmp_path):
         outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
     )
 
-    assert tfa.unit_aware_mode is True
-    assert tfa.peptide_identity_col == "UnitAwareSequence"
+    assert tfa.unit_specific_mode is True
+    assert tfa.peptide_identity_col == "UnitSpecificSequence"
     assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
     assert tfa.taxa_df["peptide_num"].sum() == 2
     assert tfa.func_df["peptide_num"].sum() == 2
@@ -543,13 +543,13 @@ def test_unit_aware_sequence_is_used_for_all_summarization_paths(tmp_path):
     assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
 
 
-def test_non_unit_aware_otf_keeps_sequence_as_peptide_identity(tfa_object):
-    assert tfa_object.unit_aware_mode is False
+def test_non_unit_specific_otf_keeps_sequence_as_peptide_identity(tfa_object):
+    assert tfa_object.unit_specific_mode is False
     assert tfa_object.peptide_identity_col == tfa_object.peptide_col_name
     assert tfa_object.peptide_identity_col == "Sequence"
 
 
-def test_unit_aware_lfq_uses_internal_unit_aware_identity(monkeypatch, tmp_path):
+def test_unit_specific_lfq_uses_internal_unit_specific_identity(monkeypatch, tmp_path):
     import metax.taxafunc_analyzer.analyzer as analyzer_module
     import metax.taxafunc_analyzer.analyzer_utils.lfq as lfq_module
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
@@ -567,7 +567,7 @@ def test_unit_aware_lfq_uses_internal_unit_aware_identity(monkeypatch, tmp_path)
 
     monkeypatch.setattr(analyzer_module, "run_lfq", fake_run_lfq)
     monkeypatch.setattr(lfq_module, "run_lfq", fake_run_lfq)
-    path = _write_unit_aware_otf(tmp_path, include_unit_sequence=False)
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
     tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
     tfa.set_func("None_func")
     tfa.set_multi_tables(
@@ -587,4 +587,4 @@ def test_unit_aware_lfq_uses_internal_unit_aware_identity(monkeypatch, tmp_path)
     )
 
     assert quant_ids
-    assert set(quant_ids) == {"_MetaXUnitAwarePeptideID"}
+    assert set(quant_ids) == {"_MetaXUnitSpecificPeptideID"}

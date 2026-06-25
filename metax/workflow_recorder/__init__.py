@@ -10,7 +10,7 @@ from .recorder import (
     method_call_step,
     set_multi_tables_step,
     taxafunc_analyzer_step,
-    unit_aware_otf_step,
+    unit_specific_otf_step,
 )
 
 __all__ = [
@@ -25,5 +25,5 @@ __all__ = [
     "method_call_step",
     "set_multi_tables_step",
     "taxafunc_analyzer_step",
-    "unit_aware_otf_step",
+    "unit_specific_otf_step",
 ]

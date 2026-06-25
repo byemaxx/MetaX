@@ -13,7 +13,7 @@ from metax.workflow_recorder import (
     taxafunc_analyzer_step,
     deseq2_step,
     limma_step,
-    unit_aware_otf_step,
+    unit_specific_otf_step,
 )
 
 
@@ -68,10 +68,10 @@ def test_auto_otf_report_step_uses_saved_config(tmp_path: Path):
     assert step.outputs["index_html_path"].endswith("index.html")
 
 
-def test_unit_aware_otf_step_records_replayable_parameters():
+def test_unit_specific_otf_step_records_replayable_parameters():
     params = {
         "peptide_table_path": "peptides.tsv",
-        "unit_aware_manifest_path": "manifest.json",
+        "unit_specific_manifest_path": "manifest.json",
         "taxafunc_anno_db_path": "taxafunc.db",
         "output_path": "out.tsv",
         "digested_genome_folders": "digested",
@@ -88,14 +88,14 @@ def test_unit_aware_otf_step_records_replayable_parameters():
         "n_jobs": None,
     }
 
-    step = unit_aware_otf_step(params)
+    step = unit_specific_otf_step(params)
 
-    assert step.step_type == "unit_aware_peptide_direct_to_otf"
+    assert step.step_type == "unit_specific_peptide_direct_to_otf"
     assert step.parameters == params
-    assert step.inputs["unit_aware_manifest_path"] == "manifest.json"
+    assert step.inputs["unit_specific_manifest_path"] == "manifest.json"
     assert step.outputs["output_path"] == "out.tsv"
-    assert "UnitAwareOTFAnnotator(**unit_aware_otf_params)" in step.code
-    compile(step.code, "<unit-aware-workflow-step>", "exec")
+    assert "UnitSpecificOTFAnnotator(**unit_specific_otf_params)" in step.code
+    compile(step.code, "<unit-specific-workflow-step>", "exec")
 
 
 def test_taxafunc_and_multi_table_steps_generate_runnable_cells():

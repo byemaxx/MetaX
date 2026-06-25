@@ -9,11 +9,11 @@ from typing import Iterable
 import pandas as pd
 
 
-SCHEMA_VERSION = "metaumbra.unit_aware_manifest.v1"
+SCHEMA_VERSION = "metaumbra.unit_specific_manifest.v1"
 
 
 @dataclass
-class UnitAwareUnitSpec:
+class UnitSpecificUnitSpec:
     analysis_unit_id: str
     sample_columns: list[str]
     genome_ids: list[str]
@@ -21,12 +21,12 @@ class UnitAwareUnitSpec:
 
 
 @dataclass
-class UnitAwareManifest:
+class UnitSpecificManifest:
     schema_version: str
     generated_by: dict
     default_genome_threshold: str
     files: dict
-    units: dict[str, UnitAwareUnitSpec]
+    units: dict[str, UnitSpecificUnitSpec]
     selected_genome_threshold: str
 
 
@@ -54,27 +54,27 @@ def _warn_or_raise(message: str, strict: bool) -> None:
     warnings.warn(message, stacklevel=2)
 
 
-def load_unit_aware_manifest(
+def load_unit_specific_manifest(
     manifest_path: str | Path,
     genome_threshold: str | None = None,
     strict: bool = True,
-) -> UnitAwareManifest:
+) -> UnitSpecificManifest:
     manifest_path = Path(manifest_path)
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     schema_version = data.get("schema_version")
     if schema_version != SCHEMA_VERSION:
-        raise ValueError(f"Unsupported unit-aware manifest schema_version: {schema_version!r}")
+        raise ValueError(f"Unsupported unit-specific manifest schema_version: {schema_version!r}")
 
     default_threshold = str(data.get("default_genome_threshold", "")).strip()
     selected_threshold, selected_genome_key = _normalize_threshold_alias(genome_threshold, default_threshold)
 
     raw_units = data.get("units")
     if not isinstance(raw_units, dict) or not raw_units:
-        raise ValueError("unit-aware manifest must contain at least one unit")
+        raise ValueError("unit-specific manifest must contain at least one unit")
 
     seen_samples: dict[str, str] = {}
-    units: dict[str, UnitAwareUnitSpec] = {}
+    units: dict[str, UnitSpecificUnitSpec] = {}
     for analysis_unit_id, raw_unit in raw_units.items():
         if not isinstance(raw_unit, dict):
             raise ValueError(f"Unit {analysis_unit_id!r} must be an object")
@@ -120,14 +120,14 @@ def load_unit_aware_manifest(
                     strict=strict,
                 )
 
-        units[str(analysis_unit_id)] = UnitAwareUnitSpec(
+        units[str(analysis_unit_id)] = UnitSpecificUnitSpec(
             analysis_unit_id=str(analysis_unit_id),
             sample_columns=sample_columns,
             genome_ids=genome_ids,
             n_samples=n_samples,
         )
 
-    return UnitAwareManifest(
+    return UnitSpecificManifest(
         schema_version=schema_version,
         generated_by=dict(data.get("generated_by") or {}),
         default_genome_threshold=default_threshold,
@@ -239,7 +239,7 @@ def resolve_manifest_sample_columns(
 
 
 def write_unit_sample_column_mapping(
-    manifest: UnitAwareManifest,
+    manifest: UnitSpecificManifest,
     sample_column_mapping: dict[str, str],
     output_path: str | Path,
     output_sample_col_prefix: str = "Intensity_",
