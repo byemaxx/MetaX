@@ -147,10 +147,30 @@ class PeptideAnnotator:
         df_t = df.copy()
         df_t.rename(columns={self.peptide_col: 'Sequence'}, inplace=True)
         print('Running proteins_to_taxa_func...')
-        
+
+        unique_proteins = (
+            df_t[self.protein_col]
+            .dropna()
+            .drop_duplicates()
+            .tolist()
+        )
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self.run_pep2taxafunc, protein) for protein in df_t[self.protein_col]]
-            results = [future.result() for future in tqdm(futures, total=len(futures))]
+            futures = [
+                executor.submit(self.run_pep2taxafunc, protein)
+                for protein in unique_proteins
+            ]
+            unique_results = [
+                future.result()
+                for future in tqdm(futures, total=len(futures))
+            ]
+
+        annotations_by_protein = dict(zip(unique_proteins, unique_results))
+        results = [
+            annotations_by_protein[protein]
+            if pd.notna(protein)
+            else self.run_pep2taxafunc(protein)
+            for protein in df_t[self.protein_col]
+        ]
 
         df_t0 = pd.DataFrame(results, index=df_t.index)
         df_t0 = self.add_additional_columns(df_t0)
