@@ -1142,11 +1142,23 @@ class TaxaFuncAnalyzer:
             return df
         
         item_col = 'Taxon' if df_type == 'taxa' else func_name
-        count_col = (
-            self.peptide_col_name
-            if self.unit_specific_mode and self.peptide_col_name in df.columns
-            else self.peptide_identity_col
-        )
+        count_source = df
+        if self.unit_specific_mode:
+            count_col = self.peptide_col_name
+            if count_col not in count_source.columns:
+                count_col = "_MetaXBareSequence"
+                count_source = count_source.assign(
+                    **{
+                        count_col: (
+                            count_source[self.peptide_identity_col]
+                            .astype(str)
+                            .str.rsplit("||", n=1)
+                            .str[-1]
+                        )
+                    }
+                )
+        else:
+            count_col = self.peptide_identity_col
 
         # # if True: #! Need to be implemented
         # if distinct_threshold_mode:
@@ -1194,12 +1206,12 @@ class TaxaFuncAnalyzer:
         # Group by item_col and filter based on peptide number
         if df_type == 'taxa_func':
             group_cols = ['Taxon', func_name]
-            peptide_counts = df.groupby(group_cols)[count_col].nunique()
+            peptide_counts = count_source.groupby(group_cols)[count_col].nunique()
             remove_list = peptide_counts[peptide_counts < peptide_num].index
             row_pairs = pd.MultiIndex.from_frame(df[group_cols])
             df = df.loc[~row_pairs.isin(remove_list)]
         else:
-            peptide_counts = df.groupby(item_col)[count_col].nunique()
+            peptide_counts = count_source.groupby(item_col)[count_col].nunique()
             remove_list = peptide_counts[peptide_counts < peptide_num].index
             df = df.loc[~df[item_col].isin(remove_list)]
 
@@ -1265,7 +1277,7 @@ class TaxaFuncAnalyzer:
 
         
         # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
-        df_taxa_pep = df_filtered_peptides[self._cols_with_peptide_identity('Taxon') + self.sample_list] # type: ignore
+        df_taxa_pep = df_filtered_peptides[self._cols_for_peptide_table('Taxon') + self.sample_list] # type: ignore
         print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
         df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
         #TODO: use the peptide number after filtering the minimum peptide number 
@@ -1316,7 +1328,7 @@ class TaxaFuncAnalyzer:
             
         df_func_pep = self.filter_peptides_by_taxa_func(df= self.original_df, func_threshold=func_threshold,
                                     keep_unknow_func=keep_unknow_func, filter_taxa=False, func_name=func_name)
-        df_func_pep = df_func_pep[self._cols_with_peptide_identity(func_name) + self.sample_list] # type: ignore
+        df_func_pep = df_func_pep[self._cols_for_peptide_table(func_name) + self.sample_list] # type: ignore
         print("\n-----Starting to perform outlier detection and handling for [Peptide-Function] table...-----")
         df_func_pep = self.detect_and_handle_outliers(df=df_func_pep, **outlier_params)
         if not split_func:
@@ -1497,7 +1509,7 @@ class TaxaFuncAnalyzer:
         
         if not taxa_and_func_only_from_otf:
             # extract 'taxa', sample intensity #! and 'peptide_col' to avoid the duplicated items when handling outlier
-            df_taxa_pep = df_filtered_peptides[self._cols_with_peptide_identity('Taxon') + self.sample_list] # type: ignore
+            df_taxa_pep = df_filtered_peptides[self._cols_for_peptide_table('Taxon') + self.sample_list] # type: ignore
             print("\n-----Starting to perform outlier detection and handling for [Peptide-Taxon] table...-----")
             df_taxa_pep = self.detect_and_handle_outliers(df=df_taxa_pep, **outlier_params)
             #TODO: use the peptide number after filtering the minimum peptide number 
@@ -1559,7 +1571,7 @@ class TaxaFuncAnalyzer:
 
 
         # ----- create taxa_func table -----
-        df_taxa_func = df_half_processed_peptides[self._cols_with_peptide_identity('Taxon', self.func_name) + self.sample_list].copy() # type: ignore
+        df_taxa_func = df_half_processed_peptides[self._cols_for_peptide_table('Taxon', self.func_name) + self.sample_list].copy() # type: ignore
         df_taxa_func['peptide_num'] = 1
         if not split_func:
             df_taxa_func = self.filter_peptides_num(df=df_taxa_func, peptide_num_threshold=peptide_num_threshold, df_type='taxa_func')
