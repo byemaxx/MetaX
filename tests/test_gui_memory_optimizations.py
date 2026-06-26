@@ -351,9 +351,10 @@ def test_run_after_set_multi_tables_does_not_eagerly_cache_taxa_functions(monkey
     assert "peptides" not in gui.table_dict
     assert "functions-taxa" not in gui.table_dict
     assert "proteins" not in gui.table_dict
-    assert {"peptides", "unit-specific peptide features", "functions-taxa", "proteins"}.issubset(
+    assert {"peptides", "unit-specific peptide features", "functions-taxa"}.issubset(
         gui.table_provider_dict
     )
+    assert "proteins" not in gui.table_provider_dict
 
 
 def test_table_view_keeps_original_dataframe_and_renders_current_page(monkeypatch):

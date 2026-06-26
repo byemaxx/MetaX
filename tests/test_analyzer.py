@@ -268,6 +268,7 @@ def test_unit_specific_identity_is_generated_from_analysis_unit_and_sequence(tmp
     assert tfa.unit_specific_mode is True
     assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
     assert "UnitSpecificSequence" not in tfa.original_df.columns
+    assert tfa.peptide_df is None
     assert tfa.get_peptide_df().index.tolist() == ["PEPA"]
     assert tfa.get_peptide_df().index.name == "Sequence"
     peptide_feature_df = tfa.get_peptide_feature_df()
@@ -312,6 +313,7 @@ def test_unit_specific_tables_and_proteins_keep_duplicate_sequences_separate(tmp
 
     assert tfa.unit_specific_mode is True
     assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
+    assert tfa.peptide_df is None
     assert tfa.get_peptide_df().index.tolist() == ["PEPA"]
     assert tfa.get_peptide_df().loc["PEPA", ["s1", "s2"]].tolist() == [10.0, 20.0]
     peptide_feature_df = tfa.get_peptide_feature_df()
@@ -619,6 +621,11 @@ def test_unit_specific_peptide_sequence_groupby_happens_before_preprocess(monkey
         },
         outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
     )
+
+    assert seen == {}
+    assert tfa.peptide_df is None
+
+    tfa.get_peptide_df()
 
     assert seen["index"] == ["PEPA"]
     assert seen["columns"] == ["s1", "s2"]

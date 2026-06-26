@@ -93,6 +93,7 @@ class TaxaFuncAnalyzer:
         self.peptide_identity_col = self.peptide_col_name
         self.keep_processed_original_df = False
         self._last_set_multi_tables_params: Optional[dict] = None
+        self._peptide_sequence_set: Optional[set[str]] = None
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
@@ -401,7 +402,9 @@ class TaxaFuncAnalyzer:
     def peptide_sequence_exists(self, sequence: str) -> bool:
         if self.peptide_annotation_df is None or self.peptide_col_name not in self.peptide_annotation_df.columns:
             return False
-        return sequence in set(self.peptide_annotation_df[self.peptide_col_name].astype(str))
+        if self._peptide_sequence_set is None:
+            self._peptide_sequence_set = set(self.peptide_annotation_df[self.peptide_col_name].astype(str))
+        return str(sequence) in self._peptide_sequence_set
 
     def _expand_function_rows(
         self,
@@ -1388,6 +1391,7 @@ class TaxaFuncAnalyzer:
         self.keep_processed_original_df = keep_processed_original_df
         self.peptide_df = None
         self.peptide_feature_df = None
+        self._peptide_sequence_set = None
         self.processed_original_df = None
         self.func_taxa_df = None
         self._func_taxa_df = None
@@ -1529,15 +1533,6 @@ class TaxaFuncAnalyzer:
         self.peptide_annotation_df = self._build_peptide_annotation_df(df_half_processed_peptides)
         ###-----outlier hanlded peptide table End-----###
         
-        #Create finalpeptide table
-        # do rest of data preprocess, e.g. normalize, transform, batch effect correction
-        print("\n-----Starting to perform transformation, normalization, and batch effect correction for [Peptide] table...-----")
-        df_peptide_sequence = self._build_sequence_peptide_input(df_half_processed_peptides)
-        self.peptide_df = self.data_preprocess(
-            df=df_peptide_sequence,
-            df_name='peptide',
-            **data_preprocess_params,
-        )
         if keep_processed_original_df:
             self.processed_original_df = self.data_preprocess(
                 df=self._build_peptide_feature_input(df_half_processed_peptides),
@@ -1546,6 +1541,7 @@ class TaxaFuncAnalyzer:
             ).reset_index()
         else:
             self.processed_original_df = None
+        print("\n-----Peptide table will be generated on demand.-----")
         ###------Peptide Table End------###
         
 
