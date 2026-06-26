@@ -287,6 +287,9 @@ class WorkflowStepsSelectionDialog(QDialog):
 
 ###############   Class MetaXGUI Begin   ###############
 class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
+    MAX_EAGER_COMBOBOX_ITEMS = 50000
+    AUTO_SAVE_MAX_TABLE_MEMORY_MB = 2048
+
     def __init__(self, MainWindow):
         super().__init__()
         MainWindow.closeEvent = self.closeEvent
@@ -804,7 +807,127 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if replace_if_two_index:
             dft = self.tfa.replace_if_two_index(dft)
         return dft
-    
+
+    def _get_index_for_df_type(self, df_type: str):
+        df_type = df_type.lower()
+        if df_type == "taxa":
+            return self.tfa.taxa_df.index
+        if df_type in ["func", "function", "functions"]:
+            return self.tfa.func_df.index
+        if df_type in ["taxa-func", "taxa-function", "taxa-functions"]:
+            return self.tfa.taxa_func_df.index
+        if df_type in ["peptide", "peptides"]:
+            return self.tfa.peptide_df.index
+        if df_type in ["protein", "proteins"]:
+            if self.tfa.protein_df is None:
+                return []
+            return self.tfa.protein_df.index
+        if df_type == "custom":
+            if self.tfa.custom_df is None:
+                return []
+            return self.tfa.custom_df.index
+        raise ValueError(f"Invalid df_type: {df_type}")
+
+    def _get_display_list_by_df_type(self, df_type: str) -> list:
+        df_type_lower = df_type.lower()
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            return [f"{taxa} <{func}>" for taxa, func in self.tfa.taxa_func_df.index]
+        index = self._get_index_for_df_type(df_type_lower)
+        return index.tolist() if hasattr(index, "tolist") else list(index)
+
+    def _get_combobox_items_by_df_type(self, df_type: str):
+        df_type_lower = df_type.lower()
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            return self._get_display_list_by_df_type(df_type_lower)
+        return self._get_index_for_df_type(df_type_lower)
+
+    def _item_exists_in_df_type(self, item: str, df_type: str) -> bool:
+        df_type_lower = df_type.lower()
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            if " <" not in item or not item.endswith(">"):
+                return False
+            taxa, func_part = item.rsplit(" <", 1)
+            func = func_part[:-1]
+            return (taxa, func) in self.tfa.taxa_func_df.index
+        index = self._get_index_for_df_type(df_type_lower)
+        return item in index
+
+    def _add_limited_items_to_combobox(
+        self,
+        combobox,
+        items,
+        item_label: str,
+        limit: int | None = None,
+    ) -> None:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        total = len(items)
+        if total <= limit:
+            combobox.addItems(list(items))
+            return
+        if isinstance(items, list):
+            preview_items = items[:limit]
+        elif hasattr(items, "iloc"):
+            preview_items = list(items.iloc[:limit])
+        else:
+            preview_items = list(items[:limit])
+        combobox.addItems(preview_items)
+        notice = f"[Showing first {limit:,} of {total:,} {item_label}; type or paste an exact item to use it]"
+        combobox.addItem(notice)
+
+    def _populate_item_combobox(self, combobox, all_label: str, df_type: str) -> None:
+        combobox.clear()
+        combobox.addItem(all_label)
+        items = self._get_combobox_items_by_df_type(df_type)
+        self._add_limited_items_to_combobox(combobox, items, df_type)
+        if getattr(combobox, "lineEdit", None) is not None and combobox.lineEdit() is not None:
+            combobox.lineEdit().setPlaceholderText("Type or paste an exact item")
+
+    def _update_basic_peptide_query_combobox(self) -> None:
+        self.comboBox_basic_peptide_query.clear()
+        if getattr(self.comboBox_basic_peptide_query, "lineEdit", None) is not None and self.comboBox_basic_peptide_query.lineEdit() is not None:
+            self.comboBox_basic_peptide_query.lineEdit().setPlaceholderText("Type or paste a peptide sequence")
+        if self.tfa is None or getattr(self.tfa, "processed_original_df", None) is None:
+            return
+        sequences = self.tfa.processed_original_df[self.tfa.peptide_col_name].drop_duplicates()
+        self._add_limited_items_to_combobox(
+            self.comboBox_basic_peptide_query,
+            sequences,
+            "peptides",
+        )
+
+    def _estimate_metax_table_memory_mb(self) -> float:
+        if getattr(self, "tfa", None) is None:
+            return 0.0
+        total = 0
+        for name in [
+            "original_df",
+            "processed_original_df",
+            "peptide_df",
+            "taxa_df",
+            "func_df",
+            "taxa_func_df",
+            "func_taxa_df",
+            "protein_df",
+            "custom_df",
+        ]:
+            df = getattr(self.tfa, name, None)
+            if df is not None:
+                total += int(df.memory_usage(deep=True).sum())
+        return total / 1024 / 1024
+
+    def auto_save_metax_obj_to_file(self) -> None:
+        table_memory_mb = self._estimate_metax_table_memory_mb()
+        if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
+            msg = (
+                f"Skip automatic MetaX object save because in-memory tables use "
+                f"{table_memory_mb:.1f} MB. Use Save As manually if a full pickle is needed."
+            )
+            print(msg)
+            self.logger.write_log(msg, "w")
+            return
+        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+
     def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list:
         '''
         return the list of df_type, ignore capital case
@@ -812,15 +935,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return: list
         '''
         df_type = df_type.lower()
-        list_dict = {'taxa':self.taxa_list,
-                        'functions':self.func_list, 
-                        'taxa-functions':self.taxa_func_list, 
-                        'peptides':self.peptide_list,
-                        'proteins':self.protein_list,
-                        'custom':self.custom_list}
-        res_list = list_dict.get(df_type, None)
-        if res_list is None:
-            raise ValueError(f"Invalid df_type: {df_type}")
+        res_list = self._get_display_list_by_df_type(df_type)
 
         if remove_no_linked and df_type in ['taxa', 'functions', 'taxa-functions']:
             res_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(res_list, type=df_type, silent=silent)
@@ -1430,8 +1545,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
         if self.tfa and self.tfa.processed_original_df is not None:
-            self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
+            self._update_basic_peptide_query_combobox()
 
             
             
@@ -3281,8 +3395,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
         self.taxa_list = self.tfa.taxa_df.index.tolist()
         self.func_list = self.tfa.func_df.index.tolist()
-        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tfa.taxa_func_df.index.to_list()]))
-        self.peptide_list = self.tfa.peptide_df.index.tolist()
+        self.taxa_func_list = [f"{taxa} <{func}>" for taxa, func in self.tfa.taxa_func_df.index]
+        self.peptide_list = []
 
 
         # update taxa and function and group in comboBox
@@ -3294,8 +3408,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_heatmap_selection_list.clear()
 
         # update comboBox of basic peptide query
-        self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
+        self._update_basic_peptide_query_combobox()
 
         
         # clear list of taxa-func link network
@@ -3309,7 +3422,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.enable_multi_button(True)
 
         # save metax obj as pickle file
-        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+        self.auto_save_metax_obj_to_file()
         
         #Second Final Step: run a change event for each table comboBox, to update the GUI
         self.change_event_checkBox_basic_plot_table()
@@ -4940,16 +5053,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.basic_heatmap_list.remove(item.text())
     
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
-        self.comboBox_basic_heatmap_selection_list.clear()
-        type_dict = {'Taxa': ['All Taxa', self.taxa_list], 
-                    'Functions': ['All Functions', self.func_list], 
-                    'Taxa-Functions': ['All Taxa-Functions', self.taxa_func_list],
-                    'Peptides': ['All Peptides', self.peptide_list],
-                    'Proteins': ['All Proteins', self.protein_list],
-                    'Custom': ['All Items', self.custom_list]}
-        
-        self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
-        self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
+        type_dict = {'Taxa': 'All Taxa',
+                    'Functions': 'All Functions',
+                    'Taxa-Functions': 'All Taxa-Functions',
+                    'Peptides': 'All Peptides',
+                    'Proteins': 'All Proteins',
+                    'Custom': 'All Items'}
+
+        self._populate_item_combobox(
+            self.comboBox_basic_heatmap_selection_list,
+            type_dict[type_list],
+            type_list,
+        )
         self.add_basic_heatmap_list()
 
             
@@ -5302,21 +5417,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         current_table = self.comboBox_co_expr_table.currentText()
         #! NOT NEED TO add 'All Items' to co_expr_list,becaused it is list for focus
-        update_list = []
-        if current_table == 'Taxa':
-            update_list = self.taxa_list
-        elif current_table == 'Functions':
-            update_list = self.func_list
-        elif current_table == 'Taxa-Functions':
-            update_list = self.taxa_func_list
-        elif current_table == 'Peptides':
-            update_list = self.peptide_list
-        elif current_table == 'Proteins':
-            update_list = self.protein_list
-        elif current_table == 'Custom':
-            update_list = self.custom_list
-            
-        self.comboBox_co_expr_select_list.addItems(update_list)
+        update_list = self._get_combobox_items_by_df_type(current_table)
+        self._add_limited_items_to_combobox(
+            self.comboBox_co_expr_select_list,
+            update_list,
+            current_table,
+        )
 
     def update_basic_heatmap_list(self, str_list:list | None = None, str_selected:str | None = None):
             if str_selected is not None and str_list is None:
@@ -5328,20 +5434,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         break
 
                 if str_selected != '' and str_selected not in self.basic_heatmap_list:
+                    if str_selected.startswith("[Showing first "):
+                        return None
                     # check if str_selected is in the list
                     def check_if_in_list(str_selected):
                         df_type = self.comboBox_basic_table.currentText()
-                        list_dict = {'Taxa':self.taxa_list, 
-                                     'Functions':self.func_list, 
-                                     'Taxa-Functions':self.taxa_func_list, 
-                                     'Peptides':self.peptide_list, 
-                                     'Proteins':self.protein_list,
-                                     'Custom':self.custom_list}
-                        
-                        if str_selected in list_dict[df_type]:
-                            return True
-                        else:
-                            return False
+                        return self._item_exists_in_df_type(str_selected, df_type)
                     
                     if not check_if_in_list(str_selected):
                         QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
@@ -5650,7 +5748,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if str_selected == '':
                 return None
-            elif str_selected not in self.get_list_by_df_type(df_type):
+            elif str_selected.startswith("[Showing first "):
+                return None
+            elif not self._item_exists_in_df_type(str_selected, df_type):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
             elif str_selected not in self.co_expr_focus_list:
                 self.co_expr_focus_list.append(str_selected)
@@ -6172,15 +6272,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.update_trends_select_combobox(type_list=current_table)
         
     def update_trends_select_combobox(self, type_list):
-        type_dict = { 'taxa': ["All Taxa", self.taxa_list],
-                      'functions': ["All Functions", self.func_list],
-                      'taxa-functions': ["All Taxa-Functions", self.taxa_func_list],
-                      'peptides': ["All Peptides", self.peptide_list],
-                      'proteins': ["All Proteins", self.protein_list],
-                      'custom': ['All Items', self.custom_list]}
+        type_dict = { 'taxa': "All Taxa",
+                      'functions': "All Functions",
+                      'taxa-functions': "All Taxa-Functions",
+                      'peptides': "All Peptides",
+                      'proteins': "All Proteins",
+                      'custom': 'All Items'}
 
-        self.comboBox_trends_selection_list.addItem(type_dict[type_list][0])
-        self.comboBox_trends_selection_list.addItems(type_dict[type_list][1])
+        self._populate_item_combobox(
+            self.comboBox_trends_selection_list,
+            type_dict[type_list],
+            type_list,
+        )
         self.add_trends_list()     
         
         
@@ -6214,13 +6317,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     break
                 
             if str_selected != '' and str_selected not in self.trends_cluster_list:
+                if str_selected.startswith("[Showing first "):
+                    return None
                 def check_if_in_list(str_selected):
                     df_type = self.comboBox_trends_table.currentText()
-                    
-                    if str_selected in self.get_list_by_df_type(df_type):
-                        return True
-                    else:
-                        return False
+                    return self._item_exists_in_df_type(str_selected, df_type)
                 if not check_if_in_list(str_selected):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
                     return None
@@ -8752,15 +8853,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_tfnet_select_list.clear()
             # remove no linked items to avoid error when plot focus list only
             taxa_func_list = self.get_list_by_df_type('Taxa-Functions', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(taxa_func_list)
+            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, taxa_func_list, df_type)
         elif df_type == 'Taxa':
             self.comboBox_tfnet_select_list.clear()
             taxa_list = self.get_list_by_df_type('Taxa', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(taxa_list)
+            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, taxa_list, df_type)
         elif df_type == 'Functions':
             self.comboBox_tfnet_select_list.clear()
             func_list = self.get_list_by_df_type('Functions', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(func_list)
+            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, func_list, df_type)
     
     def add_a_list_to_tfnet_focus_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
@@ -8768,6 +8869,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def add_tfnet_selected_to_list(self):
         selected = self.comboBox_tfnet_select_list.currentText().strip()
+        if selected.startswith("[Showing first "):
+            return None
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
