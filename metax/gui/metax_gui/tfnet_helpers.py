@@ -17,8 +17,10 @@ def taxa_func_display_item_has_link(item, taxa_func_index, taxa_func_linked_dict
     if parsed is None:
         return False
     taxa, func = parsed
+    if taxa_func_index is not None and (taxa, func) not in taxa_func_index:
+        return False
     if taxa_func_linked_dict is None:
-        return (taxa, func) in taxa_func_index
+        return True
     return any(linked_func == func for linked_func, _peptide_num in taxa_func_linked_dict.get(taxa, []))
 
 
@@ -77,3 +79,40 @@ def format_linked_taxa_func_index_preview(
             if len(preview) >= limit:
                 break
     return preview, total
+
+
+def search_linked_taxa_func_index(
+    taxa_func_index,
+    search_terms,
+    linked_filter,
+    limit: int,
+) -> tuple[list[str], bool]:
+    lowered_terms = [term.lower() for term in search_terms if term]
+    if not lowered_terms:
+        return [], False
+
+    results: list[str] = []
+    seen = set()
+    chunk_size = max(limit, 1000)
+
+    for start in range(0, len(taxa_func_index), chunk_size):
+        if len(results) >= limit:
+            return results, True
+        chunk = taxa_func_index[start:start + chunk_size]
+        matching_items = []
+        for taxa, func in chunk:
+            item = f"{taxa} <{func}>"
+            item_lower = item.lower()
+            if any(term in item_lower for term in lowered_terms):
+                matching_items.append(item)
+
+        linked_items = linked_filter(matching_items) if matching_items else []
+        for item in linked_items:
+            if item in seen:
+                continue
+            seen.add(item)
+            results.append(item)
+            if len(results) >= limit:
+                return results, True
+
+    return results, False

@@ -104,6 +104,7 @@ try:
         format_linked_taxa_func_index_preview,
         normalize_taxa_func_display_item,
         parse_taxa_func_display_item,
+        search_linked_taxa_func_index,
         taxa_func_display_item_has_link,
     )
     from .unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
@@ -192,6 +193,7 @@ except (ImportError, ValueError):
         format_linked_taxa_func_index_preview,
         normalize_taxa_func_display_item,
         parse_taxa_func_display_item,
+        search_linked_taxa_func_index,
         taxa_func_display_item_has_link,
     )
     from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
@@ -5688,19 +5690,37 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 else:
                     valid_text_list.append(i)
         else:  # selected_mode == "search"
-            list_data = self.get_list_by_df_type(df_type)
-            search_results = []
-            for i in text_list:
-                # Search for matches where i is part of any item in list_data
-                matches = [item for item in list_data if i.lower() in item.lower()]
-                # Add all matches to search_results
-                search_results.extend(matches)
-            # Remove duplicates from search_results in case there are overlapping matches
-            search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
-            
-            # Remove No Linked Taxa-Functions if aim_list is 'tfnet'
-            if search_results and aim_list == 'tfnet':
-                search_results = self.remove_no_linked_taxa_and_func_after_filter_tflink(search_results, type= df_type.lower())
+            if aim_list == 'tfnet' and df_type.lower() == 'taxa-functions':
+                search_results, search_capped = search_linked_taxa_func_index(
+                    self.tfa.taxa_func_df.index,
+                    text_list,
+                    lambda items: self.remove_no_linked_taxa_and_func_after_filter_tflink(
+                        items,
+                        type='taxa-functions',
+                        silent=True,
+                    ),
+                    self.MAX_EAGER_COMBOBOX_ITEMS,
+                )
+                if search_capped:
+                    QMessageBox.warning(
+                        self.MainWindow,
+                        'Warning',
+                        f'Search results were limited to the first {self.MAX_EAGER_COMBOBOX_ITEMS:,} linked Taxa-Functions.',
+                    )
+            else:
+                list_data = self.get_list_by_df_type(df_type)
+                search_results = []
+                for i in text_list:
+                    # Search for matches where i is part of any item in list_data
+                    matches = [item for item in list_data if i.lower() in item.lower()]
+                    # Add all matches to search_results
+                    search_results.extend(matches)
+                # Remove duplicates from search_results in case there are overlapping matches
+                search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
+
+                # Remove No Linked Taxa-Functions if aim_list is 'tfnet'
+                if search_results and aim_list == 'tfnet':
+                    search_results = self.remove_no_linked_taxa_and_func_after_filter_tflink(search_results, type= df_type.lower())
                 
             # show the search results in a new window, allowing user to select the valid items
             if search_results:
