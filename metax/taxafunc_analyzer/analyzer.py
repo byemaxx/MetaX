@@ -13,8 +13,6 @@
 
 import pandas as pd
 from typing import Optional, Dict, List, Union
-from tqdm import tqdm 
-from collections import defaultdict
 
 # import AnalyzerUtils
 if __name__ == '__main__':
@@ -419,11 +417,17 @@ class TaxaFuncAnalyzer:
         ### taxa is the key, func list is the value, value is a list of tuples (func, pep_num)
 
         def _index_to_nested_dict(df):
-            result_dict = {}
-            for (key1, key2) in df.index:
-                pep_num = df.loc[(key1, key2), 'peptide_num']
-                result_dict.setdefault(key1, []).append((key2, pep_num))
-            return result_dict
+            if df is None or df.empty:
+                return {}
+            flat_df = df[["peptide_num"]].reset_index()
+            key1 = flat_df.columns[0]
+            key2 = flat_df.columns[1]
+            return (
+                flat_df.groupby(key1, sort=False)
+                [[key2, "peptide_num"]]
+                .apply(lambda group: list(zip(group[key2], group["peptide_num"])))
+                .to_dict()
+            )
         print("Setting taxa_func_linked_dict and func_taxa_linked_dict...")
         
         self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
@@ -455,12 +459,13 @@ class TaxaFuncAnalyzer:
 
 
     def _remove_all_zero_row(self):
-        df = self.original_df.copy()
+        df = self.original_df
         print(f'original df shape: {df.shape}')
         self.original_row_num = df.shape[0]
         sample_df = df[self.sample_list]
-        all_zero_or_na = ((sample_df == 0) | sample_df.isna()).all(axis=1)
-        df = df.drop(df[all_zero_or_na].index)
+        keep_rows = (sample_df.notna() & sample_df.ne(0)).any(axis=1)
+        if (~keep_rows).any():
+            df = df.loc[keep_rows].copy()
         print(f'after remove all zero row: {df.shape}')
         self.original_df = df
 
@@ -820,40 +825,32 @@ class TaxaFuncAnalyzer:
         print("Creating peptides_linked_dict in taxa, func, and taxa_func...")
         df = df.copy()[self._cols_with_peptide_identity('Taxon', self.func_name)]
 
-        # Use defaultdict for automatic key initialization
-        peptides_in_taxa_func = defaultdict(list)
-        peptides_in_taxa = defaultdict(list)
-        peptides_in_func = defaultdict(list)
+        peptides_in_taxa_func = {}
+        peptides_in_taxa = {}
+        peptides_in_func = {}
 
         if self.split_func_status:
-            for row in tqdm(df.itertuples(index=False), total=len(df), desc="Creating peptides_dict"):
-                peptide = row[0] 
+            for row in df.itertuples(index=False):
+                peptide = row[0]
                 taxa = row[1]
                 func_list = [f.strip() for f in row[2].split(self.split_func_sep)]
 
-                # Append peptide to taxa list
-                peptides_in_taxa[taxa].append(peptide)
+                peptides_in_taxa.setdefault(taxa, []).append(peptide)
 
-                # Process each function in the func_list
                 for func in func_list:
-                    peptides_in_func[func].append(peptide)
+                    peptides_in_func.setdefault(func, []).append(peptide)
                     taxa_func = f'{taxa} <{func}>'
-                    peptides_in_taxa_func[taxa_func].append(peptide)
+                    peptides_in_taxa_func.setdefault(taxa_func, []).append(peptide)
         else:
-            for row in tqdm(df.itertuples(index=False), total=len(df), desc="Creating peptides_dict"):
-                peptide =row[0] 
-                taxa = taxa = row[1]
+            for row in df.itertuples(index=False):
+                peptide = row[0]
+                taxa = row[1]
                 func = row[2]
 
-                # Append peptide to taxa list
-                peptides_in_taxa[taxa].append(peptide)
-
-                # Append peptide to func list
-                peptides_in_func[func].append(peptide)
-
-                # Create combined key for taxa_func
+                peptides_in_taxa.setdefault(taxa, []).append(peptide)
+                peptides_in_func.setdefault(func, []).append(peptide)
                 taxa_func = f'{taxa} <{func}>'
-                peptides_in_taxa_func[taxa_func].append(peptide)
+                peptides_in_taxa_func.setdefault(taxa_func, []).append(peptide)
 
         self.peptides_linked_dict = {'taxa': peptides_in_taxa, 'func': peptides_in_func, 'taxa_func': peptides_in_taxa_func}
         return self.peptides_linked_dict
@@ -983,6 +980,11 @@ class TaxaFuncAnalyzer:
 
         if func_name is None:
             func_name = self.func_name
+
+        if peptide_num <= 1:
+            self.peptide_num_used[df_type] = len(df)
+            print(f"Removed [0 {df_type}] from [0 Peptides] with less than [{peptide_num}] peptides.")
+            return df
         
         item_col = 'Taxon' if df_type == 'taxa' else func_name
 
