@@ -10,6 +10,10 @@ import pandas as pd
 
 
 SCHEMA_VERSION = "metaumbra.unit_specific_manifest.v1"
+SUPPORTED_SCHEMA_VERSIONS = {
+    SCHEMA_VERSION,
+    "metaumbra.unit_aware_manifest.v1",
+}
 
 
 @dataclass
@@ -63,7 +67,7 @@ def load_unit_specific_manifest(
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     schema_version = data.get("schema_version")
-    if schema_version != SCHEMA_VERSION:
+    if schema_version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(f"Unsupported unit-specific manifest schema_version: {schema_version!r}")
 
     default_threshold = str(data.get("default_genome_threshold", "")).strip()

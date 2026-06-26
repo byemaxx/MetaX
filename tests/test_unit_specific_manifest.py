@@ -52,6 +52,28 @@ def test_load_manifest_default_and_switch_thresholds(tmp_path):
     assert manifest.units["u1"].genome_ids == ["MGYG000001456.1"]
 
 
+def test_load_manifest_accepts_unit_aware_schema_alias(tmp_path):
+    path = _write_manifest(
+        tmp_path,
+        {
+            "u1": {
+                "sample_columns": ["s1"],
+                "n_samples": 1,
+                "genome_ids_q005": ["g1", "g2"],
+                "genome_ids_q001": ["g1"],
+            }
+        },
+    )
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["schema_version"] = "metaumbra.unit_aware_manifest.v1"
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    manifest = load_unit_specific_manifest(path)
+
+    assert manifest.schema_version == "metaumbra.unit_aware_manifest.v1"
+    assert manifest.units["u1"].genome_ids == ["g1", "g2"]
+
+
 def test_manifest_rejects_duplicate_samples(tmp_path):
     path = _write_manifest(
         tmp_path,

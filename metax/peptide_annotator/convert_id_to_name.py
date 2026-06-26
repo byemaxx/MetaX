@@ -284,10 +284,15 @@ def add_go_name_to_df(df: pd.DataFrame, split_char: str = ',') -> pd.DataFrame:
             namespaces = namespaces[:-2]
         return names, namespaces
 
-    # Apply the helper function to the 'GOs' column
-    df[['GO_name', 'GO_namespace']] = df['GOs'].apply(
-        lambda x: pd.Series(query_go_names(x))
-    )
+    go_values = df['GOs']
+    unique_go_values = go_values.drop_duplicates()
+    converted = {
+        value: query_go_names(value)
+        for value in unique_go_values
+    }
+    converted_values = go_values.map(converted)
+    df['GO_name'] = converted_values.map(lambda value: value[0])
+    df['GO_namespace'] = converted_values.map(lambda value: value[1])
 
     # Handle 'GOs_prop' column if it exists
     if 'GOs_prop' in df.columns:
@@ -313,40 +318,42 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
         print('EC column does not exist!, return the original dataframe')
         return df
 
-    # Create result dataframe
-    result_df = df.copy()
-    
     # Get EC dictionary
     ec_dict = get_ec_dict()
     
     # Define target columns
     ec_columns = ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']
     
-    # Create mask for valid EC rows
-    mask_EC = ~result_df['EC'].isin(['not_found', '-'])
-
-    # Process valid EC entries
-    for i, row in result_df[mask_EC].iterrows():
-        ec_nums = row['EC'].split(',')
-        for column_name in ec_columns:
-            result_df.at[i, column_name] = lookup_and_join_for_EC(ec_nums,ec_dict, column_name)
-
-    # Set default value for invalid entries
-    result_df.loc[~mask_EC, ec_columns] = '-'
+    ec_values = df['EC']
+    valid_values = ec_values[
+        ec_values.notna() & ~ec_values.isin(['not_found', '-'])
+    ].drop_duplicates()
+    converted_by_column = {
+        column_name: {
+            value: lookup_and_join_for_EC(
+                str(value).split(','),
+                ec_dict,
+                column_name,
+            )
+            for value in valid_values
+        }
+        for column_name in ec_columns
+    }
+    for column_name in ec_columns:
+        df[column_name] = (
+            ec_values.map(converted_by_column[column_name])
+            .fillna('-')
+            .replace('', '-')
+        )
 
     # Handle property columns
     if 'EC_prop' in df.columns:
         for column_name in ec_columns:
             prop_column = f'{column_name}_prop'
-            result_df[prop_column] = result_df['EC_prop']
-            
-    # Fill NA values only for EC columns
-    for col in ec_columns:
-        result_df[col] = result_df[col].fillna('-')
-        result_df[col] = result_df[col].replace('', '-')
+            df[prop_column] = df['EC_prop']
             
     print("Add EC columns to df successfully!")
-    return result_df
+    return df
 
 def add_pathway_name_to_df(df: pd.DataFrame, kppe_id:bool = False) -> pd.DataFrame:
     def query_kegg(id_str, pathway_dict, kppe_id=False):

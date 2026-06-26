@@ -92,6 +92,93 @@ def test_run_2_result_annotates_unique_protein_strings_once(
     assert "  - in-memory annotation:" in output
 
 
+def test_run_2_result_reuses_shared_annotation_result_cache(
+    monkeypatch,
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    shared_cache = {}
+    calls = []
+    original_run = Pep2TaxaFunc.proteins_to_taxa_func_from_cache
+
+    def tracked_run(self, proteins):
+        calls.append(tuple(proteins))
+        return original_run(self, proteins)
+
+    monkeypatch.setattr(
+        Pep2TaxaFunc,
+        "proteins_to_taxa_func_from_cache",
+        tracked_run,
+    )
+
+    def make_annotator():
+        annotator = PeptideAnnotator(
+            db_path=str(db_path),
+            output_path="unused.tsv",
+            peptide_df=pd.DataFrame(),
+            annotation_result_cache=shared_cache,
+        )
+        monkeypatch.setattr(
+            annotator,
+            "add_additional_columns",
+            lambda df: df,
+        )
+        return annotator
+
+    first = make_annotator().run_2_result(
+        pd.DataFrame(
+            {
+                "Sequence": ["PEP1", "PEP2"],
+                "Proteins": ["g1_p1", "g2_p2"],
+                "Intensity_s1": [1, 2],
+            }
+        )
+    )
+    second = make_annotator().run_2_result(
+        pd.DataFrame(
+            {
+                "Sequence": ["PEP3"],
+                "Proteins": ["g1_p1"],
+                "Intensity_s2": [3],
+            }
+        )
+    )
+
+    assert Counter(calls) == Counter({("g1_p1",): 1, ("g2_p2",): 1})
+    assert len(shared_cache) == 2
+    assert second.loc[0, "Taxon"] == first.loc[0, "Taxon"]
+
+
+def test_run_2_result_cache_path_keeps_nan_protein_fallback(
+    monkeypatch,
+    tmp_path,
+):
+    db_path = tmp_path / "taxafunc.db"
+    _write_taxafunc_db(db_path)
+    annotator = PeptideAnnotator(
+        db_path=str(db_path),
+        output_path="unused.tsv",
+        peptide_df=pd.DataFrame(),
+        annotation_result_cache={},
+    )
+    monkeypatch.setattr(annotator, "add_additional_columns", lambda df: df)
+
+    result = annotator.run_2_result(
+        pd.DataFrame(
+            {
+                "Sequence": ["PEP1", "PEP2"],
+                "Proteins": ["g1_p1", pd.NA],
+                "Intensity_s1": [1, 2],
+            }
+        )
+    )
+
+    assert result["Sequence"].tolist() == ["PEP1", "PEP2"]
+    assert result["Proteins"].isna().tolist() == [False, True]
+    assert result["None_func"].tolist() == ["none_func", "none_func"]
+
+
 def test_prefetch_output_matches_direct_annotation(tmp_path):
     db_path = tmp_path / "taxafunc.db"
     _write_taxafunc_db(db_path)
