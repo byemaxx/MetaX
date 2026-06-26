@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets
 from metax.gui import main_gui
 from metax.gui.main_gui import MetaXGUI
 from metax.gui.metax_gui import ui_table_view
+from metax.gui.metax_gui.tfnet_helpers import format_linked_taxa_func_index_preview
 from metax.gui.metax_gui.ui_table_view import Ui_Table_view
 
 
@@ -32,6 +33,9 @@ class FakeComboBox:
     def currentText(self):
         return self._current_text
 
+    def setCurrentText(self, text):
+        self._current_text = text
+
 
 class FakeLogger:
     def __init__(self):
@@ -52,6 +56,9 @@ class FakeListWidget:
 
     def addItems(self, items):
         self.items.extend(list(items))
+
+    def clear(self):
+        self.items.clear()
 
 
 class FakeIndexedWidget:
@@ -85,6 +92,23 @@ def _fake_gui_with_taxa_func_df(count=5):
     return gui
 
 
+def _fake_tfnet_gui(count=5, linked_pairs=None):
+    gui = _fake_gui_with_taxa_func_df(count=count)
+    if linked_pairs is None:
+        linked_pairs = {("taxon_0", "func_0"), ("taxon_2", "func_2"), ("taxon_4", "func_4")}
+    linked_dict = {}
+    for taxa, func in linked_pairs:
+        linked_dict.setdefault(taxa, []).append((func, 1))
+    gui.tfa.taxa_func_linked_dict = linked_dict
+    gui.tfa.func_taxa_linked_dict = {}
+    gui.comboBox_tfnet_select_list = FakeComboBox()
+    gui.comboBox_tfnet_table = FakeComboBox("Taxa-Functions")
+    gui.listWidget_tfnet_focus_list = FakeListWidget()
+    gui.tfnet_fcous_list = []
+    gui.MainWindow = None
+    return gui
+
+
 def test_taxa_function_combobox_population_is_limited():
     gui = _fake_gui_with_taxa_func_df(count=5)
     combo = FakeComboBox()
@@ -104,6 +128,89 @@ def test_taxa_function_validation_accepts_exact_items_beyond_preview():
     assert gui._item_exists_in_df_type("taxon_4 <func_4>", "Taxa-Functions") is True
     assert gui._item_exists_in_df_type("taxon_4 func_4", "Taxa-Functions") is False
     assert gui._item_exists_in_df_type("taxon_99 <func_99>", "Taxa-Functions") is False
+
+
+def test_linked_taxa_function_preview_is_limited_and_filtered():
+    gui = _fake_gui_with_taxa_func_df(count=1500)
+    chunk_sizes = []
+
+    def fake_remove_no_linked(items):
+        chunk_sizes.append(len(items))
+        return ["taxon_0 <func_0>", "taxon_1 <func_1>"]
+
+    preview, total = format_linked_taxa_func_index_preview(
+        gui.tfa.taxa_func_df.index,
+        fake_remove_no_linked,
+        limit=2,
+    )
+
+    assert preview == ["taxon_0 <func_0>", "taxon_1 <func_1>"]
+    assert total == 1500
+    assert chunk_sizes == [1000]
+
+
+def test_tfnet_taxa_function_combobox_uses_linked_preview():
+    gui = _fake_tfnet_gui(count=5)
+    gui.MAX_EAGER_COMBOBOX_ITEMS = 2
+
+    gui.update_tfnet_select_list()
+
+    assert gui.comboBox_tfnet_select_list.items == [
+        "taxon_0 <func_0>",
+        "taxon_2 <func_2>",
+        "[Showing first 2 linked Taxa-Functions from 5 total Taxa-Functions; type or paste an exact item to use it]",
+    ]
+    assert "taxon_1 <func_1>" not in gui.comboBox_tfnet_select_list.items
+
+
+def test_tfnet_exact_linked_item_beyond_preview_is_accepted():
+    gui = _fake_tfnet_gui(count=5)
+    gui.MAX_EAGER_COMBOBOX_ITEMS = 2
+    gui.comboBox_tfnet_select_list.setCurrentText("taxon_4 <func_4>")
+
+    gui.add_tfnet_selected_to_list()
+
+    assert gui.tfnet_fcous_list == ["taxon_4 <func_4>"]
+    assert gui.listWidget_tfnet_focus_list.items == ["taxon_4 <func_4>"]
+
+
+def test_tfnet_exact_unlinked_item_is_rejected(monkeypatch):
+    gui = _fake_tfnet_gui(count=5, linked_pairs={("taxon_0", "func_0")})
+    gui.comboBox_tfnet_select_list.setCurrentText("taxon_1 <func_1>")
+    warnings = []
+    monkeypatch.setattr(main_gui.QMessageBox, "warning", lambda *args, **kwargs: warnings.append(args))
+
+    gui.add_tfnet_selected_to_list()
+
+    assert gui.tfnet_fcous_list == []
+    assert "no valid taxa-function link" in warnings[-1][2]
+
+
+def test_tfnet_malformed_item_is_rejected(monkeypatch):
+    gui = _fake_tfnet_gui(count=5)
+    gui.comboBox_tfnet_select_list.setCurrentText("taxon_1 func_1")
+    warnings = []
+    monkeypatch.setattr(main_gui.QMessageBox, "warning", lambda *args, **kwargs: warnings.append(args))
+
+    gui.add_tfnet_selected_to_list()
+
+    assert gui.tfnet_fcous_list == []
+    assert "valid item" in warnings[-1][2]
+
+
+def test_tfnet_taxa_function_tuple_list_is_filtered_and_formatted():
+    gui = _fake_tfnet_gui(count=5, linked_pairs={("taxon_0", "func_0"), ("taxon_2", "func_2")})
+
+    gui.update_tfnet_focus_list_and_widget(
+        str_list=[
+            ("taxon_0", "func_0"),
+            ("taxon_1", "func_1"),
+            ("taxon_2", "func_2"),
+        ]
+    )
+
+    assert gui.tfnet_fcous_list == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
+    assert gui.listWidget_tfnet_focus_list.items == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
 
 
 def test_run_after_set_multi_tables_does_not_eagerly_cache_taxa_functions(monkeypatch):

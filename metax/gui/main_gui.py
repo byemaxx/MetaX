@@ -99,6 +99,13 @@ try:
     from .metax_gui.resources import icon_rc # noqa: F401
     from .metax_gui.console_window import ConsoleOutputWindow
     from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+    from .metax_gui.tfnet_helpers import (
+        filter_linked_tfnet_items,
+        format_linked_taxa_func_index_preview,
+        normalize_taxa_func_display_item,
+        parse_taxa_func_display_item,
+        taxa_func_display_item_has_link,
+    )
     from .unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
     from ..workflow_recorder import (
         AnalysisStep,
@@ -180,6 +187,13 @@ except (ImportError, ValueError):
     from metax.gui.metax_gui.resources import icon_rc
     from metax.gui.metax_gui.console_window import ConsoleOutputWindow
     from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+    from metax.gui.metax_gui.tfnet_helpers import (
+        filter_linked_tfnet_items,
+        format_linked_taxa_func_index_preview,
+        normalize_taxa_func_display_item,
+        parse_taxa_func_display_item,
+        taxa_func_display_item_has_link,
+    )
     from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
@@ -847,13 +861,34 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         preview = [f"{taxa} <{func}>" for taxa, func in idx[:preview_count]]
         return preview, total
 
+    def _item_has_tflink(self, item: str, df_type: str) -> bool:
+        if not self._item_exists_in_df_type(item, df_type):
+            return False
+
+        df_type_lower = df_type.lower()
+        if df_type_lower not in ["taxa", "functions", "taxa-functions"]:
+            return True
+        if df_type_lower == "taxa-functions":
+            return taxa_func_display_item_has_link(
+                item,
+                self.tfa.taxa_func_df.index,
+                getattr(self.tfa, "taxa_func_linked_dict", None),
+            )
+
+        filtered = self.remove_no_linked_taxa_and_func_after_filter_tflink(
+            [item],
+            type=df_type_lower,
+            silent=True,
+        )
+        return item in filtered
+
     def _item_exists_in_df_type(self, item: str, df_type: str) -> bool:
         df_type_lower = df_type.lower()
         if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
-            if " <" not in item or not item.endswith(">"):
+            parsed = parse_taxa_func_display_item(item)
+            if parsed is None:
                 return False
-            taxa, func_part = item.rsplit(" <", 1)
-            func = func_part[:-1]
+            taxa, func = parsed
             return (taxa, func) in self.tfa.taxa_func_df.index
         index = self._get_index_for_df_type(df_type_lower)
         return item in index
@@ -5620,13 +5655,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def add_a_list_to_list_window(self, df_type, aim_list, str_list=None, input_mode = True):
         def check_if_in_list(str_selected, df_type):
-            df_type = df_type.lower()
-            
-            extracted_list = self.get_list_by_df_type(df_type)
-            if str_selected in extracted_list:
-                return True
-            else:
-                return False
+            if aim_list == 'tfnet':
+                return self._item_has_tflink(str_selected, df_type)
+            return self._item_exists_in_df_type(str_selected, df_type)
                     
         # open a new window allowing user to input text with comma or new line
         self.input_window = InputWindow(self.MainWindow, input_mode=input_mode)
@@ -8892,17 +8923,30 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     # network
     def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
+        if df_type in ['Taxa-Functions', 'Taxa', 'Functions']:
+            self._populate_tfnet_combobox(df_type)
+
+    def _populate_tfnet_combobox(self, df_type: str) -> None:
+        self.comboBox_tfnet_select_list.clear()
         if df_type == 'Taxa-Functions':
-            self.comboBox_tfnet_select_list.clear()
-            self._add_items_to_combobox_by_df_type(self.comboBox_tfnet_select_list, df_type, df_type)
-        elif df_type == 'Taxa':
-            self.comboBox_tfnet_select_list.clear()
-            taxa_list = self.get_list_by_df_type('Taxa', remove_no_linked=True, silent=True)
-            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, taxa_list, df_type)
-        elif df_type == 'Functions':
-            self.comboBox_tfnet_select_list.clear()
-            func_list = self.get_list_by_df_type('Functions', remove_no_linked=True, silent=True)
-            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, func_list, df_type)
+            preview_items, total = format_linked_taxa_func_index_preview(
+                self.tfa.taxa_func_df.index,
+                lambda items: self.remove_no_linked_taxa_and_func_after_filter_tflink(
+                    items,
+                    type="taxa-functions",
+                    silent=True,
+                ),
+                self.MAX_EAGER_COMBOBOX_ITEMS,
+            )
+            self.comboBox_tfnet_select_list.addItems(preview_items)
+            if total > len(preview_items):
+                self.comboBox_tfnet_select_list.addItem(
+                    f"[Showing first {len(preview_items):,} linked Taxa-Functions from {total:,} total Taxa-Functions; type or paste an exact item to use it]"
+                )
+            return
+
+        item_list = self.get_list_by_df_type(df_type, remove_no_linked=True, silent=True)
+        self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, item_list, df_type)
     
     def add_a_list_to_tfnet_focus_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
@@ -8910,20 +8954,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def add_tfnet_selected_to_list(self):
         selected = self.comboBox_tfnet_select_list.currentText().strip()
-        if selected.startswith("[Showing first "):
+        if not selected or selected.startswith("[Showing first "):
             return None
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
     def update_tfnet_focus_list_and_widget(self, str_selected: str = '', str_list: list | None = None):
+        df_type = self.comboBox_tfnet_table.currentText()
         if str_selected == '' and str_list is None:
             return None
         elif str_selected != '' and str_list is None:
+            if not self._item_exists_in_df_type(str_selected, df_type):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+                return None
+            if not self._item_has_tflink(str_selected, df_type):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'This item has no valid taxa-function link!')
+                return None
             if str_selected not in self.tfnet_fcous_list:
                 self.tfnet_fcous_list.append(str_selected)
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{str_selected} is already in the list!')
         elif str_selected == '' and str_list is not None:
+            str_list = [
+                normalize_taxa_func_display_item(item) if df_type == 'Taxa-Functions' else item
+                for item in str_list
+                if self._item_exists_in_df_type(item, df_type) and self._item_has_tflink(item, df_type)
+            ]
             for i in str_list:
                 if i not in self.tfnet_fcous_list:
                     self.tfnet_fcous_list.append(i)
@@ -9122,18 +9178,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list, type:str = 'taxa', silent:bool = False) -> list[str]:
         # keep taxa and func only in the taxa_func_linked_dict and remove others
+        type = type.lower()
 
-        if type == 'taxa' or type == 'functions':
-            if type == 'taxa':
-                linked_dict = self.tfa.taxa_func_linked_dict
-            elif type == 'functions':
-                linked_dict = self.tfa.func_taxa_linked_dict
-            removed = [i for i in check_list if i not in linked_dict]
-            check_list = [i for i in check_list if i in linked_dict]
-        elif type == 'taxa-functions':
-            return check_list
-        else:
-            raise ValueError(f'type should be taxa, functions or taxa-functions! but got: {type}')
+        check_list, removed = filter_linked_tfnet_items(
+            check_list,
+            type,
+            self.tfa.taxa_func_linked_dict,
+            self.tfa.func_taxa_linked_dict,
+            taxa_func_index=self.tfa.taxa_func_df.index,
+        )
 
         if removed and not silent:
             removed_str = '\n'.join(removed)
