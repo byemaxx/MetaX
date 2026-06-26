@@ -807,6 +807,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         getter = getattr(self.tfa, "get_func_taxa_df", None)
         return getter() if callable(getter) else self.tfa.func_taxa_df
 
+    def _get_tfa_peptide_count(self) -> int:
+        preview_getter = getattr(self.tfa, "get_peptide_sequence_preview", None)
+        if callable(preview_getter):
+            _preview, total = preview_getter(limit=0)
+            return total
+        return self._get_tfa_peptide_df().shape[0]
+
     def get_table_by_df_type(self, df_type:str | None = None, 
                              replace_if_two_index:bool = False):
         if df_type is None:
@@ -3475,7 +3482,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         
     def run_after_set_multi_tables(self):
-        num_peptide = self._get_tfa_peptide_df().shape[0]
+        num_peptide = self._get_tfa_peptide_count()
         num_func = self.tfa.func_df.shape[0]
         num_taxa = self.tfa.taxa_df.shape[0]
         num_taxa_func = self.tfa.taxa_func_df.shape[0]
@@ -3496,8 +3503,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 'peptides': lambda: self._get_tfa_peptide_df(),
                 'unit-specific peptide features': lambda: self._get_tfa_peptide_feature_df(),
                 'functions-taxa': lambda: self._get_tfa_func_taxa_df(),
-                'proteins': lambda: self.tfa.protein_df,
             })
+            if self.tfa.protein_df is not None:
+                self.table_provider_dict['proteins'] = lambda: self.tfa.protein_df
         if self.table_dict == {}:
             if self.tfa.any_df_mode:
                 self.update_table_dict('custom', self.tfa.custom_df)
@@ -4375,6 +4383,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 df = self.table_dict[table_name]
             elif table_name in getattr(self, "table_provider_dict", {}):
                 df = self.table_provider_dict[table_name]()
+                if df is None:
+                    raise ValueError(f"{table_name} table is not available.")
                 self.update_table_dict(table_name, df)
             else:
                 raise KeyError(table_name)
@@ -6031,6 +6041,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     if self.tfa.peptide_identity_col in lookup_source.columns and df.index.isin(lookup_source[self.tfa.peptide_identity_col]).all()
                     else self.tfa.peptide_col_name
                 )
+                if lookup_key == self.tfa.peptide_col_name and getattr(self.tfa, "unit_specific_mode", False):
+                    selected_lookup = lookup_source[lookup_source[lookup_key].isin(df.index)]
+                    annotation_counts = selected_lookup.groupby(lookup_key, observed=True)[["Taxon", self.tfa.func_name]].nunique()
+                    ambiguous_sequences = annotation_counts[
+                        (annotation_counts["Taxon"] > 1) | (annotation_counts[self.tfa.func_name] > 1)
+                    ]
+                    if not ambiguous_sequences.empty:
+                        QMessageBox.warning(
+                            self.MainWindow,
+                            "Warning",
+                            "Sankey plot needs unit-specific peptide features when a peptide sequence maps to multiple Taxon/Function annotations.",
+                        )
+                        return None
                 lookup = lookup_source.drop_duplicates(subset=[lookup_key]).set_index(lookup_key)[['Taxon', self.tfa.func_name]]
 
                 aligned = lookup.reindex(df.index)  # 按 df.index 对齐，自动填充缺失为 NaN
