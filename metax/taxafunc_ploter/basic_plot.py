@@ -81,7 +81,7 @@ class BasicPlot:
             a.set_text(f'{count[i]}')
 
 
-        plt.title('Number of identified peptides at different levels', fontsize=font_size+2, loc='center', fontweight='bold')
+        plt.title('Number of non-redundant peptides at different taxonomic assignment levels', fontsize=font_size+2, loc='center', fontweight='bold')
         plt.setp(autotexts, size=font_size,  color="white")
         plt.setp(texts, size=font_size)
 
@@ -120,7 +120,7 @@ class BasicPlot:
             # set the label of the bar, and fontsize
             ax.bar_label(i, fontsize=font_size)
 
-        ax.set_title(f'Number of taxa at different levels (Peptide number >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
+        ax.set_title(f'Number of taxa at different levels (unique peptides >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
         ax.set_xlabel('Taxonomic level', fontsize=font_size+2)
         ax.set_ylabel('Number of taxa', fontsize=font_size+2)
         # set font size of xtikcs and yticks
@@ -154,9 +154,9 @@ class BasicPlot:
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
             ax.bar_label(i, fontsize=font_size)
-        ax.set_title(f'Number of different proportions of peptides in {func_name}', fontsize=font_size+2, fontweight='bold')
+        ax.set_title(f'Number of different proportions of non-redundant peptides in {func_name}', fontsize=font_size+2, fontweight='bold')
         ax.set_xlabel('Proportion of function', fontsize=font_size+2)
-        ax.set_ylabel('Number of peptides', fontsize=font_size+2)
+        ax.set_ylabel('Number of non-redundant peptides', fontsize=font_size+2)
         ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
         ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
 
