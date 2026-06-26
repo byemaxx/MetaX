@@ -42,7 +42,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--genome-threshold", default="auto", help="q0.05, q0.01, or auto")
     parser.add_argument("--peptide-col", default="Sequence")
-    parser.add_argument("--output-sample-col-prefix", default="Intensity_")
+    parser.add_argument(
+        "--output-sample-col-prefix",
+        default="Intensity_",
+        help=(
+            "Prefix for output OTF sample columns. Must be 'Intensity_' for unit-specific output. "
+            "Use --input-sample-col-prefix to match non-standard input columns."
+        ),
+    )
     parser.add_argument(
         "--input-sample-col-prefix",
         help="Optional prefix to strip when matching manifest sample_columns to peptide table columns",

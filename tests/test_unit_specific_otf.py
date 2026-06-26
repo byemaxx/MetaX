@@ -648,7 +648,6 @@ def test_unit_specific_otf_reads_only_required_tsv_columns_with_prefix_aliases(
         output_path=str(tmp_path / "OTF.tsv"),
         digested_genome_folders=str(digested_dir),
         input_sample_col_prefix="Input_",
-        output_sample_col_prefix="Abundance_",
     )
 
     prepared = annotator._read_peptide_table(["s1", "s2"])
@@ -1430,3 +1429,116 @@ def test_unit_specific_folder_mode_handles_unit_without_mapped_proteins(
         with pytest.warns(UserWarning, match="u2: unit has no peptides mapped"):
             result = annotator.run(return_dataframe=True)
         assert result["analysis_unit_id"].tolist() == ["u1"]
+
+
+def test_unit_specific_otf_raises_on_invalid_output_prefix(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    peptide_table.write_text("Sequence\ts1\nPEPA\t10\n", encoding="utf-8")
+    manifest = tmp_path / "unit_specific_manifest.json"
+    _write_manifest(manifest)
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _create_dummy_taxafunc_db(taxafunc_db)
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    
+    with pytest.raises(ValueError, match="Unit-specific OTF output_sample_col_prefix must be 'Intensity_'"):
+        UnitSpecificOTFAnnotator(
+            peptide_table_path=str(peptide_table),
+            unit_specific_manifest_path=str(manifest),
+            taxafunc_anno_db_path=str(taxafunc_db),
+            output_path=str(tmp_path / "OTF.tsv"),
+            digested_genome_folders=str(digested_dir),
+            output_sample_col_prefix="LFQ intensity ",
+        )
+
+
+def test_unit_specific_otf_per_unit_output_filename_collisions(monkeypatch, tmp_path, capsys):
+    peptide_table = tmp_path / "peptides.tsv"
+    peptide_table.write_text("Sequence\ts1\ts2\nPEPA\t10\t20\n", encoding="utf-8")
+    
+    # Create two units whose IDs will collide when sanitized to a safe filename
+    manifest_data = {
+        "schema_version": "metaumbra.unit_specific_manifest.v1",
+        "generated_by": {"tool": "test"},
+        "default_genome_threshold": "q0.05",
+        "files": {},
+        "units": {
+            "a/b": {
+                "sample_columns": ["s1"],
+                "n_samples": 1,
+                "genome_ids_q005": ["g1"],
+                "genome_ids_q001": ["g1"],
+            },
+            "a?b": {
+                "sample_columns": ["s2"],
+                "n_samples": 1,
+                "genome_ids_q005": ["g2"],
+                "genome_ids_q001": ["g2"],
+            }
+        }
+    }
+    manifest = tmp_path / "unit_specific_manifest.json"
+    manifest.write_text(json.dumps(manifest_data), encoding="utf-8")
+    
+    taxafunc_db = tmp_path / "taxafunc.db"
+    _create_dummy_taxafunc_db(taxafunc_db)
+    
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    
+    class FakeMapper:
+        def __init__(self, *args, **kwargs):
+            self.peptide_table = kwargs["peptide_df"]
+            self.final_peptide_table = self.peptide_table.copy()
+            self.peptides_before_mapping = len(self.peptide_table)
+            self.peptides_after_mapping = len(self.peptide_table)
+            self.selected_genomes_num = len(kwargs["genome_list"])
+
+        def all_in_one(self, **kwargs):
+            # Return intensity columns exactly as they exist in the chunk
+            df_dict = {
+                "Sequence": self.peptide_table["Sequence"],
+                "Proteins": ["prot1"] * len(self.peptide_table),
+                "LCA_level": ["genome"] * len(self.peptide_table),
+                "Taxon": ["d__Bacteria"] * len(self.peptide_table),
+                "Taxon_prop": [1.0] * len(self.peptide_table),
+            }
+            # Add whichever Intensity_ columns are present
+            for col in self.peptide_table.columns:
+                if col.startswith("Intensity_"):
+                    df_dict[col] = self.peptide_table[col]
+                    
+            return pd.DataFrame(df_dict)
+
+    monkeypatch.setattr("metax.peptide_annotator.unit_specific_otf.peptideProteinsMapper", FakeMapper)
+    
+    annotator = UnitSpecificOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_specific_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "OTF.tsv"),
+        digested_genome_folders=str(digested_dir),
+        save_per_unit_outputs=True,
+    )
+    result = annotator.run()
+    
+    # Check that they both succeeded and have different output paths
+    per_unit_dir = tmp_path / "OTF_artifacts" / "per_unit"
+    saved_files = list(per_unit_dir.glob("*_OTF.tsv"))
+    assert len(saved_files) == 2
+    assert saved_files[0].name != saved_files[1].name
+    
+    # Assert unit_output_records / summary preserve the original analysis_unit_id
+    summary_text = (tmp_path / "OTF_artifacts" / "unit_specific_otf_summary.tsv").read_text(encoding="utf-8")
+    assert "a/b" in summary_text
+    assert "a?b" in summary_text
+    
+    # Assert merged output contains rows from both units, not duplicated rows from the overwritten file
+    merged_text = (tmp_path / "OTF.tsv").read_text(encoding="utf-8")
+    assert "Intensity_s1" in merged_text
+    assert "Intensity_s2" in merged_text
+    
+    # Ensure they don't have duplicated contents, since s1 and s2 are different columns
+    df = pd.read_csv(tmp_path / "OTF.tsv", sep="\t", skipinitialspace=True)
+    assert len(df) == 2
+    assert set(df["analysis_unit_id"].tolist()) == {"a/b", "a?b"}

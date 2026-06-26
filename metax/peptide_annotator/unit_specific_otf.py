@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -46,6 +47,12 @@ class UnitSpecificOTFRunResult:
 
 def _safe_filename(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", str(value)).strip("._") or "unit"
+
+
+def _safe_unit_output_stem(analysis_unit_id: str) -> str:
+    safe = _safe_filename(analysis_unit_id)
+    digest = hashlib.sha1(str(analysis_unit_id).encode("utf-8")).hexdigest()[:8]
+    return f"{safe}_{digest}"
 
 
 def _create_temporary_unit_directory(parent: Path, analysis_unit_id: str) -> Path:
@@ -151,6 +158,11 @@ class UnitSpecificOTFAnnotator:
         self.peptide_col = peptide_col
         self.input_sample_col_prefix = input_sample_col_prefix
         self.output_sample_col_prefix = output_sample_col_prefix
+        if self.output_sample_col_prefix != "Intensity_":
+            raise ValueError(
+                "Unit-specific OTF output_sample_col_prefix must be 'Intensity_'. "
+                "Use input_sample_col_prefix to match non-standard input columns."
+            )
         self.table_separator = table_separator
         self.lca_threshold = lca_threshold
         self.genome_mode = genome_mode
@@ -246,11 +258,12 @@ class UnitSpecificOTFAnnotator:
         return unit_df, canonical_cols
 
     def _unit_output_path(self, analysis_unit_id: str, tmpdir: Path) -> Path:
+        stem = _safe_unit_output_stem(analysis_unit_id)
         if self.save_per_unit_outputs:
             per_unit_dir = self.artifacts_dir / "per_unit"
             per_unit_dir.mkdir(parents=True, exist_ok=True)
-            return per_unit_dir / f"{_safe_filename(analysis_unit_id)}_OTF.tsv"
-        return tmpdir / f"{_safe_filename(analysis_unit_id)}_OTF.pkl"
+            return per_unit_dir / f"{stem}_OTF.tsv"
+        return tmpdir / f"{stem}_OTF.pkl"
 
     def _add_unit_protein_mapping(
         self,
