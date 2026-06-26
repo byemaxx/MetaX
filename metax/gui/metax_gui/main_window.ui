@@ -46,7 +46,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -369,8 +369,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>566</width>
-                 <height>116</height>
+                 <width>623</width>
+                 <height>818</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1452,8 +1452,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1070</width>
-                 <height>238</height>
+                 <width>1253</width>
+                 <height>253</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_37">
@@ -1993,7 +1993,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>1168</width>
+                     <width>1221</width>
                      <height>364</height>
                     </rect>
                    </property>
@@ -2612,6 +2612,9 @@
                        <widget class="QSpinBox" name="spinBox_basic_plot_upset_max_rank">
                         <property name="maximum">
                          <number>999</number>
+                        </property>
+                        <property name="value">
+                         <number>20</number>
                         </property>
                        </widget>
                       </item>
@@ -10837,8 +10840,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1227</width>
-                    <height>488</height>
+                    <width>985</width>
+                    <height>295</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_40">
@@ -11481,8 +11484,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1227</width>
-                    <height>625</height>
+                    <width>1050</width>
+                    <height>198</height>
                    </rect>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_15">
@@ -11733,8 +11736,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>1229</width>
-                    <height>753</height>
+                    <width>452</width>
+                    <height>60</height>
                    </rect>
                   </property>
                   <attribute name="label">
