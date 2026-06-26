@@ -438,9 +438,10 @@ class TaxaFuncAnalyzer:
         """
         Add peptide counts based on unique peptide identities.
 
-        ``peptide_num`` is retained for compatibility. In unit-specific mode,
-        ``unit_peptide_num`` makes its analysis-unit-specific semantics explicit,
-        while ``bare_sequence_num`` reports unique unqualified sequences.
+        In unit-specific mode, ``peptide_num`` reports the number of
+        non-redundant biological peptide sequences, while
+        ``peptide_feature_num`` reports the number of unit-specific peptide
+        annotation features.
         """
         if not self.unit_specific_mode:
             return summary_df.copy()
@@ -469,13 +470,12 @@ class TaxaFuncAnalyzer:
             )
 
         counts = count_source.groupby(group_cols).agg(
-            unit_peptide_num=(self.peptide_identity_col, "nunique"),
-            bare_sequence_num=(bare_sequence_col, "nunique"),
+            peptide_feature_num=(self.peptide_identity_col, "nunique"),
+            peptide_num=(bare_sequence_col, "nunique"),
         )
         counts = counts.reindex(result.index).fillna(0).astype(int)
-        result["peptide_num"] = counts["bare_sequence_num"]
-        result["unit_peptide_num"] = counts["unit_peptide_num"]
-        result["bare_sequence_num"] = counts["bare_sequence_num"]
+        result["peptide_num"] = counts["peptide_num"]
+        result["peptide_feature_num"] = counts["peptide_feature_num"]
 
         return result
 
@@ -1124,6 +1124,9 @@ class TaxaFuncAnalyzer:
         - df: the original df including peptides, taxa, and functions, etc.
         - peptide_num_threshold: the threshold of peptide number for each taxa or func
         - df_type: 'taxa', 'func', or 'taxa_func'
+        - in unit-specific mode, thresholds use unique biological peptide
+          sequences, falling back to the bare sequence parsed from the
+          unit-specific peptide identity when Sequence is unavailable
         - distinct_threshold_mode: TODO
         '''
         valid_df_types = ['taxa', 'func', 'taxa_func']
@@ -1743,7 +1746,7 @@ class TaxaFuncAnalyzer:
             dft = getattr(self, name_dict[table_name])
         # remove peptide count diagnostic columns if they exist
         dft = dft.drop(
-            columns=["peptide_num", "unit_peptide_num", "bare_sequence_num"],
+            columns=["peptide_num", "peptide_feature_num"],
             errors='ignore',
         )
         

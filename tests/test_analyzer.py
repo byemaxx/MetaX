@@ -251,6 +251,12 @@ def _write_unit_specific_otf(tmp_path, include_unit_sequence=False, include_anal
     return path
 
 
+def _assert_legacy_peptide_count_columns_absent(*dfs):
+    for df in dfs:
+        assert "unit_peptide_num" not in df.columns
+        assert "bare_sequence_num" not in df.columns
+
+
 def test_unit_specific_identity_is_generated_from_analysis_unit_and_sequence(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
@@ -326,10 +332,14 @@ def test_unit_specific_tables_and_proteins_keep_duplicate_sequences_separate(tmp
     assert tfa.func_df["peptide_num"].max() == 1
     assert tfa.taxa_func_df["peptide_num"].max() == 1
     assert tfa.original_df["Sequence"].nunique() == 1
-    assert tfa.taxa_df["unit_peptide_num"].sum() == 2
-    assert tfa.func_df["unit_peptide_num"].sum() == 2
-    assert tfa.taxa_func_df["unit_peptide_num"].sum() == 2
-    assert tfa.taxa_df["bare_sequence_num"].sum() == 2
+    assert tfa.taxa_df["peptide_feature_num"].sum() == 2
+    assert tfa.func_df["peptide_feature_num"].sum() == 2
+    assert tfa.taxa_func_df["peptide_feature_num"].sum() == 2
+    _assert_legacy_peptide_count_columns_absent(
+        tfa.taxa_df,
+        tfa.func_df,
+        tfa.taxa_func_df,
+    )
     assert tfa.func_taxa_df is None
     assert tfa.get_func_taxa_df().equals(tfa.taxa_func_df.swaplevel().sort_index())
     assert set(tfa.peptide_annotation_df.columns) == {
@@ -409,22 +419,24 @@ def test_unit_specific_otf_split_func_uses_unsplit_taxa_source(
     taxon = "d__Bacteria|m__g1"
     assert tfa.taxa_df.loc[taxon, ["s1", "s2"]].tolist() == [10.0, 20.0]
     assert tfa.taxa_df.loc[taxon, "peptide_num"] == 1
-    assert tfa.taxa_df.loc[taxon, "unit_peptide_num"] == 2
-    assert tfa.taxa_df.loc[taxon, "bare_sequence_num"] == 1
+    assert tfa.taxa_df.loc[taxon, "peptide_feature_num"] == 2
 
     for func in ["K00001", "K00002"]:
         assert tfa.func_df.loc[func, ["s1", "s2"]].tolist() == expected_intensity
         assert tfa.func_df.loc[func, "peptide_num"] == 1
-        assert tfa.func_df.loc[func, "unit_peptide_num"] == 2
-        assert tfa.func_df.loc[func, "bare_sequence_num"] == 1
+        assert tfa.func_df.loc[func, "peptide_feature_num"] == 2
         assert (
             tfa.taxa_func_df.loc[(taxon, func), ["s1", "s2"]].tolist()
             == expected_intensity
         )
         assert tfa.taxa_func_df.loc[(taxon, func), "peptide_num"] == 1
-        assert tfa.taxa_func_df.loc[(taxon, func), "unit_peptide_num"] == 2
-        assert tfa.taxa_func_df.loc[(taxon, func), "bare_sequence_num"] == 1
+        assert tfa.taxa_func_df.loc[(taxon, func), "peptide_feature_num"] == 2
 
+    _assert_legacy_peptide_count_columns_absent(
+        tfa.taxa_df,
+        tfa.func_df,
+        tfa.taxa_func_df,
+    )
     assert tfa.processed_original_df is None
     assert tfa.peptide_annotation_df["KEGG_ko"].tolist() == [
         "K00001|K00002",
@@ -470,14 +482,16 @@ def test_unit_specific_peptide_num_counts_bare_sequences_per_feature(tmp_path):
     taxon = "d__Bacteria|m__g1"
     func = "K00001"
     assert tfa.taxa_df.loc[taxon, "peptide_num"] == 1
-    assert tfa.taxa_df.loc[taxon, "bare_sequence_num"] == 1
-    assert tfa.taxa_df.loc[taxon, "unit_peptide_num"] == 2
+    assert tfa.taxa_df.loc[taxon, "peptide_feature_num"] == 2
     assert tfa.func_df.loc[func, "peptide_num"] == 1
-    assert tfa.func_df.loc[func, "bare_sequence_num"] == 1
-    assert tfa.func_df.loc[func, "unit_peptide_num"] == 2
+    assert tfa.func_df.loc[func, "peptide_feature_num"] == 2
     assert tfa.taxa_func_df.loc[(taxon, func), "peptide_num"] == 1
-    assert tfa.taxa_func_df.loc[(taxon, func), "bare_sequence_num"] == 1
-    assert tfa.taxa_func_df.loc[(taxon, func), "unit_peptide_num"] == 2
+    assert tfa.taxa_func_df.loc[(taxon, func), "peptide_feature_num"] == 2
+    _assert_legacy_peptide_count_columns_absent(
+        tfa.taxa_df,
+        tfa.func_df,
+        tfa.taxa_func_df,
+    )
 
 
 def test_unit_specific_count_columns_derive_missing_bare_sequence(tmp_path):
@@ -503,8 +517,8 @@ def test_unit_specific_count_columns_derive_missing_bare_sequence(tmp_path):
     )
 
     assert result.loc["taxon_a", "peptide_num"] == 2
-    assert result.loc["taxon_a", "unit_peptide_num"] == 3
-    assert result.loc["taxon_a", "bare_sequence_num"] == 2
+    assert result.loc["taxon_a", "peptide_feature_num"] == 3
+    _assert_legacy_peptide_count_columns_absent(result)
 
 
 def test_non_unit_specific_count_columns_remain_unchanged(tfa_object):
@@ -525,6 +539,7 @@ def test_non_unit_specific_count_columns_remain_unchanged(tfa_object):
     pd.testing.assert_frame_equal(result, summary_df)
     assert "unit_peptide_num" not in result.columns
     assert "bare_sequence_num" not in result.columns
+    assert "peptide_feature_num" not in result.columns
 
 
 def test_filter_taxa_func_threshold_derives_bare_sequence_when_sequence_column_missing(tmp_path):
@@ -652,6 +667,14 @@ def test_unit_specific_sequence_is_used_for_all_summarization_paths(tmp_path):
     assert tfa.taxa_df["peptide_num"].sum() == 2
     assert tfa.func_df["peptide_num"].sum() == 2
     assert tfa.taxa_func_df["peptide_num"].sum() == 2
+    assert tfa.taxa_df["peptide_feature_num"].sum() == 2
+    assert tfa.func_df["peptide_feature_num"].sum() == 2
+    assert tfa.taxa_func_df["peptide_feature_num"].sum() == 2
+    _assert_legacy_peptide_count_columns_absent(
+        tfa.taxa_df,
+        tfa.func_df,
+        tfa.taxa_func_df,
+    )
     assert set(tfa.protein_df.index) == {"g1_p1", "g2_p2"}
     assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
 
