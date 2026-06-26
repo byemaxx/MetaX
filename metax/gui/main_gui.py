@@ -403,7 +403,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionTutorial.triggered.connect(self.open_tutorial)
         self.actionRestore_Last_TaxaFunc.triggered.connect(lambda: self.run_restore_taxafunnc_obj_from_file(last=True))
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
-        self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
+        self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False, warn_large=True))
         self.actionExport_Workflow_Notebook = QtWidgets.QAction("Export Workflow Notebook", self.MainWindow)
         self.actionExport_Workflow_Notebook.setObjectName("actionExport_Workflow_Notebook")
         self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi6.file-document-multiple-outline'))
@@ -836,10 +836,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return index.tolist() if hasattr(index, "tolist") else list(index)
 
     def _get_combobox_items_by_df_type(self, df_type: str):
-        df_type_lower = df_type.lower()
-        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
-            return self._get_display_list_by_df_type(df_type_lower)
-        return self._get_index_for_df_type(df_type_lower)
+        return self._get_index_for_df_type(df_type.lower())
+
+    def _format_taxa_func_index_preview(self, limit: int | None = None) -> tuple[list[str], int]:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        idx = self.tfa.taxa_func_df.index
+        total = len(idx)
+        preview_count = min(total, limit)
+        preview = [f"{taxa} <{func}>" for taxa, func in idx[:preview_count]]
+        return preview, total
 
     def _item_exists_in_df_type(self, item: str, df_type: str) -> bool:
         df_type_lower = df_type.lower()
@@ -875,11 +881,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         notice = f"[Showing first {limit:,} of {total:,} {item_label}; type or paste an exact item to use it]"
         combobox.addItem(notice)
 
+    def _add_items_to_combobox_by_df_type(
+        self,
+        combobox,
+        df_type: str,
+        item_label: str,
+        limit: int | None = None,
+    ) -> None:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        df_type_lower = df_type.lower()
+
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            preview_items, total = self._format_taxa_func_index_preview(limit)
+            combobox.addItems(preview_items)
+            if total > limit:
+                notice = f"[Showing first {limit:,} of {total:,} {item_label}; type or paste an exact item to use it]"
+                combobox.addItem(notice)
+            return
+
+        items = self._get_index_for_df_type(df_type_lower)
+        self._add_limited_items_to_combobox(combobox, items, item_label, limit)
+
     def _populate_item_combobox(self, combobox, all_label: str, df_type: str) -> None:
         combobox.clear()
         combobox.addItem(all_label)
-        items = self._get_combobox_items_by_df_type(df_type)
-        self._add_limited_items_to_combobox(combobox, items, df_type)
+        self._add_items_to_combobox_by_df_type(combobox, df_type, df_type)
         if getattr(combobox, "lineEdit", None) is not None and combobox.lineEdit() is not None:
             combobox.lineEdit().setPlaceholderText("Type or paste an exact item")
 
@@ -926,7 +953,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             print(msg)
             self.logger.write_log(msg, "w")
             return
-        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True, warn_large=False)
 
     def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list:
         '''
@@ -1992,10 +2019,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
             
     
-    def save_metax_obj_to_file(self, save_path=None,no_message=False):
+    def save_metax_obj_to_file(self, save_path=None, no_message=False, warn_large=True):
         if getattr(self, 'tfa', None) is None:
             QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
             return
+
+        if warn_large:
+            table_memory_mb = self._estimate_metax_table_memory_mb()
+            if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
+                reply = QMessageBox.question(
+                    self.MainWindow,
+                    "Save MetaX object",
+                    (
+                        f"Current in-memory tables use approximately {table_memory_mb:.1f} MB. "
+                        "Saving a full MetaX pickle may take a long time and may temporarily "
+                        "increase memory usage. Continue?"
+                    ),
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
+                )
+                if reply != QMessageBox.Yes:
+                    return
         
         # save settings to QSettings object
         self.save_basic_settings()
@@ -2067,7 +2111,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         # save settings.ini only
                         self.save_basic_settings()
                     else:
-                        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+                        self.auto_save_metax_obj_to_file()
                 else: # close without saving
                     # save settings.ini only
                     self.save_basic_settings()
@@ -3395,7 +3439,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
         self.taxa_list = self.tfa.taxa_df.index.tolist()
         self.func_list = self.tfa.func_df.index.tolist()
-        self.taxa_func_list = [f"{taxa} <{func}>" for taxa, func in self.tfa.taxa_func_df.index]
+        self.taxa_func_list = []
         self.peptide_list = []
 
 
@@ -5417,10 +5461,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         current_table = self.comboBox_co_expr_table.currentText()
         #! NOT NEED TO add 'All Items' to co_expr_list,becaused it is list for focus
-        update_list = self._get_combobox_items_by_df_type(current_table)
-        self._add_limited_items_to_combobox(
+        self._add_items_to_combobox_by_df_type(
             self.comboBox_co_expr_select_list,
-            update_list,
+            current_table,
             current_table,
         )
 
@@ -8851,9 +8894,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         df_type = self.comboBox_tfnet_table.currentText()
         if df_type == 'Taxa-Functions':
             self.comboBox_tfnet_select_list.clear()
-            # remove no linked items to avoid error when plot focus list only
-            taxa_func_list = self.get_list_by_df_type('Taxa-Functions', remove_no_linked=True, silent=True)
-            self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, taxa_func_list, df_type)
+            self._add_items_to_combobox_by_df_type(self.comboBox_tfnet_select_list, df_type, df_type)
         elif df_type == 'Taxa':
             self.comboBox_tfnet_select_list.clear()
             taxa_list = self.get_list_by_df_type('Taxa', remove_no_linked=True, silent=True)
