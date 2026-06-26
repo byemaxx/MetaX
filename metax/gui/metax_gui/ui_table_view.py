@@ -109,12 +109,12 @@ class Ui_Table_view(QtWidgets.QDialog):
 
     def __init__(self, df=None, parent=None, title='Table View', last_path=None):
         super().__init__(parent)  
-        self.df = df.copy() # prevent the original df from being modified
-        self.df.reset_index(inplace=True)
+        self.df = df
         self.title = title
-        self.save_index = False
+        self.save_index = df is not None
         self.current_page = 0  #set the current page number to 0
         self.rows_per_page = 100  # set the number of rows per page to 100
+        self._current_display_df = None
         self.setupUi(self)
         icon_path = os.path.join(os.path.dirname(__file__), "./resources/logo.png")
         self.setWindowIcon(QIcon(icon_path))
@@ -177,31 +177,27 @@ class Ui_Table_view(QtWidgets.QDialog):
             self.set_pd_to_QTableWidget(self.df, self.tableWidget)
 
     def set_pd_to_QTableWidget(self, df, table_widget):
-        # 处理多重列索引
-        if isinstance(df.columns, pd.MultiIndex):
-            self.save_index = True
-            column_labels = [' '.join(col).strip() for col in df.columns.values]
-        else:
-            column_labels = df.columns
-
-        # 处理多重行索引
-        if isinstance(df.index, pd.MultiIndex):
-            df = df.reset_index()
-        else:
-            df = df.reset_index(drop=True)
-
         start_row = self.current_page * self.rows_per_page
         end_row = min(start_row + self.rows_per_page, len(df))
         subset_df = df.iloc[start_row:end_row]
+        display_df = subset_df.reset_index()
+        self._current_display_df = display_df
+        column_labels = [self._format_column_label(column) for column in display_df.columns]
 
         # 使用subset_df来填充table_widget
-        table_widget.setRowCount(subset_df.shape[0])
-        table_widget.setColumnCount(subset_df.shape[1])
+        table_widget.setRowCount(display_df.shape[0])
+        table_widget.setColumnCount(display_df.shape[1])
         table_widget.setHorizontalHeaderLabels(column_labels)
 
-        for i in range(subset_df.shape[0]):
-            for j in range(subset_df.shape[1]):
-                table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(subset_df.iat[i, j])))
+        for i in range(display_df.shape[0]):
+            for j in range(display_df.shape[1]):
+                table_widget.setItem(i, j, QtWidgets.QTableWidgetItem(str(display_df.iat[i, j])))
+
+    @staticmethod
+    def _format_column_label(column):
+        if isinstance(column, tuple):
+            return ' '.join(str(part) for part in column).strip()
+        return str(column)
 
     def headerMenu(self, position):
         menu = QMenu(self)
@@ -224,14 +220,40 @@ class Ui_Table_view(QtWidgets.QDialog):
     def copy_selection_column_to_clipboard(self, position):
         column = self.tableWidget.horizontalHeader().logicalIndexAt(position)
         column_name = self.tableWidget.horizontalHeader().model().headerData(column, Qt.Horizontal)
-        column_data = self.df[column_name]
+        if self._current_display_df is not None and column < len(self._current_display_df.columns):
+            display_column = self._current_display_df.columns[column]
+            if display_column in self.df.columns:
+                column_data = self.df[display_column]
+            else:
+                column_data = self.df.index.to_frame(index=False).iloc[:, column]
+        else:
+            column_data = self.df[column_name]
         column_data.to_clipboard(index=False, header=False)
 
     def sort_by_column(self, column, ascending=True):
         """
         Sort the table by the column.
         """
-        self.df.sort_values(by=self.df.columns[column], ascending=ascending, inplace=True)
+        if len(self.df) > 500000:
+            reply = QMessageBox.question(
+                self,
+                'Sort Table',
+                'Sorting this large table may take time and temporarily increase memory usage. Continue?',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if reply != QMessageBox.Yes:
+                return
+
+        if self._current_display_df is not None and column < len(self._current_display_df.columns):
+            display_column = self._current_display_df.columns[column]
+            if display_column in self.df.columns:
+                self.df = self.df.sort_values(by=display_column, ascending=ascending)
+            else:
+                level = min(column, self.df.index.nlevels - 1)
+                self.df = self.df.sort_index(level=level, ascending=ascending)
+        else:
+            self.df = self.df.sort_values(by=self.df.columns[column], ascending=ascending)
         self.current_page = 0
         self.set_pd_to_QTableWidget(self.df, self.tableWidget)
 
