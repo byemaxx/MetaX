@@ -840,6 +840,12 @@ class BasicPlot:
                         labels = [f'{int(v)}' if v > 0 else '' for v in c.datavalues]
                         ax.bar_label(c, labels=labels, padding=1)
 
+                if 'totals' in axes:
+                    ax_totals = axes['totals']
+                    for c in ax_totals.containers:
+                        labels = [f'{int(v)}' if v > 0 else '' for v in c.datavalues]
+                        ax_totals.bar_label(c, labels=labels, padding=1)
+
             plt.suptitle(f"UpSet of {title_name}", fontsize=font_size + 2, fontweight='bold')
             plt.tight_layout()
             plt.show()
