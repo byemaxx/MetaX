@@ -70,10 +70,13 @@ class TaxaFuncAnalyzer:
         self.taxa_level: Optional[str] = None
         self.processed_original_df: Optional[pd.DataFrame] = None # the pep_taxa_func_sample table after filtering and data preprocessing
         self.peptide_df: Optional[pd.DataFrame] = None
+        self.peptide_feature_df: Optional[pd.DataFrame] = None
+        self.peptide_annotation_df: Optional[pd.DataFrame] = None
         self.taxa_df: Optional[pd.DataFrame] = None
         self.func_df: Optional[pd.DataFrame] = None
         self.taxa_func_df: Optional[pd.DataFrame] = None
         self.func_taxa_df: Optional[pd.DataFrame] = None
+        self._func_taxa_df: Optional[pd.DataFrame] = None
         self.taxa_func_linked_dict: Optional[Dict[str, List[tuple]]] = None
         self.func_taxa_linked_dict: Optional[Dict[str, List[tuple]]] = None
         self.peptides_linked_dict = {'taxa': {}, 'func': {}, 'taxa_func': {}}
@@ -88,6 +91,8 @@ class TaxaFuncAnalyzer:
         self.internal_unit_peptide_col = "_MetaXUnitSpecificPeptideID"
         self.unit_specific_mode = False
         self.peptide_identity_col = self.peptide_col_name
+        self.keep_processed_original_df = False
+        self._last_set_multi_tables_params: Optional[dict] = None
         
         self.split_func_status:bool = False
         self.split_func_sep:str = ''
@@ -257,6 +262,147 @@ class TaxaFuncAnalyzer:
             out.insert(1, self.peptide_col_name)
         return out
 
+    def _build_peptide_annotation_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        cols: list[str] = []
+        for col in [
+            self.peptide_identity_col,
+            self.analysis_unit_col,
+            self.peptide_col_name,
+            "Taxon",
+            self.func_name,
+        ]:
+            if col and col in df.columns and col not in cols:
+                cols.append(col)
+
+        annotation_df = df.loc[:, cols].drop_duplicates().copy()
+        for col in [self.analysis_unit_col, "Taxon", self.func_name]:
+            if col in annotation_df.columns:
+                annotation_df[col] = annotation_df[col].astype("category")
+        return annotation_df
+
+    def _build_sequence_peptide_input(self, df: pd.DataFrame) -> pd.DataFrame:
+        peptide_cols = [self.peptide_col_name] + self.sample_list
+        return (
+            df.loc[:, peptide_cols]
+            .groupby(self.peptide_col_name, as_index=True)
+            .sum(numeric_only=True)
+        )
+
+    def _build_peptide_feature_input(self, df: pd.DataFrame) -> pd.DataFrame:
+        cols = self._cols_for_peptide_table(self.analysis_unit_col, "Taxon", self.func_name) + self.sample_list
+        cols = [col for col in cols if col in df.columns]
+        feature_df = df.loc[:, cols].copy()
+        if self.peptide_identity_col in feature_df.columns:
+            feature_df = feature_df.set_index(self.peptide_identity_col)
+        return feature_df
+
+    def _strip_taxa_for_level(self, taxon: str, level: str) -> str:
+        level_dict = {'m': 8 , 's': 7, 'g': 6, 'f': 5, 'o': 4, 'c': 3, 'p': 2, "d": 1, 'l': 1}
+        return "|".join(taxon.split('|')[:level_dict[level]])
+
+    def _filter_original_peptides_for_last_tables(self) -> pd.DataFrame:
+        if self._last_set_multi_tables_params is None:
+            raise ValueError("Peptide tables have not been initialized. Run set_multi_tables first.")
+
+        params = self._last_set_multi_tables_params
+        level = params["level"]
+        level_mapping = {
+            'm': ['genome'],
+            's': ['species', 'genome'],
+            'g': ['genus', 'species', 'genome'],
+            'f': ['family', 'genus', 'species', 'genome'],
+            'o': ['order', 'family', 'genus', 'species', 'genome'],
+            'c': ['class', 'order', 'family', 'genus', 'species', 'genome'],
+            'p': ['phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'd': ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome'],
+            'l': ['life', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'genome']
+        }
+        if level not in level_mapping:
+            raise ValueError("Please input the correct taxa level (m, s, g, f, o, c, p, d, l)")
+
+        df_t = self.original_df.loc[self.original_df['LCA_level'].isin(level_mapping[level])].copy()
+        level_sign = 'm' if self.genome_mode else 's'
+        if level != level_sign:
+            df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(lambda x: self._strip_taxa_for_level(x, level))
+
+        if params["remove_unknown_taxa"]:
+            df_t = df_t[~df_t['Taxon'].str.endswith(f"{level}__")]
+        else:
+            df_t.loc[:, 'Taxon'] = df_t['Taxon'].apply(
+                lambda x: x.replace(f"{level}__", f"{level}__unknown") if x.endswith(f"{level}__") else x
+            )
+
+        df_filtered = self.filter_peptides_by_taxa_func(
+            df=df_t,
+            func_threshold=params["func_threshold"],
+            keep_unknow_func=params["keep_unknow_func"],
+            filter_taxa=True,
+            func_name=self.func_name,
+        )
+        return self.detect_and_handle_outliers(df=df_filtered, **params["outlier_params"])
+
+    def get_peptide_df(self, cache: bool = True) -> pd.DataFrame:
+        if self.peptide_df is not None:
+            return self.peptide_df
+        df_half_processed = self._filter_original_peptides_for_last_tables()
+        peptide_input = self._build_sequence_peptide_input(df_half_processed)
+        peptide_df = self.data_preprocess(
+            df=peptide_input,
+            df_name='peptide',
+            **self._last_set_multi_tables_params["data_preprocess_params"],
+        )
+        if cache:
+            self.peptide_df = peptide_df
+        return peptide_df
+
+    def get_peptide_feature_df(self, cache: bool = True) -> pd.DataFrame:
+        if self.peptide_feature_df is not None:
+            return self.peptide_feature_df
+        df_half_processed = self._filter_original_peptides_for_last_tables()
+        feature_input = self._build_peptide_feature_input(df_half_processed)
+        feature_df = self.data_preprocess(
+            df=feature_input,
+            df_name='peptide_feature',
+            **self._last_set_multi_tables_params["data_preprocess_params"],
+        )
+        if cache:
+            self.peptide_feature_df = feature_df
+        return feature_df
+
+    def get_processed_peptide_table(self, cache: bool = False) -> pd.DataFrame:
+        if self.processed_original_df is not None:
+            return self.processed_original_df
+        processed_df = self.get_peptide_feature_df(cache=cache).reset_index()
+        if cache and self.keep_processed_original_df:
+            self.processed_original_df = processed_df
+        return processed_df
+
+    def get_func_taxa_df(self, cache: bool = True) -> pd.DataFrame:
+        if self._func_taxa_df is not None:
+            return self._func_taxa_df
+        if self.func_taxa_df is not None:
+            self._func_taxa_df = self.func_taxa_df
+            return self._func_taxa_df
+        if self.taxa_func_df is None:
+            raise ValueError("taxa_func_df has not been created.")
+        func_taxa_df = self.taxa_func_df.swaplevel().sort_index()
+        if cache:
+            self._func_taxa_df = func_taxa_df
+            self.func_taxa_df = func_taxa_df
+        return func_taxa_df
+
+    def get_peptide_sequence_preview(self, limit: int = 50000) -> tuple[list[str], int]:
+        if self.peptide_annotation_df is None or self.peptide_col_name not in self.peptide_annotation_df.columns:
+            return [], 0
+        sequences = self.peptide_annotation_df[self.peptide_col_name].drop_duplicates()
+        total = len(sequences)
+        return sequences.iloc[:limit].tolist(), total
+
+    def peptide_sequence_exists(self, sequence: str) -> bool:
+        if self.peptide_annotation_df is None or self.peptide_col_name not in self.peptide_annotation_df.columns:
+            return False
+        return sequence in set(self.peptide_annotation_df[self.peptide_col_name].astype(str))
+
     def _expand_function_rows(
         self,
         df: pd.DataFrame,
@@ -416,12 +562,12 @@ class TaxaFuncAnalyzer:
     def set_taxa_func_linked_dict(self):
         ### taxa is the key, func list is the value, value is a list of tuples (func, pep_num)
 
-        def _index_to_nested_dict(df):
+        def _index_to_nested_dict(df, key1=None, key2=None):
             if df is None or df.empty:
                 return {}
             flat_df = df[["peptide_num"]].reset_index()
-            key1 = flat_df.columns[0]
-            key2 = flat_df.columns[1]
+            key1 = flat_df.columns[0] if key1 is None else key1
+            key2 = flat_df.columns[1] if key2 is None else key2
             return (
                 flat_df.groupby(key1, sort=False)
                 [[key2, "peptide_num"]]
@@ -430,8 +576,8 @@ class TaxaFuncAnalyzer:
             )
         print("Setting taxa_func_linked_dict and func_taxa_linked_dict...")
         
-        self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df)
-        self.func_taxa_linked_dict = _index_to_nested_dict(self.func_taxa_df)
+        self.taxa_func_linked_dict = _index_to_nested_dict(self.taxa_func_df, "Taxon", self.func_name)
+        self.func_taxa_linked_dict = _index_to_nested_dict(self.taxa_func_df, self.func_name, "Taxon")
 
     def get_func_list_in_df(self) -> list:
         col_names = self.original_df.columns.tolist()
@@ -1209,7 +1355,8 @@ class TaxaFuncAnalyzer:
                           keep_unknow_func: bool = False, 
                           split_func: bool = False, split_func_params: dict = {'split_by': '|', 'share_intensity': False},
                           taxa_and_func_only_from_otf: bool = False,
-                          quant_method: str = 'sum', remove_unknown_taxa: bool = True):
+                          quant_method: str = 'sum', remove_unknown_taxa: bool = True,
+                          keep_processed_original_df: bool = False):
 
         """
         `Example Usage:`
@@ -1238,6 +1385,25 @@ class TaxaFuncAnalyzer:
         #! fllowing code is for the normal mode
         # Update 'data_preprocess_params'
         data_preprocess_params = self.update_data_preprocess_parameters(data_preprocess_params)
+        self.keep_processed_original_df = keep_processed_original_df
+        self.peptide_df = None
+        self.peptide_feature_df = None
+        self.processed_original_df = None
+        self.func_taxa_df = None
+        self._func_taxa_df = None
+        self._last_set_multi_tables_params = {
+            "level": level,
+            "func_threshold": func_threshold,
+            "outlier_params": outlier_params,
+            "data_preprocess_params": data_preprocess_params,
+            "peptide_num_threshold": peptide_num_threshold,
+            "keep_unknow_func": keep_unknow_func,
+            "split_func": split_func,
+            "split_func_params": split_func_params,
+            "taxa_and_func_only_from_otf": taxa_and_func_only_from_otf,
+            "quant_method": quant_method,
+            "remove_unknown_taxa": remove_unknown_taxa,
+        }
         
         #2. sum the protein intensity
         if sum_protein:
@@ -1360,16 +1526,26 @@ class TaxaFuncAnalyzer:
         # the preprocessed_df is the peptide table filtered by taxa level and func_threshold, then do outlier detection and handling
         #------create peptides_dict in taxa, func and taxa_func------
         self.create_peptides_dict_in_taxa_func(df_half_processed_peptides)
+        self.peptide_annotation_df = self._build_peptide_annotation_df(df_half_processed_peptides)
         ###-----outlier hanlded peptide table End-----###
         
         #Create finalpeptide table
         # do rest of data preprocess, e.g. normalize, transform, batch effect correction
         print("\n-----Starting to perform transformation, normalization, and batch effect correction for [Peptide] table...-----")
-        self.processed_original_df = self.data_preprocess(df=df_half_processed_peptides[self._cols_for_peptide_table('Taxon', self.func_name) + self.sample_list],
-                                                          df_name = 'peptide', **data_preprocess_params)
-        # processed_original_df is the peptide table after selected taxa level, func_threshold, outlier detection and handling, then do the rest of data preprocess
-        self.peptide_df = self.processed_original_df.drop(['Taxon', self.func_name], axis=1)
-        self.peptide_df = self.peptide_df.set_index(self.peptide_identity_col)
+        df_peptide_sequence = self._build_sequence_peptide_input(df_half_processed_peptides)
+        self.peptide_df = self.data_preprocess(
+            df=df_peptide_sequence,
+            df_name='peptide',
+            **data_preprocess_params,
+        )
+        if keep_processed_original_df:
+            self.processed_original_df = self.data_preprocess(
+                df=self._build_peptide_feature_input(df_half_processed_peptides),
+                df_name='peptide_feature',
+                **data_preprocess_params,
+            ).reset_index()
+        else:
+            self.processed_original_df = None
         ###------Peptide Table End------###
         
 
@@ -1415,11 +1591,9 @@ class TaxaFuncAnalyzer:
         self.taxa_func_df = df_taxa_func_all_processed
         # -----taxa_func table End-----
         
-        # exchange the multi-index, sort the index
-        self.func_taxa_df = df_taxa_func_all_processed.swaplevel().sort_index()
         # set the taxa_func_linked_dict and func_taxa_linked_dict
         self.set_taxa_func_linked_dict()
-        # ----- func_taxa table End -----
+        # ----- func_taxa table is generated lazily by get_func_taxa_df() -----
         
         #----- create taxa and func table if not generate_taxa_and_func_before_filtering
         if taxa_and_func_only_from_otf:
@@ -1486,7 +1660,11 @@ class TaxaFuncAnalyzer:
         Get the dataframe of taxa_func_linked_peptide_num
         Taxa | Function | PepNum
         """
-        dft = self.processed_original_df[[self.peptide_identity_col, "Taxon", self.func_name]]
+        if self.peptide_annotation_df is None:
+            dft = self.get_processed_peptide_table(cache=False)
+        else:
+            dft = self.peptide_annotation_df
+        dft = dft[[self.peptide_identity_col, "Taxon", self.func_name]]
         taxa_list = dft["Taxon"].unique().tolist()
         temp_dict = {'Taxon': [], 'Function': [], 'PepNum': []}
 
@@ -1529,6 +1707,7 @@ class TaxaFuncAnalyzer:
             "functions": "func_df",
             "taxa_func": "taxa_func_df",
             "func_taxa": "func_taxa_df",
+            "functions-taxa": "func_taxa_df",
             "custom": "custom_df",
             "taxa-functions": "taxa_func_df",
             "protein": "protein_df",
@@ -1536,7 +1715,12 @@ class TaxaFuncAnalyzer:
             
         }
         table_name = table_name.lower()
-        dft = getattr(self, name_dict[table_name])
+        if table_name in ["peptide", "peptides"]:
+            dft = self.get_peptide_df()
+        elif table_name in ["func_taxa", "functions-taxa"]:
+            dft = self.get_func_taxa_df()
+        else:
+            dft = getattr(self, name_dict[table_name])
         # remove peptide count diagnostic columns if they exist
         dft = dft.drop(
             columns=["peptide_num", "unit_peptide_num", "bare_sequence_num"],
