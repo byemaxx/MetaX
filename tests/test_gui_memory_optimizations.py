@@ -10,7 +10,11 @@ from PyQt5 import QtWidgets
 from metax.gui import main_gui
 from metax.gui.main_gui import MetaXGUI
 from metax.gui.metax_gui import ui_table_view
-from metax.gui.metax_gui.tfnet_helpers import format_linked_taxa_func_index_preview
+from metax.gui.metax_gui.tfnet_helpers import (
+    format_linked_taxa_func_index_preview,
+    search_linked_taxa_func_index,
+    taxa_func_display_item_has_link,
+)
 from metax.gui.metax_gui.ui_table_view import Ui_Table_view
 
 
@@ -149,6 +153,41 @@ def test_linked_taxa_function_preview_is_limited_and_filtered():
     assert chunk_sizes == [1000]
 
 
+def test_taxa_function_link_helper_requires_index_membership():
+    index = pd.MultiIndex.from_tuples([("taxon_0", "func_0")])
+    linked_dict = {"taxon_missing": [("func_missing", 1)]}
+
+    assert taxa_func_display_item_has_link(
+        "taxon_missing <func_missing>",
+        index,
+        linked_dict,
+    ) is False
+
+
+def test_linked_taxa_function_search_is_limited_and_filtered():
+    gui = _fake_tfnet_gui(count=1500, linked_pairs={("taxon_0", "func_0"), ("taxon_1", "func_1")})
+    chunk_sizes = []
+
+    def linked_filter(items):
+        chunk_sizes.append(len(items))
+        return gui.remove_no_linked_taxa_and_func_after_filter_tflink(
+            items,
+            type="taxa-functions",
+            silent=True,
+        )
+
+    results, capped = search_linked_taxa_func_index(
+        gui.tfa.taxa_func_df.index,
+        ["taxon"],
+        linked_filter,
+        limit=2,
+    )
+
+    assert results == ["taxon_0 <func_0>", "taxon_1 <func_1>"]
+    assert capped is True
+    assert chunk_sizes == [1000]
+
+
 def test_tfnet_taxa_function_combobox_uses_linked_preview():
     gui = _fake_tfnet_gui(count=5)
     gui.MAX_EAGER_COMBOBOX_ITEMS = 2
@@ -211,6 +250,50 @@ def test_tfnet_taxa_function_tuple_list_is_filtered_and_formatted():
 
     assert gui.tfnet_fcous_list == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
     assert gui.listWidget_tfnet_focus_list.items == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
+
+
+def test_tfnet_add_list_search_mode_avoids_full_taxa_function_list(monkeypatch):
+    gui = _fake_tfnet_gui(count=5, linked_pairs={("taxon_0", "func_0"), ("taxon_2", "func_2")})
+    gui.MAX_EAGER_COMBOBOX_ITEMS = 10
+    gui.get_list_by_df_type = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("full list requested"))
+    warnings = []
+    monkeypatch.setattr(main_gui.QMessageBox, "warning", lambda *args, **kwargs: warnings.append(args))
+    monkeypatch.setattr(main_gui.QMessageBox, "information", lambda *args, **kwargs: None)
+
+    class FakeTextEdit:
+        def __init__(self, text=""):
+            self.text = text
+
+        def setText(self, text):
+            self.text = text
+
+        def setPlainText(self, text):
+            self.text = text
+
+        def toPlainText(self):
+            return self.text
+
+    class FakeInputWindow:
+        created = 0
+
+        def __init__(self, parent=None, input_mode=False):
+            FakeInputWindow.created += 1
+            self.input_mode = input_mode
+            self.text_edit = FakeTextEdit("taxon" if FakeInputWindow.created == 1 else "")
+
+        def exec_(self):
+            return main_gui.QDialog.Accepted
+
+        def get_selected_mode(self):
+            return "search"
+
+    monkeypatch.setattr(main_gui, "InputWindow", FakeInputWindow)
+
+    gui.add_a_list_to_list_window("Taxa-Functions", "tfnet")
+
+    assert gui.tfnet_fcous_list == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
+    assert gui.listWidget_tfnet_focus_list.items == ["taxon_0 <func_0>", "taxon_2 <func_2>"]
+    assert warnings == []
 
 
 def test_run_after_set_multi_tables_does_not_eagerly_cache_taxa_functions(monkeypatch):
