@@ -473,7 +473,7 @@ class TaxaFuncAnalyzer:
             bare_sequence_num=(bare_sequence_col, "nunique"),
         )
         counts = counts.reindex(result.index).fillna(0).astype(int)
-        result["peptide_num"] = counts["unit_peptide_num"]
+        result["peptide_num"] = counts["bare_sequence_num"]
         result["unit_peptide_num"] = counts["unit_peptide_num"]
         result["bare_sequence_num"] = counts["bare_sequence_num"]
 
@@ -1112,7 +1112,7 @@ class TaxaFuncAnalyzer:
         df_original_len = len(df)
         
         df = df[df['peptide_num'] >= peptide_num]
-        print(f"Removed [{df_original_len - len(df)} {df_type}] with less than [{peptide_num}] peptides.")
+        print(f"Removed [{df_original_len - len(df)} {df_type}] with less than [{peptide_num}] non-redundant peptide sequences.")
         return df    
     
 
@@ -1142,6 +1142,11 @@ class TaxaFuncAnalyzer:
             return df
         
         item_col = 'Taxon' if df_type == 'taxa' else func_name
+        count_col = (
+            self.peptide_col_name
+            if self.unit_specific_mode and self.peptide_col_name in df.columns
+            else self.peptide_identity_col
+        )
 
         # # if True: #! Need to be implemented
         # if distinct_threshold_mode:
@@ -1189,17 +1194,17 @@ class TaxaFuncAnalyzer:
         # Group by item_col and filter based on peptide number
         if df_type == 'taxa_func':
             group_cols = ['Taxon', func_name]
-            peptide_counts = df.groupby(group_cols)[self.peptide_identity_col].nunique()
+            peptide_counts = df.groupby(group_cols)[count_col].nunique()
             remove_list = peptide_counts[peptide_counts < peptide_num].index
             row_pairs = pd.MultiIndex.from_frame(df[group_cols])
             df = df.loc[~row_pairs.isin(remove_list)]
         else:
-            peptide_counts = df.groupby(item_col)[self.peptide_identity_col].nunique()
+            peptide_counts = df.groupby(item_col)[count_col].nunique()
             remove_list = peptide_counts[peptide_counts < peptide_num].index
             df = df.loc[~df[item_col].isin(remove_list)]
 
         self.peptide_num_used[df_type] = len(df)
-        print(f"Removed [{len(set((remove_list)))} {df_type}] from [{df_original_len - len(df)} Peptides] with less than [{peptide_num}] peptides.")
+        print(f"Removed [{len(set((remove_list)))} {df_type}] from [{df_original_len - len(df)} Peptides] with less than [{peptide_num}] non-redundant peptide sequences.")
 
         return df
 
