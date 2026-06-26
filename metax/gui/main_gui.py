@@ -351,6 +351,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.check_update(manual_check_trigger=False)
         
         self.table_dict = {}
+        self.table_provider_dict = {}
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_list = []
         self.table_dialogs = []
@@ -792,6 +793,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     
     ###############   basic function start   ###############  
+    def _get_tfa_peptide_df(self):
+        getter = getattr(self.tfa, "get_peptide_df", None)
+        return getter() if callable(getter) else self.tfa.peptide_df
+
+    def _get_tfa_peptide_feature_df(self):
+        getter = getattr(self.tfa, "get_peptide_feature_df", None)
+        if callable(getter):
+            return getter()
+        return getattr(self.tfa, "peptide_feature_df", None)
+
+    def _get_tfa_func_taxa_df(self):
+        getter = getattr(self.tfa, "get_func_taxa_df", None)
+        return getter() if callable(getter) else self.tfa.func_taxa_df
+
     def get_table_by_df_type(self, df_type:str | None = None, 
                              replace_if_two_index:bool = False):
         if df_type is None:
@@ -805,8 +820,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             dft =   self.tfa.func_df.copy()
         elif df_type in ["taxa-func", "taxa-function", 'taxa-functions']:
             dft =   self.tfa.taxa_func_df.copy()
+        elif df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
+            dft = self._get_tfa_func_taxa_df().copy()
         elif df_type in ["peptide", "peptides"]:
-            dft =   self.tfa.peptide_df.copy()
+            dft = self._get_tfa_peptide_df().copy()
+        elif df_type in ["unit-specific peptide features", "peptide-features", "peptide features"]:
+            dft = self._get_tfa_peptide_feature_df().copy()
         elif df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
                 raise ValueError("Please set protein table first.")
@@ -833,7 +852,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if df_type in ["taxa-func", "taxa-function", "taxa-functions"]:
             return self.tfa.taxa_func_df.index
         if df_type in ["peptide", "peptides"]:
-            return self.tfa.peptide_df.index
+            return self._get_tfa_peptide_df().index
+        if df_type in ["unit-specific peptide features", "peptide-features", "peptide features"]:
+            return self._get_tfa_peptide_feature_df().index
+        if df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
+            return self._get_tfa_func_taxa_df().index
         if df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
                 return []
@@ -951,9 +974,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_peptide_query.clear()
         if getattr(self.comboBox_basic_peptide_query, "lineEdit", None) is not None and self.comboBox_basic_peptide_query.lineEdit() is not None:
             self.comboBox_basic_peptide_query.lineEdit().setPlaceholderText("Type or paste a peptide sequence")
-        if self.tfa is None or getattr(self.tfa, "processed_original_df", None) is None:
+        if self.tfa is None:
             return
-        sequences = self.tfa.processed_original_df[self.tfa.peptide_col_name].drop_duplicates()
+        if hasattr(self.tfa, "get_peptide_sequence_preview"):
+            preview, total = self.tfa.get_peptide_sequence_preview(self.MAX_EAGER_COMBOBOX_ITEMS)
+            self.comboBox_basic_peptide_query.addItems(preview)
+            if total > len(preview):
+                self.comboBox_basic_peptide_query.addItem(
+                    f"[Showing first {len(preview):,} of {total:,} peptides; type or paste an exact item to use it]"
+                )
+            return
+        sequences = self._get_tfa_peptide_df().index
         self._add_limited_items_to_combobox(
             self.comboBox_basic_peptide_query,
             sequences,
@@ -968,6 +999,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "original_df",
             "processed_original_df",
             "peptide_df",
+            "peptide_feature_df",
+            "peptide_annotation_df",
             "taxa_df",
             "func_df",
             "taxa_func_df",
@@ -1608,7 +1641,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tfa and self.tfa.processed_original_df is not None:
+        if self.tfa and getattr(self.tfa, "peptide_annotation_df", None) is not None:
             self._update_basic_peptide_query_combobox()
 
             
@@ -3442,7 +3475,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         
     def run_after_set_multi_tables(self):
-        num_peptide = self.tfa.peptide_df.shape[0]
+        num_peptide = self._get_tfa_peptide_df().shape[0]
         num_func = self.tfa.func_df.shape[0]
         num_taxa = self.tfa.taxa_df.shape[0]
         num_taxa_func = self.tfa.taxa_func_df.shape[0]
@@ -3457,18 +3490,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.tfa.stat_mean_by_zero_dominant = self.settings.value("stat_mean_by_zero_dominant", type=bool)
 
         # add tables to table dict
+        self.table_provider_dict = {}
+        if not self.tfa.any_df_mode:
+            self.table_provider_dict.update({
+                'peptides': lambda: self._get_tfa_peptide_df(),
+                'unit-specific peptide features': lambda: self._get_tfa_peptide_feature_df(),
+                'functions-taxa': lambda: self._get_tfa_func_taxa_df(),
+                'proteins': lambda: self.tfa.protein_df,
+            })
         if self.table_dict == {}:
             if self.tfa.any_df_mode:
                 self.update_table_dict('custom', self.tfa.custom_df)
             else:
-                self.update_table_dict('peptides', self.tfa.peptide_df)
                 self.update_table_dict('taxa', self.tfa.taxa_df)
                 self.update_table_dict('functions', self.tfa.func_df)
                 self.update_table_dict('taxa-functions', self.tfa.taxa_func_df)
-                self.update_table_dict('functions-taxa', self.tfa.func_taxa_df)
-                self.update_table_dict('proteins', self.tfa.protein_df)
         else:
-            self.listWidget_table_list.addItems( list(self.table_dict.keys()))
+            self.listWidget_table_list.clear()
+            names = list(self.table_dict.keys())
+            names.extend(name for name in self.table_provider_dict if name not in self.table_dict)
+            self.listWidget_table_list.addItems(names)
             
 
         # get taxa and function list
@@ -4318,8 +4359,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return
         self.table_dict[table_name] = df
         self.listWidget_table_list.clear()
-        self.listWidget_table_list.addItems(
-            list(self.table_dict.keys()))
+        names = list(self.table_dict.keys())
+        names.extend(name for name in getattr(self, "table_provider_dict", {}) if name not in self.table_dict)
+        self.listWidget_table_list.addItems(names)
         
         self.logger.write_log(f'table_dict updated: {table_name}')
 
@@ -4329,7 +4371,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('Data is loading, please wait...')
             table_name = self.listWidget_table_list.currentItem().text()
-            df = self.table_dict[table_name]
+            if table_name in self.table_dict:
+                df = self.table_dict[table_name]
+            elif table_name in getattr(self, "table_provider_dict", {}):
+                df = self.table_provider_dict[table_name]()
+                self.update_table_dict(table_name, df)
+            else:
+                raise KeyError(table_name)
             self.show_table(df, title=table_name)
         except Exception as e:
             self.logger.write_log(f'show_table_in_list error: {e}', 'e')
@@ -5937,7 +5985,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
-                df = self.tfa.peptide_df.copy()
+                df = self._get_tfa_peptide_df().copy()
 
             else:
                 peptides_list = []
@@ -5964,15 +6012,26 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 else: # Peptide
                     peptides_list = self.basic_heatmap_list
-                
-                df = self.tfa.peptide_df.loc[peptides_list]
+
+                peptide_df = self._get_tfa_peptide_df()
+                if all(peptide in peptide_df.index for peptide in peptides_list):
+                    df = peptide_df.loc[peptides_list].copy()
+                else:
+                    df = self._get_tfa_peptide_feature_df().loc[peptides_list].copy()
                 df = df[sample_list]
                 
             if plot_type == 'sankey':
-                lookup = (
-                    self.tfa.processed_original_df
-                    .set_index('Sequence')[['Taxon', self.tfa.func_name]]
+                if getattr(self.tfa, "peptide_annotation_df", None) is not None:
+                    lookup_source = self.tfa.peptide_annotation_df
+                else:
+                    lookup_source = self.tfa.get_processed_peptide_table(cache=False)
+
+                lookup_key = (
+                    self.tfa.peptide_identity_col
+                    if self.tfa.peptide_identity_col in lookup_source.columns and df.index.isin(lookup_source[self.tfa.peptide_identity_col]).all()
+                    else self.tfa.peptide_col_name
                 )
+                lookup = lookup_source.drop_duplicates(subset=[lookup_key]).set_index(lookup_key)[['Taxon', self.tfa.func_name]]
 
                 aligned = lookup.reindex(df.index)  # 按 df.index 对齐，自动填充缺失为 NaN
 
@@ -9094,7 +9153,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             elif df_type in 'taxa':
                 df = self.tfa.taxa_func_df
             elif df_type in 'functions':
-                df = self.tfa.func_taxa_df
+                df = self._get_tfa_func_taxa_df()
             df = df[sample_list]
             df = df.loc[(df!=0).any(axis=1)]
             index_list = df.index.get_level_values(0).value_counts().index.tolist()

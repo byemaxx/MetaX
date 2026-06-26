@@ -96,13 +96,13 @@ class CrossTest:
         if df_type == 'taxa-func':
             df, primary, secondary = self.tfa.taxa_func_df, 'Taxon', self.tfa.func_name
         elif df_type == 'func-taxa':
-            df, primary, secondary = self.tfa.func_taxa_df, self.tfa.func_name, 'Taxon'
+            df, primary, secondary = self.tfa.get_func_taxa_df(), self.tfa.func_name, 'Taxon'
         elif df_type == 'taxa':
             df, primary = self.tfa.taxa_df, 'Taxon'
         elif df_type == 'func':
             df, primary = self.tfa.func_df, self.tfa.func_name
         elif df_type == 'peptide':
-            df, primary = self.tfa.peptide_df, self.tfa.peptide_col_name
+            df, primary = self.tfa.get_peptide_df(), self.tfa.peptide_col_name
         elif df_type == 'protein':
             df, primary = self.tfa.protein_df, self.tfa.protein_col_name
         elif df_type == 'custom':

@@ -268,9 +268,13 @@ def test_unit_specific_identity_is_generated_from_analysis_unit_and_sequence(tmp
     assert tfa.unit_specific_mode is True
     assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
     assert "UnitSpecificSequence" not in tfa.original_df.columns
-    assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
-    assert tfa.peptide_df.index.name == "_MetaXUnitSpecificPeptideID"
-    assert tfa.peptide_df["Sequence"].tolist() == ["PEPA", "PEPA"]
+    assert tfa.get_peptide_df().index.tolist() == ["PEPA"]
+    assert tfa.get_peptide_df().index.name == "Sequence"
+    peptide_feature_df = tfa.get_peptide_feature_df()
+    assert peptide_feature_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
+    assert peptide_feature_df.index.name == "_MetaXUnitSpecificPeptideID"
+    assert peptide_feature_df["Sequence"].tolist() == ["PEPA", "PEPA"]
+    assert tfa.processed_original_df is None
     assert tfa.taxa_func_df.index.names == ["Taxon", "None_func"]
 
 
@@ -308,8 +312,11 @@ def test_unit_specific_tables_and_proteins_keep_duplicate_sequences_separate(tmp
 
     assert tfa.unit_specific_mode is True
     assert tfa.peptide_identity_col == "_MetaXUnitSpecificPeptideID"
-    assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
-    assert tfa.peptide_df["Sequence"].tolist() == ["PEPA", "PEPA"]
+    assert tfa.get_peptide_df().index.tolist() == ["PEPA"]
+    assert tfa.get_peptide_df().loc["PEPA", ["s1", "s2"]].tolist() == [10.0, 20.0]
+    peptide_feature_df = tfa.get_peptide_feature_df()
+    assert peptide_feature_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
+    assert peptide_feature_df["Sequence"].tolist() == ["PEPA", "PEPA"]
     assert tfa.taxa_df["peptide_num"].sum() == 2
     assert tfa.func_df["peptide_num"].sum() == 2
     assert tfa.taxa_func_df["peptide_num"].sum() == 2
@@ -317,6 +324,16 @@ def test_unit_specific_tables_and_proteins_keep_duplicate_sequences_separate(tmp
     assert tfa.func_df["unit_peptide_num"].sum() == 2
     assert tfa.taxa_func_df["unit_peptide_num"].sum() == 2
     assert tfa.taxa_df["bare_sequence_num"].sum() == 2
+    assert tfa.func_taxa_df is None
+    assert tfa.get_func_taxa_df().equals(tfa.taxa_func_df.swaplevel().sort_index())
+    assert set(tfa.peptide_annotation_df.columns) == {
+        "_MetaXUnitSpecificPeptideID",
+        "analysis_unit_id",
+        "Sequence",
+        "Taxon",
+        "KEGG_ko",
+    }
+    assert not set(tfa.sample_list).intersection(tfa.peptide_annotation_df.columns)
 
     tfa.set_multi_tables(
         sum_protein=True,
@@ -400,10 +417,12 @@ def test_unit_specific_otf_split_func_uses_unsplit_taxa_source(
         assert tfa.taxa_func_df.loc[(taxon, func), "unit_peptide_num"] == 2
         assert tfa.taxa_func_df.loc[(taxon, func), "bare_sequence_num"] == 1
 
-    assert tfa.processed_original_df["KEGG_ko"].tolist() == [
+    assert tfa.processed_original_df is None
+    assert tfa.peptide_annotation_df["KEGG_ko"].tolist() == [
         "K00001|K00002",
         "K00001|K00002",
     ]
+    assert not any(col in tfa.peptide_annotation_df.columns for col in ["s1", "s2"])
 
 
 def test_unit_specific_count_columns_derive_missing_bare_sequence(tmp_path):
@@ -535,12 +554,75 @@ def test_unit_specific_sequence_is_used_for_all_summarization_paths(tmp_path):
 
     assert tfa.unit_specific_mode is True
     assert tfa.peptide_identity_col == "UnitSpecificSequence"
-    assert tfa.peptide_df.index.tolist() == ["u1||PEPA", "u2||PEPA"]
+    assert tfa.get_peptide_df().index.tolist() == ["PEPA"]
+    assert tfa.get_peptide_feature_df().index.tolist() == ["u1||PEPA", "u2||PEPA"]
     assert tfa.taxa_df["peptide_num"].sum() == 2
     assert tfa.func_df["peptide_num"].sum() == 2
     assert tfa.taxa_func_df["peptide_num"].sum() == 2
     assert set(tfa.protein_df.index) == {"g1_p1", "g2_p2"}
     assert set(tfa.protein_df["peptides"]) == {"u1||PEPA", "u2||PEPA"}
+
+
+def test_keep_processed_original_df_opt_in_preserves_processed_feature_table(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    tfa.set_multi_tables(
+        level="m",
+        quant_method="sum",
+        taxa_and_func_only_from_otf=False,
+        keep_processed_original_df=True,
+        data_preprocess_params={
+            "normalize_method": "None",
+            "transform_method": "None",
+            "batch_meta": "None",
+            "processing_order": [],
+        },
+        outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
+    )
+
+    assert tfa.processed_original_df is not None
+    assert tfa.processed_original_df["_MetaXUnitSpecificPeptideID"].tolist() == [
+        "u1||PEPA",
+        "u2||PEPA",
+    ]
+
+
+def test_unit_specific_peptide_sequence_groupby_happens_before_preprocess(monkeypatch, tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    seen = {}
+    original_data_preprocess = tfa.data_preprocess
+
+    def spy_data_preprocess(df, df_name=None, **kwargs):
+        if df_name == "peptide":
+            seen["index"] = df.index.tolist()
+            seen["columns"] = df.columns.tolist()
+            seen["values"] = df.loc["PEPA", ["s1", "s2"]].tolist()
+        return original_data_preprocess(df=df, df_name=df_name, **kwargs)
+
+    monkeypatch.setattr(tfa, "data_preprocess", spy_data_preprocess)
+    tfa.set_multi_tables(
+        level="m",
+        quant_method="sum",
+        taxa_and_func_only_from_otf=False,
+        data_preprocess_params={
+            "normalize_method": "None",
+            "transform_method": "log2",
+            "batch_meta": "None",
+            "processing_order": ["transform"],
+        },
+        outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
+    )
+
+    assert seen["index"] == ["PEPA"]
+    assert seen["columns"] == ["s1", "s2"]
+    assert seen["values"] == [10.0, 20.0]
 
 
 def test_non_unit_specific_otf_keeps_sequence_as_peptide_identity(tfa_object):
