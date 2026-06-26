@@ -306,6 +306,12 @@ class TaxaFuncAnalyzer:
             raise ValueError("Peptide tables have not been initialized. Run set_multi_tables first.")
 
         params = self._last_set_multi_tables_params
+        saved_func_name = params.get("func_name")
+        if saved_func_name is not None and self.func_name != saved_func_name:
+            raise ValueError(
+                f"Function category changed from [{saved_func_name}] to [{self.func_name}]. "
+                "Please rerun set_multi_tables before generating peptide tables."
+            )
         level = params["level"]
         level_mapping = {
             'm': ['genome'],
@@ -1397,6 +1403,7 @@ class TaxaFuncAnalyzer:
         self._func_taxa_df = None
         self._last_set_multi_tables_params = {
             "level": level,
+            "func_name": self.func_name,
             "func_threshold": func_threshold,
             "outlier_params": outlier_params,
             "data_preprocess_params": data_preprocess_params,

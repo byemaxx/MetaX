@@ -632,6 +632,31 @@ def test_unit_specific_peptide_sequence_groupby_happens_before_preprocess(monkey
     assert seen["values"] == [10.0, 20.0]
 
 
+def test_lazy_peptide_generation_rejects_changed_function_category(tmp_path):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
+    tfa = TaxaFuncAnalyzer(df_path=str(path), sample_col_prefix="Intensity")
+    tfa.set_func("KEGG_ko")
+    tfa.set_multi_tables(
+        level="m",
+        quant_method="sum",
+        taxa_and_func_only_from_otf=False,
+        data_preprocess_params={
+            "normalize_method": "None",
+            "transform_method": "None",
+            "batch_meta": "None",
+            "processing_order": [],
+        },
+        outlier_params={"detect_method": "none", "handle_method": "drop+drop"},
+    )
+
+    tfa.set_func("None_func")
+
+    with pytest.raises(ValueError, match="Function category changed"):
+        tfa.get_peptide_df()
+
+
 def test_non_unit_specific_otf_keeps_sequence_as_peptide_identity(tfa_object):
     assert tfa_object.unit_specific_mode is False
     assert tfa_object.peptide_identity_col == tfa_object.peptide_col_name

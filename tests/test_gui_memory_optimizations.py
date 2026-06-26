@@ -310,6 +310,7 @@ def test_run_after_set_multi_tables_does_not_eagerly_cache_taxa_functions(monkey
         peptide_num_used={"taxa": 2, "func": 2, "taxa_func": 2},
         taxa_level="Species",
         func_name="Function",
+        unit_specific_mode=False,
     )
     gui.table_dict = {"existing": pd.DataFrame()}
     gui.listWidget_table_list = FakeListWidget()
@@ -351,9 +352,10 @@ def test_run_after_set_multi_tables_does_not_eagerly_cache_taxa_functions(monkey
     assert "peptides" not in gui.table_dict
     assert "functions-taxa" not in gui.table_dict
     assert "proteins" not in gui.table_dict
-    assert {"peptides", "unit-specific peptide features", "functions-taxa"}.issubset(
+    assert {"peptides", "peptide annotation features", "functions-taxa"}.issubset(
         gui.table_provider_dict
     )
+    assert "unit-specific peptide features" not in gui.table_provider_dict
     assert "proteins" not in gui.table_provider_dict
 
 

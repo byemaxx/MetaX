@@ -831,7 +831,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             dft = self._get_tfa_func_taxa_df().copy()
         elif df_type in ["peptide", "peptides"]:
             dft = self._get_tfa_peptide_df().copy()
-        elif df_type in ["unit-specific peptide features", "peptide-features", "peptide features"]:
+        elif df_type in ["unit-specific peptide features", "peptide annotation features", "peptide-features", "peptide features"]:
             dft = self._get_tfa_peptide_feature_df().copy()
         elif df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
@@ -860,7 +860,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return self.tfa.taxa_func_df.index
         if df_type in ["peptide", "peptides"]:
             return self._get_tfa_peptide_df().index
-        if df_type in ["unit-specific peptide features", "peptide-features", "peptide features"]:
+        if df_type in ["unit-specific peptide features", "peptide annotation features", "peptide-features", "peptide features"]:
             return self._get_tfa_peptide_feature_df().index
         if df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
             return self._get_tfa_func_taxa_df().index
@@ -3499,9 +3499,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # add tables to table dict
         self.table_provider_dict = {}
         if not self.tfa.any_df_mode:
+            peptide_feature_label = (
+                "unit-specific peptide features"
+                if getattr(self.tfa, "unit_specific_mode", False)
+                else "peptide annotation features"
+            )
             self.table_provider_dict.update({
                 'peptides': lambda: self._get_tfa_peptide_df(),
-                'unit-specific peptide features': lambda: self._get_tfa_peptide_feature_df(),
+                peptide_feature_label: lambda: self._get_tfa_peptide_feature_df(),
                 'functions-taxa': lambda: self._get_tfa_func_taxa_df(),
             })
             if self.tfa.protein_df is not None:
