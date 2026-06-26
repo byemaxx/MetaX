@@ -391,6 +391,83 @@ def test_stream_merge_unit_outputs_is_chunked_and_fills_columns(tmp_path):
     assert not unit2.exists()
 
 
+def test_stream_merge_unit_outputs_supports_temporary_pickle(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    manifest = tmp_path / "manifest.json"
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    for path in [peptide_table, manifest, taxafunc_db, peptide_db]:
+        path.write_text("", encoding="utf-8")
+
+    annotator = UnitSpecificOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_specific_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "merged.tsv"),
+        db_path=str(peptide_db),
+    )
+    unit_path = tmp_path / "u1.pkl"
+    unit_frame = pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u1"],
+            "Sequence": ["PEPA", "PEPB"],
+            "Proteins": ["g1_p1", "g1_p2"],
+            "Intensity_s1": [10, 20],
+        }
+    )
+    unit_frame.to_pickle(unit_path)
+
+    columns, rows = annotator._stream_merge_unit_outputs(
+        [
+            {
+                "path": str(unit_path),
+                "columns": unit_frame.columns.tolist(),
+                "temporary": True,
+                "format": "pickle",
+            }
+        ],
+        ["Intensity_s1"],
+        merge_chunksize=1,
+    )
+
+    merged = pd.read_csv(annotator.output_path, sep="\t")
+    assert rows == 2
+    assert merged.columns.tolist() == columns
+    assert merged["Sequence"].tolist() == ["PEPA", "PEPB"]
+    assert not unit_path.exists()
+
+
+def test_add_unit_protein_mapping_preserves_manifest_genome_order(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    manifest = tmp_path / "manifest.json"
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    for path in [peptide_table, manifest, taxafunc_db, peptide_db]:
+        path.write_text("", encoding="utf-8")
+    annotator = UnitSpecificOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        unit_specific_manifest_path=str(manifest),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "out.tsv"),
+        db_path=str(peptide_db),
+    )
+
+    result = annotator._add_unit_protein_mapping(
+        pd.DataFrame({"Sequence": ["PEPA"]}),
+        {
+            "PEPA": {
+                "g3": {"g3_p3"},
+                "g1": {"g1_p1"},
+                "g2": {"g2_p2"},
+            }
+        },
+        ["g2", "g1"],
+    )
+
+    assert result["Proteins"].tolist() == ["g1_p1;g2_p2"]
+    assert result["Genomes"].tolist() == ["g2;g1"]
+
+
 def test_saved_per_unit_output_is_final_unit_specific_table(tmp_path):
     peptide_table = tmp_path / "peptides.tsv"
     pd.DataFrame(

@@ -65,7 +65,8 @@ class PeptideAnnotator:
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
                  peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None,
-                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum'):
+                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum',
+                 annotation_result_cache: dict[str, dict] | None = None):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
@@ -85,6 +86,11 @@ class PeptideAnnotator:
         self.thread_local = threading.local()
         self.start_time = datetime.now()
         self.additional_running_info = additional_running_info if additional_running_info else {}
+        self.annotation_result_cache = (
+            annotation_result_cache
+            if annotation_result_cache is not None
+            else {}
+        )
         # save running statistics for logging info file
         self.run_stats: dict = {}
         
@@ -192,82 +198,141 @@ class PeptideAnnotator:
         print(f'  - rows: {len(df_t)}')
         print(f'  - unique protein groups: {len(unique_proteins)}')
 
-        p2tf = Pep2TaxaFunc(
-            db_path=self.db_path,
-            threshold=self.threshold,
-            genome_mode=self.genome_mode,
-            protein_genome_separator=self.protein_genome_separator,
-        )
-        try:
-            prefetch_start = time.perf_counter()
-            unique_protein_count, unique_genome_count = (
-                p2tf.prefetch_for_protein_groups(protein_groups.values())
-            )
-            prefetch_seconds = time.perf_counter() - prefetch_start
-            print(f'  - unique proteins: {unique_protein_count}')
-            print(f'  - unique genomes: {unique_genome_count}')
-            print(f'  - batch prefetch: {prefetch_seconds:.1f} s')
-
-            annotation_start = time.perf_counter()
-            ordered_groups = [
-                protein_groups[protein]
-                for protein in unique_proteins
-            ]
-            if (
-                len(unique_proteins)
-                >= self.parallel_cache_annotation_min_groups
-                and (os.cpu_count() or 1) > 1
-            ):
-                max_workers = min(
-                    os.cpu_count() or 1,
-                    self.parallel_cache_annotation_max_workers,
+        def finalize_annotation_frame(annotation_df: pd.DataFrame) -> pd.DataFrame:
+            annotation_df = self.add_additional_columns(annotation_df)
+            annotation_df['None_func'] = 'none_func'
+            annotation_df['None_func_prop'] = '1.0'
+            if 'Description' in annotation_df.columns:
+                annotation_df.rename(
+                    columns={
+                        'Description': 'eggNOG_Description',
+                        'Description_prop': 'eggNOG_Description_prop',
+                    },
+                    inplace=True,
                 )
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    unique_results = list(tqdm(
-                        executor.map(
-                            partial(
-                                self.run_pep2taxafunc_from_cache,
-                                p2tf=p2tf,
-                            ),
-                            ordered_groups,
-                        ),
-                        total=len(ordered_groups),
-                    ))
+            if 'Preferred_name' in annotation_df.columns:
+                annotation_df.rename(
+                    columns={
+                        'Preferred_name': 'Gene',
+                        'Preferred_name_prop': 'Gene_prop',
+                    },
+                    inplace=True,
+                )
             else:
-                unique_results = [
-                    self.run_pep2taxafunc_from_cache(group, p2tf)
-                    for group in tqdm(
-                        ordered_groups,
-                        total=len(ordered_groups),
-                    )
-                ]
-            annotation_seconds = time.perf_counter() - annotation_start
-            print(f'  - in-memory annotation: {annotation_seconds:.1f} s')
-
-            annotations_by_protein = dict(zip(unique_proteins, unique_results))
-            results = [
-                annotations_by_protein[protein]
-                if pd.notna(protein)
-                else self.run_pep2taxafunc_with_instance(
-                    str(protein).split(self.protein_separator),
-                    p2tf,
+                print(
+                    'Warning: column name "Description" does not exist!, '
+                    'skip renaming...'
                 )
-                for protein in df_t[self.protein_col]
-            ]
-        finally:
-            p2tf.conn.close()
+            return annotation_df
 
-        df_t0 = pd.DataFrame(results, index=df_t.index)
-        df_t0 = self.add_additional_columns(df_t0)
-        df_t0['None_func'] = 'none_func'
-        df_t0['None_func_prop'] = '1.0'
-        
-        if 'Description' in df_t0.columns:
-            df_t0.rename(columns={'Description': 'eggNOG_Description', 'Description_prop': 'eggNOG_Description_prop'}, inplace=True)
-        if 'Preferred_name' in df_t0.columns:
-            df_t0.rename(columns={'Preferred_name': 'Gene', 'Preferred_name_prop': 'Gene_prop'}, inplace=True)
+        missing_proteins = [
+            protein
+            for protein in unique_proteins
+            if protein not in self.annotation_result_cache
+        ]
+        print(
+            f'  - cached protein groups: '
+            f'{len(unique_proteins) - len(missing_proteins)}'
+        )
+        print(f'  - protein groups to annotate: {len(missing_proteins)}')
+
+        if missing_proteins:
+            missing_groups = [
+                protein_groups[protein]
+                for protein in missing_proteins
+            ]
+            p2tf = Pep2TaxaFunc(
+                db_path=self.db_path,
+                threshold=self.threshold,
+                genome_mode=self.genome_mode,
+                protein_genome_separator=self.protein_genome_separator,
+            )
+            prefetch_start = time.perf_counter()
+            try:
+                unique_protein_count, unique_genome_count = (
+                    p2tf.prefetch_for_protein_groups(missing_groups)
+                )
+                prefetch_seconds = time.perf_counter() - prefetch_start
+                print(f'  - unique proteins: {unique_protein_count}')
+                print(f'  - unique genomes: {unique_genome_count}')
+                print(f'  - batch prefetch: {prefetch_seconds:.1f} s')
+
+                annotation_start = time.perf_counter()
+                if (
+                    len(missing_proteins)
+                    >= self.parallel_cache_annotation_min_groups
+                    and (os.cpu_count() or 1) > 1
+                ):
+                    max_workers = min(
+                        os.cpu_count() or 1,
+                        self.parallel_cache_annotation_max_workers,
+                    )
+                    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                        missing_results = list(tqdm(
+                            executor.map(
+                                partial(
+                                    self.run_pep2taxafunc_from_cache,
+                                    p2tf=p2tf,
+                                ),
+                                missing_groups,
+                            ),
+                            total=len(missing_groups),
+                        ))
+                else:
+                    missing_results = [
+                        self.run_pep2taxafunc_from_cache(group, p2tf)
+                        for group in tqdm(
+                            missing_groups,
+                            total=len(missing_groups),
+                        )
+                    ]
+                annotation_seconds = time.perf_counter() - annotation_start
+                print(f'  - in-memory annotation: {annotation_seconds:.1f} s')
+            finally:
+                p2tf.conn.close()
+
+            missing_annotation_df = pd.DataFrame(
+                missing_results,
+                index=missing_proteins,
+            )
+            missing_annotation_df = finalize_annotation_frame(missing_annotation_df)
+            self.annotation_result_cache.update(
+                missing_annotation_df.to_dict(orient='index')
+            )
         else:
-            print('Warning: column name "Description" does not exist!, skip renaming...')
+            print('  - batch prefetch: 0.0 s')
+            print('  - in-memory annotation: 0.0 s')
+
+        nan_annotation_result = None
+        if df_t[self.protein_col].isna().any():
+            p2tf = Pep2TaxaFunc(
+                db_path=self.db_path,
+                threshold=self.threshold,
+                genome_mode=self.genome_mode,
+                protein_genome_separator=self.protein_genome_separator,
+            )
+            try:
+                nan_annotation_df = pd.DataFrame(
+                    [
+                        self.run_pep2taxafunc_with_instance(
+                            str(float('nan')).split(self.protein_separator),
+                            p2tf,
+                        )
+                    ]
+                )
+            finally:
+                p2tf.conn.close()
+            nan_annotation_result = finalize_annotation_frame(
+                nan_annotation_df
+            ).iloc[0].to_dict()
+
+        results = [
+            nan_annotation_result
+            if pd.isna(protein)
+            else self.annotation_result_cache[protein]
+            for protein in df_t[self.protein_col]
+        ]
+        df_t0 = pd.DataFrame(results, index=df_t.index)
             
         df_t = pd.concat([df_t, df_t0], axis=1)
         cols = df_t.columns.tolist()

@@ -174,6 +174,7 @@ class UnitSpecificOTFAnnotator:
         self._last_unique_sequences: int | None = None
         self._last_unique_protein_groups: int | None = None
         self._last_sample_mapping: dict[str, str] | None = None
+        self._taxafunc_annotation_cache: dict[str, dict] = {}
         self.peptide_table_prepare_metadata: dict = {}
 
         for path, label in [
@@ -249,7 +250,7 @@ class UnitSpecificOTFAnnotator:
             per_unit_dir = self.artifacts_dir / "per_unit"
             per_unit_dir.mkdir(parents=True, exist_ok=True)
             return per_unit_dir / f"{_safe_filename(analysis_unit_id)}_OTF.tsv"
-        return tmpdir / f"{_safe_filename(analysis_unit_id)}_OTF.tsv"
+        return tmpdir / f"{_safe_filename(analysis_unit_id)}_OTF.pkl"
 
     def _add_unit_protein_mapping(
         self,
@@ -258,17 +259,27 @@ class UnitSpecificOTFAnnotator:
         unit_genome_ids: Iterable[str],
     ) -> pd.DataFrame:
         unit_genomes = [str(genome_id) for genome_id in unit_genome_ids]
+        unit_genome_order = {
+            genome_id: index
+            for index, genome_id in enumerate(unit_genomes)
+        }
 
         def unit_candidates(peptide: object) -> tuple[str, str]:
             genome_map = global_mapping.get(str(peptide), {})
+            matched_genomes = sorted(
+                (
+                    (unit_genome_order[genome_id], genome_id, proteins)
+                    for genome_id, proteins in genome_map.items()
+                    if genome_id in unit_genome_order and proteins
+                ),
+                key=lambda item: item[0],
+            )
             proteins = {
                 protein_id
-                for genome_id in unit_genomes
-                for protein_id in genome_map.get(genome_id, set())
+                for _, _, genome_proteins in matched_genomes
+                for protein_id in genome_proteins
             }
-            mapped_genomes = [
-                genome_id for genome_id in unit_genomes if genome_map.get(genome_id)
-            ]
+            mapped_genomes = [genome_id for _, genome_id, _ in matched_genomes]
             return ";".join(sorted(proteins)), ";".join(mapped_genomes)
 
         result = unit_df.copy()
@@ -458,7 +469,20 @@ class UnitSpecificOTFAnnotator:
         unique_protein_groups: set[str] | None = set() if collect_unique_stats else None
         for record in unit_output_records:
             unit_path = Path(record["path"])
-            for chunk in pd.read_csv(unit_path, sep="\t", chunksize=merge_chunksize):
+            if record.get("format") == "pickle":
+                unit_frame = pd.read_pickle(unit_path)
+                chunks = (
+                    unit_frame.iloc[start:start + merge_chunksize].copy()
+                    for start in range(0, len(unit_frame), merge_chunksize)
+                )
+            else:
+                unit_frame = None
+                chunks = pd.read_csv(
+                    unit_path,
+                    sep="\t",
+                    chunksize=merge_chunksize,
+                )
+            for chunk in chunks:
                 missing_sample_cols = [
                     column
                     for column in canonical_sample_cols
@@ -487,6 +511,7 @@ class UnitSpecificOTFAnnotator:
                 wrote_header = True
                 total_rows += len(chunk)
                 del chunk
+            del unit_frame
             if record.get("temporary", False):
                 unit_path.unlink(missing_ok=True)
         self._last_unique_sequences = (
@@ -833,6 +858,7 @@ class UnitSpecificOTFAnnotator:
                         "selected_genome_threshold": manifest.selected_genome_threshold,
                         **self.peptide_table_prepare_metadata,
                     },
+                    annotation_result_cache=self._taxafunc_annotation_cache,
                     save_output=False,
                 )
 
@@ -844,7 +870,19 @@ class UnitSpecificOTFAnnotator:
                     unit.analysis_unit_id,
                     tmpdir,
                 )
-                unit_otf_df.to_csv(final_unit_output_path, sep="\t", index=False)
+                unit_output_format = (
+                    "tsv"
+                    if self.save_per_unit_outputs
+                    else "pickle"
+                )
+                if unit_output_format == "tsv":
+                    unit_otf_df.to_csv(
+                        final_unit_output_path,
+                        sep="\t",
+                        index=False,
+                    )
+                else:
+                    unit_otf_df.to_pickle(final_unit_output_path)
                 self._record_summary(
                     summary_rows,
                     unit.analysis_unit_id,
@@ -867,6 +905,7 @@ class UnitSpecificOTFAnnotator:
                         "rows": unit_otf_rows,
                         "summary": dict(summary_rows[-1]),
                         "temporary": not self.save_per_unit_outputs,
+                        "format": unit_output_format,
                     }
                 )
                 unit_mapped_peptides = len(unit_df)
