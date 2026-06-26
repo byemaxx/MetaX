@@ -527,7 +527,7 @@ def test_non_unit_specific_count_columns_remain_unchanged(tfa_object):
     assert "bare_sequence_num" not in result.columns
 
 
-def test_filter_taxa_func_uses_unit_specific_pair_counts(tmp_path):
+def test_filter_taxa_func_threshold_derives_bare_sequence_when_sequence_column_missing(tmp_path):
     from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
 
     path = _write_unit_specific_otf(tmp_path, include_unit_sequence=False)
@@ -563,14 +563,10 @@ def test_filter_taxa_func_uses_unit_specific_pair_counts(tmp_path):
     )
 
     assert list(zip(result["Taxon"], result["KEGG_ko"])) == [
-        ("taxon_a", "func_1"),
-        ("taxon_a", "func_1"),
         ("taxon_b", "func_2"),
         ("taxon_b", "func_2"),
     ]
     assert result["_MetaXUnitSpecificPeptideID"].tolist() == [
-        "u1||PEPA",
-        "u2||PEPA",
         "u1||PEPA",
         "u3||PEPB",
     ]
