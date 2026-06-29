@@ -319,6 +319,81 @@ class UnitSpecificOTFAnnotator:
             on_missing=self.on_missing_sample,
         )
 
+    def _resolve_diann_sample_mapping(
+        self,
+        peptide_columns: Iterable[object],
+        manifest_sample_columns: list[str],
+        run_to_column: dict[object, object],
+    ) -> dict[str, str]:
+        peptide_column_set = {str(column) for column in peptide_columns}
+        exact_run_to_column = {
+            str(run): str(column)
+            for run, column in run_to_column.items()
+            if str(column) in peptide_column_set
+        }
+        basename_to_runs: dict[str, list[str]] = {}
+        for run in exact_run_to_column:
+            basename = Path(run.replace("\\", "/")).name
+            lower = basename.lower()
+            for suffix in (".raw", ".mzml", ".mzxml"):
+                if lower.endswith(suffix):
+                    basename = basename[: -len(suffix)]
+                    break
+            basename_to_runs.setdefault(basename, []).append(run)
+
+        mapping: dict[str, str] = {}
+        missing_samples: list[str] = []
+        for sample in manifest_sample_columns:
+            sample_str = str(sample)
+            column = exact_run_to_column.get(sample_str)
+            if column is None and sample_str in peptide_column_set:
+                column = sample_str
+            if column is None:
+                basename = Path(sample_str.replace("\\", "/")).name
+                lower = basename.lower()
+                for suffix in (".raw", ".mzml", ".mzxml"):
+                    if lower.endswith(suffix):
+                        basename = basename[: -len(suffix)]
+                        break
+                candidate_runs = basename_to_runs.get(basename, [])
+                if len(candidate_runs) == 1:
+                    column = exact_run_to_column[candidate_runs[0]]
+                elif len(candidate_runs) > 1:
+                    raise ValueError(
+                        f"Manifest sample {sample_str!r} is ambiguous in DIA-NN Run values; "
+                        f"matched runs: {sorted(candidate_runs)}"
+                    )
+            if column is None:
+                missing_samples.append(sample_str)
+                continue
+            mapping[sample_str] = column
+
+        if missing_samples:
+            fallback_mapping = self._resolve_sample_mapping(
+                peptide_columns,
+                missing_samples,
+            )
+            mapping.update(fallback_mapping)
+
+        column_to_samples: dict[str, list[str]] = {}
+        for sample, column in mapping.items():
+            column_to_samples.setdefault(column, []).append(sample)
+        duplicate_matches = {
+            column: samples
+            for column, samples in column_to_samples.items()
+            if len(samples) > 1
+        }
+        if duplicate_matches:
+            details = "; ".join(
+                f"{column!r}: {samples}"
+                for column, samples in sorted(duplicate_matches.items())
+            )
+            raise ValueError(
+                "DIA-NN manifest samples must map to distinct prepared sample columns; "
+                f"duplicate matches: {details}"
+            )
+        return mapping
+
     def _required_peptide_table_columns(
         self,
         peptide_columns: Iterable[object],
@@ -371,9 +446,10 @@ class UnitSpecificOTFAnnotator:
                 f"{prepared.peptide_col} x Run using {prepared.intensity_col}"
             )
             if manifest_sample_columns is not None:
-                self._last_sample_mapping = self._resolve_sample_mapping(
+                self._last_sample_mapping = self._resolve_diann_sample_mapping(
                     prepared.dataframe.columns,
                     manifest_sample_columns,
+                    prepared.metadata.get("diann_run_to_sample_column", {}),
                 )
             return prepared.dataframe
         self.peptide_table_prepare_metadata = {}

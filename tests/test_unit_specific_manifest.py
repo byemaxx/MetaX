@@ -141,3 +141,8 @@ def test_resolve_manifest_sample_columns_missing_and_ambiguous():
 
     with pytest.raises(ValueError, match="ambiguous"):
         resolve_manifest_sample_columns([r"C:\a\s.raw", r"D:\b\s.mzML"], ["s"])
+
+
+def test_resolve_manifest_sample_columns_rejects_duplicate_column_matches():
+    with pytest.raises(ValueError, match="distinct peptide table columns"):
+        resolve_manifest_sample_columns(["s1"], ["s1", "s1.raw"])

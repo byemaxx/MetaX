@@ -72,6 +72,34 @@ def test_prepare_diann_parquet_supports_intensity_aliases(
     assert prepared.dataframe.loc[0, "Evidence"] == 3.0
     assert prepared.dataframe.loc[0, "Q.Value"] == 0.01
     assert prepared.metadata["diann_intensity_column"] == intensity_col
+    assert prepared.metadata["diann_run_to_sample_column"] == {
+        "s1.raw": f"{expected_prefix}s1",
+        "s2.raw": f"{expected_prefix}s2",
+    }
+
+
+def test_prepare_diann_parquet_preserves_duplicate_basenames_as_distinct_runs(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": [r"C:\batch1\s1.raw", r"C:\batch2\s1.raw"],
+            "Stripped.Sequence": ["PEPA", "PEPA"],
+            "Precursor.Quantity": [10.0, 20.0],
+        }
+    ).to_parquet(parquet_path)
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        sample_column_prefix="",
+        intensity_col="Precursor.Quantity",
+    )
+
+    assert prepared.dataframe.loc[0, "s1"] == 10.0
+    assert prepared.dataframe.loc[0, "s1_2"] == 20.0
+    assert prepared.metadata["diann_run_to_sample_column"] == {
+        r"C:\batch1\s1.raw": "s1",
+        r"C:\batch2\s1.raw": "s1_2",
+    }
 
 
 def test_prepare_diann_parquet_prefers_normalised_when_both_aliases_exist(tmp_path):

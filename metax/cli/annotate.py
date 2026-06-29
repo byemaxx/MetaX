@@ -45,6 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-sample-col-prefix",
         default="Intensity_",
+        choices=["Intensity_"],
         help=(
             "Prefix for output OTF sample columns. Must be 'Intensity_' for unit-specific output. "
             "Use --input-sample-col-prefix to match non-standard input columns."
