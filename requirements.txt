@@ -26,4 +26,4 @@ statsmodels
 seaborn>=0.13.2
 numba>=0.60.0
 UpSetPlot>=0.9.0
-metaumbra[gui-pyqt5]>=1.3.6
+metaumbra[gui-pyqt5]>=1.3.7

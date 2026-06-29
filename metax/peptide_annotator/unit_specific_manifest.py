@@ -239,6 +239,23 @@ def resolve_manifest_sample_columns(
             warnings.warn(message, stacklevel=2)
             continue
         mapping[str(sample)] = chosen
+    column_to_samples: dict[str, list[str]] = {}
+    for sample, column in mapping.items():
+        column_to_samples.setdefault(column, []).append(sample)
+    duplicate_matches = {
+        column: samples
+        for column, samples in column_to_samples.items()
+        if len(samples) > 1
+    }
+    if duplicate_matches:
+        details = "; ".join(
+            f"{column!r}: {samples}"
+            for column, samples in sorted(duplicate_matches.items())
+        )
+        raise ValueError(
+            "Manifest sample columns must map to distinct peptide table columns; "
+            f"duplicate matches: {details}"
+        )
     return mapping
 
 

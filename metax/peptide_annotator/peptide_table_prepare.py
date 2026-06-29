@@ -296,6 +296,7 @@ def prepare_diann_parquet_for_direct_otf(
         "input_peptide_table_format": "diann_parquet",
         "input_peptide_table_original_path": parquet_path,
         "diann_intensity_column": intensity_col,
+        "diann_run_to_sample_column": dict(run_to_column),
         "prepared_peptide_rows": int(prepared_df.shape[0]),
         "prepared_sample_columns": len(run_to_column),
         "prepared_intensity_col_prefix": sample_column_prefix,
