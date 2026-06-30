@@ -15,7 +15,7 @@ class GetMatrix:
             sample_list = self.tfa.get_sample_list_for_group_list(condition=condition)
         
         if func_name is not None:
-            dft = self.tfa.func_taxa_df.copy()
+            dft = self.tfa.get_func_taxa_df().copy()
             dft.reset_index(inplace=True)
 
             if taxon_name is None:
@@ -26,11 +26,15 @@ class GetMatrix:
                 # get the intensity matrix of the taxon with its function
                 taxa_func = f'{taxon_name} <{func_name}>'
                 peptides_list = self.tfa.peptides_linked_dict['taxa_func'][taxa_func]
-                dft = self.tfa.peptide_df.loc[peptides_list]
+                peptide_df = self.tfa.get_peptide_df()
+                if all(peptide in peptide_df.index for peptide in peptides_list):
+                    dft = peptide_df.loc[peptides_list]
+                else:
+                    dft = self.tfa.get_peptide_feature_df().loc[peptides_list]
 
 
         elif taxon_name is not None and peptide_seq is None:
-            dft = self.tfa.func_taxa_df.copy()
+            dft = self.tfa.get_func_taxa_df().copy()
             dft.reset_index(inplace=True)
             dft = dft[dft['Taxon'] == taxon_name]
             dft.set_index(self.tfa.func_name, inplace=True)

@@ -99,6 +99,15 @@ try:
     from .metax_gui.resources import icon_rc # noqa: F401
     from .metax_gui.console_window import ConsoleOutputWindow
     from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+    from .metax_gui.tfnet_helpers import (
+        filter_linked_tfnet_items,
+        format_linked_taxa_func_index_preview,
+        normalize_taxa_func_display_item,
+        parse_taxa_func_display_item,
+        search_linked_taxa_func_index,
+        taxa_func_display_item_has_link,
+    )
+    from .unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
     from ..workflow_recorder import (
         AnalysisStep,
         WorkflowRecorder,
@@ -109,11 +118,21 @@ try:
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
+        unit_specific_otf_step,
     )
 
     from ..peptide_annotator.metalab2otf import MetaLab2OTF
     from ..peptide_annotator.peptable_annotator import PeptideAnnotator
     from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+    from ..peptide_annotator.peptide_table_prepare import (
+        PeptideTableSchema,
+        available_diann_intensity_columns,
+        is_diann_parquet,
+        is_parquet_path,
+        prepare_diann_parquet_for_direct_otf,
+        resolve_diann_parquet_schema,
+    )
+    from ..peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
@@ -169,10 +188,28 @@ except (ImportError, ValueError):
     from metax.gui.metax_gui.resources import icon_rc
     from metax.gui.metax_gui.console_window import ConsoleOutputWindow
     from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+    from metax.gui.metax_gui.tfnet_helpers import (
+        filter_linked_tfnet_items,
+        format_linked_taxa_func_index_preview,
+        normalize_taxa_func_display_item,
+        parse_taxa_func_display_item,
+        search_linked_taxa_func_index,
+        taxa_func_display_item_has_link,
+    )
+    from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
 
     from metax.peptide_annotator.metalab2otf import MetaLab2OTF
     from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
     from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+    from metax.peptide_annotator.peptide_table_prepare import (
+        PeptideTableSchema,
+        available_diann_intensity_columns,
+        is_diann_parquet,
+        is_parquet_path,
+        prepare_diann_parquet_for_direct_otf,
+        resolve_diann_parquet_schema,
+    )
+    from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
@@ -187,6 +224,7 @@ except (ImportError, ValueError):
         method_call_step,
         set_multi_tables_step,
         taxafunc_analyzer_step,
+        unit_specific_otf_step,
     )
 
 
@@ -265,6 +303,9 @@ class WorkflowStepsSelectionDialog(QDialog):
 
 ###############   Class MetaXGUI Begin   ###############
 class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
+    MAX_EAGER_COMBOBOX_ITEMS = 50000
+    AUTO_SAVE_MAX_TABLE_MEMORY_MB = 2048
+
     def __init__(self, MainWindow):
         super().__init__()
         MainWindow.closeEvent = self.closeEvent
@@ -288,6 +329,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.last_path = QDir.homePath() # init last path as home path
         self.pep_direct_to_otf_selected_genomes = []
         self.pep_direct_to_otf_selected_genome_source = ""
+        self.unit_specific_gui_config = UnitSpecificGuiConfig()
         self.metaumbra_gui_process = None
         
         # init the check update status
@@ -309,6 +351,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.check_update(manual_check_trigger=False)
         
         self.table_dict = {}
+        self.table_provider_dict = {}
         self.comboBox_top_heatmap_table_list = []
         self.comboBox_deseq2_tables_list = []
         self.table_dialogs = []
@@ -377,7 +420,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionTutorial.triggered.connect(self.open_tutorial)
         self.actionRestore_Last_TaxaFunc.triggered.connect(lambda: self.run_restore_taxafunnc_obj_from_file(last=True))
         self.actionRestore_From.triggered.connect(self.run_restore_taxafunnc_obj_from_file)
-        self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False))
+        self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False, warn_large=True))
         self.actionExport_Workflow_Notebook = QtWidgets.QAction("Export Workflow Notebook", self.MainWindow)
         self.actionExport_Workflow_Notebook.setObjectName("actionExport_Workflow_Notebook")
         self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi6.file-document-multiple-outline'))
@@ -434,6 +477,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path, 'folder')
         self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 'file')
         self.lineEdit_pep_direct_to_otf_output_path = self.make_line_edit_drag_drop(self.lineEdit_pep_direct_to_otf_output_path, 'folder', 'OTF_direct_anno.tsv')
+        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path = self.make_line_edit_drag_drop(
+                self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path,
+                'file',
+            )
 
         # set ComboBox eanble searchable
         self.make_related_comboboxes_searchable()
@@ -478,7 +526,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.pushButton_pep_direct_to_otf_open_window_paste_gnome_list.clicked.connect(self.paste_pep_direct_to_otf_genome_list)
         self.pushButton_pep_direct_to_otf_reset_selected_genome_list.clicked.connect(self.reset_pep_direct_to_otf_selected_genome_list)
         self.pushButton_pep_direct_to_otf_open_metaumbra_gui.clicked.connect(self.open_metaumbra_gui)
-        self.update_pep_direct_to_otf_output_mode()
+        for manifest_button_name in [
+            "pushButton_open_pep_direct_to_otf_unit_specific_manifest_path",
+            "pushButton_open_pep_direct_to_otf_unit_specific_mainfest_path",
+        ]:
+            manifest_button = getattr(self, manifest_button_name, None)
+            if manifest_button is not None:
+                manifest_button.clicked.connect(self.set_lineEdit_pep_direct_to_otf_unit_specific_manifest_path)
+        unit_specific_settings_button = self._get_unit_specific_settings_button()
+        if unit_specific_settings_button is not None:
+            unit_specific_settings_button.clicked.connect(self.open_pep_direct_to_otf_unit_specific_settings)
+        if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.toggled.connect(
+                self.update_pep_direct_to_otf_mode_state
+            )
+        self.checkBox_pep_direct_to_otf_use_selected_genome_list.toggled.connect(
+            self.update_pep_direct_to_otf_mode_state
+        )
+        self.checkBox_pep_direct_to_otf_stop_after_metaumbra.toggled.connect(
+            self.update_pep_direct_to_otf_mode_state
+        )
+        self.update_pep_direct_to_otf_mode_state()
         self._last_pep_direct_to_otf_peptide_table_signature = ''
         self.lineEdit_pep_direct_to_otf_peptide_path.textChanged.connect(
             self.update_pep_direct_to_otf_peptide_table_columns
@@ -725,6 +793,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     
     ###############   basic function start   ###############  
+    def _get_tfa_peptide_df(self):
+        getter = getattr(self.tfa, "get_peptide_df", None)
+        return getter() if callable(getter) else self.tfa.peptide_df
+
+    def _get_tfa_peptide_feature_df(self):
+        getter = getattr(self.tfa, "get_peptide_feature_df", None)
+        if callable(getter):
+            return getter()
+        return getattr(self.tfa, "peptide_feature_df", None)
+
+    def _get_tfa_func_taxa_df(self):
+        getter = getattr(self.tfa, "get_func_taxa_df", None)
+        return getter() if callable(getter) else self.tfa.func_taxa_df
+
+    def _get_tfa_peptide_count(self) -> int:
+        preview_getter = getattr(self.tfa, "get_peptide_sequence_preview", None)
+        if callable(preview_getter):
+            _preview, total = preview_getter(limit=0)
+            return total
+        return self._get_tfa_peptide_df().shape[0]
+
     def get_table_by_df_type(self, df_type:str | None = None, 
                              replace_if_two_index:bool = False):
         if df_type is None:
@@ -738,8 +827,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             dft =   self.tfa.func_df.copy()
         elif df_type in ["taxa-func", "taxa-function", 'taxa-functions']:
             dft =   self.tfa.taxa_func_df.copy()
+        elif df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
+            dft = self._get_tfa_func_taxa_df().copy()
         elif df_type in ["peptide", "peptides"]:
-            dft =   self.tfa.peptide_df.copy()
+            dft = self._get_tfa_peptide_df().copy()
+        elif df_type in ["unit-specific peptide features", "peptide annotation features", "peptide-features", "peptide features"]:
+            dft = self._get_tfa_peptide_feature_df().copy()
         elif df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
                 raise ValueError("Please set protein table first.")
@@ -756,7 +849,189 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if replace_if_two_index:
             dft = self.tfa.replace_if_two_index(dft)
         return dft
-    
+
+    def _get_index_for_df_type(self, df_type: str):
+        df_type = df_type.lower()
+        if df_type == "taxa":
+            return self.tfa.taxa_df.index
+        if df_type in ["func", "function", "functions"]:
+            return self.tfa.func_df.index
+        if df_type in ["taxa-func", "taxa-function", "taxa-functions"]:
+            return self.tfa.taxa_func_df.index
+        if df_type in ["peptide", "peptides"]:
+            return self._get_tfa_peptide_df().index
+        if df_type in ["unit-specific peptide features", "peptide annotation features", "peptide-features", "peptide features"]:
+            return self._get_tfa_peptide_feature_df().index
+        if df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
+            return self._get_tfa_func_taxa_df().index
+        if df_type in ["protein", "proteins"]:
+            if self.tfa.protein_df is None:
+                return []
+            return self.tfa.protein_df.index
+        if df_type == "custom":
+            if self.tfa.custom_df is None:
+                return []
+            return self.tfa.custom_df.index
+        raise ValueError(f"Invalid df_type: {df_type}")
+
+    def _get_display_list_by_df_type(self, df_type: str) -> list:
+        df_type_lower = df_type.lower()
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            return [f"{taxa} <{func}>" for taxa, func in self.tfa.taxa_func_df.index]
+        index = self._get_index_for_df_type(df_type_lower)
+        return index.tolist() if hasattr(index, "tolist") else list(index)
+
+    def _get_combobox_items_by_df_type(self, df_type: str):
+        return self._get_index_for_df_type(df_type.lower())
+
+    def _format_taxa_func_index_preview(self, limit: int | None = None) -> tuple[list[str], int]:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        idx = self.tfa.taxa_func_df.index
+        total = len(idx)
+        preview_count = min(total, limit)
+        preview = [f"{taxa} <{func}>" for taxa, func in idx[:preview_count]]
+        return preview, total
+
+    def _item_has_tflink(self, item: str, df_type: str) -> bool:
+        if not self._item_exists_in_df_type(item, df_type):
+            return False
+
+        df_type_lower = df_type.lower()
+        if df_type_lower not in ["taxa", "functions", "taxa-functions"]:
+            return True
+        if df_type_lower == "taxa-functions":
+            return taxa_func_display_item_has_link(
+                item,
+                self.tfa.taxa_func_df.index,
+                getattr(self.tfa, "taxa_func_linked_dict", None),
+            )
+
+        filtered = self.remove_no_linked_taxa_and_func_after_filter_tflink(
+            [item],
+            type=df_type_lower,
+            silent=True,
+        )
+        return item in filtered
+
+    def _item_exists_in_df_type(self, item: str, df_type: str) -> bool:
+        df_type_lower = df_type.lower()
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            parsed = parse_taxa_func_display_item(item)
+            if parsed is None:
+                return False
+            taxa, func = parsed
+            return (taxa, func) in self.tfa.taxa_func_df.index
+        index = self._get_index_for_df_type(df_type_lower)
+        return item in index
+
+    def _add_limited_items_to_combobox(
+        self,
+        combobox,
+        items,
+        item_label: str,
+        limit: int | None = None,
+    ) -> None:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        total = len(items)
+        if total <= limit:
+            combobox.addItems(list(items))
+            return
+        if isinstance(items, list):
+            preview_items = items[:limit]
+        elif hasattr(items, "iloc"):
+            preview_items = list(items.iloc[:limit])
+        else:
+            preview_items = list(items[:limit])
+        combobox.addItems(preview_items)
+        notice = f"[Showing first {limit:,} of {total:,} {item_label}; type or paste an exact item to use it]"
+        combobox.addItem(notice)
+
+    def _add_items_to_combobox_by_df_type(
+        self,
+        combobox,
+        df_type: str,
+        item_label: str,
+        limit: int | None = None,
+    ) -> None:
+        if limit is None:
+            limit = self.MAX_EAGER_COMBOBOX_ITEMS
+        df_type_lower = df_type.lower()
+
+        if df_type_lower in ["taxa-func", "taxa-function", "taxa-functions"]:
+            preview_items, total = self._format_taxa_func_index_preview(limit)
+            combobox.addItems(preview_items)
+            if total > limit:
+                notice = f"[Showing first {limit:,} of {total:,} {item_label}; type or paste an exact item to use it]"
+                combobox.addItem(notice)
+            return
+
+        items = self._get_index_for_df_type(df_type_lower)
+        self._add_limited_items_to_combobox(combobox, items, item_label, limit)
+
+    def _populate_item_combobox(self, combobox, all_label: str, df_type: str) -> None:
+        combobox.clear()
+        combobox.addItem(all_label)
+        self._add_items_to_combobox_by_df_type(combobox, df_type, df_type)
+        if getattr(combobox, "lineEdit", None) is not None and combobox.lineEdit() is not None:
+            combobox.lineEdit().setPlaceholderText("Type or paste an exact item")
+
+    def _update_basic_peptide_query_combobox(self) -> None:
+        self.comboBox_basic_peptide_query.clear()
+        if getattr(self.comboBox_basic_peptide_query, "lineEdit", None) is not None and self.comboBox_basic_peptide_query.lineEdit() is not None:
+            self.comboBox_basic_peptide_query.lineEdit().setPlaceholderText("Type or paste a peptide sequence")
+        if self.tfa is None:
+            return
+        if hasattr(self.tfa, "get_peptide_sequence_preview"):
+            preview, total = self.tfa.get_peptide_sequence_preview(self.MAX_EAGER_COMBOBOX_ITEMS)
+            self.comboBox_basic_peptide_query.addItems(preview)
+            if total > len(preview):
+                self.comboBox_basic_peptide_query.addItem(
+                    f"[Showing first {len(preview):,} of {total:,} peptides; type or paste an exact item to use it]"
+                )
+            return
+        sequences = self._get_tfa_peptide_df().index
+        self._add_limited_items_to_combobox(
+            self.comboBox_basic_peptide_query,
+            sequences,
+            "peptides",
+        )
+
+    def _estimate_metax_table_memory_mb(self) -> float:
+        if getattr(self, "tfa", None) is None:
+            return 0.0
+        total = 0
+        for name in [
+            "original_df",
+            "processed_original_df",
+            "peptide_df",
+            "peptide_feature_df",
+            "peptide_annotation_df",
+            "taxa_df",
+            "func_df",
+            "taxa_func_df",
+            "func_taxa_df",
+            "protein_df",
+            "custom_df",
+        ]:
+            df = getattr(self.tfa, name, None)
+            if df is not None:
+                total += int(df.memory_usage(deep=True).sum())
+        return total / 1024 / 1024
+
+    def auto_save_metax_obj_to_file(self) -> None:
+        table_memory_mb = self._estimate_metax_table_memory_mb()
+        if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
+            msg = (
+                f"Skip automatic MetaX object save because in-memory tables use "
+                f"{table_memory_mb:.1f} MB. Use Save As manually if a full pickle is needed."
+            )
+            print(msg)
+            self.logger.write_log(msg, "w")
+            return
+        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True, warn_large=False)
+
     def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list:
         '''
         return the list of df_type, ignore capital case
@@ -764,15 +1039,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return: list
         '''
         df_type = df_type.lower()
-        list_dict = {'taxa':self.taxa_list,
-                        'functions':self.func_list, 
-                        'taxa-functions':self.taxa_func_list, 
-                        'peptides':self.peptide_list,
-                        'proteins':self.protein_list,
-                        'custom':self.custom_list}
-        res_list = list_dict.get(df_type, None)
-        if res_list is None:
-            raise ValueError(f"Invalid df_type: {df_type}")
+        res_list = self._get_display_list_by_df_type(df_type)
 
         if remove_no_linked and df_type in ['taxa', 'functions', 'taxa-functions']:
             res_list = self.remove_no_linked_taxa_and_func_after_filter_tflink(res_list, type=df_type, silent=silent)
@@ -1381,9 +1648,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         current_stylesheet = current_app.styleSheet()
         current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
         # update comboBox of basic peptide query
-        if self.tfa and self.tfa.processed_original_df is not None:
-            self.comboBox_basic_peptide_query.clear()
-            self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
+        if self.tfa and getattr(self.tfa, "peptide_annotation_df", None) is not None:
+            self._update_basic_peptide_query_combobox()
 
             
             
@@ -1830,10 +2096,27 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
             
     
-    def save_metax_obj_to_file(self, save_path=None,no_message=False):
+    def save_metax_obj_to_file(self, save_path=None, no_message=False, warn_large=True):
         if getattr(self, 'tfa', None) is None:
             QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
             return
+
+        if warn_large:
+            table_memory_mb = self._estimate_metax_table_memory_mb()
+            if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
+                reply = QMessageBox.question(
+                    self.MainWindow,
+                    "Save MetaX object",
+                    (
+                        f"Current in-memory tables use approximately {table_memory_mb:.1f} MB. "
+                        "Saving a full MetaX pickle may take a long time and may temporarily "
+                        "increase memory usage. Continue?"
+                    ),
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
+                )
+                if reply != QMessageBox.Yes:
+                    return
         
         # save settings to QSettings object
         self.save_basic_settings()
@@ -1905,7 +2188,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         # save settings.ini only
                         self.save_basic_settings()
                     else:
-                        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+                        self.auto_save_metax_obj_to_file()
                 else: # close without saving
                     # save settings.ini only
                     self.save_basic_settings()
@@ -1990,6 +2273,115 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         layout.addWidget(new_line_edit, *position[0:2])  # position is a tuple of 4 elements including (row, column, rowspan, columnspan)
 
         return new_line_edit
+
+    def _set_widgets_enabled(self, widget_names, enabled):
+        for name in widget_names:
+            widget = getattr(self, name, None)
+            if widget is not None:
+                widget.setEnabled(enabled)
+
+    def _get_unit_specific_settings_button(self):
+        widget = getattr(self, "pushButton_pep_direct_to_otf_unit_specific_settings", None)
+        if widget is not None:
+            return widget
+        try:
+            for button in self.MainWindow.findChildren(QtWidgets.QPushButton):
+                if button.text().strip() == "Unit-specific Settings...":
+                    return button
+        except Exception:
+            return None
+        return None
+
+    def _set_unit_specific_controls_enabled(self, enabled: bool):
+        self._set_widgets_enabled(
+            [
+                "label_unit_specific_mainfest",
+                "label_unit_specific_manifest",
+                "lineEdit_pep_direct_to_otf_unit_specific_manifest_path",
+                "pushButton_open_pep_direct_to_otf_unit_specific_mainfest_path",
+                "pushButton_open_pep_direct_to_otf_unit_specific_manifest_path",
+                "pushButton_pep_direct_to_otf_unit_specific_settings",
+                "label_pep_direct_to_otf_use_unit_specific_genome_threshold",
+                "comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold",
+            ],
+            enabled,
+        )
+        settings_button = self._get_unit_specific_settings_button()
+        if settings_button is not None:
+            settings_button.setEnabled(enabled)
+
+    def _set_selected_genome_list_controls_enabled(self, enabled: bool):
+        self._set_widgets_enabled(
+            [
+                "pushButton_pep_direct_to_otf_open_genome_list_file",
+                "pushButton_pep_direct_to_otf_open_window_paste_gnome_list",
+                "pushButton_pep_direct_to_otf_reset_selected_genome_list",
+                "label__pep_direct_to_otf_selected_genome_num",
+            ],
+            enabled,
+        )
+
+    def _set_metaumbra_scoring_controls_enabled(self, enabled: bool):
+        self._set_widgets_enabled(
+            [
+                "lineEdit_pep_direct_to_otf_metaumbra_peptide_error_col",
+                "lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col",
+                "doubleSpinBox_pep_direct_to_otf_metaumbra_single_peptide_error",
+                "doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff",
+                "doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff",
+            ],
+            enabled,
+        )
+
+    def _set_otf_annotation_controls_enabled(self, enabled: bool):
+        self._set_widgets_enabled(
+            [
+                "doubleSpinBox_pep_direct_to_otf_LCA_threshold",
+                "comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode",
+            ],
+            enabled,
+        )
+
+    def update_pep_direct_to_otf_mode_state(self):
+        use_unit_specific = (
+            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
+            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
+        )
+
+        if use_unit_specific:
+            with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_use_selected_genome_list):
+                self.checkBox_pep_direct_to_otf_use_selected_genome_list.setChecked(False)
+            with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_stop_after_metaumbra):
+                self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setChecked(False)
+
+            self.checkBox_pep_direct_to_otf_use_selected_genome_list.setEnabled(False)
+            self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setEnabled(False)
+
+            self._set_selected_genome_list_controls_enabled(False)
+            self._set_metaumbra_scoring_controls_enabled(False)
+            self._set_unit_specific_controls_enabled(True)
+            self._set_otf_annotation_controls_enabled(True)
+
+            self.label_224.setText('OTFs Save To')
+            self.lineEdit_pep_direct_to_otf_output_path.setStatusTip('The path for save the OTF result')
+            if hasattr(self.lineEdit_pep_direct_to_otf_output_path, 'default_filename'):
+                self.lineEdit_pep_direct_to_otf_output_path.default_filename = 'OTF_direct_anno.tsv'
+            return
+
+        self._set_unit_specific_controls_enabled(False)
+
+        use_selected = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
+        stop_after = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
+
+        self.checkBox_pep_direct_to_otf_use_selected_genome_list.setEnabled(not stop_after)
+        self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setEnabled(not use_selected)
+
+        self._set_selected_genome_list_controls_enabled(use_selected)
+        self._set_metaumbra_scoring_controls_enabled(not use_selected)
+        if not use_selected and stop_after and hasattr(self, "doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff"):
+            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(False)
+        self._set_otf_annotation_controls_enabled(not stop_after)
+        self.update_pep_direct_to_otf_output_mode()
 
     def update_pep_direct_to_otf_output_mode(self):
         stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
@@ -2406,30 +2798,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     @staticmethod
     def _is_parquet_path(file_path: str) -> bool:
-        return str(file_path).lower().endswith(('.parquet', '.parq'))
+        return is_parquet_path(file_path)
 
-    @staticmethod
-    def _diann_parquet_required_columns() -> list[str]:
-        return ['Run', 'Stripped.Sequence', 'Evidence', 'Q.Value', 'Precursor.Normalised']
-
-    @staticmethod
-    def _diann_parquet_intensity_prefix() -> str:
-        return 'Precursor.Normalised.'
-
-    @staticmethod
-    def _diann_parquet_score_col() -> str:
-        return 'Evidence'
-
-    @staticmethod
-    def _diann_parquet_error_col() -> str:
-        return 'Q.Value'
-
-    def _apply_diann_parquet_metaumbra_columns(self) -> None:
+    def _apply_metaumbra_columns(self, schema: PeptideTableSchema) -> None:
         self.lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col.setText(
-            self._diann_parquet_score_col()
+            schema.score_col or ""
         )
         self.lineEdit_pep_direct_to_otf_metaumbra_peptide_error_col.setText(
-            self._diann_parquet_error_col()
+            schema.error_col or ""
         )
 
     def _read_parquet_preview(self, file_path: str, batch_size: int = 25) -> tuple[list[str], pd.DataFrame]:
@@ -2688,13 +3064,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             columns, preview_df = self._read_pep_direct_to_otf_peptide_table_preview(peptide_table_path)
             peptide_col = self._infer_pep_direct_to_otf_peptide_column(columns)
-            if self._is_parquet_path(peptide_table_path):
-                missing = [col for col in self._diann_parquet_required_columns() if col not in columns]
-                if missing:
-                    raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
-                peptide_col = 'Stripped.Sequence'
-                sample_prefix = self._diann_parquet_intensity_prefix()
-                self._apply_diann_parquet_metaumbra_columns()
+            diann_parquet_detected = (
+                self._is_parquet_path(peptide_table_path)
+                and is_diann_parquet(columns)
+            )
+            if diann_parquet_detected:
+                schema = resolve_diann_parquet_schema(
+                    columns,
+                    require_score_columns=True,
+                )
+                peptide_col = schema.peptide_col
+                sample_prefix = schema.intensity_col_prefix
+                self._apply_metaumbra_columns(schema)
             else:
                 sample_prefix = self._infer_pep_direct_to_otf_sample_prefix(columns, preview_df)
         except Exception as exc:
@@ -2715,123 +3096,62 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.comboBox_pep_direct_to_otf_peptide_col_name.setCurrentText(peptide_col)
         self.comboBox_pep_direct_to_otf_peptide_col_name.blockSignals(False)
 
-        if sample_prefix:
-            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setText(sample_prefix)
-            self.lineEdit_pep_direct_to_otf_sample_col_prefix.setStatusTip(
-                f"Auto-detected prefix from peptide table: {sample_prefix}"
+        intensity_selector = self.comboBox_pep_direct_to_otf_intensity_column
+        intensity_selector.blockSignals(True)
+        intensity_selector.clear()
+        if diann_parquet_detected:
+            intensity_selector.setEditable(False)
+            intensity_selector.addItems(available_diann_intensity_columns(columns))
+            intensity_selector.setCurrentText(schema.intensity_col)
+            self.label_227.setText("DIA-NN Intensity Column")
+            intensity_selector.setStatusTip(
+                "Select the DIA-NN parquet column used to build sample intensities."
             )
-
-    @staticmethod
-    def _safe_sample_column_name(prefix: str, run: str) -> str:
-        run = str(run).strip()
-        run_name = os.path.splitext(ntpath.basename(run))[0] if run else 'unknown_run'
-        run_name = re.sub(r'[^A-Za-z0-9_.-]+', '_', run_name).strip('_')
-        return f'{prefix}{run_name or "unknown_run"}'
+        else:
+            intensity_selector.setEditable(True)
+            if sample_prefix:
+                intensity_selector.addItem(sample_prefix)
+                intensity_selector.setCurrentText(sample_prefix)
+            self.label_227.setText("Prefix of Intensity Column")
+            intensity_selector.setStatusTip(
+                "Prefix used to identify intensity columns in the peptide table."
+            )
+        intensity_selector.blockSignals(False)
 
     def _prepare_diann_parquet_for_pep_direct_to_otf(
         self,
         parquet_path: str,
         output_path: str,
+        intensity_col: str,
     ) -> tuple[str, str, str, str, dict]:
-        required_columns = self._diann_parquet_required_columns()
         output_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
         output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'pep_direct_to_otf'
         prepared_path = os.path.join(output_dir, f'{output_stem}_diann_parquet_peptide_table.tsv')
 
         print(f"Preparing DIA-NN parquet peptide table: {parquet_path}")
-        try:
-            df = pd.read_parquet(parquet_path, columns=required_columns)
-        except Exception as exc:
-            raise RuntimeError(
-                "Failed to read DIA-NN parquet. Make sure the file is a DIA-NN report parquet "
-                f"with columns {required_columns}."
-            ) from exc
-
-        missing = [col for col in required_columns if col not in df.columns]
-        if missing:
-            raise ValueError(f"DIA-NN parquet is missing required columns: {missing}")
-
-        df = df.dropna(subset=['Run', 'Stripped.Sequence'])
-        if df.empty:
-            raise ValueError("DIA-NN parquet contains no rows with both Run and Stripped.Sequence.")
-
-        df['Run'] = df['Run'].astype(str)
-        df['Stripped.Sequence'] = df['Stripped.Sequence'].astype(str)
-        for col in ['Evidence', 'Q.Value', 'Precursor.Normalised']:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-
-        grouped = (
-            df.groupby(['Run', 'Stripped.Sequence'], as_index=False)
-            .agg(
-                Evidence=('Evidence', 'max'),
-                **{
-                    'Q.Value': ('Q.Value', 'min'),
-                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
-                },
-            )
+        prepared = prepare_diann_parquet_for_direct_otf(
+            parquet_path,
+            require_score_columns=True,
+            intensity_col=intensity_col,
         )
-
-        intensity_prefix = self._diann_parquet_intensity_prefix()
-        run_to_column: dict[str, str] = {}
-        used_columns: set[str] = set()
-        for run in sorted(grouped['Run'].dropna().astype(str).unique()):
-            base_column = self._safe_sample_column_name(intensity_prefix, run)
-            column = base_column
-            suffix = 2
-            while column in used_columns:
-                column = f'{base_column}_{suffix}'
-                suffix += 1
-            used_columns.add(column)
-            run_to_column[run] = column
-
-        grouped['sample_col'] = grouped['Run'].map(run_to_column)
-        wide = (
-            grouped.pivot_table(
-                index='Stripped.Sequence',
-                columns='sample_col',
-                values='Precursor.Normalised',
-                aggfunc='sum',
-                fill_value=0,
-            )
-            .reset_index()
-        )
-        wide.columns.name = None
-
-        summary = (
-            grouped.groupby('Stripped.Sequence', as_index=False)
-            .agg(
-                Run=('Run', lambda values: ';'.join(sorted(set(map(str, values))))),
-                Evidence=('Evidence', 'max'),
-                **{
-                    'Q.Value': ('Q.Value', 'min'),
-                    'Precursor.Normalised': ('Precursor.Normalised', 'sum'),
-                },
-            )
-        )
-
-        prepared_df = summary.merge(wide, on='Stripped.Sequence', how='left')
-        ordered_cols = [
-            'Run',
-            'Stripped.Sequence',
-            'Evidence',
-            'Q.Value',
-            'Precursor.Normalised',
-        ] + [col for col in prepared_df.columns if col.startswith(intensity_prefix)]
-        prepared_df = prepared_df.loc[:, ordered_cols]
-        prepared_df.to_csv(prepared_path, sep='\t', index=False)
-
+        prepared.dataframe.to_csv(prepared_path, sep='\t', index=False)
         metadata = {
-            "input_peptide_table_format": "diann_parquet",
-            "input_peptide_table_original_path": parquet_path,
+            **prepared.metadata,
             "prepared_peptide_table_path": prepared_path,
-            "prepared_peptide_rows": int(prepared_df.shape[0]),
-            "prepared_sample_columns": len(run_to_column),
         }
         print(
             "Prepared DIA-NN parquet peptide table: "
-            f"{prepared_path} (peptides={prepared_df.shape[0]}, runs={len(run_to_column)})"
+            f"{prepared_path} (peptides={prepared.dataframe.shape[0]}, "
+            f"runs={prepared.metadata['prepared_sample_columns']}, "
+            f"intensity={prepared.intensity_col})"
         )
-        return prepared_path, '\t', 'Stripped.Sequence', intensity_prefix, metadata
+        return (
+            prepared_path,
+            '\t',
+            prepared.peptide_col,
+            prepared.intensity_col_prefix,
+            metadata,
+        )
         
     def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
         digested_genome_folder_path = QFileDialog.getExistingDirectory(
@@ -2867,6 +3187,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pep_direct_to_otf_output_path = os.path.normpath(pep_direct_to_otf_output_path)
         self.lineEdit_pep_direct_to_otf_output_path.setText(pep_direct_to_otf_output_path)
 
+    def set_lineEdit_pep_direct_to_otf_unit_specific_manifest_path(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.MainWindow,
+            'Open MetaUmbra unit-specific manifest JSON',
+            self.last_path,
+            'JSON files (*.json);;All files (*)',
+        )
+        if file_path:
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.setText(os.path.normpath(file_path))
+            self.last_path = os.path.dirname(file_path)
+            self.unit_specific_gui_config.manifest_path = os.path.normpath(file_path)
+
     def _decode_pep_direct_to_otf_separator(self, separator: str) -> str:
         separator = separator or ''
         if separator == r'\t':
@@ -2874,6 +3206,61 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if separator == r'\s':
             return r'\s+'
         return separator
+
+    def _get_unit_specific_gui_config_from_controls(self) -> UnitSpecificGuiConfig:
+        config = getattr(self, "unit_specific_gui_config", UnitSpecificGuiConfig())
+        manifest_path = ""
+        genome_threshold = config.genome_threshold
+        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+            manifest_path = self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.text().strip()
+        if hasattr(self, "comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold"):
+            genome_threshold = (
+                self.comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold.currentText().strip()
+                or genome_threshold
+            )
+        return UnitSpecificGuiConfig(
+            manifest_path=manifest_path or config.manifest_path,
+            genome_threshold=genome_threshold,
+            input_sample_col_prefix=config.input_sample_col_prefix,
+            on_missing_sample=config.on_missing_sample,
+            on_empty_unit=config.on_empty_unit,
+            save_per_unit_outputs=config.save_per_unit_outputs,
+            n_jobs=config.n_jobs,
+        )
+
+    def open_pep_direct_to_otf_unit_specific_settings(self):
+        config = self._get_unit_specific_gui_config_from_controls()
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
+        intensity_selector_value = (
+            self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+        )
+        input_intensity_prefix = intensity_selector_value or None
+        diann_intensity_col = None
+        if peptide_table_path and self._is_parquet_path(peptide_table_path):
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            if is_diann_parquet(parquet_columns):
+                input_intensity_prefix = None
+                diann_intensity_col = intensity_selector_value or None
+        dialog = UnitSpecificSettingsDialog(
+            parent=self.MainWindow,
+            peptide_table_path=peptide_table_path,
+            peptide_col=self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip(),
+            peptide_table_separator=self._decode_pep_direct_to_otf_separator(
+                self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
+            ),
+            input_intensity_prefix=input_intensity_prefix,
+            diann_intensity_col=diann_intensity_col,
+            current_config=config,
+        )
+        if dialog.exec_() == QDialog.Accepted:
+            self.unit_specific_gui_config = dialog.get_config()
+            if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+                self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.setText(
+                    self.unit_specific_gui_config.manifest_path
+                )
+            if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
+                self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.setChecked(True)
+            self.update_pep_direct_to_otf_mode_state()
 
     def _parse_pep_direct_to_otf_genome_text(self, text: str) -> list[str]:
         genomes = []
@@ -3095,7 +3482,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         
     def run_after_set_multi_tables(self):
-        num_peptide = self.tfa.peptide_df.shape[0]
+        num_peptide = self._get_tfa_peptide_count()
         num_func = self.tfa.func_df.shape[0]
         num_taxa = self.tfa.taxa_df.shape[0]
         num_taxa_func = self.tfa.taxa_func_df.shape[0]
@@ -3110,18 +3497,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.tfa.stat_mean_by_zero_dominant = self.settings.value("stat_mean_by_zero_dominant", type=bool)
 
         # add tables to table dict
+        self.table_provider_dict = {}
+        if not self.tfa.any_df_mode:
+            peptide_feature_label = (
+                "unit-specific peptide features"
+                if getattr(self.tfa, "unit_specific_mode", False)
+                else "peptide annotation features"
+            )
+            self.table_provider_dict.update({
+                'peptides': lambda: self._get_tfa_peptide_df(),
+                peptide_feature_label: lambda: self._get_tfa_peptide_feature_df(),
+                'functions-taxa': lambda: self._get_tfa_func_taxa_df(),
+            })
+            if self.tfa.protein_df is not None:
+                self.table_provider_dict['proteins'] = lambda: self.tfa.protein_df
         if self.table_dict == {}:
             if self.tfa.any_df_mode:
                 self.update_table_dict('custom', self.tfa.custom_df)
             else:
-                self.update_table_dict('peptides', self.tfa.peptide_df)
                 self.update_table_dict('taxa', self.tfa.taxa_df)
                 self.update_table_dict('functions', self.tfa.func_df)
                 self.update_table_dict('taxa-functions', self.tfa.taxa_func_df)
-                self.update_table_dict('functions-taxa', self.tfa.func_taxa_df)
-                self.update_table_dict('proteins', self.tfa.protein_df)
         else:
-            self.listWidget_table_list.addItems( list(self.table_dict.keys()))
+            self.listWidget_table_list.clear()
+            names = list(self.table_dict.keys())
+            names.extend(name for name in self.table_provider_dict if name not in self.table_dict)
+            self.listWidget_table_list.addItems(names)
             
 
         # get taxa and function list
@@ -3129,8 +3530,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.func_list_linked = self.tfa.taxa_func_df.index.get_level_values(1).unique().tolist()
         self.taxa_list = self.tfa.taxa_df.index.tolist()
         self.func_list = self.tfa.func_df.index.tolist()
-        self.taxa_func_list = list(set([f"{i[0]} <{i[1]}>" for i in self.tfa.taxa_func_df.index.to_list()]))
-        self.peptide_list = self.tfa.peptide_df.index.tolist()
+        self.taxa_func_list = []
+        self.peptide_list = []
 
 
         # update taxa and function and group in comboBox
@@ -3142,8 +3543,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.comboBox_basic_heatmap_selection_list.clear()
 
         # update comboBox of basic peptide query
-        self.comboBox_basic_peptide_query.clear()
-        self.comboBox_basic_peptide_query.addItems(self.tfa.processed_original_df[self.tfa.peptide_col_name].tolist())
+        self._update_basic_peptide_query_combobox()
 
         
         # clear list of taxa-func link network
@@ -3157,7 +3557,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.enable_multi_button(True)
 
         # save metax obj as pickle file
-        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True)
+        self.auto_save_metax_obj_to_file()
         
         #Second Final Step: run a change event for each table comboBox, to update the GUI
         self.change_event_checkBox_basic_plot_table()
@@ -3479,7 +3879,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         env.setdefault("PYTHONIOENCODING", "utf-8")
         return repo_root, env
 
-    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.2.0") -> None:
+    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.3.6") -> None:
         proc = subprocess.run(
             [sys.executable, '-m', 'metaumbra', '--version'],
             stdout=subprocess.PIPE,
@@ -3640,12 +4040,150 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             genome_selection_metadata=genome_selection_metadata,
         )
 
+    def run_pep_direct_to_otf_unit_specific(self):
+        config = self._get_unit_specific_gui_config_from_controls()
+        peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
+        digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
+        taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
+        output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
+        unit_specific_manifest_path = config.manifest_path
+        peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
+        table_separator = self._decode_pep_direct_to_otf_separator(
+            self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
+        )
+        lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
+        protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text().strip()
+        duplicate_peptide_handling_mode = (
+            self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip() or "sum"
+        )
+        diann_intensity_col = None
+        if self._is_parquet_path(peptide_table_path):
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            if is_diann_parquet(parquet_columns):
+                diann_intensity_col = (
+                    self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+                    or None
+                )
+
+        required_values = [
+            ("Peptide table", peptide_table_path),
+            ("Digested genome folder", digested_genome_folder_path),
+            ("Protein to TaxaFunc database", taxafunc_anno_db_path),
+            ("OTFs Save To", output_path),
+            ("Unit-specific manifest", unit_specific_manifest_path),
+            ("Peptide column", peptide_col),
+            ("Separator of peptide table", table_separator),
+            ("Genome separator in protein ID", protein_genome_separator),
+        ]
+        for label, value in required_values:
+            if value == "":
+                QMessageBox.warning(self.MainWindow, "Warning", f"Please set {label}.")
+                return None
+
+        file_checks = [
+            ("Peptide table", peptide_table_path),
+            ("Protein to TaxaFunc database", taxafunc_anno_db_path),
+            ("Unit-specific manifest", unit_specific_manifest_path),
+        ]
+        for label, path in file_checks:
+            if not os.path.isfile(path):
+                QMessageBox.warning(self.MainWindow, "Warning", f"{label} not found:\n{path}")
+                return None
+
+        if not os.path.isdir(digested_genome_folder_path):
+            QMessageBox.warning(
+                self.MainWindow,
+                "Warning",
+                f"Digested genome folder not found:\n{digested_genome_folder_path}",
+            )
+            return None
+
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.isdir(output_dir):
+            QMessageBox.warning(self.MainWindow, "Warning", f"Output directory not found:\n{output_dir}")
+            return None
+
+        if lca_threshold < 0 or lca_threshold > 1:
+            QMessageBox.warning(self.MainWindow, "Warning", "LCA threshold must be between 0 and 1.")
+            return None
+        if duplicate_peptide_handling_mode not in {"sum", "max", "min", "mean", "first", "keep"}:
+            QMessageBox.warning(
+                self.MainWindow,
+                "Warning",
+                f"Unsupported duplicate peptide handling mode: {duplicate_peptide_handling_mode}",
+            )
+            return None
+
+        genome_threshold = None if config.genome_threshold == "auto" else config.genome_threshold
+        input_sample_col_prefix = config.input_sample_col_prefix or None
+        n_jobs = config.n_jobs
+
+        try:
+            self.logger.write_log(
+                f'run_pep_direct_to_otf_unit_specific: peptide_table_path:{peptide_table_path} '
+                f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
+                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_specific_manifest_path} '
+                f'genome_threshold:{genome_threshold or "auto"} '
+                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode} '
+                f'n_jobs:{n_jobs if n_jobs is not None else "auto"}'
+            )
+
+            workflow_params = {
+                "peptide_table_path": peptide_table_path,
+                "unit_specific_manifest_path": unit_specific_manifest_path,
+                "taxafunc_anno_db_path": taxafunc_anno_db_path,
+                "output_path": output_path,
+                "digested_genome_folders": digested_genome_folder_path,
+                "genome_threshold": genome_threshold,
+                "peptide_col": peptide_col,
+                "input_sample_col_prefix": input_sample_col_prefix,
+                "output_sample_col_prefix": "Intensity_",
+                "table_separator": table_separator,
+                "lca_threshold": lca_threshold,
+                "genome_mode": True,
+                "distinct_genome_threshold": 0,
+                "protein_genome_separator": protein_genome_separator,
+                "save_per_unit_outputs": config.save_per_unit_outputs,
+                "include_unit_specific_sequence": False,
+                "duplicate_peptide_handling_mode": duplicate_peptide_handling_mode,
+                "on_missing_sample": config.on_missing_sample,
+                "on_empty_unit": config.on_empty_unit,
+                "n_jobs": n_jobs,
+                "merge_chunksize": 100_000,
+                "collect_unique_stats": False,
+                "diann_intensity_col": diann_intensity_col,
+            }
+
+            def pep_direct_to_otf_unit_specific_wrapper():
+                annotator = UnitSpecificOTFAnnotator(**workflow_params)
+                return annotator.run()
+
+            self.run_in_new_window(
+                pep_direct_to_otf_unit_specific_wrapper,
+                show_msg=True,
+                workflow_step=unit_specific_otf_step(workflow_params),
+            )
+        except Exception as e:
+            self.logger.write_log(f'run_pep_direct_to_otf_unit_specific error: {e}', 'e')
+            QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
+
     def run_pep_dircet_to_otf(self):
+        if (
+            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
+            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
+        ):
+            return self.run_pep_direct_to_otf_unit_specific()
+
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
         table_separator = self._decode_pep_direct_to_otf_separator(self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip())
         peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
-        intensity_col_prefix = self.lineEdit_pep_direct_to_otf_sample_col_prefix.text().strip()
+        intensity_selector_value = (
+            self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
+        )
+        input_intensity_prefix = intensity_selector_value
+        diann_intensity_col = None
+        mapper_intensity_col_prefix = input_intensity_prefix
         protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
@@ -3656,13 +4194,30 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
         original_peptide_table_path = peptide_table_path
         parquet_conversion_metadata = {}
+        diann_parquet_detected = False
         if self._is_parquet_path(peptide_table_path):
             table_separator = '\t'
-            peptide_col = peptide_col or 'Stripped.Sequence'
-            intensity_col_prefix = intensity_col_prefix or self._diann_parquet_intensity_prefix()
-            self._apply_diann_parquet_metaumbra_columns()
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            diann_parquet_detected = is_diann_parquet(parquet_columns)
+            if diann_parquet_detected:
+                diann_intensity_col = intensity_selector_value
+                schema = resolve_diann_parquet_schema(
+                    parquet_columns,
+                    require_score_columns=True,
+                    intensity_col=diann_intensity_col,
+                )
+                peptide_col = schema.peptide_col
+                mapper_intensity_col_prefix = schema.intensity_col_prefix
+                self._apply_metaumbra_columns(schema)
 
-        for value in [peptide_table_path, digested_genome_folder_path, output_path, table_separator, peptide_col, intensity_col_prefix]:
+        for value in [
+            peptide_table_path,
+            digested_genome_folder_path,
+            output_path,
+            table_separator,
+            peptide_col,
+            mapper_intensity_col_prefix,
+        ]:
             if value == '':
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
                 return None
@@ -3692,17 +4247,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
             return None
 
-        if self._is_parquet_path(peptide_table_path):
+        if diann_parquet_detected:
             try:
                 (
                     peptide_table_path,
                     table_separator,
                     peptide_col,
-                    intensity_col_prefix,
+                    mapper_intensity_col_prefix,
                     parquet_conversion_metadata,
                 ) = self._prepare_diann_parquet_for_pep_direct_to_otf(
                     parquet_path=original_peptide_table_path,
                     output_path=output_path,
+                    intensity_col=diann_intensity_col,
                 )
             except Exception:
                 error_message = traceback.format_exc()
@@ -3741,7 +4297,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         digested_genome_folder_path=digested_genome_folder_path,
                         table_separator=table_separator,
                         peptide_col=peptide_col,
-                        intensity_col_prefix=intensity_col_prefix,
+                        intensity_col_prefix=mapper_intensity_col_prefix,
                         protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
                         output_path=output_path,
                         taxafunc_anno_db_path=taxafunc_anno_db_path,
@@ -3789,7 +4345,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     digested_genome_folder_path=digested_genome_folder_path,
                     table_separator=table_separator,
                     peptide_col=peptide_col,
-                    intensity_col_prefix=intensity_col_prefix,
+                    intensity_col_prefix=mapper_intensity_col_prefix,
                     protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
                     output_path=output_path,
                     taxafunc_anno_db_path=taxafunc_anno_db_path,
@@ -3816,8 +4372,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return
         self.table_dict[table_name] = df
         self.listWidget_table_list.clear()
-        self.listWidget_table_list.addItems(
-            list(self.table_dict.keys()))
+        names = list(self.table_dict.keys())
+        names.extend(name for name in getattr(self, "table_provider_dict", {}) if name not in self.table_dict)
+        self.listWidget_table_list.addItems(names)
         
         self.logger.write_log(f'table_dict updated: {table_name}')
 
@@ -3827,7 +4384,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         try:
             self.show_message('Data is loading, please wait...')
             table_name = self.listWidget_table_list.currentItem().text()
-            df = self.table_dict[table_name]
+            if table_name in self.table_dict:
+                df = self.table_dict[table_name]
+            elif table_name in getattr(self, "table_provider_dict", {}):
+                df = self.table_provider_dict[table_name]()
+                if df is None:
+                    raise ValueError(f"{table_name} table is not available.")
+                self.update_table_dict(table_name, df)
+            else:
+                raise KeyError(table_name)
             self.show_table(df, title=table_name)
         except Exception as e:
             self.logger.write_log(f'show_table_in_list error: {e}', 'e')
@@ -4632,16 +5197,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.basic_heatmap_list.remove(item.text())
     
     def update_basic_heatmap_combobox(self, type_list = 'taxa'):
-        self.comboBox_basic_heatmap_selection_list.clear()
-        type_dict = {'Taxa': ['All Taxa', self.taxa_list], 
-                    'Functions': ['All Functions', self.func_list], 
-                    'Taxa-Functions': ['All Taxa-Functions', self.taxa_func_list],
-                    'Peptides': ['All Peptides', self.peptide_list],
-                    'Proteins': ['All Proteins', self.protein_list],
-                    'Custom': ['All Items', self.custom_list]}
-        
-        self.comboBox_basic_heatmap_selection_list.addItem(type_dict[type_list][0])
-        self.comboBox_basic_heatmap_selection_list.addItems(type_dict[type_list][1])
+        type_dict = {'Taxa': 'All Taxa',
+                    'Functions': 'All Functions',
+                    'Taxa-Functions': 'All Taxa-Functions',
+                    'Peptides': 'All Peptides',
+                    'Proteins': 'All Proteins',
+                    'Custom': 'All Items'}
+
+        self._populate_item_combobox(
+            self.comboBox_basic_heatmap_selection_list,
+            type_dict[type_list],
+            type_list,
+        )
         self.add_basic_heatmap_list()
 
             
@@ -4994,21 +5561,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         current_table = self.comboBox_co_expr_table.currentText()
         #! NOT NEED TO add 'All Items' to co_expr_list,becaused it is list for focus
-        update_list = []
-        if current_table == 'Taxa':
-            update_list = self.taxa_list
-        elif current_table == 'Functions':
-            update_list = self.func_list
-        elif current_table == 'Taxa-Functions':
-            update_list = self.taxa_func_list
-        elif current_table == 'Peptides':
-            update_list = self.peptide_list
-        elif current_table == 'Proteins':
-            update_list = self.protein_list
-        elif current_table == 'Custom':
-            update_list = self.custom_list
-            
-        self.comboBox_co_expr_select_list.addItems(update_list)
+        self._add_items_to_combobox_by_df_type(
+            self.comboBox_co_expr_select_list,
+            current_table,
+            current_table,
+        )
 
     def update_basic_heatmap_list(self, str_list:list | None = None, str_selected:str | None = None):
             if str_selected is not None and str_list is None:
@@ -5020,20 +5577,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         break
 
                 if str_selected != '' and str_selected not in self.basic_heatmap_list:
+                    if str_selected.startswith("[Showing first "):
+                        return None
                     # check if str_selected is in the list
                     def check_if_in_list(str_selected):
                         df_type = self.comboBox_basic_table.currentText()
-                        list_dict = {'Taxa':self.taxa_list, 
-                                     'Functions':self.func_list, 
-                                     'Taxa-Functions':self.taxa_func_list, 
-                                     'Peptides':self.peptide_list, 
-                                     'Proteins':self.protein_list,
-                                     'Custom':self.custom_list}
-                        
-                        if str_selected in list_dict[df_type]:
-                            return True
-                        else:
-                            return False
+                        return self._item_exists_in_df_type(str_selected, df_type)
                     
                     if not check_if_in_list(str_selected):
                         QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
@@ -5171,13 +5720,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def add_a_list_to_list_window(self, df_type, aim_list, str_list=None, input_mode = True):
         def check_if_in_list(str_selected, df_type):
-            df_type = df_type.lower()
-            
-            extracted_list = self.get_list_by_df_type(df_type)
-            if str_selected in extracted_list:
-                return True
-            else:
-                return False
+            if aim_list == 'tfnet':
+                return self._item_has_tflink(str_selected, df_type)
+            return self._item_exists_in_df_type(str_selected, df_type)
                     
         # open a new window allowing user to input text with comma or new line
         self.input_window = InputWindow(self.MainWindow, input_mode=input_mode)
@@ -5208,19 +5753,37 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 else:
                     valid_text_list.append(i)
         else:  # selected_mode == "search"
-            list_data = self.get_list_by_df_type(df_type)
-            search_results = []
-            for i in text_list:
-                # Search for matches where i is part of any item in list_data
-                matches = [item for item in list_data if i.lower() in item.lower()]
-                # Add all matches to search_results
-                search_results.extend(matches)
-            # Remove duplicates from search_results in case there are overlapping matches
-            search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
-            
-            # Remove No Linked Taxa-Functions if aim_list is 'tfnet'
-            if search_results and aim_list == 'tfnet':
-                search_results = self.remove_no_linked_taxa_and_func_after_filter_tflink(search_results, type= df_type.lower())
+            if aim_list == 'tfnet' and df_type.lower() == 'taxa-functions':
+                search_results, search_capped = search_linked_taxa_func_index(
+                    self.tfa.taxa_func_df.index,
+                    text_list,
+                    lambda items: self.remove_no_linked_taxa_and_func_after_filter_tflink(
+                        items,
+                        type='taxa-functions',
+                        silent=True,
+                    ),
+                    self.MAX_EAGER_COMBOBOX_ITEMS,
+                )
+                if search_capped:
+                    QMessageBox.warning(
+                        self.MainWindow,
+                        'Warning',
+                        f'Search results were limited to the first {self.MAX_EAGER_COMBOBOX_ITEMS:,} linked Taxa-Functions.',
+                    )
+            else:
+                list_data = self.get_list_by_df_type(df_type)
+                search_results = []
+                for i in text_list:
+                    # Search for matches where i is part of any item in list_data
+                    matches = [item for item in list_data if i.lower() in item.lower()]
+                    # Add all matches to search_results
+                    search_results.extend(matches)
+                # Remove duplicates from search_results in case there are overlapping matches
+                search_results = [x for i, x in enumerate(search_results) if i == search_results.index(x)]
+
+                # Remove No Linked Taxa-Functions if aim_list is 'tfnet'
+                if search_results and aim_list == 'tfnet':
+                    search_results = self.remove_no_linked_taxa_and_func_after_filter_tflink(search_results, type= df_type.lower())
                 
             # show the search results in a new window, allowing user to select the valid items
             if search_results:
@@ -5342,7 +5905,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
             if str_selected == '':
                 return None
-            elif str_selected not in self.get_list_by_df_type(df_type):
+            elif str_selected.startswith("[Showing first "):
+                return None
+            elif not self._item_exists_in_df_type(str_selected, df_type):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
             elif str_selected not in self.co_expr_focus_list:
                 self.co_expr_focus_list.append(str_selected)
@@ -5435,7 +6000,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
                 return None
             elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions']:
-                df = self.tfa.peptide_df.copy()
+                df = self._get_tfa_peptide_df().copy()
 
             else:
                 peptides_list = []
@@ -5462,15 +6027,39 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 else: # Peptide
                     peptides_list = self.basic_heatmap_list
-                
-                df = self.tfa.peptide_df.loc[peptides_list]
+
+                peptide_df = self._get_tfa_peptide_df()
+                if all(peptide in peptide_df.index for peptide in peptides_list):
+                    df = peptide_df.loc[peptides_list].copy()
+                else:
+                    df = self._get_tfa_peptide_feature_df().loc[peptides_list].copy()
                 df = df[sample_list]
                 
             if plot_type == 'sankey':
-                lookup = (
-                    self.tfa.processed_original_df
-                    .set_index('Sequence')[['Taxon', self.tfa.func_name]]
+                if getattr(self.tfa, "peptide_annotation_df", None) is not None:
+                    lookup_source = self.tfa.peptide_annotation_df
+                else:
+                    lookup_source = self.tfa.get_processed_peptide_table(cache=False)
+
+                lookup_key = (
+                    self.tfa.peptide_identity_col
+                    if self.tfa.peptide_identity_col in lookup_source.columns and df.index.isin(lookup_source[self.tfa.peptide_identity_col]).all()
+                    else self.tfa.peptide_col_name
                 )
+                if lookup_key == self.tfa.peptide_col_name and getattr(self.tfa, "unit_specific_mode", False):
+                    selected_lookup = lookup_source[lookup_source[lookup_key].isin(df.index)]
+                    annotation_counts = selected_lookup.groupby(lookup_key, observed=True)[["Taxon", self.tfa.func_name]].nunique()
+                    ambiguous_sequences = annotation_counts[
+                        (annotation_counts["Taxon"] > 1) | (annotation_counts[self.tfa.func_name] > 1)
+                    ]
+                    if not ambiguous_sequences.empty:
+                        QMessageBox.warning(
+                            self.MainWindow,
+                            "Warning",
+                            "Sankey plot needs unit-specific peptide features when a peptide sequence maps to multiple Taxon/Function annotations.",
+                        )
+                        return None
+                lookup = lookup_source.drop_duplicates(subset=[lookup_key]).set_index(lookup_key)[['Taxon', self.tfa.func_name]]
 
                 aligned = lookup.reindex(df.index)  # 按 df.index 对齐，自动填充缺失为 NaN
 
@@ -5864,15 +6453,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.update_trends_select_combobox(type_list=current_table)
         
     def update_trends_select_combobox(self, type_list):
-        type_dict = { 'taxa': ["All Taxa", self.taxa_list],
-                      'functions': ["All Functions", self.func_list],
-                      'taxa-functions': ["All Taxa-Functions", self.taxa_func_list],
-                      'peptides': ["All Peptides", self.peptide_list],
-                      'proteins': ["All Proteins", self.protein_list],
-                      'custom': ['All Items', self.custom_list]}
+        type_dict = { 'taxa': "All Taxa",
+                      'functions': "All Functions",
+                      'taxa-functions': "All Taxa-Functions",
+                      'peptides': "All Peptides",
+                      'proteins': "All Proteins",
+                      'custom': 'All Items'}
 
-        self.comboBox_trends_selection_list.addItem(type_dict[type_list][0])
-        self.comboBox_trends_selection_list.addItems(type_dict[type_list][1])
+        self._populate_item_combobox(
+            self.comboBox_trends_selection_list,
+            type_dict[type_list],
+            type_list,
+        )
         self.add_trends_list()     
         
         
@@ -5906,13 +6498,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     break
                 
             if str_selected != '' and str_selected not in self.trends_cluster_list:
+                if str_selected.startswith("[Showing first "):
+                    return None
                 def check_if_in_list(str_selected):
                     df_type = self.comboBox_trends_table.currentText()
-                    
-                    if str_selected in self.get_list_by_df_type(df_type):
-                        return True
-                    else:
-                        return False
+                    return self._item_exists_in_df_type(str_selected, df_type)
                 if not check_if_in_list(str_selected):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
                     return None
@@ -8440,19 +9030,30 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     # network
     def update_tfnet_select_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
+        if df_type in ['Taxa-Functions', 'Taxa', 'Functions']:
+            self._populate_tfnet_combobox(df_type)
+
+    def _populate_tfnet_combobox(self, df_type: str) -> None:
+        self.comboBox_tfnet_select_list.clear()
         if df_type == 'Taxa-Functions':
-            self.comboBox_tfnet_select_list.clear()
-            # remove no linked items to avoid error when plot focus list only
-            taxa_func_list = self.get_list_by_df_type('Taxa-Functions', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(taxa_func_list)
-        elif df_type == 'Taxa':
-            self.comboBox_tfnet_select_list.clear()
-            taxa_list = self.get_list_by_df_type('Taxa', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(taxa_list)
-        elif df_type == 'Functions':
-            self.comboBox_tfnet_select_list.clear()
-            func_list = self.get_list_by_df_type('Functions', remove_no_linked=True, silent=True)
-            self.comboBox_tfnet_select_list.addItems(func_list)
+            preview_items, total = format_linked_taxa_func_index_preview(
+                self.tfa.taxa_func_df.index,
+                lambda items: self.remove_no_linked_taxa_and_func_after_filter_tflink(
+                    items,
+                    type="taxa-functions",
+                    silent=True,
+                ),
+                self.MAX_EAGER_COMBOBOX_ITEMS,
+            )
+            self.comboBox_tfnet_select_list.addItems(preview_items)
+            if total > len(preview_items):
+                self.comboBox_tfnet_select_list.addItem(
+                    f"[Showing first {len(preview_items):,} linked Taxa-Functions from {total:,} total Taxa-Functions; type or paste an exact item to use it]"
+                )
+            return
+
+        item_list = self.get_list_by_df_type(df_type, remove_no_linked=True, silent=True)
+        self._add_limited_items_to_combobox(self.comboBox_tfnet_select_list, item_list, df_type)
     
     def add_a_list_to_tfnet_focus_list(self):
         df_type = self.comboBox_tfnet_table.currentText()
@@ -8460,18 +9061,32 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def add_tfnet_selected_to_list(self):
         selected = self.comboBox_tfnet_select_list.currentText().strip()
+        if not selected or selected.startswith("[Showing first "):
+            return None
         self.update_tfnet_focus_list_and_widget(str_selected=selected)
 
 
     def update_tfnet_focus_list_and_widget(self, str_selected: str = '', str_list: list | None = None):
+        df_type = self.comboBox_tfnet_table.currentText()
         if str_selected == '' and str_list is None:
             return None
         elif str_selected != '' and str_list is None:
+            if not self._item_exists_in_df_type(str_selected, df_type):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'Please select a valid item!')
+                return None
+            if not self._item_has_tflink(str_selected, df_type):
+                QMessageBox.warning(self.MainWindow, 'Warning', 'This item has no valid taxa-function link!')
+                return None
             if str_selected not in self.tfnet_fcous_list:
                 self.tfnet_fcous_list.append(str_selected)
             else:
                 QMessageBox.warning(self.MainWindow, 'Warning', f'{str_selected} is already in the list!')
         elif str_selected == '' and str_list is not None:
+            str_list = [
+                normalize_taxa_func_display_item(item) if df_type == 'Taxa-Functions' else item
+                for item in str_list
+                if self._item_exists_in_df_type(item, df_type) and self._item_has_tflink(item, df_type)
+            ]
             for i in str_list:
                 if i not in self.tfnet_fcous_list:
                     self.tfnet_fcous_list.append(i)
@@ -8566,7 +9181,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             elif df_type in 'taxa':
                 df = self.tfa.taxa_func_df
             elif df_type in 'functions':
-                df = self.tfa.func_taxa_df
+                df = self._get_tfa_func_taxa_df()
             df = df[sample_list]
             df = df.loc[(df!=0).any(axis=1)]
             index_list = df.index.get_level_values(0).value_counts().index.tolist()
@@ -8670,18 +9285,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
     def remove_no_linked_taxa_and_func_after_filter_tflink(self, check_list:list, type:str = 'taxa', silent:bool = False) -> list[str]:
         # keep taxa and func only in the taxa_func_linked_dict and remove others
+        type = type.lower()
 
-        if type == 'taxa' or type == 'functions':
-            if type == 'taxa':
-                linked_dict = self.tfa.taxa_func_linked_dict
-            elif type == 'functions':
-                linked_dict = self.tfa.func_taxa_linked_dict
-            removed = [i for i in check_list if i not in linked_dict]
-            check_list = [i for i in check_list if i in linked_dict]
-        elif type == 'taxa-functions':
-            return check_list
-        else:
-            raise ValueError(f'type should be taxa, functions or taxa-functions! but got: {type}')
+        check_list, removed = filter_linked_tfnet_items(
+            check_list,
+            type,
+            self.tfa.taxa_func_linked_dict,
+            self.tfa.func_taxa_linked_dict,
+            taxa_func_index=self.tfa.taxa_func_df.index,
+        )
 
         if removed and not silent:
             removed_str = '\n'.join(removed)

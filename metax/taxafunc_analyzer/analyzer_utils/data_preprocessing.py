@@ -277,11 +277,6 @@ class DataPreprocessing:
         from statsmodels.discrete.discrete_model import NegativeBinomial
         from statsmodels.tools.tools import add_constant
 
-        df = df.copy()
-        
-        
-        
-
         print(f'\n{self._get_current_time()} Start to detect outlier...')
 
         method_value = None
@@ -299,6 +294,8 @@ class DataPreprocessing:
         if method in['missing-value', 'none', None]:
             print('outlier_method is not set, outlier detection did not perform.')
             return df
+
+        df = df.copy()
 
         df_mat = df[self.tfa.sample_list]
         groups_dict = self._get_group_dict(by_group)
@@ -561,20 +558,29 @@ class DataPreprocessing:
         from sklearn.experimental import enable_iterative_imputer
         from sklearn.impute import KNNImputer, IterativeImputer
 
-        df = df.copy()
-        
-    
         print(f'\n{self._get_current_time()} Start to handle missing value...\n')
 
+        if method is None:
+            method = 'drop+drop'
+
+        df = df.copy()
         df_mat = df[self.tfa.sample_list]
         df_mat.index = df.index
 
-        if not df_mat.isnull().any().any():
+        missing_rows = df_mat.isnull().any(axis=1)
+        if not missing_rows.any():
             print('No missing value, skip outlier handling')
             return df
-        
-        if method is None:
-            method = 'drop+drop'
+
+        if method == 'fillzero':
+            print('Fill NA by [fillzero]...')
+            print(f'Number of rows with NA before [fillzero]: [{missing_rows.sum()} in {len(df_mat)} ({missing_rows.sum()/len(df_mat)*100:.2f}%)]')
+            print('Fill NA with 0...')
+            df.loc[:, self.tfa.sample_list] = df_mat.fillna(0)
+            print('No missing value after [fillzero]')
+            print(f'Final number of rows after missing value handling: [{len(df)}]')
+            print(f'\n{self._get_current_time()} Outlier handling finished.\n')
+            return df
             
         method_list = method.split("+")
         method1, method2 = method_list[0], method_list[0] if len(method_list) == 1 else method_list[1]
@@ -796,15 +802,16 @@ class DataPreprocessing:
         - `pd.DataFrame`:  
         The processed DataFrame after applying the specified preprocessing steps.
         """
-        
-        
-        df = df.copy()
-        
-
         if processing_order is None:
             processing_order = ['transform', 'normalize', 'batch']
         else:
             processing_order = processing_order
+
+        if len(processing_order) == 0:
+            print(f'\n{self._get_current_time()} -----Data preprocessing of {df_name.upper()} finished.-----\n')
+            return df
+
+        df = df.copy()
         # perform data processing in order
         for process in processing_order:
             if process == 'batch':

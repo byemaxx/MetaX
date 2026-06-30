@@ -209,6 +209,32 @@ def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> 
     )
 
 
+def unit_specific_otf_step(params: dict[str, Any]) -> AnalysisStep:
+    parameters = dict(params)
+    code = _join_code(
+        "from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator",
+        "",
+        _assignment("unit_specific_otf_params", parameters),
+        "unit_specific_otf = UnitSpecificOTFAnnotator(**unit_specific_otf_params)",
+        "unit_specific_otf_result = unit_specific_otf.run()",
+        'print(f"Saved unit-specific OTF: {unit_specific_otf.output_path}")',
+    )
+    return AnalysisStep(
+        title="Run Unit-specific Peptide Direct to OTF",
+        step_type="unit_specific_peptide_direct_to_otf",
+        inputs={
+            "peptide_table_path": parameters.get("peptide_table_path"),
+            "digested_genome_folders": parameters.get("digested_genome_folders"),
+            "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
+            "unit_specific_manifest_path": parameters.get("unit_specific_manifest_path"),
+        },
+        outputs={"output_path": parameters.get("output_path")},
+        parameters=parameters,
+        code=code,
+        notes=["Recorded from the MetaX GUI unit-specific direct-to-OTF workflow."],
+    )
+
+
 def taxafunc_analyzer_step(
     params: dict[str, Any],
     group_name: str | None = None,
@@ -321,7 +347,7 @@ def deseq2_step(
         "    if key == 'taxa': return getattr(tfa, 'taxa_df', None)",
         "    if key in {'func', 'function', 'functions'}: return getattr(tfa, 'func_df', None)",
         "    if key in {'taxa-func', 'taxa-function', 'taxa-functions'}: return getattr(tfa, 'taxa_func_df', None)",
-        "    if key in {'peptide', 'peptides'}: return getattr(tfa, 'peptide_df', None)",
+        "    if key in {'peptide', 'peptides'}: return tfa.get_peptide_df() if hasattr(tfa, 'get_peptide_df') else getattr(tfa, 'peptide_df', None)",
         "    if key in {'protein', 'proteins'}: return getattr(tfa, 'protein_df', None)",
         "    if key == 'custom': return getattr(tfa, 'custom_df', None)",
         "    raise ValueError(f'Unsupported df_type: {df_type}')",
@@ -393,7 +419,7 @@ def limma_step(
         "    if key == 'taxa': return getattr(tfa, 'taxa_df', None)",
         "    if key in {'func', 'function', 'functions'}: return getattr(tfa, 'func_df', None)",
         "    if key in {'taxa-func', 'taxa-function', 'taxa-functions'}: return getattr(tfa, 'taxa_func_df', None)",
-        "    if key in {'peptide', 'peptides'}: return getattr(tfa, 'peptide_df', None)",
+        "    if key in {'peptide', 'peptides'}: return tfa.get_peptide_df() if hasattr(tfa, 'get_peptide_df') else getattr(tfa, 'peptide_df', None)",
         "    if key in {'protein', 'proteins'}: return getattr(tfa, 'protein_df', None)",
         "    if key == 'custom': return getattr(tfa, 'custom_df', None)",
         "    raise ValueError(f'Unsupported df_type: {df_type}')",
@@ -496,9 +522,9 @@ def _gui_action_replay_helper_code() -> str:
                 "functions": getattr(tfa, "func_df", None),
                 "function": getattr(tfa, "func_df", None),
                 "taxa-functions": getattr(tfa, "taxa_func_df", None),
-                "functions-taxa": getattr(tfa, "func_taxa_df", None),
-                "peptides": getattr(tfa, "peptide_df", None),
-                "peptide": getattr(tfa, "peptide_df", None),
+                "functions-taxa": tfa.get_func_taxa_df() if hasattr(tfa, "get_func_taxa_df") else getattr(tfa, "func_taxa_df", None),
+                "peptides": tfa.get_peptide_df() if hasattr(tfa, "get_peptide_df") else getattr(tfa, "peptide_df", None),
+                "peptide": tfa.get_peptide_df() if hasattr(tfa, "get_peptide_df") else getattr(tfa, "peptide_df", None),
                 "proteins": getattr(tfa, "protein_df", None),
                 "protein": getattr(tfa, "protein_df", None),
                 "custom": getattr(tfa, "custom_df", None),

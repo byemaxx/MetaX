@@ -58,7 +58,8 @@ _ensure_project_root_on_syspath()
 def query_peptide_proteins(db_file, peptide_list, 
                            chunk_size=10000, 
                            removed_genomes_set:set|None = None,
-                           selected_genomes_set:set|None = None):
+                           selected_genomes_set:set|None = None,
+                           protein_genome_separator: str = "_"):
     """
     Query peptide to protein mapping from a database with progress tracking.
 
@@ -68,6 +69,7 @@ def query_peptide_proteins(db_file, peptide_list,
         chunk_size (int): The number of peptides to query in one batch (default: 10000).
         removed_genomes_set (set[str] | None): Genomes to exclude. None means no exclusion; empty set means exclude nothing.
         selected_genomes_set (set[str] | None): Genomes to include. None means no inclusion filter; empty set means include none.
+        protein_genome_separator (str): Separator between the genome and protein portions of a protein ID.
 
     Note:
         If a genome appears in both selected and removed sets, removal takes precedence.
@@ -122,9 +124,17 @@ def query_peptide_proteins(db_file, peptide_list,
 
                 # filtering by selected/removed genomes
                 if sel_set is not None:
-                    proteins = [p for p in proteins if p.split('_', 1)[0] in sel_set]
+                    proteins = [
+                        p
+                        for p in proteins
+                        if p.split(protein_genome_separator, 1)[0] in sel_set
+                    ]
                 if rm_set is not None:
-                    proteins = [p for p in proteins if p.split('_', 1)[0] not in rm_set]
+                    proteins = [
+                        p
+                        for p in proteins
+                        if p.split(protein_genome_separator, 1)[0] not in rm_set
+                    ]
 
                 peptide_proteins[peptide] = ';'.join(proteins) if proteins else ""
 
@@ -328,6 +338,305 @@ def _process_digested_genome_batch_for_mapping(
     return mapping
 
 
+def _process_digested_genome_batch_for_nested_mapping(
+    file_paths: list[str],
+    peptide_set: set[str],
+    protein_genome_separator: str,
+    digested_peptide_col: str,
+    digested_protein_col: str,
+    sep: str = "\t",
+    chunksize: int = 500_000,
+) -> tuple[dict[str, dict[str, set[str]]], list[str]]:
+    """Process digested genome TSVs into peptide -> genome -> proteins."""
+    mapping: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    warnings_list: list[str] = []
+
+    for file_path in file_paths:
+        genome_id = pathlib.Path(file_path).stem
+        try:
+            for chunk in pd.read_csv(
+                file_path,
+                sep=sep,
+                usecols=[digested_peptide_col, digested_protein_col],
+                dtype={digested_peptide_col: "string", digested_protein_col: "string"},
+                chunksize=chunksize,
+                engine="c",
+            ):
+                chunk = chunk.dropna(subset=[digested_peptide_col, digested_protein_col])
+                if chunk.empty:
+                    continue
+
+                hit = chunk[chunk[digested_peptide_col].astype(str).isin(peptide_set)]
+                if hit.empty:
+                    continue
+
+                for peptide, protein_value in zip(
+                    hit[digested_peptide_col].astype(str),
+                    hit[digested_protein_col].astype(str),
+                ):
+                    mapping[peptide][genome_id].update(
+                        _normalize_protein_ids(
+                            genome_id=genome_id,
+                            protein_value=protein_value,
+                            protein_genome_separator=protein_genome_separator,
+                        )
+                    )
+        except Exception as exc:
+            warnings_list.append(
+                "[UnitSpecificDigestedScan] Warning: skipped malformed genome TSV: "
+                f"{file_path} ({type(exc).__name__}: {exc})"
+            )
+            continue
+
+    return (
+        {
+            peptide: {genome_id: set(proteins) for genome_id, proteins in genome_map.items()}
+            for peptide, genome_map in mapping.items()
+        },
+        warnings_list,
+    )
+
+
+def _read_nested_mapping_tsv(path: str | pathlib.Path) -> dict[str, dict[str, set[str]]]:
+    mapping: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    mapping_path = pathlib.Path(path)
+    if not mapping_path.is_file() or mapping_path.stat().st_size == 0:
+        return {}
+    frame = pd.read_csv(
+        mapping_path,
+        sep="\t",
+        dtype={"Peptide": "string", "Genome": "string", "Protein": "string"},
+    )
+    for peptide, genome_id, protein_id in frame[
+        ["Peptide", "Genome", "Protein"]
+    ].dropna().itertuples(index=False, name=None):
+        mapping[str(peptide)][str(genome_id)].add(str(protein_id))
+    return {
+        peptide: {genome_id: set(proteins) for genome_id, proteins in genome_map.items()}
+        for peptide, genome_map in mapping.items()
+    }
+
+
+def _query_peptide_proteins_nested_via_subprocess(
+    digested_genome_folders: str | list[str],
+    peptide_list: list[str],
+    selected_genomes_set: set[str],
+    protein_genome_separator: str = "_",
+    sep: str = "\t",
+    n_jobs: int | None = None,
+    digested_peptide_col: str | None = None,
+    digested_protein_col: str | None = None,
+) -> dict[str, dict[str, set[str]]]:
+    folders = (
+        [digested_genome_folders]
+        if isinstance(digested_genome_folders, str)
+        else list(digested_genome_folders)
+    )
+    with tempfile.TemporaryDirectory(prefix="metax_unit_specific_digested_scan_") as tmp:
+        tmp_path = pathlib.Path(tmp)
+        peptides_file = tmp_path / "peptides.txt"
+        selected_file = tmp_path / "selected_genomes.txt"
+        out_mapping = tmp_path / "nested_mapping.tsv"
+        out_meta = tmp_path / "meta.json"
+        peptides_file.write_text(
+            "\n".join(str(peptide) for peptide in peptide_list if str(peptide)),
+            encoding="utf-8",
+        )
+        selected_file.write_text(
+            "\n".join(sorted(str(genome_id) for genome_id in selected_genomes_set)),
+            encoding="utf-8",
+        )
+
+        cmd = [
+            sys.executable,
+            "-m",
+            "metax.peptide_annotator.digested_scan_cli",
+            "--folders",
+            *[str(folder) for folder in folders],
+            "--peptides-file",
+            str(peptides_file),
+            "--out-mapping-tsv",
+            str(out_mapping),
+            "--out-meta-json",
+            str(out_meta),
+            "--nested-output",
+            "--selected-genomes-file",
+            str(selected_file),
+            "--sep",
+            sep,
+            "--n-jobs",
+            str(0 if n_jobs is None else max(1, int(n_jobs))),
+            "--protein-genome-separator",
+            protein_genome_separator,
+        ]
+        if digested_peptide_col:
+            cmd.extend(["--digested-peptide-col", str(digested_peptide_col)])
+        if digested_protein_col:
+            cmd.extend(["--digested-protein-col", str(digested_protein_col)])
+
+        repo_root = pathlib.Path(__file__).resolve().parents[2]
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
+        env.setdefault("PYTHONIOENCODING", "utf-8")
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        print("[UnitSpecificDigestedScan/Subprocess] Launching isolated process.", flush=True)
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(repo_root),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+            creationflags=creationflags,
+        )
+        last_lines: list[str] = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            print(line.rstrip("\n"), flush=True)
+            last_lines.append(line)
+            if len(last_lines) > 50:
+                last_lines = last_lines[-50:]
+        return_code = proc.wait()
+        if return_code != 0:
+            tail = "".join(last_lines[-20:])
+            raise RuntimeError(
+                f"Unit-specific digested scan subprocess failed (exit={return_code}). "
+                f"Last output:\n{tail}"
+            )
+        if not out_mapping.is_file():
+            raise RuntimeError(
+                "Unit-specific digested scan subprocess finished without nested_mapping.tsv"
+            )
+        return _read_nested_mapping_tsv(out_mapping)
+
+
+def query_peptide_proteins_from_digested_genome_folders_nested(
+    digested_genome_folders: str | list[str],
+    peptide_list: list[str],
+    selected_genomes_set: set[str],
+    protein_genome_separator: str = "_",
+    sep: str = "\t",
+    n_jobs: int | None = None,
+    digested_peptide_col: str | None = None,
+    digested_protein_col: str | None = None,
+    parallel_backend: str = "subprocess",
+) -> dict[str, dict[str, set[str]]]:
+    """Scan selected genome TSVs once into an in-memory nested mapping."""
+    parallel_backend = (parallel_backend or "subprocess").strip().lower()
+    if parallel_backend not in {"subprocess", "process", "thread"}:
+        raise ValueError("parallel_backend must be 'subprocess', 'process', or 'thread'")
+    if not peptide_list:
+        return {}
+    if parallel_backend == "subprocess":
+        return _query_peptide_proteins_nested_via_subprocess(
+            digested_genome_folders=digested_genome_folders,
+            peptide_list=peptide_list,
+            selected_genomes_set=selected_genomes_set,
+            protein_genome_separator=protein_genome_separator,
+            sep=sep,
+            n_jobs=n_jobs,
+            digested_peptide_col=digested_peptide_col,
+            digested_protein_col=digested_protein_col,
+        )
+
+    t0 = time.time()
+    folders = (
+        [digested_genome_folders]
+        if isinstance(digested_genome_folders, str)
+        else list(digested_genome_folders)
+    )
+    valid_folders = [folder for folder in folders if folder and os.path.isdir(folder)]
+    if not valid_folders:
+        raise ValueError(f"No valid digested genome folders found: {folders}")
+
+    selected_genomes = {str(genome_id) for genome_id in selected_genomes_set}
+    all_files = [
+        str(path)
+        for folder in valid_folders
+        for path in pathlib.Path(folder).glob("*.tsv")
+        if path.stem in selected_genomes
+    ]
+    if not all_files:
+        print(
+            "[UnitSpecificDigestedScan] No genome TSV files match the manifest genome union.",
+            flush=True,
+        )
+        return {}
+
+    resolved_peptide_col, resolved_protein_col = _resolve_digest_columns_once(
+        first_file=all_files[0],
+        sep=sep,
+        digested_peptide_col=digested_peptide_col,
+        digested_protein_col=digested_protein_col,
+    )
+    peptide_set = {str(peptide) for peptide in peptide_list if str(peptide)}
+    if not peptide_set:
+        return {}
+
+    if n_jobs is None:
+        n_jobs = max(1, (os.cpu_count() or 1) - 1)
+    else:
+        n_jobs = max(1, int(n_jobs))
+    batch_count = max(1, n_jobs * 4)
+    batches = [all_files[index::batch_count] for index in range(batch_count)]
+    batches = [batch for batch in batches if batch]
+    print(
+        f"[UnitSpecificDigestedScan] Scanning {len(all_files)} union genome TSVs for "
+        f"{len(peptide_set)} peptides with n_jobs={n_jobs}.",
+        flush=True,
+    )
+
+    executor_class = (
+        concurrent.futures.ProcessPoolExecutor
+        if parallel_backend == "process"
+        else concurrent.futures.ThreadPoolExecutor
+    )
+    merged: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    with executor_class(max_workers=n_jobs) as executor:
+        futures = [
+            executor.submit(
+                _process_digested_genome_batch_for_nested_mapping,
+                batch,
+                peptide_set,
+                protein_genome_separator,
+                resolved_peptide_col,
+                resolved_protein_col,
+                sep,
+            )
+            for batch in batches
+        ]
+        for future in tqdm(
+            concurrent.futures.as_completed(futures),
+            total=len(futures),
+            desc="Scanning unit-specific genome union",
+        ):
+            batch_mapping, batch_warnings = future.result()
+            for warning_message in batch_warnings:
+                print(warning_message, flush=True)
+            for peptide, genome_map in batch_mapping.items():
+                for genome_id, proteins in genome_map.items():
+                    merged[peptide][genome_id].update(proteins)
+
+    result = {
+        peptide: {genome_id: set(proteins) for genome_id, proteins in genome_map.items()}
+        for peptide, genome_map in merged.items()
+    }
+    protein_count = sum(
+        len(proteins)
+        for genome_map in result.values()
+        for proteins in genome_map.values()
+    )
+    print(
+        f"[UnitSpecificDigestedScan] Mapped {len(result)}/{len(peptide_set)} peptides "
+        f"to {protein_count} peptide/genome/protein candidates in {time.time() - t0:.2f}s.",
+        flush=True,
+    )
+    return result
+
+
 def query_peptide_proteins_from_digested_genome_folders(
     digested_genome_folders: str | list[str],
     peptide_list: list[str],
@@ -484,10 +793,12 @@ class peptideProteinsMapper:
                  n_jobs: int | None = None,
                  digested_parallel_backend: str = "subprocess",
                  genome_list: Iterable[str] | None = None,
+                 peptide_df: pd.DataFrame | None = None,
                  duplicate_peptide_handling_mode: str = 'sum',
                  ):
 
         self.peptide_table_path = peptide_table_path
+        self.peptide_df = peptide_df
         self.db_file = db_path
         self.digested_genome_folders = digested_genome_folders
         self.digested_peptide_col = digested_peptide_col
@@ -510,6 +821,7 @@ class peptideProteinsMapper:
         
         self.has_intensity = False
         self.protein_ranked_table = None
+        self.genome_ranked_table = None
         self.final_peptide_table = None
         
         self.selected_proteins_num = 0
@@ -519,7 +831,10 @@ class peptideProteinsMapper:
         self.removed_peptides_no_matched = 0
         
         self.set_temp_dir(temp_dir)
-        self.peptide_table = self.load_peptide_table()
+        if self.peptide_df is not None:
+            self.peptide_table = self.load_peptide_dataframe(self.peptide_df)
+        else:
+            self.peptide_table = self.load_peptide_table()
 
     @staticmethod
     def _log_save(df: pd.DataFrame, path: str, desc: str) -> None:
@@ -605,18 +920,54 @@ class peptideProteinsMapper:
             else self.genome_list
         )
 
-        if effective_genome_list is None:
-            raise ValueError(
-                "genome_list is required. The old MetaX genome ranking workflow has been removed; "
-                "provide genomes selected by MetaUmbra or by an explicit selected genome list."
-            )
-
-        if not effective_genome_list:
+        if effective_genome_list is not None and not effective_genome_list:
             print("Warning: genome_list is provided but empty; no genomes will be selected.")
             self.selected_genomes_num = 0
             return []
 
         available_genomes = self._collect_genomes_from_df(df)
+
+        if effective_genome_list is None:
+            if 'Genomes' not in df.columns:
+                raise ValueError("The peptide table should have a column named 'Genomes' for automatic genome ranking")
+
+            print("No genome_list provided; ranking genomes by peptide coverage.")
+            from metax.peptide_annotator.peptide_coverage_ranker import PeptideCoverageRanker
+
+            ranker = PeptideCoverageRanker(
+                df=df,
+                peptide_column=self.peptide_col,
+                target_column='Genomes',
+                target_separator=';',
+            )
+            df_results_rank = ranker.get_ranked_coverage_df(
+                rank_method='combined',
+                iters=self.protein_rank_iters,
+                target_coverage=self.protein_peptide_coverage_cutoff,
+                stop_when_selected_stable=True,
+            )
+            self.genome_ranked_table = df_results_rank
+            if df_results_rank.empty:
+                print("Warning: no genomes were found by automatic genome ranking.")
+                self.selected_genomes_num = 0
+                return []
+
+            cutoff_index = PeptideCoverageRanker._get_cutoff_index(
+                df_results_rank,
+                self.protein_peptide_coverage_cutoff,
+            )
+            selected_genomes = (
+                df_results_rank if cutoff_index is None else df_results_rank.loc[:cutoff_index]
+            )
+            selected_genomes_list = selected_genomes['Genomes'].tolist()
+            print(f'Original genomes: [{df_results_rank.shape[0]}]')
+            print(
+                f"The number of selected genomes: [{len(selected_genomes_list)}].\n"
+                f"The last genome with coverage_ratio: {selected_genomes.iloc[-1]['coverage_ratio']}"
+            )
+            self.selected_genomes_num = len(selected_genomes_list)
+            return selected_genomes_list
+
         selected_genomes_list = list(effective_genome_list)
 
         if available_genomes:
@@ -639,12 +990,38 @@ class peptideProteinsMapper:
     
     def load_peptide_table(self):
         print("Loading peptide table...")
-        
-        header_df = pd.read_csv(self.peptide_table_path, sep=self.table_separator, nrows=0)
-        self._check_columns(header_df.columns)
+
+        is_parquet = str(self.peptide_table_path).lower().endswith(
+            (".parquet", ".parq", ".pq")
+        )
+        if is_parquet:
+            try:
+                import pyarrow.parquet as pq
+
+                header_columns = [
+                    str(name)
+                    for name in pq.ParquetFile(self.peptide_table_path).schema.names
+                ]
+            except Exception as exc:
+                raise RuntimeError(
+                    "Failed to read parquet metadata for the peptide table."
+                ) from exc
+        else:
+            header_columns = list(
+                pd.read_csv(
+                    self.peptide_table_path,
+                    sep=self.table_separator,
+                    nrows=0,
+                ).columns
+            )
+        self._check_columns(header_columns)
         
         required_cols = [self.peptide_col]
-        intensity_cols = [col for col in header_df.columns if col.startswith(self.intensity_col_prefix)]
+        intensity_cols = [
+            col
+            for col in header_columns
+            if col.startswith(self.intensity_col_prefix)
+        ]
         
         if self.continue_base_on_annotaied_peptide_table:
             required_cols.extend(['Genomes', 'Proteins'])
@@ -654,9 +1031,40 @@ class peptideProteinsMapper:
         # only print first 10 columns if too many
         print(f"Reading columns: {required_cols[:10]}{'...' if len(required_cols) > 10 else ''}")
         
-        self.peptide_table = pd.read_csv(self.peptide_table_path, sep=self.table_separator, usecols=required_cols)
-        
+        if is_parquet:
+            self.peptide_table = pd.read_parquet(
+                self.peptide_table_path,
+                columns=required_cols,
+            )
+        else:
+            self.peptide_table = pd.read_csv(
+                self.peptide_table_path,
+                sep=self.table_separator,
+                usecols=required_cols,
+            )
+        return self._prepare_loaded_peptide_table(intensity_cols)
+
+    def load_peptide_dataframe(self, peptide_df: pd.DataFrame) -> pd.DataFrame:
+        print("Loading peptide table from DataFrame...")
+        peptide_df = peptide_df.copy()
+        self._check_columns(peptide_df.columns)
+
+        required_cols = [self.peptide_col]
+        intensity_cols = [col for col in peptide_df.columns if col.startswith(self.intensity_col_prefix)]
+        if self.continue_base_on_annotaied_peptide_table:
+            required_cols.extend(['Genomes', 'Proteins'])
+        required_cols.extend(intensity_cols)
+
+        self.peptide_table = peptide_df.loc[:, required_cols].copy()
+        return self._prepare_loaded_peptide_table(intensity_cols)
+
+    def _prepare_loaded_peptide_table(self, intensity_cols: list[str]) -> pd.DataFrame:
         if intensity_cols:
+            self.peptide_table[intensity_cols] = (
+                self.peptide_table[intensity_cols]
+                .apply(pd.to_numeric, errors='coerce')
+                .fillna(0)
+            )
             self.has_intensity = True
             print("Intensity columns found and will be kept in the output")
             self.sum_duplicates_peptides()
@@ -806,6 +1214,7 @@ class peptideProteinsMapper:
                 unique_peptides,
                 removed_genomes_set=self.removed_genomes_set,
                 selected_genomes_set=self._get_effective_selected_genomes_set(),
+                protein_genome_separator=self.protein_genome_separator,
             )
 
         self.peptide_table["Proteins"] = self.peptide_table[self.peptide_col].map(peptide_proteins_dict)
@@ -1007,7 +1416,13 @@ class peptideProteinsMapper:
             stop_when_selected_stable=True,
         )
         self.protein_ranked_table = df_results_rank
-        cutoff_index = df_results_rank[df_results_rank['coverage_ratio'] >= self.protein_peptide_coverage_cutoff].index[0]
+        cutoff_index = PeptideCoverageRanker._get_cutoff_index(
+            df_results_rank,
+            self.protein_peptide_coverage_cutoff,
+        )
+        if cutoff_index is None:
+            self.selected_proteins_num = 0
+            return []
         selected_proteins = df_results_rank.loc[:cutoff_index]
         selected_proteins_list = selected_proteins['Proteins'].tolist()
         print(f'Original proteins: [{df_results_rank.shape[0]}]')
@@ -1091,10 +1506,13 @@ class peptideProteinsMapper:
                    genome_mode = True, 
                    distinct_genome_threshold = 1, # usually 3
                    exclude_protein_startwith = None, #Usually 'REV_;XXX_' 
+                   protein_separator = ';',
                    protein_genome_separator = '_',
                    genome_list: Iterable[str] | None = None,
                    duplicate_peptide_handling_mode: str | None = None,
                    genome_selection_metadata: dict | None = None,
+                   annotation_result_cache: dict[str, dict] | None = None,
+                   save_output: bool = True,
                    ): # run peptide to OTF
         duplicate_peptide_handling_mode = (
             duplicate_peptide_handling_mode or self.duplicate_peptide_handling_mode
@@ -1107,7 +1525,11 @@ class peptideProteinsMapper:
         
         genome_selection_info = dict(genome_selection_metadata or {})
         if "genome_selection_method" not in genome_selection_info:
-            genome_selection_info["genome_selection_method"] = "provided_genome_list"
+            genome_selection_info["genome_selection_method"] = (
+                "automatic_genome_ranking"
+                if genome_list is None and self.genome_list is None
+                else "provided_genome_list"
+            )
 
         # collect additional running information
         additional_running_info = {
@@ -1145,7 +1567,7 @@ class peptideProteinsMapper:
             output_path=self.output_path,
             threshold=lca_threshold,
             genome_mode=genome_mode,
-            protein_separator=';',
+            protein_separator=protein_separator,
             protein_genome_separator= protein_genome_separator,
             protein_col='Proteins',
             peptide_col=self.peptide_col,
@@ -1154,9 +1576,11 @@ class peptideProteinsMapper:
             exclude_protein_startwith = exclude_protein_startwith,
             additional_running_info=additional_running_info,
             duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
+            annotation_result_cache=annotation_result_cache,
         )
-        annotator.run_annotate()
+        df_res = annotator.run_annotate(save_output=save_output)
         print("OTF annotation finished")
+        return df_res
         
         
 if __name__ == "__main__":

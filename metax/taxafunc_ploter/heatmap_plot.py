@@ -208,8 +208,9 @@ class HeatmapPlot:
             
             data_include_negative_and_positive = True if (df_plot.min().min() < 0 and df_plot.max().max() > 0) else False
 
-            effective_col_cluster = col_cluster if df_plot.shape[1] > 1 else False
-            effective_row_cluster = row_cluster if df_plot.shape[0] > 1 else False
+            can_cluster = df_plot.shape[0] > 1 and df_plot.shape[1] > 1
+            effective_col_cluster = col_cluster if can_cluster else False
+            effective_row_cluster = row_cluster if can_cluster else False
 
             sns_params = {
                 'center': 0 if data_include_negative_and_positive else None,
