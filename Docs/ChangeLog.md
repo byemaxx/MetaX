@@ -1,3 +1,12 @@
+# Version: 2.4.0
+## Date: 2026-06-30
+### Changes:
+- New: Improved Peptide Direct to OTF workflow with MetaUmbra genome selection, selected genome-list reuse, scoring-only output, and unit-specific annotation.
+- New: Added DIA-NN parquet support for Peptide Direct to OTF.
+- Change: Unit-specific OTF outputs now keep the original peptide sequence, add `analysis_unit_id`, and report peptide counts more clearly.
+- Optimize: Improved unit-specific annotation for large datasets and added clearer progress messages.
+
+
 # Version: 2.3.3
 ## Date: 2026-06-15
 ### Changes:

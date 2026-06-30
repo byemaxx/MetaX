@@ -1,5 +1,8 @@
 import pytest
 import pandas as pd
+from types import SimpleNamespace
+
+from metax.taxafunc_analyzer.analyzer_utils.basic_stats import BasicStats
 
 def test_get_stats_taxa_level(tfa_object):
     """
@@ -43,3 +46,83 @@ def test_get_stats_func_prop(tfa_object):
     # Note: if data is empty, it might be 0, but if populated it should be close to 100
     if stats_df['n'].sum() > 0:
         assert abs(stats_df['freq'].sum() - 100.0) < 1.0, "Frequency should sum to roughly 100%"
+
+
+def _full_taxon(genome):
+    return (
+        "d__Bacteria|p__Firmicutes|c__Bacilli|o__Lactobacillales|"
+        f"f__Lactobacillaceae|g__Lactobacillus|s__acidophilus|m__{genome}"
+    )
+
+
+def _unit_specific_stats_tfa(df):
+    return SimpleNamespace(
+        original_df=df,
+        peptide_col_name="Sequence",
+        any_df_mode=False,
+        genome_mode=True,
+        func_list=["KEGG_ko"],
+    )
+
+
+def test_get_stats_peptide_num_in_taxa_counts_unique_sequences_per_lca_level():
+    df = pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u2", "u3"],
+            "Sequence": ["PEPA", "PEPA", "PEPB"],
+            "LCA_level": ["genome", "genome", "species"],
+            "Taxon": [_full_taxon("g1"), _full_taxon("g1"), _full_taxon("g2")],
+            "KEGG_ko": ["K00001", "K00001", "K00002"],
+            "KEGG_ko_prop": [1.0, 1.0, 1.0],
+        }
+    )
+
+    stats_df = BasicStats(_unit_specific_stats_tfa(df)).get_stats_peptide_num_in_taxa()
+
+    counts = stats_df.set_index("LCA_level")["count"]
+    assert counts["genome"] == 1
+    assert counts["species"] == 1
+
+
+def test_get_stats_taxa_level_threshold_counts_unique_sequences():
+    df = pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u2", "u3", "u4"],
+            "Sequence": ["PEPA", "PEPA", "PEPB", "PEPC"],
+            "LCA_level": ["genome"] * 4,
+            "Taxon": [
+                _full_taxon("g1"),
+                _full_taxon("g1"),
+                _full_taxon("g2"),
+                _full_taxon("g2"),
+            ],
+            "KEGG_ko": ["K00001", "K00001", "K00002", "K00002"],
+            "KEGG_ko_prop": [1.0, 1.0, 1.0, 1.0],
+        }
+    )
+
+    basic_stats = BasicStats(_unit_specific_stats_tfa(df))
+    stats_df = basic_stats.get_stats_taxa_level(peptide_num=2)
+    stats_df_low = basic_stats.get_stats_taxa_level(peptide_num=1)
+
+    counts = stats_df.set_index("taxa_level")["count"]
+    counts_low = stats_df_low.set_index("taxa_level")["count"]
+    assert counts["genome"] == 1
+    assert counts_low["genome"] == 2
+
+
+def test_get_stats_func_prop_counts_unique_sequences_per_bin():
+    df = pd.DataFrame(
+        {
+            "analysis_unit_id": ["u1", "u2", "u3"],
+            "Sequence": ["PEPA", "PEPA", "PEPB"],
+            "LCA_level": ["genome"] * 3,
+            "Taxon": [_full_taxon("g1"), _full_taxon("g1"), _full_taxon("g2")],
+            "KEGG_ko": ["K00001", "K00001", "K00002"],
+            "KEGG_ko_prop": [0.95, 0.95, 0.95],
+        }
+    )
+
+    stats_df = BasicStats(_unit_specific_stats_tfa(df)).get_stats_func_prop("KEGG_ko")
+
+    assert stats_df.loc[stats_df["prop"] == "0.9-1", "n"].item() == 2
