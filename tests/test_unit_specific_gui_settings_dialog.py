@@ -212,11 +212,71 @@ def test_unit_specific_gui_validation_supports_long_format_parquet(
     )
 
     assert result.ok is True
-    assert result.mapped_samples == {"s1": "s1.raw", "s2": "s2.raw", "s3": "s3.raw"}
+    assert result.mapped_samples == {"s1": "s1", "s2": "s2", "s3": "s3"}
     assert result.missing_samples == []
     assert "long-format DIA-NN parquet" in result.message
-    assert "Run values validated as sample columns" in result.message
+    assert "Run-derived sample columns validated" in result.message
     assert f"intensity={intensity_col}" in result.message
+
+
+def test_unit_specific_gui_validation_accepts_diann_prepared_sample_columns(
+    tmp_path,
+    monkeypatch,
+):
+    manifest_path = tmp_path / "unit_specific_manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "metaumbra.unit_specific_manifest.v1",
+                "generated_by": {"tool": "MetaUmbra", "version": "1.3.7"},
+                "default_genome_threshold": "q0.05",
+                "files": {},
+                "units": {
+                    "u1": {
+                        "sample_columns": ["s1"],
+                        "n_samples": 1,
+                        "genome_ids_q005": ["g1"],
+                        "genome_ids_q001": ["g1"],
+                    },
+                    "u2": {
+                        "sample_columns": ["s1_2"],
+                        "n_samples": 1,
+                        "genome_ids_q005": ["g2"],
+                        "genome_ids_q001": ["g2"],
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    peptide_path = tmp_path / "report.parquet"
+    peptide_path.write_bytes(b"parquet placeholder")
+    monkeypatch.setattr(
+        unit_specific_settings_dialog,
+        "_read_peptide_table_header_columns",
+        lambda peptide_table_path, separator: [
+            "Stripped.Sequence",
+            "Run",
+            "Precursor.Quantity",
+        ],
+    )
+    monkeypatch.setattr(
+        unit_specific_settings_dialog,
+        "_read_long_format_run_columns",
+        lambda peptide_table_path: [r"C:\batch1\s1.raw", r"C:\batch2\s1.raw"],
+    )
+
+    result = validate_unit_specific_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Stripped.Sequence",
+        diann_intensity_col="Precursor.Quantity",
+    )
+
+    assert result.ok is True
+    assert result.mapped_samples == {"s1": "s1", "s1_2": "s1_2"}
+    assert result.missing_samples == []
+    assert "Run-derived sample columns validated" in result.message
 
 
 def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):

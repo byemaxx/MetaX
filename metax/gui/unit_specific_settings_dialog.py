@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets
 
 from metax.peptide_annotator.peptide_table_prepare import (
     DIANN_RUN_COLUMN,
+    build_diann_run_to_sample_column_map,
     has_diann_core_columns,
     is_parquet_path,
     select_diann_intensity_column,
@@ -192,7 +193,19 @@ def validate_unit_specific_manifest_for_gui(
                 and has_diann_core_columns(peptide_columns)
             ):
                 try:
-                    candidate_sample_columns = _read_long_format_run_columns(peptide_table_path)
+                    run_columns = _read_long_format_run_columns(peptide_table_path)
+                    run_to_sample_column = build_diann_run_to_sample_column_map(
+                        run_columns,
+                        "",
+                    )
+                    candidate_sample_columns = list(
+                        dict.fromkeys(
+                            [
+                                *run_columns,
+                                *run_to_sample_column.values(),
+                            ]
+                        )
+                    )
                     long_format_detected = True
                     intensity_column = select_diann_intensity_column(
                         peptide_columns,
@@ -234,8 +247,8 @@ def validate_unit_specific_manifest_for_gui(
                 long_format_hint = ""
                 if long_format_detected:
                     long_format_hint = (
-                        "\nLong-format DIA-NN parquet detected. Run values were treated as sample columns; "
-                        "check that the manifest sample names match the Run names."
+                        "\nLong-format DIA-NN parquet detected. Run values and prepared sample column names "
+                        "were checked; make sure the manifest sample names match one of them."
                     )
                 return UnitSpecificManifestValidationResult(
                     False,
@@ -268,7 +281,7 @@ def validate_unit_specific_manifest_for_gui(
     elif long_format_detected:
         header_status_lines.append(
             "Peptide table format: long-format DIA-NN parquet "
-            f"({DIANN_RUN_COLUMN} values validated as sample columns; "
+            f"({DIANN_RUN_COLUMN}-derived sample columns validated; "
             f"intensity={intensity_column})"
         )
     message = (

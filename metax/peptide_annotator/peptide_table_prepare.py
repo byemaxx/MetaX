@@ -167,6 +167,24 @@ def _safe_sample_name(run: str) -> str:
     return run_name or "unknown_run"
 
 
+def build_diann_run_to_sample_column_map(
+    runs: Iterable[object],
+    sample_column_prefix: str,
+) -> dict[str, str]:
+    run_to_column: dict[str, str] = {}
+    used_columns: set[str] = set()
+    for run in sorted({str(run) for run in runs}):
+        base_column = f"{sample_column_prefix}{_safe_sample_name(run)}"
+        column = base_column
+        suffix = 2
+        while column in used_columns:
+            column = f"{base_column}_{suffix}"
+            suffix += 1
+        used_columns.add(column)
+        run_to_column[run] = column
+    return run_to_column
+
+
 def prepare_diann_parquet_for_direct_otf(
     parquet_path: str | Path,
     *,
@@ -238,17 +256,10 @@ def prepare_diann_parquet_for_direct_otf(
             error_col=schema.error_col,
         )
 
-    run_to_column: dict[str, str] = {}
-    used_columns: set[str] = set()
-    for run in sorted(grouped[DIANN_RUN_COLUMN].unique()):
-        base_column = f"{sample_column_prefix}{_safe_sample_name(run)}"
-        column = base_column
-        suffix = 2
-        while column in used_columns:
-            column = f"{base_column}_{suffix}"
-            suffix += 1
-        used_columns.add(column)
-        run_to_column[run] = column
+    run_to_column = build_diann_run_to_sample_column_map(
+        grouped[DIANN_RUN_COLUMN].unique(),
+        sample_column_prefix,
+    )
 
     grouped["sample_col"] = grouped[DIANN_RUN_COLUMN].map(run_to_column)
     wide = (
