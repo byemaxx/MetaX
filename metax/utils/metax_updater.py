@@ -18,6 +18,19 @@ import zipfile
 import shutil
 import socket
 import urllib.error
+import importlib.metadata as importlib_metadata
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
+try:
+    from packaging.markers import default_environment
+    from packaging.requirements import InvalidRequirement, Requirement
+except ModuleNotFoundError:
+    from pip._vendor.packaging.markers import default_environment
+    from pip._vendor.packaging.requirements import InvalidRequirement, Requirement
 
 
 
@@ -306,6 +319,89 @@ class Updater:
         self.dependencies_updated = True
         return True, output
 
+    def get_project_dependency_requirements(self, project_folder_path=None):
+        if project_folder_path is None:
+            project_folder_path = self.get_downloaded_project_folder_path()
+
+        pyproject_path = os.path.join(project_folder_path, "pyproject.toml")
+        if os.path.isfile(pyproject_path):
+            try:
+                with open(pyproject_path, "rb") as file:
+                    pyproject_data = tomllib.load(file)
+                dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+                if dependencies:
+                    return list(dependencies)
+            except Exception as e:
+                self.append_update_log(f"Read dependency metadata from pyproject.toml failed: {e}")
+
+        requirements_path = os.path.join(project_folder_path, "requirements.txt")
+        if os.path.isfile(requirements_path):
+            requirements = []
+            with open(requirements_path, "r", encoding="utf-8") as file:
+                for line in file:
+                    requirement = line.strip()
+                    if not requirement or requirement.startswith("#"):
+                        continue
+                    if " #" in requirement:
+                        requirement = requirement.split(" #", 1)[0].strip()
+                    if requirement.startswith(("-r", "--requirement", "-c", "--constraint")):
+                        self.append_update_log(f"Skipping nested requirement directive: {requirement}")
+                        continue
+                    requirements.append(requirement)
+            return requirements
+
+        return []
+
+    def find_unsatisfied_project_dependencies(self, project_folder_path=None):
+        requirements = self.get_project_dependency_requirements(project_folder_path)
+        issues = []
+        skipped = []
+        checked_count = 0
+        environment = default_environment()
+
+        for requirement_text in requirements:
+            try:
+                requirement = Requirement(requirement_text)
+            except InvalidRequirement as e:
+                skipped.append(f"{requirement_text}: {e}")
+                continue
+
+            if requirement.marker and not requirement.marker.evaluate(environment):
+                continue
+
+            checked_count += 1
+            try:
+                installed_version = importlib_metadata.version(requirement.name)
+            except importlib_metadata.PackageNotFoundError:
+                requirement_label = str(requirement.specifier) or "installed"
+                issues.append(f"{requirement.name}: not installed; requires {requirement_label}")
+                continue
+
+            if requirement.specifier and not requirement.specifier.contains(installed_version, prereleases=True):
+                issues.append(f"{requirement.name}: installed {installed_version}; requires {requirement.specifier}")
+
+        return issues, skipped, checked_count
+
+    def check_project_dependencies(self, project_folder_path=None):
+        issues, skipped, checked_count = self.find_unsatisfied_project_dependencies(project_folder_path)
+        if checked_count == 0:
+            self.append_update_log("No dependency requirements were found in the downloaded project.")
+        else:
+            self.append_update_log(f"Checked {checked_count} dependency requirement(s) in the current Python environment.")
+
+        for skipped_requirement in skipped:
+            self.append_update_log(f"Skipped dependency requirement: {skipped_requirement}")
+
+        if issues:
+            output = "\n".join(issues)
+            self.append_update_log("Current Python environment does not satisfy the downloaded dependency requirements:")
+            for issue in issues:
+                self.append_update_log(f"  - {issue}")
+            return False, output
+
+        self.append_update_log("Current Python environment satisfies the downloaded dependency requirements.")
+        return True, ""
+
             
         
     def replace_metax_dir(self):
@@ -364,13 +460,13 @@ class Updater:
             change_log_str = "No change log."
 
         api_changed = str(self.current_api) != str(self.remote_api)
-        dependency_notice = ""
-        if api_changed:
-            dependency_notice = (
-                "\n\nThis update changes the MetaX API version and may require new Python dependencies."
-                "\nMetaX will run pip with the current Python interpreter before replacing the local code:"
-                f"\n{sys.executable} -m pip install --upgrade <downloaded MetaX source>"
-            )
+        dependency_notice = (
+            "\n\nMetaX will check the downloaded version's Python dependency requirements "
+            "against the current Python environment."
+            "\nIf the API changes or installed packages are missing/outdated, MetaX will run pip "
+            "before replacing the local code:"
+            f"\n{sys.executable} -m pip install --upgrade <downloaded MetaX source>"
+        )
 
         reply = self.display_message_in_text_browser("Update", f"MetaX new version is available. Do you want to update?\
                                     {dependency_notice}\
@@ -394,7 +490,9 @@ class Updater:
                     QMessageBox.warning(self.MainWindow, "Update", "Download failed. Please try again later or update manually.")
                     return
 
-                if api_changed:
+                dependency_check_success, dependency_check_output = self.check_project_dependencies()
+                should_install_dependencies = api_changed or not dependency_check_success
+                if should_install_dependencies:
                     self.metaXGUI.show_message("Installing MetaX dependencies...", "Updating...")
                     dependency_success, dependency_output = self.install_project_dependencies()
                     if not dependency_success:
@@ -408,6 +506,21 @@ class Updater:
                             "The local MetaX code was not replaced.\n\n"
                             f"Command:\n{sys.executable} -m pip install --upgrade {self.get_downloaded_project_folder_path()}\n\n"
                             f"Output:\n{dependency_output}"
+                        )
+                        self.clear_update_required_flag()
+                        self.finish_update_log_dialog()
+                        return
+                    dependency_check_success, dependency_check_output = self.check_project_dependencies()
+                    if not dependency_check_success:
+                        dependency_check_output = dependency_check_output.strip()
+                        if len(dependency_check_output) > 3000:
+                            dependency_check_output = dependency_check_output[-3000:]
+                        QMessageBox.warning(
+                            self.MainWindow,
+                            "Update",
+                            "MetaX installed dependencies, but the current Python environment still does not "
+                            "satisfy the downloaded version's requirements. The local MetaX code was not replaced.\n\n"
+                            f"Unsatisfied requirements:\n{dependency_check_output}"
                         )
                         self.clear_update_required_flag()
                         self.finish_update_log_dialog()
