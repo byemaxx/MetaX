@@ -7,12 +7,21 @@
     </div>
     <div class="chip-row">
       {% for level in selected_taxa_levels %}
-        <span class="chip">Taxa level {{ level }}</span>
+        <span class="chip">Taxa level {{ dataset_summary.get("selected_taxa_levels", [])[loop.index0] }}</span>
       {% endfor %}
       {% for function_name in selected_function_columns %}
         <span class="chip">{{ function_name }}</span>
       {% endfor %}
     </div>
+  </div>
+
+  <div class="section-context" style="margin-bottom: 16px;">
+    <strong>Main report:</strong>
+    {{ dataset_summary.get("main_taxa_level", "None") }} taxa with
+    {{ dataset_summary.get("main_function", "None") }} functions.
+    <strong>Selected taxa levels:</strong> {{ dataset_summary.get("selected_taxa_levels", [])|join(", ") }}.
+    <strong>Selected function columns:</strong> {{ dataset_summary.get("selected_function_columns", [])|join(", ") }}.
+    Other combinations are listed under Extended results.
   </div>
 
   <div class="metric-grid">
@@ -52,6 +61,51 @@
         </div>
       {% endfor %}
     </div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Unit-aware analysis</div>
+      <h2>Analysis unit summary</h2>
+    </div>
+  </div>
+  {% set unit = dataset_summary.get("unit_aware", {}) %}
+  {% if unit.get("detected") %}
+    <div class="metric-grid">
+      <div class="metric primary">
+        <div class="label">Analysis units</div>
+        <div class="value">{{ unit.get("n_analysis_units", 0) }}</div>
+        <div class="hint">Detected from {{ unit.get("unit_column") }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Samples per unit</div>
+        <div class="value">{{ unit.get("samples_per_unit", {})|length }}</div>
+        <div class="hint">{{ unit.get("samples_per_unit", {}) }}</div>
+      </div>
+      {% if unit.get("records_per_unit") %}
+      <div class="metric">
+        <div class="label">Metadata records per unit</div>
+        <div class="value">{{ unit.get("records_per_unit", {})|length }}</div>
+        <div class="hint">{{ unit.get("records_per_unit", {}) }}</div>
+      </div>
+      {% endif %}
+      {% if unit.get("features_per_unit") %}
+      <div class="metric">
+        <div class="label">Features per unit</div>
+        <div class="value">{{ unit.get("features_per_unit", {})|length }}</div>
+        <div class="hint">{{ unit.get("features_per_unit", {}) }}</div>
+      </div>
+      {% endif %}
+      <div class="metric">
+        <div class="label">Unit-specific assignment</div>
+        <div class="value">{{ "Available" if unit.get("unit_specific_assignment_available") else "Not detected" }}</div>
+        <div class="hint">Genome evidence and duplicate peptide handling fields are reserved for future reports.</div>
+      </div>
+    </div>
+  {% else %}
+    <div class="empty-state">No unit-aware metadata detected</div>
   {% endif %}
 </div>
 
@@ -111,6 +165,11 @@
       <div class="label">Control group</div>
       <div class="value">{{ run_summary.control_group }}</div>
       <div class="hint">Used for group-vs-control testing when available</div>
+    </div>
+    <div class="metric">
+      <div class="label">Statistics backend</div>
+      <div class="value">{{ config.statistics.diff_method }}</div>
+      <div class="hint">{{ dataset_summary.get("statistics_backend") }}</div>
     </div>
   </div>
   <details class="config-block">

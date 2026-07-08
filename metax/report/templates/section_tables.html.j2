@@ -15,7 +15,9 @@
 
     <div class="tab-strip">
       {% for category, items in result_files_by_category.items() %}
-        {% if category == "taxa" %}
+        {% if category == "main_results" %}
+          {% set label = "Main report results" %}
+        {% elif category == "taxa" %}
           {% set label = "Taxa abundance" %}
         {% elif category == "function" %}
           {% set label = "Function abundance" %}

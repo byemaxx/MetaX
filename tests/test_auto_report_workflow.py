@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -45,23 +46,37 @@ def test_auto_report_runs_on_example_dataset(tmp_path: Path):
     assert not pd.read_csv(otf_table, sep="\t").empty
     taxa_anova = result.output_dir / "stats" / "taxa" / "taxa_s_anova.tsv"
     taxa_cho_vs_pbs = result.output_dir / "stats" / "taxa" / "taxa_s_CHO_vs_PBS.tsv"
-    taxa_dunnett = result.output_dir / "stats" / "taxa" / "taxa_s_dunnett.tsv"
     pca = result.output_dir / "figures" / "basic" / "pca_taxa_s.png"
     pca_js = result.output_dir / "figures" / "basic" / "pca_taxa_s.html"
     volcano = result.output_dir / "figures" / "differential" / "volcano_taxa_s_CHO_vs_PBS.png"
     volcano_js = result.output_dir / "figures" / "differential" / "volcano_taxa_s_CHO_vs_PBS.html"
     assert taxa_anova.exists()
-    assert taxa_dunnett.exists()
     assert taxa_cho_vs_pbs.exists()
     assert pca.exists()
     assert pca_js.exists()
     assert volcano.exists()
     assert volcano_js.exists()
     stats_df = pd.read_csv(taxa_cho_vs_pbs, sep="\t")
-    assert {"feature_id", "log2FC", "p_value", "q_value", "significant", "direction"}.issubset(stats_df.columns)
+    assert {
+        "feature_id",
+        "group",
+        "control",
+        "baseMean",
+        "log2FoldChange",
+        "pvalue",
+        "padj",
+    }.issubset(stats_df.columns)
     assert not stats_df.empty
     assert len(result.registry.stats) >= 3
     assert len(result.registry.figures) >= 1
+    summary = json.loads(result.summary_json_path.read_text(encoding="utf-8"))
+    species_rows = pd.read_csv(
+        result.output_dir / "tables" / "taxa" / "taxa_table_s.tsv",
+        sep="\t",
+    ).shape[0]
+    assert summary["dataset_summary"]["n_taxa"] == species_rows
+    assert summary["dataset_summary"]["main_taxa_level"] == "species"
+    assert summary["dataset_summary"]["statistics_backend"].startswith("limma via InMoose")
 
 
 def test_plot_builder_uses_gui_plotters_only():

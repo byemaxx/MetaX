@@ -24,26 +24,25 @@ class StatsBuilder:
     def run_all(self) -> None:
         group_meta = self.config.analysis.group_meta
         control_group = self.config.analysis.control_group
+        diff_method = str(self.config.statistics.diff_method).lower()
+        if diff_method == "gui_dunnett":
+            diff_method = "dunnett"
+        if diff_method not in {"limma", "dunnett"}:
+            raise ValueError(
+                f"Unsupported statistics.diff_method [{self.config.statistics.diff_method}]. "
+                "Supported methods are: limma, dunnett."
+            )
         if self.config.statistics.run_deseq2:
+            configured_method = str(self.config.statistics.diff_method).lower()
+            method_label = "limma via InMoose" if configured_method == "limma" else "MetaX GUI Dunnett"
             self.context.registry.add_warning(
-                "DESeq2-like analysis was requested, but the auto report does not enable it by default. "
-                "The GUI-compatible ANOVA/Dunnett workflow was used instead.",
+                "DESeq2 analysis was requested, but it is not implemented in Auto Report. "
+                f"Group-vs-control results will use the configured backend: {method_label}.",
                 "StatsBuilder",
                 details={
                     "requested_method": "DESeq2",
-                    "fallback_backend": "MetaX GUI CrossTest",
+                    "configured_group_vs_control_backend": method_label,
                     "run_deseq2": self.config.statistics.run_deseq2,
-                },
-            )
-        if str(self.config.statistics.diff_method).lower() not in {"dunnett", "gui_dunnett"}:
-            self.context.registry.add_warning(
-                f"diff_method [{self.config.statistics.diff_method}] is not a GUI group-vs-control method; "
-                "using MetaX GUI Dunnett statistics for report consistency.",
-                "StatsBuilder",
-                details={
-                    "configured_diff_method": self.config.statistics.diff_method,
-                    "used_method": "MetaX GUI Dunnett",
-                    "reason": "report reuses GUI statistical backend",
                 },
             )
         if not group_meta:
@@ -74,7 +73,109 @@ class StatsBuilder:
                     elif self.config.statistics.run_ttest and len(groups) == 2:
                         self._run_gui_ttest(table_type, artifact, df_type, groups)
                     if control_group and self.config.statistics.run_group_vs_control:
-                        self._run_gui_dunnett(table_type, artifact, df_type, groups, str(control_group))
+                        if diff_method == "limma":
+                            self._run_limma(table_type, artifact, groups, str(control_group))
+                        else:
+                            self._run_gui_dunnett(table_type, artifact, df_type, groups, str(control_group))
+
+    def _run_limma(
+        self,
+        table_type: str,
+        artifact: dict,
+        groups: list[str],
+        control_group: str,
+    ) -> None:
+        if control_group not in groups:
+            raise ValueError(f"control_group [{control_group}] is not present in configured groups.")
+        comparison_groups = [group for group in groups if group != control_group]
+        if not comparison_groups:
+            return
+        try:
+            result = self.tfa.CrossTest.get_stats_limma_against_control(
+                df=artifact["df"].copy(),
+                control_group=control_group,
+                group_list=list(comparison_groups),
+                log2_transform=True,
+                zero_to_nan=False,
+                concat_sample_to_result=True,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"limma via InMoose failed for [{artifact['title']}]. "
+                "Install/repair the limma backend or explicitly set statistics.diff_method to dunnett. "
+                f"Original error: {exc}"
+            ) from exc
+
+        if result is None or result.empty:
+            self.context.registry.add_warning(
+                f"limma returned no group-vs-control results for [{artifact['title']}].",
+                "StatsBuilder",
+                details=self._warning_details(
+                    artifact,
+                    analysis="limma",
+                    groups=groups,
+                    control=control_group,
+                    reason="empty result",
+                ),
+            )
+            return
+        if not isinstance(result.columns, pd.MultiIndex):
+            if len(comparison_groups) != 1:
+                raise ValueError("limma against-control output did not identify comparison groups.")
+            result = pd.concat({comparison_groups[0]: result}, axis=1)
+
+        available_groups = set(str(item) for item in result.columns.get_level_values(0))
+        for group in comparison_groups:
+            if group not in available_groups:
+                self.context.registry.add_warning(
+                    f"limma did not return comparison [{group} vs {control_group}] for [{artifact['title']}].",
+                    "StatsBuilder",
+                )
+                continue
+            pair_df = result[group].copy()
+            pair_df.insert(0, "control", control_group)
+            pair_df.insert(0, "group", group)
+            pair_df = self._with_feature_id(pair_df)
+            preferred = [
+                "feature_id",
+                "group",
+                "control",
+                "baseMean",
+                "log2FoldChange",
+                "stat",
+                "pvalue",
+                "padj",
+            ]
+            pair_df = pair_df[
+                [name for name in preferred if name in pair_df.columns]
+                + [name for name in pair_df.columns if name not in preferred]
+            ]
+            required = {"log2FoldChange", "pvalue", "padj"}
+            missing = sorted(required - set(pair_df.columns))
+            if missing:
+                raise ValueError(f"limma result is missing required columns: {missing}")
+            safe_group = safe_filename(group)
+            safe_control = safe_filename(control_group)
+            path = self._stats_dir(table_type) / (
+                f"{safe_filename(artifact['key'])}_{safe_group}_vs_{safe_control}.tsv"
+            )
+            self._save_stat(
+                key=f"{artifact['key']}_{safe_group}_vs_{safe_control}",
+                path=path,
+                df=pair_df,
+                title=f"{group} vs {control_group} - {artifact['title']}",
+                description=(
+                    "limma via InMoose on log2(x + 1)-transformed abundance. "
+                    "Appended sample abundance columns contain log2(x + 1)-transformed values."
+                ),
+                analysis="group_vs_control",
+                table_type=table_type,
+                source_key=artifact["key"],
+                index=False,
+                backend="limma_inmoose",
+                group=group,
+                control=control_group,
+            )
 
     def _run_gui_anova(self, table_type: str, artifact: dict, df_type: str, groups: list[str]) -> None:
         if len(groups) <= 2:
@@ -365,25 +466,42 @@ class StatsBuilder:
         raw_stat_key: str | None = None,
     ) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, sep="\t", index=index)
+        output_df = self._with_feature_id(df)
+        output_df.to_csv(path, sep="\t", index=False)
         self.context.registry.add_stat(key, path, title=title, description=description)
+        sample_value_transform = "log2(x + 1)" if backend == "limma_inmoose" else None
+        if sample_value_transform:
+            self.context.registry.stats[-1]["sample_value_transform"] = sample_value_transform
         self.context.generated_stats.append(
             {
                 "key": key,
                 "path": path,
                 "title": title,
                 "description": description,
-                "df": df.copy(),
+                "df": output_df.copy() if analysis == "group_vs_control" else df.copy(),
                 "analysis": analysis,
                 "table_type": table_type,
                 "source_key": source_key,
                 "group": group,
                 "control": control,
                 "backend": backend,
+                "sample_value_transform": sample_value_transform,
                 "raw_stat_key": raw_stat_key,
             }
         )
         self.context.logger.info("Generated statistics: %s", path)
+
+    def _with_feature_id(self, df: pd.DataFrame) -> pd.DataFrame:
+        output = df.copy()
+        if isinstance(output.columns, pd.MultiIndex):
+            output.columns = [
+                "__".join(str(part) for part in column if str(part))
+                for column in output.columns
+            ]
+        if "feature_id" in output.columns:
+            return output
+        output.insert(0, "feature_id", self._feature_labels(output))
+        return output
 
     def _valid_group_names(self) -> list[str]:
         group_names = sorted(set(str(group) for group in self.tfa.get_meta_list(self.tfa.meta_name)))

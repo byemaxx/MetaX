@@ -22,6 +22,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--peptide-col-name", help="Peptide column name.")
     parser.add_argument("--protein-col-name", help="Protein column name.")
     parser.add_argument("--top-n", type=int, help="Top-N value for report plots.")
+    parser.add_argument("--diff-method", choices=["limma", "dunnett"], help="Group-vs-control statistics backend.")
+    parser.add_argument("--figure-formats", help="Comma-separated static figure formats: png,svg,pdf.")
+    parser.add_argument("--dpi", type=int, help="DPI for raster report figures.")
     parser.add_argument("--run-deseq2", action="store_true", default=None, help="Request optional DESeq2-like analysis.")
     parser.add_argument("--no-diversity", action="store_true", default=None, help="Disable diversity plots.")
     parser.add_argument("--run-network", action="store_true", default=None, help="Enable heavy taxa-function network plots.")
@@ -58,6 +61,12 @@ def config_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) 
         config.input.protein_col_name = args.protein_col_name
     if args.top_n is not None:
         config.plots.top_n = args.top_n
+    if args.diff_method is not None:
+        config.statistics.diff_method = args.diff_method
+    if args.figure_formats is not None:
+        config.report.figure_formats = [item.lower() for item in _split_csv(args.figure_formats)]
+    if args.dpi is not None:
+        config.report.dpi = args.dpi
     if args.run_deseq2:
         config.statistics.run_deseq2 = True
     if args.no_diversity:
