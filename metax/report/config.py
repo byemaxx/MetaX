@@ -67,7 +67,7 @@ class StatsConfig:
     run_anova: bool = True
     run_ttest: bool = True
     run_group_vs_control: bool = True
-    diff_method: str = "dunnett"
+    diff_method: str = "limma"
     p_adjust_method: str = "fdr_bh"
     alpha: float = 0.05
     log2fc_cutoff: float = 1.0
@@ -109,6 +109,13 @@ class HtmlReportConfig:
     show_top_rows: int = 20
     copy_static_assets: bool = True
     overwrite: bool = False
+    figure_formats: list[str] = field(default_factory=lambda: ["png"])
+    dpi: int = 300
+
+    def __post_init__(self) -> None:
+        if isinstance(self.figure_formats, str):
+            self.figure_formats = _split_csv(self.figure_formats)
+        self.figure_formats = [str(item).lower() for item in self.figure_formats]
 
 
 @dataclass

@@ -15,6 +15,9 @@ os.environ["MPLCONFIGDIR"] = str(_mpl_config_dir)
 import matplotlib
 
 matplotlib.use("Agg", force=True)
+matplotlib.rcParams["pdf.fonttype"] = 42
+matplotlib.rcParams["ps.fonttype"] = 42
+matplotlib.rcParams["svg.fonttype"] = "none"
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -575,9 +578,16 @@ class PlotBuilder:
         volcano_df = stat["df"].copy()
         if "feature_id" in volcano_df.columns:
             volcano_df = volcano_df.set_index("feature_id")
-        volcano_df["log2FoldChange"] = pd.to_numeric(volcano_df.get("log2FC"), errors="coerce")
-        volcano_df["pvalue"] = pd.to_numeric(volcano_df.get("p_value"), errors="coerce")
-        volcano_df["padj"] = pd.to_numeric(volcano_df.get("q_value"), errors="coerce").fillna(volcano_df["pvalue"])
+        if "log2FoldChange" not in volcano_df.columns:
+            volcano_df["log2FoldChange"] = pd.to_numeric(volcano_df["log2FC"], errors="coerce")
+        if "pvalue" not in volcano_df.columns:
+            volcano_df["pvalue"] = pd.to_numeric(volcano_df["p_value"], errors="coerce")
+        if "padj" not in volcano_df.columns:
+            legacy_padj = pd.to_numeric(volcano_df["q_value"], errors="coerce")
+            volcano_df["padj"] = legacy_padj.fillna(volcano_df["pvalue"])
+        volcano_df["log2FoldChange"] = pd.to_numeric(volcano_df["log2FoldChange"], errors="coerce")
+        volcano_df["pvalue"] = pd.to_numeric(volcano_df["pvalue"], errors="coerce")
+        volcano_df["padj"] = pd.to_numeric(volcano_df["padj"], errors="coerce").fillna(volcano_df["pvalue"])
         slug = safe_filename(stat["key"])
         html_path = self.context.paths.differential_figures_dir / f"volcano_{slug}.html"
         self._plot_optional(
@@ -745,7 +755,36 @@ class PlotBuilder:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             action(path)
-            self.context.registry.add_figure(key, path, title=title, description=description, figure_type=figure_type, **metadata)
+            extra_formats = []
+            if path.suffix.lower() == ".png":
+                extra_formats = [
+                    figure_format
+                    for figure_format in self.config.report.figure_formats
+                    if figure_format != "png" and path.with_suffix(f".{figure_format}").exists()
+                ]
+            self.context.registry.add_figure(
+                key,
+                path,
+                title=title,
+                description=description,
+                figure_type=figure_type,
+                additional_static_formats=extra_formats,
+                **metadata,
+            )
+            if path.suffix.lower() == ".png":
+                for figure_format in self.config.report.figure_formats:
+                    extra_path = path.with_suffix(f".{figure_format}")
+                    if extra_path == path or not extra_path.exists():
+                        continue
+                    self.context.registry.add_figure(
+                        f"{key}_{figure_format}",
+                        extra_path,
+                        title=f"{title} ({figure_format.upper()})",
+                        description=description,
+                        figure_type=figure_type,
+                        static_format=figure_format,
+                        **metadata,
+                    )
             self.context.logger.info("Generated figure: %s", path)
         except Exception as exc:
             self.context.logger.exception("Optional GUI plot failed: %s", key)
@@ -801,6 +840,9 @@ class PlotBuilder:
         return {key: value for key, value in details.items() if value is not None and value != ""}
 
     def _save_matplotlib(self, plot_obj: Any, path: Path) -> None:
+        matplotlib.rcParams["pdf.fonttype"] = 42
+        matplotlib.rcParams["ps.fonttype"] = 42
+        matplotlib.rcParams["svg.fonttype"] = "none"
         if isinstance(plot_obj, tuple):
             plot_obj = plot_obj[0]
         if hasattr(plot_obj, "savefig"):
@@ -813,7 +855,15 @@ class PlotBuilder:
             fig = plot_obj.get_figure()
         else:
             fig = plt.gcf()
-        fig.savefig(path, dpi=180, bbox_inches="tight")
+        formats = list(dict.fromkeys(["png", *self.config.report.figure_formats]))
+        for figure_format in formats:
+            output_path = path.with_suffix(f".{figure_format}")
+            fig.savefig(
+                output_path,
+                dpi=self.config.report.dpi,
+                bbox_inches="tight",
+                format=figure_format,
+            )
 
     def _save_pyecharts(self, chart: Any, path: Path) -> None:
         if isinstance(chart, tuple):

@@ -1,3 +1,11 @@
+# Version: 2.4.1
+## Date: 2026-07-08
+### Changes:
+- New: Improved Auto Report statistics, result summaries, and unit-aware information.
+- New: Added optional PDF and SVG figure output.
+- Optimize: Made reports safer, clearer, and more compact.
+
+
 # Version: 2.4.0
 ## Date: 2026-06-30
 ### Changes:

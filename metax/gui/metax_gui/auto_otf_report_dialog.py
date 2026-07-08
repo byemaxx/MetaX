@@ -175,6 +175,22 @@ class AutoOTFReportDialog(QDialog):
         self.top_n_spin = NoWheelSpinBox()
         self.top_n_spin.setRange(1, 1000)
         self.top_n_spin.setValue(20)
+        self.diff_method_combo = NoWheelComboBox()
+        self.diff_method_combo.addItem("limma", "limma")
+        self.diff_method_combo.addItem("Dunnett (legacy)", "dunnett")
+        self.png_format_check = QtWidgets.QCheckBox("PNG")
+        self.png_format_check.setChecked(True)
+        self.png_format_check.setEnabled(False)
+        self.pdf_format_check = QtWidgets.QCheckBox("PDF")
+        self.svg_format_check = QtWidgets.QCheckBox("SVG")
+        format_layout = QtWidgets.QHBoxLayout()
+        format_layout.addWidget(self.png_format_check)
+        format_layout.addWidget(self.pdf_format_check)
+        format_layout.addWidget(self.svg_format_check)
+        format_layout.addStretch(1)
+        self.dpi_spin = NoWheelSpinBox()
+        self.dpi_spin.setRange(72, 1200)
+        self.dpi_spin.setValue(300)
         self.overwrite_check = QtWidgets.QCheckBox("Overwrite previous report files in this directory")
         self.overwrite_check.setChecked(True)
         self.embed_html_check = QtWidgets.QCheckBox("Embed interactive HTML in the report")
@@ -182,6 +198,9 @@ class AutoOTFReportDialog(QDialog):
 
         layout.addRow("Save directory", output_layout)
         layout.addRow("Top-N for plots", self.top_n_spin)
+        layout.addRow("Group-vs-control method", self.diff_method_combo)
+        layout.addRow("Figure formats", format_layout)
+        layout.addRow("Figure DPI", self.dpi_spin)
         layout.addRow("", self.overwrite_check)
         layout.addRow("", self.embed_html_check)
         layout.addRow("", self.run_network_check)
@@ -231,6 +250,16 @@ class AutoOTFReportDialog(QDialog):
         self.any_data_check.setChecked(bool(params.get("any_df_mode", False)))
         self.custom_col_edit.setText(params.get("custom_col_name", ""))
         self.output_dir_edit.setText(params.get("output_dir", ""))
+        diff_method = str(params.get("diff_method", "limma")).lower()
+        diff_method_index = self.diff_method_combo.findData(diff_method)
+        self.diff_method_combo.setCurrentIndex(diff_method_index if diff_method_index >= 0 else 0)
+        configured_formats = params.get("figure_formats", ["png"])
+        if isinstance(configured_formats, str):
+            configured_formats = configured_formats.split(",")
+        figure_formats = {str(item).strip().lower() for item in configured_formats}
+        self.pdf_format_check.setChecked("pdf" in figure_formats)
+        self.svg_format_check.setChecked("svg" in figure_formats)
+        self.dpi_spin.setValue(int(params.get("dpi", 300)))
 
         selected_taxa = set(params.get("selected_taxa_levels") or ["p", "g", "s"])
         for code, check in self.taxa_level_checks.items():
@@ -275,7 +304,7 @@ class AutoOTFReportDialog(QDialog):
         current = self.output_dir_edit.text().strip() or self.initial_params.get("last_path", "")
         selected = QFileDialog.getExistingDirectory(self, "Select Report Output Directory", current)
         if selected:
-            self.output_dir_edit.setText(os.path.normpath(selected))
+            self.output_dir_edit.setText(os.path.normpath(os.path.join(selected, "MetaX_Report")))
 
     def _update_group_values(self):
         group_meta = self.group_combo.currentText()
@@ -304,6 +333,11 @@ class AutoOTFReportDialog(QDialog):
         group_meta = self.group_combo.currentText()
         control_group = self.control_combo.currentText()
         batch_meta = self.batch_meta_combo.currentText()
+        figure_formats = ["png"]
+        if self.pdf_format_check.isChecked():
+            figure_formats.append("pdf")
+        if self.svg_format_check.isChecked():
+            figure_formats.append("svg")
         return {
             "otf_path": self.otf_path_edit.text().strip(),
             "meta_path": self.meta_path_edit.text().strip() or None,
@@ -326,6 +360,9 @@ class AutoOTFReportDialog(QDialog):
             "run_anova": self.run_anova_check.isChecked(),
             "run_ttest": self.run_ttest_check.isChecked(),
             "run_group_vs_control": self.run_group_control_check.isChecked(),
+            "diff_method": self.diff_method_combo.currentData(),
+            "figure_formats": figure_formats,
+            "dpi": self.dpi_spin.value(),
             "quant_method": self.quant_combo.currentText(),
             "outlier_detect_method": self.initial_params.get("outlier_detect_method", "None"),
             "outlier_handle_method": self.initial_params.get("outlier_handle_method", "fillzero"),
@@ -762,12 +799,15 @@ class AutoOTFReportController:
         config.statistics.run_anova = report_params["run_anova"]
         config.statistics.run_ttest = report_params["run_ttest"]
         config.statistics.run_group_vs_control = report_params["run_group_vs_control"]
+        config.statistics.diff_method = report_params["diff_method"]
 
         config.plots.top_n = report_params["top_n"]
         config.plots.run_network = report_params["run_network"]
         config.report.output_dir = report_params["output_dir"]
         config.report.overwrite = report_params["overwrite"]
         config.report.embed_interactive_html = report_params["embed_interactive_html"]
+        config.report.figure_formats = report_params["figure_formats"]
+        config.report.dpi = report_params["dpi"]
 
         gui.logger.write_log(f"run_auto_otf_report config: {config.to_dict()}", "i")
 

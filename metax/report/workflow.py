@@ -19,7 +19,7 @@ from .plot_builder import PlotBuilder
 from .registry import ResultRegistry
 from .reproducibility import save_reproducibility_artifacts
 from .stats_builder import StatsBuilder
-from .table_builder import TableBuilder, VALID_TAXA_LEVELS
+from .table_builder import TableBuilder, VALID_TAXA_LEVELS, taxa_level_label
 
 
 @dataclass
@@ -52,23 +52,12 @@ class AutoOTFReport:
 
     def run(self) -> ReportResult:
         self._validate_input_files()
-        output_was_nonempty = self._output_was_nonempty()
         paths = ReportPaths(self.config.report.output_dir)
         self._prepare_output_dir(paths)
         logger = self._setup_logging(paths)
         registry = ResultRegistry()
         for warning in self._validation_warnings:
             registry.add_warning(warning["message"], warning["source"], details=warning.get("details"))
-        if output_was_nonempty and not self.config.report.overwrite:
-            registry.add_warning(
-                "Output directory already contained files. Existing report files may be overwritten.",
-                "AutoOTFReport",
-                details={
-                    "output_dir": self.config.report.output_dir,
-                    "overwrite": self.config.report.overwrite,
-                },
-            )
-
         logger.info("Starting MetaX Auto OTF report")
         logger.info("OTF path: %s", self.config.input.otf_path)
         logger.info("Meta path: %s", self.config.input.meta_path)
@@ -114,6 +103,12 @@ class AutoOTFReport:
 
     def _validate_input_files(self) -> None:
         input_config = self.config.input
+        diff_method = self.config.statistics.diff_method.lower()
+        if diff_method not in {"limma", "dunnett", "gui_dunnett"}:
+            raise ValueError(
+                f"Unsupported statistics.diff_method [{self.config.statistics.diff_method}]. "
+                "Supported methods are: limma, dunnett."
+            )
         if not input_config.otf_path:
             raise ValueError("OTF path is required.")
         otf_path = Path(input_config.otf_path)
@@ -135,6 +130,15 @@ class AutoOTFReport:
             invalid = [level for level in taxa_levels if level not in VALID_TAXA_LEVELS]
             if invalid:
                 raise ValueError(f"Invalid taxa level(s): {invalid}. Valid levels: {sorted(VALID_TAXA_LEVELS)}")
+        supported_formats = {"png", "pdf", "svg"}
+        invalid_formats = sorted(set(self.config.report.figure_formats) - supported_formats)
+        if invalid_formats:
+            raise ValueError(
+                f"Unsupported report.figure_formats: {invalid_formats}. "
+                f"Supported formats: {sorted(supported_formats)}"
+            )
+        if self.config.report.dpi <= 0:
+            raise ValueError("report.dpi must be greater than zero.")
 
     def _validate_meta_samples_match(self, otf_path: Path, meta_path: Path) -> None:
         otf_samples = set(self._detect_otf_samples(otf_path))
@@ -205,6 +209,11 @@ class AutoOTFReport:
     def _prepare_output_dir(self, paths: ReportPaths) -> None:
         if paths.output_dir.exists() and not paths.output_dir.is_dir():
             raise ValueError(f"Output path exists but is not a directory: {paths.output_dir}")
+        if self._output_was_nonempty() and not self.config.report.overwrite:
+            raise FileExistsError(
+                f"Output directory is not empty: {paths.output_dir}. "
+                "Use --overwrite or choose a new output directory."
+            )
         if paths.output_dir.exists() and self.config.report.overwrite:
             self._clear_previous_report(paths.output_dir)
         paths.create()
@@ -321,10 +330,108 @@ class AutoOTFReport:
             "n_samples": len(context.tfa.sample_list or []),
             "n_groups": n_groups,
             "n_peptides": int(context.tfa.original_df.shape[0]),
-            "n_taxa": self._first_table_rows(context, "taxa"),
+            "n_taxa": self._main_taxa_table_rows(context),
             "n_functions": self._first_table_rows(context, "function"),
             "n_otfs": self._first_table_rows(context, "otf"),
             "otf_counts": self._otf_table_counts(context),
+            "main_taxa_level": taxa_level_label(context.config.analysis.main_taxa_level),
+            "selected_taxa_levels": [taxa_level_label(level) for level in context.taxa_levels],
+            "main_function": context.config.analysis.main_function
+            or (context.function_columns[0] if context.function_columns else "None"),
+            "selected_function_columns": list(context.function_columns),
+            "statistics_backend": self._statistics_backend_summary(context),
+            "unit_aware": self._unit_aware_summary(context),
+        }
+
+    def _main_taxa_table_rows(self, context: ReportContext) -> int:
+        tables = context.generated_tables.get("taxa", [])
+        main_level = context.config.analysis.main_taxa_level
+        for artifact in tables:
+            if artifact.get("taxa_level") == main_level:
+                return int(artifact["df"].shape[0])
+        return int(tables[0]["df"].shape[0]) if tables else 0
+
+    def _statistics_backend_summary(self, context: ReportContext) -> str:
+        if not context.config.statistics.run_group_vs_control:
+            return "Group-vs-control testing disabled"
+        if context.config.statistics.diff_method.lower() == "limma":
+            return "limma via InMoose on log2(x+1)-transformed abundance"
+        return "MetaX GUI Dunnett compatibility workflow"
+
+    def _unit_aware_summary(self, context: ReportContext) -> dict[str, Any]:
+        candidates = ["analysis_unit_id", "analysis_unit", "unit_id"]
+        original_unit_column = next(
+            (name for name in candidates if name in context.tfa.original_df.columns),
+            None,
+        )
+        meta_unit_column = next(
+            (name for name in candidates if name in context.tfa.meta_df.columns),
+            None,
+        )
+        unit_column = original_unit_column or meta_unit_column
+        if unit_column is None:
+            return {
+                "detected": False,
+                "message": "No unit-aware metadata detected",
+                "genome_evidence_source": None,
+                "duplicate_peptide_handling": None,
+                "unit_specific_assignment_available": False,
+            }
+        if original_unit_column:
+            values = context.tfa.original_df[original_unit_column].dropna().astype(str)
+        else:
+            values = context.tfa.meta_df[meta_unit_column].dropna().astype(str)
+        samples_per_unit: dict[str, int] = {}
+        if meta_unit_column and "Sample" in context.tfa.meta_df.columns:
+            samples_per_unit = (
+                context.tfa.meta_df.dropna(subset=[meta_unit_column])
+                .groupby(meta_unit_column)["Sample"]
+                .nunique()
+                .astype(int)
+                .to_dict()
+            )
+            samples_per_unit = {str(unit): int(count) for unit, count in samples_per_unit.items()}
+        elif original_unit_column:
+            sample_columns = [
+                sample
+                for sample in context.tfa.sample_list or []
+                if sample in context.tfa.original_df.columns
+            ]
+            for unit, frame in context.tfa.original_df.dropna(
+                subset=[original_unit_column]
+            ).groupby(original_unit_column):
+                matrix = frame[sample_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
+                samples_per_unit[str(unit)] = int((matrix != 0).any(axis=0).sum())
+        records_per_unit: dict[str, int] = {}
+        if meta_unit_column:
+            record_counts = (
+                context.tfa.meta_df.dropna(subset=[meta_unit_column])
+                .groupby(meta_unit_column)
+                .size()
+                .astype(int)
+                .to_dict()
+            )
+            records_per_unit = {str(unit): int(count) for unit, count in record_counts.items()}
+        features_per_unit: dict[str, int] = {}
+        if original_unit_column:
+            feature_counts = (
+                context.tfa.original_df.dropna(subset=[original_unit_column])
+                .groupby(original_unit_column)
+                .size()
+                .astype(int)
+                .to_dict()
+            )
+            features_per_unit = {str(unit): int(count) for unit, count in feature_counts.items()}
+        return {
+            "detected": True,
+            "unit_column": unit_column,
+            "n_analysis_units": int(values.nunique()),
+            "samples_per_unit": samples_per_unit,
+            "records_per_unit": records_per_unit,
+            "features_per_unit": features_per_unit,
+            "genome_evidence_source": None,
+            "duplicate_peptide_handling": None,
+            "unit_specific_assignment_available": original_unit_column == "analysis_unit_id",
         }
 
     def _first_table_rows(self, context: ReportContext, table_type: str) -> int:
@@ -340,7 +447,7 @@ class AutoOTFReport:
                 {
                     "key": artifact.get("key"),
                     "title": artifact.get("title"),
-                    "taxa_level": artifact.get("taxa_level"),
+                    "taxa_level": taxa_level_label(str(artifact.get("taxa_level"))),
                     "function_column": artifact.get("function_column"),
                     "n_features": int(artifact["df"].shape[0]),
                 }

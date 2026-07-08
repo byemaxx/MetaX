@@ -912,6 +912,33 @@ These peptide results come from the **MetaLab 2.3** MaxQuant workflow.
 
 # Developer Tools
 
+## Auto OTF report
+
+The auto report writes a self-contained `MetaX_Report` folder when an output parent
+is selected in the GUI. Existing non-empty report directories are rejected unless
+**Overwrite** is enabled, which prevents outputs from different runs being mixed.
+
+Group-vs-control testing uses limma via InMoose by default on
+`log2(x + 1)`-transformed abundance. Zero abundance remains numeric zero during
+limma preprocessing. The legacy GUI Dunnett workflow remains available by setting
+`statistics.diff_method: dunnett` or using `--diff-method dunnett`.
+
+The effective configuration is saved as `config_used.yaml`. Static figure output
+defaults to 300 DPI PNG and can include editable-text SVG/PDF:
+
+```yaml
+statistics:
+  diff_method: limma
+report:
+  figure_formats: [png, svg, pdf]
+  dpi: 300
+```
+
+Equivalent CLI options are `--diff-method`, `--figure-formats`, and `--dpi`.
+The report home page identifies the main taxa level and function column, lists
+other combinations as extended results, and shows optional analysis-unit metadata
+when `analysis_unit_id` or a compatible unit column is present.
+
 - **Export Log**
 
   - You can export the log file for debugging or reporting the issue.

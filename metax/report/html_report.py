@@ -42,7 +42,12 @@ class HtmlReportBuilder:
         registry = self.context.registry.to_dict()
         tables = [self._artifact(item) for item in registry["tables"]]
         stats = [self._artifact(item) for item in registry["stats"]]
-        figures = [self._artifact(item) for item in registry["figures"]]
+        all_figures = [self._artifact(item) for item in registry["figures"]]
+        figures = [
+            item
+            for item in all_figures
+            if Path(str(item["path"])).suffix.lower() not in {".pdf", ".svg"}
+        ]
         html_items = [self._artifact(item) for item in registry["html"]]
         self._attach_result_table_links(figures, tables + stats)
         figures_by_kind = self._group_figures_by_kind(figures)
@@ -62,7 +67,7 @@ class HtmlReportBuilder:
             "config": self.context.config.to_dict(),
             "config_yaml": yaml.safe_dump(self.context.config.to_dict(), sort_keys=False, allow_unicode=False),
             "dataset_summary": self.context.dataset_summary,
-            "run_summary": self._run_summary(tables, stats, figures),
+            "run_summary": self._run_summary(tables, stats, all_figures),
             "tables": tables,
             "tables_by_category": self._group_by_category(tables),
             "result_files": tables + stats,
@@ -127,6 +132,7 @@ class HtmlReportBuilder:
         path = Path(str(item["path"]))
         artifact["relative_path"] = self._relative_path(path)
         artifact["category"] = self._category(path)
+        artifact["result_scope"] = "main" if self._is_main_result(artifact) else "extended"
         artifact["rich_title"] = self._rich_title(str(artifact.get("title", artifact.get("key", ""))))
         alternate_path = artifact.get("alternate_interactive_path")
         if alternate_path:
@@ -231,7 +237,12 @@ class HtmlReportBuilder:
             else:
                 body = df.to_html(index=False, classes="preview-table", border=0, escape=True, table_id="preview-table")
             preview_path.write_text(
-                self._preview_document(path, body),
+                self._preview_document(
+                    path,
+                    body,
+                    actual_rows=len(df.index),
+                    download_path=self._relative_path_from(path, preview_dir),
+                ),
                 encoding="utf-8",
             )
             return preview_path
@@ -239,7 +250,13 @@ class HtmlReportBuilder:
             self.context.logger.warning("Could not preview table %s: %s", path, exc)
             return None
 
-    def _preview_document(self, source_path: Path, body: str) -> str:
+    def _preview_document(
+        self,
+        source_path: Path,
+        body: str,
+        actual_rows: int,
+        download_path: str,
+    ) -> str:
         page_size = self.context.config.report.show_top_rows
         title = escape(source_path.name)
         return f"""<!doctype html>
@@ -253,6 +270,7 @@ class HtmlReportBuilder:
     .pager button {{ border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 3px 8px; cursor: pointer; }}
     .pager button:disabled {{ opacity: .45; cursor: default; }}
     .muted {{ color: #687584; }}
+    .download-link {{ color: #136f63; font-weight: 700; }}
     table.preview-table {{ width: 100%; border-collapse: collapse; background: #fff; }}
     .preview-table th, .preview-table td {{ border-bottom: 1px solid #e8edf3; padding: 6px 8px; text-align: left; white-space: nowrap; }}
     .preview-table th {{ position: sticky; top: 37px; background: #f7f9fc; z-index: 1; }}
@@ -260,7 +278,11 @@ class HtmlReportBuilder:
 </head>
 <body>
   <div class="preview-meta">
-    <div><strong>{title}</strong> <span class="muted">preview rows</span></div>
+    <div>
+      <strong>{title}</strong>
+      <span class="muted">Previewing the first {actual_rows} rows. Download the full TSV for complete results.</span>
+      <a class="download-link" href="{escape(download_path)}">Download full table</a>
+    </div>
     <div class="pager">
       <button id="prev-page" type="button">Prev</button>
       <span id="page-status"></span>
@@ -292,10 +314,14 @@ class HtmlReportBuilder:
 </html>"""
 
     def _relative_path(self, path: Path) -> str:
+        return self._relative_path_from(path, self.context.paths.output_dir)
+
+    @staticmethod
+    def _relative_path_from(path: Path, start: Path) -> str:
         try:
-            return os.path.relpath(path.resolve(), self.context.paths.output_dir.resolve())
+            return os.path.relpath(path.resolve(), start.resolve()).replace("\\", "/")
         except Exception:
-            return str(path)
+            return str(path).replace("\\", "/")
 
     def _category(self, path: Path) -> str:
         parts = list(path.parts)
@@ -318,12 +344,40 @@ class HtmlReportBuilder:
         stats: list[dict[str, Any]],
     ) -> dict[str, list[dict[str, Any]]]:
         grouped: dict[str, list[dict[str, Any]]] = {}
+        main_results = [
+            item for item in [*tables, *stats] if item.get("result_scope") == "main"
+        ]
+        if main_results:
+            grouped["main_results"] = main_results
         for table in tables:
+            if table.get("result_scope") == "main":
+                continue
             grouped.setdefault(table["category"], []).append(table)
         for stat in stats:
+            if stat.get("result_scope") == "main":
+                continue
             category = f"comparison_{stat.get('category', 'other')}"
             grouped.setdefault(category, []).append(stat)
         return grouped
+
+    def _is_main_result(self, artifact: dict[str, Any]) -> bool:
+        key = str(artifact.get("key", ""))
+        main_taxa = self.context.config.analysis.main_taxa_level
+        main_function = (
+            self.context.config.analysis.main_function
+            or (self.context.function_columns[0] if self.context.function_columns else None)
+        )
+        safe_function = _safe_filename(main_function) if main_function else None
+        if key == f"taxa_{main_taxa}" or key.startswith(f"taxa_{main_taxa}_"):
+            return True
+        if safe_function and (
+            key == f"function_{safe_function}"
+            or key.startswith(f"function_{safe_function}_")
+            or key == f"otf_{main_taxa}_{safe_function}"
+            or key.startswith(f"otf_{main_taxa}_{safe_function}_")
+        ):
+            return True
+        return False
 
     def _group_overview_figures(self, figures: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
         grouped = {

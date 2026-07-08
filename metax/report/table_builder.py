@@ -49,11 +49,12 @@ class TableBuilder:
     def resolve_taxa_levels(self) -> list[str]:
         taxa_levels = self.config.tables.taxa_levels
         if taxa_levels == ["all"]:
-            return DEFAULT_ALL_TAXA_LEVELS
+            taxa_levels = list(DEFAULT_ALL_TAXA_LEVELS)
         invalid = [level for level in taxa_levels if level not in VALID_TAXA_LEVELS]
         if invalid:
             raise ValueError(f"Invalid taxa level(s): {invalid}. Valid levels: {sorted(VALID_TAXA_LEVELS)}")
-        return taxa_levels
+        main_level = self.config.analysis.main_taxa_level
+        return [main_level, *[level for level in taxa_levels if level != main_level]] if main_level in taxa_levels else taxa_levels
 
     def resolve_function_columns(self) -> list[str]:
         available = [
@@ -145,7 +146,7 @@ class TableBuilder:
                     columns=["peptide_num", "peptide_feature_num"],
                     errors="ignore",
                 )
-                self._save_table(df, path)
+                self._save_table(df, path, table_type="taxa", taxa_level=level)
                 self._register_table(
                     "taxa",
                     f"taxa_{level}",
@@ -190,7 +191,7 @@ class TableBuilder:
                     columns=["peptide_num", "peptide_feature_num"],
                     errors="ignore",
                 )
-                self._save_table(df, path)
+                self._save_table(df, path, table_type="function", function_column=func_name)
                 self._register_table(
                     "function",
                     f"function_{safe_name}",
@@ -248,7 +249,13 @@ class TableBuilder:
                         protein_saved = True
 
                     df = self.tfa.get_df("taxa_func")
-                    self._save_table(df, path)
+                    self._save_table(
+                        df,
+                        path,
+                        table_type="otf",
+                        taxa_level=level,
+                        function_column=func_name,
+                    )
                     self._register_table(
                         "otf",
                         f"otf_{level}_{safe_name}",
@@ -371,7 +378,7 @@ class TableBuilder:
     def _save_protein_table(self) -> None:
         protein_df = self.tfa.get_df("protein")
         path = self.context.paths.protein_tables_dir / "protein_table.tsv"
-        self._save_table(protein_df, path)
+        self._save_table(protein_df, path, table_type="protein")
         self._register_table(
             "protein",
             "protein",
@@ -382,9 +389,31 @@ class TableBuilder:
             df_type="protein",
         )
 
-    def _save_table(self, df: pd.DataFrame, path: Path) -> None:
+    def _save_table(
+        self,
+        df: pd.DataFrame,
+        path: Path,
+        table_type: str,
+        taxa_level: str | None = None,
+        function_column: str | None = None,
+    ) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, sep="\t", index=True)
+        output = df.reset_index()
+        index_columns = list(output.columns[: df.index.nlevels])
+        if "feature_id" not in output.columns:
+            output.insert(0, "feature_id", self._feature_ids(df))
+        if table_type == "taxa" and index_columns:
+            output.rename(columns={index_columns[0]: "Taxon"}, inplace=True)
+        elif table_type == "function" and index_columns:
+            output.rename(columns={index_columns[0]: function_column or "Function"}, inplace=True)
+        elif table_type == "otf":
+            if index_columns:
+                output.rename(columns={index_columns[0]: "Taxon"}, inplace=True)
+            if len(index_columns) > 1:
+                output.rename(columns={index_columns[1]: function_column or "Function"}, inplace=True)
+            output.insert(1, "taxa_level", taxa_level)
+            output.insert(2, "function_column", function_column)
+        output.to_csv(path, sep="\t", index=False)
 
     def _register_table(
         self,
