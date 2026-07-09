@@ -1,4 +1,5 @@
 import inspect
+import threading
 from pathlib import Path
 
 import pytest
@@ -148,3 +149,26 @@ def test_validate_mgnify_source_rejects_metadata_without_required_columns(monkey
 
     with pytest.raises(ValueError, match="missing required columns Lineage"):
         validate_mgnify_source("human-gut")
+
+
+def test_database_download_honours_a_cancellation_request(tmp_path):
+    cancel_event = threading.Event()
+    cancel_event.set()
+
+    with pytest.raises(database_builder_mag.DownloadCancelled):
+        database_builder_mag.download_and_build_database(
+            str(tmp_path), "MetaX.db", "human-gut", cancel_event=cancel_event
+        )
+
+
+def test_progress_window_does_not_force_terminate_worker_threads():
+    generic_thread_source = (
+        Path(__file__).resolve().parents[1]
+        / "metax"
+        / "gui"
+        / "metax_gui"
+        / "generic_thread.py"
+    ).read_text(encoding="utf-8")
+
+    assert "self.thread.terminate()" not in generic_thread_source
+    assert "self.cancel_event.set()" in generic_thread_source

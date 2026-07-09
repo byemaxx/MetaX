@@ -23,15 +23,28 @@ try:
 except ImportError:  # Support direct execution of this module as a script.
     from mgnify_sources import DB_URLS
 
-def download_with_retry(url, save_path, max_retries=3, retry_delay=5):
+
+class DownloadCancelled(Exception):
+    """Raised when the user cancels an MGnify database download."""
+
+
+def _raise_if_cancelled(cancel_event):
+    if cancel_event is not None and cancel_event.is_set():
+        raise DownloadCancelled("MGnify database download cancelled by user.")
+
+def download_with_retry(url, save_path, max_retries=3, retry_delay=5, cancel_event=None):
     """Download function with retry mechanism"""
     file_name = url.split('/')[-1]
     for attempt in range(max_retries):
+        _raise_if_cancelled(cancel_event)
         try:
             with urllib.request.urlopen(url, timeout=30) as response, open(os.path.join(save_path, file_name), 'wb') as out_file:
                 data = response.read()
+                _raise_if_cancelled(cancel_event)
                 out_file.write(data)
             return file_name
+        except DownloadCancelled:
+            raise
         except (URLError, HTTPError) as e:
             if attempt < max_retries - 1:
                 print(f"\nDownload failed for {file_name}, retrying in {retry_delay} seconds... (Error: {str(e)})")
@@ -43,7 +56,7 @@ def download_with_retry(url, save_path, max_retries=3, retry_delay=5):
             print(f"\nUnknown error occurred while downloading {file_name}: {str(e)}")
             return None
 
-def download_mgyg2taxa(save_path, db_type = "human-gut"):
+def download_mgyg2taxa(save_path, db_type = "human-gut", cancel_event=None):
     """Download metadata file for the specified database type"""
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -63,8 +76,16 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
     print(f"Downloading genomes-all_metadata.tsv from {url}...")
     with tqdm(unit='B', unit_scale=True, miniters=1, desc=file_name) as t:
         try:
-            urllib.request.urlretrieve(url, path, reporthook=lambda x, y, z: t.update(y))
+            def reporthook(_, block_size, __):
+                _raise_if_cancelled(cancel_event)
+                t.update(block_size)
+
+            urllib.request.urlretrieve(url, path, reporthook=reporthook)
             print(f"{file_name} download completed.")
+        except DownloadCancelled:
+            if os.path.exists(path):
+                os.remove(path)
+            raise
         except Exception as e:
             print(f"\nDownload failed for {file_name}: {str(e)}")
             if os.path.exists(path):
@@ -128,13 +149,14 @@ def create_download_list(mgyg_list, db_type = "human-gut"):
             continue
     return url_list
 
-def download_id2annotation(down_list, save_path):
+def download_id2annotation(down_list, save_path, cancel_event=None):
     """Download eggNOG annotation files"""
     dir_name = 'id2annotation'
     os.makedirs(os.path.join(save_path, dir_name), exist_ok=True)
     
     need_download_list = []
     for url in down_list:
+        _raise_if_cancelled(cancel_event)
         file_name = url.split('/')[-1]
         if not os.path.exists(os.path.join(save_path, dir_name, file_name)):
             need_download_list.append(url)
@@ -147,13 +169,23 @@ def download_id2annotation(down_list, save_path):
             
     print(f"\nStarting download of {len(need_download_list)} files...")
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(download_with_retry, url, os.path.join(save_path, dir_name)) for url in need_download_list]
+        futures = [
+            executor.submit(download_with_retry, url, os.path.join(save_path, dir_name), cancel_event=cancel_event)
+            for url in need_download_list
+        ]
+        cancelled = False
         with tqdm(total=len(need_download_list), desc="Downloading") as pbar:
             for future in as_completed(futures):
-                result = future.result()
+                try:
+                    result = future.result()
+                except DownloadCancelled:
+                    cancelled = True
+                    continue
                 if result:
                     pbar.update(1)
                     pbar.set_postfix_str(result)
+    if cancelled:
+        _raise_if_cancelled(cancel_event)
     print("Annotation files download completed.")
 
 def read_file(args):
@@ -334,31 +366,39 @@ def check_db(db_path):
         print(f"Error checking database: {str(e)}")
         raise
 
-def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgyg_dir=None):
+def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgyg_dir=None, cancel_event=None):
     """Main function to download and build the database"""
     try:
+        _raise_if_cancelled(cancel_event)
         db_path = os.path.join(save_path, db_name)
         status = check_db(db_path)
 
         if status in ["no db", "no id2taxa"]:
             if meta_path is None:
-                download_mgyg2taxa(save_path, db_type)
+                download_mgyg2taxa(save_path, db_type, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
             mgyg_list = build_id2taxa_db(save_path, db_name, meta_path=meta_path)
+            _raise_if_cancelled(cancel_event)
             down_list = create_download_list(mgyg_list, db_type)
             if mgyg_dir is None:
-                download_id2annotation(down_list, save_path)
+                download_id2annotation(down_list, save_path, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
             build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
 
         elif status == "no id2annotation":
             print("Database already exists, skipping id2taxa build.")
             down_list = create_download_list(query_download_list(db_path), db_type)
             if mgyg_dir is None:
-                download_id2annotation(down_list, save_path)
+                download_id2annotation(down_list, save_path, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
             build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
 
         else:
             print("Database already exists and complete, skipping build.")
             
+    except DownloadCancelled:
+        print("MGnify database build cancelled.")
+        raise
     except Exception as e:
         print(f"Error in database build process: {str(e)}")
         raise
