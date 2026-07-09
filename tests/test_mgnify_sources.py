@@ -2,6 +2,7 @@ import inspect
 import threading
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from metax.database_builder import database_builder_mag, download_mgyg_faa
@@ -159,6 +160,52 @@ def test_database_download_honours_a_cancellation_request(tmp_path):
         database_builder_mag.download_and_build_database(
             str(tmp_path), "MetaX.db", "human-gut", cancel_event=cancel_event
         )
+
+
+def test_cancelled_annotation_download_leaves_no_final_or_partial_file(monkeypatch, tmp_path):
+    cancel_event = threading.Event()
+
+    class Response:
+        def read(self, _):
+            cancel_event.set()
+            return b"partial annotation"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    monkeypatch.setattr(database_builder_mag.urllib.request, "urlopen", lambda *_, **__: Response())
+
+    with pytest.raises(database_builder_mag.DownloadCancelled):
+        database_builder_mag.download_with_retry(
+            "https://example.test/MGYG000001_eggNOG.tsv",
+            tmp_path,
+            cancel_event=cancel_event,
+        )
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_annotation_database_build_honours_cancellation_before_writing(monkeypatch, tmp_path):
+    annotation_dir = tmp_path / "id2annotation"
+    annotation_dir.mkdir()
+    (annotation_dir / "annotation.tsv").write_text("ID\tannotation\nprotein_1\tA\n", encoding="utf-8")
+    cancel_event = threading.Event()
+
+    def cancel_after_read(*_):
+        cancel_event.set()
+        return pd.DataFrame({"ID": ["protein_1"], "annotation": ["A"]})
+
+    monkeypatch.setattr(database_builder_mag, "read_file", cancel_after_read)
+
+    with pytest.raises(database_builder_mag.DownloadCancelled):
+        database_builder_mag.build_id2annotation_db(
+            tmp_path, "MetaX.db", cancel_event=cancel_event
+        )
+
+    assert not (tmp_path / "MetaX.db").exists()
 
 
 def test_progress_window_does_not_force_terminate_worker_threads():
