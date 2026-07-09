@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the database for the MetaX tool 
-# Database source: Unified Human Gastrointestinal Genome (UHGG) v2.0.1
-# Database ftp: http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.1/
+# Database source: MGnify Genomes FTP. Supported catalog versions are defined in mgnify_sources.DB_URLS.
 # Required downloads: 
 #   1. MGYG to EggNOG mapping files in the data folder
 #   2. MGYG to Taxa mapping file 
@@ -19,69 +18,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 from urllib.error import URLError, HTTPError
 
-# Combined URL dictionary for all database types
-DB_URLS = {
-    "chicken-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "cow-rumen": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "honeybee-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/honeybee-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-oral": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-vaginal": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "marine": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "mouse-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "non-model-fish-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "pig-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "sheep-rumen": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/sheep-rumen/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "zebrafish-fecal": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    }
-}
+try:
+    from .mgnify_sources import DB_URLS
+except ImportError:  # Support direct execution of this module as a script.
+    from mgnify_sources import DB_URLS
 
 def download_with_retry(url, save_path, max_retries=3, retry_delay=5):
     """Download function with retry mechanism"""
@@ -423,7 +363,7 @@ def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgy
         print(f"Error in database build process: {str(e)}")
         raise
 
-def build_db(args):
+def build_db(args, parser=None):
     """Build database based on command line arguments"""
     try:
         if args.auto:
@@ -460,18 +400,15 @@ def build_db(args):
             download_and_build_database(save_path, db_name, args.db_type)
                 
         else:
-            parser.print_help()
+            if parser is not None:
+                parser.print_help()
             
     except Exception as e:
         print(f"Error in build process: {str(e)}")
         raise
 
-if __name__ == "__main__":
-    # download_and_build_database(
-    #     save_path = os.path.abspath('C:/Users/Qing/Desktop/test'),
-    #     db_name = 'MetaX.db',
-    #     db_type = 'sheep-rumen'
-    # )
+def build_parser():
+    """Create the command-line parser for the MGnify database builder."""
     parser = argparse.ArgumentParser(
         description='Download Annotation of MGnify and create database for MetaX tool.')
 
@@ -486,10 +423,16 @@ if __name__ == "__main__":
     parser.add_argument('--meta_path', metavar='PATH', type=str,
                         help='Path of the genomes-all_metadata.tsv if already downloaded')
     parser.add_argument('--mgyg_dir', metavar='PATH', type=str,
-                        help='Directory of eggNOG annotation of UHGG if already downloaded')
+                        help='Directory of eggNOG annotation if already downloaded')
     parser.add_argument('--db_type', metavar='TYPE', type=str, default="human-gut",
-                        help='Database type (human-gut, human-oral, chicken-gut, cow-rumen, marine, non-model-fish-gut, pig-gut, zebrafish-fecal)')
+                        choices=tuple(sorted(DB_URLS)),
+                        help=f"MGnify database type. Supported values: {', '.join(sorted(DB_URLS))}")
+    return parser
+
+
+if __name__ == "__main__":
+    parser = build_parser()
 
     args = parser.parse_args()
-    build_db(args)
+    build_db(args, parser)
 

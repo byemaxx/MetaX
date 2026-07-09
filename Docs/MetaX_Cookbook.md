@@ -711,6 +711,8 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
   Ensure you download the correct database type corresponding to your data.
 
+  MetaX supports the MGnify catalogues listed in the Database Builder selector, including barley-rhizosphere, human-skin, maize-rhizosphere, marine-sediment, soil, and tomato-rhizosphere. The selector and command-line options are generated from MetaX's supported-source list. `marine-eukaryotes` is intentionally not enabled by default because it is a beta eukaryotic catalogue with an eggNOG annotation caveat.
+
   ![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
 
   **Option 2: Build Database Using Own Data**

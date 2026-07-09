@@ -137,6 +137,7 @@ try:
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
     from ..database_builder.database_builder_mag import download_and_build_database
+    from ..database_builder.mgnify_sources import mgnify_catalogue_display_names
 
 except (ImportError, ValueError):
     # Use absolute path to import the module when running directly as a script
@@ -214,6 +215,7 @@ except (ImportError, ValueError):
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
     from metax.database_builder.database_builder_mag import download_and_build_database
+    from metax.database_builder.mgnify_sources import mgnify_catalogue_display_names
     from metax.workflow_recorder import (
         AnalysisStep,
         WorkflowRecorder,
@@ -310,6 +312,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         super().__init__()
         MainWindow.closeEvent = self.closeEvent
         self.setupUi(MainWindow)
+        self.comboBox_db_type.clear()
+        self.comboBox_db_type.addItems(mgnify_catalogue_display_names())
         self.MainWindow = MainWindow
         # icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")        
         # self.MainWindow.setWindowIcon(QIcon(icon_path))
@@ -4575,10 +4579,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         QMessageBox.information(self.MainWindow, 'Database Type Help', 'All database will be downloaded from MGnify.\nWebsite: https://www.ebi.ac.uk/metagenomics/')
     
     def show_toolButton_db_all_meta_help(self):
-        QMessageBox.information(self.MainWindow, 'Database All Meta Help', 'You may find it in MetaLab-MAG folder or just leave it, we will download it for you')
+        QMessageBox.information(self.MainWindow, 'Database All Meta Help', '[genomes-all_metadata.tsv] or just leave it, we will download it for you')
     
     def show_toolButton_db_anno_folder_help(self):
-        QMessageBox.information(self.MainWindow, 'Database Annotation Folder Help', 'You may find it in MetaLab-MAG folder or just leave it, we will download it for you')
+        QMessageBox.information(self.MainWindow, 'Database Annotation Folder Help', '[annotation_folder] or just leave it, we will download it for you')
 
 
     def show_toolButton_db_update_built_in_help(self):
