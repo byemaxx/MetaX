@@ -117,11 +117,11 @@ def get_built_in_df(built_in_db_name) -> pd.DataFrame:
     # get the built-in database
     if built_in_db_name.split(' ')[0] == 'dbCAN':
         if built_in_db_name == 'dbCAN (HUMAN GUT)':
-            url = "https://bcb.unl.edu/dbCAN_seq/download/HUMAN%20GUT/dbCAN_overview.tar.gz"
+            url = "https://pro.unl.edu/dbCAN_seq/download_file.php?file=HUMAN%20GUT/dbCAN_overview.tar.gz"
         elif built_in_db_name == 'dbCAN (COW RUMEN)':
-            url = "https://bcb.unl.edu/dbCAN_seq/download/COW%20RUMEN/dbCAN_overview.tar.gz"
+            url = "https://pro.unl.edu/dbCAN_seq/download_file.php?file=COW%20RUMEN/dbCAN_overview.tar.gz"
         elif built_in_db_name == "dbCAN (MARINE)":
-            url = "https://bcb.unl.edu/dbCAN_seq/download/MARINE/dbCAN_overview.tar.gz"
+            url = "https://pro.unl.edu/dbCAN_seq/download_file.php?file=MARINE/dbCAN_overview.tar.gz"
         else:
             raise ValueError(f'Invalid built-in database name: {built_in_db_name}')
         # download the file to home directory MetaX
