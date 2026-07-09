@@ -762,7 +762,7 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
   **Option 1: Built-in Mode**
 
-  We recommend some extended databases, such as [dbCAN_seq](https://bcb.unl.edu/dbCAN_seq).
+  Built-in dbCAN_seq mode merges precomputed annotations by exact protein ID; it does not run sequence-similarity searches or re-annotate custom proteins. Incoming annotation columns replace existing columns with the same names, and MetaX writes a warning listing the replaced columns. For a custom protein database, run dbCAN/run_dbCAN on your own protein FASTA and import the resulting TSV with matching MetaX protein IDs using **Option 2**. Built-in sources are available from [dbCAN_seq](https://pro.unl.edu/dbCAN_seq/).
 
   **Option 2: TSV Table**
 
