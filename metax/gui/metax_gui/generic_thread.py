@@ -8,6 +8,8 @@ import sys
 import re
 import os
 import logging
+import inspect
+import threading
 
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
@@ -36,12 +38,15 @@ class LoggingHandler(logging.Handler):
 
 class FunctionExecutor(QMainWindow):
     finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
+    CANCELLED_RESULT = "Task cancelled by user."
 
     def __init__(self, function, *args, logger=None, **kwargs):
         super().__init__()
 
         self.function_running = True  # set flag to indicate that the function is running
         self.logger = logger 
+        self.cancel_event = threading.Event()
+        self.supports_cancellation = self._supports_cancellation(function)
 
         self.setWindowTitle('Progress')
         # set the size of the window as 1/3 of the screen
@@ -63,6 +68,8 @@ class FunctionExecutor(QMainWindow):
         self.function = function
         self.args = args
         self.kwargs = kwargs
+        if self.supports_cancellation:
+            self.kwargs.setdefault("cancel_event", self.cancel_event)
         
         self.stream_out = EmittingStream(sys.stdout)
         self.stream_err = EmittingStream(sys.stderr)
@@ -88,6 +95,20 @@ class FunctionExecutor(QMainWindow):
 
         self.thread.start()
 
+    @staticmethod
+    def _supports_cancellation(function):
+        """Return whether a worker accepts the cooperative cancellation event."""
+        try:
+            parameters = inspect.signature(function).parameters.values()
+        except (TypeError, ValueError):
+            return False
+
+        return any(
+            parameter.name == "cancel_event"
+            or parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters
+        )
+
             
     def run_function(self):
         sys.stdout = self.stream_out
@@ -96,6 +117,11 @@ class FunctionExecutor(QMainWindow):
         try:
             self.result = self.function(*self.args, **self.kwargs)
         except Exception as e:
+            if self.cancel_event.is_set():
+                self.result = self.CANCELLED_RESULT
+                success = False
+                return
+
             import traceback
             error_message = traceback.format_exc()
             sys.__stderr__.write(error_message)
@@ -111,6 +137,9 @@ class FunctionExecutor(QMainWindow):
             current_function = self.function.__name__
             self.result = f"Error in {current_function}\n\n{str(e)}"
         finally:
+            if self.cancel_event.is_set():
+                self.result = self.CANCELLED_RESULT
+                success = False
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             self.finished.emit(self.result, success)
@@ -150,9 +179,8 @@ class FunctionExecutor(QMainWindow):
         
 
     def forceCloseThread(self):
-        if self.thread.isRunning():
-            self.thread.terminate()  # 强制结束线程
-            self.thread.wait()  # 等待线程结束
+        if self.thread.isRunning() and self.supports_cancellation:
+            self.cancel_event.set()
             
             
 
@@ -160,16 +188,16 @@ class FunctionExecutor(QMainWindow):
         if self.function_running:
             # 如果函数仍在运行，询问用户是否真的想要关闭窗口
             reply = QMessageBox.question(self, 'Message',
-                                        'Are you sure you want to stop the process and close the window?',
+                                        ('Are you sure you want to stop the process and close the window?'
+                                         if self.supports_cancellation else
+                                         'This task cannot be stopped safely and will continue in the background. Close the progress window?'),
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.Yes:
-                self.thread.terminate()  # 强制结束线程
-                # 记录终止信息到logger
+                if self.supports_cancellation:
+                    self.cancel_event.set()
                 if self.logger:
-                    self.logger.write_log("Process was manually terminated by user", 'w')
-                # return success as False, result as None
-                self.finished.emit("Process terminated.", False)
+                    self.logger.write_log("Process cancellation requested by user", 'w')
 
                 event.accept()
             else:
