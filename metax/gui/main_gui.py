@@ -4582,7 +4582,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def show_toolButton_db_update_built_in_help(self):
-        QMessageBox.information(self.MainWindow, 'Database Update Built-in Help', 'Some Database are built-in method, you select one of them, and we will download and update it automatically')
+        QMessageBox.information(self.MainWindow, 'Database Update Built-in Help', 'Built-in dbCAN_seq mode merges precomputed annotations by exact protein ID. It does not run sequence similarity search or re-annotate custom proteins. Incoming annotation columns replace existing columns with the same names; MetaX logs a warning listing the replaced columns. For custom protein databases, run dbCAN/run_dbCAN on your own protein FASTA, then import a TSV table with matching MetaX protein IDs.')
     def show_toolButton_db_update_table_help(self):
         QMessageBox.information(self.MainWindow, 'Database Update Table Help', 'Extend the database by adding new database to the database table\n\nMake sure the column separator is tab\n\nMake sure the first column is Protein name and other columns are function annotation')
 
