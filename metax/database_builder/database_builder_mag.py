@@ -13,6 +13,7 @@ import pandas as pd
 import sqlite3
 import os
 import urllib.request
+import tempfile
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
@@ -35,26 +36,43 @@ def _raise_if_cancelled(cancel_event):
 def download_with_retry(url, save_path, max_retries=3, retry_delay=5, cancel_event=None):
     """Download function with retry mechanism"""
     file_name = url.split('/')[-1]
+    destination = os.path.join(save_path, file_name)
     for attempt in range(max_retries):
         _raise_if_cancelled(cancel_event)
+        temp_path = None
         try:
-            with urllib.request.urlopen(url, timeout=30) as response, open(os.path.join(save_path, file_name), 'wb') as out_file:
-                data = response.read()
-                _raise_if_cancelled(cancel_event)
-                out_file.write(data)
+            with urllib.request.urlopen(url, timeout=30) as response:
+                with tempfile.NamedTemporaryFile(
+                    mode='wb', prefix=f'.{file_name}.', suffix='.part', dir=save_path, delete=False
+                ) as out_file:
+                    temp_path = out_file.name
+                    while True:
+                        _raise_if_cancelled(cancel_event)
+                        data = response.read(1024 * 1024)
+                        if not data:
+                            break
+                        _raise_if_cancelled(cancel_event)
+                        out_file.write(data)
+            _raise_if_cancelled(cancel_event)
+            os.replace(temp_path, destination)
+            temp_path = None
             return file_name
         except DownloadCancelled:
             raise
         except (URLError, HTTPError) as e:
             if attempt < max_retries - 1:
                 print(f"\nDownload failed for {file_name}, retrying in {retry_delay} seconds... (Error: {str(e)})")
-                time.sleep(retry_delay)
+                if cancel_event is not None and cancel_event.wait(retry_delay):
+                    raise DownloadCancelled("MGnify database download cancelled by user.")
             else:
                 print(f"\nDownload failed for {file_name}, maximum retries reached.")
                 return None
         except Exception as e:
             print(f"\nUnknown error occurred while downloading {file_name}: {str(e)}")
             return None
+        finally:
+            if temp_path is not None and os.path.exists(temp_path):
+                os.remove(temp_path)
 
 def download_mgyg2taxa(save_path, db_type = "human-gut", cancel_event=None):
     """Download metadata file for the specified database type"""
@@ -93,14 +111,15 @@ def download_mgyg2taxa(save_path, db_type = "human-gut", cancel_event=None):
             raise
     return path
 
-def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv', meta_path = None):
+def build_id2taxa_db(save_path, db_name, file_name='genomes-all_metadata.tsv', meta_path=None, cancel_event=None):
     """Build id2taxa database and return a list of MGYG IDs"""
     try:
+        _raise_if_cancelled(cancel_event)
         if meta_path is None:
             df = pd.read_csv(os.path.join(save_path, file_name), sep='\t', header=0)
         else:
             df = pd.read_csv(meta_path, sep='\t', header=0)
-            
+        _raise_if_cancelled(cancel_event)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         
@@ -121,6 +140,7 @@ def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv',
         if len(result) > 0:
             print(f"{table_name} already exists in db, skipping.")
         else:
+            _raise_if_cancelled(cancel_event)
             df.to_sql("id2taxa", conn, index=True, if_exists='replace')
             print("id2taxa database built successfully.")
             
@@ -188,12 +208,14 @@ def download_id2annotation(down_list, save_path, cancel_event=None):
         _raise_if_cancelled(cancel_event)
     print("Annotation files download completed.")
 
-def read_file(args):
+def read_file(args, cancel_event=None):
     """Read and process a single annotation file"""
     file_path = args[0]
     try:
+        _raise_if_cancelled(cancel_event)
         # Files should already be validated, so we can read directly
         df = pd.read_csv(file_path, sep='\t', header=0, index_col=None)
+        _raise_if_cancelled(cancel_event)
         
         # Check if the dataframe is empty
         if df.empty:
@@ -207,12 +229,13 @@ def read_file(args):
         # Since files are pre-validated, any error here is unexpected
         raise
 
-def validate_annotation_files(file_list, path):
+def validate_annotation_files(file_list, path, cancel_event=None):
     """Validate annotation files and return list of valid files"""
     valid_files = []
     invalid_files = []
     
     for f in file_list:
+        _raise_if_cancelled(cancel_event)
         file_path = os.path.join(path, f)
         try:
             if not os.path.exists(file_path):
@@ -255,9 +278,10 @@ def validate_annotation_files(file_list, path):
     print(f"All files are valid: {len(valid_files)}/{len(file_list)}")
     return valid_files
 
-def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
+def build_id2annotation_db(save_path, db_name, dir_name='id2annotation', mgyg_dir=None, cancel_event=None):
     """Build id2annotation database from downloaded files"""
     try:
+        _raise_if_cancelled(cancel_event)
         if mgyg_dir is None:
             file_list = os.listdir(os.path.join(save_path, dir_name))
             path = os.path.join(save_path, dir_name)
@@ -266,16 +290,20 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
             path = mgyg_dir
 
         print("Validating annotation files...")
-        valid_files = validate_annotation_files(file_list, path)
+        valid_files = validate_annotation_files(file_list, path, cancel_event=cancel_event)
         
         # If we reach here, all files are valid
         print("Loading annotation files...")
         with ThreadPoolExecutor() as executor:
             df_list = []
-            futures = [executor.submit(read_file, (os.path.join(path, f),)) for f in valid_files]
+            futures = [
+                executor.submit(read_file, (os.path.join(path, f),), cancel_event)
+                for f in valid_files
+            ]
             with tqdm(total=len(valid_files), desc="Processing files") as pbar:
                 for future in as_completed(futures):
                     result = future.result()
+                    _raise_if_cancelled(cancel_event)
                     pbar.update(1)
                     if result is not None:  # Only add non-None results
                         df_list.append(result)
@@ -287,6 +315,7 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
         
         print("Concatenating annotation files...")
         df = pd.concat(df_list, ignore_index=True)
+        _raise_if_cancelled(cancel_event)
         df = df.drop_duplicates()
         df = df.rename(columns=lambda x: x.replace('#', ''))
         df.rename(columns={df.columns[0]: "ID"}, inplace=True)
@@ -313,7 +342,12 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
             print(f"{table_name} already exists in db, skipping.")
         else:
             print("Building id2annotation database...")
+            _raise_if_cancelled(cancel_event)
             df.to_sql("id2annotation", conn, index=True, if_exists='replace')
+            if cancel_event is not None and cancel_event.is_set():
+                c.execute("DROP TABLE IF EXISTS id2annotation")
+                conn.commit()
+                _raise_if_cancelled(cancel_event)
             print("id2annotation database built successfully.")
             
     except Exception as e:
@@ -377,13 +411,18 @@ def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgy
             if meta_path is None:
                 download_mgyg2taxa(save_path, db_type, cancel_event=cancel_event)
             _raise_if_cancelled(cancel_event)
-            mgyg_list = build_id2taxa_db(save_path, db_name, meta_path=meta_path)
+            mgyg_list = build_id2taxa_db(
+                save_path, db_name, meta_path=meta_path, cancel_event=cancel_event
+            )
             _raise_if_cancelled(cancel_event)
             down_list = create_download_list(mgyg_list, db_type)
             if mgyg_dir is None:
                 download_id2annotation(down_list, save_path, cancel_event=cancel_event)
             _raise_if_cancelled(cancel_event)
-            build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
+            build_id2annotation_db(
+                save_path, db_name, mgyg_dir=mgyg_dir, cancel_event=cancel_event
+            )
+            _raise_if_cancelled(cancel_event)
 
         elif status == "no id2annotation":
             print("Database already exists, skipping id2taxa build.")
@@ -391,7 +430,10 @@ def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgy
             if mgyg_dir is None:
                 download_id2annotation(down_list, save_path, cancel_event=cancel_event)
             _raise_if_cancelled(cancel_event)
-            build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
+            build_id2annotation_db(
+                save_path, db_name, mgyg_dir=mgyg_dir, cancel_event=cancel_event
+            )
+            _raise_if_cancelled(cancel_event)
 
         else:
             print("Database already exists and complete, skipping build.")
