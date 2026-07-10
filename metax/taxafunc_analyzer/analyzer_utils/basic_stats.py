@@ -121,11 +121,11 @@ class BasicStats:
         if not self.tfa.genome_mode:
             sort_list.remove('genome')
         
-        taxa_list = df['LCA_level'].tolist()
-        dic = {i: taxa_list.count(i) for i in sort_list}
+        counts = df.groupby('LCA_level')[self.tfa.peptide_col_name].nunique()
+        dic = counts.reindex(sort_list, fill_value=0).astype(int).to_dict()
         df_taxa = pd.DataFrame(dic.items(), columns=['LCA_level', 'count'])
-        df_taxa['freq'] = (df_taxa['count'] /
-                           df_taxa['count'].sum() * 100).round(2)
+        total = df_taxa['count'].sum()
+        df_taxa['freq'] = (df_taxa['count'] / total * 100).round(2) if total else 0.0
         df_taxa['label'] = df_taxa.apply(
             lambda row: f"{row['LCA_level']} ({row['freq']}%)", axis=1)
         return df_taxa
@@ -152,14 +152,14 @@ class BasicStats:
             col_list.append('genome')
         dft.columns = col_list
         
-        dft['peptide_num'] = 1 # add a initial peptide number for each row
+        dft[self.tfa.peptide_col_name] = df[self.tfa.peptide_col_name].values
         
         dic = {}
         for i in col_list:
-            dfi = dft[[i, 'peptide_num']].groupby(i).sum()
+            peptide_counts = dft.groupby(i)[self.tfa.peptide_col_name].nunique()
             # only extract the taxa with more than peptide threshold
-            dfi = dfi[dfi['peptide_num'] >= peptide_num]
-            set_i = set(dfi.index)
+            peptide_counts = peptide_counts[peptide_counts >= peptide_num]
+            set_i = set(peptide_counts.index)
             remove_list = [f'{i[0]}__NULL', f'{i[0]}__', ' ', None, f'{i[0]}__nan']
             for j in remove_list:
                 if j in set_i:
@@ -176,11 +176,16 @@ class BasicStats:
         df = self.tfa.original_df.copy()
         # remove not_found
         df = df[ (df[func_name].notnull()) & (df[func_name] != 'not_found') & (df[func_name] != '-')]
-        
+
         prop_name = f'{func_name}_prop'
 
+        bin_counts = []
+        for i in range(11):
+            mask = (df[prop_name] >= i / 10) & (df[prop_name] < (i + 1) / 10)
+            # Counts are per-bin non-redundant peptides; a sequence in multiple bins is counted once in each bin.
+            bin_counts.append(df.loc[mask, self.tfa.peptide_col_name].nunique())
         df_prop = pd.DataFrame({'prop': ['0-0.1', '0-0.2', '0-0.3', '0-0.4', '0-0.5', '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1', '1'],
-                                'n': [len(df[(df[prop_name] >= i/10) & (df[prop_name] < (i+1)/10)]) for i in range(11)]})
+                                'n': bin_counts})
         df_prop['freq'] = (df_prop['n']/df_prop['n'].sum()*100).round(2)
         df_prop['label'] = df_prop['prop'] + \
             ' (' + df_prop['freq'].astype(str) + '%)'

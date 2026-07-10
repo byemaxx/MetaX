@@ -4,6 +4,7 @@ import re
 from tqdm import tqdm
 import time
 import os
+from functools import partial
 import threading
 import sqlite3
 from datetime import datetime
@@ -19,7 +20,20 @@ except ImportError:
     from proteins_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
 
-        
+
+def _prepare_otf_for_output(
+    df: pd.DataFrame,
+    sample_cols: list[str],
+) -> pd.DataFrame:
+    """Return an OTF output copy with exact sample-intensity zeros made sparse."""
+    output_df = df.copy()
+    existing_sample_cols = [col for col in sample_cols if col in output_df.columns]
+    for col in existing_sample_cols:
+        numeric_values = pd.to_numeric(output_df[col], errors="coerce")
+        output_df[col] = numeric_values.mask(numeric_values.eq(0))
+    return output_df
+
+
 class PeptideAnnotator:
     """
     A class to annotate peptides with taxonomic and functional information.
@@ -43,12 +57,16 @@ class PeptideAnnotator:
         run_annotate():
             Runs the entire annotation process and returns the annotated dataframe.
     """
+    parallel_cache_annotation_min_groups = 1000
+    parallel_cache_annotation_max_workers = 8
+
     def __init__(self, db_path:str,  output_path: str,
                  threshold=1.0, genome_mode=True, protein_separator=';', protein_genome_separator = '_',
                  protein_col='Proteins', peptide_col='Sequence', sample_col_prefix='Intensity',
                  distinct_genome_threshold:int=0, exclude_protein_startwith:str='REV_',
                  peptide_path: str|None= None,peptide_df: pd.DataFrame|None=None,
-                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum'):
+                 additional_running_info: dict=None, duplicate_peptide_handling_mode: str='sum',
+                 annotation_result_cache: dict[str, dict] | None = None):
         self.db_path = db_path
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
@@ -68,6 +86,11 @@ class PeptideAnnotator:
         self.thread_local = threading.local()
         self.start_time = datetime.now()
         self.additional_running_info = additional_running_info if additional_running_info else {}
+        self.annotation_result_cache = (
+            annotation_result_cache
+            if annotation_result_cache is not None
+            else {}
+        )
         # save running statistics for logging info file
         self.run_stats: dict = {}
         
@@ -95,10 +118,24 @@ class PeptideAnnotator:
 
     def run_pep2taxafunc(self, row) -> dict:
         protein_list = str(row).split(self.protein_separator)
+        return self.run_pep2taxafunc_with_instance(
+            protein_list,
+            self.get_pep2taxafunc(),
+        )
+
+    def run_pep2taxafunc_with_instance(self, protein_list, p2tf) -> dict:
         result = {}
         try:
-            p2tf = self.get_pep2taxafunc()
             result = p2tf.proteins_to_taxa_func(protein_list)
+        except Exception as e:
+            print(f"Error: {protein_list}")
+            print(e)
+        return result
+
+    def run_pep2taxafunc_from_cache(self, protein_list, p2tf) -> dict:
+        result = {}
+        try:
+            result = p2tf.proteins_to_taxa_func_from_cache(protein_list)
         except Exception as e:
             print(f"Error: {protein_list}")
             print(e)
@@ -147,22 +184,155 @@ class PeptideAnnotator:
         df_t = df.copy()
         df_t.rename(columns={self.peptide_col: 'Sequence'}, inplace=True)
         print('Running proteins_to_taxa_func...')
-        
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self.run_pep2taxafunc, protein) for protein in df_t[self.protein_col]]
-            results = [future.result() for future in tqdm(futures, total=len(futures))]
 
-        df_t0 = pd.DataFrame(results, index=df_t.index)
-        df_t0 = self.add_additional_columns(df_t0)
-        df_t0['None_func'] = 'none_func'
-        df_t0['None_func_prop'] = '1.0'
-        
-        if 'Description' in df_t0.columns:
-            df_t0.rename(columns={'Description': 'eggNOG_Description', 'Description_prop': 'eggNOG_Description_prop'}, inplace=True)
-        if 'Preferred_name' in df_t0.columns:
-            df_t0.rename(columns={'Preferred_name': 'Gene', 'Preferred_name_prop': 'Gene_prop'}, inplace=True)
+        unique_proteins = (
+            df_t[self.protein_col]
+            .dropna()
+            .drop_duplicates()
+            .tolist()
+        )
+        protein_groups = {
+            protein: str(protein).split(self.protein_separator)
+            for protein in unique_proteins
+        }
+        print(f'  - rows: {len(df_t)}')
+        print(f'  - unique protein groups: {len(unique_proteins)}')
+
+        def finalize_annotation_frame(annotation_df: pd.DataFrame) -> pd.DataFrame:
+            annotation_df = self.add_additional_columns(annotation_df)
+            annotation_df['None_func'] = 'none_func'
+            annotation_df['None_func_prop'] = '1.0'
+            if 'Description' in annotation_df.columns:
+                annotation_df.rename(
+                    columns={
+                        'Description': 'eggNOG_Description',
+                        'Description_prop': 'eggNOG_Description_prop',
+                    },
+                    inplace=True,
+                )
+            if 'Preferred_name' in annotation_df.columns:
+                annotation_df.rename(
+                    columns={
+                        'Preferred_name': 'Gene',
+                        'Preferred_name_prop': 'Gene_prop',
+                    },
+                    inplace=True,
+                )
+            else:
+                print(
+                    'Warning: column name "Description" does not exist!, '
+                    'skip renaming...'
+                )
+            return annotation_df
+
+        missing_proteins = [
+            protein
+            for protein in unique_proteins
+            if protein not in self.annotation_result_cache
+        ]
+        print(
+            f'  - cached protein groups: '
+            f'{len(unique_proteins) - len(missing_proteins)}'
+        )
+        print(f'  - protein groups to annotate: {len(missing_proteins)}')
+
+        if missing_proteins:
+            missing_groups = [
+                protein_groups[protein]
+                for protein in missing_proteins
+            ]
+            p2tf = Pep2TaxaFunc(
+                db_path=self.db_path,
+                threshold=self.threshold,
+                genome_mode=self.genome_mode,
+                protein_genome_separator=self.protein_genome_separator,
+            )
+            prefetch_start = time.perf_counter()
+            try:
+                unique_protein_count, unique_genome_count = (
+                    p2tf.prefetch_for_protein_groups(missing_groups)
+                )
+                prefetch_seconds = time.perf_counter() - prefetch_start
+                print(f'  - unique proteins: {unique_protein_count}')
+                print(f'  - unique genomes: {unique_genome_count}')
+                print(f'  - batch prefetch: {prefetch_seconds:.1f} s')
+
+                annotation_start = time.perf_counter()
+                if (
+                    len(missing_proteins)
+                    >= self.parallel_cache_annotation_min_groups
+                    and (os.cpu_count() or 1) > 1
+                ):
+                    max_workers = min(
+                        os.cpu_count() or 1,
+                        self.parallel_cache_annotation_max_workers,
+                    )
+                    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                        missing_results = list(tqdm(
+                            executor.map(
+                                partial(
+                                    self.run_pep2taxafunc_from_cache,
+                                    p2tf=p2tf,
+                                ),
+                                missing_groups,
+                            ),
+                            total=len(missing_groups),
+                        ))
+                else:
+                    missing_results = [
+                        self.run_pep2taxafunc_from_cache(group, p2tf)
+                        for group in tqdm(
+                            missing_groups,
+                            total=len(missing_groups),
+                        )
+                    ]
+                annotation_seconds = time.perf_counter() - annotation_start
+                print(f'  - in-memory annotation: {annotation_seconds:.1f} s')
+            finally:
+                p2tf.conn.close()
+
+            missing_annotation_df = pd.DataFrame(
+                missing_results,
+                index=missing_proteins,
+            )
+            missing_annotation_df = finalize_annotation_frame(missing_annotation_df)
+            self.annotation_result_cache.update(
+                missing_annotation_df.to_dict(orient='index')
+            )
         else:
-            print('Warning: column name "Description" does not exist!, skip renaming...')
+            print('  - batch prefetch: 0.0 s')
+            print('  - in-memory annotation: 0.0 s')
+
+        nan_annotation_result = None
+        if df_t[self.protein_col].isna().any():
+            p2tf = Pep2TaxaFunc(
+                db_path=self.db_path,
+                threshold=self.threshold,
+                genome_mode=self.genome_mode,
+                protein_genome_separator=self.protein_genome_separator,
+            )
+            try:
+                nan_annotation_df = pd.DataFrame(
+                    [
+                        self.run_pep2taxafunc_with_instance(
+                            str(float('nan')).split(self.protein_separator),
+                            p2tf,
+                        )
+                    ]
+                )
+            finally:
+                p2tf.conn.close()
+            nan_annotation_result = finalize_annotation_frame(
+                nan_annotation_df
+            ).iloc[0].to_dict()
+
+        results = [
+            nan_annotation_result
+            if pd.isna(protein)
+            else self.annotation_result_cache[protein]
+            for protein in df_t[self.protein_col]
+        ]
+        df_t0 = pd.DataFrame(results, index=df_t.index)
             
         df_t = pd.concat([df_t, df_t0], axis=1)
         cols = df_t.columns.tolist()
@@ -221,7 +391,9 @@ class PeptideAnnotator:
         
         # save the dataframe to the output file (clean TSV without comments)
         print('Saving result dataframe to output file...')
-        df.to_csv(self.output_path, sep='\t', index=False)
+        sample_cols = [c for c in df.columns if c.startswith('Intensity_')]
+        output_df = _prepare_otf_for_output(df, sample_cols)
+        output_df.to_csv(self.output_path, sep='\t', index=False)
         
         # save metadata to a separate info file
         base_path = os.path.splitext(self.output_path)[0]
@@ -259,6 +431,11 @@ class PeptideAnnotator:
             f.write("-"*50 + "\n")
             # 处理流程摘要
             f.write("Processing summary:\n")
+            f.write("  - sparse_zero_intensity_output: True\n")
+            f.write(
+                "  - Zero intensity values in sample columns are serialized as empty fields "
+                "and should be interpreted as zero by MetaX Analyzer defaults.\n"
+            )
             rs = self.run_stats if hasattr(self, 'run_stats') else {}
             if rs:
                 if 'read_rows' in rs:
@@ -465,7 +642,7 @@ class PeptideAnnotator:
         print(f'Handling duplicate peptides with mode [{mode}]: from [{row_count}] -> [{df.shape[0]}] (removed: {removed})')
         return df
 
-    def run_annotate(self):
+    def run_annotate(self, save_output: bool = True):
         print('Start running Peptide Annotator...')
         if self.peptide_df is not None:
             print(f'Peptide Table was provided with shape: {self.peptide_df.shape}')
@@ -521,7 +698,8 @@ class PeptideAnnotator:
         
         df_res = self.rename_columns(df_res)
         
-        self.save_result(df_res)
+        if save_output:
+            self.save_result(df_res)
         
         return df_res
 

@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  {% if favicon_path %}
+  <link rel="icon" href="{{ favicon_path }}" type="image/png">
+  {% endif %}
+  <style>
+    :root {
+      --page: #f5f3ef;
+      --surface: #fffdfa;
+      --surface-raised: #ffffff;
+      --surface-soft: #f7faf8;
+      --ink: #202833;
+      --subtle: #66727f;
+      --line: #ded8cf;
+      --line-strong: #cfc7ba;
+      --primary: #136f63;
+      --primary-soft: #e2f1ed;
+      --blue: #2f5f8f;
+      --blue-soft: #e8eef7;
+      --coral: #b15b44;
+      --coral-soft: #f8e9e4;
+      --gold: #8a6500;
+      --gold-soft: #fff4d7;
+      --danger: #9f1d1d;
+      --danger-soft: #fff0f0;
+      --sidebar-accent: #136f63;
+      --sidebar-accent-soft: #edf6f3;
+      --sidebar-hover: #f0ede7;
+      --shadow: 0 16px 40px rgba(32, 40, 51, .08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 13px/1.48 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body.modal-open { overflow: hidden; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1, h2, h3 { margin: 0; line-height: 1.2; }
+    h1 { font-size: 23px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 14px; }
+    p { margin: 0; }
+    button, input { font: inherit; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 244px minmax(0, 1fr); }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      background: #fbfaf7;
+      border-right: 1px solid var(--line);
+      padding: 16px 14px;
+    }
+    .brand { border-bottom: 1px solid var(--line); padding: 0 4px 14px; margin-bottom: 12px; }
+    .brand-mark {
+      width: min(156px, 100%); aspect-ratio: 1 / 1; border-radius: 14px; background: transparent;
+      display: grid; place-items: center; font-weight: 800; margin: 0 auto 8px;
+      border: 0; overflow: hidden;
+    }
+    .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+    .brand-title { font-size: 16px; font-weight: 750; }
+    .brand-subtitle { color: var(--subtle); font-size: 11px; margin-top: 3px; }
+    .nav-label {
+      color: var(--subtle); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+      margin: 13px 6px 6px;
+    }
+    .nav-button {
+      width: 100%; border: 0; border-radius: 10px; background: transparent; color: var(--ink);
+      padding: 8px; cursor: pointer; text-align: left; display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) auto; gap: 7px; align-items: center;
+    }
+    .nav-button:hover { background: var(--sidebar-hover); }
+    .nav-button.active { background: var(--sidebar-accent); color: #fff; box-shadow: 0 8px 18px rgba(19, 111, 99, .18); }
+    .nav-icon {
+      width: 23px; height: 23px; border-radius: 7px; display: grid; place-items: center;
+      background: rgba(32, 40, 51, .08); font-size: 11px; font-weight: 750;
+    }
+    .nav-button.active .nav-icon { background: rgba(255, 255, 255, .18); }
+    .nav-title { font-weight: 650; overflow-wrap: anywhere; }
+    .nav-note { color: var(--subtle); font-size: 11px; margin-top: 1px; display: block; }
+    .nav-button.active .nav-note { color: rgba(255, 255, 255, .78); }
+    .count-pill {
+      min-width: 28px; padding: 2px 8px; border-radius: 999px; background: #e9e3d8;
+      color: #3c4651; font-size: 12px; text-align: center; font-weight: 650;
+    }
+    .nav-button.active .count-pill { background: rgba(255, 255, 255, .2); color: #fff; }
+    .side-summary {
+      margin-top: 14px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fffdfa;
+    }
+    .side-summary-title { font-weight: 700; margin-bottom: 8px; }
+    .side-summary-row {
+      display: flex; justify-content: space-between; gap: 10px; color: var(--subtle);
+      font-size: 12px; padding: 4px 0;
+    }
+    .side-summary-row strong { color: var(--ink); }
+    .content { min-width: 0; padding: 20px; }
+    .report-hero {
+      background: var(--surface-raised); border: 1px solid var(--line); border-radius: 18px;
+      box-shadow: var(--shadow); padding: 20px; margin-bottom: 15px; display: grid;
+      grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start;
+    }
+    .eyebrow {
+      color: var(--primary); font-weight: 750; font-size: 12px; text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: 7px;
+    }
+    .hero-copy { color: var(--subtle); max-width: 760px; margin-top: 8px; }
+    .quick-links, .artifact-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .action-link, .action-button {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 30px;
+      border: 1px solid var(--line-strong); border-radius: 9px; background: #fffdfa;
+      color: var(--ink); padding: 5px 9px; cursor: pointer; white-space: nowrap;
+    }
+    .action-link:hover, .action-button:hover { border-color: var(--primary); text-decoration: none; }
+    .action-button.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .panel {
+      background: var(--surface-raised); border: 1px solid var(--line); border-radius: 16px;
+      padding: 17px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(32, 40, 51, .05);
+    }
+    .panel-header {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; margin-bottom: 14px;
+    }
+    .panel-kicker {
+      color: var(--subtle); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 5px; font-weight: 700;
+    }
+    .panel-help { color: var(--subtle); margin-top: 7px; max-width: 760px; }
+    .muted { color: var(--subtle); }
+    .metric-grid, .task-grid, .file-grid, .figure-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;
+    }
+    .figure-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .metric, .task-card, .artifact, .figure-tile, .function-panel {
+      border: 1px solid var(--line); border-radius: 12px; background: #fffdfa; padding: 12px;
+    }
+    .artifact-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+    }
+    .metric.primary { background: var(--primary-soft); border-color: #c6dfd8; }
+    .metric.blue { background: var(--blue-soft); border-color: #ced9ea; }
+    .metric.coral { background: var(--coral-soft); border-color: #edcfc5; }
+    .metric.gold { background: var(--gold-soft); border-color: #e7d8a6; }
+    .metric .label { color: var(--subtle); font-size: 12px; text-transform: uppercase; font-weight: 700; }
+    .metric .value { font-size: 20px; font-weight: 760; margin-top: 4px; overflow-wrap: anywhere; }
+    .metric .hint { color: var(--subtle); font-size: 12px; margin-top: 5px; }
+    .task-card, .figure-tile { display: grid; gap: 10px; }
+    .task-top { display: flex; align-items: center; gap: 9px; }
+    .task-badge {
+      width: 28px; height: 28px; border-radius: 8px; background: var(--primary-soft);
+      color: var(--primary); display: grid; place-items: center; font-weight: 800;
+    }
+    .toolbar {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 14px;
+    }
+    .search-input {
+      min-height: 34px; width: min(340px, 100%); border: 1px solid var(--line-strong);
+      border-radius: 9px; background: #fffdfa; color: var(--ink); padding: 6px 9px;
+    }
+    .tab-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+    .tab-button {
+      border: 1px solid var(--line-strong); border-radius: 999px; background: #fffdfa;
+      color: var(--ink); padding: 5px 10px; cursor: pointer;
+    }
+    .tab-button.active { border-color: var(--primary); background: var(--primary-soft); color: #003f36; font-weight: 750; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .sub-tabs { margin-top: 8px; }
+    .subgroup-heading {
+      display: flex; justify-content: space-between; align-items: start; gap: 12px; margin: 8px 0 12px;
+    }
+    .subgroup-summary { color: var(--subtle); margin: 6px 0 10px; }
+    .function-panel-stack { display: grid; gap: 16px; }
+    .section-context, .family-note {
+      border: 1px solid var(--line); border-radius: 14px; background: var(--surface-soft);
+      padding: 13px; margin-bottom: 16px; color: var(--subtle);
+    }
+    .section-context strong, .family-note strong { color: var(--ink); }
+    .family-context { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .family-note-label {
+      color: var(--subtle); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 750; margin-bottom: 4px;
+    }
+    .artifact-title { font-weight: 750; overflow-wrap: anywhere; }
+    .figure-meta-details { margin-top: 6px; }
+    .figure-meta-details summary {
+      cursor: pointer;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .title-token {
+      display: inline-block; border-radius: 999px; padding: 1px 7px; margin: 0 1px;
+      font-weight: 800; line-height: 1.45;
+    }
+    .title-token-function { background: var(--blue-soft); color: var(--blue); }
+    .title-token-taxa { background: var(--primary-soft); color: var(--primary); }
+    .title-token-group { background: var(--coral-soft); color: var(--coral); }
+    .title-token-control { background: var(--gold-soft); color: var(--gold); }
+    .artifact-meta, .file-path { color: var(--subtle); font-size: 13px; margin-top: 4px; overflow-wrap: anywhere; }
+    .file-path { color: #7a7166; font-size: 12px; margin-top: 6px; }
+    .preview-frame {
+      display: none; width: 100%; height: 360px; margin-top: 10px;
+      border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .preview-frame.active { display: block; }
+    .figure-tile img {
+      display: block; width: 100%; max-height: 420px; object-fit: contain;
+      border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .interactive-thumb {
+      width: 100%; min-height: 170px; border: 1px dashed var(--line-strong); border-radius: 12px;
+      background: linear-gradient(135deg, #fffdfa, var(--surface-soft)); color: var(--ink);
+      display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+      padding: 18px; cursor: pointer; text-align: left;
+    }
+    .interactive-thumb:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .interactive-mark {
+      width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center;
+      background: var(--primary); color: #fff; font-weight: 850; font-size: 12px; letter-spacing: .04em;
+    }
+    .interactive-copy { display: grid; gap: 3px; min-width: 0; }
+    .interactive-copy span { color: var(--subtle); font-size: 13px; }
+    .empty-state {
+      border: 1px dashed var(--line-strong); border-radius: 14px; background: #fffdfa;
+      padding: 18px; color: var(--subtle);
+    }
+    .message { border-left: 5px solid var(--gold); background: var(--gold-soft); padding: 11px 13px; margin: 9px 0; border-radius: 8px; }
+    .message.error { border-left-color: var(--danger); background: var(--danger-soft); }
+    details.config-block summary { cursor: pointer; color: var(--primary); font-weight: 750; margin-bottom: 10px; }
+    pre {
+      overflow: auto; background: #1f2933; color: #f7fafc; border-radius: 12px;
+      padding: 14px; font-size: 12px; max-height: 420px;
+    }
+    .modal {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      padding: 24px; background: rgba(32, 40, 51, .62); z-index: 10; overscroll-behavior: contain;
+    }
+    .modal.active { display: flex; }
+    .modal-panel {
+      width: min(1100px, 96vw); max-height: 92vh; overflow: auto; border-radius: 16px;
+      background: #fffdfa; padding: 16px; box-shadow: 0 22px 60px rgba(0, 0, 0, .2);
+      overscroll-behavior: contain;
+    }
+    .modal-panel.image-preview, .modal-panel.interactive, .modal-panel.table-preview {
+      width: min(1500px, 98vw); height: min(920px, 94vh); display: grid; grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+    .modal-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .modal-title-area { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .modal-title-area h3 { overflow-wrap: anywhere; }
+    .modal-tools { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .zoom-label { min-width: 46px; text-align: center; color: var(--subtle); font-size: 12px; }
+    .image-stage {
+      display: none; overflow: auto; min-height: 0; border: 1px solid var(--line);
+      border-radius: 12px; background: #fff; overscroll-behavior: contain;
+    }
+    .modal-panel.image-preview .image-stage { display: block; }
+    .modal img { width: 100%; max-width: none; height: auto; display: block; }
+    .modal iframe {
+      width: 100%; height: 100%; min-height: 680px; border: 1px solid var(--line);
+      border-radius: 12px; background: #fff; display: none; pointer-events: auto; overscroll-behavior: contain;
+    }
+    .modal-panel.interactive iframe, .modal-panel.table-preview iframe { display: block; }
+    @media (max-width: 880px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .content { padding: 16px; }
+      .report-hero, .panel-header { grid-template-columns: 1fr; }
+      .quick-links, .artifact-actions { justify-content: flex-start; }
+      .search-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          {% if favicon_path %}
+            <img src="{{ favicon_path }}" alt="MetaX">
+          {% else %}
+            M
+          {% endif %}
+        </div>
+        <div class="brand-title">MetaX Report</div>
+        <div class="brand-subtitle">A guided view of the OTF analysis</div>
+      </div>
+      <div class="nav-label">Report sections</div>
+      <button class="nav-button active" data-section-target="summary">
+        <span class="nav-icon">1</span>
+        <span class="nav-text"><span class="nav-title">Report Home</span><span class="nav-note">What was analyzed</span></span>
+      </button>
+      <button class="nav-button" data-section-target="overview">
+        <span class="nav-icon">2</span>
+        <span class="nav-text"><span class="nav-title">Overview</span><span class="nav-note">Annotation coverage</span></span>
+        <span class="count-pill">{{ figures_by_category.get("overview", [])|length }}</span>
+      </button>
+      <button class="nav-button" data-section-target="basic">
+        <span class="nav-icon">3</span>
+        <span class="nav-text"><span class="nav-title">Basic Plot</span><span class="nav-note">GUI plot families</span></span>
+        <span class="count-pill">{{ basic_plot_figure_count }}</span>
+      </button>
+      <button class="nav-button" data-section-target="statistics">
+        <span class="nav-icon">4</span>
+        <span class="nav-text"><span class="nav-title">Group Comparisons</span><span class="nav-note">Differences between groups</span></span>
+        <span class="count-pill">{{ stats|length }}</span>
+      </button>
+      <button class="nav-button" data-section-target="tables">
+        <span class="nav-icon">5</span>
+        <span class="nav-text"><span class="nav-title">Result Tables</span><span class="nav-note">Browse and export</span></span>
+        <span class="count-pill">{{ result_file_count }}</span>
+      </button>
+      <button class="nav-button" data-section-target="warnings">
+        <span class="nav-icon">6</span>
+        <span class="nav-text"><span class="nav-title">Run Notes</span><span class="nav-note">Warnings and logs</span></span>
+        <span class="count-pill">{{ warnings|length + errors|length }}</span>
+      </button>
+
+      <div class="side-summary">
+        <div class="side-summary-title">At a glance</div>
+        <div class="side-summary-row"><span>Samples</span><strong>{{ dataset_summary.get("n_samples", 0) }}</strong></div>
+        <div class="side-summary-row"><span>Peptides</span><strong>{{ dataset_summary.get("n_peptides", 0) }}</strong></div>
+        <div class="side-summary-row"><span>Result files</span><strong>{{ result_file_count }}</strong></div>
+        <div class="side-summary-row"><span>Figures</span><strong>{{ figures|length }}</strong></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="report-hero">
+        <div>
+          <div class="eyebrow">Auto OTF report</div>
+          <h1>{{ title }}</h1>
+          <p class="hero-copy">This report organizes the analysis into review steps: understand the dataset, inspect overview charts, compare groups, review run notes, and export result tables.</p>
+        </div>
+        <div class="quick-links">
+          <a class="action-link" href="summary.json">Result summary</a>
+          <a class="action-link" href="config_used.yaml">Method settings</a>
+          <a class="action-link" href="logs/report.log">Run log</a>
+        </div>
+      </div>
+
+      <section id="summary" class="view-section active">
+        {% include "section_summary.html.j2" %}
+      </section>
+      <section id="overview" class="view-section">
+        {% include "section_overview.html.j2" %}
+      </section>
+      <section id="basic" class="view-section">
+        {% include "section_basic_plots.html.j2" %}
+      </section>
+      <section id="statistics" class="view-section">
+        {% include "section_statistics.html.j2" %}
+      </section>
+      <section id="tables" class="view-section">
+        {% include "section_tables.html.j2" %}
+      </section>
+      <section id="warnings" class="view-section">
+        {% include "section_warnings.html.j2" %}
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="figure-modal" aria-hidden="true">
+    <div class="modal-panel" id="figure-modal-panel">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <h3 id="figure-modal-title">Figure</h3>
+          <div class="modal-tools" id="image-zoom-controls" hidden>
+            <button class="action-button" type="button" data-zoom-out>-</button>
+            <span class="zoom-label" id="image-zoom-label">100%</span>
+            <button class="action-button" type="button" data-zoom-in>+</button>
+            <button class="action-button" type="button" data-zoom-reset>Reset</button>
+          </div>
+        </div>
+        <button class="action-button" type="button" data-close-modal>Close</button>
+      </div>
+      <div class="image-stage" id="figure-image-stage">
+        <img id="figure-modal-image" alt="">
+      </div>
+      <iframe id="figure-modal-frame" title="Interactive figure" tabindex="0"></iframe>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll("[data-section-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.sectionTarget;
+        document.querySelectorAll("[data-section-target]").forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".view-section").forEach((section) => section.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(target).classList.add("active");
+      });
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const group = button.closest("[data-tab-group]");
+        const target = button.dataset.tabTarget;
+        const localButtons = Array.from(group.querySelectorAll("[data-tab-target]"))
+          .filter((item) => item.closest("[data-tab-group]") === group);
+        const localPanels = Array.from(group.querySelectorAll("[data-tab-panel]"))
+          .filter((panel) => panel.closest("[data-tab-group]") === group);
+        localButtons.forEach((item) => item.classList.remove("active"));
+        localPanels.forEach((panel) => panel.classList.remove("active"));
+        button.classList.add("active");
+        const panel = localPanels.find((item) => item.dataset.tabPanel === target);
+        if (panel) {
+          panel.classList.add("active");
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-preview-src]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const card = button.closest(".artifact, .figure-tile");
+        const frame = card.querySelector(".preview-frame");
+        if (!frame.src) {
+          frame.src = button.dataset.previewSrc;
+        }
+        frame.classList.toggle("active");
+        const activeLabel = button.dataset.activeLabel || "Hide preview";
+        const inactiveLabel = button.dataset.inactiveLabel || "Preview";
+        button.textContent = frame.classList.contains("active") ? activeLabel : inactiveLabel;
+      });
+    });
+
+    document.querySelectorAll("[data-artifact-search]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const scope = input.closest("[data-search-scope]");
+        const query = input.value.trim().toLowerCase();
+        scope.querySelectorAll("[data-search-item]").forEach((item) => {
+          item.style.display = item.dataset.searchItem.includes(query) ? "" : "none";
+        });
+      });
+    });
+
+    const modal = document.getElementById("figure-modal");
+    const modalPanel = document.getElementById("figure-modal-panel");
+    const modalImage = document.getElementById("figure-modal-image");
+    const modalImageStage = document.getElementById("figure-image-stage");
+    const modalFrame = document.getElementById("figure-modal-frame");
+    const modalTitle = document.getElementById("figure-modal-title");
+    const imageZoomControls = document.getElementById("image-zoom-controls");
+    const imageZoomLabel = document.getElementById("image-zoom-label");
+    let imageZoom = 1;
+    let imageFitZoom = 1;
+    function setModalMode(mode) {
+      modalPanel.classList.remove("image-preview", "interactive", "table-preview");
+      modalPanel.classList.add(mode);
+      imageZoomControls.hidden = mode !== "image-preview";
+    }
+    function setImageZoom(value) {
+      imageZoom = Math.min(3, Math.max(0.35, value));
+      if (modalImage.naturalWidth) {
+        modalImage.style.width = `${Math.max(1, modalImage.naturalWidth * imageZoom)}px`;
+      } else {
+        modalImage.style.width = `${imageZoom * 100}%`;
+      }
+      imageZoomLabel.textContent = `${Math.round(imageZoom * 100)}%`;
+    }
+    function fitImageToStage() {
+      if (!modalImage.naturalWidth || !modalImage.naturalHeight) {
+        setImageZoom(1);
+        return;
+      }
+      const stageWidth = Math.max(1, modalImageStage.clientWidth - 2);
+      const stageHeight = Math.max(1, modalImageStage.clientHeight - 2);
+      imageFitZoom = Math.min(stageWidth / modalImage.naturalWidth, stageHeight / modalImage.naturalHeight, 1);
+      setImageZoom(imageFitZoom);
+      modalImageStage.scrollTo({ top: 0, left: 0 });
+    }
+    function openFigureModal() {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+    }
+    function closeFigureModal() {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      modalPanel.classList.remove("image-preview", "interactive", "table-preview");
+      imageZoomControls.hidden = true;
+      modalImage.src = "";
+      modalFrame.src = "";
+    }
+    document.querySelectorAll("[data-open-figure]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setModalMode("image-preview");
+        modalFrame.src = "";
+        modalImage.src = button.dataset.openFigure;
+        modalImage.alt = button.dataset.figureTitle || "Figure";
+        modalTitle.textContent = button.dataset.figureTitle || "Figure";
+        openFigureModal();
+        if (modalImage.complete) {
+          requestAnimationFrame(fitImageToStage);
+        }
+      });
+    });
+    document.querySelectorAll("[data-open-interactive]").forEach((button) => {
+      button.addEventListener("click", () => {
+        modalImage.src = "";
+        setModalMode("interactive");
+        modalFrame.src = button.dataset.openInteractive;
+        modalFrame.title = button.dataset.figureTitle || "Interactive figure";
+        modalTitle.textContent = button.dataset.figureTitle || "Interactive figure";
+        openFigureModal();
+        requestAnimationFrame(() => modalFrame.focus());
+      });
+    });
+    document.querySelectorAll("[data-open-table]").forEach((button) => {
+      button.addEventListener("click", () => {
+        modalImage.src = "";
+        setModalMode("table-preview");
+        modalFrame.src = button.dataset.openTable;
+        modalFrame.title = button.dataset.figureTitle || "Result table";
+        modalTitle.textContent = button.dataset.figureTitle || "Result table";
+        openFigureModal();
+        requestAnimationFrame(() => modalFrame.focus());
+      });
+    });
+    document.querySelectorAll("[data-zoom-in]").forEach((button) => {
+      button.addEventListener("click", () => setImageZoom(imageZoom + 0.2));
+    });
+    document.querySelectorAll("[data-zoom-out]").forEach((button) => {
+      button.addEventListener("click", () => setImageZoom(imageZoom - 0.2));
+    });
+    document.querySelectorAll("[data-zoom-reset]").forEach((button) => {
+      button.addEventListener("click", () => setImageZoom(imageFitZoom || 1));
+    });
+    modalImage.addEventListener("load", fitImageToStage);
+    modalPanel.addEventListener("wheel", (event) => {
+      event.stopPropagation();
+    }, { passive: true });
+    modalFrame.addEventListener("load", () => {
+      if (modalPanel.classList.contains("interactive")) {
+        modalFrame.focus();
+      }
+    });
+    document.querySelectorAll("[data-close-modal]").forEach((button) => {
+      button.addEventListener("click", closeFigureModal);
+    });
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeFigureModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modal.classList.contains("active")) {
+        closeFigureModal();
+      }
+    });
+  </script>
+</body>
+</html>

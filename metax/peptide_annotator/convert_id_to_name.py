@@ -2,15 +2,36 @@ import pandas as pd
 import os
 import urllib.request
 
+
+GO_BASIC_OBO_URLS = [
+    "https://current.geneontology.org/ontology/go-basic.obo",
+    "https://purl.obolibrary.org/obo/go/go-basic.obo",
+]
+
+
+def open_url_with_headers(url):
+    return urllib.request.urlopen(urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        },
+    ), timeout=60)
+
+
+def download_file_with_headers(url, output_path):
+    with open_url_with_headers(url) as response:
+        with open(output_path, "wb") as file:
+            file.write(response.read())
+
 def download_kegg_files(save_path):
     try:
         url_map ='https://rest.kegg.jp/list/pathway'
         url_ko = 'https://rest.kegg.jp/list/pathway/ko'
         with open(os.path.join(save_path, 'pathway.tsv'), 'w') as f:
             for url in [url_map, url_ko]:
-                response = urllib.request.urlopen(url)
-                html = response.read().decode('utf-8')
-                f.write(html)
+                with open_url_with_headers(url) as response:
+                    html = response.read().decode('utf-8')
+                    f.write(html)
                 f.write('\n')
         print(f'pathway.tsv downloaded to {save_path}')
     except Exception as e:
@@ -21,7 +42,7 @@ def download_kegg_files(save_path):
 def download_kegg_module_files(save_path):
     url = "https://rest.kegg.jp/list/module/"
     try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'module.tsv'))
+        download_file_with_headers(url, os.path.join(save_path, 'module.tsv'))
         print(f'ko.tsv downloaded to {save_path}')
     except Exception as e:
         print('Error: download ko.tsv failed!')
@@ -31,7 +52,7 @@ def download_kegg_module_files(save_path):
 def download_ec_files(save_path):
     try:
         url = "https://ftp.expasy.org/databases/enzyme/enzyme.dat"
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'enzyme.dat'))
+        download_file_with_headers(url, os.path.join(save_path, 'enzyme.dat'))
         print(f'enzyme.dat downloaded to {save_path}')
     except Exception as e:
         print('Error: download enzyme.dat failed!')
@@ -40,20 +61,25 @@ def download_ec_files(save_path):
 def download_ko_files(save_path):
     url = "https://rest.kegg.jp/list/ko"
     try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'ko.tsv'))
+        download_file_with_headers(url, os.path.join(save_path, 'ko.tsv'))
         print(f'ko.tsv downloaded to {save_path}')
     except Exception as e:
         print('Error: download ko.tsv failed!')
         print(e)
     
 def download_go_files(save_path):
-    url = "https://purl.obolibrary.org/obo/go/go-basic.obo"
-    try:
-        urllib.request.urlretrieve(url, os.path.join(save_path, 'go-basic.obo'))
-        print(f'go-basic.obo downloaded to {save_path}')
-    except Exception as e:
-        print('Error: download go-basic.obo failed!')
-        print(e)
+    os.makedirs(save_path, exist_ok=True)
+    output_path = os.path.join(save_path, 'go-basic.obo')
+    errors = []
+    for url in GO_BASIC_OBO_URLS:
+        try:
+            download_file_with_headers(url, output_path)
+            print(f'go-basic.obo downloaded to {save_path}')
+            return
+        except Exception as e:
+            errors.append(f'{url}: {e}')
+    print('Error: download go-basic.obo failed!')
+    print('\n'.join(errors))
 
 def parse_dat_file(file_path):
     if not os.path.exists(file_path):
@@ -258,10 +284,15 @@ def add_go_name_to_df(df: pd.DataFrame, split_char: str = ',') -> pd.DataFrame:
             namespaces = namespaces[:-2]
         return names, namespaces
 
-    # Apply the helper function to the 'GOs' column
-    df[['GO_name', 'GO_namespace']] = df['GOs'].apply(
-        lambda x: pd.Series(query_go_names(x))
-    )
+    go_values = df['GOs']
+    unique_go_values = go_values.drop_duplicates()
+    converted = {
+        value: query_go_names(value)
+        for value in unique_go_values
+    }
+    converted_values = go_values.map(converted)
+    df['GO_name'] = converted_values.map(lambda value: value[0])
+    df['GO_namespace'] = converted_values.map(lambda value: value[1])
 
     # Handle 'GOs_prop' column if it exists
     if 'GOs_prop' in df.columns:
@@ -287,40 +318,42 @@ def add_ec_name_to_df(df: pd.DataFrame) -> pd.DataFrame:
         print('EC column does not exist!, return the original dataframe')
         return df
 
-    # Create result dataframe
-    result_df = df.copy()
-    
     # Get EC dictionary
     ec_dict = get_ec_dict()
     
     # Define target columns
     ec_columns = ['EC_DE', 'EC_AN', 'EC_CC', 'EC_CA']
     
-    # Create mask for valid EC rows
-    mask_EC = ~result_df['EC'].isin(['not_found', '-'])
-
-    # Process valid EC entries
-    for i, row in result_df[mask_EC].iterrows():
-        ec_nums = row['EC'].split(',')
-        for column_name in ec_columns:
-            result_df.at[i, column_name] = lookup_and_join_for_EC(ec_nums,ec_dict, column_name)
-
-    # Set default value for invalid entries
-    result_df.loc[~mask_EC, ec_columns] = '-'
+    ec_values = df['EC']
+    valid_values = ec_values[
+        ec_values.notna() & ~ec_values.isin(['not_found', '-'])
+    ].drop_duplicates()
+    converted_by_column = {
+        column_name: {
+            value: lookup_and_join_for_EC(
+                str(value).split(','),
+                ec_dict,
+                column_name,
+            )
+            for value in valid_values
+        }
+        for column_name in ec_columns
+    }
+    for column_name in ec_columns:
+        df[column_name] = (
+            ec_values.map(converted_by_column[column_name])
+            .fillna('-')
+            .replace('', '-')
+        )
 
     # Handle property columns
     if 'EC_prop' in df.columns:
         for column_name in ec_columns:
             prop_column = f'{column_name}_prop'
-            result_df[prop_column] = result_df['EC_prop']
-            
-    # Fill NA values only for EC columns
-    for col in ec_columns:
-        result_df[col] = result_df[col].fillna('-')
-        result_df[col] = result_df[col].replace('', '-')
+            df[prop_column] = df['EC_prop']
             
     print("Add EC columns to df successfully!")
-    return result_df
+    return df
 
 def add_pathway_name_to_df(df: pd.DataFrame, kppe_id:bool = False) -> pd.DataFrame:
     def query_kegg(id_str, pathway_dict, kppe_id=False):
