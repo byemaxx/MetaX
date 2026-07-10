@@ -15,6 +15,7 @@ from metax.peptide_annotator.unit_specific_otf import (
     build_global_unit_specific_peptide_protein_map,
 )
 from metax.peptide_annotator.pep_table_to_otf import (
+    query_peptide_proteins_from_digested_genome_folders,
     query_peptide_proteins_from_digested_genome_folders_nested,
 )
 
@@ -1244,7 +1245,7 @@ def test_nested_scanner_subprocess_matches_direct_backends(tmp_path):
 def test_nested_scanner_warns_for_malformed_genome(tmp_path, capsys):
     digested_dir = tmp_path / "digested"
     digested_dir.mkdir()
-    pd.DataFrame({"Wrong": ["x"], "Columns": ["y"]}).to_csv(
+    pd.DataFrame({"Wrong": ["x"]}).to_csv(
         digested_dir / "z_bad.tsv",
         sep="\t",
         index=False,
@@ -1270,6 +1271,110 @@ def test_nested_scanner_warns_for_malformed_genome(tmp_path, capsys):
     assert "Warning: skipped malformed genome TSV" in output
     assert "z_bad.tsv" in output
     assert "ValueError" in output
+
+
+def test_digested_scanner_skips_malformed_first_file_without_losing_later_hits(
+    tmp_path,
+    capsys,
+):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame({"Unrelated": ["x"]}).to_csv(
+        digested_dir / "0_bad.tsv",
+        sep="\t",
+        index=False,
+    )
+    pd.DataFrame({"Protein": ["p1"], "Peptide": ["PEPA"]}).to_csv(
+        digested_dir / "1_good.tsv",
+        sep="\t",
+        index=False,
+    )
+
+    mapping, peptide_col, protein_col = query_peptide_proteins_from_digested_genome_folders(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA"],
+        n_jobs=1,
+        parallel_backend="thread",
+    )
+
+    assert mapping == {"PEPA": "1_good_p1"}
+    assert (peptide_col, protein_col) == ("", "")
+    output = capsys.readouterr().out
+    assert "0_bad.tsv" in output
+    assert "ValueError" in output
+
+
+def test_nested_digested_scanner_resolves_columns_for_each_header(tmp_path):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame({"Protein": ["p1"], "Peptide": ["PEPA"]}).to_csv(
+        digested_dir / "g1.tsv",
+        sep="\t",
+        index=False,
+    )
+    pd.DataFrame({"protein_id": ["p2"], "Sequence": ["PEPB"]}).to_csv(
+        digested_dir / "g2.tsv",
+        sep="\t",
+        index=False,
+    )
+
+    result = query_peptide_proteins_from_digested_genome_folders_nested(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA", "PEPB"],
+        selected_genomes_set={"g1", "g2"},
+        n_jobs=1,
+        parallel_backend="thread",
+    )
+
+    assert result == {
+        "PEPA": {"g1": {"g1_p1"}},
+        "PEPB": {"g2": {"g2_p2"}},
+    }
+
+
+def test_digested_scanner_respects_explicit_columns_per_file(tmp_path):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame({"CustomPeptide": ["PEPA"], "CustomProtein": ["p1"]}).to_csv(
+        digested_dir / "g1.tsv",
+        sep="\t",
+        index=False,
+    )
+
+    mapping, peptide_col, protein_col = query_peptide_proteins_from_digested_genome_folders(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA"],
+        digested_peptide_col="CustomPeptide",
+        digested_protein_col="CustomProtein",
+        n_jobs=1,
+        parallel_backend="thread",
+    )
+
+    assert mapping == {"PEPA": "g1_p1"}
+    assert (peptide_col, protein_col) == ("CustomPeptide", "CustomProtein")
+
+
+def test_digested_scanner_falls_back_to_inference_when_explicit_columns_are_missing(
+    tmp_path,
+):
+    digested_dir = tmp_path / "digested"
+    digested_dir.mkdir()
+    pd.DataFrame({"protein_id": ["p1"], "Sequence": ["PEPA"]}).to_csv(
+        digested_dir / "g1.tsv",
+        sep="\t",
+        index=False,
+    )
+
+    mapping, _, _ = query_peptide_proteins_from_digested_genome_folders(
+        digested_genome_folders=str(digested_dir),
+        peptide_list=["PEPA"],
+        digested_peptide_col="Peptide",
+        digested_protein_col="Protein",
+        n_jobs=1,
+        parallel_backend="thread",
+    )
+
+    assert mapping == {"PEPA": "g1_p1"}
 
 
 def test_unit_specific_cli_passes_extended_options(monkeypatch, tmp_path):
