@@ -202,8 +202,9 @@ def _resolve_digest_columns_once(
     sep: str = "\t",
     digested_peptide_col: str | None = None,
     digested_protein_col: str | None = None,
+    header_columns: Iterable[str] | None = None,
 ) -> tuple[str, str]:
-    """Resolve digested TSV peptide/protein column names once (all files share the same format).
+    """Resolve digested TSV peptide/protein columns from one TSV header.
 
     Priority:
     1) Use user-provided column names if given (validate against header when possible)
@@ -213,8 +214,11 @@ def _resolve_digest_columns_once(
     Returns:
         (peptide_col, protein_col)
     """
-    header = pd.read_csv(first_file, sep=sep, nrows=0)
-    cols = [str(c) for c in header.columns]
+    if header_columns is None:
+        header = pd.read_csv(first_file, sep=sep, nrows=0)
+        cols = [str(c) for c in header.columns]
+    else:
+        cols = [str(c) for c in header_columns]
     if len(cols) < 2:
         raise ValueError(f"Digested genome TSV must have at least 2 columns: {first_file}")
 
@@ -254,6 +258,29 @@ def _resolve_digest_columns_once(
     return fallback_pep, fallback_pro
 
 
+def _resolve_digest_columns_for_file(
+    file_path: str,
+    sep: str,
+    digested_peptide_col: str | None,
+    digested_protein_col: str | None,
+    resolution_cache: dict[tuple[str, ...], tuple[str, str]],
+) -> tuple[str, str]:
+    """Resolve one file's columns, reusing results for identical headers."""
+    header = pd.read_csv(file_path, sep=sep, nrows=0)
+    header_columns = tuple(str(column) for column in header.columns)
+    resolved = resolution_cache.get(header_columns)
+    if resolved is None:
+        resolved = _resolve_digest_columns_once(
+            first_file=file_path,
+            sep=sep,
+            digested_peptide_col=digested_peptide_col,
+            digested_protein_col=digested_protein_col,
+            header_columns=header_columns,
+        )
+        resolution_cache[header_columns] = resolved
+    return resolved
+
+
 def _normalize_protein_ids(
     genome_id: str,
     protein_value: str,
@@ -287,13 +314,15 @@ def _process_digested_genome_batch_for_mapping(
     removed_genomes_set: Optional[set[str]],
     selected_genomes_set: Optional[set[str]],
     protein_genome_separator: str,
-    digested_peptide_col: str,
-    digested_protein_col: str,
+    digested_peptide_col: str | None,
+    digested_protein_col: str | None,
     sep: str = "\t",
     chunksize: int = 500_000,
-) -> dict[str, set[str]]:
+) -> tuple[dict[str, set[str]], list[str]]:
     """Process a batch of digested genome TSVs and return peptide->proteins mapping."""
     mapping: dict[str, set[str]] = defaultdict(set)
+    warnings_list: list[str] = []
+    resolution_cache: dict[tuple[str, ...], tuple[str, str]] = {}
 
     for file_path in file_paths:
         genome_id = pathlib.Path(file_path).stem
@@ -304,17 +333,21 @@ def _process_digested_genome_batch_for_mapping(
             continue
 
         try:
+            peptide_col, protein_col = _resolve_digest_columns_for_file(
+                file_path=file_path,
+                sep=sep,
+                digested_peptide_col=digested_peptide_col,
+                digested_protein_col=digested_protein_col,
+                resolution_cache=resolution_cache,
+            )
             for chunk in pd.read_csv(
                 file_path,
                 sep=sep,
-                usecols=[digested_peptide_col, digested_protein_col],
-                dtype={digested_peptide_col: "string", digested_protein_col: "string"},
+                usecols=[peptide_col, protein_col],
+                dtype={peptide_col: "string", protein_col: "string"},
                 chunksize=chunksize,
                 engine="c",
             ):
-                peptide_col = digested_peptide_col
-                protein_col = digested_protein_col
-
                 chunk = chunk.dropna(subset=[peptide_col, protein_col])
                 if chunk.empty:
                     continue
@@ -331,48 +364,60 @@ def _process_digested_genome_batch_for_mapping(
                     ):
                         mapping[pep].add(pid)
 
-        except Exception:
+        except Exception as exc:
             # keep the batch robust: a single bad file should not kill the whole mapping
+            warnings_list.append(
+                "[DigestedScan] Warning: skipped malformed genome TSV: "
+                f"{file_path} ({type(exc).__name__}: {exc})"
+            )
             continue
 
-    return mapping
+    return mapping, warnings_list
 
 
 def _process_digested_genome_batch_for_nested_mapping(
     file_paths: list[str],
     peptide_set: set[str],
     protein_genome_separator: str,
-    digested_peptide_col: str,
-    digested_protein_col: str,
+    digested_peptide_col: str | None,
+    digested_protein_col: str | None,
     sep: str = "\t",
     chunksize: int = 500_000,
 ) -> tuple[dict[str, dict[str, set[str]]], list[str]]:
     """Process digested genome TSVs into peptide -> genome -> proteins."""
     mapping: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     warnings_list: list[str] = []
+    resolution_cache: dict[tuple[str, ...], tuple[str, str]] = {}
 
     for file_path in file_paths:
         genome_id = pathlib.Path(file_path).stem
         try:
+            peptide_col, protein_col = _resolve_digest_columns_for_file(
+                file_path=file_path,
+                sep=sep,
+                digested_peptide_col=digested_peptide_col,
+                digested_protein_col=digested_protein_col,
+                resolution_cache=resolution_cache,
+            )
             for chunk in pd.read_csv(
                 file_path,
                 sep=sep,
-                usecols=[digested_peptide_col, digested_protein_col],
-                dtype={digested_peptide_col: "string", digested_protein_col: "string"},
+                usecols=[peptide_col, protein_col],
+                dtype={peptide_col: "string", protein_col: "string"},
                 chunksize=chunksize,
                 engine="c",
             ):
-                chunk = chunk.dropna(subset=[digested_peptide_col, digested_protein_col])
+                chunk = chunk.dropna(subset=[peptide_col, protein_col])
                 if chunk.empty:
                     continue
 
-                hit = chunk[chunk[digested_peptide_col].astype(str).isin(peptide_set)]
+                hit = chunk[chunk[peptide_col].astype(str).isin(peptide_set)]
                 if hit.empty:
                     continue
 
                 for peptide, protein_value in zip(
-                    hit[digested_peptide_col].astype(str),
-                    hit[digested_protein_col].astype(str),
+                    hit[peptide_col].astype(str),
+                    hit[protein_col].astype(str),
                 ):
                     mapping[peptide][genome_id].update(
                         _normalize_protein_ids(
@@ -566,12 +611,6 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
         )
         return {}
 
-    resolved_peptide_col, resolved_protein_col = _resolve_digest_columns_once(
-        first_file=all_files[0],
-        sep=sep,
-        digested_peptide_col=digested_peptide_col,
-        digested_protein_col=digested_protein_col,
-    )
     peptide_set = {str(peptide) for peptide in peptide_list if str(peptide)}
     if not peptide_set:
         return {}
@@ -602,8 +641,8 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
                 batch,
                 peptide_set,
                 protein_genome_separator,
-                resolved_peptide_col,
-                resolved_protein_col,
+                digested_peptide_col,
+                digested_protein_col,
                 sep,
             )
             for batch in batches
@@ -694,19 +733,11 @@ def query_peptide_proteins_from_digested_genome_folders(
         )
         return {}, "", ""
 
-    # Resolve digested column names once (assume all selected genome TSVs share the same header)
-    resolved_pep_col, resolved_pro_col = _resolve_digest_columns_once(
-        first_file=all_files[0],
-        sep=sep,
-        digested_peptide_col=digested_peptide_col,
-        digested_protein_col=digested_protein_col,
-    )
-
     print(f"[DigestedScan] Folders: {len(valid_folders)}")
     for f in valid_folders:
         print(f"[DigestedScan]  - {f}")
     print(f"[DigestedScan] Genome TSV files: {len(all_files)} selected from {original_file_count}")
-    print(f"[DigestedScan] Using columns: peptide='{resolved_pep_col}', protein='{resolved_pro_col}'")
+    print("[DigestedScan] Resolving peptide/protein columns independently for each genome TSV.")
 
     peptide_set = {str(p) for p in peptide_list if isinstance(p, str) and p}
     if not peptide_set:
@@ -747,15 +778,17 @@ def query_peptide_proteins_from_digested_genome_folders(
                 rm_set,
                 sel_set,
                 protein_genome_separator,
-                resolved_pep_col,
-                resolved_pro_col,
+                digested_peptide_col,
+                digested_protein_col,
                 sep,
             )
             for batch in batches
         ]
 
         for fut in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Scanning digested genomes"):
-            part = fut.result()
+            part, batch_warnings = fut.result()
+            for warning_message in batch_warnings:
+                print(warning_message, flush=True)
             for pep, proteins in part.items():
                 merged[pep].update(proteins)
 
@@ -768,7 +801,10 @@ def query_peptide_proteins_from_digested_genome_folders(
     hit_cnt = sum(1 for v in out.values() if v)
     elapsed = time.time() - t0
     print(f"[DigestedScan] Done. Mapped peptides: {hit_cnt}/{len(peptide_list)}. Time: {elapsed:.2f}s")
-    return out, resolved_pep_col, resolved_pro_col
+    # Different digest files can legitimately have different inferred headers.
+    # Preserve explicit overrides for callers that record the request; otherwise
+    # an empty value accurately signals that no single inferred name applies.
+    return out, digested_peptide_col or "", digested_protein_col or ""
 
 
 class peptideProteinsMapper:
