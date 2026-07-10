@@ -1,3 +1,11 @@
+# Version: 2.4.2
+## Date: 2026-07-09
+### Changes:
+- New: Added MGnify database update sources.
+- Optimize: Improved update cancellation and shutdown handling for database downloads and annotation builds.
+- Fix: Updated the dbCAN download source and made its identifier merging more reliable.
+
+
 # Version: 2.4.1
 ## Date: 2026-07-08
 ### Changes:
