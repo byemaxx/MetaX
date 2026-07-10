@@ -36,6 +36,38 @@ def test_new_catalogues_are_supported_but_marine_eukaryotes_is_not():
     assert "marine-eukaryotes" not in DB_URLS
 
 
+def test_marine_sediment_uses_the_verified_hyphenated_ftp_path(monkeypatch):
+    base_url = DB_URLS["marine-sediment"]["base_url"]
+    assert base_url.endswith("/marine-sediment/v1.0")
+
+    checked_urls = []
+
+    class Response:
+        status = 200
+
+        def read(self, _):
+            return b"Species_rep\tLineage\n"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def fake_urlopen(url, timeout):
+        checked_urls.append((url, timeout))
+        return Response()
+
+    monkeypatch.setattr("metax.database_builder.mgnify_sources.urllib.request.urlopen", fake_urlopen)
+
+    validate_mgnify_source("marine-sediment", check_catalogue=True)
+
+    assert [url for url, _ in checked_urls] == [
+        "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine-sediment/v1.0/genomes-all_metadata.tsv",
+        "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine-sediment/v1.0/species_catalogue/",
+    ]
+
+
 def test_database_builders_share_the_single_source_definition():
     assert database_builder_mag.DB_URLS is DB_URLS
     assert download_mgyg_faa.DB_URLS is DB_URLS
@@ -117,6 +149,37 @@ def test_validate_mgnify_source_checks_metadata_and_optional_catalogue(monkeypat
     assert [url for url, _ in checked_urls] == [
         "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2/genomes-all_metadata.tsv",
         "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2/species_catalogue/",
+    ]
+
+
+@pytest.mark.parametrize("db_type", sorted(DB_URLS))
+def test_every_mgnify_source_builds_metadata_and_catalogue_urls(monkeypatch, db_type):
+    checked_urls = []
+
+    class Response:
+        status = 200
+
+        def read(self, _):
+            return b"Species_rep\tLineage\n"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def fake_urlopen(url, timeout):
+        checked_urls.append((url, timeout))
+        return Response()
+
+    monkeypatch.setattr("metax.database_builder.mgnify_sources.urllib.request.urlopen", fake_urlopen)
+
+    source = DB_URLS[db_type]
+    validate_mgnify_source(db_type, check_catalogue=True)
+
+    assert [url for url, _ in checked_urls] == [
+        f"{source['base_url']}/{source['metadata']}",
+        f"{source['base_url']}/{source['catalogue']}/",
     ]
 
 
@@ -219,3 +282,16 @@ def test_progress_window_does_not_force_terminate_worker_threads():
 
     assert "self.thread.terminate()" not in generic_thread_source
     assert "self.cancel_event.set()" in generic_thread_source
+
+
+def test_application_shutdown_waits_for_cancellable_workers_and_blocks_others():
+    root = Path(__file__).resolve().parents[1]
+    generic_thread_source = (root / "metax" / "gui" / "metax_gui" / "generic_thread.py").read_text(
+        encoding="utf-8"
+    )
+    main_gui_source = (root / "metax" / "gui" / "main_gui.py").read_text(encoding="utf-8")
+
+    assert "def canCloseThread(self):" in generic_thread_source
+    assert "self.thread.wait()" in generic_thread_source
+    assert "if not self.supports_cancellation:\n            return False" in generic_thread_source
+    assert "if any(not executor.canCloseThread() for executor in self.executors):" in main_gui_source
