@@ -178,9 +178,25 @@ class FunctionExecutor(QMainWindow):
         # self.close()
         
 
+    def canCloseThread(self):
+        """Return whether closing the application can safely stop this worker."""
+        return not self.thread.isRunning() or self.supports_cancellation
+
     def forceCloseThread(self):
-        if self.thread.isRunning() and self.supports_cancellation:
-            self.cancel_event.set()
+        """Cancel a running worker and wait until its QThread has stopped.
+
+        QThread instances must not outlive the Qt application.  Workers that do
+        not support cooperative cancellation are reported to the caller so the
+        application can keep running instead of tearing down underneath them.
+        """
+        if not self.thread.isRunning():
+            return True
+        if not self.supports_cancellation:
+            return False
+
+        self.cancel_event.set()
+        self.thread.wait()
+        return not self.thread.isRunning()
             
             
 

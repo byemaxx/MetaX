@@ -2185,6 +2185,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         clicked_btn = msgBox.clickedButton()
         
         if clicked_btn in [save_and_close_button, direct_close_button]:
+            if any(not executor.canCloseThread() for executor in self.executors):
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Task still running",
+                    "A task that cannot be stopped safely is still running. "
+                    "Wait for it to finish before closing MetaX.",
+                )
+                event.ignore()
+                return
+
             try:
                 if clicked_btn == save_and_close_button:
                     self.show_message("Saving settings...", "Closing...")
@@ -2219,7 +2229,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     
                 # 关闭所有子进程
                 for executor in self.executors:
-                    executor.forceCloseThread()
+                    if not executor.forceCloseThread():
+                        event.ignore()
+                        return
                                 
                 self.logger.write_log("############################## MetaX closed ##############################")
             except Exception as e:
