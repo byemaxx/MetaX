@@ -500,7 +500,7 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 - **Limma / DESeq2 Group-Control Analysis**
 
   - After unlocking the differential expression tools, choose **Method** to run either **Limma** or **DESeq2** for group-vs-control comparisons.
-  - **Limma** is the default method. It works on log2-style quantitative data; zeros are treated as missing values during preparation.
+  - **Limma** is the default method. It works on log2-style quantitative data. By default, zero values remain numeric zeros; enable **Convert zeros to NaN** only when zeros represent missing values and should be treated as such during preparation.
   - **DESeq2** is intended for raw count-like input. If the current table was transformed earlier, MetaX will try to guide you through safe preparation before running the test.
   - Both methods support optional covariates and the **Comparing in Each Condition** workflow.
 
