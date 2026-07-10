@@ -390,7 +390,7 @@ class NetworkPlot:
         df_dict = {'taxa': self.tfa.taxa_df, 
                 'functions': self.tfa.func_df, 
                 'taxa-functions': self.tfa.taxa_func_df, 
-                'peptides': self.tfa.peptide_df,
+                'peptides': self.tfa.get_peptide_df(),
                 'proteins': self.tfa.protein_df,
                 'custom': self.tfa.custom_df}
         
@@ -574,6 +574,5 @@ class NetworkPlot:
 
 #             ).plot_tflink_network(sample_list=sw.get_sample_list_in_a_group('V1'), 
 #                                   focus_list=["d__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Enterobacterales|f__Enterobacteriaceae <'glutamate synthase>"]
-                                  
+
 #                                     ).render_notebook()
-            

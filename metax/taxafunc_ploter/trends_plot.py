@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
+import inspect
 
 class TrendsPlot:
     def __init__(self, tfobj):
@@ -22,7 +23,14 @@ class TrendsPlot:
 
         # Perform KMeans clustering
         n_clusters = num_cluster
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init='auto')
+        kmeans_kwargs = dict(n_clusters=n_clusters, init='k-means++')
+        kmeans_signature = inspect.signature(KMeans)
+        n_init_param = kmeans_signature.parameters.get("n_init")
+        if n_init_param is not None and n_init_param.default == 'auto':
+            kmeans_kwargs["n_init"] = 'auto'
+        else:
+            kmeans_kwargs["n_init"] = 10
+        kmeans = KMeans(**kmeans_kwargs)
         clusters = kmeans.fit_predict(scaled_df)
 
         # Add the cluster labels to the DataFrame

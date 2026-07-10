@@ -10,6 +10,7 @@ multiprocessing workers only import lightweight code.
 
 Output:
 - A mapping TSV with columns: Peptide, Proteins
+- With --nested-output: a long TSV with columns: Peptide, Genome, Protein
 - A small JSON metadata file with resolved column names.
 """
 
@@ -71,6 +72,11 @@ def _parse_args(argv: Iterable[str]) -> argparse.Namespace:
         required=True,
         help="Output JSON path for metadata (resolved columns).",
     )
+    parser.add_argument(
+        "--nested-output",
+        action="store_true",
+        help="Write long-form Peptide/Genome/Protein output for unit-specific mapping.",
+    )
 
     parser.add_argument("--sep", default="\t", help="TSV separator (default: tab).")
     parser.add_argument("--n-jobs", type=int, default=0, help="Workers; 0 means auto.")
@@ -91,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from metax.peptide_annotator.pep_table_to_otf import (
         query_peptide_proteins_from_digested_genome_folders,
+        query_peptide_proteins_from_digested_genome_folders_nested,
     )
 
     peptide_list = _read_lines(args.peptides_file)
@@ -105,29 +112,49 @@ def main(argv: list[str] | None = None) -> int:
     pep_col = args.digested_peptide_col.strip() or None
     pro_col = args.digested_protein_col.strip() or None
 
-    mapping, resolved_pep_col, resolved_pro_col = query_peptide_proteins_from_digested_genome_folders(
-        digested_genome_folders=list(args.folders),
-        peptide_list=peptide_list,
-        removed_genomes_set=removed_set,
-        selected_genomes_set=selected_set,
-        protein_genome_separator=args.protein_genome_separator,
-        sep=args.sep,
-        n_jobs=n_jobs,
-        digested_peptide_col=pep_col,
-        digested_protein_col=pro_col,
-        parallel_backend="process",
-    )
-
     out_mapping = pathlib.Path(args.out_mapping_tsv)
     out_mapping.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write TSV mapping.
-    with out_mapping.open("w", encoding="utf-8", newline="") as f:
-        f.write("Peptide\tProteins\n")
-        for pep in peptide_list:
-            proteins = mapping.get(str(pep), "")
-            proteins = "" if proteins is None else str(proteins)
-            f.write(f"{pep}\t{proteins}\n")
+    if args.nested_output:
+        if selected_set is None:
+            raise SystemExit("--nested-output requires --selected-genomes-file")
+        mapping = query_peptide_proteins_from_digested_genome_folders_nested(
+            digested_genome_folders=list(args.folders),
+            peptide_list=peptide_list,
+            selected_genomes_set=selected_set,
+            protein_genome_separator=args.protein_genome_separator,
+            sep=args.sep,
+            n_jobs=n_jobs,
+            digested_peptide_col=pep_col,
+            digested_protein_col=pro_col,
+            parallel_backend="process",
+        )
+        with out_mapping.open("w", encoding="utf-8", newline="") as f:
+            f.write("Peptide\tGenome\tProtein\n")
+            for peptide in peptide_list:
+                for genome_id, proteins in mapping.get(str(peptide), {}).items():
+                    for protein_id in sorted(proteins):
+                        f.write(f"{peptide}\t{genome_id}\t{protein_id}\n")
+        resolved_pep_col = pep_col or ""
+        resolved_pro_col = pro_col or ""
+    else:
+        mapping, resolved_pep_col, resolved_pro_col = query_peptide_proteins_from_digested_genome_folders(
+            digested_genome_folders=list(args.folders),
+            peptide_list=peptide_list,
+            removed_genomes_set=removed_set,
+            selected_genomes_set=selected_set,
+            protein_genome_separator=args.protein_genome_separator,
+            sep=args.sep,
+            n_jobs=n_jobs,
+            digested_peptide_col=pep_col,
+            digested_protein_col=pro_col,
+            parallel_backend="process",
+        )
+        with out_mapping.open("w", encoding="utf-8", newline="") as f:
+            f.write("Peptide\tProteins\n")
+            for pep in peptide_list:
+                proteins = mapping.get(str(pep), "")
+                proteins = "" if proteins is None else str(proteins)
+                f.write(f"{pep}\t{proteins}\n")
 
     out_meta = pathlib.Path(args.out_meta_json)
     out_meta.parent.mkdir(parents=True, exist_ok=True)
@@ -136,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         "resolved_digested_protein_col": resolved_pro_col,
         "peptides": len(peptide_list),
         "folders": list(args.folders),
+        "mapping_format": "nested-long" if args.nested_output else "peptide-proteins",
     }
     out_meta.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 

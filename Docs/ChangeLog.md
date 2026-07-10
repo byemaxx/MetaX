@@ -1,3 +1,82 @@
+# Version: 2.4.2
+## Date: 2026-07-09
+### Changes:
+- New: Added MGnify database update sources.
+- Optimize: Improved update cancellation and shutdown handling for database downloads and annotation builds.
+- Fix: Updated the dbCAN download source and made its identifier merging more reliable.
+
+
+# Version: 2.4.1
+## Date: 2026-07-08
+### Changes:
+- New: Improved Auto Report statistics, result summaries, and unit-aware information.
+- New: Added optional PDF and SVG figure output.
+- Optimize: Made reports safer, clearer, and more compact.
+
+
+# Version: 2.4.0
+## Date: 2026-06-30
+### Changes:
+- New: Improved Peptide Direct to OTF workflow with MetaUmbra genome selection, selected genome-list reuse, scoring-only output, and unit-specific annotation.
+- New: Added DIA-NN parquet support for Peptide Direct to OTF.
+- Change: Unit-specific OTF outputs now keep the original peptide sequence, add `analysis_unit_id`, and report peptide counts more clearly.
+- Optimize: Improved unit-specific annotation for large datasets and added clearer progress messages.
+
+
+# Version: 2.3.3
+## Date: 2026-06-15
+### Changes:
+- feat: add table review right-click export with multi-table selection, export format options, and export progress.
+
+
+# Version: 2.3.2
+## Date: 2026-06-15
+### Changes:
+- feat: add optional zero-to-NaN handling for limma
+
+
+# Version: 2.3.1
+## Date: 2026-06-13
+### Changes:
+- feat: enabled Differential Expression (DE) extractor for 2 groups comparison result tables in table view.
+
+# Version: 2.3.0
+## Date: 2026-06-13
+### Changes:
+- New: Added `limma` for the DE analysis as the default method.
+- Change: Use `inmoose` as the backend for the DE analysis, and removed the `pydeseq2` dependency. 
+
+# Version: 2.2.0
+## Date: 2026-06-12
+### Changes:
+- New: Introduced the **Export Workflow** feature, allowing users to export GUI-based analysis steps directly into runnable Jupyter Notebook code for enhanced reproducibility.
+- Bugfix: Fixed DESeq2 analysis crashing in the Jupyter workflow by implementing missing inverse log transformation logic for counts.
+- Bugfix: Removed overly restrictive experimental group requirements in `cross_test.py`, allowing safe bypass of unmatched strata combinations in Condition.
+- Bugfix: Handled empty grouping conditions in cross tests to prevent downstream empty dataframe merging errors.
+- Bugfix: Addressed distance matrix linkage failure (`ValueError`) in heatmap plotting by appropriately filling NaN values in correlation matrices.
+
+# Version: 2.1.2
+## Date: 2026-06-10
+### Changes:
+- JS plot: Added a local echarts js file to speed up the plot of the HTML plot (e.g. sankey, sunburst, network) and gave an option to use the local js file or the online js file in the setting.
+
+# Version: 2.1.1
+## Date: 2026-06-10
+### Changes:
+- MetaX Updater: fixed the bug of when update, the pyenv folder was removed.
+
+# Version: 2.1.0
+## Date: 2026-06-04
+### Changes:
+- New: Added a function to plot the PCA for selected items.
+
+# Version: 2.0.0
+## Date: 2026-05-27
+### Changes:
+- New: Added peptide direct annotation function for the OTF table, by built-in [MetaUmbra](https://github.com/byemaxx/MetaUmbra) in **Peptide Annotator**.
+- New: Added **Report Generator** function to generate the report for the OTF analysis, including the basic statistics.
+
+
 # Version: 1.127.5
 ## Date: 2026-03-20
 ### Changes:

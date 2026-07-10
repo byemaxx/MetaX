@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # This script is used to build the database for the MetaX tool 
-# Database source: Unified Human Gastrointestinal Genome (UHGG) v2.0.1
-# Database ftp: http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.1/
+# Database source: MGnify Genomes FTP. Supported catalog versions are defined in mgnify_sources.DB_URLS.
 # Required downloads: 
 #   1. MGYG to EggNOG mapping files in the data folder
 #   2. MGYG to Taxa mapping file 
@@ -14,96 +13,68 @@ import pandas as pd
 import sqlite3
 import os
 import urllib.request
+import tempfile
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 from urllib.error import URLError, HTTPError
 
-# Combined URL dictionary for all database types
-DB_URLS = {
-    "chicken-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "cow-rumen": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "honeybee-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/honeybee-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-oral": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-vaginal": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "marine": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "mouse-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "non-model-fish-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "pig-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "sheep-rumen": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/sheep-rumen/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "zebrafish-fecal": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    }
-}
+try:
+    from .mgnify_sources import DB_URLS
+except ImportError:  # Support direct execution of this module as a script.
+    from mgnify_sources import DB_URLS
 
-def download_with_retry(url, save_path, max_retries=3, retry_delay=5):
+
+class DownloadCancelled(Exception):
+    """Raised when the user cancels an MGnify database download."""
+
+
+def _raise_if_cancelled(cancel_event):
+    if cancel_event is not None and cancel_event.is_set():
+        raise DownloadCancelled("MGnify database download cancelled by user.")
+
+def download_with_retry(url, save_path, max_retries=3, retry_delay=5, cancel_event=None):
     """Download function with retry mechanism"""
     file_name = url.split('/')[-1]
+    destination = os.path.join(save_path, file_name)
     for attempt in range(max_retries):
+        _raise_if_cancelled(cancel_event)
+        temp_path = None
         try:
-            with urllib.request.urlopen(url, timeout=30) as response, open(os.path.join(save_path, file_name), 'wb') as out_file:
-                data = response.read()
-                out_file.write(data)
+            with urllib.request.urlopen(url, timeout=30) as response:
+                with tempfile.NamedTemporaryFile(
+                    mode='wb', prefix=f'.{file_name}.', suffix='.part', dir=save_path, delete=False
+                ) as out_file:
+                    temp_path = out_file.name
+                    while True:
+                        _raise_if_cancelled(cancel_event)
+                        data = response.read(1024 * 1024)
+                        if not data:
+                            break
+                        _raise_if_cancelled(cancel_event)
+                        out_file.write(data)
+            _raise_if_cancelled(cancel_event)
+            os.replace(temp_path, destination)
+            temp_path = None
             return file_name
+        except DownloadCancelled:
+            raise
         except (URLError, HTTPError) as e:
             if attempt < max_retries - 1:
                 print(f"\nDownload failed for {file_name}, retrying in {retry_delay} seconds... (Error: {str(e)})")
-                time.sleep(retry_delay)
+                if cancel_event is not None and cancel_event.wait(retry_delay):
+                    raise DownloadCancelled("MGnify database download cancelled by user.")
             else:
                 print(f"\nDownload failed for {file_name}, maximum retries reached.")
                 return None
         except Exception as e:
             print(f"\nUnknown error occurred while downloading {file_name}: {str(e)}")
             return None
+        finally:
+            if temp_path is not None and os.path.exists(temp_path):
+                os.remove(temp_path)
 
-def download_mgyg2taxa(save_path, db_type = "human-gut"):
+def download_mgyg2taxa(save_path, db_type = "human-gut", cancel_event=None):
     """Download metadata file for the specified database type"""
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -123,8 +94,16 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
     print(f"Downloading genomes-all_metadata.tsv from {url}...")
     with tqdm(unit='B', unit_scale=True, miniters=1, desc=file_name) as t:
         try:
-            urllib.request.urlretrieve(url, path, reporthook=lambda x, y, z: t.update(y))
+            def reporthook(_, block_size, __):
+                _raise_if_cancelled(cancel_event)
+                t.update(block_size)
+
+            urllib.request.urlretrieve(url, path, reporthook=reporthook)
             print(f"{file_name} download completed.")
+        except DownloadCancelled:
+            if os.path.exists(path):
+                os.remove(path)
+            raise
         except Exception as e:
             print(f"\nDownload failed for {file_name}: {str(e)}")
             if os.path.exists(path):
@@ -132,14 +111,15 @@ def download_mgyg2taxa(save_path, db_type = "human-gut"):
             raise
     return path
 
-def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv', meta_path = None):
+def build_id2taxa_db(save_path, db_name, file_name='genomes-all_metadata.tsv', meta_path=None, cancel_event=None):
     """Build id2taxa database and return a list of MGYG IDs"""
     try:
+        _raise_if_cancelled(cancel_event)
         if meta_path is None:
             df = pd.read_csv(os.path.join(save_path, file_name), sep='\t', header=0)
         else:
             df = pd.read_csv(meta_path, sep='\t', header=0)
-            
+        _raise_if_cancelled(cancel_event)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         
@@ -160,6 +140,7 @@ def build_id2taxa_db(save_path, db_name, file_name = 'genomes-all_metadata.tsv',
         if len(result) > 0:
             print(f"{table_name} already exists in db, skipping.")
         else:
+            _raise_if_cancelled(cancel_event)
             df.to_sql("id2taxa", conn, index=True, if_exists='replace')
             print("id2taxa database built successfully.")
             
@@ -188,13 +169,14 @@ def create_download_list(mgyg_list, db_type = "human-gut"):
             continue
     return url_list
 
-def download_id2annotation(down_list, save_path):
+def download_id2annotation(down_list, save_path, cancel_event=None):
     """Download eggNOG annotation files"""
     dir_name = 'id2annotation'
     os.makedirs(os.path.join(save_path, dir_name), exist_ok=True)
     
     need_download_list = []
     for url in down_list:
+        _raise_if_cancelled(cancel_event)
         file_name = url.split('/')[-1]
         if not os.path.exists(os.path.join(save_path, dir_name, file_name)):
             need_download_list.append(url)
@@ -207,21 +189,33 @@ def download_id2annotation(down_list, save_path):
             
     print(f"\nStarting download of {len(need_download_list)} files...")
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(download_with_retry, url, os.path.join(save_path, dir_name)) for url in need_download_list]
+        futures = [
+            executor.submit(download_with_retry, url, os.path.join(save_path, dir_name), cancel_event=cancel_event)
+            for url in need_download_list
+        ]
+        cancelled = False
         with tqdm(total=len(need_download_list), desc="Downloading") as pbar:
             for future in as_completed(futures):
-                result = future.result()
+                try:
+                    result = future.result()
+                except DownloadCancelled:
+                    cancelled = True
+                    continue
                 if result:
                     pbar.update(1)
                     pbar.set_postfix_str(result)
+    if cancelled:
+        _raise_if_cancelled(cancel_event)
     print("Annotation files download completed.")
 
-def read_file(args):
+def read_file(args, cancel_event=None):
     """Read and process a single annotation file"""
     file_path = args[0]
     try:
+        _raise_if_cancelled(cancel_event)
         # Files should already be validated, so we can read directly
         df = pd.read_csv(file_path, sep='\t', header=0, index_col=None)
+        _raise_if_cancelled(cancel_event)
         
         # Check if the dataframe is empty
         if df.empty:
@@ -235,12 +229,13 @@ def read_file(args):
         # Since files are pre-validated, any error here is unexpected
         raise
 
-def validate_annotation_files(file_list, path):
+def validate_annotation_files(file_list, path, cancel_event=None):
     """Validate annotation files and return list of valid files"""
     valid_files = []
     invalid_files = []
     
     for f in file_list:
+        _raise_if_cancelled(cancel_event)
         file_path = os.path.join(path, f)
         try:
             if not os.path.exists(file_path):
@@ -283,9 +278,10 @@ def validate_annotation_files(file_list, path):
     print(f"All files are valid: {len(valid_files)}/{len(file_list)}")
     return valid_files
 
-def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_dir = None):
+def build_id2annotation_db(save_path, db_name, dir_name='id2annotation', mgyg_dir=None, cancel_event=None):
     """Build id2annotation database from downloaded files"""
     try:
+        _raise_if_cancelled(cancel_event)
         if mgyg_dir is None:
             file_list = os.listdir(os.path.join(save_path, dir_name))
             path = os.path.join(save_path, dir_name)
@@ -294,16 +290,20 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
             path = mgyg_dir
 
         print("Validating annotation files...")
-        valid_files = validate_annotation_files(file_list, path)
+        valid_files = validate_annotation_files(file_list, path, cancel_event=cancel_event)
         
         # If we reach here, all files are valid
         print("Loading annotation files...")
         with ThreadPoolExecutor() as executor:
             df_list = []
-            futures = [executor.submit(read_file, (os.path.join(path, f),)) for f in valid_files]
+            futures = [
+                executor.submit(read_file, (os.path.join(path, f),), cancel_event)
+                for f in valid_files
+            ]
             with tqdm(total=len(valid_files), desc="Processing files") as pbar:
                 for future in as_completed(futures):
                     result = future.result()
+                    _raise_if_cancelled(cancel_event)
                     pbar.update(1)
                     if result is not None:  # Only add non-None results
                         df_list.append(result)
@@ -315,6 +315,7 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
         
         print("Concatenating annotation files...")
         df = pd.concat(df_list, ignore_index=True)
+        _raise_if_cancelled(cancel_event)
         df = df.drop_duplicates()
         df = df.rename(columns=lambda x: x.replace('#', ''))
         df.rename(columns={df.columns[0]: "ID"}, inplace=True)
@@ -341,7 +342,12 @@ def build_id2annotation_db(save_path, db_name, dir_name = 'id2annotation', mgyg_
             print(f"{table_name} already exists in db, skipping.")
         else:
             print("Building id2annotation database...")
+            _raise_if_cancelled(cancel_event)
             df.to_sql("id2annotation", conn, index=True, if_exists='replace')
+            if cancel_event is not None and cancel_event.is_set():
+                c.execute("DROP TABLE IF EXISTS id2annotation")
+                conn.commit()
+                _raise_if_cancelled(cancel_event)
             print("id2annotation database built successfully.")
             
     except Exception as e:
@@ -394,36 +400,52 @@ def check_db(db_path):
         print(f"Error checking database: {str(e)}")
         raise
 
-def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgyg_dir=None):
+def download_and_build_database(save_path, db_name, db_type, meta_path=None, mgyg_dir=None, cancel_event=None):
     """Main function to download and build the database"""
     try:
+        _raise_if_cancelled(cancel_event)
         db_path = os.path.join(save_path, db_name)
         status = check_db(db_path)
 
         if status in ["no db", "no id2taxa"]:
             if meta_path is None:
-                download_mgyg2taxa(save_path, db_type)
-            mgyg_list = build_id2taxa_db(save_path, db_name, meta_path=meta_path)
+                download_mgyg2taxa(save_path, db_type, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
+            mgyg_list = build_id2taxa_db(
+                save_path, db_name, meta_path=meta_path, cancel_event=cancel_event
+            )
+            _raise_if_cancelled(cancel_event)
             down_list = create_download_list(mgyg_list, db_type)
             if mgyg_dir is None:
-                download_id2annotation(down_list, save_path)
-            build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
+                download_id2annotation(down_list, save_path, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
+            build_id2annotation_db(
+                save_path, db_name, mgyg_dir=mgyg_dir, cancel_event=cancel_event
+            )
+            _raise_if_cancelled(cancel_event)
 
         elif status == "no id2annotation":
             print("Database already exists, skipping id2taxa build.")
             down_list = create_download_list(query_download_list(db_path), db_type)
             if mgyg_dir is None:
-                download_id2annotation(down_list, save_path)
-            build_id2annotation_db(save_path, db_name, mgyg_dir=mgyg_dir)
+                download_id2annotation(down_list, save_path, cancel_event=cancel_event)
+            _raise_if_cancelled(cancel_event)
+            build_id2annotation_db(
+                save_path, db_name, mgyg_dir=mgyg_dir, cancel_event=cancel_event
+            )
+            _raise_if_cancelled(cancel_event)
 
         else:
             print("Database already exists and complete, skipping build.")
             
+    except DownloadCancelled:
+        print("MGnify database build cancelled.")
+        raise
     except Exception as e:
         print(f"Error in database build process: {str(e)}")
         raise
 
-def build_db(args):
+def build_db(args, parser=None):
     """Build database based on command line arguments"""
     try:
         if args.auto:
@@ -460,18 +482,15 @@ def build_db(args):
             download_and_build_database(save_path, db_name, args.db_type)
                 
         else:
-            parser.print_help()
+            if parser is not None:
+                parser.print_help()
             
     except Exception as e:
         print(f"Error in build process: {str(e)}")
         raise
 
-if __name__ == "__main__":
-    # download_and_build_database(
-    #     save_path = os.path.abspath('C:/Users/Qing/Desktop/test'),
-    #     db_name = 'MetaX.db',
-    #     db_type = 'sheep-rumen'
-    # )
+def build_parser():
+    """Create the command-line parser for the MGnify database builder."""
     parser = argparse.ArgumentParser(
         description='Download Annotation of MGnify and create database for MetaX tool.')
 
@@ -486,10 +505,16 @@ if __name__ == "__main__":
     parser.add_argument('--meta_path', metavar='PATH', type=str,
                         help='Path of the genomes-all_metadata.tsv if already downloaded')
     parser.add_argument('--mgyg_dir', metavar='PATH', type=str,
-                        help='Directory of eggNOG annotation of UHGG if already downloaded')
+                        help='Directory of eggNOG annotation if already downloaded')
     parser.add_argument('--db_type', metavar='TYPE', type=str, default="human-gut",
-                        help='Database type (human-gut, human-oral, chicken-gut, cow-rumen, marine, non-model-fish-gut, pig-gut, zebrafish-fecal)')
+                        choices=tuple(sorted(DB_URLS)),
+                        help=f"MGnify database type. Supported values: {', '.join(sorted(DB_URLS))}")
+    return parser
+
+
+if __name__ == "__main__":
+    parser = build_parser()
 
     args = parser.parse_args()
-    build_db(args)
+    build_db(args, parser)
 

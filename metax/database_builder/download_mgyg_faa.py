@@ -7,69 +7,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 from urllib.error import URLError, HTTPError
 
-# Combined URL dictionary for all database types
-DB_URLS = {
-    "chicken-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/chicken-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "cow-rumen": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/cow-rumen/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "honeybee-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/honeybee-gut/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-oral": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-oral/v1.0.1",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "human-vaginal": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-vaginal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "marine": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "mouse-gut": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "non-model-fish-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/non-model-fish-gut/v2.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "pig-gut": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/pig-gut/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "sheep-rumen": {
-        "base_url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/sheep-rumen/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    },
-    "zebrafish-fecal": {
-        "base_url": "http://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/zebrafish-fecal/v1.0",
-        "metadata": "genomes-all_metadata.tsv",
-        "catalogue": "species_catalogue"
-    }
-}
+try:
+    from .mgnify_sources import DB_URLS
+except ImportError:  # Support direct execution of this module as a script.
+    from mgnify_sources import DB_URLS
 
 def download_with_retry(url, save_path, max_retries=3, retry_delay=5):
     """Download function with retry mechanism"""

@@ -16,6 +16,7 @@ class SettingsWidget(QWidget):
     protein_infer_method_changed = pyqtSignal(str)
     stat_mean_by_zero_dominant_changed = pyqtSignal(bool)
     metatree_dir_changed = pyqtSignal(str)
+    use_local_js_assets_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None, update_branch="main", auto_check_update=True, stat_mean_by_zero_dominant=False, settings=None):
         super().__init__(parent)
@@ -84,6 +85,12 @@ class SettingsWidget(QWidget):
         except Exception:
             pass
         
+        # Use local JS assets
+        try:
+            self.ui.checkBox_use_local_js_assets.stateChanged.connect(self.handle_use_local_js_assets_changed)
+        except Exception:
+            pass
+        
         
     def init_ui(self, update_mode, auto_check_update, stat_mean_by_zero_dominant, settings=None,):
         if update_mode == "main":
@@ -106,6 +113,12 @@ class SettingsWidget(QWidget):
                 mt_path = settings.value('metatree_dir')
                 if mt_path:
                     self.ui.lineEdit_metatree_dir_path.setText(mt_path)
+            except Exception:
+                pass
+            
+        if settings:
+            try:
+                self.ui.checkBox_use_local_js_assets.setChecked(settings.value('use_local_js_assets', True, type=bool))
             except Exception:
                 pass
             
@@ -176,6 +189,10 @@ class SettingsWidget(QWidget):
     def handle_stat_mean_by_zero_dominant_changed(self):
         checked = self.ui.checkBox_stat_mean_by_zero_dominant.isChecked()
         self.stat_mean_by_zero_dominant_changed.emit(checked)
+        
+    def handle_use_local_js_assets_changed(self):
+        checked = self.ui.checkBox_use_local_js_assets.isChecked()
+        self.use_local_js_assets_changed.emit(checked)
     
     def set_meta_tree_directory(self):
         # open a file dialog to select a directory, check if index.html exists in the selected directory

@@ -1,0 +1,60 @@
+<div class="panel" data-tab-group data-search-scope>
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Group comparisons</div>
+      <h2>Visual comparison summaries</h2>
+      <p class="panel-help">Group comparison TSV files are available in Result Tables. This page focuses on visual outputs generated from those comparison results.</p>
+    </div>
+  </div>
+
+  {% if differential_figures_by_scope %}
+    <div class="section-context">
+      <strong>Reading differential plots:</strong>
+      volcano plots summarize effect size and adjusted significance for each group-vs-control comparison. Heatmaps are only shown when the GUI heatmap function finds significant features after filtering.
+    </div>
+    <div class="toolbar">
+      <input class="search-input" data-artifact-search type="search" placeholder="Search differential figures by taxa level, function, comparison, or plot type">
+      <span class="muted">{{ figures_by_category.get("differential", [])|length }} differential figures</span>
+    </div>
+    <div class="tab-strip">
+      {% for scope, plot_groups in differential_figures_by_scope.items() %}
+        {% set scope_count = namespace(value=0) %}
+        {% for plot_type, items in plot_groups.items() %}
+          {% set scope_count.value = scope_count.value + items|length %}
+        {% endfor %}
+        <button class="tab-button {% if loop.first %}active{% endif %}" data-tab-target="diff-{{ loop.index }}">{{ scope }} <span class="count-pill">{{ scope_count.value }}</span></button>
+      {% endfor %}
+    </div>
+
+    {% for scope, plot_groups in differential_figures_by_scope.items() %}
+      <div class="tab-panel {% if loop.first %}active{% endif %}" data-tab-panel="diff-{{ loop.index }}">
+        <div class="function-panel-stack">
+          {% for plot_type, items in plot_groups.items() %}
+            <div class="function-panel">
+              <div class="subgroup-heading">
+                <h3>{{ plot_type }}</h3>
+                <p class="muted">{{ items|length }} {{ scope }} differential figure{% if items|length != 1 %}s{% endif %}</p>
+              </div>
+              <div class="figure-grid">
+                {% for figure in items %}
+                  {% include "figure_tile.html.j2" %}
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="task-grid">
+      <div class="task-card">
+        <div class="task-top"><div class="task-badge">A</div><h3>Comparison result tables</h3></div>
+        <p class="muted">Open Result Tables to inspect ANOVA, t-test, Dunnett, or group-vs-control result TSV files.</p>
+      </div>
+      <div class="task-card">
+        <div class="task-top"><div class="task-badge">B</div><h3>Differential figures</h3></div>
+        <p class="muted">Volcano plots and significant-feature heatmaps appear here when comparison results and significant features are available.</p>
+      </div>
+    </div>
+  {% endif %}
+</div>

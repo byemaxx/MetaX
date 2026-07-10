@@ -1,0 +1,172 @@
+import pandas as pd
+import pytest
+
+from metax.peptide_annotator.peptide_table_prepare import (
+    available_diann_intensity_columns,
+    prepare_diann_parquet_for_direct_otf,
+    resolve_diann_parquet_schema,
+)
+
+
+def test_resolve_diann_parquet_schema_exposes_column_roles():
+    schema = resolve_diann_parquet_schema(
+        [
+            "Run",
+            "Stripped.Sequence",
+            "Evidence",
+            "Q.Value",
+            "Precursor.Quantity",
+        ],
+        require_score_columns=True,
+    )
+
+    assert schema.sample_col == "Run"
+    assert schema.peptide_col == "Stripped.Sequence"
+    assert schema.score_col == "Evidence"
+    assert schema.error_col == "Q.Value"
+    assert schema.intensity_col == "Precursor.Quantity"
+    assert schema.intensity_col_prefix == "Precursor.Quantity."
+
+
+def test_resolve_diann_parquet_schema_allows_optional_score_columns():
+    schema = resolve_diann_parquet_schema(
+        ["Run", "Stripped.Sequence", "Precursor.Normalised"]
+    )
+
+    assert schema.score_col is None
+    assert schema.error_col is None
+
+
+@pytest.mark.parametrize(
+    ("intensity_col", "expected_prefix"),
+    [
+        ("Precursor.Normalised", "Precursor.Normalised."),
+        ("Precursor.Quantity", "Precursor.Quantity."),
+    ],
+)
+def test_prepare_diann_parquet_supports_intensity_aliases(
+    tmp_path,
+    intensity_col,
+    expected_prefix,
+):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1.raw", "s1.raw", "s2.raw"],
+            "Stripped.Sequence": ["PEPA", "PEPA", "PEPA"],
+            "Evidence": [1.0, 2.0, 3.0],
+            "Q.Value": [0.02, 0.01, 0.03],
+            intensity_col: [4.0, 6.0, 20.0],
+        }
+    ).to_parquet(parquet_path)
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        require_score_columns=True,
+    )
+
+    assert prepared.intensity_col == intensity_col
+    assert prepared.intensity_col_prefix == expected_prefix
+    assert prepared.dataframe.loc[0, f"{expected_prefix}s1"] == 10.0
+    assert prepared.dataframe.loc[0, f"{expected_prefix}s2"] == 20.0
+    assert prepared.dataframe.loc[0, "Evidence"] == 3.0
+    assert prepared.dataframe.loc[0, "Q.Value"] == 0.01
+    assert prepared.metadata["diann_intensity_column"] == intensity_col
+    assert prepared.metadata["diann_run_to_sample_column"] == {
+        "s1.raw": f"{expected_prefix}s1",
+        "s2.raw": f"{expected_prefix}s2",
+    }
+
+
+def test_prepare_diann_parquet_preserves_duplicate_basenames_as_distinct_runs(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": [r"C:\batch1\s1.raw", r"C:\batch2\s1.raw"],
+            "Stripped.Sequence": ["PEPA", "PEPA"],
+            "Precursor.Quantity": [10.0, 20.0],
+        }
+    ).to_parquet(parquet_path)
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        sample_column_prefix="",
+        intensity_col="Precursor.Quantity",
+    )
+
+    assert prepared.dataframe.loc[0, "s1"] == 10.0
+    assert prepared.dataframe.loc[0, "s1_2"] == 20.0
+    assert prepared.metadata["diann_run_to_sample_column"] == {
+        r"C:\batch1\s1.raw": "s1",
+        r"C:\batch2\s1.raw": "s1_2",
+    }
+
+
+def test_prepare_diann_parquet_prefers_normalised_when_both_aliases_exist(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1"],
+            "Stripped.Sequence": ["PEPA"],
+            "Precursor.Normalised": [10.0],
+            "Precursor.Quantity": [99.0],
+        }
+    ).to_parquet(parquet_path)
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        sample_column_prefix="",
+    )
+
+    assert prepared.intensity_col == "Precursor.Normalised"
+    assert prepared.dataframe.loc[0, "s1"] == 10.0
+
+
+def test_prepare_diann_parquet_uses_explicit_quantity_when_both_aliases_exist(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1"],
+            "Stripped.Sequence": ["PEPA"],
+            "Precursor.Normalised": [10.0],
+            "Precursor.Quantity": [99.0],
+        }
+    ).to_parquet(parquet_path)
+
+    assert available_diann_intensity_columns(
+        pd.read_parquet(parquet_path).columns
+    ) == ["Precursor.Normalised", "Precursor.Quantity"]
+
+    prepared = prepare_diann_parquet_for_direct_otf(
+        parquet_path,
+        sample_column_prefix="",
+        intensity_col="Precursor.Quantity",
+    )
+
+    assert prepared.intensity_col == "Precursor.Quantity"
+    assert prepared.dataframe.loc[0, "s1"] == 99.0
+    assert prepared.metadata["diann_intensity_column"] == "Precursor.Quantity"
+
+
+def test_resolve_diann_parquet_schema_rejects_missing_selected_intensity():
+    with pytest.raises(
+        ValueError,
+        match="Selected DIA-NN intensity column.*Precursor.Quantity.*not found",
+    ):
+        resolve_diann_parquet_schema(
+            ["Run", "Stripped.Sequence", "Precursor.Normalised"],
+            intensity_col="Precursor.Quantity",
+        )
+
+
+def test_prepare_diann_parquet_reports_missing_intensity_alias(tmp_path):
+    parquet_path = tmp_path / "report.parquet"
+    pd.DataFrame(
+        {
+            "Run": ["s1"],
+            "Stripped.Sequence": ["PEPA"],
+        }
+    ).to_parquet(parquet_path)
+
+    with pytest.raises(ValueError, match="Expected one of.*Precursor.Normalised.*Precursor.Quantity"):
+        prepare_diann_parquet_for_direct_otf(parquet_path)

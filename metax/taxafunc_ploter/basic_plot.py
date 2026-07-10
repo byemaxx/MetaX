@@ -81,7 +81,7 @@ class BasicPlot:
             a.set_text(f'{count[i]}')
 
 
-        plt.title('Number of identified peptides at different levels', fontsize=font_size+2, loc='center', fontweight='bold')
+        plt.title('Number of non-redundant peptides at different taxonomic assignment levels', fontsize=font_size+2, loc='center', fontweight='bold')
         plt.setp(autotexts, size=font_size,  color="white")
         plt.setp(texts, size=font_size)
 
@@ -120,7 +120,7 @@ class BasicPlot:
             # set the label of the bar, and fontsize
             ax.bar_label(i, fontsize=font_size)
 
-        ax.set_title(f'Number of taxa at different levels (Peptide number >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
+        ax.set_title(f'Number of taxa at different levels (unique peptides >= {peptide_num})', fontsize=font_size+2, fontweight='bold')
         ax.set_xlabel('Taxonomic level', fontsize=font_size+2)
         ax.set_ylabel('Number of taxa', fontsize=font_size+2)
         # set font size of xtikcs and yticks
@@ -154,9 +154,9 @@ class BasicPlot:
         ax = sns.barplot(data=df, x='prop', y='n', hue='label', dodge=False, palette='tab10_r')
         for i in ax.containers:
             ax.bar_label(i, fontsize=font_size)
-        ax.set_title(f'Number of different proportions of peptides in {func_name}', fontsize=font_size+2, fontweight='bold')
+        ax.set_title(f'Number of different proportions of non-redundant peptides in {func_name}', fontsize=font_size+2, fontweight='bold')
         ax.set_xlabel('Proportion of function', fontsize=font_size+2)
-        ax.set_ylabel('Number of peptides', fontsize=font_size+2)
+        ax.set_ylabel('Number of non-redundant peptides', fontsize=font_size+2)
         ax.set_xticklabels(ax.get_xticklabels(), fontsize=font_size)
         ax.set_yticklabels(ax.get_yticklabels(), fontsize=font_size)
 
@@ -289,6 +289,7 @@ class BasicPlot:
             random_state (int): Random seed
         """
         try:
+            import inspect
             from sklearn.manifold import TSNE
             
             dft = df.copy()
@@ -329,9 +330,25 @@ class BasicPlot:
 
             plt.figure(figsize=(width, height))
             
-            tsne = TSNE(n_components=2, perplexity=perplexity, 
-                    n_iter=n_iter, early_exaggeration=early_exaggeration,
-                    learning_rate=learning_rate, random_state=random_state)
+            tsne_kwargs = dict(
+                n_components=2,
+                perplexity=perplexity,
+                early_exaggeration=early_exaggeration,
+                random_state=random_state,
+            )
+            tsne_signature = inspect.signature(TSNE)
+            if "max_iter" in tsne_signature.parameters:
+                tsne_kwargs["max_iter"] = n_iter
+            else:
+                tsne_kwargs["n_iter"] = n_iter
+
+            learning_rate_param = tsne_signature.parameters.get("learning_rate")
+            if learning_rate == "auto" and learning_rate_param is not None and learning_rate_param.default != "auto":
+                tsne_kwargs["learning_rate"] = 200.0
+            else:
+                tsne_kwargs["learning_rate"] = learning_rate
+
+            tsne = TSNE(**tsne_kwargs)
             components = tsne.fit_transform(mat)
             
             dot_size = (width * height)*font_size/10 if dot_size is None else dot_size
@@ -805,11 +822,29 @@ class BasicPlot:
             # Plot UpSet
             fig = plt.figure(figsize=(width, height))
             plt.rcParams.update({'font.size': font_size})
-            upset_plot(upset_data, fig = fig, show_counts=show_label,
-                       show_percentages=show_percentages if show_label else False,
-                    element_size=None, sort_categories_by ='-input', 
-                    min_subset_size=min_subset_size if min_subset_size != 0 else None,
-                    max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+            axes = upset_plot(upset_data, fig = fig, show_counts=False,
+                              show_percentages=False,
+                              element_size=None, sort_categories_by ='-input',
+                              sort_by='cardinality',
+                              min_subset_size=min_subset_size if min_subset_size != 0 else None,
+                              max_subset_rank=max_subset_rank if max_subset_rank != 0 else None)
+
+            if show_label:
+                ax = axes['intersections']
+                total_items = len(upset_data)
+                for c in ax.containers:
+                    if show_percentages:
+                        labels = [f'{int(v)}\n({(v/total_items)*100:.1f}%)' if v > 0 else '' for v in c.datavalues]
+                        ax.bar_label(c, labels=labels, padding=1)
+                    else:
+                        labels = [f'{int(v)}' if v > 0 else '' for v in c.datavalues]
+                        ax.bar_label(c, labels=labels, padding=1)
+
+                if 'totals' in axes:
+                    ax_totals = axes['totals']
+                    for c in ax_totals.containers:
+                        labels = [f'{int(v)}' if v > 0 else '' for v in c.datavalues]
+                        ax_totals.bar_label(c, labels=labels, padding=1)
 
             plt.suptitle(f"UpSet of {title_name}", fontsize=font_size + 2, fontweight='bold')
             plt.tight_layout()
@@ -835,6 +870,7 @@ class BasicPlot:
         linecolor='none'
     ):
         corr = df.copy()
+        corr.fillna(0, inplace=True)
         # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
