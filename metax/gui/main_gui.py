@@ -137,6 +137,7 @@ try:
     from ..database_builder.database_builder_own import build_db
     from ..database_updater.database_updater import run_db_update
     from ..database_builder.database_builder_mag import download_and_build_database
+    from ..database_builder.mgnify_sources import mgnify_catalogue_display_names
 
 except (ImportError, ValueError):
     # Use absolute path to import the module when running directly as a script
@@ -214,6 +215,7 @@ except (ImportError, ValueError):
     from metax.database_builder.database_builder_own import build_db
     from metax.database_updater.database_updater import run_db_update
     from metax.database_builder.database_builder_mag import download_and_build_database
+    from metax.database_builder.mgnify_sources import mgnify_catalogue_display_names
     from metax.workflow_recorder import (
         AnalysisStep,
         WorkflowRecorder,
@@ -310,6 +312,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         super().__init__()
         MainWindow.closeEvent = self.closeEvent
         self.setupUi(MainWindow)
+        self.comboBox_db_type.clear()
+        self.comboBox_db_type.addItems(mgnify_catalogue_display_names())
         self.MainWindow = MainWindow
         # icon_path = os.path.join(os.path.dirname(__file__), "./MetaX_GUI/resources/logo.png")        
         # self.MainWindow.setWindowIcon(QIcon(icon_path))
@@ -2181,6 +2185,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         clicked_btn = msgBox.clickedButton()
         
         if clicked_btn in [save_and_close_button, direct_close_button]:
+            if any(not executor.canCloseThread() for executor in self.executors):
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Task still running",
+                    "A task that cannot be stopped safely is still running. "
+                    "Wait for it to finish before closing MetaX.",
+                )
+                event.ignore()
+                return
+
             try:
                 if clicked_btn == save_and_close_button:
                     self.show_message("Saving settings...", "Closing...")
@@ -2215,7 +2229,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     
                 # 关闭所有子进程
                 for executor in self.executors:
-                    executor.forceCloseThread()
+                    if not executor.forceCloseThread():
+                        event.ignore()
+                        return
                                 
                 self.logger.write_log("############################## MetaX closed ##############################")
             except Exception as e:
@@ -3429,7 +3445,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # # 存储执行结果到类的属性中
             # self.Qthread_result = result
 
-            if success:
+            if result == FunctionExecutor.CANCELLED_RESULT:
+                self.logger.write_log("Background task cancelled by user", "i")
+            elif success:
                 if result is not None and show_msg:
                     QMessageBox.information(self.MainWindow, 'Result', 'Task completed')
                 elif show_msg:
@@ -4575,14 +4593,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         QMessageBox.information(self.MainWindow, 'Database Type Help', 'All database will be downloaded from MGnify.\nWebsite: https://www.ebi.ac.uk/metagenomics/')
     
     def show_toolButton_db_all_meta_help(self):
-        QMessageBox.information(self.MainWindow, 'Database All Meta Help', 'You may find it in MetaLab-MAG folder or just leave it, we will download it for you')
+        QMessageBox.information(self.MainWindow, 'Database All Meta Help', '[genomes-all_metadata.tsv] or just leave it, we will download it for you')
     
     def show_toolButton_db_anno_folder_help(self):
-        QMessageBox.information(self.MainWindow, 'Database Annotation Folder Help', 'You may find it in MetaLab-MAG folder or just leave it, we will download it for you')
+        QMessageBox.information(self.MainWindow, 'Database Annotation Folder Help', '[annotation_folder] or just leave it, we will download it for you')
 
 
     def show_toolButton_db_update_built_in_help(self):
-        QMessageBox.information(self.MainWindow, 'Database Update Built-in Help', 'Some Database are built-in method, you select one of them, and we will download and update it automatically')
+        QMessageBox.information(self.MainWindow, 'Database Update Built-in Help', 'Built-in dbCAN_seq mode merges precomputed annotations by exact protein ID. It does not run sequence similarity search or re-annotate custom proteins. Incoming annotation columns replace existing columns with the same names; MetaX logs a warning listing the replaced columns. For custom protein databases, run dbCAN/run_dbCAN on your own protein FASTA, then import a TSV table with matching MetaX protein IDs.')
     def show_toolButton_db_update_table_help(self):
         QMessageBox.information(self.MainWindow, 'Database Update Table Help', 'Extend the database by adding new database to the database table\n\nMake sure the column separator is tab\n\nMake sure the first column is Protein name and other columns are function annotation')
 
