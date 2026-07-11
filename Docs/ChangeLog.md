@@ -1,3 +1,11 @@
+# Version: 2.4.4
+## Date: 2026-07-11
+### Changes:
+- Fix: Improved background task cancellation handling.
+- Fix: Standardized DIA-NN parquet sample columns to the `Intensity_` naming convention.
+- Fix: Improved metadata loading when exported index columns or conflicting `Sample` columns are present.
+
+
 # Version: 2.4.3
 ## Date: 2026-07-11
 ### Changes:
