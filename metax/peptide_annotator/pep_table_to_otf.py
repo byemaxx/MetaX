@@ -29,6 +29,42 @@ import pandas as pd
 from tqdm import tqdm
 
 
+# concurrent.futures enforces this limit for ProcessPoolExecutor on Windows.
+# Keep it local rather than relying on the private stdlib implementation detail.
+_WINDOWS_PROCESS_POOL_MAX_WORKERS = 61
+
+
+def _resolve_digested_scan_n_jobs(
+    n_jobs: int | None,
+    *,
+    parallel_backend: str,
+) -> int:
+    """Resolve a usable worker count for a digested-genome scan.
+
+    Windows rejects ProcessPoolExecutor worker counts above 61.  In particular,
+    an automatic count based on a high-core machine can otherwise make the GUI
+    subprocess fail before it starts scanning any files.
+    """
+    resolved_n_jobs = (
+        max(1, (os.cpu_count() or 1) - 1)
+        if n_jobs is None
+        else max(1, int(n_jobs))
+    )
+    if (
+        parallel_backend == "process"
+        and os.name == "nt"
+        and resolved_n_jobs > _WINDOWS_PROCESS_POOL_MAX_WORKERS
+    ):
+        print(
+            "[DigestedScan] Capping process workers from "
+            f"{resolved_n_jobs} to {_WINDOWS_PROCESS_POOL_MAX_WORKERS} "
+            "because Windows ProcessPoolExecutor supports at most 61.",
+            flush=True,
+        )
+        return _WINDOWS_PROCESS_POOL_MAX_WORKERS
+    return resolved_n_jobs
+
+
 def _ensure_project_root_on_syspath() -> None:
     """Allow running this file directly as a script.
 
@@ -615,10 +651,10 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
     if not peptide_set:
         return {}
 
-    if n_jobs is None:
-        n_jobs = max(1, (os.cpu_count() or 1) - 1)
-    else:
-        n_jobs = max(1, int(n_jobs))
+    n_jobs = _resolve_digested_scan_n_jobs(
+        n_jobs,
+        parallel_backend=parallel_backend,
+    )
     batch_count = max(1, n_jobs * 4)
     batches = [all_files[index::batch_count] for index in range(batch_count)]
     batches = [batch for batch in batches if batch]
@@ -744,8 +780,13 @@ def query_peptide_proteins_from_digested_genome_folders(
         # keep return type stable
         return {}, "", ""
 
-    if n_jobs is None:
-        n_jobs = max(1, (os.cpu_count() or 1) - 1)
+    parallel_backend = (parallel_backend or "thread").strip().lower()
+    if parallel_backend not in {"thread", "process"}:
+        raise ValueError("parallel_backend must be 'thread' or 'process'")
+    n_jobs = _resolve_digested_scan_n_jobs(
+        n_jobs,
+        parallel_backend=parallel_backend,
+    )
 
     print(f"[DigestedScan] n_jobs={n_jobs}, peptides_to_query={len(peptide_set)}")
 
@@ -755,10 +796,6 @@ def query_peptide_proteins_from_digested_genome_folders(
     batches = [b for b in batches if b]
 
     print(f"[DigestedScan] Batches: {len(batches)} (batch_count={batch_count})")
-
-    parallel_backend = (parallel_backend or "thread").strip().lower()
-    if parallel_backend not in {"thread", "process"}:
-        raise ValueError("parallel_backend must be 'thread' or 'process'")
 
     merged: dict[str, set[str]] = defaultdict(set)
     # Default is thread for GUI stability.
