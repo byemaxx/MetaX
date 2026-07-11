@@ -844,6 +844,18 @@ def test_set_meta_uses_named_sample_after_unnamed_exported_index(tmp_path):
     assert tfa.meta_df["Group"].tolist() == ["Control", "Treatment"]
 
 
+def test_set_meta_rejects_ambiguity_after_dropping_unnamed_index(tmp_path):
+    meta_path = tmp_path / "meta.tsv"
+    meta_path.write_text(
+        "\tSubject\tSample\tGroup\n0\ts1\talias1\tControl\n",
+        encoding="utf-8",
+    )
+    tfa = _make_meta_test_analyzer(["s1"])
+
+    with pytest.raises(ValueError, match="Ambiguous meta table"):
+        tfa._set_meta(str(meta_path))
+
+
 def test_set_meta_rejects_ambiguous_sample_columns(tmp_path):
     meta_path = tmp_path / "meta.tsv"
     meta_path.write_text(

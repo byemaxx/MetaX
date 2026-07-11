@@ -498,10 +498,12 @@ class TaxaFuncAnalyzer:
             if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
                 if str(first_col).startswith('Unnamed:'):
                     # A pandas/Excel export can leave its row index in an
-                    # unnamed first column. In that unambiguous case, use the
-                    # explicitly named Sample column instead.
+                    # unnamed first column. Remove it, then re-check whether
+                    # the explicitly named Sample column is now first.
                     meta = meta.drop(columns=first_col)
-                else:
+                    first_col = meta.columns[0]
+
+                if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
                     raise ValueError(
                         "Ambiguous meta table: sample names must be in the first "
                         f"column, but the first column is [{first_col}] and another "
