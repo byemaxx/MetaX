@@ -40,6 +40,11 @@ class FunctionExecutor(QMainWindow):
     finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
     CANCELLED_RESULT = "Task cancelled by user."
 
+    @classmethod
+    def is_cancelled_result(cls, result):
+        """Return whether a worker result is the cancellation marker."""
+        return isinstance(result, str) and result == cls.CANCELLED_RESULT
+
     def __init__(self, function, *args, logger=None, **kwargs):
         super().__init__()
 

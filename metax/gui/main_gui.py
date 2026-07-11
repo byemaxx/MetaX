@@ -3445,7 +3445,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             # # 存储执行结果到类的属性中
             # self.Qthread_result = result
 
-            if result == FunctionExecutor.CANCELLED_RESULT:
+            if FunctionExecutor.is_cancelled_result(result):
                 self.logger.write_log("Background task cancelled by user", "i")
             elif success:
                 if result is not None and show_msg:
