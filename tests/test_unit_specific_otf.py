@@ -1216,6 +1216,26 @@ def test_nested_scanner_defaults_to_subprocess(monkeypatch, tmp_path):
     assert result == {"PEPA": {"g1": {"g1_p1"}}}
 
 
+def test_digested_scan_caps_windows_process_workers(monkeypatch):
+    import metax.peptide_annotator.pep_table_to_otf as mapping_module
+
+    monkeypatch.setattr(mapping_module.os, "name", "nt")
+    monkeypatch.setattr(mapping_module.os, "cpu_count", lambda: 96)
+
+    assert mapping_module._resolve_digested_scan_n_jobs(
+        None,
+        parallel_backend="process",
+    ) == 61
+    assert mapping_module._resolve_digested_scan_n_jobs(
+        95,
+        parallel_backend="process",
+    ) == 61
+    assert mapping_module._resolve_digested_scan_n_jobs(
+        95,
+        parallel_backend="thread",
+    ) == 95
+
+
 def test_nested_scanner_subprocess_matches_direct_backends(tmp_path):
     digested_dir = tmp_path / "digested"
     digested_dir.mkdir()
