@@ -816,3 +816,41 @@ def test_unit_specific_lfq_uses_internal_unit_specific_identity(monkeypatch, tmp
 
     assert quant_ids
     assert set(quant_ids) == {"_MetaXUnitSpecificPeptideID"}
+
+
+def _make_meta_test_analyzer(sample_names):
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
+    tfa = TaxaFuncAnalyzer.__new__(TaxaFuncAnalyzer)
+    tfa.sample_list = None
+    tfa.sample_col_prefix = ""
+    tfa.original_df = pd.DataFrame({sample: [1.0] for sample in sample_names})
+    tfa.check_meta_match_df = lambda: (True, "")
+    return tfa
+
+
+def test_set_meta_uses_named_sample_after_unnamed_exported_index(tmp_path):
+    meta_path = tmp_path / "meta.tsv"
+    meta_path.write_text(
+        "\tSample\tGroup\n0\ts1\tControl\n1\ts2\tTreatment\n",
+        encoding="utf-8",
+    )
+    tfa = _make_meta_test_analyzer(["s1", "s2"])
+
+    tfa._set_meta(str(meta_path))
+
+    assert tfa.sample_list == ["s1", "s2"]
+    assert tfa.meta_df.columns.tolist() == ["Sample", "Group"]
+    assert tfa.meta_df["Group"].tolist() == ["Control", "Treatment"]
+
+
+def test_set_meta_rejects_ambiguous_sample_columns(tmp_path):
+    meta_path = tmp_path / "meta.tsv"
+    meta_path.write_text(
+        "Subject\tSample\tGroup\ns1\talias1\tControl\n",
+        encoding="utf-8",
+    )
+    tfa = _make_meta_test_analyzer(["s1"])
+
+    with pytest.raises(ValueError, match="Ambiguous meta table"):
+        tfa._set_meta(str(meta_path))
