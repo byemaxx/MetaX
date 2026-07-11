@@ -842,11 +842,11 @@ MetaUmbra scoring currently requires a tab-separated peptide table. When a DIA-N
 
 When the input is a DIA-NN parquet file, MetaX reads only the required columns and pivots the long-format table into a direct-to-OTF peptide table:
 
-- `Run` becomes sample-specific intensity columns.
+- `Run` becomes sample-specific intensity columns named `Intensity_<sample>`.
 - `Stripped.Sequence` becomes the peptide sequence column.
 - `Precursor.Normalised` is preferred as the intensity source; `Precursor.Quantity` is used when selected or when normalized intensity is not available.
 - `Evidence` and `Q.Value` are required in the normal Peptide Direct to OTF window and are preserved for MetaUmbra scoring.
-- Run names are cleaned into safe sample column names, and the conversion metadata is written into the OTF info output.
+- Run names are cleaned into safe sample column names. The selected DIA-NN intensity source is recorded in conversion metadata, but `Precursor.Normalised` or `Precursor.Quantity` is not embedded in the sample-column names.
 
 ### 2. MetaUmbra Unit-Specific Direct-to-OTF Annotation
 
