@@ -497,11 +497,15 @@ class TaxaFuncAnalyzer:
             first_col = meta.columns[0]
             if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
                 if str(first_col).startswith('Unnamed:'):
-                    # A pandas/Excel export can leave its row index in an
-                    # unnamed first column. Remove it, then re-check whether
-                    # the explicitly named Sample column is now first.
-                    meta = meta.drop(columns=first_col)
-                    first_col = meta.columns[0]
+                    # Only discard an unnamed column when it is clearly an
+                    # exported row counter. It may otherwise contain the real
+                    # sample IDs saved as the DataFrame index.
+                    index_values = meta.iloc[:, 0].astype(str).str.strip().tolist()
+                    zero_based_index = [str(i) for i in range(len(meta))]
+                    one_based_index = [str(i + 1) for i in range(len(meta))]
+                    if index_values in (zero_based_index, one_based_index):
+                        meta = meta.drop(columns=first_col)
+                        first_col = meta.columns[0]
 
                 if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
                     raise ValueError(
