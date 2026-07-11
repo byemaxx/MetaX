@@ -491,9 +491,33 @@ class TaxaFuncAnalyzer:
         else:
             # read table without fill na, and as string
             meta = pd.read_csv(meta_path, sep='\t', keep_default_na=False, dtype=str)
+            if meta.shape[1] == 0:
+                raise ValueError(f"The meta table has no columns: {meta_path}")
+
+            first_col = meta.columns[0]
+            if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
+                if str(first_col).startswith('Unnamed:'):
+                    # Only discard an unnamed column when it is clearly an
+                    # exported row counter. It may otherwise contain the real
+                    # sample IDs saved as the DataFrame index.
+                    index_values = meta.iloc[:, 0].astype(str).str.strip().tolist()
+                    zero_based_index = [str(i) for i in range(len(meta))]
+                    one_based_index = [str(i + 1) for i in range(len(meta))]
+                    if index_values in (zero_based_index, one_based_index):
+                        meta = meta.drop(columns=first_col)
+                        first_col = meta.columns[0]
+
+                if first_col != 'Sample' and 'Sample' in meta.columns[1:]:
+                    raise ValueError(
+                        "Ambiguous meta table: sample names must be in the first "
+                        f"column, but the first column is [{first_col}] and another "
+                        "column is named [Sample]. Move the sample-name column to "
+                        "the first position, or rename the other [Sample] column."
+                    )
+
             # sample name must be in the first column
             # rename the first column to Sample
-            meta.rename(columns={meta.columns[0]: 'Sample'}, inplace=True)
+            meta.columns = ['Sample', *meta.columns[1:]]
             meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.strip().replace(' ', '_'))
             if self.sample_col_prefix != '': # if the prefix_col_name is not provided, use the first column name
                 meta['Sample'] = meta.iloc[:, 0].apply(lambda x: x.replace(self.sample_col_prefix, ''))

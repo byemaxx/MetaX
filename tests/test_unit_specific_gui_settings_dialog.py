@@ -303,8 +303,8 @@ def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
     prepared_df = pd.read_csv(prepared_path, sep="\t")
     assert separator == "\t"
     assert peptide_col == "Stripped.Sequence"
-    assert intensity_prefix == "Precursor.Quantity."
-    assert prepared_df.loc[0, "Precursor.Quantity.s1"] == 10.0
+    assert intensity_prefix == "Intensity_"
+    assert prepared_df.loc[0, "Intensity_s1"] == 10.0
     assert metadata["diann_intensity_column"] == "Precursor.Quantity"
 
 
