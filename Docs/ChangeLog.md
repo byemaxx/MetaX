@@ -1,3 +1,9 @@
+# Version: 2.4.3
+## Date: 2026-07-11
+### Changes:
+- Fix: Prevented Peptide Direct to OTF scans from failing on high-core Windows computers.
+
+
 # Version: 2.4.2
 ## Date: 2026-07-09
 ### Changes:
