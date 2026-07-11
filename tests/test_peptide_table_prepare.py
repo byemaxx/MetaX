@@ -25,7 +25,7 @@ def test_resolve_diann_parquet_schema_exposes_column_roles():
     assert schema.score_col == "Evidence"
     assert schema.error_col == "Q.Value"
     assert schema.intensity_col == "Precursor.Quantity"
-    assert schema.intensity_col_prefix == "Precursor.Quantity."
+    assert schema.intensity_col_prefix == "Intensity_"
 
 
 def test_resolve_diann_parquet_schema_allows_optional_score_columns():
@@ -37,17 +37,10 @@ def test_resolve_diann_parquet_schema_allows_optional_score_columns():
     assert schema.error_col is None
 
 
-@pytest.mark.parametrize(
-    ("intensity_col", "expected_prefix"),
-    [
-        ("Precursor.Normalised", "Precursor.Normalised."),
-        ("Precursor.Quantity", "Precursor.Quantity."),
-    ],
-)
+@pytest.mark.parametrize("intensity_col", ["Precursor.Normalised", "Precursor.Quantity"])
 def test_prepare_diann_parquet_supports_intensity_aliases(
     tmp_path,
     intensity_col,
-    expected_prefix,
 ):
     parquet_path = tmp_path / "report.parquet"
     pd.DataFrame(
@@ -66,15 +59,21 @@ def test_prepare_diann_parquet_supports_intensity_aliases(
     )
 
     assert prepared.intensity_col == intensity_col
-    assert prepared.intensity_col_prefix == expected_prefix
-    assert prepared.dataframe.loc[0, f"{expected_prefix}s1"] == 10.0
-    assert prepared.dataframe.loc[0, f"{expected_prefix}s2"] == 20.0
+    assert prepared.intensity_col_prefix == "Intensity_"
+    assert prepared.dataframe.loc[0, "Intensity_s1"] == 10.0
+    assert prepared.dataframe.loc[0, "Intensity_s2"] == 20.0
+    assert not any(
+        column.startswith("Precursor.Normalised.")
+        or column.startswith("Precursor.Quantity.")
+        for column in prepared.dataframe.columns
+    )
     assert prepared.dataframe.loc[0, "Evidence"] == 3.0
     assert prepared.dataframe.loc[0, "Q.Value"] == 0.01
     assert prepared.metadata["diann_intensity_column"] == intensity_col
+    assert prepared.metadata["prepared_intensity_col_prefix"] == "Intensity_"
     assert prepared.metadata["diann_run_to_sample_column"] == {
-        "s1.raw": f"{expected_prefix}s1",
-        "s2.raw": f"{expected_prefix}s2",
+        "s1.raw": "Intensity_s1",
+        "s2.raw": "Intensity_s2",
     }
 
 

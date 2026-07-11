@@ -17,6 +17,7 @@ DIANN_INTENSITY_CANDIDATES = (
     "Precursor.Normalised",
     "Precursor.Quantity",
 )
+DIANN_OUTPUT_SAMPLE_COLUMN_PREFIX = "Intensity_"
 
 
 @dataclass(frozen=True)
@@ -156,8 +157,9 @@ def diann_parquet_required_columns(
     return [column for column in required if column is not None] + [schema.intensity_col]
 
 
-def diann_parquet_intensity_prefix(intensity_col: str) -> str:
-    return f"{intensity_col}."
+def diann_parquet_intensity_prefix(_intensity_col: str) -> str:
+    """Return the canonical OTF sample prefix for any DIA-NN intensity source."""
+    return DIANN_OUTPUT_SAMPLE_COLUMN_PREFIX
 
 
 def _safe_sample_name(run: str) -> str:
