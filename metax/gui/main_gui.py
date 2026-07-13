@@ -233,14 +233,14 @@ except (ImportError, ValueError):
 class WorkflowStepsSelectionDialog(QDialog):
     def __init__(self, steps, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Export Workflow - Select Steps")
-        self.resize(600, 400)
+        self.setWindowTitle("Export Workflow")
+        self.resize(600, 480)
         
         self.steps = steps
         
         layout = QVBoxLayout(self)
         
-        label = QtWidgets.QLabel("Select the analysis steps you want to export to the notebook.\n"
+        label = QtWidgets.QLabel("Select the analysis steps and file formats to export.\n"
                                  "Mandatory configuration steps (Load OTF, Create Processed Tables) are locked.")
         layout.addWidget(label)
         
@@ -252,7 +252,7 @@ class WorkflowStepsSelectionDialog(QDialog):
             is_mandatory = step.step_type in ("load_taxafunc_analyzer", "set_multi_tables")
             
             display_text = f"[{step.step_type.upper()}] {step.title}"
-            item = QListWidgetItem(display_text, self.list_widget)
+            item = QListWidgetItem(display_text)
             
             if is_mandatory:
                 item.setCheckState(Qt.Checked)
@@ -273,10 +273,24 @@ class WorkflowStepsSelectionDialog(QDialog):
         btn_select_layout.addWidget(select_all_btn)
         btn_select_layout.addWidget(select_none_btn)
         layout.addLayout(btn_select_layout)
+
+        format_group = QtWidgets.QGroupBox("Export formats", self)
+        format_layout = QtWidgets.QHBoxLayout(format_group)
+        self.format_checkboxes = {}
+        for export_format, label_text, checked in (
+            ("ipynb", "Jupyter Notebook (.ipynb)", True),
+            ("py", "Python script (.py)", False),
+            ("yaml", "Workflow metadata (.yaml)", False),
+        ):
+            checkbox = QtWidgets.QCheckBox(label_text, format_group)
+            checkbox.setChecked(checked)
+            format_layout.addWidget(checkbox)
+            self.format_checkboxes[export_format] = checkbox
+        layout.addWidget(format_group)
         
         btn_layout = QtWidgets.QHBoxLayout()
         ok_btn = QPushButton("Export", self)
-        ok_btn.clicked.connect(self.accept)
+        ok_btn.clicked.connect(self._accept_if_valid)
         cancel_btn = QPushButton("Cancel", self)
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(ok_btn)
@@ -301,6 +315,19 @@ class WorkflowStepsSelectionDialog(QDialog):
             if item.checkState() == Qt.Checked:
                 selected.append(step)
         return selected
+
+    def get_selected_formats(self):
+        return tuple(
+            export_format
+            for export_format, checkbox in self.format_checkboxes.items()
+            if checkbox.isChecked()
+        )
+
+    def _accept_if_valid(self):
+        if not self.get_selected_formats():
+            QMessageBox.warning(self, "Export Workflow", "Select at least one export format.")
+            return
+        self.accept()
 
 
 ###############   Class MetaXGUI Begin   ###############
@@ -2509,7 +2536,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if not getattr(self, "workflow_recorder", None) or not self.workflow_recorder.steps:
             QMessageBox.information(
                 self.MainWindow,
-                "Workflow Notebook",
+                "Export Workflow",
                 "No GUI analysis steps have been recorded in this session yet.",
             )
             return
@@ -2522,23 +2549,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         if not selected_steps:
             QMessageBox.warning(
                 self.MainWindow,
-                "Workflow Notebook",
+                "Export Workflow",
                 "No steps selected for export.",
             )
             return
 
-        default_path = os.path.join(self.last_path, "metax_gui_workflow.ipynb")
-        notebook_path, _ = QFileDialog.getSaveFileName(
+        selected_formats = dialog.get_selected_formats()
+        if not selected_formats:
+            QMessageBox.warning(
+                self.MainWindow,
+                "Export Workflow",
+                "No export format selected.",
+            )
+            return
+
+        primary_format = selected_formats[0]
+        format_filters = {
+            "ipynb": "Jupyter Notebook (*.ipynb)",
+            "py": "Python Script (*.py)",
+            "yaml": "YAML Workflow (*.yaml)",
+        }
+        default_path = os.path.join(self.last_path, f"metax_gui_workflow.{primary_format}")
+        workflow_path, _ = QFileDialog.getSaveFileName(
             self.MainWindow,
-            "Export Workflow Notebook",
+            "Export Workflow",
             default_path,
-            "Jupyter Notebook (*.ipynb)",
+            format_filters[primary_format],
         )
-        if not notebook_path:
+        if not workflow_path:
             return
 
         try:
-            target_path = Path(notebook_path)
+            target_path = Path(workflow_path)
             # Create a temporary recorder with the selected steps to avoid altering the session's recorder
             temp_recorder = WorkflowRecorder(
                 title=self.workflow_recorder.record.title,
@@ -2547,20 +2589,22 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             for step in selected_steps:
                 temp_recorder.add_step(step)
 
-            paths = temp_recorder.export_all(target_path.parent, target_path.stem)
+            paths = temp_recorder.export_all(
+                target_path.parent,
+                target_path.stem,
+                formats=selected_formats,
+            )
+            exported_paths = paths.as_dict()
             self.last_path = str(target_path.parent)
             QMessageBox.information(
                 self.MainWindow,
-                "Workflow Notebook",
-                "Workflow exported:\n"
-                f"{paths.notebook_path}\n"
-                f"{paths.python_path}\n"
-                f"{paths.yaml_path}",
+                "Export Workflow",
+                "Workflow exported:\n" + "\n".join(str(path) for path in exported_paths.values()),
             )
-            self.logger.write_log(f"workflow notebook exported: {paths.as_dict()}", "i")
+            self.logger.write_log(f"workflow exported: {exported_paths}", "i")
         except Exception:
             error_message = traceback.format_exc()
-            self.logger.write_log(f"export_workflow_notebook error: {error_message}", "e")
+            self.logger.write_log(f"export workflow error: {error_message}", "e")
             QMessageBox.warning(self.MainWindow, "Error", error_message)
 
     def _current_taxafunc_params_for_workflow(self):
