@@ -63,8 +63,17 @@ class WorkflowExportPaths:
 
 
 class WorkflowRecorder:
-    def __init__(self, title: str = "MetaX GUI Workflow", metadata: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        title: str = "MetaX GUI Workflow",
+        metadata: dict[str, Any] | None = None,
+        *,
+        notebook_kernel_name: str | None = None,
+        notebook_kernel_display_name: str | None = None,
+    ):
         self.record = WorkflowRecord(title=title, metadata=metadata or {})
+        self.notebook_kernel_name = notebook_kernel_name
+        self.notebook_kernel_display_name = notebook_kernel_display_name
         self.enabled = True
 
     @property
@@ -160,7 +169,10 @@ class WorkflowRecorder:
         return "\n".join(lines).rstrip() + "\n"
 
     def to_notebook(self) -> dict[str, Any]:
-        python_metadata = _current_python_notebook_metadata()
+        python_metadata = _current_python_notebook_metadata(
+            kernel_name=self.notebook_kernel_name,
+            kernel_display_name=self.notebook_kernel_display_name,
+        )
         cells = [
             _markdown_cell(
                 f"# {self.record.title}\n\n"
@@ -209,20 +221,26 @@ def _current_python_notebook_metadata(
     executable: str | Path | None = None,
     prefix: str | Path | None = None,
     python_version: str | None = None,
+    kernel_name: str | None = None,
+    kernel_display_name: str | None = None,
 ) -> dict[str, Any]:
     """Build notebook metadata for the Python environment running the GUI."""
     executable_path = Path(executable or sys.executable).resolve()
     prefix_path = Path(prefix or sys.prefix).resolve()
     environment_name = prefix_path.name or executable_path.parent.name or "python"
-    kernel_name = re.sub(r"[^A-Za-z0-9._-]+", "-", environment_name).strip("-").lower()
-    if not kernel_name:
-        kernel_name = "python3"
+    resolved_kernel_name = kernel_name or re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "-",
+        environment_name,
+    ).strip("-").lower()
+    if not resolved_kernel_name:
+        resolved_kernel_name = "python3"
 
     return {
         "kernelspec": {
-            "display_name": f"Python ({environment_name})",
+            "display_name": kernel_display_name or f"Python ({environment_name})",
             "language": "python",
-            "name": kernel_name,
+            "name": resolved_kernel_name,
         },
         "language_info": {
             "name": "python",
@@ -235,6 +253,47 @@ def _current_python_notebook_metadata(
             "python_prefix": str(prefix_path),
         },
     }
+
+
+def _metax_kernel_identity(
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+) -> tuple[str, str]:
+    executable_path = Path(executable or sys.executable).resolve()
+    prefix_path = Path(prefix or sys.prefix).resolve()
+    environment_name = prefix_path.name or executable_path.parent.name or "python"
+    environment_slug = re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "-",
+        environment_name,
+    ).strip("-").lower() or "python"
+    return (
+        f"metax-{environment_slug}",
+        f"Python (MetaX GUI - {environment_name})",
+    )
+
+
+def register_current_python_kernel(
+    installer=None,
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+) -> tuple[str, str]:
+    """Register the GUI's Python runtime as a MetaX Jupyter kernel."""
+    if installer is None:
+        from ipykernel.kernelspec import install as installer
+
+    kernel_name, display_name = _metax_kernel_identity(
+        executable=executable,
+        prefix=prefix,
+    )
+    installer(
+        user=True,
+        kernel_name=kernel_name,
+        display_name=display_name,
+    )
+    return kernel_name, display_name
 
 
 def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> AnalysisStep:
@@ -570,6 +629,7 @@ def _environment_setup_code(
     lines = [
         "from pathlib import Path",
         "import sys",
+        "import warnings",
         "",
     ]
     if expected_python_prefix:
@@ -578,9 +638,13 @@ def _environment_setup_code(
                 f"expected_python_prefix = Path({str(expected_python_prefix)!r}).resolve()",
                 "current_python_prefix = Path(sys.prefix).resolve()",
                 "if current_python_prefix != expected_python_prefix:",
-                "    raise RuntimeError(",
-                "        'This workflow must run in the Python environment used by the MetaX GUI. '",
-                "        f'Expected: {expected_python_prefix}; current: {current_python_prefix}'",
+                "    warnings.warn(",
+                "        'This workflow was exported from a different Python environment. '",
+                "        f'Recorded: {expected_python_prefix}; current: {current_python_prefix}. '",
+                "        'Continuing with the current kernel; select the recorded MetaX GUI '",
+                "        'environment if dependency imports fail.',",
+                "        RuntimeWarning,",
+                "        stacklevel=2,",
                 "    )",
                 "print(f'Python environment: {current_python_prefix}')",
                 "",
