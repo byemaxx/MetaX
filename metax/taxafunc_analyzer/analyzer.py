@@ -1452,12 +1452,15 @@ class TaxaFuncAnalyzer:
             "outlier_params": outlier_params,
             "data_preprocess_params": data_preprocess_params,
             "peptide_num_threshold": peptide_num_threshold,
+            "sum_protein": sum_protein,
+            "sum_protein_params": dict(sum_protein_params),
             "keep_unknow_func": keep_unknow_func,
             "split_func": split_func,
             "split_func_params": split_func_params,
             "taxa_and_func_only_from_otf": taxa_and_func_only_from_otf,
             "quant_method": quant_method,
             "remove_unknown_taxa": remove_unknown_taxa,
+            "keep_processed_original_df": keep_processed_original_df,
         }
         
         #2. sum the protein intensity

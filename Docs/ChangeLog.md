@@ -1,3 +1,12 @@
+# Version: 2.4.7
+## Date: 2026-07-13
+### Changes:
+- New: Workflow notebooks now automatically use the Python environment running the MetaX GUI.
+- Fix: Improved workflow replay by restoring required processed-table steps and allowing compatible Python environments.
+- Optimize: Enlarged the workflow export window for easier step and format selection.
+- Change: Updated API compatibility to 9 after adding Jupyter kernel support.
+
+
 # Version: 2.4.6
 ## Date: 2026-07-12
 ### Changes:

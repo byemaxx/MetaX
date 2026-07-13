@@ -116,6 +116,7 @@ try:
         gui_action_step,
         limma_step,
         method_call_step,
+        register_current_python_kernel,
         set_multi_tables_step,
         taxafunc_analyzer_step,
         unit_specific_otf_step,
@@ -224,6 +225,7 @@ except (ImportError, ValueError):
         gui_action_step,
         limma_step,
         method_call_step,
+        register_current_python_kernel,
         set_multi_tables_step,
         taxafunc_analyzer_step,
         unit_specific_otf_step,
@@ -234,7 +236,7 @@ class WorkflowStepsSelectionDialog(QDialog):
     def __init__(self, steps, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Export Workflow")
-        self.resize(600, 480)
+        self.resize(800, 600)
         
         self.steps = steps
         
@@ -2533,6 +2535,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         QDesktopServices.openUrl(url)
     def export_workflow_notebook(self):
         self._record_current_taxafunc_if_needed()
+        self._record_current_processed_tables_if_needed()
         if not getattr(self, "workflow_recorder", None) or not self.workflow_recorder.steps:
             QMessageBox.information(
                 self.MainWindow,
@@ -2581,10 +2584,28 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             target_path = Path(workflow_path)
+            notebook_kernel_name = None
+            notebook_kernel_display_name = None
+            kernel_registration_error = None
+            if "ipynb" in selected_formats:
+                try:
+                    (
+                        notebook_kernel_name,
+                        notebook_kernel_display_name,
+                    ) = register_current_python_kernel()
+                except Exception:
+                    kernel_registration_error = traceback.format_exc()
+                    self.logger.write_log(
+                        f"register MetaX Jupyter kernel failed: {kernel_registration_error}",
+                        "w",
+                    )
+
             # Create a temporary recorder with the selected steps to avoid altering the session's recorder
             temp_recorder = WorkflowRecorder(
                 title=self.workflow_recorder.record.title,
                 metadata=self.workflow_recorder.record.metadata,
+                notebook_kernel_name=notebook_kernel_name,
+                notebook_kernel_display_name=notebook_kernel_display_name,
             )
             for step in selected_steps:
                 temp_recorder.add_step(step)
@@ -2596,10 +2617,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
             exported_paths = paths.as_dict()
             self.last_path = str(target_path.parent)
+            export_message = "Workflow exported:\n" + "\n".join(
+                str(path) for path in exported_paths.values()
+            )
+            if kernel_registration_error is not None:
+                export_message += (
+                    "\n\nThe MetaX Jupyter kernel could not be registered. "
+                    "Select the MetaX Python environment manually before running the notebook."
+                )
             QMessageBox.information(
                 self.MainWindow,
                 "Export Workflow",
-                "Workflow exported:\n" + "\n".join(str(path) for path in exported_paths.values()),
+                export_message,
             )
             self.logger.write_log(f"workflow exported: {exported_paths}", "i")
         except Exception:
@@ -2645,6 +2674,38 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "processed_rows": getattr(getattr(self.tfa, "original_df", None), "shape", [None])[0],
             "sample_count": len(getattr(self.tfa, "sample_list", []) or []),
         }
+
+    def _record_current_processed_tables_if_needed(self):
+        recorder = getattr(self, "workflow_recorder", None)
+        tfa = getattr(self, "tfa", None)
+        if recorder is None or tfa is None:
+            return
+        if any(step.step_type == "set_multi_tables" for step in recorder.steps):
+            return
+
+        saved_params = getattr(tfa, "_last_set_multi_tables_params", None)
+        if not saved_params:
+            return
+
+        set_multi_table_params = dict(saved_params)
+        function_name = set_multi_table_params.pop("func_name", None) or getattr(tfa, "func_name", None)
+        if not function_name:
+            self.logger.write_log(
+                "could not reconstruct processed tables workflow step: function name is missing",
+                "w",
+            )
+            return
+
+        processed_tables_step = set_multi_tables_step(function_name, set_multi_table_params)
+        load_step_index = next(
+            (
+                index
+                for index, step in enumerate(recorder.steps)
+                if step.step_type == "load_taxafunc_analyzer"
+            ),
+            -1,
+        )
+        recorder.steps.insert(load_step_index + 1, processed_tables_step)
 
     def _add_current_group_to_workflow_step(self, step):
         if not step or not hasattr(self, 'tfa') or self.tfa is None or not self.tfa.meta_name:
