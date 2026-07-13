@@ -1,3 +1,10 @@
+# Version: 2.4.6
+## Date: 2026-07-12
+### Changes:
+- New: Workflow exports now default to notebooks, with optional Python script and YAML output.
+- Fix: Improved workflow replay reliability and Python environment validation.
+
+
 # Version: 2.4.5
 ## Date: 2026-07-12
 ### Changes:
