@@ -1,3 +1,9 @@
+# Version: 2.4.5
+## Date: 2026-07-12
+### Changes:
+- Fix: Workflow notebooks now use the Python environment running the MetaX GUI.
+
+
 # Version: 2.4.4
 ## Date: 2026-07-11
 ### Changes:

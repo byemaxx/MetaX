@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import platform
+import re
+import sys
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -139,6 +142,7 @@ class WorkflowRecorder:
         return "\n".join(lines).rstrip() + "\n"
 
     def to_notebook(self) -> dict[str, Any]:
+        python_metadata = _current_python_notebook_metadata()
         cells = [
             _markdown_cell(
                 f"# {self.record.title}\n\n"
@@ -156,20 +160,43 @@ class WorkflowRecorder:
 
         return {
             "cells": cells,
-            "metadata": {
-                "kernelspec": {
-                    "display_name": "Python 3",
-                    "language": "python",
-                    "name": "python3",
-                },
-                "language_info": {
-                    "name": "python",
-                    "pygments_lexer": "ipython3",
-                },
-            },
+            "metadata": python_metadata,
             "nbformat": 4,
             "nbformat_minor": 5,
         }
+
+
+def _current_python_notebook_metadata(
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+    python_version: str | None = None,
+) -> dict[str, Any]:
+    """Build notebook metadata for the Python environment running the GUI."""
+    executable_path = Path(executable or sys.executable).resolve()
+    prefix_path = Path(prefix or sys.prefix).resolve()
+    environment_name = prefix_path.name or executable_path.parent.name or "python"
+    kernel_name = re.sub(r"[^A-Za-z0-9._-]+", "-", environment_name).strip("-").lower()
+    if not kernel_name:
+        kernel_name = "python3"
+
+    return {
+        "kernelspec": {
+            "display_name": f"Python ({environment_name})",
+            "language": "python",
+            "name": kernel_name,
+        },
+        "language_info": {
+            "name": "python",
+            "pygments_lexer": "ipython3",
+            "version": python_version or platform.python_version(),
+        },
+        "metax": {
+            "python_environment": environment_name,
+            "python_executable": str(executable_path),
+            "python_prefix": str(prefix_path),
+        },
+    }
 
 
 def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> AnalysisStep:

@@ -1,9 +1,11 @@
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import yaml
 
+from metax.workflow_recorder.recorder import _current_python_notebook_metadata
 from metax.workflow_recorder import (
     AnalysisStep,
     WorkflowRecorder,
@@ -46,8 +48,32 @@ def test_workflow_recorder_exports_yaml_python_and_notebook(tmp_path: Path):
 
     notebook = json.loads(paths.notebook_path.read_text(encoding="utf-8"))
     assert notebook["nbformat"] == 4
+    assert notebook["metadata"]["metax"]["python_executable"] == str(
+        Path(sys.executable).resolve()
+    )
     assert any(cell["cell_type"] == "code" for cell in notebook["cells"])
     assert any("print('run example')" in "".join(cell["source"]) for cell in notebook["cells"])
+
+
+def test_notebook_uses_the_python_environment_running_the_gui(tmp_path: Path):
+    prefix = tmp_path / "miniconda3" / "envs" / "metax313"
+    executable = prefix / "python.exe"
+
+    metadata = _current_python_notebook_metadata(
+        executable=executable,
+        prefix=prefix,
+        python_version="3.13.13",
+    )
+
+    assert metadata["kernelspec"] == {
+        "display_name": "Python (metax313)",
+        "language": "python",
+        "name": "metax313",
+    }
+    assert metadata["language_info"]["version"] == "3.13.13"
+    assert metadata["metax"]["python_environment"] == "metax313"
+    assert metadata["metax"]["python_executable"] == str(executable.resolve())
+    assert metadata["metax"]["python_prefix"] == str(prefix.resolve())
 
 
 def test_auto_otf_report_step_uses_saved_config(tmp_path: Path):
