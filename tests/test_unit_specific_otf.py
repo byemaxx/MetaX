@@ -260,6 +260,7 @@ def test_default_run_does_not_read_merged_output(monkeypatch, tmp_path):
     ).columns.tolist()
     assert result.completed_units == 2
     assert result.skipped_units == 0
+    assert result.selected_genome_threshold == "q0.05"
     assert "KEGG_ko" in result.column_names
     assert "KEGG_ko_prop" in result.column_names
     info_text = Path(result.info_path).read_text(encoding="utf-8")
@@ -928,7 +929,7 @@ def test_unit_specific_otf_defaults_and_path_validation(tmp_path):
     assert annotator.distinct_genome_threshold == 0
 
     parser = build_parser()
-    args = parser.parse_args(["--unit-specific"])
+    args = parser.parse_args(["--mode", "unit-specific"])
     assert args.distinct_genome_threshold == 0
     assert args.duplicate_peptide_handling_mode == "sum"
     assert args.include_unit_specific_sequence is False
@@ -942,6 +943,16 @@ def test_unit_specific_otf_defaults_and_path_validation(tmp_path):
             output_path=str(tmp_path / "out.tsv"),
             db_path=str(peptide_db),
             duplicate_peptide_handling_mode="bad-mode",
+        )
+
+    with pytest.raises(ValueError, match="n_jobs"):
+        UnitSpecificOTFAnnotator(
+            peptide_table_path=str(peptide_table),
+            unit_specific_manifest_path=str(manifest),
+            taxafunc_anno_db_path=str(taxafunc_db),
+            output_path=str(tmp_path / "out.tsv"),
+            db_path=str(peptide_db),
+            n_jobs=0,
         )
 
     with pytest.raises(FileNotFoundError, match="db_path"):
@@ -1413,7 +1424,8 @@ def test_unit_specific_cli_passes_extended_options(monkeypatch, tmp_path):
     monkeypatch.setattr(annotate_cli, "UnitSpecificOTFAnnotator", FakeAnnotator)
     result = annotate_cli.main(
         [
-            "--unit-specific",
+            "--mode",
+            "unit-specific",
             "--peptide-table",
             str(tmp_path / "peptides.tsv"),
             "--unit-specific-manifest",
