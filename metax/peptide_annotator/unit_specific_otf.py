@@ -43,6 +43,7 @@ class UnitSpecificOTFRunResult:
     column_names: list[str]
     completed_units: int
     skipped_units: int
+    selected_genome_threshold: str
 
 
 def _safe_filename(value: str) -> str:
@@ -140,6 +141,14 @@ class UnitSpecificOTFAnnotator:
             raise ValueError("on_empty_unit must be 'error' or 'warn-skip'")
         if merge_chunksize <= 0:
             raise ValueError("merge_chunksize must be greater than 0")
+        if not 0 <= lca_threshold <= 1:
+            raise ValueError("lca_threshold must be between 0 and 1")
+        if distinct_genome_threshold < 0:
+            raise ValueError(
+                "distinct_genome_threshold must be greater than or equal to 0"
+            )
+        if n_jobs is not None and n_jobs < 1:
+            raise ValueError("n_jobs must be greater than or equal to 1")
         duplicate_peptide_handling_mode = (duplicate_peptide_handling_mode or "sum").strip().lower()
         valid_duplicate_modes = {"sum", "max", "min", "mean", "first", "keep"}
         if duplicate_peptide_handling_mode not in valid_duplicate_modes:
@@ -1085,4 +1094,5 @@ class UnitSpecificOTFAnnotator:
             column_names=merged_columns,
             completed_units=completed_units,
             skipped_units=skipped_units,
+            selected_genome_threshold=manifest.selected_genome_threshold,
         )

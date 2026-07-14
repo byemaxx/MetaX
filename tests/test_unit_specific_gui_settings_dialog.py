@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 from PyQt5 import QtWidgets
 from metax.gui.main_gui import MetaXGUI
+from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator
 from metax.gui.unit_specific_settings_dialog import (
     UnitSpecificGuiConfig,
     UnitSpecificSettingsDialog,
@@ -279,7 +280,7 @@ def test_unit_specific_gui_validation_accepts_diann_prepared_sample_columns(
     assert "Run-derived sample columns validated" in result.message
 
 
-def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
+def test_shared_global_backend_prepares_direct_otf_parquet(tmp_path):
     parquet_path = tmp_path / "report.parquet"
     pd.DataFrame(
         {
@@ -290,14 +291,13 @@ def test_normal_direct_otf_gui_uses_shared_parquet_preparation(tmp_path):
             "Precursor.Quantity": [10.0],
         }
     ).to_parquet(parquet_path)
-    gui = object.__new__(MetaXGUI)
-
     prepared_path, separator, peptide_col, intensity_prefix, metadata = (
-        gui._prepare_diann_parquet_for_pep_direct_to_otf(
-            str(parquet_path),
-            str(tmp_path / "OTF.tsv"),
-            "Precursor.Quantity",
-        )
+        GlobalOTFAnnotator(
+            peptide_table_path=str(parquet_path),
+            output_path=str(tmp_path / "OTF.tsv"),
+            selection_mode="metaumbra",
+            diann_intensity_col="Precursor.Quantity",
+        )._prepare_input()
     )
 
     prepared_df = pd.read_csv(prepared_path, sep="\t")
