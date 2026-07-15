@@ -86,6 +86,8 @@ def _ensure_project_root_on_syspath() -> None:
 
 _ensure_project_root_on_syspath()
 
+from metax.peptide_annotator.subprocess_utils import run_streaming_subprocess
+
 # NOTE: Avoid importing GUI/Matplotlib-related modules at import-time.
 # This file can be imported inside multiprocessing workers on Windows; importing
 # Qt/Matplotlib backends there can trigger repeated backend initialization or
@@ -561,26 +563,14 @@ def _query_peptide_proteins_nested_via_subprocess(
         env.setdefault("PYTHONIOENCODING", "utf-8")
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         print("[UnitSpecificDigestedScan/Subprocess] Launching isolated process.", flush=True)
-        proc = subprocess.Popen(
+        return_code, last_lines = run_streaming_subprocess(
             cmd,
             cwd=str(repo_root),
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            bufsize=1,
             creationflags=creationflags,
+            max_captured_lines=50,
+            emit_line=lambda line: print(line, flush=True),
         )
-        last_lines: list[str] = []
-        assert proc.stdout is not None
-        for line in proc.stdout:
-            print(line.rstrip("\n"), flush=True)
-            last_lines.append(line)
-            if len(last_lines) > 50:
-                last_lines = last_lines[-50:]
-        return_code = proc.wait()
         if return_code != 0:
             tail = "".join(last_lines[-20:])
             raise RuntimeError(
@@ -1411,28 +1401,14 @@ class peptideProteinsMapper:
             except Exception:
                 creationflags = 0
 
-            proc = subprocess.Popen(
+            rc, last_lines = run_streaming_subprocess(
                 cmd,
                 cwd=str(repo_root),
                 env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                bufsize=1,
                 creationflags=creationflags,
+                max_captured_lines=50,
+                emit_line=print,
             )
-
-            last_lines: list[str] = []
-            assert proc.stdout is not None
-            for line in proc.stdout:
-                print(line.rstrip("\n"))
-                last_lines.append(line)
-                if len(last_lines) > 50:
-                    last_lines = last_lines[-50:]
-
-            rc = proc.wait()
             if rc != 0:
                 tail = "".join(last_lines[-20:])
                 raise RuntimeError(f"Digested scan subprocess failed (exit={rc}). Last output:\n{tail}")

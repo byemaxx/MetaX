@@ -18,7 +18,7 @@ jobs:
         run: |
           python -c "import sys, metax, metax.cli.annotate, metax.cli.report; assert not any(name.startswith('PyQt') for name in sys.modules); assert 'metax.report' not in sys.modules"
           python -m metax.cli.annotate --help
-          python -m pytest tests/test_annotation_cli.py -q
+          python -m pytest tests/test_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_unit_specific_manifest.py -q
 
   headless-analysis-profiles:
     runs-on: ubuntu-latest
@@ -34,13 +34,15 @@ jobs:
       - run: python -m pip install ".[${{ matrix.extra }}]" pytest
       - name: Verify Analyzer profile
         if: matrix.extra == 'analyzer'
-        run: python -c "from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
+        run: |
+          python -c "from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
+          python -m pytest tests/test_analyzer.py tests/test_annotation_cli.py -q
       - name: Verify Report profile
         if: matrix.extra == 'report'
         run: |
           python -c "import metax.report; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
           python -m metax.cli.report --help
-      - run: python -m pytest tests/test_annotation_cli.py -q
+          python -m pytest tests/test_auto_report_config.py tests/test_auto_report_workflow.py tests/test_annotation_cli.py -q
 
   gui-and-full-metadata:
     runs-on: ubuntu-latest
@@ -58,4 +60,23 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -c "import PyQt5, qtawesome, qt_material; import metax.gui.main_gui"
-      - run: python -m pytest tests/test_annotation_cli.py -q
+      - name: Run shared backend and GUI annotation tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest tests/test_annotation_cli.py tests/test_unit_specific_gui_settings_dialog.py -q
+
+  windows-annotation:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install . pytest
+      - name: Verify lightweight Windows annotation contract
+        shell: pwsh
+        run: |
+          python -c "import sys, metax, metax.cli.annotate; assert not any(name.startswith('PyQt') for name in sys.modules)"
+          python -m metax.cli.annotate --help
+          python -m pytest tests/test_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_unit_specific_manifest.py -q
