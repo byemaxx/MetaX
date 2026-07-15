@@ -896,6 +896,8 @@ class peptideProteinsMapper:
         self.protein_ranked_table = None
         self.genome_ranked_table = None
         self.final_peptide_table = None
+        self.annotation_output_path: str | None = None
+        self.annotation_info_path: str | None = None
         
         self.selected_proteins_num = 0
         self.selected_genomes_num = 0
@@ -1652,6 +1654,30 @@ class peptideProteinsMapper:
             annotation_result_cache=annotation_result_cache,
         )
         df_res = annotator.run_annotate(save_output=save_output)
+        if save_output:
+            self.annotation_output_path = str(
+                getattr(annotator, "output_path", self.output_path)
+            )
+            self.annotation_info_path = getattr(annotator, "info_path", None)
+        # Expose the statistics already collected by the mapper and annotator so
+        # workflow callers can produce a structured, machine-readable run result.
+        self.annotation_run_stats = dict(getattr(annotator, "run_stats", {}))
+        sample_columns = [
+            column for column in df_res.columns if column.startswith("Intensity_")
+        ]
+        sequence_column = "Sequence" if "Sequence" in df_res.columns else self.peptide_col
+        protein_column = "Proteins" if "Proteins" in df_res.columns else "Proteins"
+        self.annotation_output_metrics = {
+            "rows": int(df_res.shape[0]),
+            "columns": int(df_res.shape[1]),
+            "unique_sequences": int(df_res[sequence_column].nunique(dropna=True)),
+            "unique_protein_groups": (
+                int(df_res[protein_column].nunique(dropna=True))
+                if protein_column in df_res.columns
+                else None
+            ),
+            "sample_columns": sample_columns,
+        }
         print("OTF annotation finished")
         return df_res
         

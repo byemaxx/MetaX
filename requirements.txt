@@ -1,3 +1,5 @@
+# Complete development/desktop environment. Annotation-only installations should
+# use `python -m pip install MetaXTools` (or `python -m pip install .`).
 distinctipy>=1.2.2
 matplotlib>=3.7.2
 numpy>=1.25.1
@@ -11,7 +13,6 @@ PyQt5-Qt5>=5.15.2
 PyQt5-sip>=12.12.1
 PyQtWebEngine>=5.15.6
 PyQtWebEngine-Qt5>=5.15.2
-python-dateutil>=2.8.2
 qt-material==2.14
 QtAwesome>=1.2.3
 scikit-learn>=1.3.0
@@ -19,7 +20,7 @@ scipy>=1.11.3
 tqdm>=4.65.0
 adjustText>=1.1.1
 openpyxl
-pyproject-toml>=0.0.10
+packaging
 PyYAML>=6.0
 requests>=2.31.0
 Jinja2>=3.1

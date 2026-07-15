@@ -1,14 +1,14 @@
 import pytest
 from pathlib import Path
 
-from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
-
 @pytest.fixture(scope="session")
 def tfa_object():
     """
     Fixture to initialize a TaxaFuncAnalyzer object with example data.
     This fixture is shared across all test modules.
     """
+    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+
     repo_root = Path(__file__).resolve().parents[1]
     otf_path = str(repo_root / "metax" / "data" / "example_data" / "Example_OTF.tsv")
     meta_path = str(repo_root / "metax" / "data" / "example_data" / "Example_Meta.tsv")

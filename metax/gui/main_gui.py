@@ -55,181 +55,95 @@ import qtawesome as qta
 from qt_material import apply_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
 
-try:
-    from ..utils.version import __version__
-    from ..taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
-    from ..utils.metax_updater import Updater
-    from ..taxafunc_ploter.heatmap_plot import HeatmapPlot
-    from ..taxafunc_ploter.basic_plot import BasicPlot
-    from ..taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
-    from ..taxafunc_ploter.volcano_plot import VolcanoPlot
-    from ..taxafunc_ploter.tukey_plot import TukeyPlot
-    from ..taxafunc_ploter.bar_plot_js import BarPlot
-    from ..taxafunc_ploter.sankey_plot import SankeyPlot
-    from ..taxafunc_ploter.network_plot import NetworkPlot
-    from ..taxafunc_ploter.trends_plot import TrendsPlot
-    from ..taxafunc_ploter.trends_plot_js import TrendsPlot_js
-    from ..taxafunc_ploter.pca_plot_js import PcaPlot_js
-    from ..taxafunc_ploter.diversity_plot import DiversityPlot
-    from ..taxafunc_ploter.sunburst_plot import SunburstPlot
-    from ..taxafunc_ploter.treemap_plot import TreeMapPlot
+# Direct script execution puts ``metax/gui`` on sys.path instead of the project
+# root. Bootstrap the package context once, then use the same imports for every
+# supported launch mode.
+if __package__ in {None, ""}:
+    project_root = str(Path(__file__).resolve().parents[2])
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    __package__ = "metax.gui"
 
-    from .metax_gui import ui_main_window
-    from .metax_gui import web_dialog
-    from .metax_gui.matplotlib_figure_canvas import MatplotlibWidget
-    from .metax_gui.checkable_combo_box import CheckableComboBox
-    from .metax_gui.ui_table_view import (
-        Ui_Table_view,
-        copy_table_widget_selection_to_clipboard,
-        export_dataframe_to_path,
-        export_dataframe_with_dialog,
-        table_widget_to_dataframe,
-    )
-    from .metax_gui.drag_line_edit import FileDragDropLineEdit
-    from .metax_gui.extended_combo_box import ExtendedComboBox
-    from .metax_gui.show_plt import ExportablePlotDialog
-    from .metax_gui.input_window import InputWindow
-    from .metax_gui.command_window import CommandWindow
-    from .metax_gui.user_agreement_dialog import UserAgreementDialog
-    from .metax_gui.settings_widget import SettingsWidget
-    from .metax_gui.cmap_combo_box import CmapComboBox
-    from .metax_gui.ui_lca_help import UiLcaHelpDialog
-    from .metax_gui.ui_func_threshold_help import UifuncHelpDialog
-    from .metax_gui.generic_thread import FunctionExecutor
-    from .metax_gui.resources import icon_rc # noqa: F401
-    from .metax_gui.console_window import ConsoleOutputWindow
-    from .metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
-    from .metax_gui.tfnet_helpers import (
-        filter_linked_tfnet_items,
-        format_linked_taxa_func_index_preview,
-        normalize_taxa_func_display_item,
-        parse_taxa_func_display_item,
-        search_linked_taxa_func_index,
-        taxa_func_display_item_has_link,
-    )
-    from .unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
-    from ..workflow_recorder import (
-        AnalysisStep,
-        WorkflowRecorder,
-        auto_otf_report_step,
-        deseq2_step,
-        gui_action_step,
-        limma_step,
-        method_call_step,
-        register_current_python_kernel,
-        set_multi_tables_step,
-        taxafunc_analyzer_step,
-        unit_specific_otf_step,
-    )
+from metax.utils.version import __version__
+from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+from metax.utils.metax_updater import Updater
+from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
+from metax.taxafunc_ploter.basic_plot import BasicPlot
+from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
+from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
+from metax.taxafunc_ploter.tukey_plot import TukeyPlot
+from metax.taxafunc_ploter.bar_plot_js import BarPlot
+from metax.taxafunc_ploter.sankey_plot import SankeyPlot
+from metax.taxafunc_ploter.network_plot import NetworkPlot
+from metax.taxafunc_ploter.trends_plot import TrendsPlot
+from metax.taxafunc_ploter.trends_plot_js import TrendsPlot_js
+from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
+from metax.taxafunc_ploter.diversity_plot import DiversityPlot
+from metax.taxafunc_ploter.sunburst_plot import SunburstPlot
+from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
 
-    from ..peptide_annotator.metalab2otf import MetaLab2OTF
-    from ..peptide_annotator.peptable_annotator import PeptideAnnotator
-    from ..peptide_annotator.pep_table_to_otf import peptideProteinsMapper
-    from ..peptide_annotator.peptide_table_prepare import (
-        PeptideTableSchema,
-        available_diann_intensity_columns,
-        is_diann_parquet,
-        is_parquet_path,
-        prepare_diann_parquet_for_direct_otf,
-        resolve_diann_parquet_schema,
-    )
-    from ..peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
+from metax.gui.metax_gui import ui_main_window, web_dialog
+from metax.gui.metax_gui.matplotlib_figure_canvas import MatplotlibWidget
+from metax.gui.metax_gui.checkable_combo_box import CheckableComboBox
+from metax.gui.metax_gui.ui_table_view import (
+    Ui_Table_view,
+    copy_table_widget_selection_to_clipboard,
+    export_dataframe_to_path,
+    export_dataframe_with_dialog,
+    table_widget_to_dataframe,
+)
+from metax.gui.metax_gui.drag_line_edit import FileDragDropLineEdit
+from metax.gui.metax_gui.extended_combo_box import ExtendedComboBox
+from metax.gui.metax_gui.show_plt import ExportablePlotDialog
+from metax.gui.metax_gui.input_window import InputWindow
+from metax.gui.metax_gui.command_window import CommandWindow
+from metax.gui.metax_gui.user_agreement_dialog import UserAgreementDialog
+from metax.gui.metax_gui.settings_widget import SettingsWidget
+from metax.gui.metax_gui.cmap_combo_box import CmapComboBox
+from metax.gui.metax_gui.ui_lca_help import UiLcaHelpDialog
+from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
+from metax.gui.metax_gui.generic_thread import FunctionExecutor
+from metax.gui.metax_gui.resources import icon_rc  # noqa: F401
+from metax.gui.metax_gui.console_window import ConsoleOutputWindow
+from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
+from metax.gui.metax_gui.tfnet_helpers import (
+    filter_linked_tfnet_items,
+    format_linked_taxa_func_index_preview,
+    normalize_taxa_func_display_item,
+    parse_taxa_func_display_item,
+    search_linked_taxa_func_index,
+    taxa_func_display_item_has_link,
+)
+from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
+from metax.workflow_recorder import (
+    AnalysisStep,
+    WorkflowRecorder,
+    deseq2_step,
+    gui_action_step,
+    limma_step,
+    method_call_step,
+    register_current_python_kernel,
+    set_multi_tables_step,
+    taxafunc_analyzer_step,
+    unit_specific_otf_step,
+)
 
-    from ..database_builder.database_builder_own import build_db
-    from ..database_updater.database_updater import run_db_update
-    from ..database_builder.database_builder_mag import download_and_build_database
-    from ..database_builder.mgnify_sources import mgnify_catalogue_display_names
+from metax.peptide_annotator.metalab2otf import MetaLab2OTF
+from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
+from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator, read_genome_list_file
+from metax.peptide_annotator.peptide_table_prepare import (
+    PeptideTableSchema,
+    available_diann_intensity_columns,
+    is_diann_parquet,
+    is_parquet_path,
+    resolve_diann_parquet_schema,
+)
+from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
 
-except (ImportError, ValueError):
-    # Use absolute path to import the module when running directly as a script
-    metax_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    metax_dir = os.path.dirname(metax_dir)
-    if metax_dir not in sys.path:
-        sys.path.append(metax_dir)
-
-    from metax.utils.version import __version__
-    from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
-    from metax.utils.metax_updater import Updater
-    from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
-    from metax.taxafunc_ploter.basic_plot import BasicPlot
-    from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
-    from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
-    from metax.taxafunc_ploter.tukey_plot import TukeyPlot
-    from metax.taxafunc_ploter.bar_plot_js import BarPlot
-    from metax.taxafunc_ploter.sankey_plot import SankeyPlot
-    from metax.taxafunc_ploter.network_plot import NetworkPlot
-    from metax.taxafunc_ploter.trends_plot import TrendsPlot
-    from metax.taxafunc_ploter.trends_plot_js import TrendsPlot_js
-    from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
-    from metax.taxafunc_ploter.diversity_plot import DiversityPlot
-    from metax.taxafunc_ploter.sunburst_plot import SunburstPlot
-    from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
-
-    from metax.gui.metax_gui import ui_main_window
-    from metax.gui.metax_gui import web_dialog
-    from metax.gui.metax_gui.matplotlib_figure_canvas import MatplotlibWidget
-    from metax.gui.metax_gui.checkable_combo_box import CheckableComboBox
-    from metax.gui.metax_gui.ui_table_view import (
-        Ui_Table_view,
-        copy_table_widget_selection_to_clipboard,
-        export_dataframe_to_path,
-        export_dataframe_with_dialog,
-        table_widget_to_dataframe,
-    )
-    from metax.gui.metax_gui.drag_line_edit import FileDragDropLineEdit
-    from metax.gui.metax_gui.extended_combo_box import ExtendedComboBox
-    from metax.gui.metax_gui.show_plt import ExportablePlotDialog
-    from metax.gui.metax_gui.input_window import InputWindow
-    from metax.gui.metax_gui.command_window import CommandWindow
-    from metax.gui.metax_gui.user_agreement_dialog import UserAgreementDialog
-    from metax.gui.metax_gui.settings_widget import SettingsWidget
-    from metax.gui.metax_gui.cmap_combo_box import CmapComboBox
-    from metax.gui.metax_gui.ui_lca_help import UiLcaHelpDialog
-    from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
-    from metax.gui.metax_gui.generic_thread import FunctionExecutor
-    from metax.gui.metax_gui.resources import icon_rc
-    from metax.gui.metax_gui.console_window import ConsoleOutputWindow
-    from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
-    from metax.gui.metax_gui.tfnet_helpers import (
-        filter_linked_tfnet_items,
-        format_linked_taxa_func_index_preview,
-        normalize_taxa_func_display_item,
-        parse_taxa_func_display_item,
-        search_linked_taxa_func_index,
-        taxa_func_display_item_has_link,
-    )
-    from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
-
-    from metax.peptide_annotator.metalab2otf import MetaLab2OTF
-    from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
-    from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
-    from metax.peptide_annotator.peptide_table_prepare import (
-        PeptideTableSchema,
-        available_diann_intensity_columns,
-        is_diann_parquet,
-        is_parquet_path,
-        prepare_diann_parquet_for_direct_otf,
-        resolve_diann_parquet_schema,
-    )
-    from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
-
-    from metax.database_builder.database_builder_own import build_db
-    from metax.database_updater.database_updater import run_db_update
-    from metax.database_builder.database_builder_mag import download_and_build_database
-    from metax.database_builder.mgnify_sources import mgnify_catalogue_display_names
-    from metax.workflow_recorder import (
-        AnalysisStep,
-        WorkflowRecorder,
-        auto_otf_report_step,
-        deseq2_step,
-        gui_action_step,
-        limma_step,
-        method_call_step,
-        register_current_python_kernel,
-        set_multi_tables_step,
-        taxafunc_analyzer_step,
-        unit_specific_otf_step,
-    )
+from metax.database_builder.database_builder_own import build_db
+from metax.database_updater.database_updater import run_db_update
+from metax.database_builder.database_builder_mag import download_and_build_database
+from metax.database_builder.mgnify_sources import mgnify_catalogue_display_names
 
 
 class WorkflowStepsSelectionDialog(QDialog):
@@ -3239,41 +3153,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
         intensity_selector.blockSignals(False)
 
-    def _prepare_diann_parquet_for_pep_direct_to_otf(
-        self,
-        parquet_path: str,
-        output_path: str,
-        intensity_col: str,
-    ) -> tuple[str, str, str, str, dict]:
-        output_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
-        output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'pep_direct_to_otf'
-        prepared_path = os.path.join(output_dir, f'{output_stem}_diann_parquet_peptide_table.tsv')
-
-        print(f"Preparing DIA-NN parquet peptide table: {parquet_path}")
-        prepared = prepare_diann_parquet_for_direct_otf(
-            parquet_path,
-            require_score_columns=True,
-            intensity_col=intensity_col,
-        )
-        prepared.dataframe.to_csv(prepared_path, sep='\t', index=False)
-        metadata = {
-            **prepared.metadata,
-            "prepared_peptide_table_path": prepared_path,
-        }
-        print(
-            "Prepared DIA-NN parquet peptide table: "
-            f"{prepared_path} (peptides={prepared.dataframe.shape[0]}, "
-            f"runs={prepared.metadata['prepared_sample_columns']}, "
-            f"intensity={prepared.intensity_col})"
-        )
-        return (
-            prepared_path,
-            '\t',
-            prepared.peptide_col,
-            prepared.intensity_col_prefix,
-            metadata,
-        )
-        
     def set_lineEdit_pep_direct_to_otf_digestied_genome_pep_path(self):
         digested_genome_folder_path = QFileDialog.getExistingDirectory(
             self.MainWindow,
@@ -3413,21 +3292,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return added
 
     def _read_pep_direct_to_otf_genome_list_file(self, file_path: str) -> list[str]:
-        with open(file_path, 'r', encoding='utf-8-sig') as handle:
-            text = handle.read()
-
-        first_line = next((line for line in text.splitlines() if line.strip()), '')
-        delimiter = '\t' if '\t' in first_line else ','
-        columns = [col.strip() for col in first_line.split(delimiter)]
-        if 'genome_id' not in columns:
-            return self._parse_pep_direct_to_otf_genome_text(text)
-
-        df = pd.read_csv(file_path, sep=delimiter)
-        if 'qvalue' in df.columns:
-            qvalue_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff.value(), 3)
-            qvalues = pd.to_numeric(df['qvalue'], errors='coerce')
-            df = df[qvalues <= qvalue_cutoff]
-        return self._parse_pep_direct_to_otf_genome_text('\n'.join(df['genome_id'].dropna().astype(str).tolist()))
+        qvalue_cutoff = round(
+            self.doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff.value(),
+            3,
+        )
+        return read_genome_list_file(file_path, qvalue_cutoff=qvalue_cutoff)
 
     def open_pep_direct_to_otf_genome_list_file(self):
         genome_list_path = QFileDialog.getOpenFileName(
@@ -3977,58 +3846,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.logger.write_log(f'Error when run_metalab_maxq_annotate: {error_message}', 'e')
             QMessageBox.warning(self.MainWindow, 'Error', error_message)
             
-    def _get_pep_direct_to_otf_temp_dir(self, output_path: str) -> str:
-        output_dir = os.path.dirname(output_path) or os.getcwd()
-        temp_dir = os.path.join(output_dir, 'metax_temp')
-        os.makedirs(temp_dir, exist_ok=True)
-        return temp_dir
-
-    def _derive_pep_direct_to_otf_metaumbra_output_path(self, output_path: str) -> str:
-        temp_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
-        output_stem = os.path.splitext(os.path.basename(output_path))[0] or 'OTF'
-        return os.path.join(temp_dir, f'{output_stem}_metaumbra_genome_presence.tsv')
-
-    @staticmethod
-    def _parse_metaumbra_version(version_text: str) -> tuple[int, int, int] | None:
-        match = re.search(r'(\d+)\.(\d+)\.(\d+)', version_text)
-        if not match:
-            return None
-        return tuple(int(part) for part in match.groups())
-
-    def _get_metaumbra_subprocess_env(self) -> tuple[str, dict]:
-        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        env = os.environ.copy()
-        env["PYTHONPATH"] = repo_root + os.pathsep + env.get("PYTHONPATH", "")
-        env.setdefault("PYTHONIOENCODING", "utf-8")
-        return repo_root, env
-
-    def _ensure_metaumbra_version(self, env: dict, minimum: str = "1.3.6") -> None:
-        proc = subprocess.run(
-            [sys.executable, '-m', 'metaumbra', '--version'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            env=env,
-        )
-        version_output = (proc.stdout or '').strip()
-        if proc.returncode != 0:
-            raise RuntimeError(f"Unable to launch MetaUmbra with {sys.executable}:\n{version_output}")
-
-        actual = self._parse_metaumbra_version(version_output)
-        required = self._parse_metaumbra_version(minimum)
-        if actual is None or required is None or actual < required:
-            raise RuntimeError(
-                f"MetaX direct-to-OTF requires MetaUmbra >= {minimum}, but the active Python resolves "
-                f"{version_output or 'an unknown MetaUmbra version'}.\n"
-                f"Python executable: {sys.executable}\n"
-                "Install or update MetaUmbra in this environment before running the workflow."
-            )
-
-    def _select_genomes_from_metaumbra_result(self, genome_presence_path: str) -> list[str]:
-        return self._read_pep_direct_to_otf_genome_list_file(genome_presence_path)
-
     def _get_pep_direct_to_otf_metaumbra_settings(self) -> dict:
         return {
             "metaumbra_peptide_score_col": self.lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col.text().strip(),
@@ -4042,126 +3859,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 3,
             ),
         }
-
-    def _run_pep_direct_to_otf_metaumbra_scoring(
-        self,
-        peptide_table_path: str,
-        digested_genome_folder_path: str,
-        output_path: str,
-        peptide_col: str,
-    ) -> dict:
-        metaumbra_settings = self._get_pep_direct_to_otf_metaumbra_settings()
-
-        cmd = [
-            sys.executable,
-            '-m',
-            'metaumbra',
-            'score',
-            '--peptide-table',
-            peptide_table_path,
-            '--genome-digest-dirs',
-            digested_genome_folder_path,
-            '--output',
-            output_path,
-            '--peptide-seq-col',
-            peptide_col,
-            '--peptide-score-col',
-            metaumbra_settings["metaumbra_peptide_score_col"],
-            '--peptide-error-col',
-            metaumbra_settings["metaumbra_peptide_error_col"],
-            '--single-peptide-error-rate-upper-bound',
-            str(metaumbra_settings["metaumbra_single_peptide_error_rate_upper_bound"]),
-        ]
-
-        print("Launching MetaUmbra scoring in an isolated process:")
-        print(" ".join([f'"{part}"' if " " in str(part) else str(part) for part in cmd]))
-
-        repo_root, env = self._get_metaumbra_subprocess_env()
-        self._ensure_metaumbra_version(env)
-
-        creationflags = 0
-        try:
-            creationflags = subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined]
-        except Exception:
-            creationflags = 0
-
-        proc = subprocess.Popen(
-            cmd,
-            cwd=repo_root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            bufsize=1,
-            env=env,
-            creationflags=creationflags,
-        )
-
-        last_lines = []
-        assert proc.stdout is not None
-        for line in proc.stdout:
-            print(line.rstrip("\n"))
-            last_lines.append(line)
-            if len(last_lines) > 80:
-                last_lines = last_lines[-80:]
-
-        return_code = proc.wait()
-        if return_code != 0:
-            tail = "".join(last_lines[-30:])
-            raise RuntimeError(f"MetaUmbra scoring failed (exit={return_code}). Last output:\n{tail}")
-
-        if not os.path.exists(output_path):
-            raise RuntimeError(f"MetaUmbra scoring finished but output file was not found: {output_path}")
-
-        return {"output": output_path, **metaumbra_settings}
-
-    def _run_pep_direct_to_otf_with_genome_list(
-        self,
-        peptide_table_path: str,
-        digested_genome_folder_path: str,
-        table_separator: str,
-        peptide_col: str,
-        intensity_col_prefix: str,
-        protein_peptide_coverage_cutoff: float,
-        output_path: str,
-        taxafunc_anno_db_path: str,
-        lca_threshold: float,
-        protein_genome_separator: str,
-        selected_genomes: list[str],
-        duplicate_peptide_handling_mode: str,
-        genome_selection_metadata: dict | None = None,
-    ):
-        selected_genomes = list(dict.fromkeys([str(genome).strip() for genome in selected_genomes if str(genome).strip()]))
-        if not selected_genomes:
-            raise ValueError("No genomes were selected.")
-
-        print(f"Selected genomes for digest scan: {len(selected_genomes)}")
-        temp_dir = self._get_pep_direct_to_otf_temp_dir(output_path)
-        instance = peptideProteinsMapper(
-            peptide_table_path=peptide_table_path,
-            digested_genome_folders=digested_genome_folder_path,
-            table_separator=table_separator,
-            peptide_col=peptide_col,
-            intensity_col_prefix=intensity_col_prefix,
-            protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
-            output_path=output_path,
-            temp_dir=temp_dir,
-            selected_genomes_set=set(selected_genomes),
-            genome_list=selected_genomes,
-            continue_base_on_annotaied_peptide_table=False,
-            digested_parallel_backend="subprocess",
-            duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-        )
-        return instance.all_in_one(
-            taxafunc_anno_db_path=taxafunc_anno_db_path,
-            lca_threshold=lca_threshold,
-            distinct_genome_threshold=0,
-            protein_genome_separator=protein_genome_separator,
-            genome_list=selected_genomes,
-            duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-            genome_selection_metadata=genome_selection_metadata,
-        )
 
     def run_pep_direct_to_otf_unit_specific(self):
         config = self._get_unit_specific_gui_config_from_controls()
@@ -4315,8 +4012,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         duplicate_peptide_handling_mode = self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip()
         stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
         use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
-        original_peptide_table_path = peptide_table_path
-        parquet_conversion_metadata = {}
         diann_parquet_detected = False
         if self._is_parquet_path(peptide_table_path):
             table_separator = '\t'
@@ -4370,25 +4065,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
             return None
 
-        if diann_parquet_detected:
-            try:
-                (
-                    peptide_table_path,
-                    table_separator,
-                    peptide_col,
-                    mapper_intensity_col_prefix,
-                    parquet_conversion_metadata,
-                ) = self._prepare_diann_parquet_for_pep_direct_to_otf(
-                    parquet_path=original_peptide_table_path,
-                    output_path=output_path,
-                    intensity_col=diann_intensity_col,
-                )
-            except Exception:
-                error_message = traceback.format_exc()
-                self.logger.write_log(f'prepare_diann_parquet_for_pep_direct_to_otf error: {error_message}', 'e')
-                QMessageBox.warning(self.MainWindow, 'Error', error_message)
-                return None
-
         selected_genomes = list(self.pep_direct_to_otf_selected_genomes)
         if use_selected_genome_list and not selected_genomes:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please open or paste at least one selected genome.')
@@ -4404,68 +4080,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
 
             def pep_direct_to_otf_main_wrapper():
-                if use_selected_genome_list:
-                    print("Using predefined genome list; skip MetaUmbra scoring.")
-                    genome_selection_metadata = {
-                        "workflow": "Peptide Direct to OTFs (MetaUmbra)",
-                        "genome_selection_method": "selected_genome_list",
-                        "metaumbra_scoring_run": False,
-                        "use_selected_genome_list": True,
-                        "selected_genome_source": self.pep_direct_to_otf_selected_genome_source or "GUI selected genome list",
-                        "selected_genomes_input_count": len(selected_genomes),
-                        **parquet_conversion_metadata,
-                    }
-                    return self._run_pep_direct_to_otf_with_genome_list(
-                        peptide_table_path=peptide_table_path,
-                        digested_genome_folder_path=digested_genome_folder_path,
-                        table_separator=table_separator,
-                        peptide_col=peptide_col,
-                        intensity_col_prefix=mapper_intensity_col_prefix,
-                        protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
-                        output_path=output_path,
-                        taxafunc_anno_db_path=taxafunc_anno_db_path,
-                        lca_threshold=lca_threshold,
-                        protein_genome_separator=protein_genome_separator,
-                        selected_genomes=selected_genomes,
-                        duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-                        genome_selection_metadata=genome_selection_metadata,
-                    )
-
-                if stop_after_metaumbra:
-                    print("Running MetaUmbra scoring only.")
-                    return self._run_pep_direct_to_otf_metaumbra_scoring(
-                        peptide_table_path=peptide_table_path,
-                        digested_genome_folder_path=digested_genome_folder_path,
-                        output_path=output_path,
-                        peptide_col=peptide_col,
-                    )
-
-                metaumbra_output_path = self._derive_pep_direct_to_otf_metaumbra_output_path(output_path)
-                print(f"Step 1/2: running MetaUmbra scoring: {metaumbra_output_path}")
-                metaumbra_result = self._run_pep_direct_to_otf_metaumbra_scoring(
-                    peptide_table_path=peptide_table_path,
-                    digested_genome_folder_path=digested_genome_folder_path,
-                    output_path=metaumbra_output_path,
-                    peptide_col=peptide_col,
+                selection_mode = (
+                    "provided"
+                    if use_selected_genome_list
+                    else "metaumbra-only"
+                    if stop_after_metaumbra
+                    else "metaumbra"
                 )
-                selected_genomes_from_metaumbra = self._select_genomes_from_metaumbra_result(metaumbra_output_path)
-                if not selected_genomes_from_metaumbra:
-                    raise ValueError("MetaUmbra scoring did not select any genomes with the current q-value cutoff.")
-
-                print(f"Step 2/2: matching peptides to proteins for {len(selected_genomes_from_metaumbra)} selected genomes.")
-                genome_selection_metadata = {
-                    "workflow": "Peptide Direct to OTFs (MetaUmbra)",
-                    "genome_selection_method": "MetaUmbra",
-                    "metaumbra_scoring_run": True,
-                    "use_selected_genome_list": False,
-                    "metaumbra_genome_presence_path": metaumbra_result["output"],
-                    "selected_genomes_from_metaumbra_count": len(selected_genomes_from_metaumbra),
-                    **{key: value for key, value in metaumbra_result.items() if key != "output"},
-                    **parquet_conversion_metadata,
-                }
-                return self._run_pep_direct_to_otf_with_genome_list(
+                metaumbra_settings = self._get_pep_direct_to_otf_metaumbra_settings()
+                return GlobalOTFAnnotator(
                     peptide_table_path=peptide_table_path,
-                    digested_genome_folder_path=digested_genome_folder_path,
+                    digested_genome_folders=digested_genome_folder_path,
                     table_separator=table_separator,
                     peptide_col=peptide_col,
                     intensity_col_prefix=mapper_intensity_col_prefix,
@@ -4474,10 +4099,31 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     taxafunc_anno_db_path=taxafunc_anno_db_path,
                     lca_threshold=lca_threshold,
                     protein_genome_separator=protein_genome_separator,
-                    selected_genomes=selected_genomes_from_metaumbra,
+                    selection_mode=selection_mode,
+                    selected_genomes=selected_genomes,
+                    selected_genome_source=(
+                        (
+                            self.pep_direct_to_otf_selected_genome_source
+                            or "GUI selected genome list"
+                        )
+                        if use_selected_genome_list
+                        else None
+                    ),
                     duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-                    genome_selection_metadata=genome_selection_metadata,
-                )
+                    diann_intensity_col=diann_intensity_col,
+                    metaumbra_peptide_score_col=metaumbra_settings[
+                        "metaumbra_peptide_score_col"
+                    ],
+                    metaumbra_peptide_error_col=metaumbra_settings[
+                        "metaumbra_peptide_error_col"
+                    ],
+                    metaumbra_single_peptide_error_rate_upper_bound=metaumbra_settings[
+                        "metaumbra_single_peptide_error_rate_upper_bound"
+                    ],
+                    metaumbra_genome_qvalue_cutoff=metaumbra_settings[
+                        "metaumbra_genome_qvalue_cutoff"
+                    ],
+                ).run()
 
             self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
         except Exception as e:
