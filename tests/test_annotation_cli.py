@@ -1,5 +1,6 @@
 import json
 import ast
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -144,6 +145,7 @@ def test_global_annotation_cli_reports_renamed_output_when_target_exists(
     requested_output = tmp_path / "global_otf.tsv"
     requested_output.write_text("stale output\n", encoding="utf-8")
     result_json = tmp_path / "global_result.json"
+    result_json.write_text("stale result\n", encoding="utf-8")
 
     exit_code = main(
         [
@@ -293,7 +295,7 @@ def test_global_backend_preserves_metaumbra_provenance(monkeypatch, tmp_path):
     monkeypatch.setattr(annotation_workflow, "run_metaumbra_scoring", fake_scoring)
     monkeypatch.setattr(annotation_workflow, "peptideProteinsMapper", FakeMapper)
 
-    GlobalOTFAnnotator(
+    run_result = GlobalOTFAnnotator(
         peptide_table_path=str(peptide_table),
         output_path=str(output),
         taxafunc_anno_db_path=str(taxafunc_db),
@@ -314,6 +316,11 @@ def test_global_backend_preserves_metaumbra_provenance(monkeypatch, tmp_path):
     assert captured["metaumbra_single_peptide_error_rate_upper_bound"] == 0.01
     assert captured["metaumbra_genome_qvalue_cutoff"] == 0.05
     assert captured["selected_genomes_from_metaumbra_count"] == 1
+    assert captured["selected_genomes_input_count"] == 0
+    assert run_result.genome_selection["method"] == "metaumbra"
+    assert run_result.genome_selection["source"].endswith(
+        "_metaumbra_genome_presence.tsv"
+    )
 
 
 def test_unit_specific_annotation_cli_writes_summary_contract(
@@ -347,6 +354,7 @@ def test_unit_specific_annotation_cli_writes_summary_contract(
         encoding="utf-8",
     )
     output = tmp_path / "unit_otf.tsv"
+    output.write_text("stale unit output\n", encoding="utf-8")
     result_json = tmp_path / "unit_result.json"
 
     exit_code = main(
@@ -369,10 +377,18 @@ def test_unit_specific_annotation_cli_writes_summary_contract(
     )
 
     assert exit_code == ExitCode.SUCCESS
+    assert output.read_text(encoding="utf-8") == "stale unit output\n"
     result = json.loads(result_json.read_text(encoding="utf-8"))
     assert result["run"]["mode"] == "unit-specific"
-    assert result["outputs"]["otf"]["path"] == str(output)
+    actual_output = Path(result["outputs"]["otf"]["path"])
+    assert actual_output != output
+    assert actual_output.is_file()
     assert Path(result["outputs"]["annotation_summary"]["path"]).is_file()
+    unit_summary = Path(result["outputs"]["unit_summary"]["path"])
+    assert unit_summary.is_file()
+    assert unit_summary.parent == actual_output.with_name(
+        f"{actual_output.stem}_artifacts"
+    )
     assert "per_unit_directory" not in result["outputs"]
     assert result["metrics"]["units"] == {"completed": 2, "skipped": 0}
     assert result["genome_selection"]["method"] == "unit_specific_manifest"
@@ -453,11 +469,236 @@ options:
     config = load_config_file(config_path)
 
     assert config["mode"] == "global"
-    assert config["output"] == "configured.tsv"
-    assert config["result_json"] == "result.json"
+    assert config["output"] == str(tmp_path / "configured.tsv")
+    assert config["result_json"] == str(tmp_path / "result.json")
+    assert config["peptide_table"] == str(tmp_path / "input.tsv")
+    assert config["peptide_db"] == str(tmp_path / "peptides.db")
+    assert config["taxafunc_db"] == str(tmp_path / "taxafunc.db")
     assert config["selected_genomes"] == ["g1", "g2"]
     parsed = build_parser(config).parse_args(["--output", "overridden.tsv"])
     assert parsed.output == "overridden.tsv"
+
+
+@pytest.mark.parametrize(
+    ("selection_mode", "selected_genomes", "genome_list", "digest_dirs", "expected"),
+    [
+        (None, ["g1"], None, [], "provided"),
+        (None, [], "genomes.txt", [], "provided"),
+        (None, [], None, ["digests"], "metaumbra"),
+        (None, [], None, [], "automatic"),
+        ("automatic", [], None, ["digests"], "automatic"),
+    ],
+)
+def test_global_selection_mode_resolution(
+    selection_mode,
+    selected_genomes,
+    genome_list,
+    digest_dirs,
+    expected,
+):
+    assert annotation_workflow.resolve_global_selection_mode(
+        selection_mode,
+        selected_genomes=selected_genomes,
+        genome_list_path=genome_list,
+        digested_genome_folders=digest_dirs,
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    ("selection_mode", "selected_genomes", "genome_list", "digest_dirs"),
+    [
+        ("provided", [], None, []),
+        ("automatic", ["g1"], None, []),
+        ("metaumbra", ["g1"], None, ["digests"]),
+        ("metaumbra-only", [], "genomes.txt", ["digests"]),
+        ("provided", ["g1"], "genomes.txt", []),
+    ],
+)
+def test_global_selection_mode_rejects_contradictory_inputs(
+    selection_mode,
+    selected_genomes,
+    genome_list,
+    digest_dirs,
+):
+    with pytest.raises(AnnotationConfigurationError):
+        annotation_workflow.resolve_global_selection_mode(
+            selection_mode,
+            selected_genomes=selected_genomes,
+            genome_list_path=genome_list,
+            digested_genome_folders=digest_dirs,
+        )
+
+
+def test_metaumbra_mode_requires_digest_directories_when_run(tmp_path):
+    peptide_table = tmp_path / "peptides.tsv"
+    peptide_table.write_text("Sequence\tEvidence\tQ.Value\nPEPA\t1\t0.01\n", encoding="utf-8")
+
+    annotator = GlobalOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        output_path=str(tmp_path / "genome_presence.tsv"),
+        selection_mode="metaumbra-only",
+    )
+
+    with pytest.raises(
+        AnnotationConfigurationError,
+        match="requires digested_genome_folders",
+    ):
+        annotator._validate()
+
+
+@pytest.mark.parametrize("folder_count", [1, 2])
+def test_metaumbra_command_encodes_digest_directories_as_one_argument(
+    tmp_path,
+    folder_count,
+):
+    digest_dirs = [
+        tmp_path / f"digest folder {index}" for index in range(1, folder_count + 1)
+    ]
+    command = annotation_workflow._build_metaumbra_scoring_command(
+        peptide_table_path=str(tmp_path / "peptides with spaces.tsv"),
+        digested_genome_folders=[str(path) for path in digest_dirs],
+        output_path=str(tmp_path / "output with spaces.tsv"),
+        peptide_col="Sequence",
+        peptide_score_col="Evidence",
+        peptide_error_col="Q.Value",
+        single_peptide_error_rate_upper_bound=0.3,
+    )
+
+    option_index = command.index("--genome-digest-dirs")
+    assert command[option_index + 1] == ";".join(str(path) for path in digest_dirs)
+    assert command[option_index + 2] == "--output"
+
+
+def test_config_paths_follow_config_directory_and_cli_overrides_follow_cwd(
+    annotation_inputs,
+    tmp_path,
+    monkeypatch,
+):
+    peptide_table, peptide_db, taxafunc_db = annotation_inputs
+    config_dir = tmp_path / "portable config"
+    config_dir.mkdir()
+    results_dir = config_dir / "results"
+    results_dir.mkdir()
+    for source in (peptide_table, peptide_db, taxafunc_db):
+        shutil.copy2(source, config_dir / source.name)
+
+    config_path = config_dir / "annotation.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "mode": "global",
+                "inputs": {
+                    "peptide_table": peptide_table.name,
+                    "peptide_db": peptide_db.name,
+                    "taxafunc_db": taxafunc_db.name,
+                },
+                "output": {
+                    "otf": "results/configured.tsv",
+                    "result_json": "results/configured.json",
+                },
+                "options": {"selected_genomes": ["g1"]},
+            }
+        ),
+        encoding="utf-8",
+    )
+    launch_dir = tmp_path / "different working directory"
+    launch_dir.mkdir()
+    monkeypatch.chdir(launch_dir)
+
+    assert main(["--config", str(config_path)]) == ExitCode.SUCCESS
+    configured_output = results_dir / "configured.tsv"
+    configured_result = results_dir / "configured.json"
+    assert configured_output.is_file()
+    result = json.loads(configured_result.read_text(encoding="utf-8"))
+    assert result["parameters"]["selection_mode"] == "provided"
+    assert result["genome_selection"]["source"] == "selected_genomes"
+    assert result["outputs"]["otf"]["path"] == str(configured_output)
+    assert result["inputs"]["config"]["path"] == str(config_path)
+
+    assert main(
+        [
+            "--config",
+            str(config_path),
+            "--output",
+            "cli-override.tsv",
+            "--result-json",
+            "cli-override.json",
+        ]
+    ) == ExitCode.SUCCESS
+    assert (launch_dir / "cli-override.tsv").is_file()
+    override_result = json.loads(
+        (launch_dir / "cli-override.json").read_text(encoding="utf-8")
+    )
+    assert override_result["outputs"]["otf"]["path"] == "cli-override.tsv"
+
+
+def test_config_path_resolution_preserves_absolute_paths_and_resolves_lists(
+    tmp_path,
+):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    absolute_digest = tmp_path / "absolute digest"
+    absolute_digest.mkdir()
+    absolute_table = tmp_path / "absolute.tsv"
+    config_path = config_dir / "annotation.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "inputs": {
+                    "peptide_table": str(absolute_table),
+                    "digested_genome_folders": [
+                        "relative digest",
+                        str(absolute_digest),
+                    ],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    config = load_config_file(config_path)
+
+    assert config["peptide_table"] == str(absolute_table)
+    assert config["digested_genome_folders"] == [
+        str(config_dir / "relative digest"),
+        str(absolute_digest),
+    ]
+
+
+def test_metaumbra_only_preserves_existing_output_and_reports_actual_path(
+    monkeypatch,
+    tmp_path,
+):
+    peptide_table = tmp_path / "peptides.tsv"
+    peptide_table.write_text(
+        "Sequence\tEvidence\tQ.Value\nPEPA\t1\t0.01\n",
+        encoding="utf-8",
+    )
+    digest_dir = tmp_path / "digests"
+    digest_dir.mkdir()
+    requested_output = tmp_path / "genome_presence.tsv"
+    requested_output.write_text("stale genome presence\n", encoding="utf-8")
+
+    def fake_scoring(**kwargs):
+        pd.DataFrame(
+            {"genome_id": ["g1"], "qvalue": [0.01]}
+        ).to_csv(kwargs["output_path"], sep="\t", index=False)
+        return {"output": kwargs["output_path"], "metaumbra_version": "1.3.7"}
+
+    monkeypatch.setattr(annotation_workflow, "run_metaumbra_scoring", fake_scoring)
+    result = GlobalOTFAnnotator(
+        peptide_table_path=str(peptide_table),
+        output_path=str(requested_output),
+        digested_genome_folders=str(digest_dir),
+        selection_mode="metaumbra-only",
+    ).run()
+
+    actual_output = Path(result.output_path)
+    assert requested_output.read_text(encoding="utf-8") == "stale genome presence\n"
+    assert actual_output != requested_output
+    assert actual_output.is_file()
+    assert result.outputs["genome_presence"]["path"] == str(actual_output)
+    assert result.genome_selection["source"] == str(actual_output)
 
 
 def test_config_rejects_incompatible_api_version(tmp_path):

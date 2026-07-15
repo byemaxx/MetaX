@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import sys
 import time
@@ -38,6 +39,16 @@ class AnnotationArgumentParser(argparse.ArgumentParser):
 
 
 ANNOTATION_RESULT_SCHEMA_VERSION = "2.0"
+_CONFIG_PATH_FIELDS = {
+    "peptide_table",
+    "unit_specific_manifest",
+    "taxafunc_db",
+    "output",
+    "peptide_db",
+    "genome_list_file",
+    "result_json",
+}
+_CONFIG_MULTI_PATH_FIELDS = {"digested_genome_folders"}
 
 
 def _decode_separator(value: str) -> str:
@@ -82,8 +93,38 @@ def _flatten_config(raw_config: Mapping[str, Any]) -> dict[str, Any]:
     return flattened
 
 
+def _resolve_config_path_value(value: Any, config_dir: Path) -> Any:
+    if value is None or not isinstance(value, (str, Path)):
+        return value
+    raw_value = os.path.expanduser(str(value))
+    if not raw_value.strip():
+        return raw_value
+    candidate = Path(raw_value)
+    return raw_value if candidate.is_absolute() else str(config_dir / candidate)
+
+
+def _resolve_config_paths(config: Mapping[str, Any], config_dir: Path) -> dict[str, Any]:
+    resolved = dict(config)
+    for field_name in _CONFIG_PATH_FIELDS:
+        if field_name in resolved:
+            resolved[field_name] = _resolve_config_path_value(
+                resolved[field_name], config_dir
+            )
+    for field_name in _CONFIG_MULTI_PATH_FIELDS:
+        if field_name not in resolved:
+            continue
+        value = resolved[field_name]
+        if isinstance(value, (str, Path)):
+            resolved[field_name] = _resolve_config_path_value(value, config_dir)
+        elif value is not None:
+            resolved[field_name] = [
+                _resolve_config_path_value(item, config_dir) for item in value
+            ]
+    return resolved
+
+
 def load_config_file(path: str | Path) -> dict[str, Any]:
-    config_path = Path(path)
+    config_path = Path(path).expanduser()
     if not config_path.is_file():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
     suffix = config_path.suffix.lower()
@@ -112,7 +153,11 @@ def load_config_file(path: str | Path) -> dict[str, Any]:
         loaded = {}
     if not isinstance(loaded, Mapping):
         raise AnnotationConfigurationError("Annotation configuration must be a mapping")
-    config = _flatten_config(loaded)
+    config_path = config_path.resolve()
+    config = _resolve_config_paths(
+        _flatten_config(loaded),
+        config_path.parent,
+    )
     requested_api = str(
         config.pop("workflow_api_version", config.pop("api_version", ANNOTATION_WORKFLOW_API_VERSION))
     )
@@ -626,6 +671,8 @@ def main(argv: list[str] | None = None) -> int:
         stage_started = time.perf_counter()
         parser = build_parser(config)
         args = parser.parse_args(argv)
+        if pre_args.config:
+            args.config = config["config_path"]
         mode = args.mode
         _validate_scientific_parameters(args)
         result_json_path = args.result_json
