@@ -19,3 +19,4 @@ venv
 conda-recipe
 report_output*/
 metax/data/example_data/Example_OTF_auto_report/
+.test-temp/

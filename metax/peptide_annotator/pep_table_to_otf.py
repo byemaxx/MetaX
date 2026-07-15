@@ -34,6 +34,13 @@ from tqdm import tqdm
 _WINDOWS_PROCESS_POOL_MAX_WORKERS = 61
 
 
+def _print_console_safe(line: str) -> None:
+    """Forward UTF-8 subprocess progress even when Windows uses a legacy code page."""
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    safe_line = str(line).encode(encoding, errors="replace").decode(encoding, errors="replace")
+    print(safe_line, flush=True)
+
+
 def _resolve_digested_scan_n_jobs(
     n_jobs: int | None,
     *,
@@ -560,7 +567,7 @@ def _query_peptide_proteins_nested_via_subprocess(
         repo_root = pathlib.Path(__file__).resolve().parents[2]
         env = os.environ.copy()
         env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
-        env.setdefault("PYTHONIOENCODING", "utf-8")
+        env["PYTHONIOENCODING"] = "utf-8"
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         print("[UnitSpecificDigestedScan/Subprocess] Launching isolated process.", flush=True)
         return_code, last_lines = run_streaming_subprocess(
@@ -569,7 +576,7 @@ def _query_peptide_proteins_nested_via_subprocess(
             env=env,
             creationflags=creationflags,
             max_captured_lines=50,
-            emit_line=lambda line: print(line, flush=True),
+            emit_line=_print_console_safe,
         )
         if return_code != 0:
             tail = "".join(last_lines[-20:])
@@ -1407,7 +1414,7 @@ class peptideProteinsMapper:
                 env=env,
                 creationflags=creationflags,
                 max_captured_lines=50,
-                emit_line=print,
+                emit_line=_print_console_safe,
             )
             if rc != 0:
                 tail = "".join(last_lines[-20:])

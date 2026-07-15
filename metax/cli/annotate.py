@@ -20,7 +20,7 @@ from metax.peptide_annotator.annotation_workflow import (
     OptionalDependencyUnavailable,
 )
 from metax.peptide_annotator.peptide_table_prepare import DIANN_INTENSITY_CANDIDATES
-from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
+from metax.peptide_annotator.manifest_otf import ManifestOTFAnnotator
 from metax.utils.version import __version__
 
 
@@ -38,10 +38,10 @@ class AnnotationArgumentParser(argparse.ArgumentParser):
         raise AnnotationConfigurationError(message)
 
 
-ANNOTATION_RESULT_SCHEMA_VERSION = "2.0"
+ANNOTATION_RESULT_SCHEMA_VERSION = "metax.annotation_result.v2"
 _CONFIG_PATH_FIELDS = {
     "peptide_table",
-    "unit_specific_manifest",
+    "metaumbra_manifest",
     "taxafunc_db",
     "output",
     "peptide_db",
@@ -181,22 +181,24 @@ def build_parser(defaults: Mapping[str, Any] | None = None) -> argparse.Argument
         prog="metax-annotate",
         allow_abbrev=False,
         description=(
-            "Run MetaX global or unit-specific peptide-to-OTF annotation. "
+            "Run peptide-to-OTF annotation from a MetaUmbra manifest, MetaX automatic selection, or an explicit genome list. "
             "CLI arguments override values loaded with --config."
         ),
     )
     parser.add_argument("--config", default=defaults.get("config_path"), help="YAML or JSON workflow configuration")
-    parser.add_argument(
-        "--mode",
-        choices=["global", "unit-specific"],
-        default=_default(defaults, "mode", "global"),
-        help="Annotation mode (default: global)",
-    )
     parser.add_argument("--result-json", default=defaults.get("result_json"), help="Write the machine-readable execution result to this JSON file")
     parser.add_argument("--peptide-table", default=defaults.get("peptide_table"), help="Input peptide intensity table")
-    parser.add_argument("--unit-specific-manifest", default=defaults.get("unit_specific_manifest"), help="MetaUmbra unit_specific_manifest.json")
+    parser.add_argument(
+        "--input-source",
+        choices=["metaumbra-manifest", "metax-automatic", "genome-list"],
+        default=_default(defaults, "input_source", "metaumbra-manifest"),
+        help="Explicit genome-selection source; no file-content mode inference is performed",
+    )
+    parser.add_argument("--metaumbra-manifest", default=defaults.get("metaumbra_manifest"), help="MetaUmbra genome_selection_manifest.json")
+    parser.add_argument("--genome-list-file", default=defaults.get("genome_list_file"), help="Plain text/TSV/CSV genome list for --input-source genome-list")
+    parser.add_argument("--selected-genomes", nargs="+", default=defaults.get("selected_genomes"), help="Genome IDs for --input-source genome-list")
     parser.add_argument("--taxafunc-db", default=defaults.get("taxafunc_db"), help="MetaX taxa-function annotation SQLite database")
-    parser.add_argument("--output", default=defaults.get("output"), help="Output OTF TSV (or MetaUmbra result in metaumbra-only mode)")
+    parser.add_argument("--output", default=defaults.get("output"), help="Output OTF TSV")
     parser.add_argument("--peptide-db", default=defaults.get("peptide_db"), help="SQLite peptide-to-protein database")
     parser.add_argument(
         "--digested-genome-folders",
@@ -204,24 +206,20 @@ def build_parser(defaults: Mapping[str, Any] | None = None) -> argparse.Argument
         default=defaults.get("digested_genome_folders"),
         help="One or more folders containing digested genome TSV files",
     )
-    parser.add_argument(
-        "--selection-mode",
-        choices=["metaumbra", "provided", "automatic", "metaumbra-only"],
-        default=defaults.get("selection_mode"),
-        help="Global genome-selection strategy",
-    )
-    parser.add_argument("--genome-list-file", default=defaults.get("genome_list_file"), help="Plain genome list or MetaUmbra genome_presence table")
-    parser.add_argument("--selected-genomes", nargs="+", default=defaults.get("selected_genomes"), help="Explicit genome IDs for global provided mode")
-    parser.add_argument("--genome-threshold", default=_default(defaults, "genome_threshold", "auto"), help="Unit-specific threshold: q0.05, q0.01, or auto")
+    parser.add_argument("--genome-threshold", choices=["auto", "q0.05", "q0.01"], default=_default(defaults, "genome_threshold", "auto"), help="Genome threshold; auto uses the manifest default")
     parser.add_argument("--peptide-col", default=_default(defaults, "peptide_col", "Sequence"))
-    parser.add_argument("--intensity-col-prefix", default=_default(defaults, "intensity_col_prefix", "Intensity"), help="Global input sample/intensity column prefix")
+    parser.add_argument(
+        "--intensity-col-prefix",
+        default=_default(defaults, "intensity_col_prefix", "Intensity"),
+        help="Input intensity-column prefix for metax-automatic and genome-list sources",
+    )
     parser.add_argument(
         "--output-sample-col-prefix",
         default=_default(defaults, "output_sample_col_prefix", "Intensity_"),
         choices=["Intensity_"],
-        help="Canonical unit-specific output sample prefix",
+        help="Canonical output sample prefix",
     )
-    parser.add_argument("--input-sample-col-prefix", default=defaults.get("input_sample_col_prefix"), help="Optional unit-specific input prefix to strip when matching manifest samples")
+    parser.add_argument("--input-sample-col-prefix", default=defaults.get("input_sample_col_prefix"), help="Optional input prefix to strip when matching manifest samples")
     parser.add_argument("--table-separator", default=_default(defaults, "table_separator", r"\t"))
     parser.add_argument("--lca-threshold", type=float, default=_default(defaults, "lca_threshold", 1.0))
     parser.add_argument(
@@ -234,9 +232,7 @@ def build_parser(defaults: Mapping[str, Any] | None = None) -> argparse.Argument
     parser.add_argument("--exclude-protein-startwith", default=defaults.get("exclude_protein_startwith"))
     parser.add_argument("--protein-separator", default=_default(defaults, "protein_separator", ";"))
     parser.add_argument("--protein-genome-separator", default=_default(defaults, "protein_genome_separator", "_"))
-    parser.add_argument("--protein-peptide-coverage-cutoff", type=float, default=_default(defaults, "protein_peptide_coverage_cutoff", 1.0))
     parser.add_argument("--save-per-unit-outputs", action=argparse.BooleanOptionalAction, default=_default(defaults, "save_per_unit_outputs", False))
-    parser.add_argument("--include-unit-specific-sequence", action=argparse.BooleanOptionalAction, default=_default(defaults, "include_unit_specific_sequence", False))
     parser.add_argument(
         "--duplicate-peptide-handling-mode",
         choices=["sum", "max", "min", "mean", "first", "keep"],
@@ -248,10 +244,6 @@ def build_parser(defaults: Mapping[str, Any] | None = None) -> argparse.Argument
     parser.add_argument("--merge-chunksize", type=int, default=_default(defaults, "merge_chunksize", 100_000))
     parser.add_argument("--collect-unique-stats", action=argparse.BooleanOptionalAction, default=_default(defaults, "collect_unique_stats", False))
     parser.add_argument("--diann-intensity-col", choices=DIANN_INTENSITY_CANDIDATES, default=defaults.get("diann_intensity_col"))
-    parser.add_argument("--metaumbra-peptide-score-col", default=_default(defaults, "metaumbra_peptide_score_col", "Evidence"))
-    parser.add_argument("--metaumbra-peptide-error-col", default=_default(defaults, "metaumbra_peptide_error_col", "Q.Value"))
-    parser.add_argument("--metaumbra-single-peptide-error-rate-upper-bound", type=float, default=_default(defaults, "metaumbra_single_peptide_error_rate_upper_bound", 0.3))
-    parser.add_argument("--metaumbra-genome-qvalue-cutoff", type=float, default=_default(defaults, "metaumbra_genome_qvalue_cutoff", 0.05))
     return parser
 
 
@@ -292,20 +284,6 @@ def _validate_scientific_parameters(args: argparse.Namespace) -> None:
         )
     if args.n_jobs is not None and args.n_jobs < 1:
         raise AnnotationConfigurationError("--n-jobs must be greater than or equal to 1")
-    if args.mode == "global":
-        if not 0 < args.protein_peptide_coverage_cutoff <= 1:
-            raise AnnotationConfigurationError(
-                "--protein-peptide-coverage-cutoff must be greater than 0 and at most 1"
-            )
-        if not 0 < args.metaumbra_single_peptide_error_rate_upper_bound <= 1:
-            raise AnnotationConfigurationError(
-                "--metaumbra-single-peptide-error-rate-upper-bound must be greater "
-                "than 0 and at most 1"
-            )
-        if not 0 < args.metaumbra_genome_qvalue_cutoff <= 1:
-            raise AnnotationConfigurationError(
-                "--metaumbra-genome-qvalue-cutoff must be greater than 0 and at most 1"
-            )
 
 
 def _run_metadata(
@@ -358,8 +336,8 @@ def _argument_inputs(args: argparse.Namespace | None) -> dict[str, Any]:
     path_fields = {
         "config": (getattr(args, "config", None), None),
         "peptide_table": (getattr(args, "peptide_table", None), None),
-        "unit_specific_manifest": (
-            getattr(args, "unit_specific_manifest", None),
+        "metaumbra_manifest": (
+            getattr(args, "metaumbra_manifest", None),
             "json",
         ),
         "taxafunc_database": (getattr(args, "taxafunc_db", None), "sqlite"),
@@ -393,28 +371,19 @@ def _effective_parameters(args: argparse.Namespace | None, mode: str | None) -> 
         "duplicate_peptide_handling_mode",
         "n_jobs",
         "diann_intensity_col",
-    ]
-    global_only = [
-        "selection_mode",
         "intensity_col_prefix",
-        "protein_peptide_coverage_cutoff",
-        "metaumbra_peptide_score_col",
-        "metaumbra_peptide_error_col",
-        "metaumbra_single_peptide_error_rate_upper_bound",
-        "metaumbra_genome_qvalue_cutoff",
     ]
-    unit_only = [
+    manifest_parameters = [
         "genome_threshold",
         "input_sample_col_prefix",
         "output_sample_col_prefix",
         "save_per_unit_outputs",
-        "include_unit_specific_sequence",
         "on_missing_sample",
         "on_empty_unit",
         "merge_chunksize",
         "collect_unique_stats",
     ]
-    names = common + (unit_only if mode == "unit-specific" else global_only)
+    names = common + manifest_parameters
     return {
         name: getattr(args, name)
         for name in names
@@ -464,21 +433,21 @@ def _write_result_json(path: str | None, result: Mapping[str, Any]) -> None:
     temporary_path.replace(result_path)
 
 
-def _run_unit_specific(args: argparse.Namespace) -> tuple[Any, list[str]]:
+def _run_manifest(args: argparse.Namespace) -> tuple[Any, list[str]]:
     _require(args.peptide_table, "--peptide-table")
-    _require(args.unit_specific_manifest, "--unit-specific-manifest")
+    _require(args.metaumbra_manifest, "--metaumbra-manifest")
     _require(args.taxafunc_db, "--taxafunc-db")
     _require(args.output, "--output")
     if bool(args.peptide_db) == bool(args.digested_genome_folders):
         raise AnnotationConfigurationError(
-            "Unit-specific mode requires exactly one of --peptide-db or --digested-genome-folders"
+            "Exactly one of --peptide-db or --digested-genome-folders is required"
         )
     genome_threshold = None if args.genome_threshold == "auto" else args.genome_threshold
     with warnings.catch_warnings(record=True) as recorded:
         warnings.simplefilter("always")
-        result = UnitSpecificOTFAnnotator(
+        result = ManifestOTFAnnotator(
             peptide_table_path=args.peptide_table,
-            unit_specific_manifest_path=args.unit_specific_manifest,
+            metaumbra_manifest_path=args.metaumbra_manifest,
             taxafunc_anno_db_path=args.taxafunc_db,
             output_path=args.output,
             db_path=args.peptide_db,
@@ -495,7 +464,6 @@ def _run_unit_specific(args: argparse.Namespace) -> tuple[Any, list[str]]:
             protein_separator=args.protein_separator,
             protein_genome_separator=args.protein_genome_separator,
             save_per_unit_outputs=args.save_per_unit_outputs,
-            include_unit_specific_sequence=args.include_unit_specific_sequence,
             duplicate_peptide_handling_mode=args.duplicate_peptide_handling_mode,
             on_missing_sample=args.on_missing_sample,
             on_empty_unit=args.on_empty_unit,
@@ -507,38 +475,53 @@ def _run_unit_specific(args: argparse.Namespace) -> tuple[Any, list[str]]:
     return result, [str(item.message) for item in recorded]
 
 
-def _run_global(args: argparse.Namespace) -> Any:
+def _run_non_manifest(args: argparse.Namespace) -> tuple[Any, list[str]]:
     _require(args.peptide_table, "--peptide-table")
+    _require(args.taxafunc_db, "--taxafunc-db")
     _require(args.output, "--output")
-    return GlobalOTFAnnotator(
-        peptide_table_path=args.peptide_table,
-        output_path=args.output,
-        taxafunc_anno_db_path=args.taxafunc_db,
-        db_path=args.peptide_db,
-        digested_genome_folders=args.digested_genome_folders,
-        selection_mode=args.selection_mode,
-        selected_genomes=args.selected_genomes,
-        genome_list_path=args.genome_list_file,
-        peptide_col=args.peptide_col,
-        intensity_col_prefix=args.intensity_col_prefix,
-        table_separator=_decode_separator(args.table_separator),
-        protein_peptide_coverage_cutoff=args.protein_peptide_coverage_cutoff,
-        lca_threshold=args.lca_threshold,
-        genome_mode=args.genome_mode,
-        distinct_genome_threshold=args.distinct_genome_threshold,
-        exclude_protein_startwith=args.exclude_protein_startwith,
-        protein_separator=args.protein_separator,
-        protein_genome_separator=args.protein_genome_separator,
-        duplicate_peptide_handling_mode=args.duplicate_peptide_handling_mode,
-        n_jobs=args.n_jobs,
-        diann_intensity_col=args.diann_intensity_col,
-        metaumbra_peptide_score_col=args.metaumbra_peptide_score_col,
-        metaumbra_peptide_error_col=args.metaumbra_peptide_error_col,
-        metaumbra_single_peptide_error_rate_upper_bound=(
-            args.metaumbra_single_peptide_error_rate_upper_bound
-        ),
-        metaumbra_genome_qvalue_cutoff=args.metaumbra_genome_qvalue_cutoff,
-    ).run()
+    if bool(args.peptide_db) == bool(args.digested_genome_folders):
+        raise AnnotationConfigurationError(
+            "Exactly one of --peptide-db or --digested-genome-folders is required"
+        )
+    selection_mode = "automatic" if args.input_source == "metax-automatic" else "provided"
+    if selection_mode == "provided" and not args.genome_list_file and not args.selected_genomes:
+        raise AnnotationConfigurationError(
+            "--input-source genome-list requires --genome-list-file or --selected-genomes"
+        )
+    if selection_mode == "automatic" and (args.genome_list_file or args.selected_genomes):
+        raise AnnotationConfigurationError(
+            "Genome-list options are only valid with --input-source genome-list"
+        )
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always")
+        result = GlobalOTFAnnotator(
+            peptide_table_path=args.peptide_table,
+            output_path=args.output,
+            taxafunc_anno_db_path=args.taxafunc_db,
+            db_path=args.peptide_db,
+            digested_genome_folders=_normalise_digest_folders(args.digested_genome_folders),
+            selection_mode=selection_mode,
+            selected_genomes=args.selected_genomes,
+            genome_list_path=args.genome_list_file,
+            peptide_col=args.peptide_col,
+            intensity_col_prefix=args.intensity_col_prefix,
+            table_separator=_decode_separator(args.table_separator),
+            lca_threshold=args.lca_threshold,
+            genome_mode=args.genome_mode,
+            distinct_genome_threshold=args.distinct_genome_threshold,
+            exclude_protein_startwith=args.exclude_protein_startwith,
+            protein_separator=args.protein_separator,
+            protein_genome_separator=args.protein_genome_separator,
+            duplicate_peptide_handling_mode=args.duplicate_peptide_handling_mode,
+            n_jobs=args.n_jobs,
+            diann_intensity_col=args.diann_intensity_col,
+            selected_genome_source=(
+                args.genome_list_file or "CLI --selected-genomes"
+                if selection_mode == "provided"
+                else None
+            ),
+        ).run()
+    return result, [str(item.message) for item in recorded]
 
 
 def _success_result(
@@ -573,19 +556,6 @@ def _success_result(
         getattr(run_result, "warnings", [])
     )
 
-    if mode == "global":
-        result["inputs"] = dict(getattr(run_result, "inputs", {}))
-        if args.config:
-            result["inputs"]["config"] = _path_input(args.config)
-        result["parameters"] = dict(getattr(run_result, "parameters", {}))
-        result["stages"] = dict(getattr(run_result, "stages", {}))
-        result["genome_selection"] = dict(
-            getattr(run_result, "genome_selection", {})
-        )
-        result["metrics"] = dict(getattr(run_result, "metrics", {}))
-        result["outputs"] = dict(getattr(run_result, "outputs", {}))
-        return result
-
     run_output_path = getattr(run_result, "output_path", args.output)
     artifacts_dir = Path(run_output_path).with_name(
         f"{Path(run_output_path).stem}_artifacts"
@@ -594,13 +564,13 @@ def _success_result(
     summary_path = getattr(run_result, "summary_path", None)
     info_path = getattr(run_result, "info_path", None)
     result["stages"] = {
-        "unit_specific_annotation": {
+        "manifest_otf_annotation": {
             "status": "success",
             "duration_seconds": round(annotation_duration, 6),
         }
     }
     result["genome_selection"] = {
-        "method": "unit_specific_manifest",
+        "method": "metaumbra_genome_selection_manifest",
         "threshold": getattr(
             run_result,
             "selected_genome_threshold",
@@ -640,10 +610,63 @@ def _success_result(
         outputs["per_unit_directory"] = {"path": str(per_unit_dir)}
     sample_mapping_path = artifacts_dir / "unit_sample_column_mapping.tsv"
     if sample_mapping_path.is_file():
-        outputs["unit_sample_mapping"] = _path_input(
+        outputs["sample_mapping"] = _path_input(
             sample_mapping_path, format_name="tsv"
         )
     result["outputs"] = outputs
+    result["manifest"] = {
+        "path": str(args.metaumbra_manifest),
+        "schema_version": getattr(run_result, "manifest_schema_version", None),
+    }
+    result["number_of_units"] = int(getattr(run_result, "completed_units", 0)) + int(
+        getattr(run_result, "skipped_units", 0)
+    )
+    result["selected_threshold"] = getattr(run_result, "selected_genome_threshold", args.genome_threshold)
+    result["per_unit_summary"] = outputs.get("unit_summary")
+    result["input_source"] = mode
+    return result
+
+
+def _success_result_non_manifest(
+    mode: str,
+    run_result: Any,
+    warning_messages: list[str],
+    *,
+    args: argparse.Namespace,
+    started_at: str,
+    started_perf: float,
+    run_id: str,
+) -> dict[str, Any]:
+    result = _empty_result(
+        mode=mode,
+        exit_code=ExitCode.SUCCESS,
+        started_at=started_at,
+        started_perf=started_perf,
+        run_id=run_id,
+        args=args,
+    )
+    result["run"] = _run_metadata(
+        mode=mode,
+        exit_code=ExitCode.SUCCESS,
+        started_at=started_at,
+        started_perf=started_perf,
+        run_id=run_id,
+        software=getattr(run_result, "software", {}),
+    )
+    result["inputs"] = dict(getattr(run_result, "inputs", {}))
+    result["parameters"] = dict(getattr(run_result, "parameters", {}))
+    result["stages"] = dict(getattr(run_result, "stages", {}))
+    result["genome_selection"] = dict(getattr(run_result, "genome_selection", {}))
+    result["metrics"] = dict(getattr(run_result, "metrics", {}))
+    result["outputs"] = dict(getattr(run_result, "outputs", {}))
+    result["diagnostics"]["warnings"] = warning_messages + list(
+        getattr(run_result, "warnings", [])
+    )
+    result["input_source"] = mode
+    result["manifest"] = None
+    result["number_of_units"] = None
+    result["selected_threshold"] = None
+    result["per_unit_summary"] = None
     return result
 
 
@@ -671,9 +694,9 @@ def main(argv: list[str] | None = None) -> int:
         stage_started = time.perf_counter()
         parser = build_parser(config)
         args = parser.parse_args(argv)
+        mode = args.input_source
         if pre_args.config:
             args.config = config["config_path"]
-        mode = args.mode
         _validate_scientific_parameters(args)
         result_json_path = args.result_json
         if result_json_path and not Path(result_json_path).parent.is_dir():
@@ -682,22 +705,40 @@ def main(argv: list[str] | None = None) -> int:
             )
         failure_stage = "annotation"
         stage_started = time.perf_counter()
-        if mode == "unit-specific":
-            run_result, warning_messages = _run_unit_specific(args)
+        if args.input_source == "metaumbra-manifest":
+            if args.genome_list_file or args.selected_genomes:
+                raise AnnotationConfigurationError(
+                    "Genome-list options are only valid with --input-source genome-list"
+                )
+            run_result, warning_messages = _run_manifest(args)
         else:
-            run_result = _run_global(args)
-            warning_messages = []
+            if args.metaumbra_manifest:
+                raise AnnotationConfigurationError(
+                    "--metaumbra-manifest is only valid with --input-source metaumbra-manifest"
+                )
+            run_result, warning_messages = _run_non_manifest(args)
         annotation_duration = time.perf_counter() - stage_started
-        result = _success_result(
-            mode,
-            run_result,
-            warning_messages,
-            args=args,
-            started_at=started_at,
-            started_perf=started_perf,
-            run_id=run_id,
-            annotation_duration=annotation_duration,
-        )
+        if args.input_source == "metaumbra-manifest":
+            result = _success_result(
+                mode,
+                run_result,
+                warning_messages,
+                args=args,
+                started_at=started_at,
+                started_perf=started_perf,
+                run_id=run_id,
+                annotation_duration=annotation_duration,
+            )
+        else:
+            result = _success_result_non_manifest(
+                mode,
+                run_result,
+                warning_messages,
+                args=args,
+                started_at=started_at,
+                started_perf=started_perf,
+                run_id=run_id,
+            )
         failure_stage = "result_serialization"
         stage_started = time.perf_counter()
         _write_result_json(result_json_path, result)
