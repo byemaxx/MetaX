@@ -3,9 +3,65 @@ from __future__ import annotations
 import os
 import signal
 import subprocess
+import time
 from collections.abc import Callable, Mapping, Sequence
 from os import PathLike
 from typing import Any
+
+
+def _process_group_exists(process_group_id: int) -> bool:
+    try:
+        os.killpg(process_group_id, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _wait_for_process_group_exit(
+    process_group_id: int,
+    timeout: float,
+) -> bool:
+    deadline = time.monotonic() + timeout
+    while _process_group_exists(process_group_id):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(0.05, remaining))
+    return True
+
+
+def _terminate_posix_process_group(
+    process: subprocess.Popen[Any],
+    timeout: float,
+) -> None:
+    process_group_id = process.pid
+    try:
+        os.killpg(process_group_id, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+    deadline = time.monotonic() + timeout
+    if process.poll() is None:
+        try:
+            process.wait(timeout=max(0.0, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            pass
+
+    if _wait_for_process_group_exit(
+        process_group_id,
+        max(0.0, deadline - time.monotonic()),
+    ):
+        return
+
+    try:
+        os.killpg(process_group_id, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    if process.poll() is None:
+        process.wait()
+    _wait_for_process_group_exit(process_group_id, timeout)
 
 
 def terminate_process(
@@ -15,6 +71,15 @@ def terminate_process(
     process_group: bool = False,
 ) -> None:
     """Best-effort termination for an active child and its process group/tree."""
+    if process_group:
+        try:
+            _terminate_posix_process_group(process, timeout)
+        except OSError:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+        return
+
     if process.poll() is not None:
         return
     try:
@@ -27,16 +92,11 @@ def terminate_process(
                 check=False,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
-        elif process_group:
-            os.killpg(process.pid, signal.SIGTERM)
         else:
             process.terminate()
         process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        if os.name != "nt" and process_group:
-            os.killpg(process.pid, signal.SIGKILL)
-        else:
-            process.kill()
+        process.kill()
         process.wait()
     except OSError:
         if process.poll() is None:
