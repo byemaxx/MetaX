@@ -71,6 +71,7 @@ class PeptideAnnotator:
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
         self.output_path = output_path
+        self.info_path: str | None = None
         
         self.threshold = round(float(threshold), 4)
         self.genome_mode = genome_mode
@@ -398,6 +399,7 @@ class PeptideAnnotator:
         # save metadata to a separate info file
         base_path = os.path.splitext(self.output_path)[0]
         info_path = f"{base_path}_info.txt"
+        self.info_path = info_path
         with open(info_path, 'w', encoding='utf-8') as f:
             f.write("MetaX PeptideAnnotator Results\n")
             f.write("="*50 + "\n")

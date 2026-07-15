@@ -896,6 +896,8 @@ class peptideProteinsMapper:
         self.protein_ranked_table = None
         self.genome_ranked_table = None
         self.final_peptide_table = None
+        self.annotation_output_path: str | None = None
+        self.annotation_info_path: str | None = None
         
         self.selected_proteins_num = 0
         self.selected_genomes_num = 0
@@ -1652,6 +1654,11 @@ class peptideProteinsMapper:
             annotation_result_cache=annotation_result_cache,
         )
         df_res = annotator.run_annotate(save_output=save_output)
+        if save_output:
+            self.annotation_output_path = str(
+                getattr(annotator, "output_path", self.output_path)
+            )
+            self.annotation_info_path = getattr(annotator, "info_path", None)
         # Expose the statistics already collected by the mapper and annotator so
         # workflow callers can produce a structured, machine-readable run result.
         self.annotation_run_stats = dict(getattr(annotator, "run_stats", {}))

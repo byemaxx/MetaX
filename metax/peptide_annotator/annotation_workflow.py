@@ -732,11 +732,19 @@ class GlobalOTFAnnotator:
             "status": "success",
             "duration_seconds": _elapsed(stage_started),
         }
-        if not self.output_path.is_file():
+        actual_output_path = Path(
+            getattr(mapper, "annotation_output_path", None) or self.output_path
+        )
+        if not actual_output_path.is_file():
             raise RuntimeError(
-                f"Annotation finished but output file was not found: {self.output_path}"
+                f"Annotation finished but output file was not found: {actual_output_path}"
             )
-        info_path = str(self.info_path) if self.info_path.is_file() else None
+        actual_info_path = getattr(mapper, "annotation_info_path", None)
+        info_path = (
+            str(actual_info_path)
+            if actual_info_path and Path(actual_info_path).is_file()
+            else None
+        )
 
         peptides_before = int(getattr(mapper, "original_peptides_before_mapping", 0))
         peptides_after = int(getattr(mapper, "peptides_after_mapping", 0))
@@ -782,7 +790,7 @@ class GlobalOTFAnnotator:
                 getattr(mapper, "selected_genomes_num", 0)
             )
 
-        outputs["otf"] = _file_descriptor(self.output_path, format_name="tsv")
+        outputs["otf"] = _file_descriptor(actual_output_path, format_name="tsv")
         outputs["otf"].update(
             {"rows": int(dataframe.shape[0]), "columns": int(dataframe.shape[1])}
         )
@@ -791,7 +799,7 @@ class GlobalOTFAnnotator:
                 info_path, format_name="text"
             )
         return GlobalOTFRunResult(
-            output_path=str(self.output_path),
+            output_path=str(actual_output_path),
             info_path=info_path,
             annotation_summary_path=info_path,
             inputs=inputs,
