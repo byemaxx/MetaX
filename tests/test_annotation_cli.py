@@ -135,6 +135,49 @@ def test_global_annotation_cli_writes_result_json(annotation_inputs, tmp_path):
     assert "artifacts" not in result
 
 
+def test_global_annotation_cli_reports_renamed_output_when_target_exists(
+    annotation_inputs,
+    tmp_path,
+    capsys,
+):
+    peptide_table, peptide_db, taxafunc_db = annotation_inputs
+    requested_output = tmp_path / "global_otf.tsv"
+    requested_output.write_text("stale output\n", encoding="utf-8")
+    result_json = tmp_path / "global_result.json"
+
+    exit_code = main(
+        [
+            "--mode",
+            "global",
+            "--peptide-table",
+            str(peptide_table),
+            "--peptide-db",
+            str(peptide_db),
+            "--taxafunc-db",
+            str(taxafunc_db),
+            "--output",
+            str(requested_output),
+            "--selection-mode",
+            "provided",
+            "--selected-genomes",
+            "g1",
+            "--result-json",
+            str(result_json),
+        ]
+    )
+
+    assert exit_code == ExitCode.SUCCESS
+    assert requested_output.read_text(encoding="utf-8") == "stale output\n"
+    result = json.loads(result_json.read_text(encoding="utf-8"))
+    actual_output = Path(result["outputs"]["otf"]["path"])
+    actual_info = Path(result["outputs"]["annotation_summary"]["path"])
+    assert actual_output != requested_output
+    assert actual_output.is_file()
+    assert actual_info == actual_output.with_name(f"{actual_output.stem}_info.txt")
+    assert actual_info.is_file()
+    assert f"MetaX annotation completed: {actual_output}" in capsys.readouterr().out
+
+
 def test_global_cli_accepts_long_diann_parquet(annotation_inputs, tmp_path):
     _peptide_table, peptide_db, taxafunc_db = annotation_inputs
     parquet = tmp_path / "report.parquet"
