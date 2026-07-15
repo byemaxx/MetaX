@@ -77,6 +77,7 @@ annotation workflow API remains `1.0`.
   },
   "genome_selection": {
     "method": "metaumbra",
+    "source": "metax_temp/OTF_metaumbra_genome_presence.tsv",
     "qvalue_cutoff": 0.05,
     "genomes_evaluated": 4744,
     "genomes_selected": 222,
@@ -131,6 +132,10 @@ annotation workflow API remains `1.0`.
 
 Fields that do not apply to the selected mode are omitted. Output entries are
 only written for artifacts that were actually produced.
+
+`parameters.selection_mode` and `genome_selection.method` contain the same
+effective selection mode. `genome_selection.source` identifies explicit genome
+IDs, a genome-list file, MetaUmbra output, or automatic genome ranking.
 
 ## Unit-specific additions
 
