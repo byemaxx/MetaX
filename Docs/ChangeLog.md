@@ -1,3 +1,11 @@
+# Version: 2.5.0
+## Date: 2026-07-14
+### Changes:
+- New: Added command-line annotation workflows.
+- New: Added dependency profiles for Analyzer, Report, and GUI.
+- Change: Unified CLI and GUI annotation backends.
+
+
 # Version: 2.4.7
 ## Date: 2026-07-13
 ### Changes:

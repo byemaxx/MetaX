@@ -848,6 +848,21 @@ When the input is a DIA-NN parquet file, MetaX reads only the required columns a
 - `Evidence` and `Q.Value` are required in the normal Peptide Direct to OTF window and are preserved for MetaUmbra scoring.
 - Run names are cleaned into safe sample column names. The selected DIA-NN intensity source is recorded in conversion metadata, but `Precursor.Normalised` or `Precursor.Quantity` is not embedded in the sample-column names.
 
+The same global workflow is available without Qt through the shared annotation backend. For automation, prefer the module entry point so MetaX runs in the caller's active Python environment:
+
+```bash
+python -m metax.cli.annotate \
+  --mode global \
+  --peptide-table report.parquet \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --output OTF.tsv \
+  --selection-mode metaumbra \
+  --result-json annotation_result.json
+```
+
+Global mode also accepts `--selection-mode provided` with `--selected-genomes` or `--genome-list-file`, and `--selection-mode automatic` for the existing MetaX genome-ranking path. See [MetaX annotation CLI and automation contract](Annotation_CLI.md) for configuration files, installation profiles, result JSON, workflow API version, and exit codes.
+
 ### 2. MetaUmbra Unit-Specific Direct-to-OTF Annotation
 
 MetaX can consume a MetaUmbra `unit_specific_manifest.json` as the preferred backend interface for unit-specific OTF annotation. In this mode, MetaX uses `sample_columns` from each analysis unit to split the peptide intensity table, and uses `genome_ids_q005` or `genome_ids_q001` to restrict peptide-to-protein mapping per unit. If `--genome-threshold` is not provided, the manifest `default_genome_threshold` is used.
@@ -879,8 +894,8 @@ For downstream analysis, unit-specific public count columns use these meanings:
 Example:
 
 ```bash
-metax-annotate \
-  --unit-specific \
+python -m metax.cli.annotate \
+  --mode unit-specific \
   --peptide-table report.tsv \
   --unit-specific-manifest unit_specific_manifest.json \
   --genome-threshold q0.05 \
@@ -890,7 +905,8 @@ metax-annotate \
   --peptide-col Sequence \
   --input-sample-col-prefix "LFQ intensity " \
   --duplicate-peptide-handling-mode sum \
-  --n-jobs 4
+  --n-jobs 4 \
+  --result-json annotation_result.json
 ```
 
 ### 3. Results from MaxQuant Workflow
