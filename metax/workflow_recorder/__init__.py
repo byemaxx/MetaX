@@ -5,13 +5,14 @@ from .recorder import (
     WorkflowRecorder,
     auto_otf_report_step,
     deseq2_step,
+    direct_otf_step,
     gui_action_step,
     limma_step,
     method_call_step,
     register_current_python_kernel,
     set_multi_tables_step,
     taxafunc_analyzer_step,
-    unit_specific_otf_step,
+    manifest_otf_step,
 )
 
 __all__ = [
@@ -21,11 +22,12 @@ __all__ = [
     "WorkflowRecorder",
     "auto_otf_report_step",
     "deseq2_step",
+    "direct_otf_step",
     "gui_action_step",
     "limma_step",
     "method_call_step",
     "register_current_python_kernel",
     "set_multi_tables_step",
     "taxafunc_analyzer_step",
-    "unit_specific_otf_step",
+    "manifest_otf_step",
 ]
