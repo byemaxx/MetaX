@@ -33,6 +33,11 @@ Use `--selection-mode provided` with `--selected-genomes` or
 `--genome-list-file` to supply genomes directly. Use `automatic` for MetaX's
 internal genome ranking, or `metaumbra-only` to stop after genome scoring.
 
+When `--selection-mode` is omitted, selected genome IDs or a genome-list file
+imply `provided`; otherwise digest directories imply `metaumbra`; otherwise the
+mode is `automatic`. Explicit modes take precedence, and contradictory genome
+sources are rejected instead of ignored.
+
 Exactly one peptide-mapping source is required for OTF generation:
 `--peptide-db` or `--digested-genome-folders`.
 
@@ -81,6 +86,10 @@ Run it with:
 metax-annotate --config annotation.yaml
 ```
 
+Relative paths loaded from a configuration file are resolved from the
+configuration file's directory. Relative paths supplied directly on the command
+line remain relative to the current working directory.
+
 ## Result JSON
 
 When `--result-json` is supplied, MetaX writes schema `2.0` atomically. The
@@ -92,6 +101,9 @@ run, inputs, parameters, stages, genome_selection, metrics, outputs, diagnostics
 
 Use `run.status` and `run.exit_code` for the outcome, `outputs` for generated
 files, `metrics` for mapping/QC values, and `diagnostics` for warnings or errors.
+Scientific outputs are safely renamed when their requested path already exists,
+and `outputs` reports the actual paths. The result JSON itself keeps its requested
+stable path and is atomically replaced.
 See [Annotation Result Schema](Annotation_Result_Schema.md) for the complete
 field reference and examples.
 
@@ -105,6 +117,9 @@ field reference and examples.
 | 4 | Required optional dependency is unavailable |
 | 5 | Annotation or external scoring failed |
 | 130 | Execution was cancelled |
+
+On interruption, MetaX terminates active MetaUmbra or digested-scan process
+trees before writing the cancellation result JSON.
 
 ## Python subprocess
 

@@ -13,12 +13,14 @@ from typing import Iterable
 import pandas as pd
 
 from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+from metax.peptide_annotator.output_paths import available_output_path
 from metax.peptide_annotator.peptide_table_prepare import (
     is_diann_parquet,
     is_parquet_path,
     prepare_diann_parquet_for_direct_otf,
     read_parquet_columns,
 )
+from metax.peptide_annotator.subprocess_utils import run_streaming_subprocess
 
 
 ANNOTATION_WORKFLOW_API_VERSION = "1.0"
@@ -120,6 +122,53 @@ def _normalise_genomes(values: str | Iterable[str] | None) -> list[str]:
     return genomes
 
 
+def resolve_global_selection_mode(
+    selection_mode: str | None,
+    *,
+    selected_genomes: Iterable[str],
+    genome_list_path: str | Path | None,
+    digested_genome_folders: Iterable[str],
+) -> str:
+    """Resolve and validate the effective global genome-selection mode."""
+    selected_genomes = list(selected_genomes)
+    has_selected_genomes = bool(selected_genomes)
+    has_genome_list = genome_list_path is not None
+    has_digest_folders = bool(list(digested_genome_folders))
+
+    if has_selected_genomes and has_genome_list:
+        raise AnnotationConfigurationError(
+            "Use either selected_genomes or genome_list_file, not both"
+        )
+
+    effective_mode = selection_mode
+    if effective_mode is None:
+        if has_selected_genomes or has_genome_list:
+            effective_mode = "provided"
+        elif has_digest_folders:
+            effective_mode = "metaumbra"
+        else:
+            effective_mode = "automatic"
+
+    if effective_mode not in GLOBAL_SELECTION_MODES:
+        raise AnnotationConfigurationError(
+            f"selection_mode must be one of {sorted(GLOBAL_SELECTION_MODES)}"
+        )
+    if effective_mode == "provided" and not (
+        has_selected_genomes or has_genome_list
+    ):
+        raise AnnotationConfigurationError(
+            "selection_mode='provided' requires selected_genomes or genome_list_file"
+        )
+    if effective_mode != "provided" and (
+        has_selected_genomes or has_genome_list
+    ):
+        raise AnnotationConfigurationError(
+            f"selection_mode={effective_mode!r} cannot be combined with "
+            "selected_genomes or genome_list_file"
+        )
+    return effective_mode
+
+
 def _file_descriptor(path: str | Path, *, format_name: str | None = None) -> dict[str, object]:
     file_path = Path(path)
     descriptor: dict[str, object] = {"path": str(file_path)}
@@ -205,18 +254,28 @@ def ensure_metaumbra_available(
     return ".".join(map(str, actual))
 
 
-def run_metaumbra_scoring(
+def _build_metaumbra_scoring_command(
     *,
     peptide_table_path: str,
     digested_genome_folders: str | Iterable[str],
     output_path: str,
     peptide_col: str,
-    peptide_score_col: str = "Evidence",
-    peptide_error_col: str = "Q.Value",
-    single_peptide_error_rate_upper_bound: float = 0.3,
-) -> dict[str, object]:
+    peptide_score_col: str,
+    peptide_error_col: str,
+    single_peptide_error_rate_upper_bound: float,
+) -> list[str]:
     digest_dirs = _normalise_paths(digested_genome_folders)
-    command = [
+    if not digest_dirs:
+        raise AnnotationConfigurationError(
+            "MetaUmbra scoring requires at least one digested genome directory"
+        )
+    unsupported = [path for path in digest_dirs if re.search(r"[,;，；]", path)]
+    if unsupported:
+        raise AnnotationConfigurationError(
+            "MetaUmbra directory paths cannot contain comma or semicolon delimiters: "
+            + ", ".join(unsupported)
+        )
+    return [
         sys.executable,
         "-m",
         "metaumbra",
@@ -224,7 +283,7 @@ def run_metaumbra_scoring(
         "--peptide-table",
         peptide_table_path,
         "--genome-digest-dirs",
-        *digest_dirs,
+        ";".join(digest_dirs),
         "--output",
         output_path,
         "--peptide-seq-col",
@@ -237,33 +296,41 @@ def run_metaumbra_scoring(
         str(single_peptide_error_rate_upper_bound),
     ]
 
+
+def run_metaumbra_scoring(
+    *,
+    peptide_table_path: str,
+    digested_genome_folders: str | Iterable[str],
+    output_path: str,
+    peptide_col: str,
+    peptide_score_col: str = "Evidence",
+    peptide_error_col: str = "Q.Value",
+    single_peptide_error_rate_upper_bound: float = 0.3,
+) -> dict[str, object]:
+    command = _build_metaumbra_scoring_command(
+        peptide_table_path=peptide_table_path,
+        digested_genome_folders=digested_genome_folders,
+        output_path=output_path,
+        peptide_col=peptide_col,
+        peptide_score_col=peptide_score_col,
+        peptide_error_col=peptide_error_col,
+        single_peptide_error_rate_upper_bound=single_peptide_error_rate_upper_bound,
+    )
+
     print("Launching MetaUmbra scoring in an isolated process:")
     print(" ".join(f'"{part}"' if " " in str(part) else str(part) for part in command))
     project_root, env = _metaumbra_environment()
     metaumbra_version = ensure_metaumbra_available(env=env)
 
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-    process = subprocess.Popen(
+    return_code, last_lines = run_streaming_subprocess(
         command,
         cwd=project_root,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        bufsize=1,
         env=env,
         creationflags=creationflags,
+        max_captured_lines=80,
+        emit_line=print,
     )
-    last_lines: list[str] = []
-    assert process.stdout is not None
-    for line in process.stdout:
-        print(line.rstrip("\n"))
-        last_lines.append(line)
-        if len(last_lines) > 80:
-            last_lines = last_lines[-80:]
-
-    return_code = process.wait()
     if return_code != 0:
         tail = "".join(last_lines[-30:])
         raise RuntimeError(
@@ -318,17 +385,21 @@ class GlobalOTFAnnotator:
         selected_genome_source: str | None = None,
     ) -> None:
         self.peptide_table_path = Path(peptide_table_path)
-        self.output_path = Path(output_path)
+        self.requested_output_path = Path(output_path)
+        self.output_path = available_output_path(self.requested_output_path)
         self.taxafunc_anno_db_path = (
             Path(taxafunc_anno_db_path) if taxafunc_anno_db_path else None
         )
         self.db_path = Path(db_path) if db_path else None
         self.digested_genome_folders = _normalise_paths(digested_genome_folders)
-        self.selection_mode = selection_mode or (
-            "metaumbra" if self.digested_genome_folders else "automatic"
-        )
         self.selected_genomes = _normalise_genomes(selected_genomes)
         self.genome_list_path = Path(genome_list_path) if genome_list_path else None
+        self.selection_mode = resolve_global_selection_mode(
+            selection_mode,
+            selected_genomes=self.selected_genomes,
+            genome_list_path=self.genome_list_path,
+            digested_genome_folders=self.digested_genome_folders,
+        )
         self.peptide_col = peptide_col
         self.intensity_col_prefix = intensity_col_prefix
         self.table_separator = table_separator
@@ -367,10 +438,6 @@ class GlobalOTFAnnotator:
         return self.output_path.with_name(f"{self.output_path.stem}_info.txt")
 
     def _validate(self) -> None:
-        if self.selection_mode not in GLOBAL_SELECTION_MODES:
-            raise AnnotationConfigurationError(
-                f"selection_mode must be one of {sorted(GLOBAL_SELECTION_MODES)}"
-            )
         if not self.peptide_table_path.is_file():
             raise FileNotFoundError(f"Peptide table not found: {self.peptide_table_path}")
         if not self.output_path.parent.is_dir():
@@ -390,17 +457,37 @@ class GlobalOTFAnnotator:
                 raise AnnotationConfigurationError(
                     "Exactly one of db_path or digested_genome_folders is required"
                 )
-        if self.db_path is not None and not self.db_path.is_file():
+        if (
+            self.db_path is not None
+            and self.selection_mode != "metaumbra-only"
+            and not self.db_path.is_file()
+        ):
             raise FileNotFoundError(f"Peptide database not found: {self.db_path}")
         for digest_dir in self.digested_genome_folders:
             if not Path(digest_dir).is_dir():
                 raise FileNotFoundError(f"Digested genome directory not found: {digest_dir}")
-        if self.selection_mode in {"metaumbra", "metaumbra-only"} and not self.digested_genome_folders:
+        if (
+            self.selection_mode in {"metaumbra", "metaumbra-only"}
+            and not self.digested_genome_folders
+        ):
             raise AnnotationConfigurationError(
                 f"selection_mode={self.selection_mode!r} requires digested_genome_folders"
             )
         if self.genome_list_path is not None and not self.genome_list_path.is_file():
             raise FileNotFoundError(f"Genome list not found: {self.genome_list_path}")
+        if self.selection_mode == "metaumbra-only":
+            ignored_inputs = []
+            if self.taxafunc_anno_db_path is not None:
+                ignored_inputs.append("taxafunc_anno_db_path")
+            if self.db_path is not None:
+                ignored_inputs.append("db_path")
+            if ignored_inputs:
+                warning_message = (
+                    "selection_mode='metaumbra-only' ignores OTF annotation inputs: "
+                    + ", ".join(ignored_inputs)
+                )
+                if warning_message not in self.warnings:
+                    self.warnings.append(warning_message)
         if not 0 <= self.lca_threshold <= 1:
             raise AnnotationConfigurationError("lca_threshold must be between 0 and 1")
         if not 0 < self.protein_peptide_coverage_cutoff <= 1:
@@ -482,6 +569,11 @@ class GlobalOTFAnnotator:
         stages: dict[str, object] = {}
         stage_started = time.perf_counter()
         self._validate()
+        if self.output_path != self.requested_output_path:
+            print(
+                "Output file already exists; this run will write to: "
+                f"{self.output_path}"
+            )
         stages["validation"] = {
             "status": "success",
             "duration_seconds": _elapsed(stage_started),
@@ -588,6 +680,7 @@ class GlobalOTFAnnotator:
 
         stage_started = time.perf_counter()
         selected_genomes = self._resolve_selected_genomes()
+        provided_genomes_input_count = len(selected_genomes)
         stages["genome_selection_input"] = {
             "status": "success",
             "duration_seconds": _elapsed(stage_started),
@@ -599,7 +692,13 @@ class GlobalOTFAnnotator:
 
         genome_selection: dict[str, object] = {"method": self.selection_mode}
         selection_source = self.selected_genome_source or (
-            str(self.genome_list_path) if self.genome_list_path else None
+            str(self.genome_list_path)
+            if self.genome_list_path
+            else "selected_genomes"
+            if self.selected_genomes
+            else "automatic_genome_ranking"
+            if self.selection_mode == "automatic"
+            else None
         )
         if selection_source:
             genome_selection["source"] = selection_source
@@ -631,6 +730,8 @@ class GlobalOTFAnnotator:
             outputs["genome_presence"] = _file_descriptor(
                 scoring_output, format_name="tsv"
             )
+            selection_source = str(scoring_output)
+            genome_selection["source"] = selection_source
             software["metaumbra_version"] = str(scoring_result["metaumbra_version"])
             metaumbra_metadata = {
                 "metaumbra_genome_presence_path": str(scoring_output),
@@ -690,8 +791,10 @@ class GlobalOTFAnnotator:
         selection_metadata = {
             "workflow": "Peptide Direct to OTFs (MetaUmbra)",
             "genome_selection_method": self.selection_mode,
-            "metaumbra_scoring_run": self.selection_mode == "metaumbra",
-            "selected_genomes_input_count": len(selected_genomes),
+            "metaumbra_scoring_run": (
+                self.selection_mode in {"metaumbra", "metaumbra-only"}
+            ),
+            "selected_genomes_input_count": provided_genomes_input_count,
             **metaumbra_metadata,
             **input_metadata,
         }

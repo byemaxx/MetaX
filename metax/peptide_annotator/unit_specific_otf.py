@@ -17,6 +17,7 @@ from metax.peptide_annotator.pep_table_to_otf import (
     peptideProteinsMapper,
     query_peptide_proteins_from_digested_genome_folders_nested,
 )
+from metax.peptide_annotator.output_paths import available_output_path
 from metax.peptide_annotator.peptide_table_prepare import (
     has_diann_core_columns,
     is_parquet_path,
@@ -160,7 +161,8 @@ class UnitSpecificOTFAnnotator:
         self.peptide_table_path = Path(peptide_table_path)
         self.unit_specific_manifest_path = Path(unit_specific_manifest_path)
         self.taxafunc_anno_db_path = Path(taxafunc_anno_db_path)
-        self.output_path = Path(output_path)
+        self.requested_output_path = Path(output_path)
+        self.output_path = available_output_path(self.requested_output_path)
         self.db_path = db_path
         self.digested_genome_folders = digested_genome_folders
         self.genome_threshold = genome_threshold
@@ -712,6 +714,12 @@ class UnitSpecificOTFAnnotator:
         return_dataframe: bool = False,
     ) -> UnitSpecificOTFRunResult | pd.DataFrame:
         started_at = datetime.now()
+        if self.output_path != self.requested_output_path:
+            print(
+                "Output file already exists; this run will write to: "
+                f"{self.output_path}",
+                flush=True,
+            )
         manifest = load_unit_specific_manifest(
             self.unit_specific_manifest_path,
             genome_threshold=self.genome_threshold,
