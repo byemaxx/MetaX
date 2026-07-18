@@ -9,6 +9,7 @@ from metax.gui.main_gui import MetaXGUI
 
 
 def _build_layout_harness():
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     window = QtWidgets.QMainWindow()
     ui = MetaXGUI.__new__(MetaXGUI)
     ui.setupUi(window)
@@ -21,7 +22,7 @@ def _build_layout_harness():
     ui.gridLayout_74.addWidget(ui.label_pep_direct_to_otf_input_source, ui.gridLayout_74.rowCount(), 0)
     ui.gridLayout_74.addWidget(ui.comboBox_pep_direct_to_otf_input_source, ui.gridLayout_74.rowCount(), 2)
     ui._arrange_pep_direct_to_otf_layout()
-    return window, ui
+    return app, window, ui
 
 
 def _position(layout, target):
@@ -33,7 +34,7 @@ def _position(layout, target):
 
 
 def test_annotation_layout_follows_source_input_output_order():
-    window, ui = _build_layout_harness()
+    app, window, ui = _build_layout_harness()
     try:
         assert _position(ui.gridLayout_74, ui.label_pep_direct_to_otf_input_source) == (0, 0, 1, 2)
         assert _position(ui.gridLayout_74, ui.comboBox_pep_direct_to_otf_input_source) == (0, 2, 1, 2)
@@ -47,10 +48,11 @@ def test_annotation_layout_follows_source_input_output_order():
         assert _position(ui.gridLayout_74, ui.pushButton_run_pep_direct_to_otf)[0] == 11
     finally:
         window.close()
+        app.processEvents()
 
 
 def test_source_choice_hides_irrelevant_manifest_or_list_controls():
-    window, ui = _build_layout_harness()
+    app, window, ui = _build_layout_harness()
     try:
         ui.comboBox_pep_direct_to_otf_input_source.setCurrentIndex(0)
         ui.update_pep_direct_to_otf_mode_state()
@@ -70,10 +72,11 @@ def test_source_choice_hides_irrelevant_manifest_or_list_controls():
         assert ui.pushButton_pep_direct_to_otf_reset_selected_genome_list.text() == "Reset"
     finally:
         window.close()
+        app.processEvents()
 
 
 def test_non_manifest_gui_forwards_custom_intensity_prefix(monkeypatch, tmp_path):
-    window, ui = _build_layout_harness()
+    app, window, ui = _build_layout_harness()
     try:
         peptide = tmp_path / "peptides.tsv"
         database = tmp_path / "taxafunc.db"
@@ -114,3 +117,4 @@ def test_non_manifest_gui_forwards_custom_intensity_prefix(monkeypatch, tmp_path
         assert captured["selected_genome_source"] is None
     finally:
         window.close()
+        app.processEvents()
