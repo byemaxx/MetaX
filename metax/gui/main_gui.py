@@ -114,23 +114,24 @@ from metax.gui.metax_gui.tfnet_helpers import (
     search_linked_taxa_func_index,
     taxa_func_display_item_has_link,
 )
-from metax.gui.unit_specific_settings_dialog import UnitSpecificGuiConfig, UnitSpecificSettingsDialog
+from metax.gui.unit_specific_settings_dialog import ManifestGuiConfig, ManifestSettingsDialog
 from metax.workflow_recorder import (
     AnalysisStep,
     WorkflowRecorder,
     deseq2_step,
+    direct_otf_step,
     gui_action_step,
     limma_step,
     method_call_step,
     register_current_python_kernel,
     set_multi_tables_step,
     taxafunc_analyzer_step,
-    unit_specific_otf_step,
+    manifest_otf_step,
 )
 
 from metax.peptide_annotator.metalab2otf import MetaLab2OTF
 from metax.peptide_annotator.peptable_annotator import PeptideAnnotator
-from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator, read_genome_list_file
+from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator, read_plain_genome_list_file
 from metax.peptide_annotator.peptide_table_prepare import (
     PeptideTableSchema,
     available_diann_intensity_columns,
@@ -138,7 +139,8 @@ from metax.peptide_annotator.peptide_table_prepare import (
     is_parquet_path,
     resolve_diann_parquet_schema,
 )
-from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator
+from metax.peptide_annotator.manifest_otf import ManifestOTFAnnotator
+from metax.peptide_annotator.genome_selection_manifest import load_genome_selection_manifest
 
 from metax.database_builder.database_builder_own import build_db
 from metax.database_updater.database_updater import run_db_update
@@ -276,7 +278,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.last_path = QDir.homePath() # init last path as home path
         self.pep_direct_to_otf_selected_genomes = []
         self.pep_direct_to_otf_selected_genome_source = ""
-        self.unit_specific_gui_config = UnitSpecificGuiConfig()
+        self.unit_specific_gui_config = ManifestGuiConfig()
         self.metaumbra_gui_process = None
         
         # init the check update status
@@ -483,16 +485,54 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         unit_specific_settings_button = self._get_unit_specific_settings_button()
         if unit_specific_settings_button is not None:
             unit_specific_settings_button.clicked.connect(self.open_pep_direct_to_otf_unit_specific_settings)
-        if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
-            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.toggled.connect(
-                self.update_pep_direct_to_otf_mode_state
+        self.comboBox_pep_direct_to_otf_input_source = QtWidgets.QComboBox()
+        self.comboBox_pep_direct_to_otf_input_source.addItem(
+            "MetaUmbra genome selection manifest", "metaumbra-manifest"
+        )
+        self.comboBox_pep_direct_to_otf_input_source.addItem(
+            "MetaX automatic genome selection", "metax-automatic"
+        )
+        self.comboBox_pep_direct_to_otf_input_source.addItem(
+            "Custom genome list", "genome-list"
+        )
+        self.comboBox_pep_direct_to_otf_input_source.setToolTip(
+            "Select the genome source explicitly; MetaX does not infer a mode from file contents."
+        )
+        self.label_pep_direct_to_otf_input_source = QtWidgets.QLabel("Genome selection source")
+        if hasattr(self, "gridLayout_74"):
+            source_row = self.gridLayout_74.rowCount()
+            self.gridLayout_74.addWidget(self.label_pep_direct_to_otf_input_source, source_row, 0, 1, 2)
+            self.gridLayout_74.addWidget(self.comboBox_pep_direct_to_otf_input_source, source_row, 2, 1, 2)
+        self.comboBox_pep_direct_to_otf_input_source.currentIndexChanged.connect(
+            self.update_pep_direct_to_otf_mode_state
+        )
+        self.label_pep_direct_to_otf_manifest_summary = QtWidgets.QLabel(
+            "Select a MetaUmbra genome selection manifest to preview its analysis units."
+        )
+        self.label_pep_direct_to_otf_manifest_summary.setWordWrap(True)
+        self.label_pep_direct_to_otf_manifest_summary.setProperty("subtle", True)
+        self.label_pep_direct_to_otf_manifest_summary.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.label_pep_direct_to_otf_manifest_summary.setMargin(6)
+        self.label_pep_direct_to_otf_manifest_summary.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Fixed,
+        )
+        self.label_pep_direct_to_otf_manifest_summary.setMaximumHeight(52)
+        if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.textChanged.connect(
+                self._update_pep_direct_to_otf_manifest_summary
             )
-        self.checkBox_pep_direct_to_otf_use_selected_genome_list.toggled.connect(
-            self.update_pep_direct_to_otf_mode_state
-        )
-        self.checkBox_pep_direct_to_otf_stop_after_metaumbra.toggled.connect(
-            self.update_pep_direct_to_otf_mode_state
-        )
+        if hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate"):
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.setChecked(True)
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.setVisible(False)
+        for legacy_widget_name in (
+            "checkBox_pep_direct_to_otf_use_selected_genome_list",
+            "checkBox_pep_direct_to_otf_stop_after_metaumbra",
+        ):
+            legacy_widget = getattr(self, legacy_widget_name, None)
+            if legacy_widget is not None:
+                legacy_widget.setVisible(False)
+        self._arrange_pep_direct_to_otf_layout()
         self.update_pep_direct_to_otf_mode_state()
         self._last_pep_direct_to_otf_peptide_table_signature = ''
         self.lineEdit_pep_direct_to_otf_peptide_path.textChanged.connect(
@@ -2239,6 +2279,102 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if widget is not None:
                 widget.setEnabled(enabled)
 
+    def _arrange_pep_direct_to_otf_layout(self) -> None:
+        """Lay out annotation controls in input-to-output order."""
+        layout = self.gridLayout_74
+        if not hasattr(self, "label_pep_direct_to_otf_custom_genome_list"):
+            self.label_pep_direct_to_otf_custom_genome_list = QtWidgets.QLabel("Custom genome list")
+        if not hasattr(self, "horizontalLayout_pep_direct_to_otf_custom_genome_list"):
+            self.gridLayout_76.removeWidget(self.pushButton_pep_direct_to_otf_open_genome_list_file)
+            self.gridLayout_76.removeWidget(self.pushButton_pep_direct_to_otf_open_window_paste_gnome_list)
+            for index in range(self.gridLayout_76.count() - 1, -1, -1):
+                item = self.gridLayout_76.itemAt(index)
+                if item is not None and item.layout() is self.horizontalLayout_135:
+                    self.gridLayout_76.takeAt(index)
+            self.horizontalLayout_pep_direct_to_otf_custom_genome_list = QtWidgets.QHBoxLayout()
+            self.horizontalLayout_pep_direct_to_otf_custom_genome_list.setSpacing(8)
+            self.horizontalLayout_pep_direct_to_otf_custom_genome_list.addWidget(
+                self.pushButton_pep_direct_to_otf_open_genome_list_file
+            )
+            self.horizontalLayout_pep_direct_to_otf_custom_genome_list.addWidget(
+                self.pushButton_pep_direct_to_otf_open_window_paste_gnome_list
+            )
+            self.horizontalLayout_pep_direct_to_otf_custom_genome_list.addLayout(self.horizontalLayout_135)
+        widgets = [
+            self.label_pep_direct_to_otf_input_source,
+            self.comboBox_pep_direct_to_otf_input_source,
+            self.label_220,
+            self.lineEdit_pep_direct_to_otf_peptide_path,
+            self.pushButton_open_pep_direct_to_otf_peptide_path,
+            self.label_unit_specific_manifest,
+            self.label_pep_direct_to_otf_custom_genome_list,
+            self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path,
+            self.pushButton_open_pep_direct_to_otf_unit_specific_manifest_path,
+            self.pushButton_pep_direct_to_otf_open_metaumbra_gui,
+            self.label_pep_direct_to_otf_manifest_summary,
+            self.label_222,
+            self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path,
+            self.pushButton_open_pep_direct_to_otf_digestied_pep_db_path,
+            self.label_223,
+            self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path,
+            self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path,
+            self.label_224,
+            self.lineEdit_pep_direct_to_otf_output_path,
+            self.pushButton_open_pep_direct_to_otf_output_path,
+            self.checkBox_8,
+            self.scrollArea_pep_direct_to_otf_settings,
+            self.pushButton_run_pep_direct_to_otf,
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate,
+        ]
+        for widget in widgets:
+            layout.removeWidget(widget)
+        for index in range(layout.count() - 1, -1, -1):
+            item = layout.itemAt(index)
+            if item is not None and item.layout() in (
+                self.horizontalLayout_140,
+                self.horizontalLayout_pep_direct_to_otf_custom_genome_list,
+                self.gridLayout_78,
+            ):
+                layout.takeAt(index)
+
+        layout.addWidget(self.label_pep_direct_to_otf_input_source, 0, 0, 1, 2)
+        layout.addWidget(self.comboBox_pep_direct_to_otf_input_source, 0, 2, 1, 2)
+        layout.addWidget(self.label_220, 1, 0, 1, 2)
+        layout.addWidget(self.lineEdit_pep_direct_to_otf_peptide_path, 1, 2)
+        layout.addWidget(self.pushButton_open_pep_direct_to_otf_peptide_path, 1, 3)
+        layout.addWidget(self.label_unit_specific_manifest, 2, 0, 1, 2)
+        layout.addWidget(self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path, 2, 2)
+        layout.addWidget(self.pushButton_open_pep_direct_to_otf_unit_specific_manifest_path, 2, 3)
+        layout.addWidget(self.label_pep_direct_to_otf_custom_genome_list, 2, 0, 1, 2)
+        layout.addLayout(self.horizontalLayout_pep_direct_to_otf_custom_genome_list, 2, 2, 1, 2)
+        layout.addWidget(self.pushButton_pep_direct_to_otf_open_metaumbra_gui, 3, 0, 1, 2)
+        layout.addLayout(self.horizontalLayout_140, 3, 2, 1, 2)
+        layout.addWidget(self.label_pep_direct_to_otf_manifest_summary, 4, 0, 1, 4)
+        layout.addWidget(self.label_222, 5, 0, 1, 2)
+        layout.addWidget(self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path, 5, 2)
+        layout.addWidget(self.pushButton_open_pep_direct_to_otf_digestied_pep_db_path, 5, 3)
+        layout.addWidget(self.label_223, 6, 0, 1, 2)
+        layout.addWidget(self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path, 6, 2)
+        layout.addWidget(self.pushButton_open_pep_direct_to_otf_pro2taxafunc_db_path, 6, 3)
+        layout.addWidget(self.label_224, 7, 0, 1, 2)
+        layout.addWidget(self.lineEdit_pep_direct_to_otf_output_path, 7, 2)
+        layout.addWidget(self.pushButton_open_pep_direct_to_otf_output_path, 7, 3)
+        layout.addLayout(self.gridLayout_78, 8, 2, 1, 2)
+        layout.addWidget(self.checkBox_8, 9, 0, 1, 2)
+        layout.addWidget(self.scrollArea_pep_direct_to_otf_settings, 10, 0, 1, 4)
+        layout.addWidget(self.pushButton_run_pep_direct_to_otf, 11, 0, 1, 4)
+        if not hasattr(self, "pep_direct_to_otf_bottom_spacer"):
+            self.pep_direct_to_otf_bottom_spacer = QtWidgets.QSpacerItem(
+                0,
+                0,
+                QtWidgets.QSizePolicy.Minimum,
+                QtWidgets.QSizePolicy.Expanding,
+            )
+        layout.addItem(self.pep_direct_to_otf_bottom_spacer, 12, 0, 1, 4)
+        layout.setColumnStretch(2, 1)
+        layout.setHorizontalSpacing(12)
+        layout.setVerticalSpacing(8)
+
     def _get_unit_specific_settings_button(self):
         widget = getattr(self, "pushButton_pep_direct_to_otf_unit_specific_settings", None)
         if widget is not None:
@@ -2302,45 +2438,48 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         )
 
     def update_pep_direct_to_otf_mode_state(self):
-        use_unit_specific = (
-            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
-            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
-        )
-
-        if use_unit_specific:
-            with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_use_selected_genome_list):
-                self.checkBox_pep_direct_to_otf_use_selected_genome_list.setChecked(False)
-            with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_stop_after_metaumbra):
-                self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setChecked(False)
-
-            self.checkBox_pep_direct_to_otf_use_selected_genome_list.setEnabled(False)
-            self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setEnabled(False)
-
-            self._set_selected_genome_list_controls_enabled(False)
-            self._set_metaumbra_scoring_controls_enabled(False)
-            self._set_unit_specific_controls_enabled(True)
-            self._set_otf_annotation_controls_enabled(True)
-
-            self.label_224.setText('OTFs Save To')
-            self.lineEdit_pep_direct_to_otf_output_path.setStatusTip('The path for save the OTF result')
-            if hasattr(self.lineEdit_pep_direct_to_otf_output_path, 'default_filename'):
-                self.lineEdit_pep_direct_to_otf_output_path.default_filename = 'OTF_direct_anno.tsv'
-            return
-
-        self._set_unit_specific_controls_enabled(False)
-
-        use_selected = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
-        stop_after = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
-
-        self.checkBox_pep_direct_to_otf_use_selected_genome_list.setEnabled(not stop_after)
-        self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setEnabled(not use_selected)
-
+        source = "metaumbra-manifest"
+        if hasattr(self, "comboBox_pep_direct_to_otf_input_source"):
+            source = str(self.comboBox_pep_direct_to_otf_input_source.currentData() or source)
+        use_manifest = source == "metaumbra-manifest"
+        use_selected = source == "genome-list"
+        with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_use_unit_specific_annotate):
+            self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.setChecked(use_manifest)
+        with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_use_selected_genome_list):
+            self.checkBox_pep_direct_to_otf_use_selected_genome_list.setChecked(use_selected)
+        with QtCore.QSignalBlocker(self.checkBox_pep_direct_to_otf_stop_after_metaumbra):
+            self.checkBox_pep_direct_to_otf_stop_after_metaumbra.setChecked(False)
+        self._set_unit_specific_controls_enabled(use_manifest)
         self._set_selected_genome_list_controls_enabled(use_selected)
-        self._set_metaumbra_scoring_controls_enabled(not use_selected)
-        if not use_selected and stop_after and hasattr(self, "doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff"):
-            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(False)
-        self._set_otf_annotation_controls_enabled(not stop_after)
-        self.update_pep_direct_to_otf_output_mode()
+        self._set_metaumbra_scoring_controls_enabled(False)
+        self._set_otf_annotation_controls_enabled(True)
+        for widget_name in (
+            "label_unit_specific_manifest",
+            "lineEdit_pep_direct_to_otf_unit_specific_manifest_path",
+            "pushButton_open_pep_direct_to_otf_unit_specific_manifest_path",
+            "pushButton_pep_direct_to_otf_unit_specific_settings",
+            "label_pep_direct_to_otf_use_unit_specific_genome_threshold",
+            "comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold",
+            "pushButton_pep_direct_to_otf_open_metaumbra_gui",
+        ):
+            widget = getattr(self, widget_name, None)
+            if widget is not None:
+                widget.setVisible(use_manifest)
+        for widget_name in (
+            "label_pep_direct_to_otf_custom_genome_list",
+            "pushButton_pep_direct_to_otf_open_genome_list_file",
+            "pushButton_pep_direct_to_otf_open_window_paste_gnome_list",
+            "pushButton_pep_direct_to_otf_reset_selected_genome_list",
+            "label__pep_direct_to_otf_selected_genome_num",
+        ):
+            widget = getattr(self, widget_name, None)
+            if widget is not None:
+                widget.setVisible(use_selected)
+        self.label_pep_direct_to_otf_manifest_summary.setVisible(use_manifest)
+        self.label_224.setText('OTFs Save To')
+        self.lineEdit_pep_direct_to_otf_output_path.setStatusTip('The path for the OTF result')
+        if hasattr(self.lineEdit_pep_direct_to_otf_output_path, 'default_filename'):
+            self.lineEdit_pep_direct_to_otf_output_path.default_filename = 'OTF_direct_anno.tsv'
 
     def update_pep_direct_to_otf_output_mode(self):
         stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
@@ -3190,7 +3329,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def set_lineEdit_pep_direct_to_otf_unit_specific_manifest_path(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self.MainWindow,
-            'Open MetaUmbra unit-specific manifest JSON',
+            'Open MetaUmbra genome selection manifest JSON',
             self.last_path,
             'JSON files (*.json);;All files (*)',
         )
@@ -3198,6 +3337,29 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.setText(os.path.normpath(file_path))
             self.last_path = os.path.dirname(file_path)
             self.unit_specific_gui_config.manifest_path = os.path.normpath(file_path)
+
+    def _update_pep_direct_to_otf_manifest_summary(self, manifest_path: str) -> None:
+        path = str(manifest_path or "").strip()
+        if not path:
+            self.label_pep_direct_to_otf_manifest_summary.setText(
+                "Select a MetaUmbra genome selection manifest to preview its analysis units."
+            )
+            return
+        try:
+            manifest = load_genome_selection_manifest(path, genome_threshold="auto", strict=True)
+            sample_ids = {
+                sample_id
+                for unit in manifest.units.values()
+                for sample_id in unit.sample_ids
+            }
+            self.label_pep_direct_to_otf_manifest_summary.setText(
+                f"Manifest mode: {manifest.unit_definition.get('mode', 'unknown')} | "
+                f"Samples: {len(sample_ids)} | Analysis units: {len(manifest.units)} | "
+                f"Genome threshold: {manifest.selected_genome_threshold} | "
+                f"MetaUmbra version: {manifest.generated_by.get('version', 'unknown')}"
+            )
+        except Exception as exc:
+            self.label_pep_direct_to_otf_manifest_summary.setText(f"Manifest validation error: {exc}")
 
     def _decode_pep_direct_to_otf_separator(self, separator: str) -> str:
         separator = separator or ''
@@ -3207,8 +3369,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             return r'\s+'
         return separator
 
-    def _get_unit_specific_gui_config_from_controls(self) -> UnitSpecificGuiConfig:
-        config = getattr(self, "unit_specific_gui_config", UnitSpecificGuiConfig())
+    def _get_unit_specific_gui_config_from_controls(self) -> ManifestGuiConfig:
+        config = getattr(self, "unit_specific_gui_config", ManifestGuiConfig())
         manifest_path = ""
         genome_threshold = config.genome_threshold
         if hasattr(self, "lineEdit_pep_direct_to_otf_unit_specific_manifest_path"):
@@ -3218,7 +3380,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 self.comboBox_pep_direct_to_otf_use_unit_specific_genome_threshold.currentText().strip()
                 or genome_threshold
             )
-        return UnitSpecificGuiConfig(
+        return ManifestGuiConfig(
             manifest_path=manifest_path or config.manifest_path,
             genome_threshold=genome_threshold,
             input_sample_col_prefix=config.input_sample_col_prefix,
@@ -3241,7 +3403,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if is_diann_parquet(parquet_columns):
                 input_intensity_prefix = None
                 diann_intensity_col = intensity_selector_value or None
-        dialog = UnitSpecificSettingsDialog(
+        dialog = ManifestSettingsDialog(
             parent=self.MainWindow,
             peptide_table_path=peptide_table_path,
             peptide_col=self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip(),
@@ -3250,6 +3412,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             ),
             input_intensity_prefix=input_intensity_prefix,
             diann_intensity_col=diann_intensity_col,
+            digested_genome_folders=self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip(),
             current_config=config,
         )
         if dialog.exec_() == QDialog.Accepted:
@@ -3292,16 +3455,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return added
 
     def _read_pep_direct_to_otf_genome_list_file(self, file_path: str) -> list[str]:
-        qvalue_cutoff = round(
-            self.doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff.value(),
-            3,
-        )
-        return read_genome_list_file(file_path, qvalue_cutoff=qvalue_cutoff)
+        return read_plain_genome_list_file(file_path)
 
     def open_pep_direct_to_otf_genome_list_file(self):
         genome_list_path = QFileDialog.getOpenFileName(
             self.MainWindow,
-            'Select Genome List or MetaUmbra Result',
+            'Select Custom Genome List',
             self.last_path,
             'Genome list (*.txt *.tsv *.csv);;All Files (*)'
         )[0]
@@ -3860,13 +4019,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             ),
         }
 
-    def run_pep_direct_to_otf_unit_specific(self):
+    def run_pep_direct_to_otf_manifest(self):
         config = self._get_unit_specific_gui_config_from_controls()
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
         output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
-        unit_specific_manifest_path = config.manifest_path
+        metaumbra_manifest_path = config.manifest_path
         peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
         table_separator = self._decode_pep_direct_to_otf_separator(
             self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
@@ -3890,7 +4049,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             ("Digested genome folder", digested_genome_folder_path),
             ("Protein to TaxaFunc database", taxafunc_anno_db_path),
             ("OTFs Save To", output_path),
-            ("Unit-specific manifest", unit_specific_manifest_path),
+            ("MetaUmbra genome selection manifest", metaumbra_manifest_path),
             ("Peptide column", peptide_col),
             ("Separator of peptide table", table_separator),
             ("Genome separator in protein ID", protein_genome_separator),
@@ -3903,7 +4062,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         file_checks = [
             ("Peptide table", peptide_table_path),
             ("Protein to TaxaFunc database", taxafunc_anno_db_path),
-            ("Unit-specific manifest", unit_specific_manifest_path),
+            ("MetaUmbra genome selection manifest", metaumbra_manifest_path),
         ]
         for label, path in file_checks:
             if not os.path.isfile(path):
@@ -3940,9 +4099,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             self.logger.write_log(
-                f'run_pep_direct_to_otf_unit_specific: peptide_table_path:{peptide_table_path} '
+                f'run_pep_direct_to_otf_manifest: peptide_table_path:{peptide_table_path} '
                 f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
-                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{unit_specific_manifest_path} '
+                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} manifest:{metaumbra_manifest_path} '
                 f'genome_threshold:{genome_threshold or "auto"} '
                 f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode} '
                 f'n_jobs:{n_jobs if n_jobs is not None else "auto"}'
@@ -3950,7 +4109,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             workflow_params = {
                 "peptide_table_path": peptide_table_path,
-                "unit_specific_manifest_path": unit_specific_manifest_path,
+                "metaumbra_manifest_path": metaumbra_manifest_path,
                 "taxafunc_anno_db_path": taxafunc_anno_db_path,
                 "output_path": output_path,
                 "digested_genome_folders": digested_genome_folder_path,
@@ -3964,7 +4123,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "distinct_genome_threshold": 0,
                 "protein_genome_separator": protein_genome_separator,
                 "save_per_unit_outputs": config.save_per_unit_outputs,
-                "include_unit_specific_sequence": False,
                 "duplicate_peptide_handling_mode": duplicate_peptide_handling_mode,
                 "on_missing_sample": config.on_missing_sample,
                 "on_empty_unit": config.on_empty_unit,
@@ -3974,161 +4132,116 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "diann_intensity_col": diann_intensity_col,
             }
 
-            def pep_direct_to_otf_unit_specific_wrapper():
-                annotator = UnitSpecificOTFAnnotator(**workflow_params)
+            def pep_direct_to_otf_manifest_wrapper():
+                annotator = ManifestOTFAnnotator(**workflow_params)
                 return annotator.run()
 
             self.run_in_new_window(
-                pep_direct_to_otf_unit_specific_wrapper,
+                pep_direct_to_otf_manifest_wrapper,
                 show_msg=True,
-                workflow_step=unit_specific_otf_step(workflow_params),
+                workflow_step=manifest_otf_step(workflow_params),
             )
         except Exception as e:
-            self.logger.write_log(f'run_pep_direct_to_otf_unit_specific error: {e}', 'e')
+            self.logger.write_log(f'run_pep_direct_to_otf_manifest error: {e}', 'e')
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
-    def run_pep_dircet_to_otf(self):
-        if (
-            hasattr(self, "checkBox_pep_direct_to_otf_use_unit_specific_annotate")
-            and self.checkBox_pep_direct_to_otf_use_unit_specific_annotate.isChecked()
-        ):
-            return self.run_pep_direct_to_otf_unit_specific()
-
+    def run_pep_direct_to_otf_non_metaumbra(self, source: str):
         peptide_table_path = self.lineEdit_pep_direct_to_otf_peptide_path.text().strip()
         digested_genome_folder_path = self.lineEdit_pep_direct_to_otf_digestied_genome_pep_path.text().strip()
-        table_separator = self._decode_pep_direct_to_otf_separator(self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip())
-        peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
-        intensity_selector_value = (
-            self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip()
-        )
-        input_intensity_prefix = intensity_selector_value
-        diann_intensity_col = None
-        mapper_intensity_col_prefix = input_intensity_prefix
-        protein_peptide_coverage_cutoff = round(self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(), 3)
-        output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
         taxafunc_anno_db_path = self.lineEdit_pep_direct_to_otf_pro2taxafunc_db_path.text().strip()
+        output_path = self.lineEdit_pep_direct_to_otf_output_path.text().strip()
+        peptide_col = self.comboBox_pep_direct_to_otf_peptide_col_name.currentText().strip()
+        table_separator = self._decode_pep_direct_to_otf_separator(
+            self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
+        )
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text().strip()
-        duplicate_peptide_handling_mode = self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip()
-        stop_after_metaumbra = self.checkBox_pep_direct_to_otf_stop_after_metaumbra.isChecked()
-        use_selected_genome_list = self.checkBox_pep_direct_to_otf_use_selected_genome_list.isChecked()
-        diann_parquet_detected = False
-        if self._is_parquet_path(peptide_table_path):
-            table_separator = '\t'
-            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
-            diann_parquet_detected = is_diann_parquet(parquet_columns)
-            if diann_parquet_detected:
-                diann_intensity_col = intensity_selector_value
-                schema = resolve_diann_parquet_schema(
-                    parquet_columns,
-                    require_score_columns=True,
-                    intensity_col=diann_intensity_col,
-                )
-                peptide_col = schema.peptide_col
-                mapper_intensity_col_prefix = schema.intensity_col_prefix
-                self._apply_metaumbra_columns(schema)
-
-        for value in [
-            peptide_table_path,
-            digested_genome_folder_path,
-            output_path,
-            table_separator,
-            peptide_col,
-            mapper_intensity_col_prefix,
-        ]:
-            if value == '':
-                QMessageBox.warning(self.MainWindow, 'Warning', 'Please set all above paths and values')
+        duplicate_mode = (
+            self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip() or "sum"
+        )
+        required = [
+            ("Peptide table", peptide_table_path),
+            ("Digested genome folder", digested_genome_folder_path),
+            ("Protein to TaxaFunc database", taxafunc_anno_db_path),
+            ("OTFs Save To", output_path),
+            ("Peptide column", peptide_col),
+            ("Genome separator in protein ID", protein_genome_separator),
+        ]
+        for label, value in required:
+            if not value:
+                QMessageBox.warning(self.MainWindow, "Warning", f"Please set {label}.")
                 return None
-
-        if not duplicate_peptide_handling_mode:
-            duplicate_peptide_handling_mode = 'sum'
-
-        if not stop_after_metaumbra and not taxafunc_anno_db_path:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select Protein to TaxaFunc Database')
-            return None
-
-        if not use_selected_genome_list and table_separator != '\t':
-            QMessageBox.warning(self.MainWindow, 'Warning', 'MetaUmbra scoring currently requires a tab-separated peptide table.')
-            return None
-
-        check_files = [peptide_table_path, digested_genome_folder_path]
-        if not stop_after_metaumbra:
-            check_files.append(taxafunc_anno_db_path)
-
-        for file in check_files:
-            if not os.path.exists(file):
-                QMessageBox.warning(self.MainWindow, 'Warning', f'File not found: {file}')
+        for label, path in (("Peptide table", peptide_table_path), ("Protein to TaxaFunc database", taxafunc_anno_db_path)):
+            if not os.path.isfile(path):
+                QMessageBox.warning(self.MainWindow, "Warning", f"{label} not found:\n{path}")
                 return None
-
+        if not os.path.isdir(digested_genome_folder_path):
+            QMessageBox.warning(self.MainWindow, "Warning", f"Digested genome folder not found:\n{digested_genome_folder_path}")
+            return None
         output_dir = os.path.dirname(output_path)
         if output_dir and not os.path.isdir(output_dir):
-            QMessageBox.warning(self.MainWindow, 'Warning', f'Output directory not found: {output_dir}')
+            QMessageBox.warning(self.MainWindow, "Warning", f"Output directory not found:\n{output_dir}")
             return None
-
-        selected_genomes = list(self.pep_direct_to_otf_selected_genomes)
-        if use_selected_genome_list and not selected_genomes:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please open or paste at least one selected genome.')
+        selection_mode = "provided" if source == "genome-list" else "automatic"
+        selected_genomes = list(self.pep_direct_to_otf_selected_genomes) if selection_mode == "provided" else None
+        if selection_mode == "provided" and not selected_genomes:
+            QMessageBox.warning(self.MainWindow, "Warning", "Load or paste at least one genome ID.")
             return None
-
+        diann_intensity_col = None
+        intensity_col_prefix = self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip() or "Intensity"
+        if self._is_parquet_path(peptide_table_path):
+            parquet_columns, _ = self._read_parquet_preview(peptide_table_path)
+            if is_diann_parquet(parquet_columns):
+                diann_intensity_col = self.comboBox_pep_direct_to_otf_intensity_column.currentText().strip() or None
+                # DIA-NN preparation resolves its own canonical sample prefix.
+                intensity_col_prefix = "Intensity"
+        workflow_params = {
+            "peptide_table_path": peptide_table_path,
+            "output_path": output_path,
+            "taxafunc_anno_db_path": taxafunc_anno_db_path,
+            "digested_genome_folders": digested_genome_folder_path,
+            "selection_mode": selection_mode,
+            "selected_genomes": selected_genomes,
+            "selected_genome_source": (
+                self.pep_direct_to_otf_selected_genome_source or "GUI genome list"
+                if selection_mode == "provided"
+                else None
+            ),
+            "peptide_col": peptide_col,
+            "intensity_col_prefix": intensity_col_prefix,
+            "table_separator": table_separator,
+            "lca_threshold": lca_threshold,
+            "genome_mode": True,
+            "distinct_genome_threshold": 0,
+            "protein_genome_separator": protein_genome_separator,
+            "duplicate_peptide_handling_mode": duplicate_mode,
+            "diann_intensity_col": diann_intensity_col,
+        }
         try:
             self.logger.write_log(
-                f'run_pep_dircet_to_otf: peptide_table_path:{peptide_table_path} '
-                f'digested_genome_folder_path:{digested_genome_folder_path} output_path:{output_path} '
-                f'taxafunc_anno_db_path:{taxafunc_anno_db_path} stop_after_metaumbra:{stop_after_metaumbra} '
-                f'use_selected_genome_list:{use_selected_genome_list} '
-                f'duplicate_peptide_handling_mode:{duplicate_peptide_handling_mode}'
+                f"run_pep_direct_to_otf_non_metaumbra: source:{source} "
+                f"peptide_table_path:{peptide_table_path} output_path:{output_path}"
             )
 
-            def pep_direct_to_otf_main_wrapper():
-                selection_mode = (
-                    "provided"
-                    if use_selected_genome_list
-                    else "metaumbra-only"
-                    if stop_after_metaumbra
-                    else "metaumbra"
-                )
-                metaumbra_settings = self._get_pep_direct_to_otf_metaumbra_settings()
-                return GlobalOTFAnnotator(
-                    peptide_table_path=peptide_table_path,
-                    digested_genome_folders=digested_genome_folder_path,
-                    table_separator=table_separator,
-                    peptide_col=peptide_col,
-                    intensity_col_prefix=mapper_intensity_col_prefix,
-                    protein_peptide_coverage_cutoff=protein_peptide_coverage_cutoff,
-                    output_path=output_path,
-                    taxafunc_anno_db_path=taxafunc_anno_db_path,
-                    lca_threshold=lca_threshold,
-                    protein_genome_separator=protein_genome_separator,
-                    selection_mode=selection_mode,
-                    selected_genomes=selected_genomes,
-                    selected_genome_source=(
-                        (
-                            self.pep_direct_to_otf_selected_genome_source
-                            or "GUI selected genome list"
-                        )
-                        if use_selected_genome_list
-                        else None
-                    ),
-                    duplicate_peptide_handling_mode=duplicate_peptide_handling_mode,
-                    diann_intensity_col=diann_intensity_col,
-                    metaumbra_peptide_score_col=metaumbra_settings[
-                        "metaumbra_peptide_score_col"
-                    ],
-                    metaumbra_peptide_error_col=metaumbra_settings[
-                        "metaumbra_peptide_error_col"
-                    ],
-                    metaumbra_single_peptide_error_rate_upper_bound=metaumbra_settings[
-                        "metaumbra_single_peptide_error_rate_upper_bound"
-                    ],
-                    metaumbra_genome_qvalue_cutoff=metaumbra_settings[
-                        "metaumbra_genome_qvalue_cutoff"
-                    ],
-                ).run()
+            def direct_otf_wrapper():
+                return GlobalOTFAnnotator(**workflow_params).run()
 
-            self.run_in_new_window(pep_direct_to_otf_main_wrapper, show_msg=True)
-        except Exception as e:
-            self.logger.write_log(f'run_pep_dircet_to_otf error: {e}', 'e')
-            QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
+            self.run_in_new_window(
+                direct_otf_wrapper,
+                show_msg=True,
+                workflow_step=direct_otf_step(workflow_params),
+            )
+        except Exception as exc:
+            self.logger.write_log(f"run_pep_direct_to_otf_non_metaumbra error: {exc}", "e")
+            QMessageBox.warning(self.MainWindow, "Warning", f"Error: {exc}")
+
+    def run_pep_dircet_to_otf(self):
+        source = str(
+            self.comboBox_pep_direct_to_otf_input_source.currentData() or "metaumbra-manifest"
+        )
+        if source == "metaumbra-manifest":
+            return self.run_pep_direct_to_otf_manifest()
+        return self.run_pep_direct_to_otf_non_metaumbra(source)
     
     
     

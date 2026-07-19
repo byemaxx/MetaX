@@ -1,3 +1,16 @@
+# Version: 2.6.0
+## Date: 2026-07-15
+### Changes:
+- New: Added unified MetaUmbra genome-selection manifest annotation for one or multiple analysis units.
+- New: Added explicit MetaUmbra manifest, MetaX automatic, and custom genome-list annotation sources.
+- Change: Unified single-unit and multi-unit OTF annotation around one manifest-driven backend and retained `analysis_unit_id` in canonical OTF output.
+- Change: Reorganized the Peptide Annotator GUI around genome source, inputs, manifest validation, output, and advanced settings.
+- Change: Unified manifests are produced by MetaUmbra 1.4.0 or newer; updated the MetaX API compatibility version to 11 while retaining MetaX's existing non-manifest installation baseline.
+- Fix: Preserved custom intensity prefixes and accurate provenance for automatic and custom-list annotation.
+- Fix: Rejected empty selected-threshold genome lists and made Windows console progress output encoding-safe.
+- Test: Added unified manifest contract, CLI, backend, GUI layout, and cross-repository integration coverage.
+
+
 # Version: 2.5.0
 ## Date: 2026-07-14
 ### Changes:

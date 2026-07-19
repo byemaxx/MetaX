@@ -103,7 +103,7 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
   - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX with the graphical user interface.
   <br>
 - `Command-line version`:
-  - See the [Annotation CLI integration guide](Docs/Annotation_CLI.md) for global and unit-specific commands, configuration files, result JSON, exit codes, and subprocess integration.
+  - See the [Annotation CLI integration guide](Docs/Annotation_CLI.md) for unified MetaUmbra manifest input plus explicit MetaX automatic and custom genome-list sources.
   - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for analysis examples.
 
 

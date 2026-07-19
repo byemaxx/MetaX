@@ -333,29 +333,56 @@ def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> 
     )
 
 
-def unit_specific_otf_step(params: dict[str, Any]) -> AnalysisStep:
+def manifest_otf_step(params: dict[str, Any]) -> AnalysisStep:
     parameters = dict(params)
     code = _join_code(
-        "from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator",
+        "from metax.peptide_annotator.manifest_otf import ManifestOTFAnnotator",
         "",
-        _assignment("unit_specific_otf_params", parameters),
-        "unit_specific_otf = UnitSpecificOTFAnnotator(**unit_specific_otf_params)",
-        "unit_specific_otf_result = unit_specific_otf.run()",
-        'print(f"Saved unit-specific OTF: {unit_specific_otf.output_path}")',
+        _assignment("manifest_otf_params", parameters),
+        "manifest_otf = ManifestOTFAnnotator(**manifest_otf_params)",
+        "manifest_otf_result = manifest_otf.run()",
+        'print(f"Saved manifest-driven OTF: {manifest_otf.output_path}")',
     )
     return AnalysisStep(
-        title="Run Unit-specific Peptide Direct to OTF",
-        step_type="unit_specific_peptide_direct_to_otf",
+        title="Run Manifest Peptide Direct to OTF",
+        step_type="manifest_peptide_direct_to_otf",
         inputs={
             "peptide_table_path": parameters.get("peptide_table_path"),
             "digested_genome_folders": parameters.get("digested_genome_folders"),
             "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
-            "unit_specific_manifest_path": parameters.get("unit_specific_manifest_path"),
+            "metaumbra_manifest_path": parameters.get("metaumbra_manifest_path"),
         },
         outputs={"output_path": parameters.get("output_path")},
         parameters=parameters,
         code=code,
-        notes=["Recorded from the MetaX GUI unit-specific direct-to-OTF workflow."],
+        notes=["Recorded from the MetaX GUI manifest-driven direct-to-OTF workflow."],
+    )
+
+
+def direct_otf_step(params: dict[str, Any]) -> AnalysisStep:
+    """Record explicit MetaX automatic or custom-list annotation."""
+    parameters = dict(params)
+    code = _join_code(
+        "from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator",
+        "",
+        _assignment("direct_otf_params", parameters),
+        "direct_otf = GlobalOTFAnnotator(**direct_otf_params)",
+        "direct_otf_result = direct_otf.run()",
+        'print(f"Saved direct OTF: {direct_otf_result.output_path}")',
+    )
+    return AnalysisStep(
+        title="Run MetaX Direct Peptide to OTF",
+        step_type="metax_direct_peptide_to_otf",
+        inputs={
+            "peptide_table_path": parameters.get("peptide_table_path"),
+            "digested_genome_folders": parameters.get("digested_genome_folders"),
+            "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
+            "genome_list_path": parameters.get("genome_list_path"),
+        },
+        outputs={"output_path": parameters.get("output_path")},
+        parameters=parameters,
+        code=code,
+        notes=["Uses an explicit MetaX automatic or custom genome-list source."],
     )
 
 

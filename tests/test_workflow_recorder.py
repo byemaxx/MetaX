@@ -19,8 +19,9 @@ from metax.workflow_recorder import (
     set_multi_tables_step,
     taxafunc_analyzer_step,
     deseq2_step,
+    direct_otf_step,
     limma_step,
-    unit_specific_otf_step,
+    manifest_otf_step,
 )
 
 
@@ -150,10 +151,10 @@ def test_auto_otf_report_step_uses_saved_config(tmp_path: Path):
     assert step.outputs["index_html_path"].endswith("index.html")
 
 
-def test_unit_specific_otf_step_records_replayable_parameters():
+def test_manifest_otf_step_records_replayable_parameters():
     params = {
         "peptide_table_path": "peptides.tsv",
-        "unit_specific_manifest_path": "manifest.json",
+        "metaumbra_manifest_path": "manifest.json",
         "taxafunc_anno_db_path": "taxafunc.db",
         "output_path": "out.tsv",
         "digested_genome_folders": "digested",
@@ -170,14 +171,29 @@ def test_unit_specific_otf_step_records_replayable_parameters():
         "n_jobs": None,
     }
 
-    step = unit_specific_otf_step(params)
+    step = manifest_otf_step(params)
 
-    assert step.step_type == "unit_specific_peptide_direct_to_otf"
+    assert step.step_type == "manifest_peptide_direct_to_otf"
     assert step.parameters == params
-    assert step.inputs["unit_specific_manifest_path"] == "manifest.json"
+    assert step.inputs["metaumbra_manifest_path"] == "manifest.json"
     assert step.outputs["output_path"] == "out.tsv"
-    assert "UnitSpecificOTFAnnotator(**unit_specific_otf_params)" in step.code
-    compile(step.code, "<unit-specific-workflow-step>", "exec")
+    assert "ManifestOTFAnnotator(**manifest_otf_params)" in step.code
+    compile(step.code, "<manifest-workflow-step>", "exec")
+
+
+def test_direct_otf_step_records_automatic_or_list_source():
+    params = {
+        "peptide_table_path": "peptides.tsv",
+        "taxafunc_anno_db_path": "taxafunc.db",
+        "output_path": "out.tsv",
+        "digested_genome_folders": "digested",
+        "selection_mode": "provided",
+        "selected_genomes": ["g1", "g2"],
+    }
+    step = direct_otf_step(params)
+    assert step.step_type == "metax_direct_peptide_to_otf"
+    assert "GlobalOTFAnnotator(**direct_otf_params)" in step.code
+    compile(step.code, "<direct-otf-workflow-step>", "exec")
 
 
 def test_taxafunc_and_multi_table_steps_generate_runnable_cells():
