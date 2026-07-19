@@ -1,144 +1,40 @@
-# MetaX Annotation CLI
+# Annotation CLI
 
-`metax-annotate` provides Qt-free global and unit-specific peptide-to-OTF annotation.
-
-## Installation
-
-The default package contains the complete annotation backend:
+`metax-annotate` is a Qt-free annotation entry point with three explicit genome-selection sources. It never guesses the source from a filename or table columns.
 
 ```bash
-python -m pip install MetaXTools
-```
-
-Analyzer, Report, and desktop installation profiles are described in the
-[README](../README.md#installation).
-
-## Global annotation
-
-Run MetaUmbra genome scoring and generate an OTF from DIA-NN parquet:
-
-```bash
-metax-annotate \
-  --mode global \
+python -m metax.cli.annotate \
+  --input-source metaumbra-manifest \
   --peptide-table report.parquet \
-  --digested-genome-folders digested_genomes \
+  --metaumbra-manifest results/genome_selection_manifest.json \
   --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders UHGP_digested \
+  --genome-threshold auto \
   --output OTF.tsv \
-  --selection-mode metaumbra \
-  --diann-intensity-col Precursor.Normalised \
-  --result-json annotation_result.json
+  --result-json result.json
 ```
 
-Use `--selection-mode provided` with `--selected-genomes` or
-`--genome-list-file` to supply genomes directly. Use `automatic` for MetaX's
-internal genome ranking, or `metaumbra-only` to stop after genome scoring.
-
-When `--selection-mode` is omitted, selected genome IDs or a genome-list file
-imply `provided`; otherwise digest directories imply `metaumbra`; otherwise the
-mode is `automatic`. Explicit modes take precedence, and contradictory genome
-sources are rejected instead of ignored.
-
-Exactly one peptide-mapping source is required for OTF generation:
-`--peptide-db` or `--digested-genome-folders`.
-
-## Unit-specific annotation
-
-Use a MetaUmbra unit-specific manifest:
+MetaX automatic selection remains available for non-MetaUmbra inputs:
 
 ```bash
-metax-annotate \
-  --mode unit-specific \
-  --peptide-table report.parquet \
-  --unit-specific-manifest unit_specific_manifest.json \
-  --digested-genome-folders digested_genomes \
-  --taxafunc-db MetaX_taxafunc.db \
-  --output OTF_unit_specific.tsv \
-  --result-json annotation_result.json
+python -m metax.cli.annotate --input-source metax-automatic \
+  --peptide-table peptides.tsv --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders UHGP_digested \
+  --intensity-col-prefix Intensity --output OTF.tsv
 ```
 
-## YAML or JSON configuration
+For an explicit genome set, use `--input-source genome-list` with either `--genome-list-file genomes.txt` or `--selected-genomes g1 g2`.
+For delimited non-MetaUmbra peptide tables, `--intensity-col-prefix` identifies the input sample columns; the GUI forwards the editable **Prefix of Intensity Column** value to the same backend.
 
-CLI arguments override configuration-file values:
+`--genome-threshold` accepts `auto`, `q0.05`, or `q0.01`. `auto` uses `selection.default_genome_threshold` from the manifest. There is no global/unit-specific mode selector and MetaX does not infer genome IDs from a TSV.
 
-```yaml
-api_version: "1.0"
-mode: global
+The annotation backend always performs the same sequence:
 
-inputs:
-  peptide_table: report.parquet
-  digested_genome_folders:
-    - digested_genomes
-  taxafunc_db: MetaX_taxafunc.db
+1. Validate `metaumbra.genome_selection_manifest.v1`.
+   A unit with no genomes at the selected threshold is rejected before annotation.
+2. Resolve every manifest sample ID to a DIA-NN run or prepared intensity column.
+3. Scan the union of selected genome digest files once.
+4. Annotate each analysis unit using its samples and selected genomes.
+5. Merge unit outputs while retaining `analysis_unit_id`.
 
-output:
-  otf: OTF.tsv
-  result_json: annotation_result.json
-
-options:
-  selection_mode: metaumbra
-  duplicate_peptide_handling_mode: sum
-  diann_intensity_col: Precursor.Normalised
-```
-
-Run it with:
-
-```bash
-metax-annotate --config annotation.yaml
-```
-
-Relative paths loaded from a configuration file are resolved from the
-configuration file's directory. Relative paths supplied directly on the command
-line remain relative to the current working directory.
-
-## Result JSON
-
-When `--result-json` is supplied, MetaX writes schema `2.0` atomically. The
-top-level sections are:
-
-```text
-run, inputs, parameters, stages, genome_selection, metrics, outputs, diagnostics
-```
-
-Use `run.status` and `run.exit_code` for the outcome, `outputs` for generated
-files, `metrics` for mapping/QC values, and `diagnostics` for warnings or errors.
-Scientific outputs are safely renamed when their requested path already exists,
-and `outputs` reports the actual paths. The result JSON itself keeps its requested
-stable path and is atomically replaced.
-See [Annotation Result Schema](Annotation_Result_Schema.md) for the complete
-field reference and examples.
-
-## Exit codes
-
-| Code | Meaning |
-| ---: | --- |
-| 0 | Successful execution |
-| 2 | Invalid arguments or configuration |
-| 3 | Missing input, database, directory, or configuration file |
-| 4 | Required optional dependency is unavailable |
-| 5 | Annotation or external scoring failed |
-| 130 | Execution was cancelled |
-
-On interruption, MetaX terminates active MetaUmbra or digested-scan process
-trees before writing the cancellation result JSON.
-
-## Python subprocess
-
-Invoke MetaX with the same Python environment in which it is installed:
-
-```python
-import subprocess
-import sys
-
-completed = subprocess.run(
-    [
-        sys.executable,
-        "-m",
-        "metax.cli.annotate",
-        "--config",
-        "annotation.yaml",
-    ],
-    check=False,
-)
-```
-
-Read the process exit code first, then inspect result JSON for structured details.
+The result JSON uses `metax.annotation_result.v2` and records `input_source`. Manifest runs additionally record the manifest path/schema, number of units, selected threshold, sample mapping, and per-unit summary; non-manifest runs set those manifest-only fields to null. Exit codes are `0` success, `2` invalid configuration, `3` missing input, `4` missing optional dependency, `5` annotation failure, and `130` cancellation.

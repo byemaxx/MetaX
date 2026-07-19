@@ -9,16 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check out the pinned MetaUmbra manifest producer
+        uses: actions/checkout@v4
+        with:
+          repository: byemaxx/MetaUmbra
+          ref: b3f719b49b8e73cd324e2841df7f686d4f6c909b
+          path: MetaUmbra
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: python -m pip install . pytest
       - name: Verify lightweight imports and annotation CLI
+        env:
+          METAX_METAUMBRA_SOURCE: ${{ github.workspace }}/MetaUmbra
         run: |
           python -c "import sys, metax, metax.cli.annotate, metax.cli.report; assert not any(name.startswith('PyQt') for name in sys.modules); assert 'metax.report' not in sys.modules"
           python -m metax.cli.annotate --help
-          python -m pytest tests/test_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_unit_specific_manifest.py -q
+          python -m pytest tests/test_manifest_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_genome_selection_manifest.py tests/test_manifest_otf_backend.py tests/test_metaumbra_contract_integration.py -q
 
   headless-analysis-profiles:
     runs-on: ubuntu-latest
@@ -36,13 +44,13 @@ jobs:
         if: matrix.extra == 'analyzer'
         run: |
           python -c "from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
-          python -m pytest tests/test_analyzer.py tests/test_annotation_cli.py -q
+          python -m pytest tests/test_analyzer.py tests/test_manifest_annotation_cli.py -q
       - name: Verify Report profile
         if: matrix.extra == 'report'
         run: |
           python -c "import metax.report; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
           python -m metax.cli.report --help
-          python -m pytest tests/test_auto_report_config.py tests/test_auto_report_workflow.py tests/test_annotation_cli.py -q
+          python -m pytest tests/test_auto_report_config.py tests/test_auto_report_workflow.py tests/test_manifest_annotation_cli.py -q
 
   gui-and-full-metadata:
     runs-on: ubuntu-latest
@@ -63,7 +71,7 @@ jobs:
       - name: Run shared backend and GUI annotation tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest tests/test_annotation_cli.py tests/test_unit_specific_gui_settings_dialog.py -q
+        run: python -m pytest tests/test_manifest_annotation_cli.py tests/test_peptide_annotator_layout.py -q
 
   windows-annotation:
     runs-on: windows-latest
@@ -79,4 +87,4 @@ jobs:
         run: |
           python -c "import sys, metax, metax.cli.annotate; assert not any(name.startswith('PyQt') for name in sys.modules)"
           python -m metax.cli.annotate --help
-          python -m pytest tests/test_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_unit_specific_manifest.py -q
+          python -m pytest tests/test_manifest_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_genome_selection_manifest.py tests/test_manifest_otf_backend.py -q

@@ -92,6 +92,19 @@ def read_genome_list_file(
     return parse_genome_text("\n".join(dataframe["genome_id"].dropna().astype(str)))
 
 
+def read_plain_genome_list_file(file_path: str | Path) -> list[str]:
+    """Read a user genome list without interpreting it as MetaUmbra output."""
+    file_path = Path(file_path)
+    text = file_path.read_text(encoding="utf-8-sig")
+    first_line = next((line for line in text.splitlines() if line.strip()), "")
+    delimiter = "\t" if "\t" in first_line else ","
+    columns = [column.strip() for column in first_line.split(delimiter)]
+    if "genome_id" not in columns:
+        return parse_genome_text(text)
+    dataframe = pd.read_csv(file_path, sep=delimiter)
+    return parse_genome_text("\n".join(dataframe["genome_id"].dropna().astype(str)))
+
+
 def _parse_version(version_text: str) -> tuple[int, int, int] | None:
     match = re.search(r"(\d+)\.(\d+)\.(\d+)", version_text)
     if not match:
@@ -558,10 +571,7 @@ class GlobalOTFAnnotator:
         genomes = list(self.selected_genomes)
         if self.genome_list_path is not None:
             genomes.extend(
-                read_genome_list_file(
-                    self.genome_list_path,
-                    qvalue_cutoff=self.metaumbra_genome_qvalue_cutoff,
-                )
+                read_plain_genome_list_file(self.genome_list_path)
             )
         return _normalise_genomes(genomes)
 
