@@ -48,7 +48,7 @@ def test_manifest_rejects_empty_unit_and_genome_threshold_contract(tmp_path):
     data["units"]["u1"]["n_samples"] = 0
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(data), encoding="utf-8")
-    with pytest.raises(ValueError, match="no sample_ids"):
+    with pytest.raises(ValueError, match="sample_ids must contain at least one item"):
         load_genome_selection_manifest(path)
 
     data = json.loads(FIXTURE.read_text(encoding="utf-8"))
@@ -57,6 +57,67 @@ def test_manifest_rejects_empty_unit_and_genome_threshold_contract(tmp_path):
     path.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(ValueError, match="no genomes at selected threshold q0.05"):
         load_genome_selection_manifest(path, genome_threshold="q0.05", strict=True)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("sample_ids", "s1"),
+        ("genome_ids_q005", "g1"),
+        ("genome_ids_q001", "g1"),
+    ],
+)
+def test_manifest_rejects_string_values_for_array_fields(tmp_path, field, value):
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["units"]["u1"][field] = value
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must be an array of strings"):
+        load_genome_selection_manifest(path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("sample_ids", ["s1", "s1"]),
+        ("genome_ids_q005", ["g1", "g1"]),
+        ("genome_ids_q001", ["g1", "g1"]),
+    ],
+)
+def test_manifest_rejects_duplicate_array_items(tmp_path, field, value):
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["units"]["u1"][field] = value
+    if field == "sample_ids":
+        data["units"]["u1"]["n_samples"] = len(value)
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must contain unique items"):
+        load_genome_selection_manifest(path)
+
+
+def test_manifest_rejects_missing_required_provenance(tmp_path):
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["generated_by"].pop("run_id")
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="generated_by.run_id must be a string"):
+        load_genome_selection_manifest(path)
+
+
+def test_manifest_subset_violation_respects_strict_mode(tmp_path):
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["units"]["u1"]["genome_ids_q001"].append("g3")
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="q0.01 genomes not present"):
+        load_genome_selection_manifest(path, strict=True)
+    with pytest.warns(UserWarning, match="q0.01 genomes not present"):
+        manifest = load_genome_selection_manifest(path, strict=False)
+    assert manifest.units["u1"].genome_ids == ["g1", "g2"]
 
 
 def test_sample_mapping_is_one_to_one():

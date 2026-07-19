@@ -591,6 +591,52 @@ def _query_peptide_proteins_nested_via_subprocess(
         return _read_nested_mapping_tsv(out_mapping)
 
 
+def _resolve_selected_digest_genome_files(
+    valid_folders: list[str],
+    selected_genomes: set[str],
+) -> list[str]:
+    """Resolve one digest TSV per selected genome during the existing directory walk."""
+    matched_files: dict[str, dict[str, str]] = {}
+    for folder in valid_folders:
+        for path in pathlib.Path(folder).glob("*.tsv"):
+            genome_id = path.stem
+            if genome_id not in selected_genomes:
+                continue
+            resolved_path = str(path.resolve())
+            matched_files.setdefault(genome_id, {})[resolved_path] = str(path)
+
+    missing_genomes = sorted(selected_genomes - set(matched_files))
+    if missing_genomes:
+        preview = ", ".join(missing_genomes[:20])
+        suffix = "" if len(missing_genomes) <= 20 else ", ..."
+        raise FileNotFoundError(
+            "Missing digested genome TSV files for "
+            f"{len(missing_genomes)} selected manifest genomes: {preview}{suffix}. "
+            f"Searched directories: {valid_folders}"
+        )
+
+    duplicate_genomes = {
+        genome_id: sorted(paths.values())
+        for genome_id, paths in matched_files.items()
+        if len(paths) > 1
+    }
+    if duplicate_genomes:
+        details = "; ".join(
+            f"{genome_id}: {paths}"
+            for genome_id, paths in sorted(duplicate_genomes.items())[:10]
+        )
+        suffix = "" if len(duplicate_genomes) <= 10 else "; ..."
+        raise ValueError(
+            "Selected manifest genomes must resolve to exactly one digest TSV; "
+            f"duplicates found for {len(duplicate_genomes)} genomes: {details}{suffix}"
+        )
+
+    return [
+        next(iter(matched_files[genome_id].values()))
+        for genome_id in sorted(selected_genomes)
+    ]
+
+
 def query_peptide_proteins_from_digested_genome_folders_nested(
     digested_genome_folders: str | list[str],
     peptide_list: list[str],
@@ -630,13 +676,15 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
     if not valid_folders:
         raise ValueError(f"No valid digested genome folders found: {folders}")
 
-    selected_genomes = {str(genome_id) for genome_id in selected_genomes_set}
-    all_files = [
-        str(path)
-        for folder in valid_folders
-        for path in pathlib.Path(folder).glob("*.tsv")
-        if path.stem in selected_genomes
-    ]
+    selected_genomes = {
+        str(genome_id)
+        for genome_id in selected_genomes_set
+        if str(genome_id)
+    }
+    all_files = _resolve_selected_digest_genome_files(
+        valid_folders,
+        selected_genomes,
+    )
     if not all_files:
         print(
             "[UnitSpecificDigestedScan] No genome TSV files match the manifest genome union.",

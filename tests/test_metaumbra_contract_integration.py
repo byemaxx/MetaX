@@ -14,8 +14,19 @@ from metax.peptide_annotator.genome_selection_manifest import (
 
 def test_metaumbra_generated_manifest_is_loaded_directly_by_metax(tmp_path):
     workspace = Path(__file__).resolve().parents[2]
-    schema_path = workspace / "MetaUmbra" / "docs" / "genome_selection_manifest.v1.schema.json"
+    configured_source = os.environ.get("METAX_METAUMBRA_SOURCE")
+    metaumbra_source = (
+        Path(configured_source).expanduser().resolve()
+        if configured_source
+        else workspace / "MetaUmbra"
+    )
+    schema_path = metaumbra_source / "docs" / "genome_selection_manifest.v1.schema.json"
     if not schema_path.is_file():
+        if os.environ.get("CI"):
+            pytest.fail(
+                "MetaUmbra contract checkout is required in CI; "
+                f"expected schema at {schema_path}"
+            )
         pytest.skip("Cross-repository MetaUmbra checkout is not available")
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     output = tmp_path / "genome_selection_manifest.json"
@@ -49,7 +60,7 @@ manifest = build_genome_selection_manifest(
 write_genome_selection_manifest(output, manifest)
 '''
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(workspace / "MetaUmbra" / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = str(metaumbra_source / "src") + os.pathsep + env.get("PYTHONPATH", "")
     subprocess.run([sys.executable, "-c", script, str(output)], check=True, env=env)
     manifest = load_genome_selection_manifest(output)
     assert schema["$id"] == SCHEMA_VERSION == manifest.schema_version
