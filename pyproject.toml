@@ -24,7 +24,7 @@ dependencies = [
     "pyarrow>=15.0.0",
     "PyYAML>=6.0",
     "tqdm>=4.65.0",
-    "metaumbra>=1.3.7",
+    "metaumbra>=1.4.0",
 ]
 
 [project.optional-dependencies]
@@ -76,7 +76,7 @@ gui = [
     "PyQtWebEngine-Qt5>=5.15.2",
     "qt-material==2.14",
     "QtAwesome>=1.2.3",
-    "metaumbra[gui-pyqt5]>=1.3.7"
+    "metaumbra[gui-pyqt5]>=1.4.0"
 ]
 full = [
     "inmoose==0.9.1",
@@ -103,7 +103,7 @@ full = [
     "PyQtWebEngine-Qt5>=5.15.2",
     "qt-material==2.14",
     "QtAwesome>=1.2.3",
-    "metaumbra[gui-pyqt5]>=1.3.7"
+    "metaumbra[gui-pyqt5]>=1.4.0"
 ]
 
 [project.scripts]
