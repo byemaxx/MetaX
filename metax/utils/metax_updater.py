@@ -286,7 +286,15 @@ class Updater:
         if not os.path.isdir(project_folder_path):
             return False, f"Downloaded project folder does not exist: {project_folder_path}"
 
-        command = [sys.executable, "-m", "pip", "install", "--upgrade", project_folder_path]
+        command = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-warn-script-location",
+            project_folder_path,
+        ]
         self.append_update_log(f"Installing MetaX dependencies with command: {' '.join(command)}")
         output_lines = []
         try:
@@ -465,7 +473,8 @@ class Updater:
             "against the current Python environment."
             "\nIf the API changes or installed packages are missing/outdated, MetaX will run pip "
             "before replacing the local code:"
-            f"\n{sys.executable} -m pip install --upgrade <downloaded MetaX source>"
+            f"\n{sys.executable} -m pip install --upgrade --no-warn-script-location "
+            "<downloaded MetaX source>"
         )
 
         reply = self.display_message_in_text_browser("Update", f"MetaX new version is available. Do you want to update?\
@@ -504,7 +513,8 @@ class Updater:
                             "Update",
                             "MetaX downloaded the new version, but dependency installation failed. "
                             "The local MetaX code was not replaced.\n\n"
-                            f"Command:\n{sys.executable} -m pip install --upgrade {self.get_downloaded_project_folder_path()}\n\n"
+                            f"Command:\n{sys.executable} -m pip install --upgrade --no-warn-script-location "
+                            f"{self.get_downloaded_project_folder_path()}\n\n"
                             f"Output:\n{dependency_output}"
                         )
                         self.clear_update_required_flag()

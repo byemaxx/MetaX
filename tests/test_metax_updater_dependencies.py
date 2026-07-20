@@ -11,6 +11,31 @@ def _make_updater():
     return updater
 
 
+def test_dependency_install_disables_script_location_warning(tmp_path, monkeypatch):
+    captured = {}
+
+    class FakeProcess:
+        stdout = iter(())
+
+        def wait(self):
+            return 0
+
+    def fake_popen(command, **kwargs):
+        captured["command"] = command
+        return FakeProcess()
+
+    monkeypatch.setattr(metax_updater.subprocess, "Popen", fake_popen)
+
+    updater = _make_updater()
+    updater.get_downloaded_project_folder_path = lambda: str(tmp_path)
+
+    success, output = updater.install_project_dependencies()
+
+    assert success
+    assert output == ""
+    assert "--no-warn-script-location" in captured["command"]
+
+
 def test_dependency_check_detects_installed_version_below_minimum(tmp_path, monkeypatch):
     (tmp_path / "pyproject.toml").write_text(
         textwrap.dedent(
