@@ -125,16 +125,19 @@ def test_source_choice_hides_irrelevant_manifest_or_list_controls():
         ui.update_pep_direct_to_otf_mode_state()
         assert not ui.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.isHidden()
         assert ui.pushButton_pep_direct_to_otf_open_genome_list_file.isHidden()
+        assert not ui.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.isEnabled()
 
         ui.comboBox_pep_direct_to_otf_input_source.setCurrentIndex(1)
         ui.update_pep_direct_to_otf_mode_state()
         assert ui.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.isHidden()
         assert ui.pushButton_pep_direct_to_otf_open_genome_list_file.isHidden()
+        assert ui.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.isEnabled()
 
         ui.comboBox_pep_direct_to_otf_input_source.setCurrentIndex(2)
         ui.update_pep_direct_to_otf_mode_state()
         assert ui.lineEdit_pep_direct_to_otf_unit_specific_manifest_path.isHidden()
         assert not ui.pushButton_pep_direct_to_otf_open_genome_list_file.isHidden()
+        assert ui.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.isEnabled()
         assert not ui.label_pep_direct_to_otf_custom_genome_list.isHidden()
         assert ui.pushButton_pep_direct_to_otf_reset_selected_genome_list.text() == "Reset"
     finally:
@@ -165,6 +168,7 @@ def test_non_manifest_gui_forwards_custom_intensity_prefix(monkeypatch, tmp_path
         ui.comboBox_pep_direct_to_otf_peptide_col_name.addItem("Sequence")
         ui.comboBox_pep_direct_to_otf_intensity_column.setEditable(True)
         ui.comboBox_pep_direct_to_otf_intensity_column.setEditText("Abundance")
+        ui.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setValue(0.42)
 
         captured = {}
 
@@ -180,6 +184,7 @@ def test_non_manifest_gui_forwards_custom_intensity_prefix(monkeypatch, tmp_path
         ui.run_pep_direct_to_otf_non_metaumbra("metax-automatic")
 
         assert captured["intensity_col_prefix"] == "Abundance"
+        assert captured["protein_peptide_coverage_cutoff"] == 0.42
         assert captured["selection_mode"] == "automatic"
         assert captured["selected_genome_source"] is None
     finally:
