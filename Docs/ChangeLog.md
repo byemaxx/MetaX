@@ -1,3 +1,10 @@
+# Version: 2.6.1
+## Date: 2026-07-21
+### Changes:
+- Fix: Improved Peptide Annotator manifest validation for DIA-NN matrix sample columns ending in `.raw.dia`.
+- Fix: Manifest validation now requires a peptide table before reporting success.
+
+
 # Version: 2.6.0
 ## Date: 2026-07-15
 ### Changes:

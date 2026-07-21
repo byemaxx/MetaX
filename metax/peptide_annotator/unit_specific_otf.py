@@ -21,6 +21,7 @@ from metax.peptide_annotator.output_paths import available_output_path
 from metax.peptide_annotator.peptide_table_prepare import (
     has_diann_core_columns,
     is_parquet_path,
+    normalize_sample_identifier,
     prepare_diann_parquet_for_direct_otf,
     read_parquet_columns,
 )
@@ -344,12 +345,7 @@ class ManifestOTFAnnotator:
         }
         basename_to_runs: dict[str, list[str]] = {}
         for run in exact_run_to_column:
-            basename = Path(run.replace("\\", "/")).name
-            lower = basename.lower()
-            for suffix in (".raw", ".mzml", ".mzxml"):
-                if lower.endswith(suffix):
-                    basename = basename[: -len(suffix)]
-                    break
+            basename = normalize_sample_identifier(run)
             basename_to_runs.setdefault(basename, []).append(run)
 
         mapping: dict[str, str] = {}
@@ -360,12 +356,7 @@ class ManifestOTFAnnotator:
             if column is None and sample_str in peptide_column_set:
                 column = sample_str
             if column is None:
-                basename = Path(sample_str.replace("\\", "/")).name
-                lower = basename.lower()
-                for suffix in (".raw", ".mzml", ".mzxml"):
-                    if lower.endswith(suffix):
-                        basename = basename[: -len(suffix)]
-                        break
+                basename = normalize_sample_identifier(sample_str)
                 candidate_runs = basename_to_runs.get(basename, [])
                 if len(candidate_runs) == 1:
                     column = exact_run_to_column[candidate_runs[0]]

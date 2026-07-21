@@ -8,6 +8,8 @@ from typing import Iterable
 
 import pandas as pd
 
+from metax.peptide_annotator.peptide_table_prepare import normalize_sample_identifier
+
 
 SCHEMA_VERSION = "metaumbra.genome_selection_manifest.v1"
 _TOP_LEVEL_FIELDS = {
@@ -305,15 +307,6 @@ def _strip_leading_underscores(value: str) -> str:
     return value.lstrip("_")
 
 
-def _basename_without_raw_suffix(value: str) -> str:
-    basename = Path(str(value).replace("\\", "/")).name
-    lower = basename.lower()
-    for suffix in (".raw", ".mzml", ".mzxml"):
-        if lower.endswith(suffix):
-            return basename[: -len(suffix)]
-    return basename
-
-
 def _candidate_matches(
     manifest_sample: str,
     peptide_columns: Iterable[str],
@@ -340,7 +333,7 @@ def _candidate_matches(
             matches[7].add(column)
         if _strip_leading_underscores(column) == _strip_leading_underscores(manifest_sample):
             matches[8].add(column)
-        if _basename_without_raw_suffix(column) == _basename_without_raw_suffix(manifest_sample):
+        if normalize_sample_identifier(column) == normalize_sample_identifier(manifest_sample):
             matches[9].add(column)
     return matches
 
