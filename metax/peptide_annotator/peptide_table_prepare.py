@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +17,8 @@ DIANN_INTENSITY_CANDIDATES = (
     "Precursor.Quantity",
 )
 DIANN_OUTPUT_SAMPLE_COLUMN_PREFIX = "Intensity_"
+DIANN_RUN_WRAPPER_SUFFIXES = (".dia",)
+DIANN_ACQUISITION_SUFFIXES = (".raw", ".mzml", ".mzxml")
 
 
 @dataclass(frozen=True)
@@ -162,9 +163,25 @@ def diann_parquet_intensity_prefix(_intensity_col: str) -> str:
     return DIANN_OUTPUT_SAMPLE_COLUMN_PREFIX
 
 
+def normalize_sample_identifier(value: object) -> str:
+    """Return a path-free sample ID with known DIA-NN/raw suffixes removed."""
+    name = Path(str(value).strip().replace("\\", "/")).name
+
+    # DIA-NN matrix headers may append ``.dia`` to the original acquisition
+    # filename (for example, ``sample.raw.dia``). Remove the wrapper first so
+    # the underlying acquisition suffix can be recognized next.
+    for suffix_group in (DIANN_RUN_WRAPPER_SUFFIXES, DIANN_ACQUISITION_SUFFIXES):
+        lower_name = name.lower()
+        for suffix in suffix_group:
+            if lower_name.endswith(suffix):
+                name = name[: -len(suffix)]
+                break
+    return name
+
+
 def _safe_sample_name(run: str) -> str:
     run = str(run).strip()
-    run_name = os.path.splitext(Path(run.replace("\\", "/")).name)[0] if run else "unknown_run"
+    run_name = normalize_sample_identifier(run) if run else "unknown_run"
     run_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", run_name).strip("_")
     return run_name or "unknown_run"
 
@@ -217,6 +234,7 @@ def prepare_diann_parquet_for_direct_otf(
             f"Failed to read DIA-NN parquet columns: {read_columns}"
         ) from exc
 
+    input_rows = int(df.shape[0])
     df = df.dropna(subset=[DIANN_RUN_COLUMN, DIANN_PEPTIDE_COLUMN]).copy()
     if df.empty:
         raise ValueError(
@@ -308,6 +326,12 @@ def prepare_diann_parquet_for_direct_otf(
     metadata = {
         "input_peptide_table_format": "diann_parquet",
         "input_peptide_table_original_path": parquet_path,
+        "input_rows": input_rows,
+        "input_columns": len(available_columns),
+        "input_rows_with_required_values": int(df.shape[0]),
+        "input_runs": int(df[DIANN_RUN_COLUMN].nunique(dropna=True)),
+        "input_unique_peptides": int(df[DIANN_PEPTIDE_COLUMN].nunique(dropna=True)),
+        "aggregated_run_peptide_rows": int(grouped.shape[0]),
         "diann_intensity_column": intensity_col,
         "diann_run_to_sample_column": dict(run_to_column),
         "prepared_peptide_rows": int(prepared_df.shape[0]),

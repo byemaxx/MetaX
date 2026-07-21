@@ -34,6 +34,13 @@ from tqdm import tqdm
 _WINDOWS_PROCESS_POOL_MAX_WORKERS = 61
 
 
+def _print_console_safe(line: str) -> None:
+    """Forward UTF-8 subprocess progress even when Windows uses a legacy code page."""
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    safe_line = str(line).encode(encoding, errors="replace").decode(encoding, errors="replace")
+    print(safe_line, flush=True)
+
+
 def _resolve_digested_scan_n_jobs(
     n_jobs: int | None,
     *,
@@ -85,6 +92,8 @@ def _ensure_project_root_on_syspath() -> None:
 
 
 _ensure_project_root_on_syspath()
+
+from metax.peptide_annotator.subprocess_utils import run_streaming_subprocess
 
 # NOTE: Avoid importing GUI/Matplotlib-related modules at import-time.
 # This file can be imported inside multiprocessing workers on Windows; importing
@@ -558,29 +567,17 @@ def _query_peptide_proteins_nested_via_subprocess(
         repo_root = pathlib.Path(__file__).resolve().parents[2]
         env = os.environ.copy()
         env["PYTHONPATH"] = str(repo_root) + os.pathsep + env.get("PYTHONPATH", "")
-        env.setdefault("PYTHONIOENCODING", "utf-8")
+        env["PYTHONIOENCODING"] = "utf-8"
         creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         print("[UnitSpecificDigestedScan/Subprocess] Launching isolated process.", flush=True)
-        proc = subprocess.Popen(
+        return_code, last_lines = run_streaming_subprocess(
             cmd,
             cwd=str(repo_root),
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            bufsize=1,
             creationflags=creationflags,
+            max_captured_lines=50,
+            emit_line=_print_console_safe,
         )
-        last_lines: list[str] = []
-        assert proc.stdout is not None
-        for line in proc.stdout:
-            print(line.rstrip("\n"), flush=True)
-            last_lines.append(line)
-            if len(last_lines) > 50:
-                last_lines = last_lines[-50:]
-        return_code = proc.wait()
         if return_code != 0:
             tail = "".join(last_lines[-20:])
             raise RuntimeError(
@@ -592,6 +589,52 @@ def _query_peptide_proteins_nested_via_subprocess(
                 "Unit-specific digested scan subprocess finished without nested_mapping.tsv"
             )
         return _read_nested_mapping_tsv(out_mapping)
+
+
+def _resolve_selected_digest_genome_files(
+    valid_folders: list[str],
+    selected_genomes: set[str],
+) -> list[str]:
+    """Resolve one digest TSV per selected genome during the existing directory walk."""
+    matched_files: dict[str, dict[str, str]] = {}
+    for folder in valid_folders:
+        for path in pathlib.Path(folder).glob("*.tsv"):
+            genome_id = path.stem
+            if genome_id not in selected_genomes:
+                continue
+            resolved_path = str(path.resolve())
+            matched_files.setdefault(genome_id, {})[resolved_path] = str(path)
+
+    missing_genomes = sorted(selected_genomes - set(matched_files))
+    if missing_genomes:
+        preview = ", ".join(missing_genomes[:20])
+        suffix = "" if len(missing_genomes) <= 20 else ", ..."
+        raise FileNotFoundError(
+            "Missing digested genome TSV files for "
+            f"{len(missing_genomes)} selected manifest genomes: {preview}{suffix}. "
+            f"Searched directories: {valid_folders}"
+        )
+
+    duplicate_genomes = {
+        genome_id: sorted(paths.values())
+        for genome_id, paths in matched_files.items()
+        if len(paths) > 1
+    }
+    if duplicate_genomes:
+        details = "; ".join(
+            f"{genome_id}: {paths}"
+            for genome_id, paths in sorted(duplicate_genomes.items())[:10]
+        )
+        suffix = "" if len(duplicate_genomes) <= 10 else "; ..."
+        raise ValueError(
+            "Selected manifest genomes must resolve to exactly one digest TSV; "
+            f"duplicates found for {len(duplicate_genomes)} genomes: {details}{suffix}"
+        )
+
+    return [
+        next(iter(matched_files[genome_id].values()))
+        for genome_id in sorted(selected_genomes)
+    ]
 
 
 def query_peptide_proteins_from_digested_genome_folders_nested(
@@ -633,13 +676,15 @@ def query_peptide_proteins_from_digested_genome_folders_nested(
     if not valid_folders:
         raise ValueError(f"No valid digested genome folders found: {folders}")
 
-    selected_genomes = {str(genome_id) for genome_id in selected_genomes_set}
-    all_files = [
-        str(path)
-        for folder in valid_folders
-        for path in pathlib.Path(folder).glob("*.tsv")
-        if path.stem in selected_genomes
-    ]
+    selected_genomes = {
+        str(genome_id)
+        for genome_id in selected_genomes_set
+        if str(genome_id)
+    }
+    all_files = _resolve_selected_digest_genome_files(
+        valid_folders,
+        selected_genomes,
+    )
     if not all_files:
         print(
             "[UnitSpecificDigestedScan] No genome TSV files match the manifest genome union.",
@@ -896,6 +941,8 @@ class peptideProteinsMapper:
         self.protein_ranked_table = None
         self.genome_ranked_table = None
         self.final_peptide_table = None
+        self.annotation_output_path: str | None = None
+        self.annotation_info_path: str | None = None
         
         self.selected_proteins_num = 0
         self.selected_genomes_num = 0
@@ -1409,28 +1456,14 @@ class peptideProteinsMapper:
             except Exception:
                 creationflags = 0
 
-            proc = subprocess.Popen(
+            rc, last_lines = run_streaming_subprocess(
                 cmd,
                 cwd=str(repo_root),
                 env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                bufsize=1,
                 creationflags=creationflags,
+                max_captured_lines=50,
+                emit_line=_print_console_safe,
             )
-
-            last_lines: list[str] = []
-            assert proc.stdout is not None
-            for line in proc.stdout:
-                print(line.rstrip("\n"))
-                last_lines.append(line)
-                if len(last_lines) > 50:
-                    last_lines = last_lines[-50:]
-
-            rc = proc.wait()
             if rc != 0:
                 tail = "".join(last_lines[-20:])
                 raise RuntimeError(f"Digested scan subprocess failed (exit={rc}). Last output:\n{tail}")
@@ -1652,6 +1685,30 @@ class peptideProteinsMapper:
             annotation_result_cache=annotation_result_cache,
         )
         df_res = annotator.run_annotate(save_output=save_output)
+        if save_output:
+            self.annotation_output_path = str(
+                getattr(annotator, "output_path", self.output_path)
+            )
+            self.annotation_info_path = getattr(annotator, "info_path", None)
+        # Expose the statistics already collected by the mapper and annotator so
+        # workflow callers can produce a structured, machine-readable run result.
+        self.annotation_run_stats = dict(getattr(annotator, "run_stats", {}))
+        sample_columns = [
+            column for column in df_res.columns if column.startswith("Intensity_")
+        ]
+        sequence_column = "Sequence" if "Sequence" in df_res.columns else self.peptide_col
+        protein_column = "Proteins" if "Proteins" in df_res.columns else "Proteins"
+        self.annotation_output_metrics = {
+            "rows": int(df_res.shape[0]),
+            "columns": int(df_res.shape[1]),
+            "unique_sequences": int(df_res[sequence_column].nunique(dropna=True)),
+            "unique_protein_groups": (
+                int(df_res[protein_column].nunique(dropna=True))
+                if protein_column in df_res.columns
+                else None
+            ),
+            "sample_columns": sample_columns,
+        }
         print("OTF annotation finished")
         return df_res
         

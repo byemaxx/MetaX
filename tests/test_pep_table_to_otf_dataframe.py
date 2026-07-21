@@ -1,9 +1,20 @@
+import io
 import json
 import sqlite3
 
 import pandas as pd
 
+from metax.peptide_annotator import pep_table_to_otf
 from metax.peptide_annotator.pep_table_to_otf import peptideProteinsMapper
+
+
+def test_subprocess_progress_is_safe_on_legacy_windows_console(monkeypatch):
+    raw = io.BytesIO()
+    legacy_stdout = io.TextIOWrapper(raw, encoding="cp1252")
+    monkeypatch.setattr(pep_table_to_otf.sys, "stdout", legacy_stdout)
+    pep_table_to_otf._print_console_safe("Scanning ██")
+    legacy_stdout.flush()
+    assert raw.getvalue().decode("cp1252").strip() == "Scanning ??"
 
 
 def _make_peptide_db(path):

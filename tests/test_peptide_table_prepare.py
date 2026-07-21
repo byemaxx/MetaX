@@ -3,9 +3,24 @@ import pytest
 
 from metax.peptide_annotator.peptide_table_prepare import (
     available_diann_intensity_columns,
+    normalize_sample_identifier,
     prepare_diann_parquet_for_direct_otf,
     resolve_diann_parquet_schema,
 )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (r"D:\data\sample_1.raw.dia", "sample_1"),
+        (r"D:\data\sample_1.RAW.DIA", "sample_1"),
+        ("/data/sample_1.mzML.dia", "sample_1"),
+        ("sample_1.mzXML", "sample_1"),
+        ("sample.v2", "sample.v2"),
+    ],
+)
+def test_normalize_sample_identifier_removes_only_known_suffixes(value, expected):
+    assert normalize_sample_identifier(value) == expected
 
 
 def test_resolve_diann_parquet_schema_exposes_column_roles():

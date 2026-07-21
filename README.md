@@ -60,15 +60,40 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
 
 <br>
 
-- **Command-line version**
+- **Lightweight annotation CLI**
 
-    > Install via [PyPI](https://pypi.org/project/MetaXTools/):
+    > The default PyPI installation contains the OTF annotation backend and CLI without Qt:
     >
     > ```bash
     > python -m pip install MetaXTools
     > ```
-    > 
-    > After installation, launch the GUI by typing `metax` in your terminal.
+    >
+    > Run annotation with the same Python environment that installed MetaX:
+    >
+    > ```bash
+    > python -m metax.cli.annotate --config annotation.yaml
+    > ```
+
+- **Headless Analyzer and Report**
+
+    > Install the Analyzer without Qt, or install the complete headless Report stack:
+    >
+    > ```bash
+    > python -m pip install "MetaXTools[analyzer]"
+    > python -m pip install "MetaXTools[report]"
+    > metax-report --config report.yaml
+    > ```
+
+- **Desktop GUI / complete installation**
+
+    > The desktop profile includes Analyzer, statistics, plotting, Report, notebook export, and Qt:
+    >
+    > ```bash
+    > python -m pip install "MetaXTools[full]"
+    > metax
+    > ```
+    >
+    > If an optional stack is missing, `metax` and `metax-report` exit with a clear message identifying the required extra.
 
 
 
@@ -78,7 +103,8 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
   - Refer to the <a href="https://byemaxx.github.io/MetaX/" target="_blank">MetaX Cookbook</a> for detailed instructions on how to use MetaX with the graphical user interface.
   <br>
 - `Command-line version`:
-  - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for detailed instructions and examples.
+  - See the [Annotation CLI integration guide](Docs/Annotation_CLI.md) for unified MetaUmbra manifest input plus explicit MetaX automatic and custom genome-list sources.
+  - Read the example documentation in the [Notebook](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for analysis examples.
 
 
 ## Citing
