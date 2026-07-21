@@ -28,6 +28,12 @@ GUI_IMPORT_ROOTS = {
     "statsmodels",
     "upsetplot",
 }
+NATIVE_IMPORT_ERROR_MARKERS = (
+    "cannot open shared object file",
+    "dll load failed",
+    "image not found",
+    "library not loaded",
+)
 
 
 def _missing_gui_message(missing_module: str | None = None) -> str:
@@ -38,13 +44,20 @@ def _missing_gui_message(missing_module: str | None = None) -> str:
     )
 
 
+def _is_gui_dependency_import_error(exc: ImportError) -> bool:
+    missing_root = (exc.name or "").split(".", 1)[0]
+    if missing_root in GUI_IMPORT_ROOTS:
+        return True
+    error_message = str(exc).casefold()
+    return any(marker in error_message for marker in NATIVE_IMPORT_ERROR_MARKERS)
+
+
 def main() -> int:
     """Load the desktop application only when the optional GUI stack is present."""
     try:
         main_gui = importlib.import_module("metax.gui.main_gui")
-    except ModuleNotFoundError as exc:
-        missing_root = (exc.name or "").split(".", 1)[0]
-        if missing_root in GUI_IMPORT_ROOTS:
+    except ImportError as exc:
+        if _is_gui_dependency_import_error(exc):
             print(_missing_gui_message(exc.name), file=sys.stderr)
             return 4
         raise
