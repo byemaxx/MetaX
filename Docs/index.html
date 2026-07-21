@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaX Cookbook</title>
+    <title>MetaX Documentation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +30,7 @@
             --table-stripe-odd: #ffffff;
             --table-stripe-even: #f9fbff;
             --code-bg: rgba(175, 184, 193, 0.2);
+            --tab-bg: #eaeef2;
             --nav-width: 310px;
             --radius: 8px;
             --shadow: 0 1px 2px rgba(31, 35, 40, 0.04);
@@ -56,6 +57,7 @@
             --table-stripe-odd: #161b22;
             --table-stripe-even: #1b2230;
             --code-bg: rgba(110, 118, 129, 0.4);
+            --tab-bg: #21262d;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
         }
 
@@ -258,6 +260,7 @@
         }
 
         nav a:focus-visible,
+        .doc-tab:focus-visible,
         .theme-toggle:focus-visible,
         .sidebar-toggle:focus-visible,
         .toc-caret:focus-visible,
@@ -270,7 +273,7 @@
 
         main {
             margin-left: var(--nav-width);
-            padding: 36px 42px;
+            padding: 20px 42px 36px;
             min-height: 100vh;
             --list-indent: 0px;
         }
@@ -279,6 +282,47 @@
             max-width: 1100px;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        .doc-tabs {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            gap: 6px;
+            padding: 10px 0 12px;
+            margin-bottom: 22px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--nav-border);
+        }
+
+        .doc-tab {
+            border: 1px solid var(--nav-border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: var(--muted-text);
+            background: var(--surface-soft);
+            font: inherit;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .doc-tab:hover {
+            color: var(--text);
+            background: var(--tab-bg);
+        }
+
+        .doc-tab[aria-selected="true"] {
+            color: var(--accent-strong);
+            background: var(--active-bg);
+            border-color: var(--active-border);
+        }
+
+        .doc-panel[hidden],
+        .toc-list[hidden] {
+            display: none !important;
         }
 
         main ul,
@@ -295,7 +339,7 @@
         }
 
         h1, h2, h3, h4 {
-            scroll-margin-top: 84px;
+            scroll-margin-top: 96px;
         }
 
         h1 {
@@ -540,6 +584,12 @@
                 padding: 70px 16px 24px;
             }
 
+            .doc-tabs {
+                overflow-x: auto;
+                padding-top: 8px;
+                white-space: nowrap;
+            }
+
             .toc-toggle {
                 display: inline-flex;
                 align-items: center;
@@ -556,7 +606,7 @@
 <nav id="doc-nav" aria-label="Table of contents">
     <div class="nav-header">
         <div class="nav-title">
-            <h2 class="nav-title-text">MetaX Cookbook</h2>
+            <h2 class="nav-title-text">MetaX Documentation</h2>
             <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse sidebar">◀</button>
         </div>
         <button id="toggleTheme" class="theme-toggle" type="button" aria-label="Toggle color theme">Dark</button>
@@ -565,460 +615,928 @@
         <button id="collapseAllToc" type="button">Collapse All</button>
         <button id="expandAllToc" type="button">Expand All</button>
     </div>
-    <ul class="toc-list">
-    
-        <li class="toc-node level-1" data-anchor="metax-cookbook" data-has-children="false">
+
+    <ul class="toc-list" data-doc-key="cookbook">
+
+            <li class="toc-node level-1" data-anchor="metax-cookbook" data-has-children="true">
     <div class="toc-row" style="--toc-level: 1;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
+
+        <button class="toc-caret" type="button" aria-label="Toggle MetaX Cookbook" aria-expanded="true"></button>
+
         <a class="nav-link toc-link level-1" href="#metax-cookbook" id="nav-metax-cookbook">MetaX Cookbook</a>
     </div>
-    
-</li>
-    
-        <li class="toc-node level-1" data-anchor="overview" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 1;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-1" href="#overview" id="nav-overview">Overview</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-1" data-anchor="project-page" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 1;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-1" href="#project-page" id="nav-project-page">Project Page</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-1" data-anchor="getting-started" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 1;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-1" href="#getting-started" id="nav-getting-started">Getting Started</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-1" data-anchor="exploring-data-with-metax" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 1;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle Exploring Data with MetaX" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-1" href="#exploring-data-with-metax" id="nav-exploring-data-with-metax">Exploring Data with MetaX</a>
-    </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-2" data-anchor="module-1-otf-analyzer" data-has-children="false">
+
+        <li class="toc-node level-2" data-anchor="overview" data-has-children="false">
     <div class="toc-row" style="--toc-level: 2;">
-        
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
+
+        <a class="nav-link toc-link level-2" href="#overview" id="nav-overview">Overview</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="contents" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#contents" id="nav-contents">Contents</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="getting-started" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#getting-started" id="nav-getting-started">Getting Started</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="module-1-otf-analyzer" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle Module 1. OTF Analyzer" aria-expanded="true"></button>
+
         <a class="nav-link toc-link level-2" href="#module-1-otf-analyzer" id="nav-module-1-otf-analyzer">Module 1. OTF Analyzer</a>
     </div>
-    
-</li>
-    
-        <li class="toc-node level-2" data-anchor="1-data-preparation" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-2" href="#1-data-preparation" id="nav-1-data-preparation">1. Data Preparation</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-2" data-anchor="2-data-overview" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-2" href="#2-data-overview" id="nav-2-data-overview">2. Data Overview</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-2" data-anchor="3-set-taxafunc" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle 3. Set TaxaFunc" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-2" href="#3-set-taxafunc" id="nav-3-set-taxafunc">3. Set TaxaFunc</a>
-    </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="data-selection" data-has-children="false">
+
+        <li class="toc-node level-3" data-anchor="1-data-preparation" data-has-children="false">
     <div class="toc-row" style="--toc-level: 3;">
-        
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#data-selection" id="nav-data-selection">Data Selection</a>
+
+        <a class="nav-link toc-link level-3" href="#1-data-preparation" id="nav-1-data-preparation">1. Data Preparation</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="sum-proteins-intensity" data-has-children="false">
+
+        <li class="toc-node level-3" data-anchor="2-data-overview" data-has-children="false">
     <div class="toc-row" style="--toc-level: 3;">
-        
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#sum-proteins-intensity" id="nav-sum-proteins-intensity">Sum Proteins Intensity</a>
+
+        <a class="nav-link toc-link level-3" href="#2-data-overview" id="nav-2-data-overview">2. Data Overview</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="data-preprocessing" data-has-children="false">
+
+        <li class="toc-node level-3" data-anchor="3-build-analysis-tables-set-taxafunc" data-has-children="true">
     <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#data-preprocessing" id="nav-data-preprocessing">Data preprocessing</a>
+
+        <button class="toc-caret" type="button" aria-label="Toggle 3. Build Analysis Tables (Set TaxaFunc)" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-3" href="#3-build-analysis-tables-set-taxafunc" id="nav-3-build-analysis-tables-set-taxafunc">3. Build Analysis Tables (Set TaxaFunc)</a>
     </div>
-    
-</li>
-    
-    </ul>
-    
-</li>
-    
-        <li class="toc-node level-2" data-anchor="4-basic-stats" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle 4. Basic Stats" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-2" href="#4-basic-stats" id="nav-4-basic-stats">4. Basic Stats</a>
-    </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="pca-correlation-and-box-plot" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="data-selection" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#pca-correlation-and-box-plot" id="nav-pca-correlation-and-box-plot">PCA, Correlation and Box Plot</a>
+
+        <a class="nav-link toc-link level-4" href="#data-selection" id="nav-data-selection">Data Selection</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="heatmap-and-bar-plot" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="generate-a-protein-intensity-table" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#heatmap-and-bar-plot" id="nav-heatmap-and-bar-plot">Heatmap and Bar Plot</a>
+
+        <a class="nav-link toc-link level-4" href="#generate-a-protein-intensity-table" id="nav-generate-a-protein-intensity-table">Generate a Protein Intensity Table</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="peptide-query" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="data-preprocessing" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#peptide-query" id="nav-peptide-query">Peptide Query</a>
+
+        <a class="nav-link toc-link level-4" href="#data-preprocessing" id="nav-data-preprocessing">Data Preprocessing</a>
     </div>
-    
+
 </li>
-    
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-2" data-anchor="5-cross-test" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle 5. Cross Test" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-2" href="#5-cross-test" id="nav-5-cross-test">5. Cross Test</a>
+
+        <li class="toc-node level-3" data-anchor="4-basic-statistics-and-plots" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 4. Basic Statistics and Plots" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-3" href="#4-basic-statistics-and-plots" id="nav-4-basic-statistics-and-plots">4. Basic Statistics and Plots</a>
     </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="t-test" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="pca-t-sne-correlation-and-box-plot" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#t-test" id="nav-t-test">T-TEST</a>
+
+        <a class="nav-link toc-link level-4" href="#pca-t-sne-correlation-and-box-plot" id="nav-pca-t-sne-correlation-and-box-plot">PCA, t-SNE, Correlation, and Box Plot</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="anova-test" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="heatmap-and-bar-plot" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#anova-test" id="nav-anova-test">ANOVA-TEST</a>
+
+        <a class="nav-link toc-link level-4" href="#heatmap-and-bar-plot" id="nav-heatmap-and-bar-plot">Heatmap and Bar Plot</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="significant-taxa-func" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="peptide-query" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#significant-taxa-func" id="nav-significant-taxa-func">Significant Taxa-Func</a>
+
+        <a class="nav-link toc-link level-4" href="#peptide-query" id="nav-peptide-query">Peptide Query</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="plot-cross-heatmap" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#plot-cross-heatmap" id="nav-plot-cross-heatmap">Plot Cross Heatmap</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-3" data-anchor="group-control-test" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#group-control-test" id="nav-group-control-test">Group-Control TEST</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-3" data-anchor="deseq2" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#deseq2" id="nav-deseq2">DESeq2</a>
-    </div>
-    
-</li>
-    
-        <li class="toc-node level-3" data-anchor="tukey-test" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#tukey-test" id="nav-tukey-test">Tukey Test</a>
-    </div>
-    
-</li>
-    
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-2" data-anchor="6-expression-analysis" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 2;">
-        
+
+        <li class="toc-node level-3" data-anchor="5-statistical-tests" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 5. Statistical Tests" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-3" href="#5-statistical-tests" id="nav-5-statistical-tests">5. Statistical Tests</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-4" data-anchor="t-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#t-test" id="nav-t-test">T-test</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="anova" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#anova" id="nav-anova">ANOVA</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="significant-taxa-function-results" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#significant-taxa-function-results" id="nav-significant-taxa-function-results">Significant Taxa-Function Results</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="cross-test-heatmaps" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#cross-test-heatmaps" id="nav-cross-test-heatmaps">Cross-test Heatmaps</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="group-vs-control-tests" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#group-vs-control-tests" id="nav-group-vs-control-tests">Group-vs-Control Tests</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="differential-expression-limma-deseq2" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#differential-expression-limma-deseq2" id="nav-differential-expression-limma-deseq2">Differential Expression (Limma / DESeq2)</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="tukey-test" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#tukey-test" id="nav-tukey-test">Tukey Test</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="6-expression-analysis" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 3;">
+
         <button class="toc-caret" type="button" aria-label="Toggle 6. Expression Analysis" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-2" href="#6-expression-analysis" id="nav-6-expression-analysis">6. Expression Analysis</a>
+
+        <a class="nav-link toc-link level-3" href="#6-expression-analysis" id="nav-6-expression-analysis">6. Expression Analysis</a>
     </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="co-expression-networks-heatmap" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="co-expression-networks-and-heatmaps" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#co-expression-networks-heatmap" id="nav-co-expression-networks-heatmap">Co-Expression Networks & Heatmap</a>
+
+        <a class="nav-link toc-link level-4" href="#co-expression-networks-and-heatmaps" id="nav-co-expression-networks-and-heatmaps">Co-expression Networks and Heatmaps</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="expression-trends" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="expression-trends" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#expression-trends" id="nav-expression-trends">Expression Trends</a>
+
+        <a class="nav-link toc-link level-4" href="#expression-trends" id="nav-expression-trends">Expression Trends</a>
     </div>
-    
+
 </li>
-    
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-2" data-anchor="7-taxa-func-link" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 2;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle 7. Taxa-Func Link" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-2" href="#7-taxa-func-link" id="nav-7-taxa-func-link">7. Taxa-Func Link</a>
+
+        <li class="toc-node level-3" data-anchor="7-taxa-function-links" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 7. Taxa-Function Links" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-3" href="#7-taxa-function-links" id="nav-7-taxa-function-links">7. Taxa-Function Links</a>
     </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="taxa-func-link-plot" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="taxa-function-link-plots" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#taxa-func-link-plot" id="nav-taxa-func-link-plot">Taxa-Func Link Plot</a>
+
+        <a class="nav-link toc-link level-4" href="#taxa-function-link-plots" id="nav-taxa-function-link-plots">Taxa-Function Link Plots</a>
     </div>
-    
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="taxa-func-network" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 3;">
-        
+
+        <li class="toc-node level-4" data-anchor="taxa-function-network" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#taxa-func-network" id="nav-taxa-func-network">Taxa-Func Network</a>
+
+        <a class="nav-link toc-link level-4" href="#taxa-function-network" id="nav-taxa-function-network">Taxa-Function Network</a>
     </div>
-    
+
 </li>
-    
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-2" data-anchor="8-restore-last-taxafunc-object" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 2;">
-        
+
+        <li class="toc-node level-3" data-anchor="8-save-and-restore-a-taxafunc-object" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-2" href="#8-restore-last-taxafunc-object" id="nav-8-restore-last-taxafunc-object">8. Restore Last TaxaFunc Object</a>
+
+        <a class="nav-link toc-link level-3" href="#8-save-and-restore-a-taxafunc-object" id="nav-8-save-and-restore-a-taxafunc-object">8. Save and Restore a TaxaFunc Object</a>
     </div>
-    
+
 </li>
-    
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-1" data-anchor="preparing-your-data" data-has-children="true">
-    <div class="toc-row" style="--toc-level: 1;">
-        
-        <button class="toc-caret" type="button" aria-label="Toggle Preparing Your Data" aria-expanded="true"></button>
-        
-        <a class="nav-link toc-link level-1" href="#preparing-your-data" id="nav-preparing-your-data">Preparing Your Data</a>
-    </div>
-    
-    <ul class="toc-children">
-    
-        <li class="toc-node level-2" data-anchor="module-2-database-builder" data-has-children="false">
+
+        <li class="toc-node level-2" data-anchor="module-2-database-builder" data-has-children="true">
     <div class="toc-row" style="--toc-level: 2;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
+
+        <button class="toc-caret" type="button" aria-label="Toggle Module 2. Database Builder" aria-expanded="true"></button>
+
         <a class="nav-link toc-link level-2" href="#module-2-database-builder" id="nav-module-2-database-builder">Module 2. Database Builder</a>
     </div>
-    
-</li>
-    
-        <li class="toc-node level-2" data-anchor="module-3-database-updater" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 2;">
-        
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="option-1-build-from-an-mgnify-catalogue" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
+
+        <a class="nav-link toc-link level-3" href="#option-1-build-from-an-mgnify-catalogue" id="nav-option-1-build-from-an-mgnify-catalogue">Option 1: Build from an MGnify Catalogue</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="option-2-build-from-custom-data" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#option-2-build-from-custom-data" id="nav-option-2-build-from-custom-data">Option 2: Build from Custom Data</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="module-3-database-updater" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle Module 3. Database Updater" aria-expanded="true"></button>
+
         <a class="nav-link toc-link level-2" href="#module-3-database-updater" id="nav-module-3-database-updater">Module 3. Database Updater</a>
     </div>
-    
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="option-1-built-in-dbcan_seq-annotations" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#option-1-built-in-dbcan_seq-annotations" id="nav-option-1-built-in-dbcan_seq-annotations">Option 1: Built-in dbCAN_seq Annotations</a>
+    </div>
+
 </li>
-    
+
+        <li class="toc-node level-3" data-anchor="option-2-custom-tsv-annotation-table" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#option-2-custom-tsv-annotation-table" id="nav-option-2-custom-tsv-annotation-table">Option 2: Custom TSV Annotation Table</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
         <li class="toc-node level-2" data-anchor="module-4-peptide-annotator" data-has-children="true">
     <div class="toc-row" style="--toc-level: 2;">
-        
+
         <button class="toc-caret" type="button" aria-label="Toggle Module 4. Peptide Annotator" aria-expanded="true"></button>
-        
+
         <a class="nav-link toc-link level-2" href="#module-4-peptide-annotator" id="nav-module-4-peptide-annotator">Module 4. Peptide Annotator</a>
     </div>
-    
+
     <ul class="toc-children">
-    
-        <li class="toc-node level-3" data-anchor="1-results-from-mag-workflow" data-has-children="false">
+
+        <li class="toc-node level-3" data-anchor="1-peptide-direct-to-otfs-recommended" data-has-children="true">
     <div class="toc-row" style="--toc-level: 3;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#1-results-from-mag-workflow" id="nav-1-results-from-mag-workflow">1. Results from MAG Workflow</a>
+
+        <button class="toc-caret" type="button" aria-label="Toggle 1. Peptide Direct to OTFs (Recommended)" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-3" href="#1-peptide-direct-to-otfs-recommended" id="nav-1-peptide-direct-to-otfs-recommended">1. Peptide Direct to OTFs (Recommended)</a>
     </div>
-    
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-4" data-anchor="step-1-build-your-own-digested-genome-reference" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#step-1-build-your-own-digested-genome-reference" id="nav-step-1-build-your-own-digested-genome-reference">Step 1: Build Your Own Digested-Genome Reference</a>
+    </div>
+
 </li>
-    
-        <li class="toc-node level-3" data-anchor="2-results-from-maxquant-workflow" data-has-children="false">
+
+        <li class="toc-node level-4" data-anchor="step-2-run-metaumbra-genome-presence-scoring" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#step-2-run-metaumbra-genome-presence-scoring" id="nav-step-2-run-metaumbra-genome-presence-scoring">Step 2: Run MetaUmbra Genome Presence Scoring</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="step-3-load-the-metaumbra-manifest-in-metax" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#step-3-load-the-metaumbra-manifest-in-metax" id="nav-step-3-load-the-metaumbra-manifest-in-metax">Step 3: Load the MetaUmbra Manifest in MetaX</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="produce-a-standalone-genome-list" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#produce-a-standalone-genome-list" id="nav-produce-a-standalone-genome-list">Produce a Standalone Genome List</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="other-genome-selection-sources" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#other-genome-selection-sources" id="nav-other-genome-selection-sources">Other genome selection sources</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="common-inputs" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#common-inputs" id="nav-common-inputs">Common inputs</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="dia-nn-parquet-input" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#dia-nn-parquet-input" id="nav-dia-nn-parquet-input">DIA-NN parquet input</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="advanced-settings" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#advanced-settings" id="nav-advanced-settings">Advanced settings</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-4" data-anchor="manifest-output-and-downstream-counts" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 4;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-4" href="#manifest-output-and-downstream-counts" id="nav-manifest-output-and-downstream-counts">Manifest output and downstream counts</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="2-mag-annotate-a-pre-mapped-peptide-table" data-has-children="false">
     <div class="toc-row" style="--toc-level: 3;">
-        
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-3" href="#2-results-from-maxquant-workflow" id="nav-2-results-from-maxquant-workflow">2. Results from MaxQuant Workflow</a>
+
+        <a class="nav-link toc-link level-3" href="#2-mag-annotate-a-pre-mapped-peptide-table" id="nav-2-mag-annotate-a-pre-mapped-peptide-table">2. MAG: Annotate a Pre-mapped Peptide Table</a>
     </div>
-    
+
 </li>
-    
+
+        <li class="toc-node level-3" data-anchor="3-metalab-23-maxquant-results" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#3-metalab-23-maxquant-results" id="nav-3-metalab-23-maxquant-results">3. MetaLab 2.3 MaxQuant Results</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="4-peptide-direct-to-otfs-via-cli-and-automation" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#4-peptide-direct-to-otfs-via-cli-and-automation" id="nav-4-peptide-direct-to-otfs-via-cli-and-automation">4. Peptide Direct to OTFs via CLI and Automation</a>
+    </div>
+
+</li>
+
     </ul>
-    
+
 </li>
-    
+
+        <li class="toc-node level-2" data-anchor="reporting-and-reproducibility" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle Reporting and Reproducibility" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-2" href="#reporting-and-reproducibility" id="nav-reporting-and-reproducibility">Reporting and Reproducibility</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="auto-otf-report" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#auto-otf-report" id="nav-auto-otf-report">Auto OTF Report</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="export-a-recorded-gui-workflow" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#export-a-recorded-gui-workflow" id="nav-export-a-recorded-gui-workflow">Export a Recorded GUI Workflow</a>
+    </div>
+
+</li>
+
     </ul>
-    
+
 </li>
-    
-        <li class="toc-node level-1" data-anchor="developer-tools" data-has-children="false">
+
+        <li class="toc-node level-2" data-anchor="application-tools" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle Application Tools" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-2" href="#application-tools" id="nav-application-tools">Application Tools</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="logs-and-console" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#logs-and-console" id="nav-logs-and-console">Logs and Console</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="settings-and-updates" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#settings-and-updates" id="nav-settings-and-updates">Settings and Updates</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="support" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#support" id="nav-support">Support</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+    </ul>
+
+    <ul class="toc-list" data-doc-key="metax-cli" hidden>
+
+            <li class="toc-node level-1" data-anchor="metax-cli" data-has-children="true">
     <div class="toc-row" style="--toc-level: 1;">
-        
-        <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-1" href="#developer-tools" id="nav-developer-tools">Developer Tools</a>
+
+        <button class="toc-caret" type="button" aria-label="Toggle MetaX CLI" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-1" href="#metax-cli" id="nav-metax-cli">MetaX CLI</a>
     </div>
-    
-</li>
-    
-        <li class="toc-node level-1" data-anchor="enjoy-metax" data-has-children="false">
-    <div class="toc-row" style="--toc-level: 1;">
-        
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-2" data-anchor="1-installation-profiles" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
         <span class="toc-spacer" aria-hidden="true"></span>
-        
-        <a class="nav-link toc-link level-1" href="#enjoy-metax" id="nav-enjoy-metax">Enjoy MetaX</a>
+
+        <a class="nav-link toc-link level-2" href="#1-installation-profiles" id="nav-1-installation-profiles">1. Installation Profiles</a>
     </div>
-    
+
 </li>
-    
+
+        <li class="toc-node level-2" data-anchor="2-command-overview" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#2-command-overview" id="nav-2-command-overview">2. Command Overview</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="3-desktop-launcher" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#3-desktop-launcher" id="nav-3-desktop-launcher">3. Desktop Launcher</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="4-peptide-to-otf-annotation" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 4. Peptide-to-OTF Annotation" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-2" href="#4-peptide-to-otf-annotation" id="nav-4-peptide-to-otf-annotation">4. Peptide-to-OTF Annotation</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="41-input-sources" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#41-input-sources" id="nav-41-input-sources">4.1 Input Sources</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="42-metaumbra-manifest-workflow-recommended" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#42-metaumbra-manifest-workflow-recommended" id="nav-42-metaumbra-manifest-workflow-recommended">4.2 MetaUmbra Manifest Workflow (Recommended)</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="43-metax-automatic-genome-selection" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#43-metax-automatic-genome-selection" id="nav-43-metax-automatic-genome-selection">4.3 MetaX Automatic Genome Selection</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="44-custom-genome-list" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#44-custom-genome-list" id="nav-44-custom-genome-list">4.4 Custom Genome List</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="45-annotation-configuration-file" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#45-annotation-configuration-file" id="nav-45-annotation-configuration-file">4.5 Annotation Configuration File</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="46-annotation-option-reference" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#46-annotation-option-reference" id="nav-46-annotation-option-reference">4.6 Annotation Option Reference</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="47-annotation-outputs-and-exit-codes" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#47-annotation-outputs-and-exit-codes" id="nav-47-annotation-outputs-and-exit-codes">4.7 Annotation Outputs and Exit Codes</a>
+    </div>
+
+</li>
+
     </ul>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="5-auto-otf-html-report" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 5. Auto OTF HTML Report" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-2" href="#5-auto-otf-html-report" id="nav-5-auto-otf-html-report">5. Auto OTF HTML Report</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="51-report-configuration-file" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#51-report-configuration-file" id="nav-51-report-configuration-file">5.1 Report Configuration File</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="52-report-option-reference" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#52-report-option-reference" id="nav-52-report-option-reference">5.2 Report Option Reference</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="6-mgnify-database-builder-module" data-has-children="true">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <button class="toc-caret" type="button" aria-label="Toggle 6. MGnify Database Builder Module" aria-expanded="true"></button>
+
+        <a class="nav-link toc-link level-2" href="#6-mgnify-database-builder-module" id="nav-6-mgnify-database-builder-module">6. MGnify Database Builder Module</a>
+    </div>
+
+    <ul class="toc-children">
+
+        <li class="toc-node level-3" data-anchor="61-automatic-build" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#61-automatic-build" id="nav-61-automatic-build">6.1 Automatic Build</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-3" data-anchor="62-custom-output-location" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 3;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-3" href="#62-custom-output-location" id="nav-62-custom-output-location">6.2 Custom Output Location</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="7-reproducible-analyzer-workflows" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#7-reproducible-analyzer-workflows" id="nav-7-reproducible-analyzer-workflows">7. Reproducible Analyzer Workflows</a>
+    </div>
+
+</li>
+
+        <li class="toc-node level-2" data-anchor="8-shell-and-automation-notes" data-has-children="false">
+    <div class="toc-row" style="--toc-level: 2;">
+
+        <span class="toc-spacer" aria-hidden="true"></span>
+
+        <a class="nav-link toc-link level-2" href="#8-shell-and-automation-notes" id="nav-8-shell-and-automation-notes">8. Shell and Automation Notes</a>
+    </div>
+
+</li>
+
+    </ul>
+
+</li>
+
+    </ul>
+
 </nav>
 
 <main id="doc-main">
-    <h1 id="metax-cookbook">MetaX Cookbook</h1>
-<p>This guidebook is for the MetaX <strong>GUI version</strong>. If you are using the CLI, we recommend reading the <a href="https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb">documentation</a> for instructions on how to use each MetaX module from the command line.</p>
-<h1 id="overview">Overview</h1>
-<p><strong><a href="https://github.com/byemaxx/MetaX">MetaX</a></strong> is a novel tool for linking peptide sequences with taxonomic and functional information in <strong>Metaproteomics</strong>. We introduce the <strong><em>Operational Taxon-Function (OTF)</em></strong> concept to explore microbial roles and interactions ("<strong>who is doing what and how</strong>") within ecosystems. </p>
-<p>MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups.</p>
+    <div class="doc-tabs" role="tablist" aria-label="Documentation sections">
+
+        <button
+            id="doc-tab-cookbook"
+            class="doc-tab"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="doc-panel-cookbook"
+            data-doc-key="cookbook"
+            tabindex="0"
+        >Cookbook</button>
+
+        <button
+            id="doc-tab-metax-cli"
+            class="doc-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="doc-panel-metax-cli"
+            data-doc-key="metax-cli"
+            tabindex="-1"
+        >MetaX CLI</button>
+
+    </div>
+
+    <section
+        id="doc-panel-cookbook"
+        class="doc-panel"
+        role="tabpanel"
+        aria-labelledby="doc-tab-cookbook"
+        data-doc-key="cookbook"
+
+    >
+        <h1 id="metax-cookbook">MetaX Cookbook</h1>
+<p>This cookbook is the practical user guide for the MetaX desktop application. It covers peptide-to-OTF annotation, OTF analysis, visualization, automated reports, and reproducible workflow export. Command-line workflows are introduced where they complement the GUI, with installation, annotation, reporting, database-building, and automation details collected in the <a href="#metax-cli">MetaX CLI</a> tab on the same deployed page.</p>
+<h2 id="overview">Overview</h2>
+<p><strong><a href="https://github.com/byemaxx/MetaX">MetaX</a></strong> links peptide sequences with taxonomic and functional information in <strong>metaproteomics</strong>. The <strong>Operational Taxon-Function (OTF)</strong> framework is designed to investigate “who is doing what and how” within microbial communities.</p>
+<p>MetaX provides peptide annotation, quantitative summarization, statistical testing, visualization, automated HTML reports, and exportable analysis workflows for peptides, proteins, taxa, functions, and taxon-function associations.</p>
 <span class="image-wrap"><img alt="abstract" src="./MetaX_Cookbook.assets/abstract.png" decoding="async" class="doc-image"></span>
-<h1 id="project-page">Project Page</h1>
-<p>Visit <strong>GitHub</strong> to get more information:</p>
-<p><a href="https://github.com/byemaxx/MetaX">https://github.com/byemaxx/MetaX</a></p>
-<h1 id="getting-started">Getting Started</h1>
+<p>Project resources: <a href="https://github.com/byemaxx/MetaX">GitHub repository</a> · <a href="#metax-cli">MetaX CLI</a> · <a href="https://github.com/byemaxx/MetaX/blob/main/Docs/ChangeLog.md">Change log</a></p>
+<h2 id="contents">Contents</h2>
 <ul>
-<li>The main window of MetaX</li>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#module-1-otf-analyzer">Module 1. OTF Analyzer</a></li>
+<li><a href="#module-2-database-builder">Module 2. Database Builder</a></li>
+<li><a href="#module-3-database-updater">Module 3. Database Updater</a></li>
+<li><a href="#module-4-peptide-annotator">Module 4. Peptide Annotator</a></li>
+<li><a href="#reporting-and-reproducibility">Reporting and Reproducibility</a></li>
+<li><a href="#application-tools">Application Tools</a></li>
+<li><a href="#support">Support</a></li>
 </ul>
-<span class="image-wrap"><img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window" decoding="async" class="doc-image"></span>
-<ul>
-<li>Click 'Tools Menu' to switch <strong>different modules</strong></li>
-</ul>
-<span class="image-wrap"><img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu" decoding="async" class="doc-image"></span>
-<p><br></p>
-<h1 id="exploring-data-with-metax">Exploring Data with MetaX</h1>
-<p>See the <strong><u><a href="#preparing-your-data">Preparing Your Data</a></u></strong> section to build the database and annotate peptides to OTFs before starting.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>The main window opens on the OTF Analyzer. Use <strong>Tools Menu</strong> to switch between the Analyzer, Database Builder, Database Updater, and Peptide Annotator.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/main_window.png" alt="MetaX main window" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/tools_menu.png" alt="MetaX Tools Menu" decoding="async" class="doc-image"></span>
+<p>Choose the shortest route for your data:</p>
+<ol>
+<li><strong>You already have an OTF table:</strong> Continue with <a href="#module-1-otf-analyzer">Module 1. OTF Analyzer</a>.</li>
+<li><strong>You have a peptide-intensity table from a MAG search:</strong> Build or select the matching annotation resources, then use <a href="#1-peptide-direct-to-otfs-recommended">Peptide Direct to OTFs</a>.</li>
+<li><strong>Your peptide table already contains protein assignments:</strong> Use the <a href="#2-mag-annotate-a-pre-mapped-peptide-table">MAG annotation tab</a>.</li>
+<li><strong>You have MetaLab 2.3 MaxQuant results:</strong> Use the <a href="#3-metalab-23-maxquant-results">MetaLab 2.3 tab</a>.</li>
+<li><strong>You want a standard overview quickly:</strong> Select the OTF and metadata tables in the Analyzer and use <strong>Generate Report</strong>.</li>
+</ol>
 <h2 id="module-1-otf-analyzer">Module 1. OTF Analyzer</h2>
-<p>After obtaining the <strong>Operational Taxa-Functions (OTF) Table</strong> using the <u><strong><a href="#module-4-peptide-annotator">Peptide Annotator</a></strong></u>, you can perform downstream analysis with the <strong><u>OTF Analyzer</u></strong>.</p>
-<h2 id="1-data-preparation">1. Data Preparation</h2>
-<p><strong>OTFs (Operational Taxa-Functions) Table:</strong> Obtained from the <u><a href="#module-4-peptide-annotator">Peptide Annotator</a></u> module.</p>
-<p><strong>Meta Table:</strong> The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.</p>
+<p>After creating an OTF table with the <a href="#module-4-peptide-annotator">Peptide Annotator</a>, use the OTF Analyzer to build quantitative tables, run statistical tests, review results, and create figures.</p>
+<h3 id="1-data-preparation">1. Data Preparation</h3>
+<p>Select the two main inputs:</p>
+<ul>
+<li><strong>OTF table:</strong> A peptide-level Operational Taxon-Function table produced by the <a href="#module-4-peptide-annotator">Peptide Annotator</a> or a compatible external workflow.</li>
+<li><strong>Metadata table:</strong> The first column contains sample IDs; the remaining columns contain grouping variables such as subject, treatment, site, or batch. Sample IDs must match the OTF intensity-column names after removal of the configured sample prefix. If no metadata table is supplied, MetaX can generate simple grouping information automatically.</li>
+</ul>
 <p><strong>Example Meta Table:</strong></p>
 <div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
@@ -1068,57 +1586,50 @@
 </tr>
 </tbody>
 </table></div>
-<p>You can load example data by <strong>clicking the button</strong>.</p>
+<p>Use <strong>Load Example</strong> to explore the Analyzer with the bundled example data.</p>
 <span class="image-wrap"><img alt="load_example" src="./MetaX_Cookbook.assets/load_example.png" decoding="async" class="doc-image"></span>
-<p>Then, click <strong>Go</strong> to start the analysis.</p>
+<p>Click <strong>GO</strong> to load the data. Use <strong>Generate Report</strong> instead when you want the automated HTML workflow described in <a href="#auto-otf-report">Auto OTF Report</a>.</p>
+<p><strong>Advanced Settings</strong></p>
+<span class="image-wrap"><img alt="ad_settings_otf_analyzer" src="./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png" decoding="async" class="doc-image"></span>
 <ul>
-<li><strong>Advanced Settings</strong></li>
-<li class="media-item"><span class="image-wrap"><img alt="ad_settings_otf_analyzer" src="./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png" decoding="async" class="doc-image"></span></li>
-<li><strong>Peptide Column Name:</strong> Specifies the column in the OTF table that contains peptide information.</li>
-<li><strong>Protein Column Name:</strong> Specifies the column in the OTF table that contains protein information (only required if protein summation is performed in downstream analysis).</li>
-<li><strong>Sample Column Prefix:</strong> Identifies the prefix of sample columns to determine intensity columns in the OTF table.</li>
-<li><strong>Any Data Mode:</strong> Allows analysis of any table using MetaX, not limited to OTF tables (only partial tool functionality is available).<ul>
-<li><strong>Customized Table Item Column Name:</strong> Specifies the column containing item names in any data mode. If left empty, the first column will be selected by default.</li>
+<li><strong>Peptide Column Name:</strong> Column containing the biological peptide sequence.</li>
+<li><strong>Protein Column Name:</strong> Protein-group column used when a protein intensity table is requested.</li>
+<li><strong>Sample Column Prefix:</strong> Prefix used to recognize intensity columns.</li>
+<li><strong>Any Data Mode:</strong> Loads a non-OTF quantitative table with a reduced set of analysis tools.</li>
+<li><strong>Customized Table Item Column Name:</strong> Item identifier for Any Data Mode; when blank, MetaX uses the first column.</li>
 </ul>
-</li>
-</ul>
-<h2 id="2-data-overview">2. Data Overview</h2>
-<p>The Data Overview provides basic information about your data, such as the number of taxa, functions, and proportions.</p>
-<ul>
-<li>Set the threshold for linked peptides and the differences between them to plot figures.</li>
-</ul>
+<h3 id="2-data-overview">2. Data Overview</h3>
+<p>Data Overview summarizes the numbers of peptides, taxa, functions, and linked taxon-function entries. Use its thresholds to focus the overview plots on supported links.</p>
 <span class="image-wrap"><img alt="data_overview" src="./MetaX_Cookbook.assets/data_overview.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Select different functions to plot the proportion distribution.</li>
-</ul>
+<p>Select a function annotation to inspect its proportion distribution.</p>
 <span class="image-wrap"><img alt="data_overview_func" src="./MetaX_Cookbook.assets/data_overview_func.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Filter out samples for downstream analysis.</li>
-</ul>
+<p>You can exclude samples here before building downstream analysis tables.</p>
 <span class="image-wrap"><img alt="data_overview_filter" src="./MetaX_Cookbook.assets/data_overview_filter.png" decoding="async" class="doc-image"></span>
-<h2 id="3-set-taxafunc">3. Set TaxaFunc</h2>
-<span class="image-wrap"><img alt="set_multi_table" src="./MetaX_Cookbook.assets/set_multi_table.png" decoding="async" class="doc-image"></span>
-<h3 id="data-selection">Data Selection</h3>
+<p>Click <strong>Export Meta Table for Editing</strong> to save the currently loaded metadata as a TSV file. This is useful after MetaX has generated default metadata or when you want to edit the sample grouping and reload it for a later analysis.</p>
+<h3 id="3-build-analysis-tables-set-taxafunc">3. Build Analysis Tables (Set TaxaFunc)</h3>
+<span class="image-wrap"><img alt="Set TaxaFunc configuration" src="./MetaX_Cookbook.assets/set_multi_table.png" decoding="async" class="doc-image"></span>
+<h4 id="data-selection">Data Selection</h4>
 <ul>
 <li>
-<p><strong>Function:</strong> Select a function for downstream analysis (<strong>None</strong> in the list means no function is selected, focusing only on peptides and taxa).</p>
+<p><strong>Function:</strong> Select the function annotation used in downstream tables. Select <strong>None</strong> to work only with peptides and taxa.</p>
 </li>
 <li>
-<p><strong>Function Filter Threshold:</strong> If a specific function within a protein group of a peptide has the highest proportion, it will be considered the representative function for that peptide. The default threshold is 1.00 (100%).</p>
+<p><strong>Function Filter Threshold:</strong> Minimum within-protein-group proportion required to retain a function assignment for a peptide. The default is <code>1.00</code> (100%).</p>
 </li>
 </ul>
 <span class="image-wrap"><img alt="FUNC_prop" src="./MetaX_Cookbook.assets/FUNC_prop.png" decoding="async" class="doc-image"></span>
 <ul>
 <li>
-<p><strong>Taxa Level:</strong> Select a taxa level for downstream analysis (<strong>Life</strong> in the list means no filtering by taxa, and the following analysis focuses on functions).</p>
+<p><strong>Taxa Level:</strong> Select the taxonomic level used for aggregation. <strong>Life</strong> disables taxonomic-level filtering and is useful for function-only analysis.</p>
 </li>
 <li>
-<p><strong>Peptide Number Threshold:</strong> Only keep taxa, functions, or OTFs that have at least the specified number of peptides.</p>
+<p><strong>Peptide Number Threshold:</strong> Retain taxa, functions, or taxon-function entries supported by at least this number of unique biological peptide sequences.</p>
 </li>
 <li>
-<p><strong>Split Function:</strong> Split the annotations with multi-functions.</p>
+<p><strong>Split Function:</strong> Expand multi-value function annotations into separate rows. For example:</p>
 </li>
-<li class="media-item"><div class="table-responsive"><table class="table table-striped table-bordered">
+</ul>
+<div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
 <tr>
 <th>KO</th>
@@ -1132,7 +1643,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>to</p>
+<p>becomes:</p>
 <div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
 <tr>
@@ -1151,8 +1662,8 @@
 </tr>
 </tbody>
 </table></div>
-<p>If <u>Share Intensity</u> is checked, the intensity above will be split equally, giving <u>5</u> to each KO.</p>
-</li>
+<p>With <strong>Share Intensity</strong> enabled, the original intensity is divided equally, giving <code>5</code> to each KO in this example. Without it, each expanded row retains the original value.</p>
+<ul>
 <li>
 <p><strong>Remove unknown taxa:</strong> Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed. When unchecked, such peptides will be retained and labeled as <em>unknown</em>, for example:</p>
 <p><code>text
@@ -1162,228 +1673,95 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown</code></p>
 </li>
 <li>
-<p><strong>Create Taxa and Func only from OTFs:</strong></p>
+<p><strong>Create Taxa and Func only from OTFs:</strong> When disabled, the Taxa and Function tables apply their own independent filters. When enabled, both tables are derived from the peptide rows that pass the combined taxonomic and functional OTF filters. The Taxa-Function table always uses both filters.</p>
 </li>
-<li>
-<p><strong>Without selection (checkbox not checked):</strong></p>
+</ul>
+<h4 id="generate-a-protein-intensity-table">Generate a Protein Intensity Table</h4>
+<p>Enable <strong>Generate Protein Intensity Table</strong> when the input OTF includes a protein-group column.</p>
 <ul>
-<li><u>Taxa table:</u> Peptides are filtered based solely on taxa levels, without considering any functional categories.</li>
-<li><u>Function table:</u> Peptides are filtered solely by functional categories and thresholds, regardless of their taxa levels.</li>
-<li><u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
+<li><strong>Occam's Razor:</strong> Builds a minimal protein set that covers the observed peptides, then assigns a shared peptide to the best-supported protein. Tied proteins share its intensity.</li>
+<li><strong>Anti-Razor:</strong> Retains every linked protein and shares the peptide intensity across them.</li>
+<li><strong>Rank:</strong> Assigns shared peptides to the higher-ranked protein. Ranking can use unique-peptide counts, all-peptide counts, unique-peptide intensity, or shared-peptide intensity.</li>
+<li><strong>Minimum peptide number per protein:</strong> Removes proteins supported by fewer peptides than the selected threshold.</li>
 </ul>
-</li>
-<li><strong>With selection (checkbox checked):</strong><ul>
-<li><u>Taxa table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
-<li><u>Function table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
-<li><u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.</li>
-</ul>
-</li>
-</ul>
-<h3 id="sum-proteins-intensity">Sum Proteins Intensity</h3>
-<p>Click <strong>Generate Protein Intensity Table</strong> to sum peptides to proteins if the Protein column is in the original table.</p>
+<h4 id="data-preprocessing">Data Preprocessing</h4>
 <ul>
 <li>
-<p><strong>Occam's Razor</strong>, <strong>Anti-Razor</strong> and <strong>Rank:</strong> Methods available for inferring shared peptides.</p>
+<p><strong>Quantitative method:</strong> Use <strong>Sum</strong> to aggregate peptide intensities directly, or <strong>DirectLFQ</strong> to estimate abundance from normalized intensity traces.</p>
 </li>
 <li>
-<p>Razor:</p>
-<ol>
-<li>Build a minimal set of proteins to cover all peptides.</li>
-<li>For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).</li>
-</ol>
+<p><strong>Outlier detection:</strong> Selected values are marked as <code>NaN</code>; rows containing only zero/<code>NaN</code> values are then removed. Detection and imputation can use different metadata columns.</p>
 </li>
-<li>Anti-Razor:<ul>
-<li>All proteins share the intensity of each peptide.</li>
-</ul>
+<li><strong>IQR:</strong> Marks values outside <code>Q1 - 1.5 × IQR</code> and <code>Q3 + 1.5 × IQR</code>.</li>
+<li><strong>Missing-Value:</strong> Passes existing missing values to the handling step.</li>
+<li><strong>Half-Zero:</strong> Within each group, converts the minority state (zero or non-zero) to <code>NaN</code>; an equal split converts the whole group.</li>
+<li><strong>Zero-Dominant:</strong> If zeros form the majority of a group, marks its non-zero values as <code>NaN</code>; otherwise leaves the group unchanged.</li>
+<li><strong>Zero-Inflated Poisson / Negative Binomial:</strong> Uses a fitted count model to identify improbable values.</li>
+<li><strong>Z-Score:</strong> Detects values far from the group mean in standard-deviation units.</li>
+<li>
+<p><strong>Mahalanobis Distance:</strong> Detects multivariate outliers while accounting for correlation between samples.</p>
 </li>
 <li>
-<p>Rank:</p>
-<ol>
-<li>Build the rank of proteins.</li>
-<li>Choose the protein with a higher rank for the shared peptide.</li>
-</ol>
-<blockquote>
-<p>Methods to Build Protein Rank:
-- unique_counts: Use the counts of proteins inferred by unique peptides.
-- all_count: Use the counts of all proteins.
-- unique_intensity: Use the intensity of proteins inferred by unique peptides.
-- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.</p>
-</blockquote>
+<p><strong>Outlier handling:</strong> Choose <strong>Drop</strong>, <strong>Original</strong>, <strong>Mean</strong>, <strong>Median</strong>, <strong>KNN</strong>, <strong>Regression</strong>, or <strong>Multiple</strong> imputation. Imputation can be performed within groups or across all samples.</p>
 </li>
 <li>
-<p><strong>Minimum peptide number per protein:</strong> Filters out proteins that contain fewer peptides than the specified threshold.</p>
+<p><strong>Remove Batch Effect:</strong> Select the batch metadata column and apply <a href="https://github.com/BorgwardtLab/reComBat">reComBat</a>.</p>
+</li>
+<li>
+<p><strong>Data transformation:</strong> Log2, log10, square root, cube root, or Box-Cox.</p>
+</li>
+<li>
+<p><strong>Data normalization:</strong> Trace shifting, standard scaling (Z-score), min-max scaling, Pareto scaling, mean centering, or percentage normalization. When trace shifting and transformation are both enabled, normalization runs first. MetaX adds a minimum offset after Z-score, mean-centering, or Pareto normalization to avoid negative abundance values.</p>
 </li>
 </ul>
-<h3 id="data-preprocessing">Data preprocessing</h3>
-<ul>
-<li>
-<p><strong>Quantitative Method:</strong></p>
-</li>
-<li>
-<p><strong><u>Sum</u></strong>: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.</p>
-</li>
-<li>
-<p><strong><u>DirectLFQ</u></strong>: Use DirectLFQ to normalize peptides and then estimate intensity using <em>intensity traces</em>.</p>
-</li>
-<li>
-<p><strong>Outlier handling:</strong></p>
-</li>
-</ul>
-<p>There are several methods for detecting and handling outliers.</p>
-<ul>
-<li>Two steps will be applied:</li>
-<li><u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows <code>only contain NaN values and 0</code> will be removed. The remaining NaN values will be handled in the next step.</li>
-<li>
-<p><u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.</p>
-</li>
-<li>
-<p><strong>Outlier Detection:</strong></p>
-</li>
-<li>
-<p><strong>IQR:</strong> In a group, if the value is greater than Q3+1.5*IQR or less than Q1-1.5*IQR, the value will be marked as NaN.</p>
-</li>
-<li>
-<p><strong>Missing-Value:</strong> Detect nan values in the data. If a value is nan, it will be marked as a NaN.</p>
-</li>
-<li>
-<p><strong>Half-Zero:</strong> </p>
-<p>​   Applies to grouped data.</p>
-<ul>
-<li>
-<p>If more than half of the values in a group are zero, all <em>non-zero</em> values are replaced with NaN.</p>
-</li>
-<li>
-<p>If fewer than half of the values are zero, all <em>zero</em> values are replaced with NaN.</p>
-</li>
-<li>If the number of zero and non-zero values is equal, <em>all</em> values in the group are replaced with NaN.</li>
-</ul>
-</li>
-<li>
-<p><strong>Zero-Dominant:</strong> </p>
-<p>​   Applies to grouped data.</p>
-<ul>
-<li>If more than half of the values in a group are zero, all <em>non-zero</em> values are replaced with NaN.</li>
-<li>Otherwise, the group remains unchanged.</li>
-</ul>
-</li>
-<li>
-<p><strong>Zero-Inflated Poisson:</strong> This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
-</li>
-<li>
-<p><strong>Negative Binomial:</strong> This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).</p>
-</li>
-<li>
-<p><strong>Z-Score:</strong> Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.</p>
-</li>
-<li>
-<p><strong>Mahalanobis Distance:</strong> Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.</p>
-</li>
-</ul>
-<p><u>In all methods, you can choose one meta column for outlier detection and another meta column for handling outliers.</u></p>
-<ul>
-<li>
-<p><strong>Outliers Imputation:</strong></p>
-</li>
-<li>
-<p><strong>Drop:</strong> Remove peptides that contain any NaN values.</p>
-</li>
-<li>
-<p><strong>Original:</strong> Keep the remaining NaN values as-is.</p>
-</li>
-<li>
-<p><strong>Mean</strong>: Outliers will be imputed by the mean.</p>
-</li>
-<li>
-<p><strong>Median</strong>: Outliers will be imputed by the median.</p>
-</li>
-<li>
-<p><strong>KNN</strong>: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbours to fill in missing values.</p>
-</li>
-<li>
-<p><strong>Regression</strong>: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modelling each feature with missing values as a function of other features.</p>
-</li>
-<li>
-<p><strong>Multiple</strong>: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of the nearest features.</p>
-</li>
-</ul>
-<p>You can choose outlier imputation by <em>each group</em> or by <em>all samples</em>.</p>
-<ul>
-<li>
-<p><strong>Remove Batch Effect:</strong></p>
-</li>
-<li>
-<p>Here, you can choose a group as the batch effect and then use <a href="https://github.com/BorgwardtLab/reComBat"><u>reCombat</u></a> to handle it.</p>
-</li>
-<li>
-<p><strong>Data Transformation:</strong></p>
-</li>
-<li>
-<p>Log2, Log10, Square root transformation, Cube root transformation and box-cox.</p>
-</li>
-<li>
-<p><strong>Data Normalization:</strong></p>
-</li>
-<li>
-<p><strong>Trace Shifting:</strong> Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).</p>
-<ul>
-<li>Note: If <u>both</u> trace shifting and transformation are applied, <em><u>normalization will be done before transformation.</u></em></li>
-</ul>
-</li>
-<li>
-<p>Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring, and normalization by percentage.</p>
-</li>
-</ul>
-<p><u>If you use Z-Score, Mean centring, or Pareto Scaling for data normalization, the data will be given a minimum offset again to avoid negative values.</u></p>
-<ul>
-<li><strong>Drag the item's name</strong> to change the <u><strong>order</strong></u> of data preprocessing.</li>
-</ul>
-<p><strong>Then, click Go to create a TaxaFunc object for analysis.</strong></p>
+<p>Drag preprocessing steps to change their execution order.</p>
+<p>Click <strong>GO</strong> to create the TaxaFunc analysis object.</p>
 <span class="image-wrap"><img alt="TaxaFunc_ready" src="./MetaX_Cookbook.assets/TaxaFunc_ready.png" decoding="async" class="doc-image"></span>
-<p>Then you can check the tables in the <strong>Table Review</strong> section and export them.</p>
+<p>Use <strong>Table Review</strong> to inspect generated tables. Double-click one table to open it. Use Ctrl/Shift selection and right-click <strong>Export Selected Tables</strong> to export several tables as TSV or CSV files, both of which can be opened in Excel. In an opened table, right-click selected cells to copy or export only the current selection.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/table_review_open_window.png" alt="table_review_open_window" decoding="async" class="doc-image"></span>
-<h2 id="4-basic-stats">4. Basic Stats</h2>
-<h3 id="pca-correlation-and-box-plot">PCA, Correlation and Box Plot</h3>
+<h3 id="4-basic-statistics-and-plots">4. Basic Statistics and Plots</h3>
+<h4 id="pca-t-sne-correlation-and-box-plot">PCA, t-SNE, Correlation, and Box Plot</h4>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" decoding="async" class="doc-image"></span>
-<p>You can select <u><strong>meta</strong></u> <u><strong>groups</strong></u> or <u><strong>samples</strong></u> (default: all) to plot <strong>PCA</strong>, <strong>Correlation</strong>, and <strong>Box Plot</strong> for <strong>Taxa, Function, Taxa-Func, Peptide, and Protein</strong> tables.</p>
+<p>Select a table and analyze all samples, selected samples, or metadata-defined groups. Two-dimensional PCA, interactive 3D PCA, t-SNE, correlation, and box plots are available for Taxa, Function, Taxa-Function, Peptide, and Protein tables when those tables exist. Use t-SNE for exploratory nonlinear separation; its layout depends on the selected perplexity, iteration count, and early-exaggeration settings.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca.png" alt="pca" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca_3d.png" alt="pca_3d" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/correlation.png" alt="correlation" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/boxplot.png" alt="boxplot" style="width: 50%" decoding="async" class="doc-image"></span>
 <ul>
 <li>
-<p><strong>Setting and modifying the plot</strong></p>
+<p><strong>Plot controls</strong></p>
 </li>
 <li>
 <p>Show or hide labels in the figure by checking <strong>Show Labels</strong>.</p>
 </li>
 <li>
-<p>Select <strong>Sub Meta</strong> to plot with two meta columns.</p>
+<p>Select <strong>Sub Meta</strong> to combine a second metadata variable with the primary grouping.</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/sub_meta.png" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p>Change settings in the <strong>PLOT PARAMETER</strong> tab</p>
+<p>Change labels, dimensions, colors, and other options in <strong>PLOT PARAMETER</strong>.</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p>Select specific Groups <strong>with condition</strong></p>
-<p><strong>For example:</strong> Select PBS, BAS, and other groups <strong>only in</strong> <u>Individual</u> <u>V1</u>.</p>
+<p>Enable the condition controls to select groups within a second metadata value.</p>
+<p>For example, compare treatment groups only within <code>Individual = V1</code>.</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/group_in_condition.png" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p>Select <strong>specific Samples</strong> to Analysis</p>
+<p>Switch to sample selection when only specific samples should be plotted.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/pca_setting.png" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="width: 80%" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p><strong>Number stats</strong></p>
+<p><strong>Number statistics</strong></p>
 </li>
 <li>
 <p>Plot the counts for each table by <strong>groups</strong> or by <strong>samples</strong>.</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p><strong>Taxa Specific</strong></p>
+<p><strong>Taxa-specific plots</strong></p>
 </li>
 <li>
 <p>Alpha/Beta Diversity</p>
@@ -1395,7 +1773,7 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p>TreeMap</p>
+<p>Treemap</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/treemap.png" alt="treemap" decoding="async" class="doc-image"></span>
 </li>
 <li>
@@ -1403,62 +1781,53 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_sankey.png" alt="basic_sankey" decoding="async" class="doc-image"></span>
 </li>
 </ul>
-<h3 id="heatmap-and-bar-plot">Heatmap and Bar Plot</h3>
+<h4 id="heatmap-and-bar-plot">Heatmap and Bar Plot</h4>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" decoding="async" class="doc-image"></span>
+<p>Select Taxa, Function, Taxa-Function, Peptide, or Protein items and add them to the plotting list. Use <strong>Add All</strong> only when the resulting figure will remain readable.</p>
+<p>The focused item list is shared by more than the heatmap and bar plot buttons:</p>
 <ul>
-<li><strong>Select items (Taxa, Function, Taxa-Func, and Peptide) to plot:</strong></li>
-<li>Add <strong>All Taxa</strong>, or select one we are interested in.</li>
+<li><strong>Plot PCA</strong> compares the abundance profiles of only the selected biological items; enable <strong>3D PCA</strong> in its settings when at least three items are available.</li>
+<li><strong>UpSet</strong> summarizes intersections among the selected items, groups, or samples.</li>
+<li><strong>Plot Sankey</strong> is available for compatible Taxa and Taxa-Function selections.</li>
+<li><strong>MetaTree</strong> is available for Taxa and Taxa-Function selections when a MetaTree installation directory has been configured under <strong>Dev &gt; Settings</strong>.</li>
+<li><strong>Get Table</strong> exports the selected-item matrix used by these plots.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list" decoding="async" class="doc-image"></span>
 <ul>
 <li>
-<p><strong>Add items to Top List:</strong> Select the top items to plot using a statistical method.</p>
+<p><strong>Add Top to List:</strong> Rank items by abundance or a completed statistical test and add the selected number of results.</p>
 </li>
 <li>
-<p>Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of DESeq2 results (configured on the corresponding page).</p>
+<p><strong>Filter with threshold</strong> uses adjusted p-values for ANOVA/T-test and adjusted p-value plus log2 fold-change thresholds for Limma/DESeq2 results.</p>
 </li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list" decoding="async" class="doc-image"></span>
 <ul>
-<li>
-<p><strong>Add a list for plotting:</strong></p>
-</li>
-<li>
-<p>Make sure one row one item</p>
-</li>
+<li><strong>Add a list:</strong> Paste one item per line to build a reusable focus list.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list" decoding="async" class="doc-image"></span>
 <ul>
+<li><strong>Settings:</strong></li>
+<li><strong>Rename Samples:</strong> Add group information to sample labels.</li>
+<li><strong>Rename Taxa:</strong> Display only the last populated taxonomic rank.</li>
+<li><strong>Plot Mean:</strong> Aggregate samples to group means before plotting.</li>
 <li>
-<p><strong>Setting:</strong></p>
-</li>
-<li>
-<p>Change the setting fit for your data.</p>
-</li>
-<li><strong>Rename Samples</strong>: Add group info to each sample name</li>
-<li><strong>Rename Taxa</strong>: Only keep the last taxonomic level to reduce to name</li>
-<li>
-<p><strong>Plot Mean</strong>: calculate the mean of each group before plotting</p>
-</li>
-<li>
-<p><strong>Sub Meta:</strong> select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
+<p><strong>Sub Meta:</strong> Combine two metadata variables for heatmaps and 3D bar plots.
     <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" decoding="async" class="doc-image"></span></p>
 </li>
 <li>
-<p>View all color maps by right-clicking <u><strong>Theme</strong></u>.</p>
-<ul>
-<li class="media-item"><span class="image-wrap"><img alt="right_click_theme" src="MetaX_Cookbook.assets/right_click_theme.png" decoding="async" class="doc-image"></span>
-<span class="image-wrap"><img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" decoding="async" class="doc-image"></span></li>
-</ul>
+<p>Right-click <strong>Theme</strong> to preview the available color maps.
+    <span class="image-wrap"><img alt="Theme context menu" src="MetaX_Cookbook.assets/right_click_theme.png" decoding="async" class="doc-image"></span>
+    <span class="image-wrap"><img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap" decoding="async" class="doc-image"></span></p>
 </li>
 <li>
-<p><strong>Plot:</strong></p>
+<p><strong>Heatmap output:</strong></p>
 </li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original" decoding="async" class="doc-image"></span>
 <ul>
 <li>
-<p><strong>Modify</strong> the pic to fit the window to get the <strong>Perfect picture</strong>:</p>
+<p>Use <strong>Modify</strong> to adjust the figure layout after it opens.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/heatmap_fixed.png" alt="heatmap_fixed" decoding="async" class="doc-image"></span>
 </li>
@@ -1468,7 +1837,7 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar" decoding="async" class="doc-image"></span>
 <ul>
-<li><strong>Interactive functions:</strong></li>
+<li><strong>Interactive bar controls:</strong></li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting" decoding="async" class="doc-image"></span>
 <ul>
@@ -1477,101 +1846,54 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p><strong>3D Bar Plot</strong></p>
-</li>
-<li>
-<p>Plot 3D bar by selecting a <strong>sub meta</strong>.
+<p><strong>3D Bar Plot:</strong> Select a <strong>Sub Meta</strong> to create the second grouping dimension.
   <span class="image-wrap"><img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d" decoding="async" class="doc-image"></span></p>
 </li>
 </ul>
-<h3 id="peptide-query">Peptide Query</h3>
-<ul>
-<li>Query everything of a peptide</li>
-</ul>
+<h4 id="peptide-query">Peptide Query</h4>
+<p>Select or type an exact peptide sequence to inspect its linked proteins, taxa, functions, and abundance values. Large peptide lists are loaded as a searchable preview; an exact pasted sequence can still be queried.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query" decoding="async" class="doc-image"></span>
-<h2 id="5-cross-test">5. Cross Test</h2>
-<h3 id="t-test">T-TEST</h3>
-<ul>
-<li>Select two groups for T-test analysis on <strong>Taxa, Function, Taxa-Func, Peptide, and Protein</strong> tables.</li>
-</ul>
+<h3 id="5-statistical-tests">5. Statistical Tests</h3>
+<h4 id="t-test">T-test</h4>
+<p>Select two groups to run a T-test on Taxa, Function, Taxa-Function, Peptide, or Protein tables.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test" decoding="async" class="doc-image"></span>
-<h3 id="anova-test">ANOVA-TEST</h3>
-<ul>
-<li>Select <u>some groups</u> or <u>all groups</u> to run ANOVA on <strong>Taxa, Function, Taxa-Func, and Peptide</strong> tables.</li>
-</ul>
+<h4 id="anova">ANOVA</h4>
+<p>Select two or more groups to run ANOVA on the available analysis tables.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test" decoding="async" class="doc-image"></span>
-<h3 id="significant-taxa-func">Significant Taxa-Func</h3>
-<ul>
-<li>Significant comparison helps identify cases where <strong><u>taxa show no significant differences between two groups, while their related functions are significantly different</u></strong>, and vice versa.</li>
-<li class="media-item"><span class="image-wrap"><img alt="Significant_Taxa-Func" src="MetaX_Cookbook.assets/Significant_Taxa-Func.png" decoding="async" class="doc-image"></span></li>
-</ul>
-<h3 id="plot-cross-heatmap">Plot Cross Heatmap</h3>
-<ul>
-<li>The <strong>results</strong> of the T-test and ANOVA test will appear in a new window.</li>
-</ul>
+<h4 id="significant-taxa-function-results">Significant Taxa-Function Results</h4>
+<p>This comparison highlights discordant taxon-function behavior: a taxon may remain stable while one of its linked functions changes significantly, or a taxon may change while a linked function remains stable.
+<span class="image-wrap"><img alt="Significant Taxa-Function results" src="MetaX_Cookbook.assets/Significant_Taxa-Func.png" decoding="async" class="doc-image"></span></p>
+<h4 id="cross-test-heatmaps">Cross-test Heatmaps</h4>
+<p>T-test and ANOVA results open in a result window and are also registered in Table Review.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res" decoding="async" class="doc-image"></span>
-<ul>
-<li>
-<p>Plot Heatmap for results</p>
-</li>
-<li>
-<p>Choose a table to plot a <strong>top differences heatmap</strong> or export <strong>the top table</strong>.</p>
-</li>
-</ul>
+<p>Choose a result table to plot a top-difference heatmap or export the corresponding top-result table.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting" decoding="async" class="doc-image"></span>
 <ul>
-<li>Taxa-Func cross heatmap:</li>
-<li>The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.</li>
+<li><strong>Taxa-Function cross heatmap:</strong> Colored cells indicate significant taxon-function combinations, with functions on the x-axis and taxa on the y-axis.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap" decoding="async" class="doc-image"></span>
 <ul>
-<li>
-<p>Func(Taxa) Heatmap:</p>
-</li>
-<li>
-<p>The colour shows the intensity of the significant Func(Taxa) between groups.</p>
-</li>
+<li><strong>Function/Taxon heatmap:</strong> Color represents the abundance of significant functions or taxa across groups.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap" decoding="async" class="doc-image"></span>
 <ul>
-<li>
-<p>Significant Taxa-Func Heatmap:</p>
-</li>
-<li>
-<p>The colored tiles represent the taxa which were not significantly different between groups but the related functions were.</p>
-</li>
+<li><strong>Significant Taxa-Function heatmap:</strong> Colored tiles represent discordant significance patterns between a taxon and its linked function.</li>
 </ul>
-<h3 id="group-control-test">Group-Control TEST</h3>
+<h4 id="group-vs-control-tests">Group-vs-Control Tests</h4>
+<p>Set one group as <strong>Control</strong> to compare every other group against it. <strong>Comparing in Each Condition</strong> repeats those comparisons within the values of another metadata column, such as subject or site.</p>
+<p>If the Limma/DESeq2 controls are hidden, open <strong>Help &gt; About</strong> and click <strong>Like</strong> three times to enable the advanced differential-expression pages.</p>
+<span class="image-wrap"><img alt="group_control_test" src="./MetaX_Cookbook.assets/group_control_test.png" decoding="async" class="doc-image"></span>
 <ul>
-<li><strong>Dunnett's Test</strong></li>
+<li><strong>Limma</strong> is the default group-vs-control method for log2-style quantitative abundance. Zero values remain numeric by default; enable <strong>Convert zeros to NaN</strong> only when zeros represent missing measurements.</li>
+<li><strong>DESeq2</strong> is intended for untransformed count-like data. MetaX checks whether earlier preprocessing is compatible before running it.</li>
+<li>Both methods support optional covariates.</li>
+<li><strong>Dunnett's test</strong> remains available as a legacy group-vs-control method. Its heatmap displays the test statistic.</li>
 </ul>
-<p>Set a Group as <strong>"Control"</strong>, then compare all groups to Control</p>
-<ul>
-<li>
-<p><strong>Comparing in Each Condition:</strong> Select a meta such as individual, then compare groups to control in each individual.</p>
-</li>
-<li>
-<p><strong>DESeq2 Test</strong></p>
-</li>
-</ul>
-<p>Bingo! You noticed the hidden function of MetaX,  click <strong>Help -&gt; About -&gt; Like</strong> 3 times to unlock the function to compare all groups to control.</p>
-<ul>
-<li class="media-item"><span class="image-wrap"><img alt="group_control_test" src="./MetaX_Cookbook.assets/group_control_test.png" decoding="async" class="doc-image"></span></li>
-<li>Result of Dunnett's Test:<ul>
-<li>T- Statistic value shown in the heatmap
-  <span class="image-wrap"><img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap" decoding="async" class="doc-image"></span></li>
-</ul>
-</li>
-</ul>
-<h3 id="deseq2">DESeq2</h3>
-<ul>
-<li>Select two groups to calculate fold change with <a href="https://github.com/owkin/PyDESeq2"><u>PyDESeq2</u></a>.</li>
-</ul>
-<span class="image-wrap"><img src="./MetaX_Cookbook.assets/deseq2.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Select <u>p-adjust</u>, <u>log2FC</u> to plot</li>
-</ul>
-<p>(<strong>Ultra-Up(Down):</strong> |log2FC| &gt; Max log2FC)</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="Dunnett test-statistic heatmap" decoding="async" class="doc-image"></span>
+<h4 id="differential-expression-limma-deseq2">Differential Expression (Limma / DESeq2)</h4>
+<p>Use this page for a selected pairwise comparison. Choose <strong>Limma</strong> for log2-style quantitative abundance or <strong>DESeq2</strong> for untransformed count-like data. Limma is the default; both methods use the <a href="https://github.com/epigenelabs/inmoose">InMoose</a> backend.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/Differential_Expression.png" decoding="async" class="doc-image"></span>
+<p>Set the adjusted p-value and log2 fold-change thresholds, then generate a volcano plot or a taxon-function Sankey plot. <strong>Ultra-Up/Down</strong> marks results whose absolute log2 fold change exceeds the configured maximum display threshold.</p>
 <ul>
 <li>
 <p>Volcano:</p>
@@ -1580,190 +1902,108 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 <li>
 <p>Sankey:</p>
 <ul>
-<li>The last node level is the functions linked to each Taxon (When plotting Taxa-Func)</li>
+<li>For Taxa-Function results, the final node level contains the functions linked to each taxon.</li>
+<li>Sankey plotting is available for Limma and DESeq2 Taxa and Taxa-Function result tables.</li>
 </ul>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" decoding="async" class="doc-image"></span>
 </li>
 </ul>
-<h3 id="tukey-test">Tukey Test</h3>
+<p>Right-click a supported differential result in Table Review to open the <strong>Differential Results Extractor</strong> or generate a long-format table for downstream filtering, export, or plotting.</p>
+<h4 id="tukey-test">Tukey Test</h4>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test" decoding="async" class="doc-image"></span>
-<ul>
-<li>
-<p><strong>Select a function:</strong> </p>
-</li>
-<li>
-<p>Test the significant groups in this function.</p>
-</li>
-<li>
-<p><strong>Select a Taxon:</strong> </p>
-</li>
-<li>
-<p>Test the significant groups in this taxon.</p>
-</li>
-<li>
-<p><strong>Select both function and taxon:</strong> </p>
-</li>
-<li>
-<p>Test the significant groups in this function and this taxon.</p>
-</li>
-</ul>
+<p>Select a function, a taxon, or a linked taxon-function pair to identify which group means differ after ANOVA.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only" decoding="async" class="doc-image"></span>
 <ul>
-<li>
-<p>Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.</p>
-</li>
-<li>
-<p>Show Linked Func Only: Only shows the functions linked with the current taxon in the function combo box.</p>
-<p><strong>Do not forget to click <u>Reset Function Taxa List</u> to restore all items after filtering.</strong></p>
-</li>
-<li>
-<p><strong>Tukey result plot:</strong></p>
-</li>
-<li>The dots and lines show the difference in the mean value of the Tukey test</li>
+<li><strong>Show Linked Taxa Only</strong> restricts the taxon selector to taxa linked to the current function.</li>
+<li><strong>Show Linked Func Only</strong> restricts the function selector to functions linked to the current taxon.</li>
+<li>Click <strong>Reset Function Taxa List</strong> to restore the full selectors.</li>
 </ul>
+<p>The Tukey result plot displays pairwise mean differences and their intervals.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot" decoding="async" class="doc-image"></span>
-<h2 id="6-expression-analysis">6. Expression Analysis</h2>
-<h3 id="co-expression-networks-heatmap">Co-Expression Networks &amp; Heatmap</h3>
-<ul>
-<li>Select groups or samples to calculate correlations and plot the network.</li>
-</ul>
+<h3 id="6-expression-analysis">6. Expression Analysis</h3>
+<h4 id="co-expression-networks-and-heatmaps">Co-expression Networks and Heatmaps</h4>
+<p>Select groups or samples, choose an analysis table, and set the correlation method and threshold.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_page.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Select a table, then set the correlation method and threshold.</li>
-</ul>
-<span class="image-wrap"><img alt="image-20230728142905839" src="./MetaX_Cookbook.assets/co_network_setting.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Add some items to the focus list (Optional)</li>
-</ul>
+<span class="image-wrap"><img alt="Co-expression settings" src="./MetaX_Cookbook.assets/co_network_setting.png" decoding="async" class="doc-image"></span>
+<p>Add items to the focus list when you want to emphasize selected nodes; leave it empty for an unrestricted network.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568" decoding="async" class="doc-image"></span>
 <ul>
-<li>
-<p>Network Plot</p>
-</li>
-<li>
-<p>The Red dots are focus items</p>
-</li>
-<li>The depth of color and the width of edges represent the correlation value</li>
-<li>The size of the dot indicates the number of connections</li>
+<li>Focus items are shown in red.</li>
+<li>Edge color and width represent correlation strength.</li>
+<li>Node size represents the number of connections.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic" decoding="async" class="doc-image"></span>
-<ul>
-<li>Expression correlation</li>
-<li class="media-item"><span class="image-wrap"><img alt="image-20240723162241316" src="MetaX_Cookbook.assets/expression_corelation_heatmap.png" decoding="async" class="doc-image"></span></li>
-</ul>
-<h3 id="expression-trends">Expression Trends</h3>
-<ul>
-<li>Add items to the list window to plot the clusters with similar trends of intensity</li>
-</ul>
+<p>The same correlation results can be displayed as a clustered expression-correlation heatmap.</p>
+<span class="image-wrap"><img alt="Expression correlation heatmap" src="MetaX_Cookbook.assets/expression_corelation_heatmap.png" decoding="async" class="doc-image"></span>
+<h4 id="expression-trends">Expression Trends</h4>
+<p>Add items to the plotting list, select their ordered groups or samples, and cluster similar abundance trends.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/trends_page.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>
-<p>Clusters plot (clustered by <strong>k-means</strong>)</p>
-</li>
-<li>
-<p>The coloured line is the average.</p>
-</li>
-</ul>
+<p>MetaX uses <strong>k-means</strong> for trend clustering. The highlighted line represents the cluster mean.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/trends_cluster.png" style="width: 67%" decoding="async" class="doc-image"></span>
+<p>Select a cluster to open interactive lines or export its table.</p>
 <ul>
-<li>
-<p>Select a <strong>specific cluster</strong> to plot <u>interactive Lines</u> or get the <u>table</u></p>
-</li>
 <li class="media-item"><span class="image-wrap"><img alt="image-20230728144544988" src="./MetaX_Cookbook.assets/trends_cluster_setting.png" decoding="async" class="doc-image"></span>
 </li>
 <li>
-<p>The dashed red line  is the average </p>
+<p>The dashed red line represents the mean trend.</p>
 <span class="image-wrap"><img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032" decoding="async" class="doc-image"></span>
 </li>
 </ul>
-<h2 id="7-taxa-func-link">7. Taxa-Func Link</h2>
-<h3 id="taxa-func-link-plot">Taxa-Func Link Plot</h3>
+<h3 id="7-taxa-function-links">7. Taxa-Function Links</h3>
+<h4 id="taxa-function-link-plots">Taxa-Function Link Plots</h4>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png" decoding="async" class="doc-image"></span>
+<p>Select a function and click <strong>Show Linked Taxa Only</strong>, or select a taxon and click <strong>Show Linked Func Only</strong>, to restrict the selectors to observed links.</p>
 <ul>
-<li>
-<p>Check all taxa in one function (or all functions in one taxon).</p>
-</li>
-<li>
-<p>select <strong>a function</strong>, and click the button <strong><u>Show Linked Taxa Only</u></strong></p>
-<ul>
-<li><strong>Linked Number</strong>: The number shows how many taxa are linked in this function</li>
-<li><strong>The number starts with Taxa</strong>: The number shows how many peptides are in this Taxa-Func</li>
-</ul>
-</li>
+<li><strong>Linked Number</strong> reports how many linked taxa or functions are available.</li>
+<li>The count shown with a taxon-function item reports its supporting peptide number.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517" decoding="async" class="doc-image"></span>
-<ul>
-<li>Filter items of the Taxa and Func list</li>
-</ul>
+<p>Use the list filters to search large taxon and function selectors.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_filter.png" alt="image-20230728150853953" style="width: 50%" decoding="async" class="doc-image"></span>
-<ul>
-<li>
-<p>Plot Heatmap or Bar</p>
-</li>
-<li>
-<p>Select some groups (Default all) to get <strong>the intensity of each taxon of this function</strong></p>
-<span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png" decoding="async" class="doc-image"></span>
-</li>
-</ul>
+<p>Select groups or samples, then create a heatmap or bar plot for the taxa linked to a function, or the functions linked to a taxon.</p>
+<pre><code>&lt;img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png"&gt;
+</code></pre>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Plot <strong>peptides</strong> in <u>one Function of a Taxon</u></li>
-</ul>
+<p>For a selected taxon-function pair, switch to peptide-level heatmaps or bar plots to inspect the underlying evidence.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png" decoding="async" class="doc-image"></span>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png" decoding="async" class="doc-image"></span>
-<ul>
-<li>Switch Bar to Stacked or not ( Line)</li>
-</ul>
+<p>Bar plots can be stacked or unstacked.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck" decoding="async" class="doc-image"></span>
-<ul>
-<li>Change Bar plot to Lines</li>
-</ul>
+<p>They can also be displayed as line plots.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line" decoding="async" class="doc-image"></span>
-<h3 id="taxa-func-network">Taxa-Func Network</h3>
-<ul>
-<li>Select some groups or samples (default: all).</li>
-<li>Add some taxa, functions, or taxa-func items to focus the view (optional).</li>
-</ul>
+<h4 id="taxa-function-network">Taxa-Function Network</h4>
+<p>Select groups or samples, then optionally add taxa, functions, or taxon-function entries to the focus list.</p>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_page.png" decoding="async" class="doc-image"></span>
 <ul>
-<li>Plot list only</li>
-<li><strong>Plot List Only:</strong> Show only the items in the list and the items linked to them.</li>
+<li><strong>Plot List Only:</strong> Show focus items and their direct neighbors.</li>
 <li>
-<p><strong>Without Links:</strong> Only show the items in the focus list.
+<p><strong>Without Links:</strong> Show only focus-list items.
     <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" decoding="async" class="doc-image"></span></p>
 </li>
 <li>
-<p>Network plot</p>
+<p>Yellow nodes are taxa and gray nodes are functions; node size represents abundance.</p>
 </li>
-<li>The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity</li>
-<li>The red dots are the taxa we focused on</li>
-<li>The green dots are the functions we focused on</li>
-<li>More parameters can be set in <strong>Dev</strong>-&gt;<strong>Settings</strong>-&gt;<strong>Others</strong> (e.g. Nodes Shape, color, Line Style)</li>
+<li>Focused taxa are red and focused functions are green.</li>
+<li>Configure node shapes, colors, and line styles under <strong>Dev &gt; Settings &gt; Others</strong>.</li>
 </ul>
 <span class="image-wrap"><img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network" decoding="async" class="doc-image"></span>
-<h2 id="8-restore-last-taxafunc-object">8. Restore Last TaxaFunc Object</h2>
-<ul>
-<li>Once you create TaxaFunc, the <u>TaxaFunc Object</u> is saved automatically, and you can restore it next time.</li>
-<li>You can also export the current MetaX object to a file and reload it later.
-  <span class="image-wrap"><img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" decoding="async" class="doc-image"></span></li>
-</ul>
-<h1 id="preparing-your-data">Preparing Your Data</h1>
+<h3 id="8-save-and-restore-a-taxafunc-object">8. Save and Restore a TaxaFunc Object</h3>
+<p>MetaX automatically saves the latest TaxaFunc object for convenient restoration at the next launch. Use <strong>Restore</strong> to reopen the last object, save the current object to a chosen file, or load an earlier saved object.
+  <span class="image-wrap"><img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore" decoding="async" class="doc-image"></span></p>
+<p>The following modules prepare annotation resources and convert peptide results into an OTF table.</p>
 <h2 id="module-2-database-builder">Module 2. Database Builder</h2>
-<p><strong>Note:</strong> The results from <strong>MetaLab v2.3</strong> MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.</p>
-<ul>
-<li>Build the database for the <strong>first time</strong> using the <u>Database Builder</u>.</li>
-</ul>
-<p><strong>Option 1: Build Database Using MGnify Data</strong></p>
-<p>Ensure you download the correct database type corresponding to your data.</p>
+<p>Build a Protein to TaxaFunc annotation database before using the Direct-to-OTF or MAG workflows. The database must correspond to the protein/genome reference used for peptide identification. MetaLab 2.3 MaxQuant results use their own annotation files and do not require this step.</p>
+<h3 id="option-1-build-from-an-mgnify-catalogue">Option 1: Build from an MGnify Catalogue</h3>
+<p>Select the catalogue that matches the search database. The GUI selector is generated from MetaX's current supported-source registry and includes the catalogue version in each label.</p>
+<p>The registry covers human body-site catalogues, animal gut/rumen catalogues, plant rhizosphere catalogues, soil, marine, and marine-sediment references. Because MGnify catalogue versions can change, use the version shown in the GUI and keep the selected catalogue consistent with the protein FASTA/search database.</p>
 <span class="image-wrap"><img alt="dbbuilder" src="./MetaX_Cookbook.assets/dbbuilder.png" decoding="async" class="doc-image"></span>
-<p><strong>Option 2: Build Database Using Own Data</strong></p>
+<h3 id="option-2-build-from-custom-data">Option 2: Build from Custom Data</h3>
+<p>Provide:</p>
 <ol>
-<li><strong>Annotation Table:</strong> A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.</li>
+<li><strong>Annotation Table:</strong> A tab-separated table whose first column contains protein IDs and whose remaining columns contain function annotations. Protein IDs must include the genome ID using the separator expected by the annotation workflow, for example <code>Genome1_protein1</code>.</li>
+<li><strong>Taxa Table:</strong> A tab-separated table whose first column contains genome IDs and whose second column contains the taxonomic lineage.</li>
 </ol>
 <span class="image-wrap"><img alt="dbbuilder_own" src="./MetaX_Cookbook.assets/dbbuilder_own.png" decoding="async" class="doc-image"></span>
-<ol start="2">
-<li><strong>Taxa Table:</strong> A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.</li>
-</ol>
 <p><strong>Example Annotation Table:</strong></p>
 <div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
@@ -1897,15 +2137,12 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 </tbody>
 </table></div>
 <h2 id="module-3-database-updater">Module 3. Database Updater</h2>
-<p>The <strong>Database Updater</strong> allows updating the database built by the <strong>Database Builder</strong> or adding more annotations. This step is <strong><u>optional</u></strong>.</p>
-<ul>
-<li>Update the built database and extend annotations.</li>
-</ul>
+<p>Database Updater is optional. Use it to add function columns to a database created by Database Builder.</p>
 <span class="image-wrap"><img alt="db_updater" src="./MetaX_Cookbook.assets/db_updater.png" decoding="async" class="doc-image"></span>
-<p><strong>Option 1: Built-in Mode</strong></p>
-<p>Built-in dbCAN_seq mode merges precomputed annotations by exact protein ID; it does not run sequence-similarity searches or re-annotate custom proteins. Incoming annotation columns replace existing columns with the same names, and MetaX writes a warning listing the replaced columns. For a custom protein database, run dbCAN/run_dbCAN on your own protein FASTA and import the resulting TSV with matching MetaX protein IDs using <strong>Option 2</strong>. Built-in sources are available from <a href="https://pro.unl.edu/dbCAN_seq/">dbCAN_seq</a>.</p>
-<p><strong>Option 2: TSV Table</strong></p>
-<p>Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.</p>
+<h3 id="option-1-built-in-dbcan_seq-annotations">Option 1: Built-in dbCAN_seq Annotations</h3>
+<p>Built-in mode merges precomputed <a href="https://pro.unl.edu/dbCAN_seq/">dbCAN_seq</a> annotations by exact protein ID. It does not run a similarity search or annotate custom proteins. Incoming columns replace existing columns with the same names, and MetaX reports which columns were replaced.</p>
+<h3 id="option-2-custom-tsv-annotation-table">Option 2: Custom TSV Annotation Table</h3>
+<p>For custom proteins, run dbCAN/run_dbCAN or another annotation workflow separately, then import a tab-separated table whose first column contains exact MetaX protein IDs and whose remaining columns contain the new annotations.</p>
 <p><strong>Example:</strong></p>
 <div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
@@ -1938,28 +2175,197 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 </tbody>
 </table></div>
 <h2 id="module-4-peptide-annotator">Module 4. Peptide Annotator</h2>
-<h3 id="1-results-from-mag-workflow">1. Results from MAG Workflow</h3>
-<p>These peptide results use metagenome-assembled genomes (MAGs) as the reference database for protein searches, such as <strong>DIA-NN</strong>, <strong>MetaLab-MAG</strong>, <strong>MetaLab-DIA</strong>, and other workflows that use MAG databases like MGnify or custom MAG databases.</p>
+<p>The Peptide Annotator provides three GUI workflows. <strong>Peptide Direct to OTFs</strong> is the recommended and primary workflow for current MAG-based metaproteomics projects. The <strong>MAG</strong> and <strong>MetaLab 2.3</strong> tabs remain available for peptide tables that already contain protein assignments or for legacy MetaLab MaxQuant results.</p>
+<h3 id="1-peptide-direct-to-otfs-recommended">1. Peptide Direct to OTFs (Recommended)</h3>
+<p>Use this workflow to map quantified peptides against selected digested genomes and directly build an Operational Taxon-Function (OTF) table. It is designed for MAG-based searches from <strong>DIA-NN</strong>, <strong>MetaLab-MAG</strong>, <strong>MetaPilot</strong>, MGnify databases, or a compatible custom MAG database.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="Peptide Direct to OTFs" decoding="async" class="doc-image"></span>
+<p>MetaX and MetaUmbra have separate roles in this workflow. <strong>MetaUmbra</strong> digests the genome protein FASTA files and scores genome presence from the observed peptides. <strong>MetaX</strong> then consumes the selected genomes, digest tables, and Protein-to-TaxaFunc database to construct the OTF table. MetaX does not repeat MetaUmbra's statistical genome-presence test.</p>
+<h4 id="step-1-build-your-own-digested-genome-reference">Step 1: Build Your Own Digested-Genome Reference</h4>
+<p>Skip this step when a compatible digested-genome folder is already available. Although the MetaUmbra page is named <strong>Digest FASTA</strong>, its output is a directory of per-genome peptide digest <strong>TSV files</strong>, not another FASTA database.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/MetaUmbra_2.png" alt="MetaUmbra Digest FASTA page" decoding="async" class="doc-image"></span>
+<p>Prepare one <strong>protein FASTA file per genome</strong>, and keep all files in one input directory. In MetaUmbra:</p>
+<ol>
+<li>Open <strong>Digest FASTA</strong> and select <strong>Digest a directory of FASTA files</strong>.</li>
+<li>Select the input FASTA directory and an output TSV directory.</li>
+<li>Select the protease and set the minimum peptide length, maximum peptide length, and allowed missed cleavages. The displayed defaults are Trypsin (<code>42</code>), 7-30 amino acids, and 2 missed cleavages.</li>
+<li>Normally keep <strong>Shorten FASTA header at first space</strong> enabled so the first token of each protein header becomes the protein ID.</li>
+<li>Click <strong>Run Digest</strong>. Each input FASTA produces one TSV containing <code>Protein</code> and <code>Peptide</code> columns.</li>
+</ol>
+<p>The reference naming and digestion settings are part of the data contract:</p>
 <ul>
-<li>Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.</li>
+<li>The FASTA filename stem becomes the genome ID. For example, <code>MGYG000000001.faa</code> produces <code>MGYG000000001.tsv</code> and identifies genome <code>MGYG000000001</code>.</li>
+<li>Do not combine many genomes into one FASTA: that would produce one digest file and collapse them into one apparent genome.</li>
+<li>Protein IDs in the digest TSVs must match the IDs in the <strong>Protein to TaxaFunc Database</strong>. Choose the FASTA-header shortening option accordingly.</li>
+<li>Use the same enzyme, peptide-length range, and missed-cleavage policy used to prepare the peptide-search database.</li>
+<li>Use this same digest output directory for MetaUmbra scoring and for MetaX <strong>Digested Genome Folder</strong>.</li>
 </ul>
-<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc" decoding="async" class="doc-image"></span>
-<p><strong>Required:</strong></p>
+<p>The equivalent directory-mode command is:</p>
+<pre><code class="language-bash">metaumbra digest \
+  --input-dir genome_fastas \
+  --output-dir genome_fastas_digested \
+  --enzyme-id 42 \
+  --min-length 7 \
+  --max-length 30 \
+  --max-miscleavages 2
+</code></pre>
+<p>Use <code>--input-file</code> and <code>--output-file</code> instead when testing a single genome. On PowerShell, place the command on one line or replace each trailing <code>\</code> with a backtick.</p>
+<h4 id="step-2-run-metaumbra-genome-presence-scoring">Step 2: Run MetaUmbra Genome Presence Scoring</h4>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/MetaUmbra_1.png" alt="MetaUmbra Genome Presence Scoring page" decoding="async" class="doc-image"></span>
+<p>Unified <code>genome_selection_manifest.json</code> output requires <strong>MetaUmbra 1.4.0 or newer</strong>.</p>
+<p>In <strong>Genome Presence Scoring</strong>:</p>
+<ol>
+<li>Select the observed peptide table. MetaUmbra accepts a delimited peptide table or a DIA-NN <code>report.parquet</code> file.</li>
+<li>Add the digested-genome directory created in Step 1. Multiple digest directories can be added when the reference is split across locations.</li>
+<li>Select the output results directory and map the sequence/evidence columns. Add a genome-lineage table only when lineage-aware output is needed.</li>
+<li>Configure peptide-row filters such as the q-value cutoff and reverse/decoy markers.</li>
+<li>Select the analysis-unit mode: pooled <code>all-samples</code>, one unit <code>per-sample</code>, or groups defined by a <code>metadata</code> table.</li>
+<li>Click <strong>Run Genome Presence Scoring</strong>.</li>
+</ol>
+<p>For a pooled DIA-NN analysis, the corresponding command is:</p>
+<pre><code class="language-bash">metaumbra score \
+  --peptide-table report.parquet \
+  --genome-digest-dirs genome_fastas_digested \
+  --output metaumbra_results \
+  --unit-mode all-samples
+</code></pre>
+<p>The result directory includes these primary files:</p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>genome_selection_manifest.json</code></td>
+<td>Recommended downstream interface; records samples, analysis units, settings, and selected genomes at q0.05 and q0.01</td>
+</tr>
+<tr>
+<td><code>unit_genome_results.tsv</code></td>
+<td>Full per-analysis-unit genome statistics, including q-values and threshold-pass flags</td>
+</tr>
+<tr>
+<td><code>cohort_genome_summary.tsv</code></td>
+<td>Genome-level summary across the cohort</td>
+</tr>
+<tr>
+<td><code>sample_unit_mapping.tsv</code></td>
+<td>Mapping between peptide-table samples and analysis units</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="step-3-load-the-metaumbra-manifest-in-metax">Step 3: Load the MetaUmbra Manifest in MetaX</h4>
+<p>The default <strong>Genome selection source</strong> is <strong>MetaUmbra genome selection manifest</strong>. This preserves the genome selections and analysis-unit definitions produced by MetaUmbra instead of repeating genome selection inside MetaX.</p>
+<ol>
+<li>Select the same quantified <strong>Peptide Table</strong> used for scoring.</li>
+<li>Select the generated <code>genome_selection_manifest.json</code>. If it has not yet been generated, click <strong>Open MetaUmbra GUI</strong>, complete Steps 1-2 there, and then return to MetaX.</li>
+<li>Choose <strong>Genome threshold</strong> (<code>q0.05</code> or <code>q0.01</code>).</li>
+<li>Click <strong>Validate / Settings...</strong> to verify the manifest, peptide-table sample mapping, and digested genomes before starting annotation.</li>
+<li>Set <strong>Digested Genome Folder</strong>, <strong>Protein to TaxaFunc Database</strong>, and <strong>OTFs Save To</strong>, then click <strong>GO</strong>.</li>
+</ol>
+<p>A MetaUmbra manifest may describe one pooled analysis unit (<code>__global__</code>), one unit per sample, or metadata-defined groups. MetaX reads the samples and selected genomes for every unit, scans the union of selected genome digests once, and restricts peptide-to-protein matches to the appropriate unit during annotation.</p>
+<p>The <strong>Validate / Settings...</strong> dialog also provides the input sample-column prefix, missing-sample and empty-unit behavior, optional per-unit OTF output, and digested-scan worker count. Validation is strongly recommended when the manifest contains per-sample or grouped units.</p>
+<h4 id="produce-a-standalone-genome-list">Produce a Standalone Genome List</h4>
+<p>Use a standalone list only when a single fixed genome set is intended. A plain list is convenient for sharing or for MetaX <strong>Custom genome list</strong>, but it discards the sample-to-analysis-unit mapping stored in the manifest. Keep the manifest for per-sample or metadata-grouped annotation.</p>
+<p>The simplest method is to enable MetaUmbra's <strong>Export unit-specific diagnostic tables</strong> option, or add <code>--export-diagnostics</code> to <code>metaumbra score</code>. MetaUmbra then writes thresholded union tables under <code>artifacts/diagnostics/</code>:</p>
 <ul>
-<li>
-<p><strong>Database</strong>: The database created by <u><a href="#module-2-database-builder">Database Builder</a></u></p>
-</li>
-<li>
-<p><strong>Peptide Table</strong>:</p>
-<ul>
-<li>
-<p><em>Option 1</em>: From the Search engine which using Metagenome-assembled genomes (MAGs)  as database. (e.g. <strong><em>final_peptides.tsv</em></strong> in MetaLab-MAG, <strong><em>xxx_report.pr_matrix.tsv</em></strong> in DIA-NN result)</p>
-</li>
-<li>
-<p><em>Option 2</em>: Manually create a table with one column for the <strong>peptide sequence</strong> and another column for the <strong>protein group</strong> (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the <strong>intensity values</strong> for each sample.</p>
-</li>
+<li><code>genome_union_q005.tsv</code>: genomes passing q &lt;= 0.05 in at least one analysis unit.</li>
+<li><code>genome_union_q001.tsv</code>: genomes passing q &lt;= 0.01 in at least one analysis unit.</li>
 </ul>
-<p><strong>Example:</strong></p>
+<p>Both tables contain a <code>genome_id</code> column and can be loaded directly through MetaX <strong>Custom genome list</strong>. Do <strong>not</strong> load the unfiltered <code>unit_genome_results.tsv</code> directly as a custom list, because it also contains genomes that failed the selected threshold.</p>
+<p>If diagnostic tables were not exported, create a newline-delimited list from the primary result table:</p>
+<pre><code class="language-python">from pathlib import Path
+
+import pandas as pd
+
+results = pd.read_csv(&quot;metaumbra_results/unit_genome_results.tsv&quot;, sep=&quot;\t&quot;)
+flag = &quot;pass_q_0_05&quot;  # Use pass_q_0_01 for the stricter threshold.
+passed = results[flag].astype(str).str.lower().isin({&quot;true&quot;, &quot;1&quot;})
+genomes = sorted(results.loc[passed, &quot;genome_id&quot;].dropna().astype(str).unique())
+Path(&quot;genomes_q005.txt&quot;).write_text(&quot;\n&quot;.join(genomes) + &quot;\n&quot;, encoding=&quot;utf-8&quot;)
+</code></pre>
+<p>The resulting <code>genomes_q005.txt</code> can be loaded or pasted into MetaX after selecting <strong>Custom genome list</strong>.</p>
+<h4 id="other-genome-selection-sources">Other genome selection sources</h4>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Genome selection source</th>
+<th>When to use it</th>
+<th>Additional action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MetaUmbra genome selection manifest</strong></td>
+<td>Recommended for current workflows and required when MetaUmbra analysis-unit definitions must be retained</td>
+<td>Select the manifest, threshold, and run <strong>Validate / Settings...</strong></td>
+</tr>
+<tr>
+<td><strong>MetaX automatic genome selection</strong></td>
+<td>Non-MetaUmbra workflow that selects genomes globally from peptide coverage</td>
+<td>Adjust <strong>Peptide Coverage Cutoff for Protein Selection</strong> in advanced settings if needed</td>
+</tr>
+<tr>
+<td><strong>Custom genome list</strong></td>
+<td>A fixed genome set is already known</td>
+<td>Load a plain text/TSV/CSV list, use a thresholded MetaUmbra union table, or paste genome IDs into MetaX</td>
+</tr>
+</tbody>
+</table></div>
+<p>The source is always selected explicitly. MetaX does not infer the genome-selection mode from a filename or from peptide-table columns.</p>
+<h4 id="common-inputs">Common inputs</h4>
+<ul>
+<li><strong>Peptide Table</strong>: A wide delimited peptide-intensity table (<code>.tsv</code>, <code>.txt</code>, or <code>.csv</code>) or a long-format DIA-NN parquet file. A wide table needs a peptide sequence column and sample-intensity columns; it does not need a precomputed protein-group column because this workflow maps peptides against the digested genomes.</li>
+<li><strong>Digested Genome Folder</strong>: The digested genome peptide tables created from the same protein database used for peptide identification.</li>
+<li><strong>Protein to TaxaFunc Database</strong>: The annotation database created by <a href="#module-2-database-builder">Database Builder</a> from the same genome/protein reference.</li>
+<li><strong>OTFs Save To</strong>: The final merged OTF TSV path.</li>
+<li><strong>Peptide Column Name</strong>: The peptide sequence column. MetaX detects common names; DIA-NN parquet uses <code>Stripped.Sequence</code>.</li>
+<li><strong>Prefix of Intensity Column</strong>: For a wide table, the prefix that identifies sample columns, such as <code>Intensity</code> for <code>Intensity_sample1</code>.</li>
+</ul>
+<h4 id="dia-nn-parquet-input">DIA-NN parquet input</h4>
+<p>MetaX recognizes DIA-NN parquet input by the presence of <code>Run</code>, <code>Stripped.Sequence</code>, and at least one supported intensity column:</p>
+<ul>
+<li><code>Precursor.Normalised</code> is preferred when available.</li>
+<li><code>Precursor.Quantity</code> can be selected as an alternative or is used when normalized intensity is unavailable.</li>
+<li><code>Run</code> values become sample columns named <code>Intensity_&lt;sample&gt;</code>.</li>
+<li><code>Stripped.Sequence</code> becomes the peptide sequence column.</li>
+<li>The selected source column is recorded in conversion metadata; <code>Precursor.Normalised</code> or <code>Precursor.Quantity</code> is not added to the visible sample names.</li>
+</ul>
+<p>When DIA-NN parquet is selected, the GUI changes <strong>Prefix of Intensity Column</strong> to <strong>DIA-NN Intensity Column</strong>. Common raw-data suffixes in <code>Run</code> values are normalized when samples are matched to a manifest, including <code>.raw</code> and <code>.raw.dia</code>.</p>
+<h4 id="advanced-settings">Advanced settings</h4>
+<p>The defaults are suitable for most projects. Enable <strong>Show Advanced Settings</strong> when the input schema or protein identifiers differ from the defaults:</p>
+<ul>
+<li><strong>Separator of Peptide Table</strong>: Usually <code>\t</code> for TSV input.</li>
+<li><strong>LCA Threshold for OTF</strong>: Proportion threshold used to assign the peptide LCA; the default is <code>1.00</code> (100%).</li>
+<li><strong>Genome Separator in Protein ID</strong>: For example, <code>_</code> in <code>MGYG000003683_00301</code> or <code>|</code> in <code>MGYG000003683|00301</code>.</li>
+<li><strong>Method to handle duplicate peptides intensity</strong>: <code>sum</code>, <code>max</code>, <code>min</code>, <code>mean</code>, or <code>first</code>.</li>
+<li><strong>Peptide Coverage Cutoff for Protein Selection</strong>: Used by <strong>MetaX automatic genome selection</strong> and not by manifest-driven annotation.</li>
+</ul>
+<span class="image-wrap"><img alt="LCA_prop" src="./MetaX_Cookbook.assets/LCA_prop.png" decoding="async" class="doc-image"></span>
+<h4 id="manifest-output-and-downstream-counts">Manifest output and downstream counts</h4>
+<p>Manifest-driven output retains <code>analysis_unit_id</code> and the biological <code>Sequence</code>. Do not deduplicate a multi-unit OTF table by <code>Sequence</code> alone because the same peptide can carry evidence in more than one analysis unit.</p>
+<p>The run creates:</p>
+<ul>
+<li>The merged OTF table selected in <strong>OTFs Save To</strong>.</li>
+<li><code>&lt;output_stem&gt;_info.txt</code>, containing input parameters and an annotation summary.</li>
+<li><code>&lt;output_stem&gt;_artifacts/unit_annotation_summary.tsv</code>, containing one row per analysis unit.</li>
+<li><code>&lt;output_stem&gt;_artifacts/unit_sample_column_mapping.tsv</code>, recording manifest-sample to peptide-table-column matching.</li>
+<li>Optional per-unit OTF files when <strong>Save per-unit OTFs</strong> is enabled in <strong>Validate / Settings...</strong>.</li>
+</ul>
+<p>In downstream MetaX results, <code>peptide_num</code> is the number of unique biological <code>Sequence</code> values, while <code>peptide_feature_num</code> is the number of unique analysis-unit peptide features.</p>
+<p>For unattended or reproducible annotation, use the dedicated <a href="#4-peptide-direct-to-otfs-via-cli-and-automation">CLI and automation section</a>.</p>
+<h3 id="2-mag-annotate-a-pre-mapped-peptide-table">2. MAG: Annotate a Pre-mapped Peptide Table</h3>
+<p>Use the <strong>MAG</strong> tab when the peptide table already contains peptide-to-protein assignments. Unlike <strong>Peptide Direct to OTFs</strong>, this workflow does not select genomes or scan a digested genome folder.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide2taxafunc_mag.png" alt="MAG peptide annotation" decoding="async" class="doc-image"></span>
+<p>Required inputs:</p>
+<ul>
+<li><strong>Database</strong>: The Protein to TaxaFunc database created by <a href="#module-2-database-builder">Database Builder</a>.</li>
+<li><strong>Peptide Table</strong>: A delimited table containing a peptide sequence column, a protein-group column, and sample-intensity columns.</li>
+<li><strong>OTFs Save To</strong>: The output OTF TSV path.</li>
+<li><strong>LCA Threshold</strong>: The peptide LCA proportion threshold; the default is <code>1.000</code>.</li>
+</ul>
+<p>Example peptide table:</p>
 <div class="table-responsive"><table class="table table-striped table-bordered">
 <thead>
 <tr>
@@ -1967,106 +2373,680 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 <th>Proteins</th>
 <th>Intensity_V1_01</th>
 <th>Intensity_V1_02</th>
-<th>Intensity_V1_03</th>
-<th>Intensity_V1_04</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>(Acetyl)KGGVEPQSETVWR</td>
-<td>MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002926_00231;...</td>
+<td>KGGVEPQSETVWR</td>
+<td>MGYG000002716_01681;MGYG000000195_00452</td>
 <td>714650</td>
 <td>0</td>
-<td>0</td>
-<td>0</td>
 </tr>
 <tr>
-<td>(Acetyl)KVIPELNGK</td>
-<td>MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;...</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-</tr>
-<tr>
-<td>(Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK</td>
-<td>MGYG000001199_02893</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-</tr>
-<tr>
-<td>(Acetyl)LLTGLPDAYGR</td>
-<td>MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124</td>
+<td>LLTGLPDAYGR</td>
+<td>MGYG000001757_01206;MGYG000004547_02135</td>
 <td>0</td>
 <td>307519</td>
-<td>0</td>
-<td>0</td>
-</tr>
-<tr>
-<td>(Acetyl)MDFTLDKK</td>
-<td>MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102</td>
-<td>306231</td>
-<td>0</td>
-<td>0</td>
-<td>1214497</td>
 </tr>
 </tbody>
-</table></div></li>
-<li>
-<p><strong>Output Save Path</strong>: The location to save the result table.</p>
-</li>
-<li>
-<p><strong>LCA Threshold</strong>: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).</p>
-<span class="image-wrap"><img alt="LCA_prop" src="./MetaX_Cookbook.assets/LCA_prop.png" decoding="async" class="doc-image"></span>
-</li>
-</ul>
-<h3 id="2-results-from-maxquant-workflow">2. Results from MaxQuant Workflow</h3>
-<p>These peptide results come from the <strong>MetaLab 2.3</strong> MaxQuant workflow.</p>
+</table></div>
+<p>Use <strong>Show Advanced Settings</strong> to change the peptide column, protein column, intensity prefix, protein-group separator, genome separator, excluded protein prefixes, distinct-genome threshold, or duplicate-peptide handling.</p>
+<h3 id="3-metalab-23-maxquant-results">3. MetaLab 2.3 MaxQuant Results</h3>
+<p>Use this tab only for results from the <strong>MetaLab 2.3 MaxQuant</strong> workflow. These results already contain the MetaLab taxonomy and function annotations needed to construct an OTF table.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="MetaLab 2.3 peptide annotation" decoding="async" class="doc-image"></span>
+<ol>
+<li>Click <strong>Open</strong> beside <strong>MetaLab 2.3 Result Folder</strong> and select the folder that contains <code>maxquant_search</code>.</li>
+<li>MetaX locates these files automatically:
+   - <code>maxquant_search/combined/txt/peptides_report.txt</code>
+   - <code>maxquant_search/taxonomy_analysis/BuiltIn.pepTaxa.csv</code>
+   - <code>maxquant_search/functional_annotation/functions.tsv</code></li>
+<li>Set <strong>OTFs Save To</strong>. If automatic discovery is not appropriate, open the <strong>SET PATH</strong> panel and select the three files manually.</li>
+<li>Click <strong>GO</strong> to create the OTF table.</li>
+</ol>
+<h3 id="4-peptide-direct-to-otfs-via-cli-and-automation">4. Peptide Direct to OTFs via CLI and Automation</h3>
+<p>The annotation CLI implements the three <strong>Peptide Direct to OTFs</strong> genome-selection sources. It does not replace the legacy MAG or MetaLab 2.3 tabs.</p>
+<blockquote>
+<p><strong>Complete command reference:</strong> Open <a href="#4-peptide-to-otf-annotation">MetaX CLI - Peptide-to-OTF Annotation</a>. The link switches the deployed page to the <strong>MetaX CLI</strong> tab and opens its annotation options, configuration schema, outputs, and exit codes.</p>
+</blockquote>
+<p>The examples below use Bash line continuation. In PowerShell, replace each trailing <code>\</code> with a backtick or place the command on one line.</p>
+<p><strong>MetaUmbra manifest (recommended):</strong></p>
+<pre><code class="language-bash">python -m metax.cli.annotate \
+  --input-source metaumbra-manifest \
+  --peptide-table report.parquet \
+  --metaumbra-manifest genome_selection_manifest.json \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --output OTF.tsv \
+  --genome-threshold auto \
+  --result-json annotation_result.json
+</code></pre>
+<p><strong>MetaX automatic genome selection:</strong></p>
+<pre><code class="language-bash">python -m metax.cli.annotate \
+  --input-source metax-automatic \
+  --peptide-table peptides.tsv \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --intensity-col-prefix Intensity \
+  --output OTF.tsv
+</code></pre>
+<p><strong>Custom genome list:</strong></p>
+<pre><code class="language-bash">python -m metax.cli.annotate \
+  --input-source genome-list \
+  --genome-list-file genomes.txt \
+  --peptide-table peptides.tsv \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --output OTF.tsv
+</code></pre>
+<p>Use <code>--diann-intensity-col Precursor.Normalised</code> or <code>Precursor.Quantity</code> to select a DIA-NN parquet intensity source explicitly. YAML/JSON configuration files are supported with <code>--config</code>; command-line arguments override configuration values. Use <code>--result-json</code> when a workflow manager needs structured status, parameters, outputs, and failure information.</p>
+<p>Continue in the <a href="#metax-cli">MetaX CLI tab</a> for installation profiles, Auto OTF Report automation, database-building commands, reproducible Analyzer workflows, and shell guidance.</p>
+<h2 id="reporting-and-reproducibility">Reporting and Reproducibility</h2>
+<h3 id="auto-otf-report">Auto OTF Report</h3>
+<p>On the OTF Analyzer input page, set the OTF and metadata paths and click <strong>Generate Report</strong>. Choose the taxonomic levels, function annotations, grouping metadata, control group, statistical tests, and output options. The report workflow can also generate a protein table and heavier network plots when requested.</p>
+<span class="image-wrap"><img src="./MetaX_Cookbook.assets/report_generate.png" alt="Generate Auto OTF Report dialog" decoding="async" class="doc-image"></span>
+<p>The dialog is organized into collapsible sections:</p>
 <ul>
-<li>Select the <strong>MetaLab</strong> result folder, which contains the <strong>maxquant_search</strong> folder.</li>
+<li><strong>Input</strong> uses the paths and column settings from Data Import and also supports custom-table mode.</li>
+<li><strong>Analysis Selection</strong> chooses one or more taxonomic levels and function annotations, optional grouping/control metadata, and ANOVA, T-test, or group-vs-control analysis.</li>
+<li><strong>Report Output</strong> controls the output directory, top-N plots, Limma or legacy Dunnett group-vs-control testing, PNG/PDF/SVG formats, DPI, interactive HTML embedding, network plots, and overwrite behavior.</li>
+<li><strong>OTF Processing Settings</strong> reuses quantification, batch correction, peptide thresholds, split-function behavior, and optional protein-table generation.</li>
 </ul>
-<span class="image-wrap"><img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="peptide2taxafunc_tab2_1" style="width: 80%" decoding="async" class="doc-image"></span>
+<p>After generation starts, the <strong>Auto OTF Report Log</strong> window shows live progress. Use <strong>Stop</strong> to cancel a running report, or <strong>Open Report</strong> after successful completion. A stopped run can leave partial files, so use a fresh output directory before restarting unless those files are intentionally overwritten.</p>
+<p>The output is a self-contained <code>MetaX_Report</code> directory with an <code>index.html</code> home page, result tables, figures, logs, <code>summary.json</code>, and the effective <code>config_used.yaml</code>. A non-empty report directory is rejected unless <strong>Overwrite</strong> is enabled, preventing results from unrelated runs from being mixed.</p>
+<p>Group-vs-control analysis uses Limma through InMoose by default on <code>log2(x + 1)</code> abundance. Zero abundance remains numeric during Limma preparation. Dunnett's test remains available as the legacy alternative.</p>
+<p>PNG output is always produced. PDF and SVG can be enabled for editable/vector output, and figure DPI is configurable. The equivalent configuration is:</p>
+<pre><code class="language-yaml">statistics:
+  diff_method: limma
+report:
+  figure_formats: [png, svg, pdf]
+  dpi: 300
+</code></pre>
+<p>The report home page identifies the primary taxonomic level and function annotation, links additional combinations as extended results, and displays analysis-unit metadata when the OTF contains <code>analysis_unit_id</code> or a compatible unit column. A successful GUI report also records its effective configuration and reproducibility helpers for workflow export. See <a href="#5-auto-otf-html-report">MetaX CLI - Auto OTF HTML Report</a> or run <code>metax-report --help</code> for unattended reporting.</p>
+<h3 id="export-a-recorded-gui-workflow">Export a Recorded GUI Workflow</h3>
+<p>MetaX records supported analysis steps during the current GUI session. Open <strong>Restore &gt; Export Workflow Notebook</strong>, select the steps to replay, and choose the output formats:</p>
 <ul>
-<li>
-<p>The <strong>Peptide Annotator</strong> will automatically find the <strong>peptides_report.txt</strong>, <strong>BuiltIn.pepTaxa.csv</strong>, and <strong>functions.tsv</strong> in the <strong>maxquant_search</strong> folder. Alternatively, you can select the files manually.</p>
-</li>
-<li>
-<p>Select <strong>OTFs Save To</strong> to set the location to save the result table.</p>
-</li>
+<li><strong>Jupyter Notebook (<code>.ipynb</code>)</strong> is enabled by default and is bound to the Python runtime used by the current MetaX GUI when possible.</li>
+<li><strong>Python script (<code>.py</code>)</strong> is optional.</li>
+<li><strong>YAML workflow (<code>.yaml</code>)</strong> is optional and records the selected steps and parameters in a readable form.</li>
 </ul>
-<span class="image-wrap"><img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png" alt="peptide2taxafunc_tab2_2" style="width: 80%" decoding="async" class="doc-image"></span>
-<p><br></p>
-<h1 id="developer-tools">Developer Tools</h1>
+<p>Mandatory setup steps remain selected to keep the exported workflow runnable. Use workflow export to reproduce a GUI analysis, review its effective parameters, or continue the analysis in code.</p>
+<h2 id="application-tools">Application Tools</h2>
+<h3 id="logs-and-console">Logs and Console</h3>
+<p>Use <strong>Dev &gt; Export Log File</strong> when reporting an error or preserving a run log. <strong>Dev &gt; Show Console</strong> opens live standard output and progress information, which is useful for long annotation and analysis tasks.</p>
+<span class="image-wrap"><img alt="Dev menu" src="MetaX_Cookbook.assets/dev_menu.png" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/show_console.png" alt="MetaX console" decoding="async" class="doc-image"></span>
+<h3 id="settings-and-updates">Settings and Updates</h3>
+<p>Open <strong>Dev &gt; Settings</strong> to configure application behavior, paths, plotting defaults, and update preferences.</p>
 <ul>
-<li>
-<p><strong>Export Log</strong></p>
-</li>
-<li>
-<p>You can export the log file for debugging or reporting the issue.</p>
-</li>
-<li class="media-item"><span class="image-wrap"><img alt="dev_menu" src="MetaX_Cookbook.assets/dev_menu.png" decoding="async" class="doc-image"></span>
-</li>
-<li>
-<p><strong>Show or Hide the Console</strong></p>
-</li>
+<li><strong>Auto Check Update</strong> controls update checks at launch.</li>
+<li>Select the stable or beta update channel according to the desired release track.</li>
+<li><strong>Use Local JS Assets (Offline/Fast)</strong> makes interactive plots load from bundled ECharts assets and work offline. Disable it before sharing standalone interactive HTML when recipients should load the libraries from the public CDN instead.</li>
+<li>Configure the <strong>MetaTree directory</strong> before using the MetaTree button in the selected-item plotting workflow.</li>
+<li>Additional pages contain analysis and visualization defaults used by the corresponding GUI tools.</li>
 </ul>
-<span class="image-wrap"><img src="MetaX_Cookbook.assets/show_console.png" alt="show_console" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img src="MetaX_Cookbook.assets/settings.png" alt="MetaX settings" decoding="async" class="doc-image"></span>
+<span class="image-wrap"><img alt="Additional settings" src="./MetaX_Cookbook.assets/settings_page2.png" decoding="async" class="doc-image"></span>
+<h2 id="support">Support</h2>
+<p>If you encounter a problem, export the MetaX log and open an issue in the <a href="https://github.com/byemaxx/MetaX">MetaX GitHub repository</a>. Include the MetaX version, input schema, selected workflow, and the smallest reproducible example that can be shared.</p>
+    </section>
+
+    <section
+        id="doc-panel-metax-cli"
+        class="doc-panel"
+        role="tabpanel"
+        aria-labelledby="doc-tab-metax-cli"
+        data-doc-key="metax-cli"
+        hidden
+    >
+        <h1 id="metax-cli">MetaX CLI</h1>
+<p>MetaX provides command-line entry points for launching the desktop application, annotating peptides to Operational Taxon-Functions (OTFs), generating complete HTML reports, and building an MGnify annotation database. This page documents every user-facing command currently available in the project.</p>
+<p>MetaX does not currently expose a separate general-purpose <code>metax analyze</code> command for every interactive Analyzer plot. Use <strong>Restore &gt; Export Workflow Notebook</strong> in the GUI when a downstream Analyzer workflow must be replayed without manual interaction; the exported notebook and optional Python script use the same analysis APIs.</p>
+<h2 id="1-installation-profiles">1. Installation Profiles</h2>
+<p>Install MetaX into the Python environment from which the commands will be run.</p>
+<pre><code class="language-bash"># Peptide-to-OTF annotation without Qt
+python -m pip install MetaXTools
+
+# Annotation plus the headless Auto OTF Report stack
+python -m pip install &quot;MetaXTools[report]&quot;
+
+# Desktop GUI and all optional analysis/report dependencies
+python -m pip install &quot;MetaXTools[full]&quot;
+</code></pre>
+<p>Use the lightweight base installation for annotation servers and workflow managers. Use the report profile for headless analysis and HTML reporting. The full profile is required for the desktop application and is also the safest choice for the legacy MGnify database-builder module.</p>
+<h2 id="2-command-overview">2. Command Overview</h2>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+<th>Recommended installation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metax</code></td>
+<td>Launch the MetaX desktop application</td>
+<td><code>MetaXTools[full]</code></td>
+</tr>
+<tr>
+<td><code>metax-annotate</code></td>
+<td>Convert a peptide-intensity table to an OTF table</td>
+<td><code>MetaXTools</code></td>
+</tr>
+<tr>
+<td><code>metax-report</code></td>
+<td>Generate a self-contained Auto OTF HTML report</td>
+<td><code>MetaXTools[report]</code></td>
+</tr>
+<tr>
+<td><code>python -m metax.database_builder.database_builder_mag</code></td>
+<td>Download or build an MGnify annotation database</td>
+<td><code>MetaXTools[full]</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The two headless commands also have module forms, which are useful when several Python installations are present:</p>
+<pre><code class="language-bash">python -m metax.cli.annotate --help
+python -m metax.cli.report --help
+</code></pre>
+<p>Using <code>python -m ...</code> guarantees that the command runs with the same interpreter that contains the selected MetaX installation.</p>
+<h2 id="3-desktop-launcher">3. Desktop Launcher</h2>
+<pre><code class="language-bash">metax
+</code></pre>
+<p>The launcher opens the desktop GUI and does not define additional command-line options. If GUI dependencies are unavailable, it exits with code <code>4</code> and identifies the required installation extra.</p>
+<h2 id="4-peptide-to-otf-annotation">4. Peptide-to-OTF Annotation</h2>
+<h3 id="41-input-sources">4.1 Input Sources</h3>
+<p><code>metax-annotate</code> supports the three genome-selection sources available on the <strong>Peptide Direct to OTFs</strong> GUI tab. The source must be selected explicitly; MetaX does not infer it from a filename or table columns.</p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th><code>--input-source</code></th>
+<th>Genome selection</th>
+<th>Source-specific input</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metaumbra-manifest</code></td>
+<td>Per-analysis-unit genomes selected by MetaUmbra</td>
+<td><code>--metaumbra-manifest</code></td>
+</tr>
+<tr>
+<td><code>metax-automatic</code></td>
+<td>MetaX automatic selection from the supplied peptide table</td>
+<td>No genome-list argument</td>
+</tr>
+<tr>
+<td><code>genome-list</code></td>
+<td>A user-supplied fixed genome set</td>
+<td><code>--genome-list-file</code> or <code>--selected-genomes</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="42-metaumbra-manifest-workflow-recommended">4.2 MetaUmbra Manifest Workflow (Recommended)</h3>
+<pre><code class="language-bash">metax-annotate \
+  --input-source metaumbra-manifest \
+  --peptide-table report.parquet \
+  --metaumbra-manifest results/genome_selection_manifest.json \
+  --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders UHGP_digested \
+  --genome-threshold auto \
+  --output OTF.tsv \
+  --result-json annotation_result.json
+</code></pre>
+<p><code>--genome-threshold auto</code> uses <code>selection.default_genome_threshold</code> from the manifest. Use <code>q0.05</code> or <code>q0.01</code> to select a specific manifest threshold. MetaX validates analysis units, sample mappings, selected genomes, and required files before annotation.</p>
+<h3 id="43-metax-automatic-genome-selection">4.3 MetaX Automatic Genome Selection</h3>
+<pre><code class="language-bash">metax-annotate \
+  --input-source metax-automatic \
+  --peptide-table peptides.tsv \
+  --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders UHGP_digested \
+  --intensity-col-prefix Intensity \
+  --output OTF.tsv
+</code></pre>
+<h3 id="44-custom-genome-list">4.4 Custom Genome List</h3>
+<pre><code class="language-bash">metax-annotate \
+  --input-source genome-list \
+  --genome-list-file genomes.txt \
+  --peptide-table peptides.tsv \
+  --taxafunc-db MetaX_taxafunc.db \
+  --digested-genome-folders UHGP_digested \
+  --output OTF.tsv
+</code></pre>
+<p>For a short inline list, replace <code>--genome-list-file genomes.txt</code> with <code>--selected-genomes genome_1 genome_2</code>. Text, TSV, and CSV genome-list files are accepted.</p>
+<h3 id="45-annotation-configuration-file">4.5 Annotation Configuration File</h3>
+<p>YAML and JSON configurations are supported. Relative paths are resolved from the configuration file directory, and explicit command-line arguments override configuration values.</p>
+<pre><code class="language-yaml">workflow_api_version: &quot;1.0&quot;
+inputs:
+  peptide_table: report.parquet
+  metaumbra_manifest: results/genome_selection_manifest.json
+  taxafunc_db: databases/MetaX_taxafunc.db
+  digested_genome_folders:
+    - databases/UHGP_digested
+options:
+  input_source: metaumbra-manifest
+  genome_threshold: auto
+  peptide_col: Stripped.Sequence
+  diann_intensity_col: Precursor.Normalised
+  n_jobs: 8
+output:
+  otf: results/OTF.tsv
+  result_json: results/annotation_result.json
+</code></pre>
+<p>Run it with:</p>
+<pre><code class="language-bash">metax-annotate --config annotation.yaml
+</code></pre>
+<h3 id="46-annotation-option-reference">4.6 Annotation Option Reference</h3>
+<p><strong>Core inputs and outputs</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--config PATH</code></td>
+<td>YAML or JSON workflow configuration</td>
+</tr>
+<tr>
+<td><code>--peptide-table PATH</code></td>
+<td>Peptide-intensity table; delimited text or DIA-NN parquet</td>
+</tr>
+<tr>
+<td><code>--input-source SOURCE</code></td>
+<td><code>metaumbra-manifest</code>, <code>metax-automatic</code>, or <code>genome-list</code></td>
+</tr>
+<tr>
+<td><code>--metaumbra-manifest PATH</code></td>
+<td>MetaUmbra <code>genome_selection_manifest.json</code></td>
+</tr>
+<tr>
+<td><code>--genome-list-file PATH</code></td>
+<td>Text, TSV, or CSV file containing genome IDs</td>
+</tr>
+<tr>
+<td><code>--selected-genomes ID ...</code></td>
+<td>Genome IDs supplied directly on the command line</td>
+</tr>
+<tr>
+<td><code>--taxafunc-db PATH</code></td>
+<td>MetaX taxa-function annotation SQLite database</td>
+</tr>
+<tr>
+<td><code>--peptide-db PATH</code></td>
+<td>Optional SQLite peptide-to-protein cache/database</td>
+</tr>
+<tr>
+<td><code>--digested-genome-folders PATH ...</code></td>
+<td>One or more directories containing digested genome TSV files</td>
+</tr>
+<tr>
+<td><code>--output PATH</code></td>
+<td>Output OTF TSV</td>
+</tr>
+<tr>
+<td><code>--result-json PATH</code></td>
+<td>Structured execution result for automation and diagnostics</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Columns and input preparation</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning / default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--peptide-col NAME</code></td>
+<td>Peptide column; default <code>Sequence</code></td>
+</tr>
+<tr>
+<td><code>--intensity-col-prefix PREFIX</code></td>
+<td>Input sample-column prefix for automatic and genome-list modes; default <code>Intensity</code></td>
+</tr>
+<tr>
+<td><code>--input-sample-col-prefix PREFIX</code></td>
+<td>Optional input prefix removed while matching manifest sample IDs</td>
+</tr>
+<tr>
+<td><code>--output-sample-col-prefix Intensity_</code></td>
+<td>Canonical OTF sample prefix; currently fixed to <code>Intensity_</code></td>
+</tr>
+<tr>
+<td><code>--table-separator SEP</code></td>
+<td>Delimited-table separator; default tab (<code>\t</code>)</td>
+</tr>
+<tr>
+<td><code>--diann-intensity-col COLUMN</code></td>
+<td>DIA-NN parquet intensity source: <code>Precursor.Normalised</code> or <code>Precursor.Quantity</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>For DIA-NN parquet, MetaX reads <code>Run</code> and <code>Stripped.Sequence</code>, prefers <code>Precursor.Normalised</code>, and falls back to <code>Precursor.Quantity</code> when no explicit DIA-NN intensity option is supplied. Output sample columns use <code>Intensity_&lt;sample&gt;</code>.</p>
+<p><strong>Annotation behavior</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning / values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--genome-threshold VALUE</code></td>
+<td><code>auto</code>, <code>q0.05</code>, or <code>q0.01</code></td>
+</tr>
+<tr>
+<td><code>--lca-threshold FLOAT</code></td>
+<td>LCA agreement threshold from <code>0</code> to <code>1</code>; default <code>1.0</code></td>
+</tr>
+<tr>
+<td><code>--genome-mode</code> / <code>--no-genome-mode</code></td>
+<td>Enable or disable genome-mode annotation</td>
+</tr>
+<tr>
+<td><code>--distinct-genome-threshold N</code></td>
+<td>Minimum distinct-genome filter; default <code>0</code></td>
+</tr>
+<tr>
+<td><code>--exclude-protein-startwith TEXT</code></td>
+<td>Exclude protein IDs beginning with the supplied text</td>
+</tr>
+<tr>
+<td><code>--protein-separator TEXT</code></td>
+<td>Separator between protein assignments; default <code>;</code></td>
+</tr>
+<tr>
+<td><code>--protein-genome-separator TEXT</code></td>
+<td>Separator between genome and protein IDs; default <code>_</code></td>
+</tr>
+<tr>
+<td><code>--duplicate-peptide-handling-mode MODE</code></td>
+<td><code>sum</code>, <code>max</code>, <code>min</code>, <code>mean</code>, <code>first</code>, or <code>keep</code>; default <code>sum</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Manifest execution and performance</strong></p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning / default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--save-per-unit-outputs</code> / <code>--no-save-per-unit-outputs</code></td>
+<td>Save a separate OTF file for each analysis unit</td>
+</tr>
+<tr>
+<td><code>--on-missing-sample MODE</code></td>
+<td><code>error</code> or <code>warn-skip</code>; default <code>error</code></td>
+</tr>
+<tr>
+<td><code>--on-empty-unit MODE</code></td>
+<td><code>error</code> or <code>warn-skip</code>; default <code>warn-skip</code></td>
+</tr>
+<tr>
+<td><code>--n-jobs N</code></td>
+<td>Worker count; must be at least <code>1</code> when supplied</td>
+</tr>
+<tr>
+<td><code>--merge-chunksize N</code></td>
+<td>Merge chunk size; default <code>100000</code></td>
+</tr>
+<tr>
+<td><code>--collect-unique-stats</code> / <code>--no-collect-unique-stats</code></td>
+<td>Collect additional unique-peptide statistics</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="47-annotation-outputs-and-exit-codes">4.7 Annotation Outputs and Exit Codes</h3>
+<p>The main output is an OTF TSV. Manifest-based runs retain <code>analysis_unit_id</code> and can additionally write sample-mapping, unit-summary, and optional per-unit artifacts. <code>--result-json</code> records the input source, effective parameters, stage status, output paths, warnings, and errors using the current <code>metax.annotation_result.v2</code> contract.</p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Exit code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Success</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>Invalid configuration or arguments</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>Required input file is missing</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>Optional dependency is unavailable</td>
+</tr>
+<tr>
+<td><code>5</code></td>
+<td>Annotation failed</td>
+</tr>
+<tr>
+<td><code>130</code></td>
+<td>Cancelled or interrupted</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-auto-otf-html-report">5. Auto OTF HTML Report</h2>
+<p>Install the report profile, then generate a report directly from an OTF table:</p>
+<pre><code class="language-bash">metax-report \
+  --otf OTF.tsv \
+  --meta metadata.tsv \
+  --out MetaX_Report \
+  --group Treatment \
+  --control Control \
+  --taxa-levels p,g,s \
+  --func eggNOG_OGs,KEGG_ko \
+  --diff-method limma \
+  --figure-formats png,svg,pdf \
+  --dpi 300
+</code></pre>
+<p>Without <code>--config</code>, <code>--otf</code> and <code>--out</code> are required. With a configuration file, command-line options override the corresponding configuration values.</p>
+<h3 id="51-report-configuration-file">5.1 Report Configuration File</h3>
+<pre><code class="language-yaml">input:
+  otf_path: OTF.tsv
+  meta_path: metadata.tsv
+  peptide_col_name: Sequence
+  protein_col_name: Proteins
+  sample_col_prefix: Intensity
+analysis:
+  group_meta: Treatment
+  control_group: Control
+  main_taxa_level: s
+tables:
+  taxa_levels: [p, g, s]
+  function_columns: [eggNOG_OGs, KEGG_ko]
+statistics:
+  diff_method: limma
+  alpha: 0.05
+  log2fc_cutoff: 1.0
+plots:
+  top_n: 20
+  run_network: false
+report:
+  output_dir: MetaX_Report
+  figure_formats: [png, svg, pdf]
+  dpi: 300
+  overwrite: false
+</code></pre>
+<pre><code class="language-bash">metax-report --config report.yaml
+</code></pre>
+<h3 id="52-report-option-reference">5.2 Report Option Reference</h3>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--otf PATH</code></td>
+<td>Input OTF table</td>
+</tr>
+<tr>
+<td><code>--out DIR</code></td>
+<td>Output report directory</td>
+</tr>
+<tr>
+<td><code>--meta PATH</code></td>
+<td>Optional metadata table</td>
+</tr>
+<tr>
+<td><code>--group COLUMN</code></td>
+<td>Metadata grouping column</td>
+</tr>
+<tr>
+<td><code>--control VALUE</code></td>
+<td>Control value within the grouping column</td>
+</tr>
+<tr>
+<td><code>--taxa-levels LIST</code></td>
+<td>Comma-separated levels such as <code>p,g,s</code>, or <code>all</code></td>
+</tr>
+<tr>
+<td><code>--func LIST</code></td>
+<td>Comma-separated function columns, or <code>auto</code></td>
+</tr>
+<tr>
+<td><code>--config PATH</code></td>
+<td>YAML report configuration</td>
+</tr>
+<tr>
+<td><code>--sample-col-prefix PREFIX</code></td>
+<td>OTF sample-intensity prefix</td>
+</tr>
+<tr>
+<td><code>--peptide-col-name NAME</code></td>
+<td>Peptide column name</td>
+</tr>
+<tr>
+<td><code>--protein-col-name NAME</code></td>
+<td>Protein column name</td>
+</tr>
+<tr>
+<td><code>--top-n N</code></td>
+<td>Top features displayed in report plots</td>
+</tr>
+<tr>
+<td><code>--diff-method METHOD</code></td>
+<td><code>limma</code> or <code>dunnett</code></td>
+</tr>
+<tr>
+<td><code>--figure-formats LIST</code></td>
+<td>Comma-separated <code>png</code>, <code>svg</code>, and/or <code>pdf</code></td>
+</tr>
+<tr>
+<td><code>--dpi N</code></td>
+<td>Raster-figure DPI</td>
+</tr>
+<tr>
+<td><code>--run-deseq2</code></td>
+<td>Request optional DESeq2-like analysis</td>
+</tr>
+<tr>
+<td><code>--no-diversity</code></td>
+<td>Disable alpha- and beta-diversity plots</td>
+</tr>
+<tr>
+<td><code>--run-network</code></td>
+<td>Enable heavier taxa-function network plots</td>
+</tr>
+<tr>
+<td><code>--no-network</code></td>
+<td>Disable network plots</td>
+</tr>
+<tr>
+<td><code>--overwrite</code></td>
+<td>Replace report files in a non-empty output directory</td>
+</tr>
+</tbody>
+</table></div>
+<p>The command prints the generated report <code>index.html</code> path on success and returns <code>0</code>. A report failure returns <code>1</code>; a missing optional report dependency returns <code>4</code>. The report directory also contains tables, figures, logs, <code>summary.json</code>, <code>config_used.yaml</code>, and reproducibility helpers.</p>
+<h2 id="6-mgnify-database-builder-module">6. MGnify Database Builder Module</h2>
+<p>The current database builder is available as a Python module rather than a separate installed console command. Use the full installation profile.</p>
+<h3 id="61-automatic-build">6.1 Automatic Build</h3>
+<pre><code class="language-bash">python -m metax.database_builder.database_builder_mag \
+  --auto \
+  --db_type human-gut
+</code></pre>
+<p>This downloads the selected MGnify catalogue and writes <code>MetaX_database/MetaX.db</code> under the current directory.</p>
+<h3 id="62-custom-output-location">6.2 Custom Output Location</h3>
+<pre><code class="language-bash">python -m metax.database_builder.database_builder_mag \
+  --save_dir databases \
+  --db_name MetaX.db \
+  --db_type marine
+</code></pre>
+<p>To reuse already downloaded source data, also supply <code>--meta_path</code> for <code>genomes-all_metadata.tsv</code> and <code>--mgyg_dir</code> for the eggNOG annotation directory.</p>
+<div class="table-responsive"><table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--auto</code></td>
+<td>Use <code>MetaX_database/MetaX.db</code> under the current directory</td>
+</tr>
+<tr>
+<td><code>--save_dir PATH</code></td>
+<td>Database output directory</td>
+</tr>
+<tr>
+<td><code>--db_name NAME</code></td>
+<td>SQLite database filename</td>
+</tr>
+<tr>
+<td><code>--meta_path PATH</code></td>
+<td>Existing <code>genomes-all_metadata.tsv</code></td>
+</tr>
+<tr>
+<td><code>--mgyg_dir PATH</code></td>
+<td>Existing MGnify eggNOG annotation directory</td>
+</tr>
+<tr>
+<td><code>--db_type TYPE</code></td>
+<td>MGnify catalogue; run <code>--help</code> for the catalogues supported by the installed version</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7-reproducible-analyzer-workflows">7. Reproducible Analyzer Workflows</h2>
+<p>The OTF Analyzer is currently exposed through the desktop GUI and Python analysis APIs, not a single public <code>metax analyze</code> command. For a reproducible command-line deliverable:</p>
+<ol>
+<li>Run the supported analysis in the GUI.</li>
+<li>Open <strong>Restore &gt; Export Workflow Notebook</strong>.</li>
+<li>Keep the default Jupyter notebook, and optionally export the Python script and YAML workflow.</li>
+<li>Run the exported artifact with the Python environment recorded by MetaX.</li>
+</ol>
+<p>Use <code>metax-report</code> when a standardized, unattended overview is sufficient. Use workflow export when the exact sequence of interactive Analyzer operations must be reproduced.</p>
+<h2 id="8-shell-and-automation-notes">8. Shell and Automation Notes</h2>
 <ul>
-<li>
-<p><strong>Settings</strong></p>
-</li>
-<li>
-<p>Check <strong>Auto Check Update</strong> to enable or disable update checks on launch.</p>
-</li>
-<li>Choose whether to update from the <strong>stable version</strong> or <strong>beta version</strong> in Settings.
-  <span class="image-wrap"><img src="MetaX_Cookbook.assets/settings.png" alt="settings" decoding="async" class="doc-image"></span></li>
-<li>Other Options Settings</li>
-<li class="media-item"><span class="image-wrap"><img alt="settings_page2" src="./MetaX_Cookbook.assets/settings_page2.png" decoding="async" class="doc-image"></span></li>
+<li>Examples use Bash line continuation (<code>\</code>). In PowerShell, replace each trailing backslash with a backtick or put the command on one line.</li>
+<li>Quote paths containing spaces.</li>
+<li>Prefer module invocation (<code>python -m metax.cli.annotate</code>) when the shell may resolve a command from the wrong Python environment.</li>
+<li>Use annotation <code>--result-json</code> and process exit codes in workflow managers; do not determine success only by checking whether an output file exists.</li>
+<li>Use a new report directory or pass <code>--overwrite</code> intentionally. MetaX rejects a non-empty report directory by default so unrelated runs are not mixed.</li>
+<li>Run each command with <code>--help</code> to inspect the exact options supported by the installed MetaX version.</li>
 </ul>
-<h1 id="enjoy-metax">Enjoy MetaX</h1>
-<p>If you have any issues or suggestions, please open a new issue on <a href="https://github.com/byemaxx/MetaX">GitHub</a>.</p>
+    </section>
+
 </main>
 
 <button id="backToTop" type="button" aria-label="Back to top">Top</button>
@@ -2075,8 +3055,9 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
     const THEME_KEY = "metax-docs-theme";
     const TOC_COLLAPSE_KEY = "metax-docs-collapsed-anchors";
     const SIDEBAR_COLLAPSE_KEY = "metax-docs-sidebar-collapsed";
+    const DOC_TAB_KEY = "metax-docs-active-tab";
     const MOBILE_BREAKPOINT = 960;
-    const ANCHOR_OFFSET = 84;
+    const ANCHOR_OFFSET = 96;
 
     const body = document.body;
     const nav = document.getElementById("doc-nav");
@@ -2089,11 +3070,60 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
     const navLinks = Array.from(document.querySelectorAll("nav a.nav-link"));
     const tocNodes = Array.from(document.querySelectorAll(".toc-node"));
     const tocCarets = Array.from(document.querySelectorAll(".toc-caret"));
+    const tocLists = Array.from(document.querySelectorAll(".toc-list[data-doc-key]"));
+    const docTabs = Array.from(document.querySelectorAll(".doc-tab[data-doc-key]"));
+    const docPanels = Array.from(document.querySelectorAll(".doc-panel[data-doc-key]"));
     const contentImages = Array.from(document.querySelectorAll("main img"));
-    const sections = Array.from(document.querySelectorAll("main h1, main h2, main h3, main h4, main h5, main h6")).filter(function(node) {
-        return Boolean(node.id);
-    });
     let hashRealignTimer = null;
+
+    function activeDocumentKey() {
+        const selected = docTabs.find(function(tab) {
+            return tab.getAttribute("aria-selected") === "true";
+        });
+        return selected ? selected.getAttribute("data-doc-key") : docTabs[0].getAttribute("data-doc-key");
+    }
+
+    function activeSections() {
+        const panel = docPanels.find(function(candidate) {
+            return !candidate.hidden;
+        });
+        if (!panel) {
+            return [];
+        }
+        return Array.from(panel.querySelectorAll("h1, h2, h3, h4, h5, h6")).filter(function(node) {
+            return Boolean(node.id);
+        });
+    }
+
+    function documentKeyForTarget(target) {
+        const panel = target ? target.closest(".doc-panel[data-doc-key]") : null;
+        return panel ? panel.getAttribute("data-doc-key") : null;
+    }
+
+    function activateDocument(key, remember) {
+        const exists = docPanels.some(function(panel) {
+            return panel.getAttribute("data-doc-key") === key;
+        });
+        const resolvedKey = exists ? key : docPanels[0].getAttribute("data-doc-key");
+
+        docTabs.forEach(function(tab) {
+            const active = tab.getAttribute("data-doc-key") === resolvedKey;
+            tab.setAttribute("aria-selected", String(active));
+            tab.setAttribute("tabindex", active ? "0" : "-1");
+        });
+        docPanels.forEach(function(panel) {
+            panel.hidden = panel.getAttribute("data-doc-key") !== resolvedKey;
+        });
+        tocLists.forEach(function(list) {
+            list.hidden = list.getAttribute("data-doc-key") !== resolvedKey;
+        });
+
+        if (remember !== false) {
+            localStorage.setItem(DOC_TAB_KEY, resolvedKey);
+        }
+        updateActiveNavLink();
+        return resolvedKey;
+    }
 
     function collapsibleNodes() {
         return tocNodes.filter(function(node) {
@@ -2145,6 +3175,7 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
     }
 
     function updateActiveNavLink() {
+        const sections = activeSections();
         if (!sections.length) {
             return;
         }
@@ -2159,7 +3190,8 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
         });
 
         navLinks.forEach(function(link) {
-            const isActive = link.getAttribute("href") === "#" + currentId;
+            const visibleToc = !link.closest(".toc-list").hidden;
+            const isActive = visibleToc && link.getAttribute("href") === "#" + currentId;
             link.classList.toggle("active", isActive);
         });
 
@@ -2199,6 +3231,11 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
         const target = currentHashTarget();
         if (!target) {
             return false;
+        }
+
+        const targetDocument = documentKeyForTarget(target);
+        if (targetDocument && targetDocument !== activeDocumentKey()) {
+            activateDocument(targetDocument);
         }
 
         const top = Math.max(window.scrollY + target.getBoundingClientRect().top - ANCHOR_OFFSET, 0);
@@ -2256,9 +3293,40 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
         tocToggle.setAttribute("aria-expanded", String(open));
     });
 
+    docTabs.forEach(function(tab, index) {
+        tab.addEventListener("click", function() {
+            const key = activateDocument(tab.getAttribute("data-doc-key"));
+            const panel = docPanels.find(function(candidate) {
+                return candidate.getAttribute("data-doc-key") === key;
+            });
+            const firstHeading = panel ? panel.querySelector("h1, h2, h3, h4, h5, h6") : null;
+            if (firstHeading && firstHeading.id) {
+                history.pushState(null, "", "#" + firstHeading.id);
+                scheduleHashRealign(0, "smooth");
+                scheduleHashRealign(250, "auto");
+            }
+        });
+
+        tab.addEventListener("keydown", function(event) {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+                return;
+            }
+            event.preventDefault();
+            const direction = event.key === "ArrowRight" ? 1 : -1;
+            const nextIndex = (index + direction + docTabs.length) % docTabs.length;
+            docTabs[nextIndex].focus();
+            docTabs[nextIndex].click();
+        });
+    });
+
     navLinks.forEach(function(link) {
         link.addEventListener("click", function(event) {
             closeMobileToc();
+
+            const targetList = link.closest(".toc-list[data-doc-key]");
+            if (targetList) {
+                activateDocument(targetList.getAttribute("data-doc-key"));
+            }
 
             const href = link.getAttribute("href");
             if (!href || !href.startsWith("#")) {
@@ -2284,14 +3352,18 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
     });
 
     collapseAllToc.addEventListener("click", function() {
-        collapsibleNodes().forEach(function(node) {
+        collapsibleNodes().filter(function(node) {
+            return !node.closest(".toc-list").hidden;
+        }).forEach(function(node) {
             setNodeCollapsed(node, true);
         });
         saveCollapsedTocState();
     });
 
     expandAllToc.addEventListener("click", function() {
-        collapsibleNodes().forEach(function(node) {
+        collapsibleNodes().filter(function(node) {
+            return !node.closest(".toc-list").hidden;
+        }).forEach(function(node) {
             setNodeCollapsed(node, false);
         });
         saveCollapsedTocState();
@@ -2339,10 +3411,13 @@ d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;
 
     document.addEventListener("DOMContentLoaded", function() {
         const savedTheme = localStorage.getItem(THEME_KEY);
+        const hashDocument = documentKeyForTarget(currentHashTarget());
+        const savedDocument = localStorage.getItem(DOC_TAB_KEY);
         applyTheme(savedTheme === "dark" ? "dark" : "light");
         normalizeMediaLists();
         loadCollapsedTocState();
         setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
+        activateDocument(hashDocument || savedDocument || docPanels[0].getAttribute("data-doc-key"), false);
         updateActiveNavLink();
         updateBackToTop();
         scheduleHashRealign(0, "auto");
