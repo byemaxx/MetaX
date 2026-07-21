@@ -1,4 +1,6 @@
+import json
 import os
+from pathlib import Path
 from types import SimpleNamespace
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -6,6 +8,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt5 import QtWidgets
 
 from metax.gui.main_gui import MetaXGUI
+from metax.gui.unit_specific_settings_dialog import (
+    validate_genome_selection_manifest_for_gui,
+)
 
 
 def _build_layout_harness():
@@ -31,6 +36,68 @@ def _position(layout, target):
         if item.widget() is target or item.layout() is target:
             return layout.getItemPosition(index)
     raise AssertionError(f"Layout item not found: {target}")
+
+
+def test_manifest_gui_validation_requires_peptide_table():
+    manifest_path = Path(__file__).parent / "fixtures" / "genome_selection_manifest.v1.json"
+
+    result = validate_genome_selection_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path="",
+    )
+
+    assert not result.ok
+    assert "Please select a peptide table" in result.message
+    assert result.mapped_samples == {}
+    assert result.missing_samples == result.manifest_samples
+
+
+def test_manifest_gui_validation_accepts_diann_wide_matrix_compound_suffixes(tmp_path):
+    samples = [
+        "20250211_Ailing_Pro2_P1_V48_PBS_1",
+        "20250211_Ailing_Pro2_P1_V48_PBS_2",
+        "20250211_Ailing_Pro2_P1_V48_PBS_3",
+    ]
+    fixture_path = Path(__file__).parent / "fixtures" / "genome_selection_manifest.v1.json"
+    manifest_data = json.loads(fixture_path.read_text(encoding="utf-8"))
+    unit_template = next(iter(manifest_data["units"].values()))
+    manifest_data["unit_definition"].update(
+        {
+            "mode": "per-sample",
+            "analysis_unit_column": None,
+            "n_units": len(samples),
+        }
+    )
+    manifest_data["units"] = {
+        sample: {
+            **unit_template,
+            "sample_ids": [sample],
+            "n_samples": 1,
+        }
+        for sample in samples
+    }
+    manifest_path = tmp_path / "genome_selection_manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+
+    sample_columns = [
+        rf"D:\Qing\v48_from_aling_proj2\raw\{sample}.raw.dia"
+        for sample in samples
+    ]
+    peptide_path = tmp_path / "report.pr_matrix.tsv"
+    peptide_path.write_text(
+        "\t".join(["Stripped.Sequence", *sample_columns]) + "\n",
+        encoding="utf-8",
+    )
+
+    result = validate_genome_selection_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        peptide_col="Stripped.Sequence",
+    )
+
+    assert result.ok
+    assert result.missing_samples == []
+    assert result.mapped_samples == dict(zip(samples, sample_columns))
 
 
 def test_annotation_layout_follows_source_input_output_order():

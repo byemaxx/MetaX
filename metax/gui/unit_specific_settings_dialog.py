@@ -156,6 +156,15 @@ def validate_genome_selection_manifest_for_gui(
     long_format_detected = False
 
     peptide_table_path = str(peptide_table_path or "").strip()
+    if not peptide_table_path:
+        return UnitSpecificManifestValidationResult(
+            False,
+            "Please select a peptide table in the main Peptide Direct to OTF window "
+            "before validating the manifest.",
+            manifest_samples,
+            {},
+            manifest_samples,
+        )
     if peptide_table_path:
         if not Path(peptide_table_path).is_file():
             return UnitSpecificManifestValidationResult(

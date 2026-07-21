@@ -127,3 +127,19 @@ def test_sample_mapping_is_one_to_one():
     assert mapping == {"s1": "Intensity_s1", "s2": "Intensity_s2"}
     with pytest.raises(ValueError, match="distinct"):
         resolve_manifest_sample_columns(["s1"], ["s1", "s1.raw"])
+
+
+def test_sample_mapping_accepts_diann_wide_matrix_compound_suffixes():
+    samples = [
+        "20250211_Ailing_Pro2_P1_V48_PBS_1",
+        "20250211_Ailing_Pro2_P1_V48_PBS_2",
+        "20250211_Ailing_Pro2_P1_V48_PBS_3",
+    ]
+    columns = [
+        rf"D:\Qing\v48_from_aling_proj2\raw\{sample}.raw.dia"
+        for sample in samples
+    ]
+
+    assert resolve_manifest_sample_columns(columns, samples) == dict(
+        zip(samples, columns)
+    )
