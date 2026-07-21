@@ -15,14 +15,14 @@ from metax.peptide_annotator.peptide_table_prepare import (
     is_parquet_path,
     select_diann_intensity_column,
 )
-from metax.peptide_annotator.unit_specific_manifest import (
-    load_unit_specific_manifest,
+from metax.peptide_annotator.genome_selection_manifest import (
+    load_genome_selection_manifest,
     resolve_manifest_sample_columns,
 )
 
 
 @dataclass
-class UnitSpecificGuiConfig:
+class ManifestGuiConfig:
     manifest_path: str = ""
     genome_threshold: str = "auto"
     input_sample_col_prefix: str = ""
@@ -45,7 +45,7 @@ class UnitSpecificManifestValidationResult:
 class UnitSpecificValidationResultDialog(QtWidgets.QDialog):
     def __init__(self, result: UnitSpecificManifestValidationResult, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Unit-specific Manifest Validation")
+        self.setWindowTitle("MetaUmbra Manifest Validation")
         self.setModal(True)
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -111,7 +111,7 @@ def _all_manifest_samples(manifest) -> list[str]:
     return samples
 
 
-def validate_unit_specific_manifest_for_gui(
+def validate_genome_selection_manifest_for_gui(
     manifest_path: str,
     peptide_table_path: str = "",
     peptide_col: str = "Sequence",
@@ -120,6 +120,7 @@ def validate_unit_specific_manifest_for_gui(
     input_sample_col_prefix: str | None = None,
     on_missing_sample: str = "error",
     diann_intensity_col: str | None = None,
+    digested_genome_folders: str | list[str] | None = None,
 ) -> UnitSpecificManifestValidationResult:
     manifest_path = str(manifest_path or "").strip()
     if on_missing_sample not in {"error", "warn-skip"}:
@@ -133,7 +134,7 @@ def validate_unit_specific_manifest_for_gui(
     if not manifest_path:
         return UnitSpecificManifestValidationResult(
             False,
-            "Please select a unit-specific manifest JSON in the main Peptide Direct to OTF window.",
+            "Please select a MetaUmbra genome selection manifest in the main Peptide Direct to OTF window.",
             [],
             {},
             [],
@@ -143,7 +144,7 @@ def validate_unit_specific_manifest_for_gui(
 
     threshold_arg = None if (genome_threshold or "auto") == "auto" else genome_threshold
     try:
-        manifest = load_unit_specific_manifest(manifest_path, genome_threshold=threshold_arg, strict=True)
+        manifest = load_genome_selection_manifest(manifest_path, genome_threshold=threshold_arg, strict=True)
     except Exception as exc:
         return UnitSpecificManifestValidationResult(False, f"Manifest validation failed:\n{exc}", [], {}, [])
 
@@ -155,6 +156,15 @@ def validate_unit_specific_manifest_for_gui(
     long_format_detected = False
 
     peptide_table_path = str(peptide_table_path or "").strip()
+    if not peptide_table_path:
+        return UnitSpecificManifestValidationResult(
+            False,
+            "Please select a peptide table in the main Peptide Direct to OTF window "
+            "before validating the manifest.",
+            manifest_samples,
+            {},
+            manifest_samples,
+        )
     if peptide_table_path:
         if not Path(peptide_table_path).is_file():
             return UnitSpecificManifestValidationResult(
@@ -284,22 +294,50 @@ def validate_unit_specific_manifest_for_gui(
             f"({DIANN_RUN_COLUMN}-derived sample columns validated; "
             f"intensity={intensity_column})"
         )
+    digest_status = "not checked"
+    if digested_genome_folders:
+        folders = [digested_genome_folders] if isinstance(digested_genome_folders, str) else list(digested_genome_folders)
+        folder_paths = [Path(path) for path in folders]
+        missing_folders = [str(path) for path in folder_paths if not path.is_dir()]
+        if missing_folders:
+            return UnitSpecificManifestValidationResult(
+                False, "Genome digest directories not found:\n" + "\n".join(missing_folders),
+                manifest_samples, mapped_samples, missing_samples,
+            )
+        selected_genomes = {genome for unit in manifest.units.values() for genome in unit.genome_ids}
+        missing_genomes = sorted(
+            genome for genome in selected_genomes
+            if not any((folder / f"{genome}.tsv").is_file() for folder in folder_paths)
+        )
+        if missing_genomes:
+            return UnitSpecificManifestValidationResult(
+                False,
+                f"Digest files are missing for {len(missing_genomes)} selected genomes:\n"
+                + "\n".join(missing_genomes[:20]),
+                manifest_samples, mapped_samples, missing_samples,
+            )
+        digest_status = f"valid ({len(selected_genomes)} selected genome files)"
+    provenance_warning = "\n".join(f"Manifest warning: {item}" for item in manifest.warnings)
     message = (
         "Manifest schema: valid\n"
+        f"Manifest mode: {manifest.unit_definition.get('mode')}\n"
+        f"MetaUmbra version: {manifest.generated_by.get('version', 'unknown')}\n"
         f"Selected genome threshold: {manifest.selected_genome_threshold}\n"
         f"Units: {len(manifest.units)}\n"
         f"Manifest samples: {len(manifest_samples)}\n"
+        f"Genome digest source: {digest_status}\n"
         + ("\n".join(header_status_lines) + "\n" if header_status_lines else "")
         + f"Mapped peptide table samples: {mapped_text}\n"
         f"Missing samples: {missing_text}\n"
         "Per-unit summary:\n"
         + "\n".join(unit_lines)
+        + ("\n" + provenance_warning if provenance_warning else "")
     )
     ok = not missing_samples or on_missing_sample == "warn-skip"
     return UnitSpecificManifestValidationResult(ok, message, manifest_samples, mapped_samples, missing_samples)
 
 
-class UnitSpecificSettingsDialog(QtWidgets.QDialog):
+class ManifestSettingsDialog(QtWidgets.QDialog):
     def __init__(
         self,
         parent=None,
@@ -308,17 +346,19 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
         peptide_table_separator: str = "\t",
         input_intensity_prefix: str | None = None,
         diann_intensity_col: str | None = None,
-        current_config: UnitSpecificGuiConfig | None = None,
+        digested_genome_folders: str | list[str] | None = None,
+        current_config: ManifestGuiConfig | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Unit-specific Settings")
+        self.setWindowTitle("Manifest Annotation Settings")
         self.resize(720, 360)
         self.peptide_table_path = peptide_table_path
         self.peptide_col = peptide_col
         self.peptide_table_separator = peptide_table_separator
         self.input_intensity_prefix = input_intensity_prefix
         self.diann_intensity_col = diann_intensity_col
-        self._config = current_config or UnitSpecificGuiConfig()
+        self.digested_genome_folders = digested_genome_folders
+        self._config = current_config or ManifestGuiConfig()
 
         self._build_ui()
         self._load_config(self._config)
@@ -333,7 +373,7 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
 
         self.lineEdit_current_manifest_path = QtWidgets.QLineEdit(manifest_tab)
         self.lineEdit_current_manifest_path.setReadOnly(True)
-        form.addRow("Current manifest JSON", self.lineEdit_current_manifest_path)
+        form.addRow("MetaUmbra genome selection manifest", self.lineEdit_current_manifest_path)
 
         self.lineEdit_input_prefix = QtWidgets.QLineEdit(manifest_tab)
         form.addRow("Input sample column prefix", self.lineEdit_input_prefix)
@@ -374,7 +414,7 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
-    def _load_config(self, config: UnitSpecificGuiConfig) -> None:
+    def _load_config(self, config: ManifestGuiConfig) -> None:
         self.lineEdit_current_manifest_path.setText(config.manifest_path)
         self.lineEdit_input_prefix.setText(config.input_sample_col_prefix or "")
         self.comboBox_on_missing_sample.setCurrentText(config.on_missing_sample or "error")
@@ -383,7 +423,7 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
         self.spinBox_n_jobs.setValue(0 if config.n_jobs is None else max(1, int(config.n_jobs)))
 
     def _validate_manifest(self) -> bool:
-        result = validate_unit_specific_manifest_for_gui(
+        result = validate_genome_selection_manifest_for_gui(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             peptide_table_path=self.peptide_table_path,
             peptide_col=self.peptide_col,
@@ -392,6 +432,7 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
             diann_intensity_col=self.diann_intensity_col,
+            digested_genome_folders=self.digested_genome_folders,
         )
         UnitSpecificValidationResultDialog(result, self).exec_()
         return result.ok
@@ -402,9 +443,9 @@ class UnitSpecificSettingsDialog(QtWidgets.QDialog):
         self._config = self.get_config()
         super().accept()
 
-    def get_config(self) -> UnitSpecificGuiConfig:
+    def get_config(self) -> ManifestGuiConfig:
         n_jobs_value = self.spinBox_n_jobs.value()
-        return UnitSpecificGuiConfig(
+        return ManifestGuiConfig(
             manifest_path=self.lineEdit_current_manifest_path.text().strip(),
             genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text(),

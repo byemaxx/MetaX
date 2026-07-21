@@ -8,29 +8,46 @@ from typing import Iterable
 
 import pandas as pd
 
+from metax.peptide_annotator.peptide_table_prepare import normalize_sample_identifier
 
-SCHEMA_VERSION = "metaumbra.unit_specific_manifest.v1"
-SUPPORTED_SCHEMA_VERSIONS = {
-    SCHEMA_VERSION,
-    "metaumbra.unit_aware_manifest.v1",
+
+SCHEMA_VERSION = "metaumbra.genome_selection_manifest.v1"
+_TOP_LEVEL_FIELDS = {
+    "schema_version",
+    "generated_by",
+    "unit_definition",
+    "selection",
+    "inputs",
+    "units",
+    "artifacts",
+    "warnings",
 }
+_GENOME_THRESHOLDS = {"q0.05", "q0.01"}
 
 
 @dataclass
-class UnitSpecificUnitSpec:
+class GenomeSelectionUnitSpec:
     analysis_unit_id: str
-    sample_columns: list[str]
+    sample_ids: list[str]
     genome_ids: list[str]
     n_samples: int
 
+    @property
+    def sample_columns(self) -> list[str]:
+        """Prepared-table mapping uses the manifest's canonical sample IDs."""
+        return self.sample_ids
+
 
 @dataclass
-class UnitSpecificManifest:
+class GenomeSelectionManifest:
     schema_version: str
     generated_by: dict
-    default_genome_threshold: str
-    files: dict
-    units: dict[str, UnitSpecificUnitSpec]
+    unit_definition: dict
+    selection: dict
+    inputs: dict
+    artifacts: dict
+    warnings: list[str]
+    units: dict[str, GenomeSelectionUnitSpec]
     selected_genome_threshold: str
 
 
@@ -58,84 +75,215 @@ def _warn_or_raise(message: str, strict: bool) -> None:
     warnings.warn(message, stacklevel=2)
 
 
-def load_unit_specific_manifest(
+def _require_mapping(value: object, label: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    return value
+
+
+def _require_string(value: object, label: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be a string")
+    return value
+
+
+def _require_integer(value: object, label: str, *, minimum: int | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{label} must be an integer")
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{label} must be greater than or equal to {minimum}")
+    return value
+
+
+def _require_unique_string_list(
+    value: object,
+    label: str,
+    *,
+    allow_empty: bool,
+    unique: bool = True,
+) -> list[str]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be an array of strings")
+    if not allow_empty and not value:
+        raise ValueError(f"{label} must contain at least one item")
+    if any(not isinstance(item, str) for item in value):
+        raise ValueError(f"{label} must contain only strings")
+    if unique and len(set(value)) != len(value):
+        raise ValueError(f"{label} must contain unique items")
+    return list(value)
+
+
+def _validate_manifest_structure(data: object) -> dict:
+    manifest = _require_mapping(data, "genome selection manifest")
+    missing_fields = sorted(_TOP_LEVEL_FIELDS - set(manifest))
+    if missing_fields:
+        raise ValueError(
+            "genome selection manifest is missing required fields: "
+            + ", ".join(missing_fields)
+        )
+    unknown_fields = sorted(set(manifest) - _TOP_LEVEL_FIELDS)
+    if unknown_fields:
+        raise ValueError(
+            "genome selection manifest contains unsupported fields: "
+            + ", ".join(unknown_fields)
+        )
+
+    generated_by = _require_mapping(manifest["generated_by"], "generated_by")
+    if generated_by.get("software") != "MetaUmbra":
+        raise ValueError("generated_by.software must be 'MetaUmbra'")
+    for field in ("version", "run_id", "generated_at"):
+        _require_string(generated_by.get(field), f"generated_by.{field}")
+
+    unit_definition = _require_mapping(
+        manifest["unit_definition"],
+        "unit_definition",
+    )
+    mode = _require_string(unit_definition.get("mode"), "unit_definition.mode")
+    if mode not in {"all-samples", "per-sample", "metadata"}:
+        raise ValueError(
+            "unit_definition.mode must be 'all-samples', 'per-sample', or 'metadata'"
+        )
+    _require_string(
+        unit_definition.get("sample_id_column"),
+        "unit_definition.sample_id_column",
+    )
+    analysis_unit_column = unit_definition.get("analysis_unit_column")
+    if analysis_unit_column is not None:
+        _require_string(
+            analysis_unit_column,
+            "unit_definition.analysis_unit_column",
+        )
+    _require_integer(
+        unit_definition.get("n_units"),
+        "unit_definition.n_units",
+        minimum=1,
+    )
+
+    selection = _require_mapping(manifest["selection"], "selection")
+    default_threshold = _require_string(
+        selection.get("default_genome_threshold"),
+        "selection.default_genome_threshold",
+    )
+    if default_threshold not in _GENOME_THRESHOLDS:
+        raise ValueError(
+            "selection.default_genome_threshold must be 'q0.05' or 'q0.01'"
+        )
+    if selection.get("available_genome_thresholds") != ["q0.05", "q0.01"]:
+        raise ValueError(
+            "selection.available_genome_thresholds must be ['q0.05', 'q0.01']"
+        )
+    _require_string(selection.get("scoring_method"), "selection.scoring_method")
+
+    _require_mapping(manifest["inputs"], "inputs")
+    _require_mapping(manifest["artifacts"], "artifacts")
+    _require_unique_string_list(
+        manifest["warnings"],
+        "warnings",
+        allow_empty=True,
+        unique=False,
+    )
+    return manifest
+
+
+def load_genome_selection_manifest(
     manifest_path: str | Path,
     genome_threshold: str | None = None,
     strict: bool = True,
-) -> UnitSpecificManifest:
+) -> GenomeSelectionManifest:
     manifest_path = Path(manifest_path)
-    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    data = _validate_manifest_structure(
+        json.loads(manifest_path.read_text(encoding="utf-8"))
+    )
 
     schema_version = data.get("schema_version")
-    if schema_version not in SUPPORTED_SCHEMA_VERSIONS:
-        raise ValueError(f"Unsupported unit-specific manifest schema_version: {schema_version!r}")
+    if schema_version != SCHEMA_VERSION:
+        raise ValueError(f"Unsupported genome selection manifest schema_version: {schema_version!r}")
 
-    default_threshold = str(data.get("default_genome_threshold", "")).strip()
+    unit_definition = data["unit_definition"]
+    selection = data["selection"]
+    default_threshold = str(selection.get("default_genome_threshold", "")).strip()
     selected_threshold, selected_genome_key = _normalize_threshold_alias(genome_threshold, default_threshold)
 
-    raw_units = data.get("units")
+    raw_units = data["units"]
     if not isinstance(raw_units, dict) or not raw_units:
-        raise ValueError("unit-specific manifest must contain at least one unit")
+        raise ValueError("genome selection manifest must contain at least one unit")
+    if unit_definition["n_units"] != len(raw_units):
+        raise ValueError("unit_definition.n_units does not match units")
 
     seen_samples: dict[str, str] = {}
-    units: dict[str, UnitSpecificUnitSpec] = {}
+    units: dict[str, GenomeSelectionUnitSpec] = {}
     for analysis_unit_id, raw_unit in raw_units.items():
         if not isinstance(raw_unit, dict):
             raise ValueError(f"Unit {analysis_unit_id!r} must be an object")
 
-        sample_columns = [str(sample) for sample in raw_unit.get("sample_columns", [])]
-        if not sample_columns:
-            raise ValueError(f"Unit {analysis_unit_id!r} has no sample_columns")
+        sample_columns = _require_unique_string_list(
+            raw_unit.get("sample_ids"),
+            f"Unit {analysis_unit_id!r}.sample_ids",
+            allow_empty=False,
+        )
 
         for sample in sample_columns:
             previous_unit = seen_samples.get(sample)
             if previous_unit is not None and previous_unit != analysis_unit_id:
                 raise ValueError(
-                    f"Sample column {sample!r} is assigned to multiple units: "
+                    f"Sample {sample!r} is assigned to multiple units: "
                     f"{previous_unit!r} and {analysis_unit_id!r}"
                 )
             seen_samples[sample] = str(analysis_unit_id)
 
         if selected_genome_key not in raw_unit:
             raise ValueError(f"Unit {analysis_unit_id!r} is missing {selected_genome_key}")
-        genome_ids = [str(genome) for genome in raw_unit.get(selected_genome_key, [])]
+        q005 = _require_unique_string_list(
+            raw_unit.get("genome_ids_q005"),
+            f"Unit {analysis_unit_id!r}.genome_ids_q005",
+            allow_empty=True,
+        )
+        q001 = _require_unique_string_list(
+            raw_unit.get("genome_ids_q001"),
+            f"Unit {analysis_unit_id!r}.genome_ids_q001",
+            allow_empty=True,
+        )
+        genome_ids = q005 if selected_genome_key == "genome_ids_q005" else q001
+        if not genome_ids:
+            raise ValueError(
+                f"Unit {analysis_unit_id!r} has no genomes at selected threshold {selected_threshold}"
+            )
 
-        n_samples_value = raw_unit.get("n_samples", len(sample_columns))
-        try:
-            n_samples = int(n_samples_value)
-        except Exception as exc:
-            raise ValueError(f"Unit {analysis_unit_id!r} has invalid n_samples: {n_samples_value!r}") from exc
+        n_samples = _require_integer(
+            raw_unit.get("n_samples"),
+            f"Unit {analysis_unit_id!r}.n_samples",
+            minimum=1,
+        )
         if n_samples != len(sample_columns):
             raise ValueError(
                 f"Unit {analysis_unit_id!r} declares n_samples={n_samples}, "
-                f"but has {len(sample_columns)} sample_columns"
+                f"but has {len(sample_columns)} sample_ids"
             )
 
-        q005 = raw_unit.get("genome_ids_q005")
-        q001 = raw_unit.get("genome_ids_q001")
-        if q005 is not None and q001 is not None:
-            q005_set = {str(genome) for genome in q005}
-            q001_set = {str(genome) for genome in q001}
-            missing = q001_set - q005_set
-            if missing:
-                preview = ", ".join(sorted(missing)[:10])
-                _warn_or_raise(
-                    f"Unit {analysis_unit_id!r} has q0.01 genomes not present in q0.05: {preview}",
-                    strict=strict,
-                )
+        missing = set(q001) - set(q005)
+        if missing:
+            preview = ", ".join(sorted(missing)[:10])
+            _warn_or_raise(
+                f"Unit {analysis_unit_id!r} has q0.01 genomes not present in q0.05: {preview}",
+                strict=strict,
+            )
 
-        units[str(analysis_unit_id)] = UnitSpecificUnitSpec(
+        units[str(analysis_unit_id)] = GenomeSelectionUnitSpec(
             analysis_unit_id=str(analysis_unit_id),
-            sample_columns=sample_columns,
+            sample_ids=sample_columns,
             genome_ids=genome_ids,
             n_samples=n_samples,
         )
 
-    return UnitSpecificManifest(
+    generated_by = data["generated_by"]
+    return GenomeSelectionManifest(
         schema_version=schema_version,
-        generated_by=dict(data.get("generated_by") or {}),
-        default_genome_threshold=default_threshold,
-        files=dict(data.get("files") or {}),
+        generated_by=dict(generated_by),
+        unit_definition=dict(unit_definition),
+        selection=dict(selection),
+        inputs=dict(data.get("inputs") or {}),
+        artifacts=dict(data.get("artifacts") or {}),
+        warnings=[str(item) for item in data.get("warnings", [])],
         units=units,
         selected_genome_threshold=selected_threshold,
     )
@@ -157,15 +305,6 @@ def _strip_prefix(value: str, prefix: str | None) -> str:
 
 def _strip_leading_underscores(value: str) -> str:
     return value.lstrip("_")
-
-
-def _basename_without_raw_suffix(value: str) -> str:
-    basename = Path(str(value).replace("\\", "/")).name
-    lower = basename.lower()
-    for suffix in (".raw", ".mzml", ".mzxml"):
-        if lower.endswith(suffix):
-            return basename[: -len(suffix)]
-    return basename
 
 
 def _candidate_matches(
@@ -194,7 +333,7 @@ def _candidate_matches(
             matches[7].add(column)
         if _strip_leading_underscores(column) == _strip_leading_underscores(manifest_sample):
             matches[8].add(column)
-        if _basename_without_raw_suffix(column) == _basename_without_raw_suffix(manifest_sample):
+        if normalize_sample_identifier(column) == normalize_sample_identifier(manifest_sample):
             matches[9].add(column)
     return matches
 
@@ -260,7 +399,7 @@ def resolve_manifest_sample_columns(
 
 
 def write_unit_sample_column_mapping(
-    manifest: UnitSpecificManifest,
+    manifest: GenomeSelectionManifest,
     sample_column_mapping: dict[str, str],
     output_path: str | Path,
     output_sample_col_prefix: str = "Intensity_",

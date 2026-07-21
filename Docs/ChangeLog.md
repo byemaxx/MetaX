@@ -1,3 +1,53 @@
+# Version: 2.6.1
+## Date: 2026-07-21
+### Changes:
+- Fix: Improved Peptide Annotator manifest validation for DIA-NN matrix sample columns ending in `.raw.dia`.
+- Fix: Manifest validation now requires a peptide table before reporting success.
+
+
+# Version: 2.6.0
+## Date: 2026-07-15
+### Changes:
+- New: Added unified MetaUmbra genome-selection manifest annotation for one or multiple analysis units.
+- New: Added explicit MetaUmbra manifest, MetaX automatic, and custom genome-list annotation sources.
+- Change: Unified single-unit and multi-unit OTF annotation around one manifest-driven backend and retained `analysis_unit_id` in canonical OTF output.
+- Change: Reorganized the Peptide Annotator GUI around genome source, inputs, manifest validation, output, and advanced settings.
+- Change: Unified manifests are produced by MetaUmbra 1.4.0 or newer; updated the MetaX API compatibility version to 11 while retaining MetaX's existing non-manifest installation baseline.
+- Fix: Preserved custom intensity prefixes and accurate provenance for automatic and custom-list annotation.
+- Fix: Rejected empty selected-threshold genome lists and made Windows console progress output encoding-safe.
+- Test: Added unified manifest contract, CLI, backend, GUI layout, and cross-repository integration coverage.
+
+
+# Version: 2.5.0
+## Date: 2026-07-14
+### Changes:
+- New: Added command-line annotation workflows.
+- New: Added dependency profiles for Analyzer, Report, and GUI.
+- Change: Unified CLI and GUI annotation backends.
+
+
+# Version: 2.4.7
+## Date: 2026-07-13
+### Changes:
+- New: Workflow notebooks now automatically use the Python environment running the MetaX GUI.
+- Fix: Improved workflow replay by restoring required processed-table steps and allowing compatible Python environments.
+- Optimize: Enlarged the workflow export window for easier step and format selection.
+- Change: Updated API compatibility to 9 after adding Jupyter kernel support.
+
+
+# Version: 2.4.6
+## Date: 2026-07-12
+### Changes:
+- New: Workflow exports now default to notebooks, with optional Python script and YAML output.
+- Fix: Improved workflow replay reliability and Python environment validation.
+
+
+# Version: 2.4.5
+## Date: 2026-07-12
+### Changes:
+- Fix: Workflow notebooks now use the Python environment running the MetaX GUI.
+
+
 # Version: 2.4.4
 ## Date: 2026-07-11
 ### Changes:

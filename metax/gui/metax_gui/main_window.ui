@@ -351,7 +351,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>50</width>
+                            <width>70</width>
                 <height>0</height>
                </size>
               </property>
@@ -10756,7 +10756,7 @@
              </property>
              <widget class="QWidget" name="tab_6">
               <attribute name="title">
-               <string>Pepetide Direct to OTFs (MetaUmbra)</string>
+               <string>Peptide Direct to OTFs</string>
               </attribute>
               <layout class="QGridLayout" name="gridLayout_74">
                <item row="7" column="2">
@@ -11018,7 +11018,7 @@
                           <string>Reset the selected genome list</string>
                          </property>
                          <property name="text">
-                          <string>🔄</string>
+                           <string>Reset</string>
                          </property>
                         </widget>
                        </item>
@@ -11030,7 +11030,7 @@
                         <bool>false</bool>
                        </property>
                        <property name="statusTip">
-                        <string>Accepts either a plain genome ID list or a MetaUmbra genome_presence.tsv file.</string>
+                        <string>Load a plain text, TSV, or CSV file containing custom genome IDs.</string>
                        </property>
                        <property name="text">
                         <string>Open Genome List File</string>
@@ -11186,8 +11186,14 @@
                </item>
                <item row="5" column="0">
                 <widget class="QCheckBox" name="checkBox_pep_direct_to_otf_use_unit_specific_annotate">
+                 <property name="visible">
+                  <bool>false</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
-                  <string>Use unit-specific annotation</string>
+                  <string>Manifest-driven annotation</string>
                  </property>
                 </widget>
                </item>
@@ -11211,7 +11217,7 @@
                <item row="6" column="2">
                 <widget class="QLineEdit" name="lineEdit_pep_direct_to_otf_unit_specific_manifest_path">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -11281,7 +11287,7 @@
                <item row="6" column="0">
                 <widget class="QLabel" name="label_unit_specific_manifest">
                  <property name="text">
-                  <string>MetaUmbra unit-specific manifest</string>
+                  <string>MetaUmbra genome selection manifest</string>
                  </property>
                 </widget>
                </item>
@@ -11322,7 +11328,7 @@
                <item row="6" column="3">
                 <widget class="QPushButton" name="pushButton_open_pep_direct_to_otf_unit_specific_manifest_path">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="text">
                   <string>Open</string>
@@ -11343,7 +11349,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Unit-specific Settings...</string>
+                    <string>Validate / Settings...</string>
                    </property>
                   </widget>
                  </item>

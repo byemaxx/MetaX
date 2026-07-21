@@ -145,6 +145,9 @@ def test_set_multi_tables(tfa_object):
     # Verify that samples are preserved as columns in these matrices
     assert set(tfa_object.sample_list).issubset(set(tfa_object.taxa_df.columns))
     assert set(tfa_object.sample_list).issubset(set(tfa_object.func_df.columns))
+    assert tfa_object._last_set_multi_tables_params["sum_protein"] is False
+    assert tfa_object._last_set_multi_tables_params["sum_protein_params"]["method"] == "razor"
+    assert tfa_object._last_set_multi_tables_params["keep_processed_original_df"] is False
 
 
 def _write_sparse_analyzer_otf(path, sparse):

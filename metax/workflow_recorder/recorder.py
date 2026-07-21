@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import json
+import platform
+import re
+import sys
 import uuid
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -9,6 +13,9 @@ from textwrap import dedent
 from typing import Any
 
 import yaml
+
+
+WORKFLOW_EXPORT_FORMATS = ("ipynb", "py", "yaml")
 
 
 @dataclass
@@ -42,21 +49,31 @@ class WorkflowRecord:
 
 @dataclass(frozen=True)
 class WorkflowExportPaths:
-    yaml_path: Path
-    python_path: Path
-    notebook_path: Path
+    yaml_path: Path | None = None
+    python_path: Path | None = None
+    notebook_path: Path | None = None
 
     def as_dict(self) -> dict[str, Path]:
-        return {
-            "workflow_yaml": self.yaml_path,
-            "workflow_python": self.python_path,
-            "workflow_notebook": self.notebook_path,
-        }
+        paths = (
+            ("workflow_notebook", self.notebook_path),
+            ("workflow_python", self.python_path),
+            ("workflow_yaml", self.yaml_path),
+        )
+        return {name: path for name, path in paths if path is not None}
 
 
 class WorkflowRecorder:
-    def __init__(self, title: str = "MetaX GUI Workflow", metadata: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        title: str = "MetaX GUI Workflow",
+        metadata: dict[str, Any] | None = None,
+        *,
+        notebook_kernel_name: str | None = None,
+        notebook_kernel_display_name: str | None = None,
+    ):
         self.record = WorkflowRecord(title=title, metadata=metadata or {})
+        self.notebook_kernel_name = notebook_kernel_name
+        self.notebook_kernel_display_name = notebook_kernel_display_name
         self.enabled = True
 
     @property
@@ -79,17 +96,26 @@ class WorkflowRecorder:
     def to_dict(self) -> dict[str, Any]:
         return self.record.to_dict()
 
-    def export_all(self, output_dir: str | Path, basename: str = "metax_gui_workflow") -> WorkflowExportPaths:
+    def export_all(
+        self,
+        output_dir: str | Path,
+        basename: str = "metax_gui_workflow",
+        formats: Iterable[str] | str | None = None,
+    ) -> WorkflowExportPaths:
+        selected_formats = _normalize_export_formats(formats)
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         paths = WorkflowExportPaths(
-            yaml_path=output_path / f"{basename}.yaml",
-            python_path=output_path / f"{basename}.py",
-            notebook_path=output_path / f"{basename}.ipynb",
+            yaml_path=output_path / f"{basename}.yaml" if "yaml" in selected_formats else None,
+            python_path=output_path / f"{basename}.py" if "py" in selected_formats else None,
+            notebook_path=output_path / f"{basename}.ipynb" if "ipynb" in selected_formats else None,
         )
-        self.save_yaml(paths.yaml_path)
-        self.save_python(paths.python_path)
-        self.save_notebook(paths.notebook_path)
+        if paths.yaml_path is not None:
+            self.save_yaml(paths.yaml_path)
+        if paths.python_path is not None:
+            self.save_python(paths.python_path)
+        if paths.notebook_path is not None:
+            self.save_notebook(paths.notebook_path)
         return paths
 
     def save_yaml(self, path: str | Path) -> Path:
@@ -115,12 +141,16 @@ class WorkflowRecorder:
         return output_path
 
     def to_python_script(self) -> str:
+        python_metadata = _current_python_notebook_metadata()
         lines = [
             "# Auto-generated from a MetaX GUI workflow.",
             "# Run cells individually in an editor that supports '# %%' cells.",
             "",
             "# %%",
-            _environment_setup_code(self.record.metadata).rstrip(),
+            _environment_setup_code(
+                self.record.metadata,
+                expected_python_prefix=python_metadata["metax"]["python_prefix"],
+            ).rstrip(),
             "",
             "# %%",
             _gui_action_replay_helper_code().rstrip(),
@@ -139,12 +169,21 @@ class WorkflowRecorder:
         return "\n".join(lines).rstrip() + "\n"
 
     def to_notebook(self) -> dict[str, Any]:
+        python_metadata = _current_python_notebook_metadata(
+            kernel_name=self.notebook_kernel_name,
+            kernel_display_name=self.notebook_kernel_display_name,
+        )
         cells = [
             _markdown_cell(
                 f"# {self.record.title}\n\n"
                 "This notebook was generated from semantic MetaX GUI analysis steps."
             ),
-            _code_cell(_environment_setup_code(self.record.metadata)),
+            _code_cell(
+                _environment_setup_code(
+                    self.record.metadata,
+                    expected_python_prefix=python_metadata["metax"]["python_prefix"],
+                )
+            ),
             _code_cell(_gui_action_replay_helper_code()),
         ]
         if self.record.metadata:
@@ -156,20 +195,105 @@ class WorkflowRecorder:
 
         return {
             "cells": cells,
-            "metadata": {
-                "kernelspec": {
-                    "display_name": "Python 3",
-                    "language": "python",
-                    "name": "python3",
-                },
-                "language_info": {
-                    "name": "python",
-                    "pygments_lexer": "ipython3",
-                },
-            },
+            "metadata": python_metadata,
             "nbformat": 4,
             "nbformat_minor": 5,
         }
+
+
+def _normalize_export_formats(formats: Iterable[str] | str | None) -> frozenset[str]:
+    requested_formats = WORKFLOW_EXPORT_FORMATS if formats is None else formats
+    if isinstance(requested_formats, str):
+        requested_formats = (requested_formats,)
+    normalized = frozenset(str(item).lower().lstrip(".") for item in requested_formats)
+    if not normalized:
+        raise ValueError("At least one workflow export format must be selected.")
+    unsupported = normalized.difference(WORKFLOW_EXPORT_FORMATS)
+    if unsupported:
+        supported = ", ".join(f".{item}" for item in WORKFLOW_EXPORT_FORMATS)
+        invalid = ", ".join(sorted(unsupported))
+        raise ValueError(f"Unsupported workflow export format(s): {invalid}. Supported formats: {supported}.")
+    return normalized
+
+
+def _current_python_notebook_metadata(
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+    python_version: str | None = None,
+    kernel_name: str | None = None,
+    kernel_display_name: str | None = None,
+) -> dict[str, Any]:
+    """Build notebook metadata for the Python environment running the GUI."""
+    executable_path = Path(executable or sys.executable).resolve()
+    prefix_path = Path(prefix or sys.prefix).resolve()
+    environment_name = prefix_path.name or executable_path.parent.name or "python"
+    resolved_kernel_name = kernel_name or re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "-",
+        environment_name,
+    ).strip("-").lower()
+    if not resolved_kernel_name:
+        resolved_kernel_name = "python3"
+
+    return {
+        "kernelspec": {
+            "display_name": kernel_display_name or f"Python ({environment_name})",
+            "language": "python",
+            "name": resolved_kernel_name,
+        },
+        "language_info": {
+            "name": "python",
+            "pygments_lexer": "ipython3",
+            "version": python_version or platform.python_version(),
+        },
+        "metax": {
+            "python_environment": environment_name,
+            "python_executable": str(executable_path),
+            "python_prefix": str(prefix_path),
+        },
+    }
+
+
+def _metax_kernel_identity(
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+) -> tuple[str, str]:
+    executable_path = Path(executable or sys.executable).resolve()
+    prefix_path = Path(prefix or sys.prefix).resolve()
+    environment_name = prefix_path.name or executable_path.parent.name or "python"
+    environment_slug = re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "-",
+        environment_name,
+    ).strip("-").lower() or "python"
+    return (
+        f"metax-{environment_slug}",
+        f"Python (MetaX GUI - {environment_name})",
+    )
+
+
+def register_current_python_kernel(
+    installer=None,
+    *,
+    executable: str | Path | None = None,
+    prefix: str | Path | None = None,
+) -> tuple[str, str]:
+    """Register the GUI's Python runtime as a MetaX Jupyter kernel."""
+    if installer is None:
+        from ipykernel.kernelspec import install as installer
+
+    kernel_name, display_name = _metax_kernel_identity(
+        executable=executable,
+        prefix=prefix,
+    )
+    installer(
+        user=True,
+        kernel_name=kernel_name,
+        display_name=display_name,
+    )
+    return kernel_name, display_name
 
 
 def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> AnalysisStep:
@@ -209,29 +333,56 @@ def auto_otf_report_step(config_path: str | Path, result: Any | None = None) -> 
     )
 
 
-def unit_specific_otf_step(params: dict[str, Any]) -> AnalysisStep:
+def manifest_otf_step(params: dict[str, Any]) -> AnalysisStep:
     parameters = dict(params)
     code = _join_code(
-        "from metax.peptide_annotator.unit_specific_otf import UnitSpecificOTFAnnotator",
+        "from metax.peptide_annotator.manifest_otf import ManifestOTFAnnotator",
         "",
-        _assignment("unit_specific_otf_params", parameters),
-        "unit_specific_otf = UnitSpecificOTFAnnotator(**unit_specific_otf_params)",
-        "unit_specific_otf_result = unit_specific_otf.run()",
-        'print(f"Saved unit-specific OTF: {unit_specific_otf.output_path}")',
+        _assignment("manifest_otf_params", parameters),
+        "manifest_otf = ManifestOTFAnnotator(**manifest_otf_params)",
+        "manifest_otf_result = manifest_otf.run()",
+        'print(f"Saved manifest-driven OTF: {manifest_otf.output_path}")',
     )
     return AnalysisStep(
-        title="Run Unit-specific Peptide Direct to OTF",
-        step_type="unit_specific_peptide_direct_to_otf",
+        title="Run Manifest Peptide Direct to OTF",
+        step_type="manifest_peptide_direct_to_otf",
         inputs={
             "peptide_table_path": parameters.get("peptide_table_path"),
             "digested_genome_folders": parameters.get("digested_genome_folders"),
             "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
-            "unit_specific_manifest_path": parameters.get("unit_specific_manifest_path"),
+            "metaumbra_manifest_path": parameters.get("metaumbra_manifest_path"),
         },
         outputs={"output_path": parameters.get("output_path")},
         parameters=parameters,
         code=code,
-        notes=["Recorded from the MetaX GUI unit-specific direct-to-OTF workflow."],
+        notes=["Recorded from the MetaX GUI manifest-driven direct-to-OTF workflow."],
+    )
+
+
+def direct_otf_step(params: dict[str, Any]) -> AnalysisStep:
+    """Record explicit MetaX automatic or custom-list annotation."""
+    parameters = dict(params)
+    code = _join_code(
+        "from metax.peptide_annotator.annotation_workflow import GlobalOTFAnnotator",
+        "",
+        _assignment("direct_otf_params", parameters),
+        "direct_otf = GlobalOTFAnnotator(**direct_otf_params)",
+        "direct_otf_result = direct_otf.run()",
+        'print(f"Saved direct OTF: {direct_otf_result.output_path}")',
+    )
+    return AnalysisStep(
+        title="Run MetaX Direct Peptide to OTF",
+        step_type="metax_direct_peptide_to_otf",
+        inputs={
+            "peptide_table_path": parameters.get("peptide_table_path"),
+            "digested_genome_folders": parameters.get("digested_genome_folders"),
+            "taxafunc_anno_db_path": parameters.get("taxafunc_anno_db_path"),
+            "genome_list_path": parameters.get("genome_list_path"),
+        },
+        outputs={"output_path": parameters.get("output_path")},
+        parameters=parameters,
+        code=code,
+        notes=["Uses an explicit MetaX automatic or custom genome-list source."],
     )
 
 
@@ -496,20 +647,48 @@ def _join_code(*parts: str) -> str:
     return "\n".join(parts).rstrip() + "\n"
 
 
-def _environment_setup_code(metadata: dict[str, Any]) -> str:
+def _environment_setup_code(
+    metadata: dict[str, Any],
+    *,
+    expected_python_prefix: str | Path | None = None,
+) -> str:
     package_root = metadata.get("metax_package_root") or ""
-    return _join_code(
+    lines = [
         "from pathlib import Path",
         "import sys",
+        "import warnings",
         "",
-        f"metax_package_root = Path(r{package_root!r}) if {bool(package_root)!r} else Path.cwd()",
-        "if str(metax_package_root) not in sys.path:",
-        "    sys.path.insert(0, str(metax_package_root))",
-        "print(f'MetaX package root: {metax_package_root}')",
-        "",
-        "# Global registry to hold statistical results for downstream plotting.",
-        "stats_results = {}",
+    ]
+    if expected_python_prefix:
+        lines.extend(
+            [
+                f"expected_python_prefix = Path({str(expected_python_prefix)!r}).resolve()",
+                "current_python_prefix = Path(sys.prefix).resolve()",
+                "if current_python_prefix != expected_python_prefix:",
+                "    warnings.warn(",
+                "        'This workflow was exported from a different Python environment. '",
+                "        f'Recorded: {expected_python_prefix}; current: {current_python_prefix}. '",
+                "        'Continuing with the current kernel; select the recorded MetaX GUI '",
+                "        'environment if dependency imports fail.',",
+                "        RuntimeWarning,",
+                "        stacklevel=2,",
+                "    )",
+                "print(f'Python environment: {current_python_prefix}')",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            f"metax_package_root = Path({package_root!r}) if {bool(package_root)!r} else Path.cwd()",
+            "if str(metax_package_root) not in sys.path:",
+            "    sys.path.insert(0, str(metax_package_root))",
+            "print(f'MetaX package root: {metax_package_root}')",
+            "",
+            "# Global registry to hold statistical results for downstream plotting.",
+            "stats_results = {}",
+        ]
     )
+    return _join_code(*lines)
 
 
 def _gui_action_replay_helper_code() -> str:
@@ -517,19 +696,30 @@ def _gui_action_replay_helper_code() -> str:
         """\
         def _metax_table_from_tfa(tfa, table_name):
             normalized = str(table_name).lower()
-            table_map = {
-                "taxa": getattr(tfa, "taxa_df", None),
-                "functions": getattr(tfa, "func_df", None),
-                "function": getattr(tfa, "func_df", None),
-                "taxa-functions": getattr(tfa, "taxa_func_df", None),
-                "functions-taxa": tfa.get_func_taxa_df() if hasattr(tfa, "get_func_taxa_df") else getattr(tfa, "func_taxa_df", None),
-                "peptides": tfa.get_peptide_df() if hasattr(tfa, "get_peptide_df") else getattr(tfa, "peptide_df", None),
-                "peptide": tfa.get_peptide_df() if hasattr(tfa, "get_peptide_df") else getattr(tfa, "peptide_df", None),
-                "proteins": getattr(tfa, "protein_df", None),
-                "protein": getattr(tfa, "protein_df", None),
-                "custom": getattr(tfa, "custom_df", None),
+            attribute_map = {
+                "taxa": "taxa_df",
+                "functions": "func_df",
+                "function": "func_df",
+                "taxa-functions": "taxa_func_df",
+                "proteins": "protein_df",
+                "protein": "protein_df",
+                "custom": "custom_df",
             }
-            table = table_map.get(normalized)
+            if normalized == "functions-taxa":
+                table = (
+                    tfa.get_func_taxa_df()
+                    if hasattr(tfa, "get_func_taxa_df")
+                    else getattr(tfa, "func_taxa_df", None)
+                )
+            elif normalized in {"peptides", "peptide"}:
+                table = (
+                    tfa.get_peptide_df()
+                    if hasattr(tfa, "get_peptide_df")
+                    else getattr(tfa, "peptide_df", None)
+                )
+            else:
+                attribute_name = attribute_map.get(normalized)
+                table = getattr(tfa, attribute_name, None) if attribute_name else None
             if table is None:
                 raise ValueError(f"Cannot resolve table from tfa: {table_name}")
             return table

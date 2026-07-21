@@ -1,0 +1,46 @@
+{
+  "schema_version": "metaumbra.genome_selection_manifest.v1",
+  "generated_by": {
+    "software": "MetaUmbra",
+    "version": "1.4.0",
+    "run_id": "contract-fixture",
+    "generated_at": "2026-07-15T00:00:00+00:00"
+  },
+  "unit_definition": {
+    "mode": "metadata",
+    "sample_id_column": "Run",
+    "analysis_unit_column": "analysis_unit_id",
+    "n_units": 2
+  },
+  "selection": {
+    "default_genome_threshold": "q0.05",
+    "available_genome_thresholds": ["q0.05", "q0.01"],
+    "scoring_method": "per-analysis-unit/empirical-background"
+  },
+  "inputs": {
+    "peptide_table": {"path": "report.parquet", "format": "diann_parquet"},
+    "metadata_table": {"path": "metadata.tsv", "format": "tsv"},
+    "genome_digest_directories": ["digests"]
+  },
+  "units": {
+    "u1": {
+      "sample_ids": ["s1"],
+      "n_samples": 1,
+      "genome_ids_q005": ["g1", "g2"],
+      "genome_ids_q001": ["g1"]
+    },
+    "u2": {
+      "sample_ids": ["s2"],
+      "n_samples": 1,
+      "genome_ids_q005": ["g2"],
+      "genome_ids_q001": ["g2"]
+    }
+  },
+  "artifacts": {
+    "unit_genome_results": "unit_genome_results.tsv",
+    "sample_unit_mapping": "sample_unit_mapping.tsv",
+    "cohort_summary": "cohort_genome_summary.tsv",
+    "diagnostics_directory": "artifacts/diagnostics"
+  },
+  "warnings": []
+}

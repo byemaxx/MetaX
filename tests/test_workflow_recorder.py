@@ -1,9 +1,16 @@
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 import yaml
 
+from metax.workflow_recorder.recorder import (
+    _current_python_notebook_metadata,
+    _environment_setup_code,
+    register_current_python_kernel,
+)
 from metax.workflow_recorder import (
     AnalysisStep,
     WorkflowRecorder,
@@ -12,8 +19,9 @@ from metax.workflow_recorder import (
     set_multi_tables_step,
     taxafunc_analyzer_step,
     deseq2_step,
+    direct_otf_step,
     limma_step,
-    unit_specific_otf_step,
+    manifest_otf_step,
 )
 
 
@@ -46,8 +54,83 @@ def test_workflow_recorder_exports_yaml_python_and_notebook(tmp_path: Path):
 
     notebook = json.loads(paths.notebook_path.read_text(encoding="utf-8"))
     assert notebook["nbformat"] == 4
+    assert notebook["metadata"]["metax"]["python_executable"] == str(
+        Path(sys.executable).resolve()
+    )
     assert any(cell["cell_type"] == "code" for cell in notebook["cells"])
     assert any("print('run example')" in "".join(cell["source"]) for cell in notebook["cells"])
+
+
+def test_workflow_recorder_exports_only_selected_formats(tmp_path: Path):
+    recorder = WorkflowRecorder()
+
+    paths = recorder.export_all(tmp_path, "notebook_only", formats={".ipynb"})
+
+    assert paths.notebook_path == tmp_path / "notebook_only.ipynb"
+    assert paths.notebook_path.exists()
+    assert paths.python_path is None
+    assert paths.yaml_path is None
+    assert paths.as_dict() == {"workflow_notebook": paths.notebook_path}
+    assert not (tmp_path / "notebook_only.py").exists()
+    assert not (tmp_path / "notebook_only.yaml").exists()
+
+
+@pytest.mark.parametrize("formats", [(), {"html"}])
+def test_workflow_recorder_rejects_invalid_format_selections(tmp_path: Path, formats):
+    recorder = WorkflowRecorder()
+
+    with pytest.raises(ValueError):
+        recorder.export_all(tmp_path, formats=formats)
+
+
+def test_notebook_uses_the_python_environment_running_the_gui(tmp_path: Path):
+    prefix = tmp_path / "miniconda3" / "envs" / "metax313"
+    executable = prefix / "python.exe"
+
+    metadata = _current_python_notebook_metadata(
+        executable=executable,
+        prefix=prefix,
+        python_version="3.13.13",
+    )
+
+    assert metadata["kernelspec"] == {
+        "display_name": "Python (metax313)",
+        "language": "python",
+        "name": "metax313",
+    }
+    assert metadata["language_info"]["version"] == "3.13.13"
+    assert metadata["metax"]["python_environment"] == "metax313"
+    assert metadata["metax"]["python_executable"] == str(executable.resolve())
+    assert metadata["metax"]["python_prefix"] == str(prefix.resolve())
+
+
+def test_registered_metax_kernel_is_used_in_notebook_metadata(tmp_path: Path):
+    calls = []
+    prefix = tmp_path / "MetaX" / "pyenv"
+
+    kernel_name, display_name = register_current_python_kernel(
+        installer=lambda **kwargs: calls.append(kwargs),
+        executable=prefix / "python.exe",
+        prefix=prefix,
+    )
+    recorder = WorkflowRecorder(
+        notebook_kernel_name=kernel_name,
+        notebook_kernel_display_name=display_name,
+    )
+    metadata = recorder.to_notebook()["metadata"]
+
+    assert calls == [
+        {
+            "user": True,
+            "kernel_name": "metax-pyenv",
+            "display_name": "Python (MetaX GUI - pyenv)",
+        }
+    ]
+    assert metadata["kernelspec"] == {
+        "display_name": "Python (MetaX GUI - pyenv)",
+        "language": "python",
+        "name": "metax-pyenv",
+    }
 
 
 def test_auto_otf_report_step_uses_saved_config(tmp_path: Path):
@@ -68,10 +151,10 @@ def test_auto_otf_report_step_uses_saved_config(tmp_path: Path):
     assert step.outputs["index_html_path"].endswith("index.html")
 
 
-def test_unit_specific_otf_step_records_replayable_parameters():
+def test_manifest_otf_step_records_replayable_parameters():
     params = {
         "peptide_table_path": "peptides.tsv",
-        "unit_specific_manifest_path": "manifest.json",
+        "metaumbra_manifest_path": "manifest.json",
         "taxafunc_anno_db_path": "taxafunc.db",
         "output_path": "out.tsv",
         "digested_genome_folders": "digested",
@@ -88,14 +171,29 @@ def test_unit_specific_otf_step_records_replayable_parameters():
         "n_jobs": None,
     }
 
-    step = unit_specific_otf_step(params)
+    step = manifest_otf_step(params)
 
-    assert step.step_type == "unit_specific_peptide_direct_to_otf"
+    assert step.step_type == "manifest_peptide_direct_to_otf"
     assert step.parameters == params
-    assert step.inputs["unit_specific_manifest_path"] == "manifest.json"
+    assert step.inputs["metaumbra_manifest_path"] == "manifest.json"
     assert step.outputs["output_path"] == "out.tsv"
-    assert "UnitSpecificOTFAnnotator(**unit_specific_otf_params)" in step.code
-    compile(step.code, "<unit-specific-workflow-step>", "exec")
+    assert "ManifestOTFAnnotator(**manifest_otf_params)" in step.code
+    compile(step.code, "<manifest-workflow-step>", "exec")
+
+
+def test_direct_otf_step_records_automatic_or_list_source():
+    params = {
+        "peptide_table_path": "peptides.tsv",
+        "taxafunc_anno_db_path": "taxafunc.db",
+        "output_path": "out.tsv",
+        "digested_genome_folders": "digested",
+        "selection_mode": "provided",
+        "selected_genomes": ["g1", "g2"],
+    }
+    step = direct_otf_step(params)
+    assert step.step_type == "metax_direct_peptide_to_otf"
+    assert "GlobalOTFAnnotator(**direct_otf_params)" in step.code
+    compile(step.code, "<direct-otf-workflow-step>", "exec")
 
 
 def test_taxafunc_and_multi_table_steps_generate_runnable_cells():
@@ -153,6 +251,9 @@ def test_notebook_setup_and_gui_action_replay_cells_keep_lists_compact():
     code_cells = ["".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"]
 
     assert "sys.path.insert(0, str(metax_package_root))" in code_cells[0]
+    assert "expected_python_prefix" in code_cells[0]
+    assert "This workflow was exported from a different Python environment" in code_cells[0]
+    assert "raise RuntimeError" not in code_cells[0]
     assert "def replay_metax_gui_action" in code_cells[1]
     assert "replay_metax_gui_action(tfa, action_name, parameters, stats_tables=stats_results)" in code_cells[-1]
     assert "'sample_list': [" in code_cells[-1]
@@ -161,12 +262,38 @@ def test_notebook_setup_and_gui_action_replay_cells_keep_lists_compact():
         compile(code, "<workflow-notebook-cell>", "exec")
 
 
+def test_notebook_setup_continues_with_a_different_python_environment(
+    tmp_path: Path,
+    monkeypatch,
+):
+    expected_prefix = tmp_path / "MetaX" / "pyenv"
+    monkeypatch.setattr(sys, "path", sys.path.copy())
+    setup_code = _environment_setup_code(
+        {"metax_package_root": str(tmp_path)},
+        expected_python_prefix=expected_prefix,
+    )
+    namespace = {}
+
+    with pytest.warns(RuntimeWarning, match="Continuing with the current kernel"):
+        exec(setup_code, namespace)
+
+    assert namespace["expected_python_prefix"] == expected_prefix.resolve()
+    assert namespace["current_python_prefix"] == Path(sys.prefix).resolve()
+    assert namespace["stats_results"] == {}
+    assert str(tmp_path) in sys.path
+
+
 def test_all_gui_actions_generation():
     recorder = WorkflowRecorder()
     actions = [
         ("Plot PCA", "plot_basic_info_sns", {"method": "pca", "table_name": "Taxa"}),
         ("Plot PCA 3D", "plot_basic_info_sns", {"method": "pca_3d", "table_name": "Taxa"}),
         ("Plot t-SNE", "plot_basic_info_sns", {"method": "tsne", "table_name": "Taxa"}),
+        ("Plot Box", "plot_basic_info_sns", {"method": "box", "table_name": "Taxa"}),
+        ("Plot Correlation", "plot_basic_info_sns", {"method": "corr", "table_name": "Taxa"}),
+        ("Plot Sunburst", "plot_basic_info_sns", {"method": "sunburst", "table_name": "Taxa"}),
+        ("Plot Treemap", "plot_basic_info_sns", {"method": "treemap", "table_name": "Taxa"}),
+        ("Plot Sankey", "plot_basic_info_sns", {"method": "sankey", "table_name": "Taxa"}),
         ("Plot Alpha Diversity", "plot_basic_info_sns", {"method": "alpha_div", "table_name": "Taxa", "metric": "shannon"}),
         ("Plot Beta Diversity", "plot_basic_info_sns", {"method": "beta_div", "table_name": "Taxa", "metric": "braycurtis"}),
         ("Plot Number Bar", "plot_basic_info_sns", {"method": "num_bar", "table_name": "Taxa"}),
@@ -184,6 +311,8 @@ def test_all_gui_actions_generation():
         ("Plot Taxa-Func Link Heatmap", "plot_tflink_heatmap", {"taxa": "Taxon1", "func": "Func1"}),
         ("Plot Taxa-Func Link Intensity Bar", "plot_tflink_bar", {"taxa": "Taxon1", "func": "Func1"}),
         ("Plot Tukey HSD", "plot_tukey", {"table_name": "tukey_test"}),
+        ("Plot Top Heatmap", "plot_top_heatmap", {"table_name": "anova(taxa)"}),
+        ("Plot DESeq2 Volcano", "plot_deseq2_volcano", {"table_name": "deseq2(taxa)"}),
     ]
 
     for title, action_name, params in actions:
@@ -304,6 +433,30 @@ def test_plot_basic_list_pca_replay_imports_basic_plot():
     assert "return BasicPlot(tfa).plot_pca_sns" in plot_basic_list_branch
 
 
+def test_table_replay_helper_does_not_eagerly_resolve_unrequested_tables():
+    recorder = WorkflowRecorder()
+    notebook = recorder.to_notebook()
+    helper_cell = next(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code" and "def replay_metax_gui_action" in "".join(cell["source"])
+    )
+    namespace = {}
+    exec(helper_cell, namespace)
+    taxa_table = object()
+
+    class FakeAnalyzer:
+        taxa_df = taxa_table
+
+        def get_func_taxa_df(self):
+            raise AssertionError("Unrequested functions-taxa table was resolved")
+
+        def get_peptide_df(self):
+            raise AssertionError("Unrequested peptide table was resolved")
+
+    assert namespace["_metax_table_from_tfa"](FakeAnalyzer(), "Taxa") is taxa_table
+
+
 def test_limma_step_defaults_zero_to_nan_false():
     step = limma_step(
         title="Run Limma Two Group",
@@ -319,8 +472,6 @@ def test_limma_step_defaults_zero_to_nan_false():
 
 
 def test_async_workflow_step_preserves_current_tfa_group():
-    import pytest
-
     main_gui = pytest.importorskip("metax.gui.main_gui", exc_type=ImportError)
 
     gui = main_gui.MetaXGUI.__new__(main_gui.MetaXGUI)
@@ -342,3 +493,176 @@ def test_async_workflow_step_preserves_current_tfa_group():
     assert gui.workflow_recorder.steps[0].code.index("tfa.set_group('Treatment')") < gui.workflow_recorder.steps[0].code.index(
         "params = {}"
     )
+
+
+def test_workflow_export_dialog_defaults_to_notebook_only():
+    main_gui = pytest.importorskip("metax.gui.main_gui", exc_type=ImportError)
+    step = AnalysisStep(title="Plot PCA", step_type="plot", code="print('pca')")
+
+    dialog = main_gui.WorkflowStepsSelectionDialog([step])
+    try:
+        assert dialog.width() == 800
+        assert dialog.height() == 600
+        assert dialog.list_widget.count() == 1
+        assert dialog.get_selected_formats() == ("ipynb",)
+
+        dialog.format_checkboxes["ipynb"].setChecked(False)
+        dialog.format_checkboxes["py"].setChecked(True)
+        dialog.format_checkboxes["yaml"].setChecked(True)
+        assert dialog.get_selected_formats() == ("py", "yaml")
+    finally:
+        dialog.close()
+
+
+def test_export_recovers_missing_processed_tables_step_from_live_analyzer(
+    tmp_path: Path,
+    monkeypatch,
+):
+    main_gui = pytest.importorskip("metax.gui.main_gui", exc_type=ImportError)
+    load_step = taxafunc_analyzer_step(
+        {
+            "df_path": "OTF.tsv",
+            "meta_path": "Meta.tsv",
+            "any_df_mode": False,
+            "peptide_col_name": "Sequence",
+            "protein_col_name": "Proteins",
+            "sample_col_prefix": "Intensity",
+            "custom_col_name": "",
+        },
+        group_name="Treatment",
+    )
+    plot_step = gui_action_step(
+        title="Plot PCA",
+        step_type="plot",
+        action_name="plot_basic_info_sns",
+        parameters={"method": "pca", "table_name": "Taxa"},
+    )
+    recorder = WorkflowRecorder()
+    recorder.add_step(load_step)
+    recorder.add_step(plot_step)
+    gui = main_gui.MetaXGUI.__new__(main_gui.MetaXGUI)
+    gui.MainWindow = None
+    gui.workflow_recorder = recorder
+    gui.last_path = str(tmp_path)
+    gui.logger = SimpleNamespace(write_log=lambda *args, **kwargs: None)
+    gui._record_current_taxafunc_if_needed = lambda: None
+    gui.tfa = SimpleNamespace(
+        func_name="KEGG_ko_name",
+        _last_set_multi_tables_params={
+            "level": "s",
+            "func_name": "KEGG_ko_name",
+            "func_threshold": 1.0,
+            "outlier_params": {"detect_method": "none", "handle_method": "drop+drop"},
+            "data_preprocess_params": {
+                "normalize_method": None,
+                "transform_method": None,
+                "batch_meta": None,
+                "processing_order": [],
+            },
+            "peptide_num_threshold": {"taxa": 1, "func": 1, "taxa_func": 1},
+            "keep_unknow_func": False,
+            "split_func": False,
+            "split_func_params": {"split_by": "|", "share_intensity": False},
+            "taxa_and_func_only_from_otf": False,
+            "quant_method": "sum",
+            "remove_unknown_taxa": True,
+        },
+    )
+
+    class FakeExportDialog:
+        def __init__(self, steps, parent):
+            self.steps = steps
+
+        def exec_(self):
+            return main_gui.QDialog.Accepted
+
+        def get_selected_steps(self):
+            return self.steps
+
+        def get_selected_formats(self):
+            return ("ipynb",)
+
+    monkeypatch.setattr(main_gui, "WorkflowStepsSelectionDialog", FakeExportDialog)
+    monkeypatch.setattr(
+        main_gui.QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(tmp_path / "recovered.ipynb"), "Jupyter Notebook (*.ipynb)"),
+    )
+    monkeypatch.setattr(main_gui.QMessageBox, "information", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_gui.QMessageBox, "warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        main_gui,
+        "register_current_python_kernel",
+        lambda: ("metax-test", "Python (MetaX GUI - test)"),
+    )
+
+    gui.export_workflow_notebook()
+
+    assert [step.step_type for step in recorder.steps] == [
+        "load_taxafunc_analyzer",
+        "set_multi_tables",
+        "plot",
+    ]
+    processed_step = recorder.steps[1]
+    assert "tfa.set_func('KEGG_ko_name')" in processed_step.code
+    assert "tfa.set_multi_tables(**set_multi_table_params)" in processed_step.code
+    assert "'func_name'" not in processed_step.code
+    exported_notebook = json.loads((tmp_path / "recovered.ipynb").read_text(encoding="utf-8"))
+    assert exported_notebook["metadata"]["kernelspec"]["name"] == "metax-test"
+    exported_code = [
+        "".join(cell["source"])
+        for cell in exported_notebook["cells"]
+        if cell["cell_type"] == "code"
+    ]
+    processed_cell_index = next(
+        index for index, code in enumerate(exported_code) if "tfa.set_multi_tables" in code
+    )
+    plot_cell_index = next(
+        index for index, code in enumerate(exported_code) if "action_name = 'plot_basic_info_sns'" in code
+    )
+    assert processed_cell_index < plot_cell_index
+
+
+def test_gui_workflow_export_honors_selected_formats(tmp_path: Path, monkeypatch):
+    main_gui = pytest.importorskip("metax.gui.main_gui", exc_type=ImportError)
+    recorder = WorkflowRecorder()
+    recorder.add_step(AnalysisStep(title="Plot PCA", step_type="plot", code="print('pca')"))
+    gui = main_gui.MetaXGUI.__new__(main_gui.MetaXGUI)
+    gui.MainWindow = None
+    gui.workflow_recorder = recorder
+    gui.last_path = str(tmp_path)
+    gui.logger = SimpleNamespace(write_log=lambda *args, **kwargs: None)
+    gui._record_current_taxafunc_if_needed = lambda: None
+
+    class FakeExportDialog:
+        def __init__(self, steps, parent):
+            self.steps = steps
+
+        def exec_(self):
+            return main_gui.QDialog.Accepted
+
+        def get_selected_steps(self):
+            return self.steps
+
+        def get_selected_formats(self):
+            return ("ipynb",)
+
+    monkeypatch.setattr(main_gui, "WorkflowStepsSelectionDialog", FakeExportDialog)
+    monkeypatch.setattr(
+        main_gui.QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(tmp_path / "selected.ipynb"), "Jupyter Notebook (*.ipynb)"),
+    )
+    monkeypatch.setattr(main_gui.QMessageBox, "information", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_gui.QMessageBox, "warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        main_gui,
+        "register_current_python_kernel",
+        lambda: ("metax-test", "Python (MetaX GUI - test)"),
+    )
+
+    gui.export_workflow_notebook()
+
+    assert (tmp_path / "selected.ipynb").exists()
+    assert not (tmp_path / "selected.py").exists()
+    assert not (tmp_path / "selected.yaml").exists()

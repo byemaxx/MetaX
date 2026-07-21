@@ -12,11 +12,13 @@ from datetime import datetime
 
 try:
     from ..utils.version import __version__
+    from .output_paths import available_output_path
     from .proteins_to_taxafunc import Pep2TaxaFunc
     from .convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
 except ImportError:
     print("ImportError occurred, trying alternative imports...")
     __version__ = "Test version"
+    from output_paths import available_output_path
     from proteins_to_taxafunc import Pep2TaxaFunc
     from convert_id_to_name import add_pathway_name_to_df, add_ec_name_to_df, add_ko_name_to_df, add_kegg_module_to_df, add_go_name_to_df
 
@@ -71,6 +73,7 @@ class PeptideAnnotator:
         self.peptide_path = peptide_path
         self.peptide_df = peptide_df
         self.output_path = output_path
+        self.info_path: str | None = None
         
         self.threshold = round(float(threshold), 4)
         self.genome_mode = genome_mode
@@ -373,15 +376,7 @@ class PeptideAnnotator:
             print(f'Output directory did not exist, created: {dir_path}')
         
         if os.path.exists(self.output_path):
-            counter = 1
-            base_name = os.path.splitext(os.path.basename(self.output_path))[0]
-            ext = os.path.splitext(self.output_path)[-1]
-            new_output_path = os.path.join(dir_path, f'{base_name}_{pd.Timestamp.now().strftime("%Y%m%d%H%M%S")}{ext}')
-            
-            while os.path.exists(new_output_path):
-                counter += 1
-                new_output_path = os.path.join(dir_path, f'{base_name}_{counter}{ext}')
-            self.output_path = new_output_path
+            self.output_path = str(available_output_path(self.output_path))
             print(f'Output file already exists, saved as: {self.output_path}')
         
         # get metadata for the running
@@ -398,6 +393,7 @@ class PeptideAnnotator:
         # save metadata to a separate info file
         base_path = os.path.splitext(self.output_path)[0]
         info_path = f"{base_path}_info.txt"
+        self.info_path = info_path
         with open(info_path, 'w', encoding='utf-8') as f:
             f.write("MetaX PeptideAnnotator Results\n")
             f.write("="*50 + "\n")

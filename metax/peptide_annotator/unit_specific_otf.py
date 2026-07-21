@@ -17,16 +17,18 @@ from metax.peptide_annotator.pep_table_to_otf import (
     peptideProteinsMapper,
     query_peptide_proteins_from_digested_genome_folders_nested,
 )
+from metax.peptide_annotator.output_paths import available_output_path
 from metax.peptide_annotator.peptide_table_prepare import (
     has_diann_core_columns,
     is_parquet_path,
+    normalize_sample_identifier,
     prepare_diann_parquet_for_direct_otf,
     read_parquet_columns,
 )
 from metax.peptide_annotator.peptable_annotator import _prepare_otf_for_output
-from metax.peptide_annotator.unit_specific_manifest import (
-    UnitSpecificManifest,
-    load_unit_specific_manifest,
+from metax.peptide_annotator.genome_selection_manifest import (
+    GenomeSelectionManifest,
+    load_genome_selection_manifest,
     resolve_manifest_sample_columns,
     write_unit_sample_column_mapping,
 )
@@ -34,7 +36,7 @@ from metax.utils.version import __version__
 
 
 @dataclass(frozen=True)
-class UnitSpecificOTFRunResult:
+class ManifestOTFRunResult:
     output_path: str
     info_path: str
     summary_path: str
@@ -43,6 +45,9 @@ class UnitSpecificOTFRunResult:
     column_names: list[str]
     completed_units: int
     skipped_units: int
+    selected_genome_threshold: str
+    manifest_schema_version: str
+    warnings: list[str]
 
 
 def _safe_filename(value: str) -> str:
@@ -66,10 +71,10 @@ def _create_temporary_unit_directory(parent: Path, analysis_unit_id: str) -> Pat
     return run_dir
 
 
-def build_global_unit_specific_peptide_protein_map(
+def build_manifest_peptide_protein_map(
     peptide_df: pd.DataFrame,
     peptide_col: str,
-    manifest: UnitSpecificManifest,
+    manifest: GenomeSelectionManifest,
     digested_genome_folders: str | list[str],
     protein_genome_separator: str = "_",
     n_jobs: int | None = None,
@@ -102,11 +107,11 @@ def build_global_unit_specific_peptide_protein_map(
     )
 
 
-class UnitSpecificOTFAnnotator:
+class ManifestOTFAnnotator:
     def __init__(
         self,
         peptide_table_path: str,
-        unit_specific_manifest_path: str,
+        metaumbra_manifest_path: str,
         taxafunc_anno_db_path: str,
         output_path: str,
         db_path: str | None = None,
@@ -123,7 +128,6 @@ class UnitSpecificOTFAnnotator:
         protein_separator: str = ";",
         protein_genome_separator: str = "_",
         save_per_unit_outputs: bool = False,
-        include_unit_specific_sequence: bool = False,
         duplicate_peptide_handling_mode: str = "sum",
         on_missing_sample: str = "error",
         on_empty_unit: str = "warn-skip",
@@ -140,6 +144,14 @@ class UnitSpecificOTFAnnotator:
             raise ValueError("on_empty_unit must be 'error' or 'warn-skip'")
         if merge_chunksize <= 0:
             raise ValueError("merge_chunksize must be greater than 0")
+        if not 0 <= lca_threshold <= 1:
+            raise ValueError("lca_threshold must be between 0 and 1")
+        if distinct_genome_threshold < 0:
+            raise ValueError(
+                "distinct_genome_threshold must be greater than or equal to 0"
+            )
+        if n_jobs is not None and n_jobs < 1:
+            raise ValueError("n_jobs must be greater than or equal to 1")
         duplicate_peptide_handling_mode = (duplicate_peptide_handling_mode or "sum").strip().lower()
         valid_duplicate_modes = {"sum", "max", "min", "mean", "first", "keep"}
         if duplicate_peptide_handling_mode not in valid_duplicate_modes:
@@ -149,9 +161,10 @@ class UnitSpecificOTFAnnotator:
             )
 
         self.peptide_table_path = Path(peptide_table_path)
-        self.unit_specific_manifest_path = Path(unit_specific_manifest_path)
+        self.metaumbra_manifest_path = Path(metaumbra_manifest_path)
         self.taxafunc_anno_db_path = Path(taxafunc_anno_db_path)
-        self.output_path = Path(output_path)
+        self.requested_output_path = Path(output_path)
+        self.output_path = available_output_path(self.requested_output_path)
         self.db_path = db_path
         self.digested_genome_folders = digested_genome_folders
         self.genome_threshold = genome_threshold
@@ -171,7 +184,6 @@ class UnitSpecificOTFAnnotator:
         self.protein_separator = protein_separator
         self.protein_genome_separator = protein_genome_separator
         self.save_per_unit_outputs = save_per_unit_outputs
-        self.include_unit_specific_sequence = include_unit_specific_sequence
         self.duplicate_peptide_handling_mode = duplicate_peptide_handling_mode
         self.on_missing_sample = on_missing_sample
         self.on_empty_unit = on_empty_unit
@@ -191,7 +203,7 @@ class UnitSpecificOTFAnnotator:
 
         for path, label in [
             (self.peptide_table_path, "peptide_table_path"),
-            (self.unit_specific_manifest_path, "unit_specific_manifest_path"),
+            (self.metaumbra_manifest_path, "metaumbra_manifest_path"),
             (self.taxafunc_anno_db_path, "taxafunc_anno_db_path"),
         ]:
             if not path.is_file():
@@ -224,7 +236,7 @@ class UnitSpecificOTFAnnotator:
     def temporary_unit_otf_dir(self) -> Path:
         return self.artifacts_dir / "per_unit" / "unit_otf"
 
-    def _all_manifest_samples(self, manifest: UnitSpecificManifest) -> list[str]:
+    def _all_manifest_samples(self, manifest: GenomeSelectionManifest) -> list[str]:
         samples: list[str] = []
         for unit in manifest.units.values():
             for sample in unit.sample_columns:
@@ -302,9 +314,9 @@ class UnitSpecificOTFAnnotator:
         return result.loc[result["Proteins"].ne("")].copy()
 
     def _write_manifest_used(self) -> None:
-        target = self.artifacts_dir / "unit_specific_manifest_used.json"
+        target = self.artifacts_dir / "genome_selection_manifest_used.json"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(self.unit_specific_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
+        target.write_text(self.metaumbra_manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _resolve_sample_mapping(
         self,
@@ -333,12 +345,7 @@ class UnitSpecificOTFAnnotator:
         }
         basename_to_runs: dict[str, list[str]] = {}
         for run in exact_run_to_column:
-            basename = Path(run.replace("\\", "/")).name
-            lower = basename.lower()
-            for suffix in (".raw", ".mzml", ".mzxml"):
-                if lower.endswith(suffix):
-                    basename = basename[: -len(suffix)]
-                    break
+            basename = normalize_sample_identifier(run)
             basename_to_runs.setdefault(basename, []).append(run)
 
         mapping: dict[str, str] = {}
@@ -349,12 +356,7 @@ class UnitSpecificOTFAnnotator:
             if column is None and sample_str in peptide_column_set:
                 column = sample_str
             if column is None:
-                basename = Path(sample_str.replace("\\", "/")).name
-                lower = basename.lower()
-                for suffix in (".raw", ".mzml", ".mzxml"):
-                    if lower.endswith(suffix):
-                        basename = basename[: -len(suffix)]
-                        break
+                basename = normalize_sample_identifier(sample_str)
                 candidate_runs = basename_to_runs.get(basename, [])
                 if len(candidate_runs) == 1:
                     column = exact_run_to_column[candidate_runs[0]]
@@ -618,7 +620,7 @@ class UnitSpecificOTFAnnotator:
     def _write_merged_info(
         self,
         *,
-        manifest: UnitSpecificManifest,
+        manifest: GenomeSelectionManifest,
         manifest_samples: list[str],
         sample_mapping: dict[str, str],
         summary_df: pd.DataFrame,
@@ -639,7 +641,7 @@ class UnitSpecificOTFAnnotator:
         with self.info_path.open("w", encoding="utf-8") as handle:
             handle.write("MetaX PeptideAnnotator Results\n")
             handle.write("=" * 50 + "\n")
-            handle.write(f"Software: MetaX (UnitSpecificOTFAnnotator) v{__version__}\n")
+            handle.write(f"Software: MetaX (ManifestOTFAnnotator) v{__version__}\n")
             handle.write(f"Run time: {started_at.strftime('%Y-%m-%d %H:%M:%S')}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Parameters:\n")
@@ -654,14 +656,13 @@ class UnitSpecificOTFAnnotator:
             handle.write(f"  - Duplicate handling mode: {self.duplicate_peptide_handling_mode}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Unit-specific configuration:\n")
-            handle.write(f"  - Manifest: {self.unit_specific_manifest_path}\n")
+            handle.write(f"  - Manifest: {self.metaumbra_manifest_path}\n")
             handle.write(f"  - Selected genome threshold: {manifest.selected_genome_threshold}\n")
             handle.write(f"  - Units: {len(manifest.units)}\n")
             handle.write(f"  - Manifest samples: {len(manifest_samples)}\n")
             handle.write(f"  - Mapped samples: {len(sample_mapping)}\n")
             handle.write(f"  - On missing sample: {self.on_missing_sample}\n")
             handle.write(f"  - On empty unit: {self.on_empty_unit}\n")
-            handle.write(f"  - Include UnitSpecificSequence: {self.include_unit_specific_sequence}\n")
             handle.write("-" * 50 + "\n")
             handle.write("Input/Output:\n")
             handle.write(f"  - Input: {self.peptide_table_path}\n")
@@ -701,10 +702,16 @@ class UnitSpecificOTFAnnotator:
     def run(
         self,
         return_dataframe: bool = False,
-    ) -> UnitSpecificOTFRunResult | pd.DataFrame:
+    ) -> ManifestOTFRunResult | pd.DataFrame:
         started_at = datetime.now()
-        manifest = load_unit_specific_manifest(
-            self.unit_specific_manifest_path,
+        if self.output_path != self.requested_output_path:
+            print(
+                "Output file already exists; this run will write to: "
+                f"{self.output_path}",
+                flush=True,
+            )
+        manifest = load_genome_selection_manifest(
+            self.metaumbra_manifest_path,
             genome_threshold=self.genome_threshold,
             strict=True,
         )
@@ -774,7 +781,7 @@ class UnitSpecificOTFAnnotator:
                 "intensity in mapped manifest samples.",
                 flush=True,
             )
-            global_mapping = build_global_unit_specific_peptide_protein_map(
+            global_mapping = build_manifest_peptide_protein_map(
                 peptide_df=peptide_df.loc[
                     globally_nonzero_mask,
                     [self.peptide_col],
@@ -941,8 +948,8 @@ class UnitSpecificOTFAnnotator:
                     genome_list=unit.genome_ids,
                     duplicate_peptide_handling_mode=self.duplicate_peptide_handling_mode,
                     genome_selection_metadata={
-                        "genome_selection_method": "metaumbra_unit_specific_manifest",
-                        "unit_specific_manifest_path": str(self.unit_specific_manifest_path),
+                        "genome_selection_method": "metaumbra_genome_selection_manifest",
+                        "metaumbra_manifest_path": str(self.metaumbra_manifest_path),
                         "analysis_unit_id": unit.analysis_unit_id,
                         "selected_genome_threshold": manifest.selected_genome_threshold,
                         **self.peptide_table_prepare_metadata,
@@ -952,9 +959,6 @@ class UnitSpecificOTFAnnotator:
                 )
 
                 unit_otf_df.insert(0, "analysis_unit_id", unit.analysis_unit_id)
-                if self.include_unit_specific_sequence:
-                    sequence_values = unit_otf_df["Sequence"].astype(str)
-                    unit_otf_df.insert(1, "UnitSpecificSequence", unit.analysis_unit_id + "||" + sequence_values)
                 final_unit_output_path = self._unit_output_path(
                     unit.analysis_unit_id,
                     tmpdir,
@@ -1062,7 +1066,7 @@ class UnitSpecificOTFAnnotator:
         )
 
         manifest_summary = {
-            "unit_specific_manifest_path": str(self.unit_specific_manifest_path),
+            "metaumbra_manifest_path": str(self.metaumbra_manifest_path),
             "selected_genome_threshold": manifest.selected_genome_threshold,
             "n_units": len(manifest.units),
             "n_manifest_samples": len(manifest_samples),
@@ -1076,7 +1080,7 @@ class UnitSpecificOTFAnnotator:
         )
         if return_dataframe:
             return pd.read_csv(self.output_path, sep="\t")
-        return UnitSpecificOTFRunResult(
+        return ManifestOTFRunResult(
             output_path=str(self.output_path),
             info_path=str(self.info_path),
             summary_path=str(summary_path),
@@ -1085,4 +1089,7 @@ class UnitSpecificOTFAnnotator:
             column_names=merged_columns,
             completed_units=completed_units,
             skipped_units=skipped_units,
+            selected_genome_threshold=manifest.selected_genome_threshold,
+            manifest_schema_version=manifest.schema_version,
+            warnings=list(manifest.warnings),
         )

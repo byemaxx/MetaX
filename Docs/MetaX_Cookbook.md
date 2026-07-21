@@ -826,17 +826,9 @@ These peptide results use metagenome-assembled genomes (MAGs) as the reference d
 
   - **Duplicate peptide handling**: Controls how repeated peptide rows are combined before annotation. Available options are `sum`, `max`, `min`, `mean`, `first`, and `keep`.
 
-#### Genome Selection Modes
+#### Genome Selection Manifest
 
-Peptide Direct to OTF has three genome-selection modes:
-
-- **Run MetaUmbra scoring, then annotate OTFs**: This is the default workflow. MetaX runs `MetaUmbra score` in an isolated process, writes the intermediate genome-presence table under `metax_temp`, selects genomes by the configured MetaUmbra q-value cutoff, scans the digested genome folder for peptide-to-protein matches from those genomes, and then annotates the final OTF table.
-
-- **Run MetaUmbra scoring only**: Enable **Stop after MetaUmbra** when you only want the MetaUmbra genome-presence table. The output path changes to a genome-presence TSV, and MetaX does not require the Protein to TaxaFunc database for this mode.
-
-- **Use selected genome list**: Open or paste a genome list, or load a MetaUmbra genome-presence result. MetaX skips MetaUmbra scoring and directly scans the digested genome folder for the selected genomes. This is useful when you already reviewed the selected genomes or want to reuse the same genome set across runs.
-
-MetaUmbra scoring currently requires a tab-separated peptide table. When a DIA-NN parquet file is selected, MetaX first prepares a temporary tab-separated peptide table in `metax_temp` before running MetaUmbra.
+For MetaUmbra results, Peptide Direct to OTF uses one `genome_selection_manifest.json` for every analysis-unit layout. A run with all samples pooled is represented by `__global__`; per-sample and metadata-grouped runs use the same schema and annotation backend. MetaX automatic genome selection and explicit custom genome lists remain available as separate, clearly labeled sources.
 
 #### DIA-NN Parquet Preparation
 
@@ -848,49 +840,59 @@ When the input is a DIA-NN parquet file, MetaX reads only the required columns a
 - `Evidence` and `Q.Value` are required in the normal Peptide Direct to OTF window and are preserved for MetaUmbra scoring.
 - Run names are cleaned into safe sample column names. The selected DIA-NN intensity source is recorded in conversion metadata, but `Precursor.Normalised` or `Precursor.Quantity` is not embedded in the sample-column names.
 
-### 2. MetaUmbra Unit-Specific Direct-to-OTF Annotation
+The same manifest workflow is available without Qt. For automation, prefer the module entry point so MetaX runs in the caller's active Python environment:
 
-MetaX can consume a MetaUmbra `unit_specific_manifest.json` as the preferred backend interface for unit-specific OTF annotation. In this mode, MetaX uses `sample_columns` from each analysis unit to split the peptide intensity table, and uses `genome_ids_q005` or `genome_ids_q001` to restrict peptide-to-protein mapping per unit. If `--genome-threshold` is not provided, the manifest `default_genome_threshold` is used.
+```bash
+python -m metax.cli.annotate \
+  --input-source metaumbra-manifest \
+  --peptide-table report.parquet \
+  --metaumbra-manifest genome_selection_manifest.json \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --output OTF.tsv \
+  --genome-threshold auto \
+  --result-json annotation_result.json
+```
 
-This backend is additive to the normal/global Peptide Direct to OTF workflow. When unit-specific mode is disabled, MetaX uses the selected normal mode: MetaUmbra genome scoring, a user-provided genome list, or MetaUmbra scoring-only output. Unit-specific mode does not run the normal global genome-selection path; each analysis unit receives its own genome list directly from the MetaUmbra manifest.
+See [MetaX annotation CLI and automation contract](Annotation_CLI.md) for configuration files, result JSON, exit codes, and the complete option list.
 
-The unit-specific distinct-genome filter defaults to `0`, so MetaX trusts the manifest-selected genome list. Set `--distinct-genome-threshold` to a value greater than `0` only when you want an additional MetaX-side filter requiring that many distinct peptides per genome after mapping.
+Choose `--input-source metax-automatic` for MetaX's non-MetaUmbra automatic selection, or `--input-source genome-list --genome-list-file genomes.txt` for a custom list. For wide delimited tables, set `--intensity-col-prefix` when the sample columns do not use the default `Intensity` prefix. The GUI exposes the same three choices in **Genome selection source** and forwards its editable intensity-prefix field.
 
-Sample columns are matched from manifest `sample_columns` to peptide-table columns in this order: exact name, `Intensity_` prefix, configured output prefix, configured input prefix, stripped `Intensity_`, stripped output prefix, stripped input prefix, leading underscores removed, and raw-file basename without `.raw`, `.mzML`, or `.mzXML`. Use `--input-sample-col-prefix` for inputs such as `LFQ intensity sample_1`.
+### 2. MetaUmbra Manifest Direct-to-OTF Annotation
 
-The merged unit-specific OTF table includes `analysis_unit_id` and the original `Sequence` column. MetaX internally derives the unit-specific peptide evidence ID as `analysis_unit_id + "||" + Sequence` when downstream analysis needs a unique peptide identity; `UnitSpecificSequence` is not written by default. Do not deduplicate unit-specific output by `Sequence` alone. Downstream final OTF identity remains Taxon + Function.
+MetaX reads `sample_ids` and `genome_ids_q005` or `genome_ids_q001` from every manifest unit. With `--genome-threshold auto`, it uses the manifest default threshold. The selected genome union is scanned once, then matches are restricted to each unit. Sample names are matched against peptide-table columns after normalizing common prefixes and raw-file suffixes.
 
-In the GUI, select the MetaUmbra `unit_specific_manifest.json` and genome threshold in the main Peptide Direct to OTF window. The Unit-specific Settings dialog does not select a separate manifest or threshold; it configures sample-column matching behavior and missing/empty unit handling, and validates the selected manifest against the current peptide table when possible. Unit-specific mode disables the legacy global genome scoring controls, and the duplicate peptide handling selector still applies. A manual manifest builder is not implemented yet.
+The merged OTF table always includes `analysis_unit_id` and the original `Sequence`. MetaX derives a unit-aware peptide evidence identity internally; `UnitSpecificSequence` is not emitted. Downstream code must not deduplicate multi-unit output by `Sequence` alone.
 
-Unit-specific annotation accepts either a wide peptide-intensity table with one sample intensity column per manifest sample or a long-format DIA-NN parquet containing `Run`, `Stripped.Sequence`, and either `Precursor.Normalised` or `Precursor.Quantity`. Long-format parquet input is pivoted automatically, and common raw-file suffixes such as `.raw`, `.mzML`, and `.mzXML` are ignored when matching `Run` values to manifest samples.
+The GUI exposes the same manifest path, threshold, validation, and sample-column matching settings. Annotation accepts either a wide peptide-intensity table or long-format DIA-NN parquet with `Run`, `Stripped.Sequence`, and `Precursor.Normalised` or `Precursor.Quantity`.
 
-The default unit-specific execution path is disk-backed. Per-unit temporary files are written under `<output_stem>_artifacts/per_unit/unit_otf/`, merged into the final OTF table by streaming append, and then cleaned up. The final artifacts include:
+The execution path is disk-backed. Per-unit temporary files are streamed into the final table and cleaned up. Final artifacts include:
 
 - The merged OTF table selected in **OTFs Save To**.
 - `<output_stem>_info.txt`, with input parameters and annotation summary.
 - `<output_stem>_artifacts/unit_annotation_summary.tsv`, with one row per analysis unit.
 - `<output_stem>_artifacts/unit_sample_column_mapping.tsv`, with manifest sample to peptide-table column mapping.
 
-For downstream analysis, unit-specific public count columns use these meanings:
+For downstream analysis, public count columns use these meanings:
 
 - `peptide_num`: unique biological `Sequence` count.
-- `peptide_feature_num`: unique unit-specific peptide feature count.
+- `peptide_feature_num`: unique analysis-unit peptide feature count.
 
 Example:
 
 ```bash
-metax-annotate \
-  --unit-specific \
-  --peptide-table report.tsv \
-  --unit-specific-manifest unit_specific_manifest.json \
+python -m metax.cli.annotate \
+  --peptide-table report.parquet \
+  --metaumbra-manifest genome_selection_manifest.json \
   --genome-threshold q0.05 \
   --taxafunc-db MetaX_taxafunc.db \
   --digested-genome-folders digested_genomes/ \
-  --output OTF_unit_specific.tsv \
+  --output OTF.tsv \
   --peptide-col Sequence \
   --input-sample-col-prefix "LFQ intensity " \
   --duplicate-peptide-handling-mode sum \
-  --n-jobs 4
+  --n-jobs 4 \
+  --result-json annotation_result.json
 ```
 
 ### 3. Results from MaxQuant Workflow
