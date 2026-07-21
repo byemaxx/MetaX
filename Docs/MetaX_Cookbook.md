@@ -1,53 +1,54 @@
 # MetaX Cookbook
 
-This guidebook is for the MetaX **GUI version**. If you are using the CLI, we recommend reading the [documentation](https://github.com/byemaxx/MetaX/blob/main/Docs/example.ipynb) for instructions on how to use each MetaX module from the command line.
+This cookbook is the practical user guide for the MetaX desktop application. It covers peptide-to-OTF annotation, OTF analysis, visualization, automated reports, and reproducible workflow export. Command-line workflows are introduced where they complement the GUI, with installation, annotation, reporting, database-building, and automation details collected in the [MetaX CLI](#metax-cli) tab on the same deployed page.
 
-# Overview
+## Overview
 
-**[MetaX](https://github.com/byemaxx/MetaX)** is a novel tool for linking peptide sequences with taxonomic and functional information in **Metaproteomics**. We introduce the ***Operational Taxon-Function (OTF)*** concept to explore microbial roles and interactions ("**who is doing what and how**") within ecosystems. 
+**[MetaX](https://github.com/byemaxx/MetaX)** links peptide sequences with taxonomic and functional information in **metaproteomics**. The **Operational Taxon-Function (OTF)** framework is designed to investigate “who is doing what and how” within microbial communities.
 
-MetaX also features <u>statistical modules</u> and <u>plotting tools</u> for analyzing peptides, taxa, functions, proteins, and taxon-function contributions across groups, and can now export recorded GUI analysis steps as runnable workflow notebooks for reproducible downstream use.
-
+MetaX provides peptide annotation, quantitative summarization, statistical testing, visualization, automated HTML reports, and exportable analysis workflows for peptides, proteins, taxa, functions, and taxon-function associations.
 
 ![abstract](./MetaX_Cookbook.assets/abstract.png)
 
-# Project Page
+Project resources: [GitHub repository](https://github.com/byemaxx/MetaX) · [MetaX CLI](#metax-cli) · [Change log](https://github.com/byemaxx/MetaX/blob/main/Docs/ChangeLog.md)
 
-Visit **GitHub** to get more information:
+## Contents
 
-[https://github.com/byemaxx/MetaX](https://github.com/byemaxx/MetaX)
+- [Getting Started](#getting-started)
+- [Module 1. OTF Analyzer](#module-1-otf-analyzer)
+- [Module 2. Database Builder](#module-2-database-builder)
+- [Module 3. Database Updater](#module-3-database-updater)
+- [Module 4. Peptide Annotator](#module-4-peptide-annotator)
+- [Reporting and Reproducibility](#reporting-and-reproducibility)
+- [Application Tools](#application-tools)
+- [Support](#support)
 
-# Contents
+## Getting Started
 
-[TOC]
+The main window opens on the OTF Analyzer. Use **Tools Menu** to switch between the Analyzer, Database Builder, Database Updater, and Peptide Annotator.
 
+<img src="./MetaX_Cookbook.assets/main_window.png" alt="MetaX main window" />
 
+<img src="./MetaX_Cookbook.assets/tools_menu.png" alt="MetaX Tools Menu" />
 
-# Getting Started
+Choose the shortest route for your data:
 
-- The main window of MetaX
-
-  <img src="./MetaX_Cookbook.assets/main_window.png" alt="main_window"  />
-
-- Click 'Tools Menu' to switch **different modules**
-
-  <img src="./MetaX_Cookbook.assets/tools_menu.png" alt="tools_menu"  />
-
-<br>
-
-# Exploring Data with MetaX
-
-See the **<u>[Preparing Your Data](#preparing-your-data)</u>** section to build the database and annotate peptides to OTFs before starting.
+1. **You already have an OTF table:** Continue with [Module 1. OTF Analyzer](#module-1-otf-analyzer).
+2. **You have a peptide-intensity table from a MAG search:** Build or select the matching annotation resources, then use [Peptide Direct to OTFs](#1-peptide-direct-to-otfs-recommended).
+3. **Your peptide table already contains protein assignments:** Use the [MAG annotation tab](#2-mag-annotate-a-pre-mapped-peptide-table).
+4. **You have MetaLab 2.3 MaxQuant results:** Use the [MetaLab 2.3 tab](#3-metalab-23-maxquant-results).
+5. **You want a standard overview quickly:** Select the OTF and metadata tables in the Analyzer and use **Generate Report**.
 
 ## Module 1. OTF Analyzer
 
-After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**[Peptide Annotator](#module-4-peptide-annotator)**</u>, you can perform downstream analysis with the **<u>OTF Analyzer</u>**.
+After creating an OTF table with the [Peptide Annotator](#module-4-peptide-annotator), use the OTF Analyzer to build quantitative tables, run statistical tests, review results, and create figures.
 
-## 1. Data Preparation
+### 1. Data Preparation
 
-**OTFs (Operational Taxa-Functions) Table:** Obtained from the <u>[Peptide Annotator](#module-4-peptide-annotator)</u> module.
+Select the two main inputs:
 
-**Meta Table:** The first column is sample names, and the other columns represent different groups. If no meta table is provided, meta info will be generated automatically: (1) all samples are in the same group; (2) each sample is a separate group.
+- **OTF table:** A peptide-level Operational Taxon-Function table produced by the [Peptide Annotator](#module-4-peptide-annotator) or a compatible external workflow.
+- **Metadata table:** The first column contains sample IDs; the remaining columns contain grouping variables such as subject, treatment, site, or batch. Sample IDs must match the OTF intensity-column names after removal of the configured sample prefix. If no metadata table is supplied, MetaX can generate simple grouping information automatically.
 
 **Example Meta Table:**
 
@@ -60,66 +61,68 @@ After obtaining the **Operational Taxa-Functions (OTF) Table** using the <u>**[P
 | sample_5 | V1          | Control   | PBS       |
 | sample_6 | V1          | Control   | PBS       |
 
-You can load example data by **clicking the button**.
+Use **Load Example** to explore the Analyzer with the bundled example data.
 
 ![load_example](./MetaX_Cookbook.assets/load_example.png)
 
-Then, click **Go** to start the analysis.
+Click **GO** to load the data. Use **Generate Report** instead when you want the automated HTML workflow described in [Auto OTF Report](#auto-otf-report).
 
-- **Advanced Settings**
-  - ![ad_settings_otf_analyzer](./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png)
-  - **Peptide Column Name:** Specifies the column in the OTF table that contains peptide information.
-  - **Protein Column Name:** Specifies the column in the OTF table that contains protein information (only required if protein summation is performed in downstream analysis).
-  - **Sample Column Prefix:** Identifies the prefix of sample columns to determine intensity columns in the OTF table.
-  - **Any Data Mode:** Allows analysis of any table using MetaX, not limited to OTF tables (only partial tool functionality is available).
-    - **Customized Table Item Column Name:** Specifies the column containing item names in any data mode. If left empty, the first column will be selected by default.
+**Advanced Settings**
 
-## 2. Data Overview
+![ad_settings_otf_analyzer](./MetaX_Cookbook.assets/ad_settings_otf_analyzer.png)
 
-The Data Overview provides basic information about your data, such as the number of taxa, functions, and proportions.
+- **Peptide Column Name:** Column containing the biological peptide sequence.
+- **Protein Column Name:** Protein-group column used when a protein intensity table is requested.
+- **Sample Column Prefix:** Prefix used to recognize intensity columns.
+- **Any Data Mode:** Loads a non-OTF quantitative table with a reduced set of analysis tools.
+- **Customized Table Item Column Name:** Item identifier for Any Data Mode; when blank, MetaX uses the first column.
 
-- Set the threshold for linked peptides and the differences between them to plot figures.
+### 2. Data Overview
+
+Data Overview summarizes the numbers of peptides, taxa, functions, and linked taxon-function entries. Use its thresholds to focus the overview plots on supported links.
 
 ![data_overview](./MetaX_Cookbook.assets/data_overview.png)
 
-- Select different functions to plot the proportion distribution.
+Select a function annotation to inspect its proportion distribution.
 
 ![data_overview_func](./MetaX_Cookbook.assets/data_overview_func.png)
 
-- Filter out samples for downstream analysis.
+You can exclude samples here before building downstream analysis tables.
 
 ![data_overview_filter](./MetaX_Cookbook.assets/data_overview_filter.png)
 
-## 3. Set TaxaFunc
+Click **Export Meta Table for Editing** to save the currently loaded metadata as a TSV file. This is useful after MetaX has generated default metadata or when you want to edit the sample grouping and reload it for a later analysis.
 
-![set_multi_table](./MetaX_Cookbook.assets/set_multi_table.png)
+### 3. Build Analysis Tables (Set TaxaFunc)
 
-### Data Selection
+![Set TaxaFunc configuration](./MetaX_Cookbook.assets/set_multi_table.png)
 
-- **Function:** Select a function for downstream analysis (**None** in the list means no function is selected, focusing only on peptides and taxa).
+#### Data Selection
 
-- **Function Filter Threshold:** If a specific function within a protein group of a peptide has the highest proportion, it will be considered the representative function for that peptide. The default threshold is 1.00 (100%).
+- **Function:** Select the function annotation used in downstream tables. Select **None** to work only with peptides and taxa.
+
+- **Function Filter Threshold:** Minimum within-protein-group proportion required to retain a function assignment for a peptide. The default is `1.00` (100%).
 
 ![FUNC_prop](./MetaX_Cookbook.assets/FUNC_prop.png)
 
-- **Taxa Level:** Select a taxa level for downstream analysis (**Life** in the list means no filtering by taxa, and the following analysis focuses on functions).
+- **Taxa Level:** Select the taxonomic level used for aggregation. **Life** disables taxonomic-level filtering and is useful for function-only analysis.
 
-- **Peptide Number Threshold:** Only keep taxa, functions, or OTFs that have at least the specified number of peptides.
+- **Peptide Number Threshold:** Retain taxa, functions, or taxon-function entries supported by at least this number of unique biological peptide sequences.
 
-- **Split Function:** Split the annotations with multi-functions.
+- **Split Function:** Expand multi-value function annotations into separate rows. For example:
 
-  - | KO                  | Intensity |
-    | ------------------- | --------- |
-    | ko:K00625,ko:K13788 | 10        |
+  | KO                  | Intensity |
+  | ------------------- | --------- |
+  | ko:K00625,ko:K13788 | 10        |
 
-    to
+  becomes:
 
-    | KO        | Intensity |
-    | --------- | --------- |
-    | ko:K00625 | 10        |
-    | ko:K13788 | 10        |
+  | KO        | Intensity |
+  | --------- | --------- |
+  | ko:K00625 | 10        |
+  | ko:K13788 | 10        |
 
-    If <u>Share Intensity</u> is checked, the intensity above will be split equally, giving <u>5</u> to each KO.
+  With **Share Intensity** enabled, the original intensity is divided equally, giving `5` to each KO in this example. Without it, each expanded row retains the original value.
 
 - **Remove unknown taxa:** Checked by default. When enabled, peptides that are not annotated to the selected taxonomic level will be removed. When unchecked, such peptides will be retained and labeled as *unknown*, for example:
 
@@ -133,138 +136,47 @@ The Data Overview provides basic information about your data, such as the number
     d__Bacteria;p__Firmicutes_A;c__Clostridia;o__Oscillospirales;f__Ruminococcaceae;g__UMGS363;s_unknown
     ```
 
-- **Create Taxa and Func only from OTFs:**
+- **Create Taxa and Func only from OTFs:** When disabled, the Taxa and Function tables apply their own independent filters. When enabled, both tables are derived from the peptide rows that pass the combined taxonomic and functional OTF filters. The Taxa-Function table always uses both filters.
 
-  - **Without selection (checkbox not checked):**
-    - <u>Taxa table:</u> Peptides are filtered based solely on taxa levels, without considering any functional categories.
-    - <u>Function table:</u> Peptides are filtered solely by functional categories and thresholds, regardless of their taxa levels.
-    - <u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
-  - **With selection (checkbox checked):**
-    - <u>Taxa table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
-    - <u>Function table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
-    - <u>Taxa-Function (OTFs) table:</u> Peptides are filtered by both taxa levels and functional categories simultaneously.
+#### Generate a Protein Intensity Table
 
-### Sum Proteins Intensity
+Enable **Generate Protein Intensity Table** when the input OTF includes a protein-group column.
 
-Click **Generate Protein Intensity Table** to sum peptides to proteins if the Protein column is in the original table.
+- **Occam's Razor:** Builds a minimal protein set that covers the observed peptides, then assigns a shared peptide to the best-supported protein. Tied proteins share its intensity.
+- **Anti-Razor:** Retains every linked protein and shares the peptide intensity across them.
+- **Rank:** Assigns shared peptides to the higher-ranked protein. Ranking can use unique-peptide counts, all-peptide counts, unique-peptide intensity, or shared-peptide intensity.
+- **Minimum peptide number per protein:** Removes proteins supported by fewer peptides than the selected threshold.
 
-- **Occam's Razor**, **Anti-Razor** and **Rank:** Methods available for inferring shared peptides.
-  
-  - Razor:
-    1. Build a minimal set of proteins to cover all peptides.
-    2. For each peptide, choose the protein with the most peptides (if multiple proteins have the same number of peptides, share intensity to them).
-  - Anti-Razor:
-    - All proteins share the intensity of each peptide.
-  - Rank:
-    1. Build the rank of proteins.
-    2. Choose the protein with a higher rank for the shared peptide.
-    
-    >Methods to Build Protein Rank:
-    >- unique_counts: Use the counts of proteins inferred by unique peptides.
-    >- all_count: Use the counts of all proteins.
-    >- unique_intensity: Use the intensity of proteins inferred by unique peptides.
-    >- shared_intensity: Use the intensity divided by the number of shared peptides for each protein.
-    
+#### Data Preprocessing
 
-- **Minimum peptide number per protein:** Filters out proteins that contain fewer peptides than the specified threshold.
+- **Quantitative method:** Use **Sum** to aggregate peptide intensities directly, or **DirectLFQ** to estimate abundance from normalized intensity traces.
 
-### Data preprocessing
+- **Outlier detection:** Selected values are marked as `NaN`; rows containing only zero/`NaN` values are then removed. Detection and imputation can use different metadata columns.
+  - **IQR:** Marks values outside `Q1 - 1.5 × IQR` and `Q3 + 1.5 × IQR`.
+  - **Missing-Value:** Passes existing missing values to the handling step.
+  - **Half-Zero:** Within each group, converts the minority state (zero or non-zero) to `NaN`; an equal split converts the whole group.
+  - **Zero-Dominant:** If zeros form the majority of a group, marks its non-zero values as `NaN`; otherwise leaves the group unchanged.
+  - **Zero-Inflated Poisson / Negative Binomial:** Uses a fitted count model to identify improbable values.
+  - **Z-Score:** Detects values far from the group mean in standard-deviation units.
+  - **Mahalanobis Distance:** Detects multivariate outliers while accounting for correlation between samples.
 
-- **Quantitative Method:**
+- **Outlier handling:** Choose **Drop**, **Original**, **Mean**, **Median**, **KNN**, **Regression**, or **Multiple** imputation. Imputation can be performed within groups or across all samples.
 
-  - **<u>Sum</u>**: Sum the peptides intensity directly to Taxa, Functions or OTFs intensity.
+- **Remove Batch Effect:** Select the batch metadata column and apply [reComBat](https://github.com/BorgwardtLab/reComBat).
 
-  - **<u>DirectLFQ</u>**: Use DirectLFQ to normalize peptides and then estimate intensity using *intensity traces*.
+- **Data transformation:** Log2, log10, square root, cube root, or Box-Cox.
 
-    
+- **Data normalization:** Trace shifting, standard scaling (Z-score), min-max scaling, Pareto scaling, mean centering, or percentage normalization. When trace shifting and transformation are both enabled, normalization runs first. MetaX adds a minimum offset after Z-score, mean-centering, or Pareto normalization to avoid negative abundance values.
 
-- **Outlier handling:**
-
-There are several methods for detecting and handling outliers.
-
-- Two steps will be applied:
-  - <u>Outlier Detection:</u> Users can select a method to mark outlier values as NaN. Then the rows `only contain NaN values and 0` will be removed. The remaining NaN values will be handled in the next step.
-  - <u>Outlier Handling:</u> Users can choose a method to fill the remaining NaN values.
-  
-
-
-
-- **Outlier Detection:**
-
-  - **IQR:** In a group, if the value is greater than Q3+1.5\*IQR or less than Q1-1.5\*IQR, the value will be marked as NaN.
-  
-  - **Missing-Value:** Detect nan values in the data. If a value is nan, it will be marked as a NaN.
-  
-  - **Half-Zero:** 
-  
-    ​	Applies to grouped data.
-  
-    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
-  
-    - If fewer than half of the values are zero, all *zero* values are replaced with NaN.
-    - If the number of zero and non-zero values is equal, *all* values in the group are replaced with NaN.
-  
-  - **Zero-Dominant:** 
-  
-    ​	Applies to grouped data.
-  
-    - If more than half of the values in a group are zero, all *non-zero* values are replaced with NaN.
-    - Otherwise, the group remains unchanged.
-  
-  - **Zero-Inflated Poisson:** This method is based on the Zero-Inflated Poisson (ZIP) model, which is a type of model that is used when the data contains a lot of zeros, more than what is expected in a standard Poisson model. In this context, the ZIP model is used to detect outliers in the data. The process involves fitting the ZIP model to the data and then predicting the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
-  
-  - **Negative Binomial:** This method is based on the Negative Binomial model, which is a type of model used when the variance of the data is greater than the mean. Similar to the ZIP method, the Negative Binomial model is fitted to the data and then used to predict the data values. If the predicted value is less than 0.01, then the data point is marked as an outlier (NaN).
-  
-  - **Z-Score:** Z-score is a statistical measure that tells how far a data point is from the mean in terms of standard deviations. Outliers are often identified as points with Z-scores greater than 2.5 or less than -2.5.
-  
-  - **Mahalanobis Distance:** Mahalanobis distance measures the distance between a point and a distribution, considering the correlation among variables. Outliers can be identified as points with a Mahalanobis distance that exceeds a certain threshold.
-
-<u>In all methods, you can choose one meta column for outlier detection and another meta column for handling outliers.</u>
-
-- **Outliers Imputation:**
-
-  - **Drop:** Remove peptides that contain any NaN values.
-
-  - **Original:** Keep the remaining NaN values as-is.
-
-  - **Mean**: Outliers will be imputed by the mean.
-
-  - **Median**: Outliers will be imputed by the median.
-
-  - **KNN**: Outliers will be imputed by KNN (K=5). The K-Nearest Neighbors algorithm uses the mean or median of the nearest neighbours to fill in missing values.
-
-  - **Regression**: Outliers will be imputed by using IterativeImputer with regression method. This method uses round-robin linear regression, modelling each feature with missing values as a function of other features.
-
-  - **Multiple**: Outliers will be imputed by using IterativeImputer with multiple imputations method. It uses the IterativeImputer with a specified number (K=5) of the nearest features.
-
-  You can choose outlier imputation by *each group* or by *all samples*.
-
-- **Remove Batch Effect:**
-
-  - Here, you can choose a group as the batch effect and then use [<u>reCombat</u>](https://github.com/BorgwardtLab/reComBat) to handle it.
-- **Data Transformation:**
-
-  - Log2, Log10, Square root transformation, Cube root transformation and box-cox.
-
-- **Data Normalization:**
-
-  - **Trace Shifting:** Reframing the Normalization Problem with Intensity traces (inspired by DirectLFQ).
-    - Note: If <u>both</u> trace shifting and transformation are applied, *<u>normalization will be done before transformation.</u>*
-  
-  - Standard Scaling (Z-Score), Min-Max Scaling, Pareto Scaling, Mean centring, and normalization by percentage.
-  
-
-<u>If you use Z-Score, Mean centring, or Pareto Scaling for data normalization, the data will be given a minimum offset again to avoid negative values.</u>
-
-- **Drag the item's name** to change the <u>**order**</u> of data preprocessing.
+Drag preprocessing steps to change their execution order.
 
   
 
-**Then, click Go to create a TaxaFunc object for analysis.**
+Click **GO** to create the TaxaFunc analysis object.
 
 ![TaxaFunc_ready](./MetaX_Cookbook.assets/TaxaFunc_ready.png)
 
-Then you can check the tables in the **Table Review** section and export them.
+Use **Table Review** to inspect generated tables. Double-click one table to open it. Use Ctrl/Shift selection and right-click **Export Selected Tables** to export several tables as TSV or CSV files, both of which can be opened in Excel. In an opened table, right-click selected cells to copy or export only the current selection.
 
 <img src="./MetaX_Cookbook.assets/table_review.png" alt="table_review"  />
 
@@ -272,13 +184,13 @@ Then you can check the tables in the **Table Review** section and export them.
 
 
 
-## 4. Basic Stats
+### 4. Basic Statistics and Plots
 
-### PCA, Correlation and Box Plot
+#### PCA, t-SNE, Correlation, and Box Plot
 
 <img src="./MetaX_Cookbook.assets/basic_stats_pca.png" alt="basic_stats_pca" />
 
-You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default: all) to plot **PCA**, **Correlation**, and **Box Plot** for **Taxa, Function, Taxa-Func, Peptide, and Protein** tables.
+Select a table and analyze all samples, selected samples, or metadata-defined groups. Two-dimensional PCA, interactive 3D PCA, t-SNE, correlation, and box plots are available for Taxa, Function, Taxa-Function, Peptide, and Protein tables when those tables exist. Use t-SNE for exploratory nonlinear separation; its layout depends on the selected perplexity, iteration count, and early-exaggeration settings.
 
 <img src="./MetaX_Cookbook.assets/pca.png" alt="pca"  />
 
@@ -288,27 +200,27 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 <img src="./MetaX_Cookbook.assets/boxplot.png" alt="boxplot" style="zoom:50%;" />
 
-- **Setting and modifying the plot**
+- **Plot controls**
 
   - Show or hide labels in the figure by checking **Show Labels**.
 
-  - Select **Sub Meta** to plot with two meta columns.
+  - Select **Sub Meta** to combine a second metadata variable with the primary grouping.
 
     <img src="MetaX_Cookbook.assets/sub_meta.png" >
 
-  - Change settings in the **PLOT PARAMETER** tab
+  - Change labels, dimensions, colors, and other options in **PLOT PARAMETER**.
 
     <img src="MetaX_Cookbook.assets/basic_setting.png" alt="basic_setting"  />
 
       
 
-  - Select specific Groups **with condition**
+  - Enable the condition controls to select groups within a second metadata value.
 
-    **For example:** Select PBS, BAS, and other groups **only in** <u>Individual</u> <u>V1</u>.
+    For example, compare treatment groups only within `Individual = V1`.
 
     <img src="MetaX_Cookbook.assets/group_in_condition.png">
 
-  - Select **specific Samples** to Analysis
+  - Switch to sample selection when only specific samples should be plotted.
 
     <img src="./MetaX_Cookbook.assets/pca_setting.png" >
 
@@ -316,13 +228,13 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
     <img src="./MetaX_Cookbook.assets/pic_tools_bar.png" alt="image-20230728112747731" style="zoom:80%;" />
 
-- **Number stats**
+- **Number statistics**
 
   - Plot the counts for each table by **groups** or by **samples**.
 
     <img src="MetaX_Cookbook.assets/basic_number.png" alt="basic_number"  />
 
-- **Taxa Specific**
+- **Taxa-specific plots**
 
   - Alpha/Beta Diversity
 
@@ -333,7 +245,7 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
     <img src="MetaX_Cookbook.assets/sunburst.png" alt="sunburst"  />
 
-  - TreeMap
+  - Treemap
 
     <img src="MetaX_Cookbook.assets/treemap.png" alt="treemap"  />
 
@@ -344,26 +256,31 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
     
 
 
-### Heatmap and Bar Plot
+#### Heatmap and Bar Plot
 
 <img src="./MetaX_Cookbook.assets/basic_stats_heatmap.png" >
 
-- **Select items (Taxa, Function, Taxa-Func, and Peptide) to plot:**
-  - Add **All Taxa**, or select one we are interested in.
+Select Taxa, Function, Taxa-Function, Peptide, or Protein items and add them to the plotting list. Use **Add All** only when the resulting figure will remain readable.
+
+The focused item list is shared by more than the heatmap and bar plot buttons:
+
+- **Plot PCA** compares the abundance profiles of only the selected biological items; enable **3D PCA** in its settings when at least three items are available.
+- **UpSet** summarizes intersections among the selected items, groups, or samples.
+- **Plot Sankey** is available for compatible Taxa and Taxa-Function selections.
+- **MetaTree** is available for Taxa and Taxa-Function selections when a MetaTree installation directory has been configured under **Dev > Settings**.
+- **Get Table** exports the selected-item matrix used by these plots.
 
 <img src="./MetaX_Cookbook.assets/add_to_list.png" alt="add_to_list"  />
 
 
 
-- **Add items to Top List:** Select the top items to plot using a statistical method.
+- **Add Top to List:** Rank items by abundance or a completed statistical test and add the selected number of results.
 
-  - Clicking <u>filter with threshold</u> filters by the adjusted p-value of ANOVA and T-TEST, and by the adjusted p-value and Log2FC of differential expression results from DESeq2 or Limma (configured on the corresponding page).
+  - **Filter with threshold** uses adjusted p-values for ANOVA/T-test and adjusted p-value plus log2 fold-change thresholds for Limma/DESeq2 results.
 
   <img src="./MetaX_Cookbook.assets/add_top_list.png" alt="add_top_list"  />
 
-- **Add a list for plotting:**
-
-  - Make sure one row one item
+- **Add a list:** Paste one item per line to build a reusable focus list.
 
 <img src="./MetaX_Cookbook.assets/add_a_list.png" alt="add_a_list"  />
 
@@ -371,25 +288,22 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 
 
-- **Setting:**
-
-  - Change the setting fit for your data.
-  - **Rename Samples**: Add group info to each sample name
-  - **Rename Taxa**: Only keep the last taxonomic level to reduce to name
-  - **Plot Mean**: calculate the mean of each group before plotting
-  
-  - **Sub Meta:** select a second meta, then combine two meta by mean for Heatmap and 3D bar plot
+- **Settings:**
+  - **Rename Samples:** Add group information to sample labels.
+  - **Rename Taxa:** Display only the last populated taxonomic rank.
+  - **Plot Mean:** Aggregate samples to group means before plotting.
+  - **Sub Meta:** Combine two metadata variables for heatmaps and 3D bar plots.
     <img src="./MetaX_Cookbook.assets/basic_stats_heatmap_seeting.png" >
   
-  - View all color maps by right-clicking <u>**Theme**</u>.
-    - ![right_click_theme](MetaX_Cookbook.assets/right_click_theme.png)
+  - Right-click **Theme** to preview the available color maps.
+    ![Theme context menu](MetaX_Cookbook.assets/right_click_theme.png)
     <img src="MetaX_Cookbook.assets/all_cmap.png" alt="all_cmap">
   
-- **Plot:**
+- **Heatmap output:**
 
   <img src="./MetaX_Cookbook.assets/heatmap_original.png" alt="heatmap_original"  />
 
-  - **Modify** the pic to fit the window to get the **Perfect picture**:
+  - Use **Modify** to adjust the figure layout after it opens.
 
     <img src="./MetaX_Cookbook.assets/modify_pic.png" alt="modify_pic"  />
     
@@ -403,7 +317,7 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 <img src="./MetaX_Cookbook.assets/basic_stats_bar.png" alt="basic_stats_bar"  />
 
-- **Interactive functions:**
+- **Interactive bar controls:**
 
   <img src="./MetaX_Cookbook.assets/basic_stats_bar_setting.png" alt="basic_stats_bar_setting"  />
 
@@ -411,16 +325,14 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
     <img src="./MetaX_Cookbook.assets/basic_stats_bar_to_line.png" alt="basic_stats_bar_to_line"  />
 
-- **3D Bar Plot**
-
-  - Plot 3D bar by selecting a **sub meta**.
+- **3D Bar Plot:** Select a **Sub Meta** to create the second grouping dimension.
   <img src="MetaX_Cookbook.assets/basic_stats_bar_3d.png" alt="basic_stats_bar_3d"  />
 
 
 
-### Peptide Query
+#### Peptide Query
 
-- Query everything of a peptide
+Select or type an exact peptide sequence to inspect its linked proteins, taxa, functions, and abundance values. Large peptide lists are loaded as a searchable preview; an exact pasted sequence can still be queried.
 
   <img src="./MetaX_Cookbook.assets/peptide_query.png" alt="peptide_query"  />
 
@@ -430,95 +342,72 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 
 
-## 5. Cross Test
+### 5. Statistical Tests
 
-### T-TEST
+#### T-test
 
-- Select two groups for T-test analysis on **Taxa, Function, Taxa-Func, Peptide, and Protein** tables.
+Select two groups to run a T-test on Taxa, Function, Taxa-Function, Peptide, or Protein tables.
 
 <img src="./MetaX_Cookbook.assets/t_test.png" alt="t_test"/>
 
-### ANOVA-TEST
+#### ANOVA
 
-- Select <u>some groups</u> or <u>all groups</u> to run ANOVA on **Taxa, Function, Taxa-Func, and Peptide** tables.
+Select two or more groups to run ANOVA on the available analysis tables.
 
 <img src="./MetaX_Cookbook.assets/anova_test.png" alt="anova_test"/>
 
-### Significant Taxa-Func
+#### Significant Taxa-Function Results
 
-- Significant comparison helps identify cases where **<u>taxa show no significant differences between two groups, while their related functions are significantly different</u>**, and vice versa.
-- ![Significant_Taxa-Func](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
+This comparison highlights discordant taxon-function behavior: a taxon may remain stable while one of its linked functions changes significantly, or a taxon may change while a linked function remains stable.
+![Significant Taxa-Function results](MetaX_Cookbook.assets/Significant_Taxa-Func.png)
 
-### Plot Cross Heatmap
+#### Cross-test Heatmaps
 
-- The **results** of the T-test and ANOVA test will appear in a new window.
+T-test and ANOVA results open in a result window and are also registered in Table Review.
 
   <img src="./MetaX_Cookbook.assets/t_test_res.png" alt="t_test_res"/>
 
   
 
-- Plot Heatmap for results
-
-  - Choose a table to plot a **top differences heatmap** or export **the top table**.
+Choose a result table to plot a top-difference heatmap or export the corresponding top-result table.
 
 <img src="./MetaX_Cookbook.assets/corss_heatmap_setting.png" alt="corss_heatmap_setting"  />
 
-- Taxa-Func cross heatmap:
-  - The orange cells mean in the corresponding function ( X-axis) and Taxa( Y-axis) are significantly different between groups.
+- **Taxa-Function cross heatmap:** Colored cells indicate significant taxon-function combinations, with functions on the x-axis and taxa on the y-axis.
 
 <img src="./MetaX_Cookbook.assets/corss_heatmap.png" alt="corss_heatmap"  />
 
-- Func(Taxa) Heatmap:
-
-  - The colour shows the intensity of the significant Func(Taxa) between groups.
+- **Function/Taxon heatmap:** Color represents the abundance of significant functions or taxa across groups.
 
   <img src="./MetaX_Cookbook.assets/t_test_heatmap.png" alt="t_test_heatmap"  />
 
-- Significant Taxa-Func Heatmap:
+- **Significant Taxa-Function heatmap:** Colored tiles represent discordant significance patterns between a taxon and its linked function.
 
-  - The colored tiles represent the taxa which were not significantly different between groups but the related functions were.
+#### Group-vs-Control Tests
 
-### Group-Control TEST
+Set one group as **Control** to compare every other group against it. **Comparing in Each Condition** repeats those comparisons within the values of another metadata column, such as subject or site.
 
-- **Dunnett's Test**
+If the Limma/DESeq2 controls are hidden, open **Help > About** and click **Like** three times to enable the advanced differential-expression pages.
 
-  Set a Group as **"Control"**, then compare all groups to Control
+![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
 
-  - **Comparing in Each Condition:** Select a meta such as individual, then compare groups to control in each individual.
+- **Limma** is the default group-vs-control method for log2-style quantitative abundance. Zero values remain numeric by default; enable **Convert zeros to NaN** only when zeros represent missing measurements.
+- **DESeq2** is intended for untransformed count-like data. MetaX checks whether earlier preprocessing is compatible before running it.
+- Both methods support optional covariates.
+- **Dunnett's test** remains available as a legacy group-vs-control method. Its heatmap displays the test statistic.
 
-- **DESeq2 Test**
-
-  Bingo! You noticed the hidden function of MetaX,  click **Help -> About -> Like** 3 times to unlock the function to compare all groups to control.
-
-  
-
-  - ![group_control_test](./MetaX_Cookbook.assets/group_control_test.png)
-  - Result of Dunnett's Test:
-    - T- Statistic value shown in the heatmap
-    <img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="dunnetts_heatmap"  />
-
-- **Limma / DESeq2 Group-Control Analysis**
-
-  - After unlocking the differential expression tools, choose **Method** to run either **Limma** or **DESeq2** for group-vs-control comparisons.
-  - **Limma** is the default method. It works on log2-style quantitative data. By default, zero values remain numeric zeros; enable **Convert zeros to NaN** only when zeros represent missing values and should be treated as such during preparation.
-  - **DESeq2** is intended for raw count-like input. If the current table was transformed earlier, MetaX will try to guide you through safe preparation before running the test.
-  - Both methods support optional covariates and the **Comparing in Each Condition** workflow.
+<img src="./MetaX_Cookbook.assets/dunnetts_heatmap.png" alt="Dunnett test-statistic heatmap" />
 
 
-### Differential Expression (Limma / DESeq2)
+#### Differential Expression (Limma / DESeq2)
 
-- Select **Method** to run differential expression with **Limma** or **DESeq2**.
-- **Limma** is the default method for this page.
-- MetaX now uses [<u>InMoose</u>](https://github.com/epigenelabs/inmoose) as the differential expression backend.
-- Use **Limma** for log2-transformed quantitative tables, and use **DESeq2** for raw count-style tables.
+Use this page for a selected pairwise comparison. Choose **Limma** for log2-style quantitative abundance or **DESeq2** for untransformed count-like data. Limma is the default; both methods use the [InMoose](https://github.com/epigenelabs/inmoose) backend.
 
   
 
 <img src="./MetaX_Cookbook.assets/Differential_Expression.png">
 
-- Select <u>p-adjust</u>, <u>log2FC</u> to plot significant results from either method.
-
-  (**Ultra-Up(Down):** |log2FC| > Max log2FC)
+Set the adjusted p-value and log2 fold-change thresholds, then generate a volcano plot or a taxon-function Sankey plot. **Ultra-Up/Down** marks results whose absolute log2 fold change exceeds the configured maximum display threshold.
 
   - Volcano:
 
@@ -526,44 +415,29 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
   - Sankey:
 
-    - The last node level is the functions linked to each Taxon (when plotting Taxa-Func).
-    - Sankey plotting is available for both **DESeq2** and **Limma** result tables on **Taxa** and **Taxa-Func** comparisons.
+    - For Taxa-Function results, the final node level contains the functions linked to each taxon.
+    - Sankey plotting is available for Limma and DESeq2 Taxa and Taxa-Function result tables.
 
     <img src="MetaX_Cookbook.assets/taxa_func_sankey.png" alt="taxa_func_sankey" />
 
-- Differential result tables generated from **group-control** analyses can be right-clicked in the table list to:
-  - Open them in the **Differential Results Extractor**
-  - Generate a **long-format table** for downstream filtering, export, or plotting
+Right-click a supported differential result in Table Review to open the **Differential Results Extractor** or generate a long-format table for downstream filtering, export, or plotting.
 
 
-### Tukey Test
+#### Tukey Test
 
 <img src="./MetaX_Cookbook.assets/tukey_test.png" alt="tukey_test"/>
 
-- **Select a function:** 
-
-  - Test the significant groups in this function.
-
-- **Select a Taxon:** 
-
-  - Test the significant groups in this taxon.
-
-- **Select both function and taxon:** 
-
-  - Test the significant groups in this function and this taxon.
+Select a function, a taxon, or a linked taxon-function pair to identify which group means differ after ANOVA.
 
   <img src="./MetaX_Cookbook.assets/taxa_func_linked_only.png" alt="taxa_func_linked_only"  />
 
-  - Show Linked Taxa Only: only shows the taxa linked with the current function in the taxa combo box.
-
-  - Show Linked Func Only: Only shows the functions linked with the current taxon in the function combo box.
-
-    **Do not forget to click <u>Reset Function Taxa List</u> to restore all items after filtering.**
+  - **Show Linked Taxa Only** restricts the taxon selector to taxa linked to the current function.
+  - **Show Linked Func Only** restricts the function selector to functions linked to the current taxon.
+  - Click **Reset Function Taxa List** to restore the full selectors.
 
   
 
-- **Tukey result plot:**
-  - The dots and lines show the difference in the mean value of the Tukey test
+The Tukey result plot displays pairwise mean differences and their intervals.
 
 <img src="./MetaX_Cookbook.assets/tukey_plot.png" alt="tukey_plot"  />
 
@@ -571,52 +445,47 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 
 
-## 6. Expression Analysis
+### 6. Expression Analysis
 
-### Co-Expression Networks & Heatmap
+#### Co-expression Networks and Heatmaps
 
-- Select groups or samples to calculate correlations and plot the network.
+Select groups or samples, choose an analysis table, and set the correlation method and threshold.
 
 <img src="./MetaX_Cookbook.assets/co_network_page.png">
 
-- Select a table, then set the correlation method and threshold.
+![Co-expression settings](./MetaX_Cookbook.assets/co_network_setting.png)
 
-  ![image-20230728142905839](./MetaX_Cookbook.assets/co_network_setting.png)
-
-  - Add some items to the focus list (Optional)
+Add items to the focus list when you want to emphasize selected nodes; leave it empty for an unrestricted network.
 
   <img src="./MetaX_Cookbook.assets/co_network_focus.png" alt="image-20230728143058568"  />
 
-- Network Plot
-
-  - The Red dots are focus items
-  - The depth of color and the width of edges represent the correlation value
-  - The size of the dot indicates the number of connections
+- Focus items are shown in red.
+- Edge color and width represent correlation strength.
+- Node size represents the number of connections.
 
 <img src="./MetaX_Cookbook.assets/co_network_pic.png" alt="co_network_pic"  />
 
-- Expression correlation
-  - ![image-20240723162241316](MetaX_Cookbook.assets/expression_corelation_heatmap.png)
+The same correlation results can be displayed as a clustered expression-correlation heatmap.
 
-### Expression Trends
+![Expression correlation heatmap](MetaX_Cookbook.assets/expression_corelation_heatmap.png)
 
-- Add items to the list window to plot the clusters with similar trends of intensity
+#### Expression Trends
+
+Add items to the plotting list, select their ordered groups or samples, and cluster similar abundance trends.
 
 <img src="./MetaX_Cookbook.assets/trends_page.png">
 
-- Clusters plot (clustered by **k-means**)
-
-  - The coloured line is the average.
+MetaX uses **k-means** for trend clustering. The highlighted line represents the cluster mean.
 
   <img src="./MetaX_Cookbook.assets/trends_cluster.png" style="zoom: 67%;"  >
 
 
 
-- Select a **specific cluster** to plot <u>interactive Lines</u> or get the <u>table</u>
+Select a cluster to open interactive lines or export its table.
 
   - ![image-20230728144544988](./MetaX_Cookbook.assets/trends_cluster_setting.png)
 
-  - The dashed red line  is the average 
+  - The dashed red line represents the mean trend.
 
     <img src="MetaX_Cookbook.assets/image-20240304120503032.png" alt="image-20240304120503032"  />
 
@@ -626,102 +495,93 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 
 
-## 7. Taxa-Func Link
+### 7. Taxa-Function Links
 
-### Taxa-Func Link Plot
+#### Taxa-Function Link Plots
 
 <img src="./MetaX_Cookbook.assets/taxa_func_link_page2.png">
 
-- Check all taxa in one function (or all functions in one taxon).
+Select a function and click **Show Linked Taxa Only**, or select a taxon and click **Show Linked Func Only**, to restrict the selectors to observed links.
 
-  - select **a function**, and click the button **<u>Show Linked Taxa Only</u>**
-    - **Linked Number**: The number shows how many taxa are linked in this function
-    - **The number starts with Taxa**: The number shows how many peptides are in this Taxa-Func
+- **Linked Number** reports how many linked taxa or functions are available.
+- The count shown with a taxon-function item reports its supporting peptide number.
 
   <img src="./MetaX_Cookbook.assets/taxa_func_linked_only2.png" alt="image-20230728152236517"  />
 
-- Filter items of the Taxa and Func list
+Use the list filters to search large taxon and function selectors.
 
   <img src="./MetaX_Cookbook.assets/taxa_func_link_filter.png" alt="image-20230728150853953" style="zoom:50%;" />
 
   
 
-- Plot Heatmap or Bar
-
-  - Select some groups (Default all) to get **the intensity of each taxon of this function**
+Select groups or samples, then create a heatmap or bar plot for the taxa linked to a function, or the functions linked to a taxon.
 
     <img src="./MetaX_Cookbook.assets/taxa_func_link_heatmap.png">
 
 <img src="./MetaX_Cookbook.assets/taxa_func_link_bar.png">
 
-- Plot **peptides** in <u>one Function of a Taxon</u>
+For a selected taxon-function pair, switch to peptide-level heatmaps or bar plots to inspect the underlying evidence.
 
   <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_heatmap.png">
 
   <img src="./MetaX_Cookbook.assets/taxa_func_link_pep_bar.png">
 
-- Switch Bar to Stacked or not ( Line)
+Bar plots can be stacked or unstacked.
 
   <img src="./MetaX_Cookbook.assets/bar_switch_satck.png" alt="bar_switch_satck"  />
 
-- Change Bar plot to Lines
+They can also be displayed as line plots.
 
   <img src="./MetaX_Cookbook.assets/bar_to_line.png" alt="bar_to_line"  />
 
 
-### Taxa-Func Network
+#### Taxa-Function Network
 
-- Select some groups or samples (default: all).
-- Add some taxa, functions, or taxa-func items to focus the view (optional).
+Select groups or samples, then optionally add taxa, functions, or taxon-function entries to the focus list.
 
 <img src="./MetaX_Cookbook.assets/taxa_func_link_page.png">
 
-- Plot list only
-  - **Plot List Only:** Show only the items in the list and the items linked to them.
-  - **Without Links:** Only show the items in the focus list.
+- **Plot List Only:** Show focus items and their direct neighbors.
+- **Without Links:** Show only focus-list items.
     <img src="./MetaX_Cookbook.assets/taxa_func_link_net_settings.png" >
   
-- Network plot
-  - The yellow dots are taxa, and the grey dots are functions, the size of the dots presents the intensity
-  - The red dots are the taxa we focused on
-  - The green dots are the functions we focused on
-- More parameters can be set in **Dev**->**Settings**->**Others** (e.g. Nodes Shape, color, Line Style)
+- Yellow nodes are taxa and gray nodes are functions; node size represents abundance.
+- Focused taxa are red and focused functions are green.
+- Configure node shapes, colors, and line styles under **Dev > Settings > Others**.
 
 <img src="./MetaX_Cookbook.assets/taxa_func_network.png" alt="taxa_func_network"  />
 
 
 
-## 8. Restore Last TaxaFunc Object
+### 8. Save and Restore a TaxaFunc Object
 
-- Once you create TaxaFunc, the <u>TaxaFunc Object</u> is saved automatically, and you can restore it next time.
-- You can also export the current MetaX object to a file and reload it later.
+MetaX automatically saves the latest TaxaFunc object for convenient restoration at the next launch. Use **Restore** to reopen the last object, save the current object to a chosen file, or load an earlier saved object.
   <img src="./MetaX_Cookbook.assets/save_and_restore.png" alt="save_and_restore"/>
 
 
 
-# Preparing Your Data
+The following modules prepare annotation resources and convert peptide results into an OTF table.
 
 ## Module 2. Database Builder
 
-**Note:** The results from **MetaLab v2.3** MaxQuant workflow do not require database building. However, we do not recommend using these results as input to MetaX, as many peptides may be discarded.
+Build a Protein to TaxaFunc annotation database before using the Direct-to-OTF or MAG workflows. The database must correspond to the protein/genome reference used for peptide identification. MetaLab 2.3 MaxQuant results use their own annotation files and do not require this step.
 
-- Build the database for the **first time** using the <u>Database Builder</u>.
+### Option 1: Build from an MGnify Catalogue
 
-  **Option 1: Build Database Using MGnify Data**
+Select the catalogue that matches the search database. The GUI selector is generated from MetaX's current supported-source registry and includes the catalogue version in each label.
 
-  Ensure you download the correct database type corresponding to your data.
+The registry covers human body-site catalogues, animal gut/rumen catalogues, plant rhizosphere catalogues, soil, marine, and marine-sediment references. Because MGnify catalogue versions can change, use the version shown in the GUI and keep the selected catalogue consistent with the protein FASTA/search database.
 
-  MetaX supports the MGnify catalogues listed in the Database Builder selector, including barley-rhizosphere, human-skin, maize-rhizosphere, marine-sediment, soil, and tomato-rhizosphere. The selector and command-line options are generated from MetaX's supported-source list. `marine-eukaryotes` is intentionally not enabled by default because it is a beta eukaryotic catalogue with an eggNOG annotation caveat.
+![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
 
-  ![dbbuilder](./MetaX_Cookbook.assets/dbbuilder.png)
+### Option 2: Build from Custom Data
 
-  **Option 2: Build Database Using Own Data**
+Provide:
 
-  1. **Annotation Table:** A TSV table (tab-separated), with the first column as protein name joined with Genome by "_", e.g., "Genome1_protein1", and other columns containing annotation information.
+1. **Annotation Table:** A tab-separated table whose first column contains protein IDs and whose remaining columns contain function annotations. Protein IDs must include the genome ID using the separator expected by the annotation workflow, for example `Genome1_protein1`.
+2. **Taxa Table:** A tab-separated table whose first column contains genome IDs and whose second column contains the taxonomic lineage.
 
-  ![dbbuilder_own](./MetaX_Cookbook.assets/dbbuilder_own.png)
-
-  2. **Taxa Table:** A TSV table (tab-separated), with the first column as Genome name, e.g., "Genome1", and the second column as taxa.
+![dbbuilder_own](./MetaX_Cookbook.assets/dbbuilder_own.png)
 
   **Example Annotation Table:**
 
@@ -756,19 +616,17 @@ You can select <u>**meta**</u> <u>**groups**</u> or <u>**samples**</u> (default:
 
 ## Module 3. Database Updater
 
-The **Database Updater** allows updating the database built by the **Database Builder** or adding more annotations. This step is **<u>optional</u>**.
+Database Updater is optional. Use it to add function columns to a database created by Database Builder.
 
-- Update the built database and extend annotations.
+![db_updater](./MetaX_Cookbook.assets/db_updater.png)
 
-  ![db_updater](./MetaX_Cookbook.assets/db_updater.png)
+### Option 1: Built-in dbCAN_seq Annotations
 
-  **Option 1: Built-in Mode**
+Built-in mode merges precomputed [dbCAN_seq](https://pro.unl.edu/dbCAN_seq/) annotations by exact protein ID. It does not run a similarity search or annotate custom proteins. Incoming columns replace existing columns with the same names, and MetaX reports which columns were replaced.
 
-  Built-in dbCAN_seq mode merges precomputed annotations by exact protein ID; it does not run sequence-similarity searches or re-annotate custom proteins. Incoming annotation columns replace existing columns with the same names, and MetaX writes a warning listing the replaced columns. For a custom protein database, run dbCAN/run_dbCAN on your own protein FASTA and import the resulting TSV with matching MetaX protein IDs using **Option 2**. Built-in sources are available from [dbCAN_seq](https://pro.unl.edu/dbCAN_seq/).
+### Option 2: Custom TSV Annotation Table
 
-  **Option 2: TSV Table**
-
-  Extend the database by adding a new database to the database table. Ensure the column separator is a tab and the first column is the Protein name, with other columns containing function annotations.
+For custom proteins, run dbCAN/run_dbCAN or another annotation workflow separately, then import a tab-separated table whose first column contains exact MetaX protein IDs and whose remaining columns contain the new annotations.
 
   **Example:**
 
@@ -780,67 +638,231 @@ The **Database Updater** allows updating the database built by the **Database Bu
 
 ## Module 4. Peptide Annotator
 
-### 1. Peptide Direct to OTF from MAG Workflow
+The Peptide Annotator provides three GUI workflows. **Peptide Direct to OTFs** is the recommended and primary workflow for current MAG-based metaproteomics projects. The **MAG** and **MetaLab 2.3** tabs remain available for peptide tables that already contain protein assignments or for legacy MetaLab MaxQuant results.
 
-These peptide results use metagenome-assembled genomes (MAGs) as the reference database for protein searches, such as **DIA-NN**, **MetaLab-MAG**, **MetaLab-DIA**, and other workflows that use MAG databases like MGnify or custom MAG databases.
+### 1. Peptide Direct to OTFs (Recommended)
 
-- Annotate the peptide to the Operational Taxa-Functions (OTF) Table before analysis using the <u>Peptide Annotator</u>.
+Use this workflow to map quantified peptides against selected digested genomes and directly build an Operational Taxon-Function (OTF) table. It is designed for MAG-based searches from **DIA-NN**, **MetaLab-MAG**, **MetaPilot**, MGnify databases, or a compatible custom MAG database.
 
-  <img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="peptide2taxafunc"  />
+<img src="./MetaX_Cookbook.assets/peptide2taxafunc.png" alt="Peptide Direct to OTFs" />
 
-  **Required inputs:**
+MetaX and MetaUmbra have separate roles in this workflow. **MetaUmbra** digests the genome protein FASTA files and scores genome presence from the observed peptides. **MetaX** then consumes the selected genomes, digest tables, and Protein-to-TaxaFunc database to construct the OTF table. MetaX does not repeat MetaUmbra's statistical genome-presence test.
 
-  - **Digested Genome Folder**: Folder containing digested genome peptide tables created from the same protein database used for the peptide search.
+#### Step 1: Build Your Own Digested-Genome Reference
 
-  - **Protein to TaxaFunc Database**: The annotation database created by <u>[Database Builder](#module-2-database-builder)</u>. This is required when producing the final OTF table.
+Skip this step when a compatible digested-genome folder is already available. Although the MetaUmbra page is named **Digest FASTA**, its output is a directory of per-genome peptide digest **TSV files**, not another FASTA database.
 
-  - **Peptide Table**:
+<img src="./MetaX_Cookbook.assets/MetaUmbra_2.png" alt="MetaUmbra Digest FASTA page" />
 
-    - *Option 1*: A tab-separated peptide-intensity table from a MAG search workflow, such as ***final_peptides.tsv*** from MetaLab-MAG or ***xxx_report.pr_matrix.tsv*** from DIA-NN matrix export.
+Prepare one **protein FASTA file per genome**, and keep all files in one input directory. In MetaUmbra:
 
-    - *Option 2*: Manually create a table with one column for the **peptide sequence** and another column for the **protein group** (e.g., MGYG000003683_00301; MGYG000001490_01143) from the MGnify or your own database. The remaining columns should contain the **intensity values** for each sample.
+1. Open **Digest FASTA** and select **Digest a directory of FASTA files**.
+2. Select the input FASTA directory and an output TSV directory.
+3. Select the protease and set the minimum peptide length, maximum peptide length, and allowed missed cleavages. The displayed defaults are Trypsin (`42`), 7-30 amino acids, and 2 missed cleavages.
+4. Normally keep **Shorten FASTA header at first space** enabled so the first token of each protein header becomes the protein ID.
+5. Click **Run Digest**. Each input FASTA produces one TSV containing `Protein` and `Peptide` columns.
 
-    - *Option 3*: A long-format DIA-NN parquet file. MetaX detects DIA-NN parquet by `Run`, `Stripped.Sequence`, and a supported intensity column. In the normal Peptide Direct to OTF window, the parquet must also include `Evidence` and `Q.Value`.
+The reference naming and digestion settings are part of the data contract:
 
-    **Example:**
+- The FASTA filename stem becomes the genome ID. For example, `MGYG000000001.faa` produces `MGYG000000001.tsv` and identifies genome `MGYG000000001`.
+- Do not combine many genomes into one FASTA: that would produce one digest file and collapse them into one apparent genome.
+- Protein IDs in the digest TSVs must match the IDs in the **Protein to TaxaFunc Database**. Choose the FASTA-header shortening option accordingly.
+- Use the same enzyme, peptide-length range, and missed-cleavage policy used to prepare the peptide-search database.
+- Use this same digest output directory for MetaUmbra scoring and for MetaX **Digested Genome Folder**.
 
-    | Sequence                            | Proteins                                                     | Intensity_V1_01 | Intensity_V1_02 | Intensity_V1_03 | Intensity_V1_04 |
-    | ----------------------------------- | ------------------------------------------------------------ | --------------- | --------------- | --------------- | --------------- |
-    | (Acetyl)KGGVEPQSETVWR               | MGYG000002716_01681;MGYG000000195_00452;MGYG000001616_00519;MGYG000002926_00231;... | 714650          | 0               | 0               | 0               |
-    | (Acetyl)KVIPELNGK                   | MGYG000003589_01892;MGYG000001560_01812;MGYG000001789_00244;... | 0               | 0               | 0               | 0               |
-    | (Acetyl)LAELGAKAVTLSGPDGYIYDPDGITTK | MGYG000001199_02893                                          | 0               | 0               | 0               | 0               |
-    | (Acetyl)LLTGLPDAYGR                 | MGYG000001757_01206;MGYG000004547_02135;MGYG000001283_00124  | 0               | 307519          | 0               | 0               |
-    | (Acetyl)MDFTLDKK                    | MGYG000000076_01275;MGYG000003694_00879;MGYG000000312_02425;MGYG000000271_02102 | 306231          | 0               | 0               | 1214497         |
+The equivalent directory-mode command is:
 
-  - **Output Save Path**: The location to save the result table.
+```bash
+metaumbra digest \
+  --input-dir genome_fastas \
+  --output-dir genome_fastas_digested \
+  --enzyme-id 42 \
+  --min-length 7 \
+  --max-length 30 \
+  --max-miscleavages 2
+```
 
-  - **Peptide Column Name**: The peptide sequence column. For DIA-NN parquet input, MetaX uses `Stripped.Sequence`.
+Use `--input-file` and `--output-file` instead when testing a single genome. On PowerShell, place the command on one line or replace each trailing `\` with a backtick.
 
-  - **Prefix of Intensity Column / DIA-NN Intensity Column**: For table input, this is the sample-intensity prefix, such as `Intensity_`. For DIA-NN parquet input, select `Precursor.Normalised` or `Precursor.Quantity`; MetaX defaults to `Precursor.Normalised` when it is available.
+#### Step 2: Run MetaUmbra Genome Presence Scoring
 
-  - **LCA Threshold**: Find the LCA with the proportion threshold for each peptide. The default is 1.00 (100%).
+<img src="./MetaX_Cookbook.assets/MetaUmbra_1.png" alt="MetaUmbra Genome Presence Scoring page" />
 
-    ![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
+Unified `genome_selection_manifest.json` output requires **MetaUmbra 1.4.0 or newer**.
 
-  - **Genome separator in protein ID**: Separator between genome ID and protein ID in the searched protein identifiers, such as `_` for `MGYG000003683_00301` or `|` for `MGYG000003683|00301`.
+In **Genome Presence Scoring**:
 
-  - **Duplicate peptide handling**: Controls how repeated peptide rows are combined before annotation. Available options are `sum`, `max`, `min`, `mean`, `first`, and `keep`.
+1. Select the observed peptide table. MetaUmbra accepts a delimited peptide table or a DIA-NN `report.parquet` file.
+2. Add the digested-genome directory created in Step 1. Multiple digest directories can be added when the reference is split across locations.
+3. Select the output results directory and map the sequence/evidence columns. Add a genome-lineage table only when lineage-aware output is needed.
+4. Configure peptide-row filters such as the q-value cutoff and reverse/decoy markers.
+5. Select the analysis-unit mode: pooled `all-samples`, one unit `per-sample`, or groups defined by a `metadata` table.
+6. Click **Run Genome Presence Scoring**.
 
-#### Genome Selection Manifest
+For a pooled DIA-NN analysis, the corresponding command is:
 
-For MetaUmbra results, Peptide Direct to OTF uses one `genome_selection_manifest.json` for every analysis-unit layout. A run with all samples pooled is represented by `__global__`; per-sample and metadata-grouped runs use the same schema and annotation backend. MetaX automatic genome selection and explicit custom genome lists remain available as separate, clearly labeled sources.
+```bash
+metaumbra score \
+  --peptide-table report.parquet \
+  --genome-digest-dirs genome_fastas_digested \
+  --output metaumbra_results \
+  --unit-mode all-samples
+```
 
-#### DIA-NN Parquet Preparation
+The result directory includes these primary files:
 
-When the input is a DIA-NN parquet file, MetaX reads only the required columns and pivots the long-format table into a direct-to-OTF peptide table:
+| File | Purpose |
+| ---- | ------- |
+| `genome_selection_manifest.json` | Recommended downstream interface; records samples, analysis units, settings, and selected genomes at q0.05 and q0.01 |
+| `unit_genome_results.tsv` | Full per-analysis-unit genome statistics, including q-values and threshold-pass flags |
+| `cohort_genome_summary.tsv` | Genome-level summary across the cohort |
+| `sample_unit_mapping.tsv` | Mapping between peptide-table samples and analysis units |
 
-- `Run` becomes sample-specific intensity columns named `Intensity_<sample>`.
+#### Step 3: Load the MetaUmbra Manifest in MetaX
+
+The default **Genome selection source** is **MetaUmbra genome selection manifest**. This preserves the genome selections and analysis-unit definitions produced by MetaUmbra instead of repeating genome selection inside MetaX.
+
+1. Select the same quantified **Peptide Table** used for scoring.
+2. Select the generated `genome_selection_manifest.json`. If it has not yet been generated, click **Open MetaUmbra GUI**, complete Steps 1-2 there, and then return to MetaX.
+3. Choose **Genome threshold** (`q0.05` or `q0.01`).
+4. Click **Validate / Settings...** to verify the manifest, peptide-table sample mapping, and digested genomes before starting annotation.
+5. Set **Digested Genome Folder**, **Protein to TaxaFunc Database**, and **OTFs Save To**, then click **GO**.
+
+A MetaUmbra manifest may describe one pooled analysis unit (`__global__`), one unit per sample, or metadata-defined groups. MetaX reads the samples and selected genomes for every unit, scans the union of selected genome digests once, and restricts peptide-to-protein matches to the appropriate unit during annotation.
+
+The **Validate / Settings...** dialog also provides the input sample-column prefix, missing-sample and empty-unit behavior, optional per-unit OTF output, and digested-scan worker count. Validation is strongly recommended when the manifest contains per-sample or grouped units.
+
+#### Produce a Standalone Genome List
+
+Use a standalone list only when a single fixed genome set is intended. A plain list is convenient for sharing or for MetaX **Custom genome list**, but it discards the sample-to-analysis-unit mapping stored in the manifest. Keep the manifest for per-sample or metadata-grouped annotation.
+
+The simplest method is to enable MetaUmbra's **Export unit-specific diagnostic tables** option, or add `--export-diagnostics` to `metaumbra score`. MetaUmbra then writes thresholded union tables under `artifacts/diagnostics/`:
+
+- `genome_union_q005.tsv`: genomes passing q <= 0.05 in at least one analysis unit.
+- `genome_union_q001.tsv`: genomes passing q <= 0.01 in at least one analysis unit.
+
+Both tables contain a `genome_id` column and can be loaded directly through MetaX **Custom genome list**. Do **not** load the unfiltered `unit_genome_results.tsv` directly as a custom list, because it also contains genomes that failed the selected threshold.
+
+If diagnostic tables were not exported, create a newline-delimited list from the primary result table:
+
+```python
+from pathlib import Path
+
+import pandas as pd
+
+results = pd.read_csv("metaumbra_results/unit_genome_results.tsv", sep="\t")
+flag = "pass_q_0_05"  # Use pass_q_0_01 for the stricter threshold.
+passed = results[flag].astype(str).str.lower().isin({"true", "1"})
+genomes = sorted(results.loc[passed, "genome_id"].dropna().astype(str).unique())
+Path("genomes_q005.txt").write_text("\n".join(genomes) + "\n", encoding="utf-8")
+```
+
+The resulting `genomes_q005.txt` can be loaded or pasted into MetaX after selecting **Custom genome list**.
+
+#### Other genome selection sources
+
+| Genome selection source | When to use it | Additional action |
+| ----------------------- | -------------- | ----------------- |
+| **MetaUmbra genome selection manifest** | Recommended for current workflows and required when MetaUmbra analysis-unit definitions must be retained | Select the manifest, threshold, and run **Validate / Settings...** |
+| **MetaX automatic genome selection** | Non-MetaUmbra workflow that selects genomes globally from peptide coverage | Adjust **Peptide Coverage Cutoff for Protein Selection** in advanced settings if needed |
+| **Custom genome list** | A fixed genome set is already known | Load a plain text/TSV/CSV list, use a thresholded MetaUmbra union table, or paste genome IDs into MetaX |
+
+The source is always selected explicitly. MetaX does not infer the genome-selection mode from a filename or from peptide-table columns.
+
+#### Common inputs
+
+- **Peptide Table**: A wide delimited peptide-intensity table (`.tsv`, `.txt`, or `.csv`) or a long-format DIA-NN parquet file. A wide table needs a peptide sequence column and sample-intensity columns; it does not need a precomputed protein-group column because this workflow maps peptides against the digested genomes.
+- **Digested Genome Folder**: The digested genome peptide tables created from the same protein database used for peptide identification.
+- **Protein to TaxaFunc Database**: The annotation database created by [Database Builder](#module-2-database-builder) from the same genome/protein reference.
+- **OTFs Save To**: The final merged OTF TSV path.
+- **Peptide Column Name**: The peptide sequence column. MetaX detects common names; DIA-NN parquet uses `Stripped.Sequence`.
+- **Prefix of Intensity Column**: For a wide table, the prefix that identifies sample columns, such as `Intensity` for `Intensity_sample1`.
+
+#### DIA-NN parquet input
+
+MetaX recognizes DIA-NN parquet input by the presence of `Run`, `Stripped.Sequence`, and at least one supported intensity column:
+
+- `Precursor.Normalised` is preferred when available.
+- `Precursor.Quantity` can be selected as an alternative or is used when normalized intensity is unavailable.
+- `Run` values become sample columns named `Intensity_<sample>`.
 - `Stripped.Sequence` becomes the peptide sequence column.
-- `Precursor.Normalised` is preferred as the intensity source; `Precursor.Quantity` is used when selected or when normalized intensity is not available.
-- `Evidence` and `Q.Value` are required in the normal Peptide Direct to OTF window and are preserved for MetaUmbra scoring.
-- Run names are cleaned into safe sample column names. The selected DIA-NN intensity source is recorded in conversion metadata, but `Precursor.Normalised` or `Precursor.Quantity` is not embedded in the sample-column names.
+- The selected source column is recorded in conversion metadata; `Precursor.Normalised` or `Precursor.Quantity` is not added to the visible sample names.
 
-The same manifest workflow is available without Qt. For automation, prefer the module entry point so MetaX runs in the caller's active Python environment:
+When DIA-NN parquet is selected, the GUI changes **Prefix of Intensity Column** to **DIA-NN Intensity Column**. Common raw-data suffixes in `Run` values are normalized when samples are matched to a manifest, including `.raw` and `.raw.dia`.
+
+#### Advanced settings
+
+The defaults are suitable for most projects. Enable **Show Advanced Settings** when the input schema or protein identifiers differ from the defaults:
+
+- **Separator of Peptide Table**: Usually `\t` for TSV input.
+- **LCA Threshold for OTF**: Proportion threshold used to assign the peptide LCA; the default is `1.00` (100%).
+- **Genome Separator in Protein ID**: For example, `_` in `MGYG000003683_00301` or `|` in `MGYG000003683|00301`.
+- **Method to handle duplicate peptides intensity**: `sum`, `max`, `min`, `mean`, or `first`.
+- **Peptide Coverage Cutoff for Protein Selection**: Used by **MetaX automatic genome selection** and not by manifest-driven annotation.
+
+![LCA_prop](./MetaX_Cookbook.assets/LCA_prop.png)
+
+#### Manifest output and downstream counts
+
+Manifest-driven output retains `analysis_unit_id` and the biological `Sequence`. Do not deduplicate a multi-unit OTF table by `Sequence` alone because the same peptide can carry evidence in more than one analysis unit.
+
+The run creates:
+
+- The merged OTF table selected in **OTFs Save To**.
+- `<output_stem>_info.txt`, containing input parameters and an annotation summary.
+- `<output_stem>_artifacts/unit_annotation_summary.tsv`, containing one row per analysis unit.
+- `<output_stem>_artifacts/unit_sample_column_mapping.tsv`, recording manifest-sample to peptide-table-column matching.
+- Optional per-unit OTF files when **Save per-unit OTFs** is enabled in **Validate / Settings...**.
+
+In downstream MetaX results, `peptide_num` is the number of unique biological `Sequence` values, while `peptide_feature_num` is the number of unique analysis-unit peptide features.
+
+For unattended or reproducible annotation, use the dedicated [CLI and automation section](#4-peptide-direct-to-otfs-via-cli-and-automation).
+
+### 2. MAG: Annotate a Pre-mapped Peptide Table
+
+Use the **MAG** tab when the peptide table already contains peptide-to-protein assignments. Unlike **Peptide Direct to OTFs**, this workflow does not select genomes or scan a digested genome folder.
+
+<img src="./MetaX_Cookbook.assets/peptide2taxafunc_mag.png" alt="MAG peptide annotation" />
+
+Required inputs:
+
+- **Database**: The Protein to TaxaFunc database created by [Database Builder](#module-2-database-builder).
+- **Peptide Table**: A delimited table containing a peptide sequence column, a protein-group column, and sample-intensity columns.
+- **OTFs Save To**: The output OTF TSV path.
+- **LCA Threshold**: The peptide LCA proportion threshold; the default is `1.000`.
+
+Example peptide table:
+
+| Sequence | Proteins | Intensity_V1_01 | Intensity_V1_02 |
+| -------- | -------- | --------------- | --------------- |
+| KGGVEPQSETVWR | MGYG000002716_01681;MGYG000000195_00452 | 714650 | 0 |
+| LLTGLPDAYGR | MGYG000001757_01206;MGYG000004547_02135 | 0 | 307519 |
+
+Use **Show Advanced Settings** to change the peptide column, protein column, intensity prefix, protein-group separator, genome separator, excluded protein prefixes, distinct-genome threshold, or duplicate-peptide handling.
+
+### 3. MetaLab 2.3 MaxQuant Results
+
+Use this tab only for results from the **MetaLab 2.3 MaxQuant** workflow. These results already contain the MetaLab taxonomy and function annotations needed to construct an OTF table.
+
+<img src="./MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="MetaLab 2.3 peptide annotation" />
+
+1. Click **Open** beside **MetaLab 2.3 Result Folder** and select the folder that contains `maxquant_search`.
+2. MetaX locates these files automatically:
+   - `maxquant_search/combined/txt/peptides_report.txt`
+   - `maxquant_search/taxonomy_analysis/BuiltIn.pepTaxa.csv`
+   - `maxquant_search/functional_annotation/functions.tsv`
+3. Set **OTFs Save To**. If automatic discovery is not appropriate, open the **SET PATH** panel and select the three files manually.
+4. Click **GO** to create the OTF table.
+
+### 4. Peptide Direct to OTFs via CLI and Automation
+
+The annotation CLI implements the three **Peptide Direct to OTFs** genome-selection sources. It does not replace the legacy MAG or MetaLab 2.3 tabs.
+
+> **Complete command reference:** Open [MetaX CLI - Peptide-to-OTF Annotation](#4-peptide-to-otf-annotation). The link switches the deployed page to the **MetaX CLI** tab and opens its annotation options, configuration schema, outputs, and exit codes.
+
+The examples below use Bash line continuation. In PowerShell, replace each trailing `\` with a backtick or place the command on one line.
+
+**MetaUmbra manifest (recommended):**
 
 ```bash
 python -m metax.cli.annotate \
@@ -854,81 +876,56 @@ python -m metax.cli.annotate \
   --result-json annotation_result.json
 ```
 
-See [MetaX annotation CLI and automation contract](Annotation_CLI.md) for configuration files, result JSON, exit codes, and the complete option list.
-
-Choose `--input-source metax-automatic` for MetaX's non-MetaUmbra automatic selection, or `--input-source genome-list --genome-list-file genomes.txt` for a custom list. For wide delimited tables, set `--intensity-col-prefix` when the sample columns do not use the default `Intensity` prefix. The GUI exposes the same three choices in **Genome selection source** and forwards its editable intensity-prefix field.
-
-### 2. MetaUmbra Manifest Direct-to-OTF Annotation
-
-MetaX reads `sample_ids` and `genome_ids_q005` or `genome_ids_q001` from every manifest unit. With `--genome-threshold auto`, it uses the manifest default threshold. The selected genome union is scanned once, then matches are restricted to each unit. Sample names are matched against peptide-table columns after normalizing common prefixes and raw-file suffixes.
-
-The merged OTF table always includes `analysis_unit_id` and the original `Sequence`. MetaX derives a unit-aware peptide evidence identity internally; `UnitSpecificSequence` is not emitted. Downstream code must not deduplicate multi-unit output by `Sequence` alone.
-
-The GUI exposes the same manifest path, threshold, validation, and sample-column matching settings. Annotation accepts either a wide peptide-intensity table or long-format DIA-NN parquet with `Run`, `Stripped.Sequence`, and `Precursor.Normalised` or `Precursor.Quantity`.
-
-The execution path is disk-backed. Per-unit temporary files are streamed into the final table and cleaned up. Final artifacts include:
-
-- The merged OTF table selected in **OTFs Save To**.
-- `<output_stem>_info.txt`, with input parameters and annotation summary.
-- `<output_stem>_artifacts/unit_annotation_summary.tsv`, with one row per analysis unit.
-- `<output_stem>_artifacts/unit_sample_column_mapping.tsv`, with manifest sample to peptide-table column mapping.
-
-For downstream analysis, public count columns use these meanings:
-
-- `peptide_num`: unique biological `Sequence` count.
-- `peptide_feature_num`: unique analysis-unit peptide feature count.
-
-Example:
+**MetaX automatic genome selection:**
 
 ```bash
 python -m metax.cli.annotate \
-  --peptide-table report.parquet \
-  --metaumbra-manifest genome_selection_manifest.json \
-  --genome-threshold q0.05 \
-  --taxafunc-db MetaX_taxafunc.db \
+  --input-source metax-automatic \
+  --peptide-table peptides.tsv \
   --digested-genome-folders digested_genomes/ \
-  --output OTF.tsv \
-  --peptide-col Sequence \
-  --input-sample-col-prefix "LFQ intensity " \
-  --duplicate-peptide-handling-mode sum \
-  --n-jobs 4 \
-  --result-json annotation_result.json
+  --taxafunc-db MetaX_taxafunc.db \
+  --intensity-col-prefix Intensity \
+  --output OTF.tsv
 ```
 
-### 3. Results from MaxQuant Workflow
+**Custom genome list:**
 
-These peptide results come from the **MetaLab 2.3** MaxQuant workflow.
+```bash
+python -m metax.cli.annotate \
+  --input-source genome-list \
+  --genome-list-file genomes.txt \
+  --peptide-table peptides.tsv \
+  --digested-genome-folders digested_genomes/ \
+  --taxafunc-db MetaX_taxafunc.db \
+  --output OTF.tsv
+```
 
-- Select the **MetaLab** result folder, which contains the **maxquant_search** folder.
+Use `--diann-intensity-col Precursor.Normalised` or `Precursor.Quantity` to select a DIA-NN parquet intensity source explicitly. YAML/JSON configuration files are supported with `--config`; command-line arguments override configuration values. Use `--result-json` when a workflow manager needs structured status, parameters, outputs, and failure information.
 
-  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_1.png" alt="peptide2taxafunc_tab2_1" style="zoom:80%;" />
+Continue in the [MetaX CLI tab](#metax-cli) for installation profiles, Auto OTF Report automation, database-building commands, reproducible Analyzer workflows, and shell guidance.
 
-- The **Peptide Annotator** will automatically find the **peptides_report.txt**, **BuiltIn.pepTaxa.csv**, and **functions.tsv** in the **maxquant_search** folder. Alternatively, you can select the files manually.
+## Reporting and Reproducibility
 
-  - Select **OTFs Save To** to set the location to save the result table.
+### Auto OTF Report
 
-  <img src="MetaX_Cookbook.assets/peptide2taxafunc_tab2_2.png" alt="peptide2taxafunc_tab2_2" style="zoom:80%;" />
+On the OTF Analyzer input page, set the OTF and metadata paths and click **Generate Report**. Choose the taxonomic levels, function annotations, grouping metadata, control group, statistical tests, and output options. The report workflow can also generate a protein table and heavier network plots when requested.
 
-<br>
+<img src="./MetaX_Cookbook.assets/report_generate.png" alt="Generate Auto OTF Report dialog" />
 
+The dialog is organized into collapsible sections:
 
+- **Input** uses the paths and column settings from Data Import and also supports custom-table mode.
+- **Analysis Selection** chooses one or more taxonomic levels and function annotations, optional grouping/control metadata, and ANOVA, T-test, or group-vs-control analysis.
+- **Report Output** controls the output directory, top-N plots, Limma or legacy Dunnett group-vs-control testing, PNG/PDF/SVG formats, DPI, interactive HTML embedding, network plots, and overwrite behavior.
+- **OTF Processing Settings** reuses quantification, batch correction, peptide thresholds, split-function behavior, and optional protein-table generation.
 
+After generation starts, the **Auto OTF Report Log** window shows live progress. Use **Stop** to cancel a running report, or **Open Report** after successful completion. A stopped run can leave partial files, so use a fresh output directory before restarting unless those files are intentionally overwritten.
 
-# Developer Tools
+The output is a self-contained `MetaX_Report` directory with an `index.html` home page, result tables, figures, logs, `summary.json`, and the effective `config_used.yaml`. A non-empty report directory is rejected unless **Overwrite** is enabled, preventing results from unrelated runs from being mixed.
 
-## Auto OTF report
+Group-vs-control analysis uses Limma through InMoose by default on `log2(x + 1)` abundance. Zero abundance remains numeric during Limma preparation. Dunnett's test remains available as the legacy alternative.
 
-The auto report writes a self-contained `MetaX_Report` folder when an output parent
-is selected in the GUI. Existing non-empty report directories are rejected unless
-**Overwrite** is enabled, which prevents outputs from different runs being mixed.
-
-Group-vs-control testing uses limma via InMoose by default on
-`log2(x + 1)`-transformed abundance. Zero abundance remains numeric zero during
-limma preprocessing. The legacy GUI Dunnett workflow remains available by setting
-`statistics.diff_method: dunnett` or using `--diff-method dunnett`.
-
-The effective configuration is saved as `config_used.yaml`. Static figure output
-defaults to 300 DPI PNG and can include editable-text SVG/PDF:
+PNG output is always produced. PDF and SVG can be enabled for editable/vector output, and figure DPI is configurable. The equivalent configuration is:
 
 ```yaml
 statistics:
@@ -938,42 +935,42 @@ report:
   dpi: 300
 ```
 
-Equivalent CLI options are `--diff-method`, `--figure-formats`, and `--dpi`.
-The report home page identifies the main taxa level and function column, lists
-other combinations as extended results, and shows optional analysis-unit metadata
-when `analysis_unit_id` or a compatible unit column is present.
+The report home page identifies the primary taxonomic level and function annotation, links additional combinations as extended results, and displays analysis-unit metadata when the OTF contains `analysis_unit_id` or a compatible unit column. A successful GUI report also records its effective configuration and reproducibility helpers for workflow export. See [MetaX CLI - Auto OTF HTML Report](#5-auto-otf-html-report) or run `metax-report --help` for unattended reporting.
 
-- **Export Log**
+### Export a Recorded GUI Workflow
 
-  - You can export the log file for debugging or reporting the issue.
-  - ![dev_menu](MetaX_Cookbook.assets/dev_menu.png)
+MetaX records supported analysis steps during the current GUI session. Open **Restore > Export Workflow Notebook**, select the steps to replay, and choose the output formats:
 
-- **Export Workflow Notebook**
+- **Jupyter Notebook (`.ipynb`)** is enabled by default and is bound to the Python runtime used by the current MetaX GUI when possible.
+- **Python script (`.py`)** is optional.
+- **YAML workflow (`.yaml`)** is optional and records the selected steps and parameters in a readable form.
 
-  - MetaX records GUI analysis steps during the current session and can export selected steps as a runnable workflow package.
-  - Use **Developer Tools -> Export Workflow Notebook** to save:
-    - a Jupyter notebook (`.ipynb`)
-    - a Python script (`.py`)
-    - a workflow description file (`.yaml`)
-  - This is useful when you want to reproduce a GUI analysis, review the exact parameters used, or continue the workflow in code.
+Mandatory setup steps remain selected to keep the exported workflow runnable. Use workflow export to reproduce a GUI analysis, review its effective parameters, or continue the analysis in code.
 
-- **Show or Hide the Console**
+## Application Tools
 
-  <img src="MetaX_Cookbook.assets/show_console.png" alt="show_console"  />
+### Logs and Console
 
-  
+Use **Dev > Export Log File** when reporting an error or preserving a run log. **Dev > Show Console** opens live standard output and progress information, which is useful for long annotation and analysis tasks.
 
-- **Settings**
+![Dev menu](MetaX_Cookbook.assets/dev_menu.png)
 
-  - Check **Auto Check Update** to enable or disable update checks on launch.
-  - Choose whether to update from the **stable version** or **beta version** in Settings.
-  <img src="MetaX_Cookbook.assets/settings.png" alt="settings"  />
-  - Other Options Settings
-  - ![settings_page2](./MetaX_Cookbook.assets/settings_page2.png)
-  
-  
+<img src="MetaX_Cookbook.assets/show_console.png" alt="MetaX console" />
 
+### Settings and Updates
 
-# Enjoy MetaX
+Open **Dev > Settings** to configure application behavior, paths, plotting defaults, and update preferences.
 
-If you have any issues or suggestions, please open a new issue on [GitHub](https://github.com/byemaxx/MetaX).
+- **Auto Check Update** controls update checks at launch.
+- Select the stable or beta update channel according to the desired release track.
+- **Use Local JS Assets (Offline/Fast)** makes interactive plots load from bundled ECharts assets and work offline. Disable it before sharing standalone interactive HTML when recipients should load the libraries from the public CDN instead.
+- Configure the **MetaTree directory** before using the MetaTree button in the selected-item plotting workflow.
+- Additional pages contain analysis and visualization defaults used by the corresponding GUI tools.
+
+<img src="MetaX_Cookbook.assets/settings.png" alt="MetaX settings" />
+
+![Additional settings](./MetaX_Cookbook.assets/settings_page2.png)
+
+## Support
+
+If you encounter a problem, export the MetaX log and open an issue in the [MetaX GitHub repository](https://github.com/byemaxx/MetaX). Include the MetaX version, input schema, selected workflow, and the smallest reproducible example that can be shared.

@@ -12,6 +12,9 @@ from jinja2 import Template
 
 INPUT_CANDIDATES = (Path("Docs/MetaX_Cookbook.md"), Path("docs/MetaX_Cookbook.md"))
 MARKDOWN_EXTENSIONS = ["tables", "toc", "fenced_code", "sane_lists"]
+SUPPLEMENTARY_DOCUMENTS = (
+    ("metax-cli", "MetaX CLI", "CLI.md"),
+)
 
 TEMPLATE = """
 <!DOCTYPE html>
@@ -45,6 +48,7 @@ TEMPLATE = """
             --table-stripe-odd: #ffffff;
             --table-stripe-even: #f9fbff;
             --code-bg: rgba(175, 184, 193, 0.2);
+            --tab-bg: #eaeef2;
             --nav-width: 310px;
             --radius: 8px;
             --shadow: 0 1px 2px rgba(31, 35, 40, 0.04);
@@ -71,6 +75,7 @@ TEMPLATE = """
             --table-stripe-odd: #161b22;
             --table-stripe-even: #1b2230;
             --code-bg: rgba(110, 118, 129, 0.4);
+            --tab-bg: #21262d;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
         }
 
@@ -273,6 +278,7 @@ TEMPLATE = """
         }
 
         nav a:focus-visible,
+        .doc-tab:focus-visible,
         .theme-toggle:focus-visible,
         .sidebar-toggle:focus-visible,
         .toc-caret:focus-visible,
@@ -285,7 +291,7 @@ TEMPLATE = """
 
         main {
             margin-left: var(--nav-width);
-            padding: 36px 42px;
+            padding: 20px 42px 36px;
             min-height: 100vh;
             --list-indent: 0px;
         }
@@ -294,6 +300,47 @@ TEMPLATE = """
             max-width: 1100px;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        .doc-tabs {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            gap: 6px;
+            padding: 10px 0 12px;
+            margin-bottom: 22px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--nav-border);
+        }
+
+        .doc-tab {
+            border: 1px solid var(--nav-border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: var(--muted-text);
+            background: var(--surface-soft);
+            font: inherit;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .doc-tab:hover {
+            color: var(--text);
+            background: var(--tab-bg);
+        }
+
+        .doc-tab[aria-selected="true"] {
+            color: var(--accent-strong);
+            background: var(--active-bg);
+            border-color: var(--active-border);
+        }
+
+        .doc-panel[hidden],
+        .toc-list[hidden] {
+            display: none !important;
         }
 
         main ul,
@@ -310,7 +357,7 @@ TEMPLATE = """
         }
 
         h1, h2, h3, h4 {
-            scroll-margin-top: 84px;
+            scroll-margin-top: 96px;
         }
 
         h1 {
@@ -555,6 +602,12 @@ TEMPLATE = """
                 padding: 70px 16px 24px;
             }
 
+            .doc-tabs {
+                overflow-x: auto;
+                padding-top: 8px;
+                white-space: nowrap;
+            }
+
             .toc-toggle {
                 display: inline-flex;
                 align-items: center;
@@ -598,15 +651,42 @@ TEMPLATE = """
         <button id="collapseAllToc" type="button">Collapse All</button>
         <button id="expandAllToc" type="button">Expand All</button>
     </div>
-    <ul class="toc-list">
-    {% for node in toc_tree %}
-        {{ render_node(node) }}
-    {% endfor %}
+    {% for document in documents %}
+    <ul class="toc-list" data-doc-key="{{ document.key }}"{% if not loop.first %} hidden{% endif %}>
+        {% for node in document.toc_tree %}
+            {{ render_node(node) }}
+        {% endfor %}
     </ul>
+    {% endfor %}
 </nav>
 
 <main id="doc-main">
-    {{ content }}
+    <div class="doc-tabs" role="tablist" aria-label="Documentation sections">
+        {% for document in documents %}
+        <button
+            id="doc-tab-{{ document.key }}"
+            class="doc-tab"
+            type="button"
+            role="tab"
+            aria-selected="{{ 'true' if loop.first else 'false' }}"
+            aria-controls="doc-panel-{{ document.key }}"
+            data-doc-key="{{ document.key }}"
+            tabindex="{{ '0' if loop.first else '-1' }}"
+        >{{ document.label }}</button>
+        {% endfor %}
+    </div>
+    {% for document in documents %}
+    <section
+        id="doc-panel-{{ document.key }}"
+        class="doc-panel"
+        role="tabpanel"
+        aria-labelledby="doc-tab-{{ document.key }}"
+        data-doc-key="{{ document.key }}"
+        {% if not loop.first %}hidden{% endif %}
+    >
+        {{ document.content }}
+    </section>
+    {% endfor %}
 </main>
 
 <button id="backToTop" type="button" aria-label="Back to top">Top</button>
@@ -615,8 +695,9 @@ TEMPLATE = """
     const THEME_KEY = "metax-docs-theme";
     const TOC_COLLAPSE_KEY = "metax-docs-collapsed-anchors";
     const SIDEBAR_COLLAPSE_KEY = "metax-docs-sidebar-collapsed";
+    const DOC_TAB_KEY = "metax-docs-active-tab";
     const MOBILE_BREAKPOINT = 960;
-    const ANCHOR_OFFSET = 84;
+    const ANCHOR_OFFSET = 96;
 
     const body = document.body;
     const nav = document.getElementById("doc-nav");
@@ -629,11 +710,60 @@ TEMPLATE = """
     const navLinks = Array.from(document.querySelectorAll("nav a.nav-link"));
     const tocNodes = Array.from(document.querySelectorAll(".toc-node"));
     const tocCarets = Array.from(document.querySelectorAll(".toc-caret"));
+    const tocLists = Array.from(document.querySelectorAll(".toc-list[data-doc-key]"));
+    const docTabs = Array.from(document.querySelectorAll(".doc-tab[data-doc-key]"));
+    const docPanels = Array.from(document.querySelectorAll(".doc-panel[data-doc-key]"));
     const contentImages = Array.from(document.querySelectorAll("main img"));
-    const sections = Array.from(document.querySelectorAll("main h1, main h2, main h3, main h4, main h5, main h6")).filter(function(node) {
-        return Boolean(node.id);
-    });
     let hashRealignTimer = null;
+
+    function activeDocumentKey() {
+        const selected = docTabs.find(function(tab) {
+            return tab.getAttribute("aria-selected") === "true";
+        });
+        return selected ? selected.getAttribute("data-doc-key") : docTabs[0].getAttribute("data-doc-key");
+    }
+
+    function activeSections() {
+        const panel = docPanels.find(function(candidate) {
+            return !candidate.hidden;
+        });
+        if (!panel) {
+            return [];
+        }
+        return Array.from(panel.querySelectorAll("h1, h2, h3, h4, h5, h6")).filter(function(node) {
+            return Boolean(node.id);
+        });
+    }
+
+    function documentKeyForTarget(target) {
+        const panel = target ? target.closest(".doc-panel[data-doc-key]") : null;
+        return panel ? panel.getAttribute("data-doc-key") : null;
+    }
+
+    function activateDocument(key, remember) {
+        const exists = docPanels.some(function(panel) {
+            return panel.getAttribute("data-doc-key") === key;
+        });
+        const resolvedKey = exists ? key : docPanels[0].getAttribute("data-doc-key");
+
+        docTabs.forEach(function(tab) {
+            const active = tab.getAttribute("data-doc-key") === resolvedKey;
+            tab.setAttribute("aria-selected", String(active));
+            tab.setAttribute("tabindex", active ? "0" : "-1");
+        });
+        docPanels.forEach(function(panel) {
+            panel.hidden = panel.getAttribute("data-doc-key") !== resolvedKey;
+        });
+        tocLists.forEach(function(list) {
+            list.hidden = list.getAttribute("data-doc-key") !== resolvedKey;
+        });
+
+        if (remember !== false) {
+            localStorage.setItem(DOC_TAB_KEY, resolvedKey);
+        }
+        updateActiveNavLink();
+        return resolvedKey;
+    }
 
     function collapsibleNodes() {
         return tocNodes.filter(function(node) {
@@ -685,6 +815,7 @@ TEMPLATE = """
     }
 
     function updateActiveNavLink() {
+        const sections = activeSections();
         if (!sections.length) {
             return;
         }
@@ -699,7 +830,8 @@ TEMPLATE = """
         });
 
         navLinks.forEach(function(link) {
-            const isActive = link.getAttribute("href") === "#" + currentId;
+            const visibleToc = !link.closest(".toc-list").hidden;
+            const isActive = visibleToc && link.getAttribute("href") === "#" + currentId;
             link.classList.toggle("active", isActive);
         });
 
@@ -739,6 +871,11 @@ TEMPLATE = """
         const target = currentHashTarget();
         if (!target) {
             return false;
+        }
+
+        const targetDocument = documentKeyForTarget(target);
+        if (targetDocument && targetDocument !== activeDocumentKey()) {
+            activateDocument(targetDocument);
         }
 
         const top = Math.max(window.scrollY + target.getBoundingClientRect().top - ANCHOR_OFFSET, 0);
@@ -796,9 +933,40 @@ TEMPLATE = """
         tocToggle.setAttribute("aria-expanded", String(open));
     });
 
+    docTabs.forEach(function(tab, index) {
+        tab.addEventListener("click", function() {
+            const key = activateDocument(tab.getAttribute("data-doc-key"));
+            const panel = docPanels.find(function(candidate) {
+                return candidate.getAttribute("data-doc-key") === key;
+            });
+            const firstHeading = panel ? panel.querySelector("h1, h2, h3, h4, h5, h6") : null;
+            if (firstHeading && firstHeading.id) {
+                history.pushState(null, "", "#" + firstHeading.id);
+                scheduleHashRealign(0, "smooth");
+                scheduleHashRealign(250, "auto");
+            }
+        });
+
+        tab.addEventListener("keydown", function(event) {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+                return;
+            }
+            event.preventDefault();
+            const direction = event.key === "ArrowRight" ? 1 : -1;
+            const nextIndex = (index + direction + docTabs.length) % docTabs.length;
+            docTabs[nextIndex].focus();
+            docTabs[nextIndex].click();
+        });
+    });
+
     navLinks.forEach(function(link) {
         link.addEventListener("click", function(event) {
             closeMobileToc();
+
+            const targetList = link.closest(".toc-list[data-doc-key]");
+            if (targetList) {
+                activateDocument(targetList.getAttribute("data-doc-key"));
+            }
 
             const href = link.getAttribute("href");
             if (!href || !href.startsWith("#")) {
@@ -824,14 +992,18 @@ TEMPLATE = """
     });
 
     collapseAllToc.addEventListener("click", function() {
-        collapsibleNodes().forEach(function(node) {
+        collapsibleNodes().filter(function(node) {
+            return !node.closest(".toc-list").hidden;
+        }).forEach(function(node) {
             setNodeCollapsed(node, true);
         });
         saveCollapsedTocState();
     });
 
     expandAllToc.addEventListener("click", function() {
-        collapsibleNodes().forEach(function(node) {
+        collapsibleNodes().filter(function(node) {
+            return !node.closest(".toc-list").hidden;
+        }).forEach(function(node) {
             setNodeCollapsed(node, false);
         });
         saveCollapsedTocState();
@@ -879,10 +1051,13 @@ TEMPLATE = """
 
     document.addEventListener("DOMContentLoaded", function() {
         const savedTheme = localStorage.getItem(THEME_KEY);
+        const hashDocument = documentKeyForTarget(currentHashTarget());
+        const savedDocument = localStorage.getItem(DOC_TAB_KEY);
         applyTheme(savedTheme === "dark" ? "dark" : "light");
         normalizeMediaLists();
         loadCollapsedTocState();
         setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
+        activateDocument(hashDocument || savedDocument || docPanels[0].getAttribute("data-doc-key"), false);
         updateActiveNavLink();
         updateBackToTop();
         scheduleHashRealign(0, "auto");
@@ -898,7 +1073,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Convert cookbook markdown to a styled HTML page.")
     parser.add_argument("--input", type=Path, help="Path to markdown source file.")
     parser.add_argument("--output", type=Path, help="Path to generated HTML output file.")
-    parser.add_argument("--title", default="MetaX Cookbook", help="Document title shown in the page header.")
+    parser.add_argument("--title", default="MetaX Documentation", help="Document title shown in the page header.")
     return parser.parse_args()
 
 
@@ -927,6 +1102,7 @@ def collect_toc_tree(toc_tokens: list[dict[str, Any]]) -> list[dict[str, Any]]:
             title = strip_html(str(node.get("name", "")))
             anchor = str(node.get("id", "")).strip()
             if not anchor or not title:
+                tree.extend(walk(node.get("children", [])))
                 continue
             tree.append(
                 {
@@ -939,6 +1115,16 @@ def collect_toc_tree(toc_tokens: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return tree
 
     return walk(toc_tokens)
+
+
+def collect_toc_anchors(nodes: list[dict[str, Any]]) -> set[str]:
+    anchors: set[str] = set()
+    stack = list(nodes)
+    while stack:
+        node = stack.pop()
+        anchors.add(str(node["anchor"]))
+        stack.extend(node["children"])
+    return anchors
 
 
 def ensure_class(attrs: str, class_names: list[str]) -> str:
@@ -1089,21 +1275,57 @@ def cleanup_block_wrappers(html_content: str) -> str:
     return html_content
 
 
-def build_html(markdown_path: Path, output_path: Path, title: str) -> None:
+def render_markdown_document(markdown_path: Path, key: str, label: str) -> dict[str, Any]:
     markdown_content = markdown_path.read_text(encoding="utf-8")
-    markdown_content = markdown_content.replace("# Contents", "").replace("[TOC]", "")
+    markdown_content = re.sub(r"(?m)^# Contents\s*$", "", markdown_content)
+    markdown_content = re.sub(r"(?m)^\[TOC\]\s*$", "", markdown_content)
 
     md = markdown.Markdown(extensions=MARKDOWN_EXTENSIONS)
     html_content = md.convert(markdown_content)
     toc_tree = collect_toc_tree(getattr(md, "toc_tokens", []))
+    heading_anchors = set(re.findall(r'<h[1-6]\s+id="([^"]+)"', html_content))
+    missing_from_toc = sorted(heading_anchors - collect_toc_anchors(toc_tree))
+    if missing_from_toc:
+        raise ValueError(
+            f"Sidebar TOC is missing headings from {markdown_path}: "
+            + ", ".join(missing_from_toc)
+        )
 
     html_content = enhance_tables(html_content)
     html_content = enhance_images(html_content)
     html_content = normalize_internal_links(html_content)
     html_content = cleanup_block_wrappers(html_content)
 
+    return {
+        "key": key,
+        "label": label,
+        "content": html_content,
+        "toc_tree": toc_tree,
+    }
+
+
+def build_html(markdown_path: Path, output_path: Path, title: str) -> None:
+    documents = [render_markdown_document(markdown_path, "cookbook", "Cookbook")]
+    for key, label, filename in SUPPLEMENTARY_DOCUMENTS:
+        path = markdown_path.with_name(filename)
+        if path.exists():
+            documents.append(render_markdown_document(path, key, label))
+
+    anchors: set[str] = set()
+    for document in documents:
+        for node in document["toc_tree"]:
+            stack = [node]
+            while stack:
+                current = stack.pop()
+                anchor = current["anchor"]
+                if anchor in anchors:
+                    raise ValueError(f"Duplicate documentation anchor: {anchor}")
+                anchors.add(anchor)
+                stack.extend(current["children"])
+
     template = Template(TEMPLATE)
-    html_output = template.render(content=html_content, toc_tree=toc_tree, title=title)
+    html_output = template.render(documents=documents, title=title)
+    html_output = "\n".join(line.rstrip() for line in html_output.splitlines()) + "\n"
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html_output, encoding="utf-8")
