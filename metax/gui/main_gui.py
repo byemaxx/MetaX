@@ -2423,7 +2423,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 "lineEdit_pep_direct_to_otf_metaumbra_peptide_score_col",
                 "doubleSpinBox_pep_direct_to_otf_metaumbra_single_peptide_error",
                 "doubleSpinBox_pep_direct_to_otf_metaumbra_qvalue_cutoff",
-                "doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff",
             ],
             enabled,
         )
@@ -2453,6 +2452,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self._set_selected_genome_list_controls_enabled(use_selected)
         self._set_metaumbra_scoring_controls_enabled(False)
         self._set_otf_annotation_controls_enabled(True)
+        self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.setEnabled(
+            not use_manifest
+        )
         for widget_name in (
             "label_unit_specific_manifest",
             "lineEdit_pep_direct_to_otf_unit_specific_manifest_path",
@@ -4155,6 +4157,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.lineEdit_pep_direct_to_otf_pep_table_sep.text().strip()
         )
         lca_threshold = round(self.doubleSpinBox_pep_direct_to_otf_LCA_threshold.value(), 3)
+        protein_peptide_coverage_cutoff = round(
+            self.doubleSpinBox_pep_direct_to_otf_protein_coverage_cutoff.value(),
+            3,
+        )
         protein_genome_separator = self.lineEdit_pep_direct_to_otf_genome_separator.text().strip()
         duplicate_mode = (
             self.comboBox_pep_direct_to_otf_duplicate_peptide_handle_mode.currentText().strip() or "sum"
@@ -4211,6 +4217,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             "intensity_col_prefix": intensity_col_prefix,
             "table_separator": table_separator,
             "lca_threshold": lca_threshold,
+            "protein_peptide_coverage_cutoff": protein_peptide_coverage_cutoff,
             "genome_mode": True,
             "distinct_genome_threshold": 0,
             "protein_genome_separator": protein_genome_separator,
