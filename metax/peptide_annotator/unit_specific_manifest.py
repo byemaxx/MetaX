@@ -244,10 +244,6 @@ def load_genome_selection_manifest(
             allow_empty=True,
         )
         genome_ids = q005 if selected_genome_key == "genome_ids_q005" else q001
-        if not genome_ids:
-            raise ValueError(
-                f"Unit {analysis_unit_id!r} has no genomes at selected threshold {selected_threshold}"
-            )
 
         n_samples = _require_integer(
             raw_unit.get("n_samples"),

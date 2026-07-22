@@ -100,6 +100,34 @@ def test_manifest_gui_validation_accepts_diann_wide_matrix_compound_suffixes(tmp
     assert result.mapped_samples == dict(zip(samples, sample_columns))
 
 
+def test_manifest_gui_validation_respects_empty_genome_unit_policy(tmp_path):
+    fixture_path = Path(__file__).parent / "fixtures" / "genome_selection_manifest.v1.json"
+    manifest_data = json.loads(fixture_path.read_text(encoding="utf-8"))
+    manifest_data["units"]["u1"]["genome_ids_q001"] = []
+    manifest_path = tmp_path / "genome_selection_manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    peptide_path = tmp_path / "peptides.tsv"
+    peptide_path.write_text("Sequence\ts1\ts2\nPEP\t1\t1\n", encoding="utf-8")
+
+    warn_result = validate_genome_selection_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        genome_threshold="q0.01",
+        on_empty_unit="warn-skip",
+    )
+    error_result = validate_genome_selection_manifest_for_gui(
+        manifest_path=str(manifest_path),
+        peptide_table_path=str(peptide_path),
+        genome_threshold="q0.01",
+        on_empty_unit="error",
+    )
+
+    assert warn_result.ok
+    assert "Empty genome units to skip: u1" in warn_result.message
+    assert not error_result.ok
+    assert "Unit 'u1' has no genomes at selected threshold q0.01" in error_result.message
+
+
 def test_annotation_layout_follows_source_input_output_order():
     app, window, ui = _build_layout_harness()
     try:
