@@ -715,6 +715,15 @@ class ManifestOTFAnnotator:
             genome_threshold=self.genome_threshold,
             strict=True,
         )
+        empty_genome_units = [
+            unit for unit in manifest.units.values() if not unit.genome_ids
+        ]
+        if empty_genome_units and self.on_empty_unit == "error":
+            unit = empty_genome_units[0]
+            raise ValueError(
+                f"Unit {unit.analysis_unit_id!r} has no genomes at selected threshold "
+                f"{manifest.selected_genome_threshold}"
+            )
         total_units = len(manifest.units)
         print(
             f"[Unit-specific] Preparing annotation for {total_units} units "
@@ -821,21 +830,42 @@ class ManifestOTFAnnotator:
         temporary_unit_dirs: list[Path] = []
         try:
             for unit_index, unit in enumerate(manifest.units.values(), start=1):
+                progress_prefix = (
+                    f"[Unit-specific] Unit {unit_index} of {total_units}: "
+                    f"{unit.analysis_unit_id}"
+                )
+                mapped_samples = [sample for sample in unit.sample_columns if sample in sample_mapping]
+                if not unit.genome_ids:
+                    message = (
+                        f"Unit {unit.analysis_unit_id!r} has no genomes at selected threshold "
+                        f"{manifest.selected_genome_threshold}"
+                    )
+                    warnings.warn(message, stacklevel=2)
+                    self._record_summary(
+                        summary_rows,
+                        unit.analysis_unit_id,
+                        len(unit.sample_columns),
+                        len(mapped_samples),
+                        len(peptide_df),
+                        0,
+                        0,
+                        0,
+                        "skipped",
+                        message,
+                    )
+                    print(f"{progress_prefix} skipped: {message}", flush=True)
+                    continue
+
                 tmpdir = _create_temporary_unit_directory(
                     self.temporary_unit_otf_dir,
                     unit.analysis_unit_id,
                 )
                 temporary_unit_dirs.append(tmpdir)
-                progress_prefix = (
-                    f"[Unit-specific] Unit {unit_index} of {total_units}: "
-                    f"{unit.analysis_unit_id}"
-                )
                 print(
                     f"{progress_prefix} started "
                     f"({len(unit.sample_columns)} samples, {len(unit.genome_ids)} genomes).",
                     flush=True,
                 )
-                mapped_samples = [sample for sample in unit.sample_columns if sample in sample_mapping]
                 try:
                     unit_df, _ = self._build_unit_dataframe(peptide_df, unit.sample_columns, sample_mapping)
                 except ValueError as exc:
