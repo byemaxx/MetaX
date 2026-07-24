@@ -236,9 +236,16 @@ class ManifestOTFAnnotator:
     def temporary_unit_otf_dir(self) -> Path:
         return self.artifacts_dir / "per_unit" / "unit_otf"
 
-    def _all_manifest_samples(self, manifest: GenomeSelectionManifest) -> list[str]:
+    def _manifest_samples(
+        self,
+        manifest: GenomeSelectionManifest,
+        *,
+        include_empty_genome_units: bool = True,
+    ) -> list[str]:
         samples: list[str] = []
         for unit in manifest.units.values():
+            if not include_empty_genome_units and not unit.genome_ids:
+                continue
             for sample in unit.sample_columns:
                 if sample not in samples:
                     samples.append(sample)
@@ -736,8 +743,12 @@ class ManifestOTFAnnotator:
             f"(genome threshold: {manifest.selected_genome_threshold}).",
             flush=True,
         )
-        manifest_samples = self._all_manifest_samples(manifest)
-        peptide_df = self._read_peptide_table(manifest_samples)
+        manifest_samples = self._manifest_samples(manifest)
+        required_manifest_samples = self._manifest_samples(
+            manifest,
+            include_empty_genome_units=False,
+        )
+        peptide_df = self._read_peptide_table(required_manifest_samples)
         if self.peptide_col not in peptide_df.columns:
             raise ValueError(f"Peptide column {self.peptide_col!r} not found in peptide table")
 
@@ -745,7 +756,7 @@ class ManifestOTFAnnotator:
         if sample_mapping is None:
             sample_mapping = self._resolve_sample_mapping(
                 peptide_df.columns,
-                manifest_samples,
+                required_manifest_samples,
             )
         mapped_input_cols = sorted(set(sample_mapping.values()))
         if mapped_input_cols:
@@ -756,7 +767,8 @@ class ManifestOTFAnnotator:
             )
         print(
             f"[Unit-specific] Sample mapping complete: {len(sample_mapping)} of "
-            f"{len(manifest_samples)} manifest samples mapped.",
+            f"{len(required_manifest_samples)} required manifest samples mapped "
+            f"({len(manifest_samples)} total).",
             flush=True,
         )
         global_genome_set = {

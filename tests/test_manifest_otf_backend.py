@@ -32,14 +32,14 @@ def test_digest_union_is_scanned_once(monkeypatch):
     assert calls[0]["selected_genomes_set"] == {"g1", "g2"}
 
 
-def test_run_warn_skips_empty_genome_unit_and_processes_other_units(tmp_path, monkeypatch):
+def test_run_warn_skips_empty_genome_unit_without_requiring_its_samples(tmp_path, monkeypatch):
     manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
     manifest_data["units"]["u1"]["genome_ids_q001"] = []
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
     peptide_path = tmp_path / "peptides.tsv"
     peptide_path.write_text(
-        "Sequence\ts1\ts2\nPEP1\t1\t0\nPEP2\t0\t1\n",
+        "Sequence\ts2\nPEP1\t0\nPEP2\t1\n",
         encoding="utf-8",
     )
     taxafunc_db = tmp_path / "taxafunc.db"
@@ -84,6 +84,9 @@ def test_run_warn_skips_empty_genome_unit_and_processes_other_units(tmp_path, mo
     assert skipped["status"] == "skipped"
     assert skipped["n_genomes_from_manifest"] == 0
     assert "no genomes at selected threshold q0.01" in skipped["message"]
+    output = pd.read_csv(result.output_path, sep="\t")
+    assert "Intensity_s1" in output.columns
+    assert output["Intensity_s1"].isna().all()
 
 
 def test_run_warn_skips_all_empty_genome_units_and_writes_zero_row_outputs(tmp_path):
@@ -94,7 +97,7 @@ def test_run_warn_skips_all_empty_genome_units_and_writes_zero_row_outputs(tmp_p
     manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
     peptide_path = tmp_path / "peptides.tsv"
     peptide_path.write_text(
-        "Sequence\ts1\ts2\nPEP1\t1\t0\nPEP2\t0\t1\n",
+        "Sequence\nPEP1\nPEP2\n",
         encoding="utf-8",
     )
     taxafunc_db = tmp_path / "taxafunc.db"
