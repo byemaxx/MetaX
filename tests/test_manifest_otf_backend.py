@@ -86,6 +86,63 @@ def test_run_warn_skips_empty_genome_unit_and_processes_other_units(tmp_path, mo
     assert "no genomes at selected threshold q0.01" in skipped["message"]
 
 
+def test_run_warn_skips_all_empty_genome_units_and_writes_zero_row_outputs(tmp_path):
+    manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    for unit in manifest_data["units"].values():
+        unit["genome_ids_q001"] = []
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    peptide_path = tmp_path / "peptides.tsv"
+    peptide_path.write_text(
+        "Sequence\ts1\ts2\nPEP1\t1\t0\nPEP2\t0\t1\n",
+        encoding="utf-8",
+    )
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    taxafunc_db.touch()
+    peptide_db.touch()
+    output_path = tmp_path / "output.tsv"
+    annotator = backend.ManifestOTFAnnotator(
+        peptide_table_path=str(peptide_path),
+        metaumbra_manifest_path=str(manifest_path),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(output_path),
+        db_path=str(peptide_db),
+        genome_threshold="q0.01",
+        on_empty_unit="warn-skip",
+    )
+
+    with pytest.warns(UserWarning, match="has no genomes at selected threshold q0.01"):
+        result = annotator.run()
+
+    expected_columns = [
+        "analysis_unit_id",
+        "Sequence",
+        "Proteins",
+        "LCA_level",
+        "Taxon",
+        "Taxon_prop",
+        "Intensity_s1",
+        "Intensity_s2",
+    ]
+    assert result.rows == 0
+    assert result.column_names == expected_columns
+    assert result.column_count == len(expected_columns)
+    assert result.completed_units == 0
+    assert result.skipped_units == 2
+
+    output = pd.read_csv(result.output_path, sep="\t")
+    assert output.empty
+    assert output.columns.tolist() == expected_columns
+
+    summary = pd.read_csv(result.summary_path, sep="\t")
+    assert summary["analysis_unit_id"].tolist() == ["u1", "u2"]
+    assert summary["status"].tolist() == ["skipped", "skipped"]
+    assert summary["n_genomes_from_manifest"].tolist() == [0, 0]
+    assert Path(result.info_path).is_file()
+    assert (Path(result.summary_path).parent / "run_summary.json").is_file()
+
+
 def test_run_errors_on_empty_genome_unit_when_configured(tmp_path):
     manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
     manifest_data["units"]["u1"]["genome_ids_q001"] = []
