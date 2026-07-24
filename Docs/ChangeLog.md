@@ -1,3 +1,12 @@
+# Version: 2.6.2
+## Date: 2026-07-24
+### Changes:
+- New: Added a machine-readable automated-report CLI contract for workflow orchestrators.
+- New: Added report capability discovery and versioned `metax.report_result.v1` result JSON output.
+- Change: Report result files are written atomically and include generated artifacts, warnings, errors, and software provenance.
+- Test: Added report CLI capability, success-result, and failure-result contract coverage.
+
+
 # Version: 2.6.1
 ## Date: 2026-07-21
 ### Changes:
