@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib
+import json
 import sys
+
+from metax.utils.version import __version__
 
 
 REPORT_EXTRA = "MetaXTools[report]"
@@ -20,6 +23,9 @@ REPORT_IMPORT_ROOTS = {
     "statsmodels",
     "upsetplot",
 }
+REPORT_WORKFLOW_API_VERSION = "1.0"
+REPORT_RESULT_SCHEMA_VERSION = "metax.report_result.v1"
+REPORT_CAPABILITIES_SCHEMA_VERSION = "metax.report_capabilities.v1"
 
 
 def _missing_report_message(missing_module: str | None = None) -> str:
@@ -32,6 +38,21 @@ def _missing_report_message(missing_module: str | None = None) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     """Load the report CLI only when the headless analysis stack is installed."""
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments == ["--capabilities"]:
+        print(
+            json.dumps(
+                {
+                    "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
+                    "available": True,
+                    "metax_version": __version__,
+                    "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
+                    "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
+                },
+                indent=2,
+            )
+        )
+        return 0
     try:
         report_cli = importlib.import_module("metax.report.cli")
     except ModuleNotFoundError as exc:
@@ -40,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
             print(_missing_report_message(exc.name), file=sys.stderr)
             return 4
         raise
-    return report_cli.main(argv)
+    return report_cli.main(arguments)
 
 
 if __name__ == "__main__":

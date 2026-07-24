@@ -4,7 +4,8 @@
 - New: Added a machine-readable automated-report CLI contract for workflow orchestrators.
 - New: Added report capability discovery and versioned `metax.report_result.v1` result JSON output.
 - Change: Report result files are written atomically and include generated artifacts, warnings, errors, and software provenance.
-- Test: Added report CLI capability, success-result, and failure-result contract coverage.
+- Change: Report result input/output paths are absolute, completed results require a non-empty `index.html`, and capability discovery remains available without loading the report or Qt stacks.
+- Test: Added report CLI capability, success, failure, cancellation, missing-artifact, real headless fixture, and Windows contract coverage.
 
 
 # Version: 2.6.1

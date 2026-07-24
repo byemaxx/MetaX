@@ -80,9 +80,13 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
     >
     > ```bash
     > python -m pip install "MetaXTools[analyzer]"
-    > python -m pip install "MetaXTools[report]"
-    > metax-report --config report.yaml
+    > python -m pip install "MetaXTools[report]>=2.6.2"
+    > python -m metax.cli.report --capabilities
+    > metax-report --config report.yaml --result-json metax_report_result.json
     > ```
+
+    > MetaXTools 2.6.2 provides the machine-readable
+    > `metax.report_result.v1` contract for headless workflow orchestration.
 
 - **Desktop GUI / complete installation**
 

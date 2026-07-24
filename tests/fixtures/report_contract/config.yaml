@@ -1,0 +1,40 @@
+analysis:
+  group_meta: Group
+  control_group: control
+preprocessing:
+  taxa_peptide_num_threshold: 1
+  func_peptide_num_threshold: 1
+  otf_peptide_num_threshold: 1
+tables:
+  taxa_levels:
+    - s
+  function_columns:
+    - Gene
+statistics:
+  run_anova: false
+  run_ttest: false
+  run_group_vs_control: false
+plots:
+  top_n: 5
+  run_overview: true
+  run_pca: false
+  run_pca_3d: false
+  run_tsne: false
+  run_correlation: false
+  run_heatmap: false
+  run_box: false
+  run_bar: false
+  run_barplot: false
+  run_upset: false
+  run_alpha_diversity: false
+  run_beta_diversity: false
+  run_diversity: false
+  run_volcano: false
+  run_sankey: false
+  run_sunburst: false
+  run_treemap: false
+  run_network: false
+report:
+  overwrite: true
+  figure_formats:
+    - png
