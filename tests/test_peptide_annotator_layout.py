@@ -107,7 +107,7 @@ def test_manifest_gui_validation_respects_empty_genome_unit_policy(tmp_path):
     manifest_path = tmp_path / "genome_selection_manifest.json"
     manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
     peptide_path = tmp_path / "peptides.tsv"
-    peptide_path.write_text("Sequence\ts1\ts2\nPEP\t1\t1\n", encoding="utf-8")
+    peptide_path.write_text("Sequence\ts2\nPEP\t1\n", encoding="utf-8")
 
     warn_result = validate_genome_selection_manifest_for_gui(
         manifest_path=str(manifest_path),
@@ -123,6 +123,10 @@ def test_manifest_gui_validation_respects_empty_genome_unit_policy(tmp_path):
     )
 
     assert warn_result.ok
+    assert warn_result.manifest_samples == ["s1", "s2"]
+    assert warn_result.mapped_samples == {"s2": "s2"}
+    assert warn_result.missing_samples == []
+    assert "Required peptide table samples: 1" in warn_result.message
     assert "Empty genome units to skip: u1" in warn_result.message
     assert not error_result.ok
     assert "Unit 'u1' has no genomes at selected threshold q0.01" in error_result.message
