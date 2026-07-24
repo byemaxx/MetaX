@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -29,6 +30,145 @@ def test_digest_union_is_scanned_once(monkeypatch):
     )
     assert len(calls) == 1
     assert calls[0]["selected_genomes_set"] == {"g1", "g2"}
+
+
+def test_run_warn_skips_empty_genome_unit_without_requiring_its_samples(tmp_path, monkeypatch):
+    manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    manifest_data["units"]["u1"]["genome_ids_q001"] = []
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    peptide_path = tmp_path / "peptides.tsv"
+    peptide_path.write_text(
+        "Sequence\ts2\nPEP1\t0\nPEP2\t1\n",
+        encoding="utf-8",
+    )
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    taxafunc_db.touch()
+    peptide_db.touch()
+
+    class FakeMapper:
+        def __init__(self, *, peptide_df, genome_list, **kwargs):
+            self.peptide_table = peptide_df
+            self.peptides_after_mapping = len(peptide_df)
+            self.final_peptide_table = peptide_df
+            self.selected_genomes_num = len(genome_list)
+
+        def all_in_one(self, **kwargs):
+            return pd.DataFrame(
+                {
+                    "Sequence": self.peptide_table["Sequence"],
+                    "Taxon": ["t__test"] * len(self.peptide_table),
+                    "Intensity_s2": self.peptide_table["Intensity_s2"],
+                }
+            )
+
+    monkeypatch.setattr(backend, "peptideProteinsMapper", FakeMapper)
+    annotator = backend.ManifestOTFAnnotator(
+        peptide_table_path=str(peptide_path),
+        metaumbra_manifest_path=str(manifest_path),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "output.tsv"),
+        db_path=str(peptide_db),
+        genome_threshold="q0.01",
+        on_empty_unit="warn-skip",
+    )
+
+    with pytest.warns(UserWarning, match="Unit 'u1' has no genomes"):
+        result = annotator.run()
+
+    assert result.completed_units == 1
+    assert result.skipped_units == 1
+    summary = pd.read_csv(result.summary_path, sep="\t")
+    skipped = summary.loc[summary["analysis_unit_id"] == "u1"].iloc[0]
+    assert skipped["status"] == "skipped"
+    assert skipped["n_genomes_from_manifest"] == 0
+    assert "no genomes at selected threshold q0.01" in skipped["message"]
+    output = pd.read_csv(result.output_path, sep="\t")
+    assert "Intensity_s1" in output.columns
+    assert output["Intensity_s1"].isna().all()
+
+
+def test_run_warn_skips_all_empty_genome_units_and_writes_zero_row_outputs(tmp_path):
+    manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    for unit in manifest_data["units"].values():
+        unit["genome_ids_q001"] = []
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    peptide_path = tmp_path / "peptides.tsv"
+    peptide_path.write_text(
+        "Sequence\nPEP1\nPEP2\n",
+        encoding="utf-8",
+    )
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    taxafunc_db.touch()
+    peptide_db.touch()
+    output_path = tmp_path / "output.tsv"
+    annotator = backend.ManifestOTFAnnotator(
+        peptide_table_path=str(peptide_path),
+        metaumbra_manifest_path=str(manifest_path),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(output_path),
+        db_path=str(peptide_db),
+        genome_threshold="q0.01",
+        on_empty_unit="warn-skip",
+    )
+
+    with pytest.warns(UserWarning, match="has no genomes at selected threshold q0.01"):
+        result = annotator.run()
+
+    expected_columns = [
+        "analysis_unit_id",
+        "Sequence",
+        "Proteins",
+        "LCA_level",
+        "Taxon",
+        "Taxon_prop",
+        "Intensity_s1",
+        "Intensity_s2",
+    ]
+    assert result.rows == 0
+    assert result.column_names == expected_columns
+    assert result.column_count == len(expected_columns)
+    assert result.completed_units == 0
+    assert result.skipped_units == 2
+
+    output = pd.read_csv(result.output_path, sep="\t")
+    assert output.empty
+    assert output.columns.tolist() == expected_columns
+
+    summary = pd.read_csv(result.summary_path, sep="\t")
+    assert summary["analysis_unit_id"].tolist() == ["u1", "u2"]
+    assert summary["status"].tolist() == ["skipped", "skipped"]
+    assert summary["n_genomes_from_manifest"].tolist() == [0, 0]
+    assert Path(result.info_path).is_file()
+    assert (Path(result.summary_path).parent / "run_summary.json").is_file()
+
+
+def test_run_errors_on_empty_genome_unit_when_configured(tmp_path):
+    manifest_data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    manifest_data["units"]["u1"]["genome_ids_q001"] = []
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    peptide_path = tmp_path / "peptides.tsv"
+    peptide_path.write_text("Sequence\ts1\ts2\nPEP\t1\t1\n", encoding="utf-8")
+    taxafunc_db = tmp_path / "taxafunc.db"
+    peptide_db = tmp_path / "peptide.db"
+    taxafunc_db.touch()
+    peptide_db.touch()
+    annotator = backend.ManifestOTFAnnotator(
+        peptide_table_path=str(peptide_path),
+        metaumbra_manifest_path=str(manifest_path),
+        taxafunc_anno_db_path=str(taxafunc_db),
+        output_path=str(tmp_path / "output.tsv"),
+        db_path=str(peptide_db),
+        genome_threshold="q0.01",
+        on_empty_unit="error",
+    )
+
+    with pytest.raises(ValueError, match="Unit 'u1' has no genomes at selected threshold q0.01"):
+        annotator.run()
 
 
 def test_merged_column_order_always_contains_analysis_unit_id(tmp_path):

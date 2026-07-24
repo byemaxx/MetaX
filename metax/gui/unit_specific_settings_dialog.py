@@ -102,9 +102,15 @@ def _read_long_format_run_columns(peptide_table_path: str) -> list[str]:
     return [str(value) for value in pc.unique(run_column).to_pylist() if value is not None]
 
 
-def _all_manifest_samples(manifest) -> list[str]:
+def _manifest_samples(
+    manifest,
+    *,
+    include_empty_genome_units: bool = True,
+) -> list[str]:
     samples: list[str] = []
     for unit in manifest.units.values():
+        if not include_empty_genome_units and not unit.genome_ids:
+            continue
         for sample in unit.sample_columns:
             if sample not in samples:
                 samples.append(sample)
@@ -119,6 +125,7 @@ def validate_genome_selection_manifest_for_gui(
     genome_threshold: str = "auto",
     input_sample_col_prefix: str | None = None,
     on_missing_sample: str = "error",
+    on_empty_unit: str = "warn-skip",
     diann_intensity_col: str | None = None,
     digested_genome_folders: str | list[str] | None = None,
 ) -> UnitSpecificManifestValidationResult:
@@ -127,6 +134,14 @@ def validate_genome_selection_manifest_for_gui(
         return UnitSpecificManifestValidationResult(
             False,
             "On missing sample must be 'error' or 'warn-skip'.",
+            [],
+            {},
+            [],
+        )
+    if on_empty_unit not in {"error", "warn-skip"}:
+        return UnitSpecificManifestValidationResult(
+            False,
+            "On empty unit must be 'error' or 'warn-skip'.",
             [],
             {},
             [],
@@ -148,7 +163,27 @@ def validate_genome_selection_manifest_for_gui(
     except Exception as exc:
         return UnitSpecificManifestValidationResult(False, f"Manifest validation failed:\n{exc}", [], {}, [])
 
-    manifest_samples = _all_manifest_samples(manifest)
+    empty_genome_units = [
+        unit.analysis_unit_id
+        for unit in manifest.units.values()
+        if not unit.genome_ids
+    ]
+    if empty_genome_units and on_empty_unit == "error":
+        unit_id = empty_genome_units[0]
+        return UnitSpecificManifestValidationResult(
+            False,
+            f"Manifest validation failed:\nUnit {unit_id!r} has no genomes at selected "
+            f"threshold {manifest.selected_genome_threshold}",
+            [],
+            {},
+            [],
+        )
+
+    manifest_samples = _manifest_samples(manifest)
+    required_manifest_samples = _manifest_samples(
+        manifest,
+        include_empty_genome_units=False,
+    )
     mapped_samples: dict[str, str] = {}
     missing_samples: list[str] = []
     header_validation_skipped = False
@@ -163,7 +198,7 @@ def validate_genome_selection_manifest_for_gui(
             "before validating the manifest.",
             manifest_samples,
             {},
-            manifest_samples,
+            required_manifest_samples,
         )
     if peptide_table_path:
         if not Path(peptide_table_path).is_file():
@@ -172,7 +207,7 @@ def validate_genome_selection_manifest_for_gui(
                 f"Peptide table not found:\n{peptide_table_path}",
                 manifest_samples,
                 {},
-                manifest_samples,
+                required_manifest_samples,
             )
         try:
             peptide_columns = _read_peptide_table_header_columns(peptide_table_path, peptide_table_separator)
@@ -182,7 +217,7 @@ def validate_genome_selection_manifest_for_gui(
                 f"Could not read peptide table header:\n{exc}",
                 manifest_samples,
                 {},
-                manifest_samples,
+                required_manifest_samples,
             )
 
         if peptide_columns is None:
@@ -195,7 +230,7 @@ def validate_genome_selection_manifest_for_gui(
                     f"Peptide column {peptide_col!r} was not found in the peptide table header.",
                     manifest_samples,
                     {},
-                    manifest_samples,
+                    required_manifest_samples,
                 )
             candidate_sample_columns = peptide_columns
             if (
@@ -227,14 +262,14 @@ def validate_genome_selection_manifest_for_gui(
                         f"Could not read DIA-NN Run values from the parquet file:\n{exc}",
                         manifest_samples,
                         {},
-                        manifest_samples,
+                        required_manifest_samples,
                     )
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
                     mapped_samples = resolve_manifest_sample_columns(
                         peptide_columns=candidate_sample_columns,
-                        manifest_sample_columns=manifest_samples,
+                        manifest_sample_columns=required_manifest_samples,
                         output_sample_col_prefix="Intensity_",
                         input_sample_col_prefix=input_sample_col_prefix or None,
                         on_missing="warn-skip",
@@ -247,7 +282,11 @@ def validate_genome_selection_manifest_for_gui(
                     mapped_samples,
                     missing_samples,
                 )
-            missing_samples = [sample for sample in manifest_samples if sample not in mapped_samples]
+            missing_samples = [
+                sample
+                for sample in required_manifest_samples
+                if sample not in mapped_samples
+            ]
             if missing_samples and on_missing_sample == "error":
                 example_count = min(8, len(missing_samples))
                 missing_examples = ", ".join(missing_samples[:example_count])
@@ -263,7 +302,7 @@ def validate_genome_selection_manifest_for_gui(
                 return UnitSpecificManifestValidationResult(
                     False,
                     "Manifest sample-column validation failed.\n"
-                    f"Mapped samples: {len(mapped_samples)}/{len(manifest_samples)}\n"
+                    f"Mapped samples: {len(mapped_samples)}/{len(required_manifest_samples)}\n"
                     f"Missing samples: {len(missing_samples)}\n"
                     f"Examples: {missing_examples}"
                     f"{long_format_hint}",
@@ -318,6 +357,11 @@ def validate_genome_selection_manifest_for_gui(
             )
         digest_status = f"valid ({len(selected_genomes)} selected genome files)"
     provenance_warning = "\n".join(f"Manifest warning: {item}" for item in manifest.warnings)
+    empty_unit_warning = ""
+    if empty_genome_units:
+        empty_unit_warning = (
+            "Empty genome units to skip: " + ", ".join(empty_genome_units)
+        )
     message = (
         "Manifest schema: valid\n"
         f"Manifest mode: {manifest.unit_definition.get('mode')}\n"
@@ -325,12 +369,14 @@ def validate_genome_selection_manifest_for_gui(
         f"Selected genome threshold: {manifest.selected_genome_threshold}\n"
         f"Units: {len(manifest.units)}\n"
         f"Manifest samples: {len(manifest_samples)}\n"
+        f"Required peptide table samples: {len(required_manifest_samples)}\n"
         f"Genome digest source: {digest_status}\n"
         + ("\n".join(header_status_lines) + "\n" if header_status_lines else "")
         + f"Mapped peptide table samples: {mapped_text}\n"
         f"Missing samples: {missing_text}\n"
         "Per-unit summary:\n"
         + "\n".join(unit_lines)
+        + ("\n" + empty_unit_warning if empty_unit_warning else "")
         + ("\n" + provenance_warning if provenance_warning else "")
     )
     ok = not missing_samples or on_missing_sample == "warn-skip"
@@ -431,6 +477,7 @@ class ManifestSettingsDialog(QtWidgets.QDialog):
             genome_threshold=self._config.genome_threshold,
             input_sample_col_prefix=self.lineEdit_input_prefix.text().strip() or None,
             on_missing_sample=self.comboBox_on_missing_sample.currentText().strip(),
+            on_empty_unit=self.comboBox_on_empty_unit.currentText().strip(),
             diann_intensity_col=self.diann_intensity_col,
             digested_genome_folders=self.digested_genome_folders,
         )
