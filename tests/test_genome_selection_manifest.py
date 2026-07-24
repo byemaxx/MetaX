@@ -42,7 +42,7 @@ def test_manifest_rejects_duplicate_sample_assignments(tmp_path):
         load_genome_selection_manifest(path)
 
 
-def test_manifest_rejects_empty_unit_and_genome_threshold_contract(tmp_path):
+def test_manifest_rejects_empty_sample_unit_but_accepts_empty_genome_threshold(tmp_path):
     data = json.loads(FIXTURE.read_text(encoding="utf-8"))
     data["units"]["u1"]["sample_ids"] = []
     data["units"]["u1"]["n_samples"] = 0
@@ -52,11 +52,14 @@ def test_manifest_rejects_empty_unit_and_genome_threshold_contract(tmp_path):
         load_genome_selection_manifest(path)
 
     data = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    data["units"]["u1"]["genome_ids_q005"] = []
     data["units"]["u1"]["genome_ids_q001"] = []
     path.write_text(json.dumps(data), encoding="utf-8")
-    with pytest.raises(ValueError, match="no genomes at selected threshold q0.05"):
-        load_genome_selection_manifest(path, genome_threshold="q0.05", strict=True)
+    manifest = load_genome_selection_manifest(
+        path,
+        genome_threshold="q0.01",
+        strict=True,
+    )
+    assert manifest.units["u1"].genome_ids == []
 
 
 @pytest.mark.parametrize(
