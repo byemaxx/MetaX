@@ -510,9 +510,6 @@ class ManifestOTFAnnotator:
         unit_output_records: list[dict],
         canonical_sample_cols: list[str],
     ) -> list[str]:
-        if not unit_output_records:
-            raise ValueError("No unit-specific OTF rows were produced")
-
         leading_cols = [
             "analysis_unit_id",
             "Sequence",
@@ -521,6 +518,9 @@ class ManifestOTFAnnotator:
             "Taxon",
             "Taxon_prop",
         ]
+        if not unit_output_records:
+            return leading_cols + canonical_sample_cols
+
         all_columns: list[str] = []
         for record in unit_output_records:
             for column in record["columns"]:
@@ -605,6 +605,12 @@ class ManifestOTFAnnotator:
             del unit_frame
             if record.get("temporary", False):
                 unit_path.unlink(missing_ok=True)
+        if not wrote_header:
+            pd.DataFrame(columns=ordered_columns).to_csv(
+                self.output_path,
+                sep="\t",
+                index=False,
+            )
         self._last_unique_sequences = (
             len(unique_sequences) if unique_sequences is not None else None
         )
@@ -1059,18 +1065,18 @@ class ManifestOTFAnnotator:
                     "message",
                 ],
             )
-            merged_columns, merged_rows = self._stream_merge_unit_outputs(
-                unit_output_records,
-                canonical_sample_cols,
-            )
-            unique_sequences = self._last_unique_sequences
-            unique_protein_groups = self._last_unique_protein_groups
             summary_path = self.artifacts_dir / "unit_annotation_summary.tsv"
             summary_df.to_csv(
                 summary_path,
                 sep="\t",
                 index=False,
             )
+            merged_columns, merged_rows = self._stream_merge_unit_outputs(
+                unit_output_records,
+                canonical_sample_cols,
+            )
+            unique_sequences = self._last_unique_sequences
+            unique_protein_groups = self._last_unique_protein_groups
             self._write_merged_info(
                 manifest=manifest,
                 manifest_samples=manifest_samples,
