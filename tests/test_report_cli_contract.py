@@ -151,6 +151,44 @@ def test_report_rejects_missing_index_html(tmp_path: Path, monkeypatch) -> None:
     assert "non-empty index.html" in payload["errors"][0]["message"]
 
 
+def test_report_rejects_missing_summary_json(tmp_path: Path, monkeypatch) -> None:
+    otf_path = tmp_path / "OTF.tsv"
+    otf_path.write_text("Sequence\tIntensity_A\nPEPTIDE\t1\n", encoding="utf-8")
+    result_json = tmp_path / "failed.json"
+    output_dir = tmp_path / "report"
+
+    class IncompleteReport:
+        def __init__(self, config) -> None:
+            self.config = config
+
+        def run(self):
+            output_dir.mkdir()
+            (output_dir / "index.html").write_text("<html>report</html>", encoding="utf-8")
+            return SimpleNamespace(
+                output_dir=output_dir,
+                index_html_path=output_dir / "index.html",
+                summary_json_path=output_dir / "summary.json",
+                registry=ResultRegistry(),
+                reproducibility_artifacts={},
+            )
+
+    monkeypatch.setattr(cli, "AutoOTFReport", IncompleteReport)
+
+    assert cli.main(
+        [
+            "--otf",
+            str(otf_path),
+            "--out",
+            str(output_dir),
+            "--result-json",
+            str(result_json),
+        ]
+    ) == 1
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert "non-empty summary JSON" in payload["errors"][0]["message"]
+
+
 def test_report_failure_writes_machine_readable_result(tmp_path: Path, monkeypatch) -> None:
     otf_path = tmp_path / "OTF.tsv"
     otf_path.write_text("Sequence\nPEPTIDE\n", encoding="utf-8")
