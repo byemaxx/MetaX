@@ -16,8 +16,19 @@ REPORT_RESULT_SCHEMA_VERSION = "metax.report_result.v1"
 REPORT_CAPABILITIES_SCHEMA_VERSION = "metax.report_capabilities.v1"
 
 
+class ReportCLIValidationError(ValueError):
+    """Command-line validation failure that should be reported as exit code 2."""
+
+
+class ReportArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        self.print_usage(sys.stderr)
+        self._print_message(f"{self.prog}: error: {message}\n", sys.stderr)
+        raise ReportCLIValidationError(message)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate a MetaX Auto OTF HTML report.")
+    parser = ReportArgumentParser(description="Generate a MetaX Auto OTF HTML report.")
     parser.add_argument("--otf", help="Path to the OTF table.")
     parser.add_argument("--out", help="Output report directory.")
     parser.add_argument("--meta", help="Path to the metadata table.")
@@ -100,39 +111,47 @@ def config_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) 
 
 
 def main(argv: list[str] | None = None) -> int:
+    result_json_path = _find_result_json_path(argv)
     parser = build_parser()
-    args = parser.parse_args(argv)
-    if args.capabilities:
-        print(
-            json.dumps(
-                {
-                    "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
-                    "available": True,
-                    "metax_version": __version__,
-                    "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
-                    "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
-                },
-                indent=2,
-            )
-        )
-        return 0
-
     config: AutoReportConfig | None = None
     try:
+        args = parser.parse_args(argv)
+        result_json_path = args.result_json
+        if args.capabilities:
+            print(
+                json.dumps(
+                    {
+                        "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
+                        "available": True,
+                        "metax_version": __version__,
+                        "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
+                        "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
+                    },
+                    indent=2,
+                )
+            )
+            return 0
+
         config = config_from_args(args, parser)
         result = AutoOTFReport(config).run()
         payload = _success_result(config, result)
-        _write_result_json(args.result_json, payload)
+        _write_result_json(result_json_path, payload)
         print(Path(result.index_html_path))
         return 0
+    except ReportCLIValidationError as exc:
+        _write_result_json(
+            result_json_path,
+            _terminal_result("failed", config, error=str(exc)),
+        )
+        return 2
     except KeyboardInterrupt:
         _write_result_json(
-            args.result_json,
+            result_json_path,
             _terminal_result("cancelled", config, error="Report generation was cancelled."),
         )
         return 130
     except Exception as exc:
-        _write_result_json(args.result_json, _terminal_result("failed", config, error=str(exc)))
+        _write_result_json(result_json_path, _terminal_result("failed", config, error=str(exc)))
         print(f"metax-report failed: {exc}", file=sys.stderr)
         return 1
 
@@ -193,6 +212,19 @@ def _write_result_json(path: str | None, payload: dict[str, Any]) -> None:
     temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
     temporary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     temporary_path.replace(output_path)
+
+
+def _find_result_json_path(argv: list[str] | None) -> str | None:
+    """Find the result path before full parsing so parser errors can be recorded."""
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    for index, argument in enumerate(arguments):
+        if argument.startswith("--result-json="):
+            return argument.split("=", 1)[1] or None
+        if argument == "--result-json" and index + 1 < len(arguments):
+            candidate = arguments[index + 1]
+            if not candidate.startswith("-"):
+                return candidate
+    return None
 
 
 def _split_csv(value: str) -> list[str]:
