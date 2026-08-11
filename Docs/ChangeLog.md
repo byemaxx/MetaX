@@ -6,6 +6,7 @@
 - Fix: Made `Save and close` close MetaX only after a successful save; cancelled and failed saves now keep the application open.
 - Change: Kept the automatic-save limit at 2 GB and raised the warning threshold for user-requested saves to 4 GB.
 - Fix: Handled missing, empty, or invalid installed dependency version metadata during updates instead of aborting the update.
+- Fix: Ensured report CLI argument and configuration validation failures still write the requested machine-readable result JSON.
 - Test: Added regression coverage for sparse DESeq2 normalization, workflow replay, dependency metadata, and save-on-close behavior.
 
 
