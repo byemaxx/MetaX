@@ -92,6 +92,28 @@ def test_dependency_check_detects_missing_requirement(tmp_path, monkeypatch):
     assert "openpyxl" not in output
 
 
+@pytest.mark.parametrize("installed_version", [None, "", "not a version"])
+def test_dependency_check_handles_invalid_installed_version_metadata(
+    tmp_path, monkeypatch, installed_version
+):
+    (tmp_path / "requirements.txt").write_text(
+        "metaumbra>=1.4.0\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        metax_updater.importlib_metadata,
+        "version",
+        lambda name: installed_version,
+    )
+
+    updater = _make_updater()
+    success, output = updater.check_project_dependencies(str(tmp_path))
+
+    assert not success
+    assert "metaumbra: installed version metadata is" in output
+    assert "requires >=1.4.0" in output
+
+
 @pytest.mark.parametrize(
     "requirement",
     [
