@@ -5,6 +5,7 @@ from types import SimpleNamespace
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pandas as pd
+import pytest
 from PyQt5 import QtWidgets
 
 from metax.gui import main_gui
@@ -402,16 +403,21 @@ def test_auto_save_skips_large_tables(monkeypatch):
     monkeypatch.setattr(gui, "_estimate_metax_table_memory_mb", lambda: 4096.0)
     monkeypatch.setattr(gui, "save_metax_obj_to_file", lambda *args, **kwargs: save_calls.append((args, kwargs)))
 
-    gui.auto_save_metax_obj_to_file()
+    result = gui.auto_save_metax_obj_to_file()
 
+    assert result is False
     assert save_calls == []
     assert gui.logger.messages[-1][1] == "w"
 
 
-def test_close_event_save_and_close_uses_auto_save_guard(monkeypatch):
+@pytest.mark.parametrize(("save_result", "expected_accepted"), [(True, True), (False, False)])
+def test_close_event_save_and_close_requires_successful_save(
+    monkeypatch, save_result, expected_accepted
+):
     gui = object.__new__(MetaXGUI)
     gui.MainWindow = None
     gui.tfa = object()
+    gui.metax_home_path = "metax-home"
     gui.web_list = []
     gui.table_dialogs = []
     gui.plt_dialogs = []
@@ -419,10 +425,13 @@ def test_close_event_save_and_close_uses_auto_save_guard(monkeypatch):
     gui.logger = FakeLogger()
     gui.show_message = lambda *args, **kwargs: None
     gui.save_basic_settings = lambda *args, **kwargs: None
-    auto_save_calls = []
     direct_save_calls = []
-    gui.auto_save_metax_obj_to_file = lambda: auto_save_calls.append(True)
-    gui.save_metax_obj_to_file = lambda *args, **kwargs: direct_save_calls.append((args, kwargs))
+
+    def fake_save(*args, **kwargs):
+        direct_save_calls.append((args, kwargs))
+        return save_result
+
+    gui.save_metax_obj_to_file = fake_save
 
     class FakeButton:
         def __init__(self, text, parent=None):
@@ -467,14 +476,16 @@ def test_close_event_save_and_close_uses_auto_save_guard(monkeypatch):
 
     gui.closeEvent(event)
 
-    assert auto_save_calls == [True]
-    assert direct_save_calls == []
-    assert event.accepted is True
+    assert direct_save_calls == [
+        ((), {"save_path": "metax-home", "no_message": True, "warn_large": True})
+    ]
+    assert event.accepted is expected_accepted
 
 
 def test_manual_save_large_table_respects_confirmation(tmp_path, monkeypatch):
     gui = object.__new__(MetaXGUI)
     gui.AUTO_SAVE_MAX_TABLE_MEMORY_MB = 2048
+    gui.LARGE_SAVE_WARNING_MEMORY_MB = 4096
     gui.MainWindow = None
     gui.tfa = SimpleNamespace(peptide_df=pd.DataFrame({"s1": [1]}))
     gui.table_dict = {}
@@ -483,19 +494,59 @@ def test_manual_save_large_table_respects_confirmation(tmp_path, monkeypatch):
     gui.logger = FakeLogger()
     gui.save_basic_settings = lambda *args, **kwargs: None
     gui.save_set_multi_table_settings = lambda *args, **kwargs: None
-    monkeypatch.setattr(gui, "_estimate_metax_table_memory_mb", lambda: 4096.0)
+    monkeypatch.setattr(gui, "_estimate_metax_table_memory_mb", lambda: 4097.0)
     (tmp_path / "settings.ini").write_text("settings", encoding="utf-8")
 
     cancelled_path = tmp_path / "cancelled.pkl"
     monkeypatch.setattr(main_gui.QMessageBox, "question", lambda *args, **kwargs: main_gui.QMessageBox.No)
 
-    gui.save_metax_obj_to_file(save_path=str(cancelled_path), no_message=True, warn_large=True)
+    cancelled = gui.save_metax_obj_to_file(
+        save_path=str(cancelled_path),
+        no_message=True,
+        warn_large=True,
+    )
 
+    assert cancelled is False
     assert not cancelled_path.exists()
 
     saved_path = tmp_path / "confirmed.pkl"
     monkeypatch.setattr(main_gui.QMessageBox, "question", lambda *args, **kwargs: main_gui.QMessageBox.Yes)
 
-    gui.save_metax_obj_to_file(save_path=str(saved_path), no_message=True, warn_large=True)
+    saved = gui.save_metax_obj_to_file(
+        save_path=str(saved_path),
+        no_message=True,
+        warn_large=True,
+    )
 
+    assert saved is True
+    assert saved_path.exists()
+
+
+def test_manual_save_below_four_gb_does_not_warn(tmp_path, monkeypatch):
+    gui = object.__new__(MetaXGUI)
+    gui.LARGE_SAVE_WARNING_MEMORY_MB = 4096
+    gui.MainWindow = None
+    gui.tfa = SimpleNamespace(peptide_df=pd.DataFrame({"s1": [1]}))
+    gui.table_dict = {}
+    gui.metax_home_path = str(tmp_path)
+    gui.last_path = str(tmp_path)
+    gui.logger = FakeLogger()
+    gui.save_basic_settings = lambda *args, **kwargs: None
+    gui.save_set_multi_table_settings = lambda *args, **kwargs: None
+    monkeypatch.setattr(gui, "_estimate_metax_table_memory_mb", lambda: 3131.1)
+    monkeypatch.setattr(
+        main_gui.QMessageBox,
+        "question",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("unexpected warning")),
+    )
+    (tmp_path / "settings.ini").write_text("settings", encoding="utf-8")
+    saved_path = tmp_path / "below-warning-threshold.pkl"
+
+    saved = gui.save_metax_obj_to_file(
+        save_path=str(saved_path),
+        no_message=True,
+        warn_large=True,
+    )
+
+    assert saved is True
     assert saved_path.exists()

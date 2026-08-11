@@ -15,7 +15,7 @@ def test_report_capabilities_contract(capsys) -> None:
     assert payload == {
         "schema_version": "metax.report_capabilities.v1",
         "available": True,
-        "metax_version": "2.6.2",
+        "metax_version": "2.6.3",
         "workflow_api_version": "1.0",
         "result_schema_version": "metax.report_result.v1",
     }

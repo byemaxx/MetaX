@@ -10,6 +10,8 @@ from statsmodels.stats.multitest import multipletests
 import re
 
 class CrossTest:
+    DESEQ2_RATIO_ZERO_ERROR = "every gene contains at least one zero"
+
     def __init__(self, tfa):
         self.tfa = tfa
 
@@ -370,6 +372,7 @@ class CrossTest:
         group_list=None,
         quiet=False,
         add_covariates: list[str] | None = None,
+        sf_type: str = "ratio",
         input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
@@ -417,6 +420,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=[condition, cond_level],
                 add_covariates=covs,
+                sf_type=sf_type,
                 input_prepared=True,
             )
             if dft is not None and not dft.empty:
@@ -464,16 +468,67 @@ class CrossTest:
             ) from exc
         return lmFit, contrasts_fit, eBayes, topTable
 
-    def _run_inmoose_deseq(self, DESeq, dds_factory, quiet=False):
+    def _run_inmoose_deseq(self, DESeq, dds_factory, quiet=False, sf_type="ratio"):
+        if sf_type not in {"ratio", "poscounts"}:
+            raise ValueError("sf_type must be either 'ratio' or 'poscounts'.")
+
         dds = dds_factory()
         try:
-            return DESeq(dds, quiet=quiet)
+            return DESeq(dds, quiet=quiet, sfType=sf_type)
+        except ValueError as exc:
+            if sf_type == "ratio" and self.DESEQ2_RATIO_ZERO_ERROR in str(exc):
+                raise ValueError(
+                    "DESeq2's default ratio normalization cannot estimate size factors because "
+                    "every feature contains a zero in at least one selected sample. This is common "
+                    "in sparse datasets. Run again with sf_type='poscounts'."
+                ) from exc
+            raise
         except NotImplementedError:
             print(
                 "[DESeq2] InMoose local dispersion fallback is not implemented; "
                 "retrying with fitType='mean'."
             )
-            return DESeq(dds_factory(), quiet=quiet, fitType="mean")
+            return DESeq(dds_factory(), quiet=quiet, fitType="mean", sfType=sf_type)
+
+    def _prepare_deseq2_count_matrix(self, df, sample_list, log_scaling=False):
+        dft = df.copy()[sample_list]
+        dft = self.tfa.replace_if_two_index(dft)
+
+        counts_df = dft.T
+        target_max = 1e6
+        raw_max = float(np.nanmax(counts_df.values)) if counts_df.size else 0.0
+        scale = max(raw_max / target_max, 1.0)
+        if log_scaling:
+            if scale > 1.0:
+                print(f'[Scaling] scale={scale:.3f} (max {raw_max:.3g} → target_max {target_max:.0f})')
+            else:
+                print(f'[Scaling] no scaling applied (max {raw_max:.3g} ≤ target_max {target_max:.0f})')
+        counts_df = (counts_df / scale).round().astype(int)
+        return dft, counts_df
+
+    def get_deseq2_ratio_preflight(self, df, group1, group2, condition=None):
+        """Check whether the selected comparison can use ratio size factors."""
+        group1_sample = self.tfa.get_sample_list_in_a_group(group1, condition=condition)
+        group2_sample = self.tfa.get_sample_list_in_a_group(group2, condition=condition)
+        sample_list = group1_sample + group2_sample
+        if not group1_sample or not group2_sample:
+            return {
+                "can_compare": False,
+                "ratio_compatible": True,
+                "sample_count": len(sample_list),
+                "feature_count": 0,
+                "ratio_feature_count": 0,
+            }
+
+        _, counts_df = self._prepare_deseq2_count_matrix(df, sample_list)
+        ratio_feature_count = int((counts_df > 0).all(axis=0).sum())
+        return {
+            "can_compare": True,
+            "ratio_compatible": ratio_feature_count > 0,
+            "sample_count": counts_df.shape[0],
+            "feature_count": counts_df.shape[1],
+            "ratio_feature_count": ratio_feature_count,
+        }
 
     def _restore_limma_fit_column_names(self, fit, design_columns):
         design_columns = list(design_columns)
@@ -679,6 +734,7 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        sf_type: str = "ratio",
         input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
@@ -711,6 +767,7 @@ class CrossTest:
                 quiet=quiet,
                 condition=condition,
                 add_covariates=add_covariates,
+                sf_type=sf_type,
                 input_prepared=True,
             )
             if df_res is not None:
@@ -736,6 +793,7 @@ class CrossTest:
         quiet: bool = False,
         condition: list | None = None,
         add_covariates: list[str] | None = None,
+        sf_type: str = "ratio",
         input_prepared: bool = False,
     ) -> pd.DataFrame:
         """
@@ -762,20 +820,12 @@ class CrossTest:
         if not input_prepared:
             df = self.prepare_deseq2_input(df, validate=True)
             
-        dft = df.copy()
-        dft = dft[sample_list]
-        dft = self.tfa.replace_if_two_index(dft)  # keep your original helper
-
         # counts: samples x features (int), with stable scaling → round → int
-        counts_df = dft.T  # rows = samples, cols = features
-        target_max = 1e6
-        raw_max = float(np.nanmax(counts_df.values)) if counts_df.size else 0.0
-        scale = max(raw_max / target_max, 1.0)
-        if scale > 1.0:
-            print(f'[Scaling] scale={scale:.3f} (max {raw_max:.3g} → target_max {target_max:.0f})')
-        else:
-            print(f'[Scaling] no scaling applied (max {raw_max:.3g} ≤ target_max {target_max:.0f})')
-        counts_df = (counts_df / scale).round().astype(int)
+        dft, counts_df = self._prepare_deseq2_count_matrix(
+            df,
+            sample_list,
+            log_scaling=True,
+        )
 
         meta_df, design_factor, covs, g1, g2 = self._prepare_de_metadata(
             sample_list=sample_list,
@@ -799,7 +849,13 @@ class CrossTest:
                 design=design_formula
             )
 
-        dds = self._run_inmoose_deseq(DESeq, dds_factory, quiet=quiet)
+        print(f"[DESeq2] Size-factor estimation method: {sf_type}")
+        dds = self._run_inmoose_deseq(
+            DESeq,
+            dds_factory,
+            quiet=quiet,
+            sf_type=sf_type,
+        )
 
         contrast = [design_factor, g2, g1]
         print(f"Contrast used: {contrast}  => log2FoldChange = {g2} / {g1}")
