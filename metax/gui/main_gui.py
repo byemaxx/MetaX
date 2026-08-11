@@ -252,6 +252,7 @@ class WorkflowStepsSelectionDialog(QDialog):
 class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     MAX_EAGER_COMBOBOX_ITEMS = 50000
     AUTO_SAVE_MAX_TABLE_MEMORY_MB = 2048
+    LARGE_SAVE_WARNING_MEMORY_MB = 4096
 
     def __init__(self, MainWindow):
         super().__init__()
@@ -1007,7 +1008,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 total += int(df.memory_usage(deep=True).sum())
         return total / 1024 / 1024
 
-    def auto_save_metax_obj_to_file(self) -> None:
+    def auto_save_metax_obj_to_file(self) -> bool:
         table_memory_mb = self._estimate_metax_table_memory_mb()
         if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
             msg = (
@@ -1016,8 +1017,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
             print(msg)
             self.logger.write_log(msg, "w")
-            return
-        self.save_metax_obj_to_file(save_path=self.metax_home_path, no_message=True, warn_large=False)
+            return False
+        return self.save_metax_obj_to_file(
+            save_path=self.metax_home_path,
+            no_message=True,
+            warn_large=False,
+        )
 
     def get_list_by_df_type(self, df_type:str, remove_no_linked:bool=False, silent:bool=False) -> list:
         '''
@@ -2086,11 +2091,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     def save_metax_obj_to_file(self, save_path=None, no_message=False, warn_large=True):
         if getattr(self, 'tfa', None) is None:
             QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
-            return
+            return False
 
         if warn_large:
             table_memory_mb = self._estimate_metax_table_memory_mb()
-            if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
+            if table_memory_mb > self.LARGE_SAVE_WARNING_MEMORY_MB:
                 reply = QMessageBox.question(
                     self.MainWindow,
                     "Save MetaX object",
@@ -2103,7 +2108,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.No,
                 )
                 if reply != QMessageBox.Yes:
-                    return
+                    return False
         
         # save settings to QSettings object
         self.save_basic_settings()
@@ -2151,6 +2156,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
             print(f"Saved MetaX object to {file_path}.")
             self.logger.write_log(f"Saved MetaX object to {file_path}.")
+            return True
+
+        return False
         
 
     def closeEvent(self, event):
@@ -2185,7 +2193,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         # save settings.ini only
                         self.save_basic_settings()
                     else:
-                        self.auto_save_metax_obj_to_file()
+                        saved = self.save_metax_obj_to_file(
+                            save_path=self.metax_home_path,
+                            no_message=True,
+                            warn_large=True,
+                        )
+                        if not saved:
+                            event.ignore()
+                            return
                 else: # close without saving
                     # save settings.ini only
                     self.save_basic_settings()
@@ -2220,8 +2235,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             except Exception as e:
                 print('Error when closing MetaX: ', e)
                 self.logger.write_log(f'Error when closing MetaX: {e}')
-            finally:
-                event.accept()
+                QMessageBox.warning(
+                    self.MainWindow,
+                    "Close MetaX",
+                    f"MetaX could not save and close:\n{e}",
+                )
+                event.ignore()
+                return
+
+            event.accept()
         else:
             event.ignore()
 
@@ -7964,6 +7986,49 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             _warn('Error', f'Failed to prepare data for DESeq2: {e}')
             return None, False, None
 
+    def _confirm_deseq2_size_factor_method(self, df, comparisons):
+        """Return ratio/poscounts for GUI DESeq2 runs, or None when cancelled."""
+        sparse_comparisons = []
+        for group1, group2, condition in comparisons:
+            preflight = self.tfa.CrossTest.get_deseq2_ratio_preflight(
+                df,
+                group1=group1,
+                group2=group2,
+                condition=condition,
+            )
+            if preflight["can_compare"] and not preflight["ratio_compatible"]:
+                sparse_comparisons.append((group1, group2, condition))
+
+        if not sparse_comparisons:
+            return "ratio"
+
+        box = QMessageBox(self.MainWindow)
+        try:
+            box.setStyleSheet(self.msgbox_style)
+        except Exception:
+            pass
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle("DESeq2 normalization")
+        box.setText(
+            "Default DESeq2 normalization cannot handle this sparse dataset.\n\n"
+            "Use 'poscounts' instead?"
+        )
+        box.setInformativeText(
+            "For continuous MS intensities, Limma is recommended."
+        )
+        continue_button = box.addButton("Use poscounts", QMessageBox.AcceptRole)
+        cancel_button = box.addButton("Cancel", QMessageBox.RejectRole)
+        box.setDefaultButton(cancel_button)
+        box.exec_()
+
+        if box.clickedButton() is continue_button:
+            print(
+                f"[DESeq2] User accepted sfType='poscounts' for "
+                f"{len(sparse_comparisons)} sparse comparison(s)."
+            )
+            return "poscounts"
+        return None
+
     def _collect_limma_preprocess_options(self, zero_to_nan: bool):
         def _style_box(box):
             try:
@@ -8149,6 +8214,24 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     return
                 df = df_checked
                 if self.checkBox_comparing_group_control_in_condition.isChecked():
+                    condition_levels = self.tfa.meta_df[all_condition_meta].dropna().unique().tolist()
+                    deseq2_comparisons = [
+                        (control_group, group, [all_condition_meta, condition_level])
+                        for condition_level in condition_levels
+                        for group in group_list
+                    ]
+                else:
+                    deseq2_comparisons = [
+                        (control_group, group, condition)
+                        for group in group_list
+                    ]
+                sf_type = self._confirm_deseq2_size_factor_method(df, deseq2_comparisons)
+                if sf_type is None:
+                    for combobox in self.meta_combobox_list:
+                        combobox.setEnabled(True)
+                    return
+
+                if self.checkBox_comparing_group_control_in_condition.isChecked():
                     self.temp_params_dict= {'table_name': f'deseq2allinCondition({df_type})'}
                     self.run_in_new_window(
                         self.tfa.CrossTest.get_stats_deseq2_against_control_with_conditon,
@@ -8162,12 +8245,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "group_list": group_list,
                                 "condition": all_condition_meta,
                                 "add_covariates": model_covariates,
+                                "sf_type": sf_type,
                                 "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_cond",
                         ),
                         df = df, control_group=control_group, group_list=group_list,
-                        condition=all_condition_meta, add_covariates=model_covariates
+                        condition=all_condition_meta, add_covariates=model_covariates,
+                        sf_type=sf_type,
                     )
 
                 else:
@@ -8184,12 +8269,14 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                 "group_list": group_list,
                                 "condition": condition,
                                 "add_covariates": model_covariates,
+                                "sf_type": sf_type,
                                 "invert_transform": transform_method if is_inverted else None,
                             },
                             output_name="df_deseq2_control",
                         ),
                         df = df,control_group=control_group, group_list=group_list, 
-                        condition=condition, add_covariates=model_covariates
+                        condition=condition, add_covariates=model_covariates,
+                        sf_type=sf_type,
                     )
 
             elif method == 'limma':
@@ -8573,6 +8660,17 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if any(cov == self.tfa.meta_name for cov in model_covariates):
                 QMessageBox.warning(self.MainWindow, 'Warning', f'The covariates should not contain the [{self.tfa.meta_name}]!')
                 return None
+
+        sf_type = None
+        if method == 'deseq2':
+            sf_type = self._confirm_deseq2_size_factor_method(
+                df,
+                [(group1, group2, condition)],
+            )
+            if sf_type is None:
+                for combobox in self.meta_combobox_list:
+                    combobox.setEnabled(True)
+                return None
             
         try:
             if self.check_if_last_test_not_finish():
@@ -8580,7 +8678,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             method_name = 'get_stats_deseq2' if method == 'deseq2' else 'get_stats_limma'
             cross_test_method = getattr(self.tfa.CrossTest, method_name)
             de_params = {'df': df, 'group1': group1, 'group2': group2, 'condition': condition, 'add_covariates': model_covariates}
-            if method == 'limma':
+            if method == 'deseq2':
+                de_params['sf_type'] = sf_type
+            elif method == 'limma':
                 de_params['invert_transform'] = limma_invert_transform
                 de_params['log2_transform'] = log2_transformed
                 de_params['zero_to_nan'] = zero_to_nan
@@ -8593,6 +8693,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     "group2": group2,
                     "condition": condition,
                     "add_covariates": model_covariates,
+                    "sf_type": sf_type,
                     "invert_transform": transform_method if is_inverted else None,
                 },
                 output_name="df_deseq2",
