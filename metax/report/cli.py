@@ -1,15 +1,34 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
+from typing import Any
+
+from metax.utils.version import __version__
 
 from .config import AutoReportConfig, load_config_from_yaml
 from .workflow import AutoOTFReport
 
+REPORT_WORKFLOW_API_VERSION = "1.0"
+REPORT_RESULT_SCHEMA_VERSION = "metax.report_result.v1"
+REPORT_CAPABILITIES_SCHEMA_VERSION = "metax.report_capabilities.v1"
+
+
+class ReportCLIValidationError(ValueError):
+    """Command-line validation failure that should be reported as exit code 2."""
+
+
+class ReportArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        self.print_usage(sys.stderr)
+        self._print_message(f"{self.prog}: error: {message}\n", sys.stderr)
+        raise ReportCLIValidationError(message)
+
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate a MetaX Auto OTF HTML report.")
+    parser = ReportArgumentParser(description="Generate a MetaX Auto OTF HTML report.")
     parser.add_argument("--otf", help="Path to the OTF table.")
     parser.add_argument("--out", help="Output report directory.")
     parser.add_argument("--meta", help="Path to the metadata table.")
@@ -30,6 +49,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-network", action="store_true", default=None, help="Enable heavy taxa-function network plots.")
     parser.add_argument("--no-network", action="store_true", default=None, help="Disable network plots.")
     parser.add_argument("--overwrite", action="store_true", default=None, help="Allow writing into an existing output directory.")
+    parser.add_argument("--result-json", help="Write the versioned machine-readable result contract.")
+    parser.add_argument("--capabilities", action="store_true", help="Print the report CLI capability contract as JSON and exit.")
     return parser
 
 
@@ -90,16 +111,120 @@ def config_from_args(args: argparse.Namespace, parser: argparse.ArgumentParser) 
 
 
 def main(argv: list[str] | None = None) -> int:
+    result_json_path = _find_result_json_path(argv)
     parser = build_parser()
-    args = parser.parse_args(argv)
+    config: AutoReportConfig | None = None
     try:
+        args = parser.parse_args(argv)
+        result_json_path = args.result_json
+        if args.capabilities:
+            print(
+                json.dumps(
+                    {
+                        "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
+                        "available": True,
+                        "metax_version": __version__,
+                        "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
+                        "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
+                    },
+                    indent=2,
+                )
+            )
+            return 0
+
         config = config_from_args(args, parser)
         result = AutoOTFReport(config).run()
+        payload = _success_result(config, result)
+        _write_result_json(result_json_path, payload)
         print(Path(result.index_html_path))
         return 0
+    except ReportCLIValidationError as exc:
+        _write_result_json(
+            result_json_path,
+            _terminal_result("failed", config, error=str(exc)),
+        )
+        return 2
+    except KeyboardInterrupt:
+        _write_result_json(
+            result_json_path,
+            _terminal_result("cancelled", config, error="Report generation was cancelled."),
+        )
+        return 130
     except Exception as exc:
+        _write_result_json(result_json_path, _terminal_result("failed", config, error=str(exc)))
         print(f"metax-report failed: {exc}", file=sys.stderr)
         return 1
+
+
+def _success_result(config: AutoReportConfig, result: Any) -> dict[str, Any]:
+    registry = result.registry.to_dict()
+    return {
+        **_terminal_result("completed", config),
+        "outputs": {
+            "output_directory": str(Path(result.output_dir).resolve()),
+            "index_html": str(Path(result.index_html_path).resolve()),
+            "summary_json": str(Path(result.summary_json_path).resolve()),
+            "reproducibility_artifacts": {
+                key: str(Path(path).resolve())
+                for key, path in result.reproducibility_artifacts.items()
+            },
+        },
+        "summary": {
+            "tables": len(registry["tables"]),
+            "statistics": len(registry["stats"]),
+            "figures": len(registry["figures"]),
+            "interactive_html": len(registry["html"]),
+        },
+        "warnings": registry["warnings"],
+        "errors": registry["errors"],
+        "runtime": registry["runtime"],
+    }
+
+
+def _terminal_result(
+    status: str,
+    config: AutoReportConfig | None,
+    *,
+    error: str = "",
+) -> dict[str, Any]:
+    return {
+        "schema_version": REPORT_RESULT_SCHEMA_VERSION,
+        "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
+        "status": status,
+        "software": {"metax_version": __version__},
+        "inputs": {
+            "otf_table": config.input.otf_path if config else None,
+            "metadata_table": config.input.meta_path if config else None,
+        },
+        "outputs": {},
+        "summary": {},
+        "warnings": [],
+        "errors": [{"message": error, "source": "metax-report"}] if error else [],
+        "runtime": {},
+    }
+
+
+def _write_result_json(path: str | None, payload: dict[str, Any]) -> None:
+    if not path:
+        return
+    output_path = Path(path).expanduser().resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    temporary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    temporary_path.replace(output_path)
+
+
+def _find_result_json_path(argv: list[str] | None) -> str | None:
+    """Find the result path before full parsing so parser errors can be recorded."""
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    for index, argument in enumerate(arguments):
+        if argument.startswith("--result-json="):
+            return argument.split("=", 1)[1] or None
+        if argument == "--result-json" and index + 1 < len(arguments):
+            candidate = arguments[index + 1]
+            if not candidate.startswith("-"):
+                return candidate
+    return None
 
 
 def _split_csv(value: str) -> list[str]:
