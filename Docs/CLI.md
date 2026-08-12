@@ -13,7 +13,7 @@ Install MetaX into the Python environment from which the commands will be run.
 python -m pip install MetaXTools
 
 # Annotation plus the headless Auto OTF Report stack
-python -m pip install "MetaXTools[report]>=2.6.2"
+python -m pip install "MetaXTools[report]"
 
 # Desktop GUI and all optional analysis/report dependencies
 python -m pip install "MetaXTools[full]"
@@ -45,7 +45,7 @@ Workflow orchestrators can discover the report contract without loading Qt:
 python -m metax.cli.report --capabilities
 ```
 
-MetaXTools 2.6.2 reports workflow API `1.0` and result schema
+The capability output reports workflow API `1.0` and result schema
 `metax.report_result.v1`.
 
 ## 3. Desktop Launcher
