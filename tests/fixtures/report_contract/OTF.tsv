@@ -1,0 +1,7 @@
+Sequence	Proteins	LCA_level	Taxon	Taxon_prop	Gene	Gene_prop	Intensity_S1	Intensity_S2	Intensity_S3	Intensity_S4
+PEPTIDEAA	P001	species	d__Bacteria|p__Firmicutes|g__Lactobacillus|s__Lactobacillus acidophilus	1.0	geneA	1.0	100	120	20	25
+PEPTIDEBB	P002	species	d__Bacteria|p__Firmicutes|g__Lactobacillus|s__Lactobacillus acidophilus	1.0	geneA	1.0	80	90	10	15
+PEPTIDECC	P003	species	d__Bacteria|p__Bacteroidota|g__Bacteroides|s__Bacteroides fragilis	1.0	geneB	1.0	20	25	110	120
+PEPTIDEDD	P004	species	d__Bacteria|p__Bacteroidota|g__Bacteroides|s__Bacteroides fragilis	1.0	geneB	1.0	15	10	90	100
+PEPTIDEEE	P005	species	d__Bacteria|p__Actinobacteriota|g__Bifidobacterium|s__Bifidobacterium longum	1.0	geneC	1.0	30	35	40	45
+PEPTIDEFF	P006	species	d__Bacteria|p__Actinobacteriota|g__Bifidobacterium|s__Bifidobacterium longum	1.0	geneC	1.0	25	30	35	40
