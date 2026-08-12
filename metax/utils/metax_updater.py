@@ -28,9 +28,11 @@ except ModuleNotFoundError:
 try:
     from packaging.markers import default_environment
     from packaging.requirements import InvalidRequirement, Requirement
+    from packaging.version import InvalidVersion, Version
 except ModuleNotFoundError:
     from pip._vendor.packaging.markers import default_environment
     from pip._vendor.packaging.requirements import InvalidRequirement, Requirement
+    from pip._vendor.packaging.version import InvalidVersion, Version
 
 
 
@@ -385,7 +387,28 @@ class Updater:
                 issues.append(f"{requirement.name}: not installed; requires {requirement_label}")
                 continue
 
-            if requirement.specifier and not requirement.specifier.contains(installed_version, prereleases=True):
+            requirement_label = str(requirement.specifier) or "valid installation metadata"
+            if not isinstance(installed_version, str) or not installed_version.strip():
+                issues.append(
+                    f"{requirement.name}: installed version metadata is missing or invalid; "
+                    f"requires {requirement_label}"
+                )
+                continue
+
+            try:
+                parsed_installed_version = Version(installed_version)
+                version_satisfied = (
+                    not requirement.specifier
+                    or requirement.specifier.contains(parsed_installed_version, prereleases=True)
+                )
+            except InvalidVersion:
+                issues.append(
+                    f"{requirement.name}: installed version metadata is invalid ({installed_version!r}); "
+                    f"requires {requirement_label}"
+                )
+                continue
+
+            if not version_satisfied:
                 issues.append(f"{requirement.name}: installed {installed_version}; requires {requirement.specifier}")
 
         return issues, skipped, checked_count

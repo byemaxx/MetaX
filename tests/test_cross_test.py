@@ -68,8 +68,8 @@ def test_run_inmoose_deseq_retries_mean_fit_on_unimplemented_local_fallback():
         calls.append("factory")
         return {"id": dds_count}
 
-    def fake_deseq(dds, quiet=False, fitType="parametric"):
-        calls.append((dds["id"], quiet, fitType))
+    def fake_deseq(dds, quiet=False, fitType="parametric", sfType="ratio"):
+        calls.append((dds["id"], quiet, fitType, sfType))
         if fitType == "parametric":
             raise NotImplementedError()
         return {"fitType": fitType, "dds": dds}
@@ -77,7 +77,64 @@ def test_run_inmoose_deseq_retries_mean_fit_on_unimplemented_local_fallback():
     result = ct._run_inmoose_deseq(fake_deseq, dds_factory, quiet=True)
 
     assert result["fitType"] == "mean"
-    assert calls == ["factory", (1, True, "parametric"), "factory", (2, True, "mean")]
+    assert calls == [
+        "factory",
+        (1, True, "parametric", "ratio"),
+        "factory",
+        (2, True, "mean", "ratio"),
+    ]
+
+
+def test_run_inmoose_deseq_explains_sparse_ratio_failure():
+    ct = CrossTest(tfa=None)
+
+    def fake_deseq(dds, quiet=False, sfType="ratio"):
+        raise ValueError("every gene contains at least one zero, cannot compute log geometric means")
+
+    with pytest.raises(ValueError, match="Run again with sf_type='poscounts'"):
+        ct._run_inmoose_deseq(fake_deseq, lambda: object(), sf_type="ratio")
+
+
+def test_run_inmoose_deseq_passes_poscounts():
+    ct = CrossTest(tfa=None)
+    calls = []
+
+    def fake_deseq(dds, quiet=False, sfType="ratio"):
+        calls.append(sfType)
+        return dds
+
+    result = ct._run_inmoose_deseq(
+        fake_deseq,
+        lambda: "dds",
+        sf_type="poscounts",
+    )
+
+    assert result == "dds"
+    assert calls == ["poscounts"]
+
+
+@pytest.mark.parametrize(
+    ("values", "expected_compatible", "expected_ratio_features"),
+    [
+        ([[1, 0], [0, 1]], False, 0),
+        ([[1, 2], [0, 1]], True, 1),
+    ],
+)
+def test_deseq2_ratio_preflight_detects_sparse_comparisons(
+    values, expected_compatible, expected_ratio_features
+):
+    tfa = SimpleNamespace(
+        get_sample_list_in_a_group=lambda group, condition=None: ["S1"] if group == "A" else ["S2"],
+        replace_if_two_index=lambda df: df,
+    )
+    ct = CrossTest(tfa=tfa)
+    df = pd.DataFrame(values, index=["feature_1", "feature_2"], columns=["S1", "S2"])
+
+    result = ct.get_deseq2_ratio_preflight(df, group1="A", group2="B")
+
+    assert result["can_compare"]
+    assert result["ratio_compatible"] is expected_compatible
+    assert result["ratio_feature_count"] == expected_ratio_features
 
 
 def test_restore_limma_fit_column_names_aligns_fit_with_design_columns():

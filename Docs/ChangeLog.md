@@ -1,3 +1,15 @@
+# Version: 2.6.3
+## Date: 2026-08-11
+### Changes:
+- New: Added a DESeq2 sparse-data preflight that asks before using `sfType="poscounts"` when default ratio normalization is unavailable.
+- Change: Recorded the selected DESeq2 size-factor method in exported workflows and improved direct-API guidance for sparse matrices.
+- Fix: Made `Save and close` close MetaX only after a successful save; cancelled and failed saves now keep the application open.
+- Change: Kept the automatic-save limit at 2 GB and raised the warning threshold for user-requested saves to 4 GB.
+- Fix: Handled missing, empty, or invalid installed dependency version metadata during updates instead of aborting the update.
+- Fix: Ensured report CLI argument and configuration validation failures still write the requested machine-readable result JSON.
+- Test: Added regression coverage for sparse DESeq2 normalization, workflow replay, dependency metadata, and save-on-close behavior.
+
+
 # Version: 2.6.2
 ## Date: 2026-07-24
 ### Changes:
