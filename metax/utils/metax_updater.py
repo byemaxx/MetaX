@@ -35,6 +35,18 @@ except ModuleNotFoundError:
     from pip._vendor.packaging.version import InvalidVersion, Version
 
 
+BUNDLED_RUNTIME_MARKER = ".metax-bundled-runtime.json"
+BUNDLED_RELEASE_URL = "https://github.com/byemaxx/MetaX/releases"
+UPDATE_ROOT_FILES = (
+    "LICENSE",
+    "MANIFEST.in",
+    "README.md",
+    "README_PyPi.md",
+    "pyproject.toml",
+    "requirements.txt",
+)
+UPDATE_ROOT_DIRS = ("licenses", "metax")
+
 
 class Updater:
     def __init__(self, MetaXGUI, version, splash, show_message=False, branch='main', is_test_mode=False):
@@ -78,6 +90,28 @@ class Updater:
 
     def get_downloaded_project_folder_path(self):
         return os.path.join(self.get_update_workspace_path(), f'MetaX-{self.branch}')
+
+    def get_local_project_folder_path(self):
+        """Return the project root containing the importable ``metax`` package."""
+        return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    def is_bundled_runtime_install(self):
+        marker_path = os.path.join(self.get_local_project_folder_path(), BUNDLED_RUNTIME_MARKER)
+        return os.path.isfile(marker_path)
+
+    def bundled_runtime_requires_installer(self, api_changed, dependency_check_success):
+        return self.is_bundled_runtime_install() and (api_changed or not dependency_check_success)
+
+    def get_bundled_runtime_update_message(self, dependency_check_output=""):
+        detail = ""
+        if dependency_check_output:
+            detail = f"\n\nRuntime dependency details:\n{dependency_check_output}"
+        return (
+            "This MetaX installation includes a precompiled Python runtime. "
+            "The new release changes the runtime API or its dependencies, so MetaX will not run pip "
+            "on this computer. Install the new complete MetaX installer instead."
+            f"\n\nReleases: {BUNDLED_RELEASE_URL}{detail}"
+        )
 
     def clear_update_required_flag(self):
         if hasattr(self.metaXGUI, "update_required"):
@@ -436,10 +470,7 @@ class Updater:
             
         
     def replace_metax_dir(self):
-        # MetaX folder path is this file's parent and the parent's parent
-        current_script_path = os.path.dirname(os.path.abspath(__file__))
-        metax_folder_path = os.path.dirname(current_script_path)
-        metax_folder_path = os.path.dirname(metax_folder_path)
+        metax_folder_path = self.get_local_project_folder_path()
         self.append_update_log(f"Replacing MetaX files in: {metax_folder_path}")
         
         project_folder_path = self.get_downloaded_project_folder_path()
@@ -447,15 +478,21 @@ class Updater:
             self.append_update_log(f"Error: Downloaded project folder not found at {project_folder_path}")
             return False
 
+        expected_package = os.path.join(project_folder_path, "metax")
+        if not os.path.isdir(expected_package):
+            self.append_update_log(f"Error: Downloaded MetaX package not found at {expected_package}")
+            return False
+
         replaced_count = 0
         try:
-            for item in os.listdir(project_folder_path):
+            update_items = [
+                item
+                for item in (*UPDATE_ROOT_FILES, *UPDATE_ROOT_DIRS)
+                if os.path.exists(os.path.join(project_folder_path, item))
+            ]
+            for item in update_items:
                 source_item = os.path.join(project_folder_path, item)
                 target_item = os.path.join(metax_folder_path, item)
-                
-                # Exclude .git and other repo-specific files that don't need to be in the local installation
-                if item in ['.git', '.github', '.gitignore']:
-                    continue
 
                 if os.path.isdir(source_item):
                     if os.path.exists(target_item):
@@ -524,6 +561,13 @@ class Updater:
 
                 dependency_check_success, dependency_check_output = self.check_project_dependencies()
                 should_install_dependencies = api_changed or not dependency_check_success
+                if self.bundled_runtime_requires_installer(api_changed, dependency_check_success):
+                    message = self.get_bundled_runtime_update_message(dependency_check_output)
+                    self.append_update_log(message)
+                    QMessageBox.warning(self.MainWindow, "Complete installer required", message)
+                    self.clear_update_required_flag()
+                    self.finish_update_log_dialog()
+                    return
                 if should_install_dependencies:
                     self.metaXGUI.show_message("Installing MetaX dependencies...", "Updating...")
                     dependency_success, dependency_output = self.install_project_dependencies()
