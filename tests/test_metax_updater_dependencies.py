@@ -1,4 +1,5 @@
 import textwrap
+from pathlib import Path
 
 import pytest
 
@@ -134,3 +135,45 @@ def test_dependency_check_ignores_non_matching_markers(tmp_path, monkeypatch, re
 
     assert success
     assert output == ""
+
+
+def test_bundled_runtime_dependency_change_requires_complete_installer(tmp_path, monkeypatch):
+    updater = _make_updater()
+    monkeypatch.setattr(updater, "get_local_project_folder_path", lambda: str(tmp_path))
+    (tmp_path / metax_updater.BUNDLED_RUNTIME_MARKER).write_text("{}", encoding="utf-8")
+
+    assert updater.bundled_runtime_requires_installer(api_changed=True, dependency_check_success=True)
+    assert updater.bundled_runtime_requires_installer(api_changed=False, dependency_check_success=False)
+    assert not updater.bundled_runtime_requires_installer(api_changed=False, dependency_check_success=True)
+
+
+def test_source_install_can_continue_using_pip_for_dependency_change(tmp_path, monkeypatch):
+    updater = _make_updater()
+    monkeypatch.setattr(updater, "get_local_project_folder_path", lambda: str(tmp_path))
+
+    assert not updater.bundled_runtime_requires_installer(api_changed=True, dependency_check_success=False)
+
+
+def test_replace_metax_dir_uses_runtime_allowlist_and_preserves_marker(tmp_path, monkeypatch):
+    downloaded = tmp_path / "downloaded"
+    installed = tmp_path / "installed"
+    (downloaded / "metax").mkdir(parents=True)
+    (downloaded / "tests").mkdir()
+    (installed / "metax").mkdir(parents=True)
+    (downloaded / "metax" / "new.py").write_text("new", encoding="utf-8")
+    (downloaded / "tests" / "not_runtime.py").write_text("test", encoding="utf-8")
+    (downloaded / "README.md").write_text("new readme", encoding="utf-8")
+    (installed / "metax" / "old.py").write_text("old", encoding="utf-8")
+    marker = installed / metax_updater.BUNDLED_RUNTIME_MARKER
+    marker.write_text("{}", encoding="utf-8")
+
+    updater = _make_updater()
+    monkeypatch.setattr(updater, "get_downloaded_project_folder_path", lambda: str(downloaded))
+    monkeypatch.setattr(updater, "get_local_project_folder_path", lambda: str(installed))
+
+    assert updater.replace_metax_dir()
+    assert (installed / "metax" / "new.py").read_text(encoding="utf-8") == "new"
+    assert not (installed / "metax" / "old.py").exists()
+    assert not (installed / "tests").exists()
+    assert marker.is_file()
+    assert Path(installed / "README.md").read_text(encoding="utf-8") == "new readme"
