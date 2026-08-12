@@ -17,7 +17,7 @@ def test_report_capabilities_contract(capsys) -> None:
     assert payload == {
         "schema_version": "metax.report_capabilities.v1",
         "available": True,
-        "metax_version": "2.6.2",
+        "metax_version": "2.6.3",
         "workflow_api_version": "1.0",
         "result_schema_version": "metax.report_result.v1",
     }
@@ -222,3 +222,50 @@ def test_real_report_cli_contract(tmp_path: Path) -> None:
         payload["outputs"]["summary_json"],
     ]:
         assert Path(path).is_absolute()
+
+
+def test_report_config_validation_failure_writes_machine_readable_result(
+    tmp_path: Path, capsys
+) -> None:
+    result_json = tmp_path / "invalid_config.json"
+
+    exit_code = cli.main(
+        [
+            "--otf",
+            str(tmp_path / "OTF.tsv"),
+            "--result-json",
+            str(result_json),
+        ]
+    )
+
+    assert exit_code == 2
+    assert "--out is required unless --config is provided" in capsys.readouterr().err
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["errors"] == [
+        {
+            "message": "--out is required unless --config is provided.",
+            "source": "metax-report",
+        }
+    ]
+
+
+def test_report_argument_validation_failure_writes_machine_readable_result(
+    tmp_path: Path, capsys
+) -> None:
+    result_json = tmp_path / "invalid_argument.json"
+
+    exit_code = cli.main(
+        [
+            "--diff-method",
+            "invalid",
+            "--result-json",
+            str(result_json),
+        ]
+    )
+
+    assert exit_code == 2
+    assert "invalid choice" in capsys.readouterr().err
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert "invalid choice" in payload["errors"][0]["message"]

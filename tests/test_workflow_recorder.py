@@ -331,7 +331,7 @@ def test_all_gui_actions_generation():
             title="Run DESeq2 Two Group",
             method_name="get_stats_deseq2",
             df_type="taxa",
-            parameters={"group1": "A", "group2": "B"},
+            parameters={"group1": "A", "group2": "B", "sf_type": "poscounts"},
         )
     )
     recorder.add_step(
@@ -398,6 +398,7 @@ def test_all_gui_actions_generation():
     # Verify new helper
     assert "prepare_deseq2_input" in deseq2_cells[0]
     assert "_get_metax_df_by_type" in deseq2_cells[0]
+    assert "'sf_type': 'poscounts'" in deseq2_cells[0]
 
     limma_cells = [code for code in code_cells if "tfa.CrossTest.get_stats_limma" in code]
     assert len(limma_cells) == 3

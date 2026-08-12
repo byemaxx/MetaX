@@ -5,6 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import numpy as np
 import pandas as pd
 import pytest
+from types import SimpleNamespace
 
 from metax.gui import main_gui
 from metax.gui.main_gui import MetaXGUI
@@ -70,3 +71,90 @@ def test_run_in_new_window_handles_dataframe_result(monkeypatch):
     FakeExecutor.last_instance.finished.emit(result, True)
 
     assert len(information_calls) == 1
+
+
+def test_sparse_deseq2_prompt_accepts_poscounts(monkeypatch):
+    class FakeMessageBox:
+        Warning = 1
+        AcceptRole = 2
+        RejectRole = 3
+        last_instance = None
+
+        def __init__(self, parent=None):
+            self.continue_button = None
+            self.clicked = None
+            self.text = ""
+            self.informative_text = ""
+            FakeMessageBox.last_instance = self
+
+        def setStyleSheet(self, style):
+            pass
+
+        def setIcon(self, icon):
+            pass
+
+        def setWindowTitle(self, title):
+            self.title = title
+
+        def setText(self, text):
+            self.text = text
+
+        def setInformativeText(self, text):
+            self.informative_text = text
+
+        def addButton(self, label, role):
+            button = object()
+            if role == self.AcceptRole:
+                self.continue_button = button
+            return button
+
+        def setDefaultButton(self, button):
+            pass
+
+        def exec_(self):
+            self.clicked = self.continue_button
+
+        def clickedButton(self):
+            return self.clicked
+
+    monkeypatch.setattr(main_gui, "QMessageBox", FakeMessageBox)
+
+    gui = object.__new__(MetaXGUI)
+    gui.MainWindow = None
+    gui.tfa = SimpleNamespace(
+        CrossTest=SimpleNamespace(
+            get_deseq2_ratio_preflight=lambda *args, **kwargs: {
+                "can_compare": True,
+                "ratio_compatible": False,
+            }
+        )
+    )
+
+    result = gui._confirm_deseq2_size_factor_method(
+        pd.DataFrame(),
+        [("control", "treatment", None)],
+    )
+
+    assert result == "poscounts"
+    assert FakeMessageBox.last_instance.title == "DESeq2 normalization"
+    assert "Use 'poscounts' instead?" in FakeMessageBox.last_instance.text
+    assert "continuous MS intensities" in FakeMessageBox.last_instance.informative_text
+
+
+def test_deseq2_preflight_keeps_ratio_without_prompt():
+    gui = object.__new__(MetaXGUI)
+    gui.tfa = SimpleNamespace(
+        CrossTest=SimpleNamespace(
+            get_deseq2_ratio_preflight=lambda *args, **kwargs: {
+                "can_compare": True,
+                "ratio_compatible": True,
+            }
+        )
+    )
+
+    result = gui._confirm_deseq2_size_factor_method(
+        pd.DataFrame(),
+        [("control", "treatment", None)],
+    )
+
+    assert result == "ratio"
