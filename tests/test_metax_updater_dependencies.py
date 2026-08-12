@@ -93,6 +93,39 @@ def test_dependency_check_detects_missing_requirement(tmp_path, monkeypatch):
     assert "openpyxl" not in output
 
 
+def test_bundled_runtime_dependency_check_includes_full_profile(tmp_path, monkeypatch):
+    (tmp_path / "pyproject.toml").write_text(
+        textwrap.dedent(
+            """
+            [project]
+            dependencies = ["numpy>=1.25.1"]
+
+            [project.optional-dependencies]
+            full = ["Jinja2>=3.2"]
+            """
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / metax_updater.BUNDLED_RUNTIME_MARKER).write_text("{}", encoding="utf-8")
+
+    def fake_version(name):
+        if name == "Jinja2":
+            raise metax_updater.importlib_metadata.PackageNotFoundError(name)
+        return "1.25.1"
+
+    monkeypatch.setattr(metax_updater.importlib_metadata, "version", fake_version)
+
+    updater = _make_updater()
+    monkeypatch.setattr(updater, "get_local_project_folder_path", lambda: str(tmp_path))
+    success, output = updater.check_project_dependencies(
+        str(tmp_path),
+        optional_dependency_groups=updater.get_dependency_check_optional_groups(),
+    )
+
+    assert not success
+    assert "Jinja2: not installed; requires >=3.2" in output
+
+
 @pytest.mark.parametrize("installed_version", [None, "", "not a version"])
 def test_dependency_check_handles_invalid_installed_version_metadata(
     tmp_path, monkeypatch, installed_version

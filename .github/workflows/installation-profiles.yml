@@ -25,7 +25,7 @@ jobs:
           METAX_METAUMBRA_SOURCE: ${{ github.workspace }}/MetaUmbra
         run: |
           python -c "import sys, metax, metax.cli.annotate, metax.cli.report; assert not any(name.startswith('PyQt') for name in sys.modules); assert 'metax.report' not in sys.modules"
-          python -m metax.cli.report --capabilities
+          python -c "import json, subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--capabilities'], text=True, capture_output=True); assert p.returncode == 0; payload = json.loads(p.stdout); assert payload['available'] is False, payload"
           python -c "import subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--otf', 'missing.tsv', '--out', 'report'], text=True, capture_output=True); assert p.returncode == 4; assert 'MetaXTools[report]' in p.stderr"
           python -m metax.cli.annotate --help
           python -m pytest tests/test_manifest_annotation_cli.py tests/test_annotation_subprocess_cleanup.py tests/test_pep_table_to_otf_dataframe.py tests/test_genome_selection_manifest.py tests/test_manifest_otf_backend.py tests/test_metaumbra_contract_integration.py -q
@@ -51,7 +51,7 @@ jobs:
         if: matrix.extra == 'report'
         run: |
           python -c "import metax.report; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
-          python -m metax.cli.report --capabilities
+          python -c "import json, subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--capabilities'], text=True, capture_output=True); assert p.returncode == 0; payload = json.loads(p.stdout); assert payload['available'] is True, payload"
           python -m metax.cli.report --help
           python -m pytest tests/test_report_cli_contract.py tests/test_auto_report_config.py tests/test_auto_report_workflow.py -q
 
@@ -104,6 +104,6 @@ jobs:
       - name: Verify Windows report contract
         shell: pwsh
         run: |
-          python -m metax.cli.report --capabilities
+          python -c "import json, subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--capabilities'], text=True, capture_output=True); assert p.returncode == 0; payload = json.loads(p.stdout); assert payload['available'] is True, payload"
           python -m metax.cli.report --help
           python -m pytest tests/test_report_cli_contract.py -q
