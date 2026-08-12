@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+from metax.cli import report as report_entrypoint
 from metax.report import cli
 from metax.report.registry import ResultRegistry
 
@@ -19,6 +22,21 @@ def test_report_capabilities_contract(capsys) -> None:
         "workflow_api_version": "1.0",
         "result_schema_version": "metax.report_result.v1",
     }
+
+
+def test_report_entrypoint_capabilities_reflect_dependency_availability(
+    capsys, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        report_entrypoint,
+        "find_spec",
+        lambda module_name: None if module_name == "jinja2" else object(),
+    )
+
+    assert report_entrypoint.main(["--capabilities"]) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["available"] is False
 
 
 def test_report_result_json_contract(tmp_path: Path, monkeypatch) -> None:
@@ -70,6 +88,7 @@ def test_report_result_json_contract(tmp_path: Path, monkeypatch) -> None:
     assert payload["schema_version"] == "metax.report_result.v1"
     assert payload["workflow_api_version"] == "1.0"
     assert payload["status"] == "completed"
+    assert payload["inputs"]["otf_table"] == str(otf_path.resolve())
     assert payload["outputs"]["index_html"] == str((output_dir / "index.html").resolve())
     assert payload["summary"] == {
         "tables": 1,
@@ -78,6 +97,43 @@ def test_report_result_json_contract(tmp_path: Path, monkeypatch) -> None:
         "interactive_html": 0,
     }
     assert payload["warnings"][0]["message"] == "A test warning"
+
+
+def test_report_rejects_missing_index_html(tmp_path: Path, monkeypatch) -> None:
+    otf_path = tmp_path / "OTF.tsv"
+    otf_path.write_text("Sequence\tIntensity_A\nPEPTIDE\t1\n", encoding="utf-8")
+    result_json = tmp_path / "failed.json"
+    output_dir = tmp_path / "report"
+
+    class IncompleteReport:
+        def __init__(self, config) -> None:
+            self.config = config
+
+        def run(self):
+            output_dir.mkdir()
+            return SimpleNamespace(
+                output_dir=output_dir,
+                index_html_path=output_dir / "index.html",
+                summary_json_path=output_dir / "summary.json",
+                registry=ResultRegistry(),
+                reproducibility_artifacts={},
+            )
+
+    monkeypatch.setattr(cli, "AutoOTFReport", IncompleteReport)
+
+    assert cli.main(
+        [
+            "--otf",
+            str(otf_path),
+            "--out",
+            str(output_dir),
+            "--result-json",
+            str(result_json),
+        ]
+    ) == 1
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert "non-empty index.html" in payload["errors"][0]["message"]
 
 
 def test_report_failure_writes_machine_readable_result(tmp_path: Path, monkeypatch) -> None:
@@ -109,6 +165,79 @@ def test_report_failure_writes_machine_readable_result(tmp_path: Path, monkeypat
     payload = json.loads(result_json.read_text(encoding="utf-8"))
     assert payload["status"] == "failed"
     assert payload["errors"] == [{"message": "analysis failed", "source": "metax-report"}]
+
+
+def test_report_cancellation_contract(tmp_path: Path, monkeypatch) -> None:
+    otf_path = tmp_path / "OTF.tsv"
+    otf_path.write_text("Sequence\tIntensity_A\nPEPTIDE\t1\n", encoding="utf-8")
+    result_json = tmp_path / "cancelled.json"
+
+    class CancelledReport:
+        def __init__(self, config) -> None:
+            self.config = config
+
+        def run(self):
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli, "AutoOTFReport", CancelledReport)
+    assert cli.main(
+        [
+            "--otf",
+            str(otf_path),
+            "--out",
+            str(tmp_path / "report"),
+            "--result-json",
+            str(result_json),
+        ]
+    ) == 130
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "cancelled"
+    assert payload["errors"][0]["source"] == "metax-report"
+
+
+def test_real_report_cli_contract(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "report_contract"
+    output_dir = tmp_path / "report output with spaces"
+    result_json = tmp_path / "result output" / "metax_report_result.json"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "metax.cli.report",
+            "--config",
+            str(fixture_dir / "config.yaml"),
+            "--otf",
+            str(fixture_dir / "OTF.tsv"),
+            "--meta",
+            str(fixture_dir / "metadata.tsv"),
+            "--out",
+            str(output_dir),
+            "--result-json",
+            str(result_json),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=180,
+    )
+    assert completed.returncode == 0, completed.stderr
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == "metax.report_result.v1"
+    assert payload["workflow_api_version"].split(".", 1)[0] == "1"
+    assert payload["status"] == "completed"
+    assert Path(payload["outputs"]["index_html"]).stat().st_size > 0
+    assert Path(payload["outputs"]["summary_json"]).is_file()
+    assert payload["summary"]["tables"] + payload["summary"]["figures"] >= 1
+    assert isinstance(payload["warnings"], list)
+    assert isinstance(payload["errors"], list)
+    for path in [
+        payload["inputs"]["otf_table"],
+        payload["inputs"]["metadata_table"],
+        payload["outputs"]["output_directory"],
+        payload["outputs"]["index_html"],
+        payload["outputs"]["summary_json"],
+    ]:
+        assert Path(path).is_absolute()
 
 
 def test_report_config_validation_failure_writes_machine_readable_result(

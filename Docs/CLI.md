@@ -39,6 +39,15 @@ python -m metax.cli.report --help
 
 Using `python -m ...` guarantees that the command runs with the same interpreter that contains the selected MetaX installation.
 
+Workflow orchestrators can discover the report contract without loading Qt:
+
+```bash
+python -m metax.cli.report --capabilities
+```
+
+The capability output reports workflow API `1.0` and result schema
+`metax.report_result.v1`.
+
 ## 3. Desktop Launcher
 
 ```bash
@@ -216,6 +225,24 @@ metax-report \
   --dpi 300
 ```
 
+For machine-to-machine execution, request the versioned result contract:
+
+```bash
+python -m metax.cli.report \
+  --otf OTF.tsv \
+  --meta metadata.tsv \
+  --out MetaX_Report \
+  --result-json metax_report_result.json
+```
+
+The atomically written JSON contains `schema_version`,
+`workflow_api_version`, `status`, `software`, absolute input and output
+paths, summary counts, structured warnings and errors, and runtime details.
+Completed runs use status `completed`; interrupted runs use `cancelled` and
+exit code `130`; failures use `failed` and a non-zero exit code. A completed
+result is not emitted unless the generated `index.html` exists and is
+non-empty.
+
 Without `--config`, `--otf` and `--out` are required. With a configuration file, command-line options override the corresponding configuration values.
 
 ### 5.1 Report Configuration File
@@ -276,6 +303,8 @@ metax-report --config report.yaml
 | `--run-network` | Enable heavier taxa-function network plots |
 | `--no-network` | Disable network plots |
 | `--overwrite` | Replace report files in a non-empty output directory |
+| `--result-json PATH` | Atomically write `metax.report_result.v1` for workflow orchestration |
+| `--capabilities` | Print the report capability contract and exit |
 
 The command prints the generated report `index.html` path on success and returns `0`. A report failure returns `1`; a missing optional report dependency returns `4`. The report directory also contains tables, figures, logs, `summary.json`, `config_used.yaml`, and reproducibility helpers.
 
@@ -329,6 +358,6 @@ Use `metax-report` when a standardized, unattended overview is sufficient. Use w
 - Examples use Bash line continuation (`\`). In PowerShell, replace each trailing backslash with a backtick or put the command on one line.
 - Quote paths containing spaces.
 - Prefer module invocation (`python -m metax.cli.annotate`) when the shell may resolve a command from the wrong Python environment.
-- Use annotation `--result-json` and process exit codes in workflow managers; do not determine success only by checking whether an output file exists.
+- Use annotation and report `--result-json` contracts plus process exit codes in workflow managers; do not determine success only by checking whether an output file exists.
 - Use a new report directory or pass `--overwrite` intentionally. MetaX rejects a non-empty report directory by default so unrelated runs are not mixed.
 - Run each command with `--help` to inspect the exact options supported by the installed MetaX version.

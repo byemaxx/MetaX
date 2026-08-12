@@ -81,7 +81,8 @@ Show OTFS intensity in groups(samples), e.g., **Species-KO** OTF Heatmap
     > ```bash
     > python -m pip install "MetaXTools[analyzer]"
     > python -m pip install "MetaXTools[report]"
-    > metax-report --config report.yaml
+    > python -m metax.cli.report --capabilities
+    > metax-report --config report.yaml --result-json metax_report_result.json
     > ```
 
 - **Desktop GUI / complete installation**
