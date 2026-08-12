@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+from metax.cli import report as report_entrypoint
 from metax.report import cli
 from metax.report.registry import ResultRegistry
 
@@ -21,6 +22,21 @@ def test_report_capabilities_contract(capsys) -> None:
         "workflow_api_version": "1.0",
         "result_schema_version": "metax.report_result.v1",
     }
+
+
+def test_report_entrypoint_capabilities_reflect_dependency_availability(
+    capsys, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        report_entrypoint,
+        "find_spec",
+        lambda module_name: None if module_name == "jinja2" else object(),
+    )
+
+    assert report_entrypoint.main(["--capabilities"]) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["available"] is False
 
 
 def test_report_result_json_contract(tmp_path: Path, monkeypatch) -> None:

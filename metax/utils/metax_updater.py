@@ -37,6 +37,7 @@ except ModuleNotFoundError:
 
 BUNDLED_RUNTIME_MARKER = ".metax-bundled-runtime.json"
 BUNDLED_RELEASE_URL = "https://github.com/byemaxx/MetaX/releases"
+BUNDLED_RUNTIME_OPTIONAL_DEPENDENCY_GROUPS = ("full",)
 UPDATE_ROOT_FILES = (
     "LICENSE",
     "MANIFEST.in",
@@ -98,6 +99,11 @@ class Updater:
     def is_bundled_runtime_install(self):
         marker_path = os.path.join(self.get_local_project_folder_path(), BUNDLED_RUNTIME_MARKER)
         return os.path.isfile(marker_path)
+
+    def get_dependency_check_optional_groups(self):
+        if self.is_bundled_runtime_install():
+            return BUNDLED_RUNTIME_OPTIONAL_DEPENDENCY_GROUPS
+        return ()
 
     def bundled_runtime_requires_installer(self, api_changed, dependency_check_success):
         return self.is_bundled_runtime_install() and (api_changed or not dependency_check_success)
@@ -363,7 +369,11 @@ class Updater:
         self.dependencies_updated = True
         return True, output
 
-    def get_project_dependency_requirements(self, project_folder_path=None):
+    def get_project_dependency_requirements(
+        self,
+        project_folder_path=None,
+        optional_dependency_groups=(),
+    ):
         if project_folder_path is None:
             project_folder_path = self.get_downloaded_project_folder_path()
 
@@ -372,9 +382,25 @@ class Updater:
             try:
                 with open(pyproject_path, "rb") as file:
                     pyproject_data = tomllib.load(file)
-                dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+                project_data = pyproject_data.get("project", {})
+                dependencies = list(project_data.get("dependencies", []))
+                optional_dependencies = project_data.get("optional-dependencies", {})
+                missing_optional_groups = []
+                for group_name in optional_dependency_groups:
+                    group_requirements = optional_dependencies.get(group_name)
+                    if group_requirements is None:
+                        missing_optional_groups.append(group_name)
+                        continue
+                    dependencies.extend(group_requirements)
+                if missing_optional_groups:
+                    self.append_update_log(
+                        "Downloaded pyproject.toml does not define optional dependency group(s): "
+                        + ", ".join(missing_optional_groups)
+                        + "; checking requirements.txt instead."
+                    )
+                    dependencies = []
                 if dependencies:
-                    return list(dependencies)
+                    return list(dict.fromkeys(dependencies))
             except Exception as e:
                 self.append_update_log(f"Read dependency metadata from pyproject.toml failed: {e}")
 
@@ -396,8 +422,15 @@ class Updater:
 
         return []
 
-    def find_unsatisfied_project_dependencies(self, project_folder_path=None):
-        requirements = self.get_project_dependency_requirements(project_folder_path)
+    def find_unsatisfied_project_dependencies(
+        self,
+        project_folder_path=None,
+        optional_dependency_groups=(),
+    ):
+        requirements = self.get_project_dependency_requirements(
+            project_folder_path,
+            optional_dependency_groups=optional_dependency_groups,
+        )
         issues = []
         skipped = []
         checked_count = 0
@@ -447,8 +480,15 @@ class Updater:
 
         return issues, skipped, checked_count
 
-    def check_project_dependencies(self, project_folder_path=None):
-        issues, skipped, checked_count = self.find_unsatisfied_project_dependencies(project_folder_path)
+    def check_project_dependencies(
+        self,
+        project_folder_path=None,
+        optional_dependency_groups=(),
+    ):
+        issues, skipped, checked_count = self.find_unsatisfied_project_dependencies(
+            project_folder_path,
+            optional_dependency_groups=optional_dependency_groups,
+        )
         if checked_count == 0:
             self.append_update_log("No dependency requirements were found in the downloaded project.")
         else:
@@ -559,7 +599,10 @@ class Updater:
                     QMessageBox.warning(self.MainWindow, "Update", "Download failed. Please try again later or update manually.")
                     return
 
-                dependency_check_success, dependency_check_output = self.check_project_dependencies()
+                optional_dependency_groups = self.get_dependency_check_optional_groups()
+                dependency_check_success, dependency_check_output = self.check_project_dependencies(
+                    optional_dependency_groups=optional_dependency_groups,
+                )
                 should_install_dependencies = api_changed or not dependency_check_success
                 if self.bundled_runtime_requires_installer(api_changed, dependency_check_success):
                     message = self.get_bundled_runtime_update_message(dependency_check_output)
