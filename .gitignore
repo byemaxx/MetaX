@@ -3,6 +3,7 @@
 .idea/
 .trunk/
 .local_tests/
+packaging/windows/
 *.pyc
 *.db
 .gitignore

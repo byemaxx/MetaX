@@ -157,12 +157,17 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _success_result(config: AutoReportConfig, result: Any) -> dict[str, Any]:
+    index_html = Path(result.index_html_path).expanduser().resolve()
+    if not index_html.is_file() or index_html.stat().st_size == 0:
+        raise RuntimeError(
+            f"Report backend did not produce a non-empty index.html: {index_html}"
+        )
     registry = result.registry.to_dict()
     return {
         **_terminal_result("completed", config),
         "outputs": {
             "output_directory": str(Path(result.output_dir).resolve()),
-            "index_html": str(Path(result.index_html_path).resolve()),
+            "index_html": str(index_html),
             "summary_json": str(Path(result.summary_json_path).resolve()),
             "reproducibility_artifacts": {
                 key: str(Path(path).resolve())
@@ -187,14 +192,16 @@ def _terminal_result(
     *,
     error: str = "",
 ) -> dict[str, Any]:
+    otf_path = _absolute_path(config.input.otf_path) if config else None
+    metadata_path = _absolute_path(config.input.meta_path) if config else None
     return {
         "schema_version": REPORT_RESULT_SCHEMA_VERSION,
         "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
         "status": status,
         "software": {"metax_version": __version__},
         "inputs": {
-            "otf_table": config.input.otf_path if config else None,
-            "metadata_table": config.input.meta_path if config else None,
+            "otf_table": otf_path,
+            "metadata_table": metadata_path,
         },
         "outputs": {},
         "summary": {},
@@ -210,8 +217,17 @@ def _write_result_json(path: str | None, payload: dict[str, Any]) -> None:
     output_path = Path(path).expanduser().resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
-    temporary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    temporary_path.replace(output_path)
+    try:
+        temporary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        temporary_path.replace(output_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def _absolute_path(path: str | None) -> str | None:
+    if not path:
+        return None
+    return str(Path(path).expanduser().resolve())
 
 
 def _find_result_json_path(argv: list[str] | None) -> str | None:
