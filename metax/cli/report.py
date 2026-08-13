@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import json
 import sys
-from importlib.util import find_spec
 
 from metax.utils.version import __version__
 
 
 REPORT_EXTRA = "MetaXTools[report]"
-REPORT_IMPORT_ROOTS = {
+# These names cover the optional ``report`` extra and the analyzer modules that
+# the report workflow loads.  Probe them with ``find_spec`` rather than imports:
+# capabilities must not initialize Qt, plotting backends, or scientific work.
+REPORT_IMPORT_ROOTS = (
     "adjustText",
     "distinctipy",
     "inmoose",
@@ -23,7 +26,7 @@ REPORT_IMPORT_ROOTS = {
     "sklearn",
     "statsmodels",
     "upsetplot",
-}
+)
 REPORT_WORKFLOW_API_VERSION = "1.0"
 REPORT_RESULT_SCHEMA_VERSION = "metax.report_result.v1"
 REPORT_CAPABILITIES_SCHEMA_VERSION = "metax.report_capabilities.v1"
@@ -37,27 +40,31 @@ def _missing_report_message(missing_module: str | None = None) -> str:
     )
 
 
-def _report_stack_available() -> bool:
-    """Check report dependency availability without importing the report or Qt stacks."""
-    return all(find_spec(module_name) is not None for module_name in REPORT_IMPORT_ROOTS)
+def report_capabilities() -> dict[str, object]:
+    """Return the lightweight, machine-readable report runtime contract."""
+    missing = [
+        module
+        for module in REPORT_IMPORT_ROOTS
+        if importlib.util.find_spec(module) is None
+    ]
+    available = not missing
+    return {
+        "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
+        "available": available,
+        "metax_version": __version__,
+        "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
+        "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
+        "missing_dependencies": missing,
+        "reason": "" if available else "MetaX report dependencies are not installed.",
+        "install_hint": "" if available else f'pip install "{REPORT_EXTRA}"',
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
     """Load the report CLI only when the headless analysis stack is installed."""
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments == ["--capabilities"]:
-        print(
-            json.dumps(
-                {
-                    "schema_version": REPORT_CAPABILITIES_SCHEMA_VERSION,
-                    "available": _report_stack_available(),
-                    "metax_version": __version__,
-                    "workflow_api_version": REPORT_WORKFLOW_API_VERSION,
-                    "result_schema_version": REPORT_RESULT_SCHEMA_VERSION,
-                },
-                indent=2,
-            )
-        )
+        print(json.dumps(report_capabilities(), indent=2))
         return 0
     try:
         report_cli = importlib.import_module("metax.report.cli")
