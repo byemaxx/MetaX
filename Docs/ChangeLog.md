@@ -1,3 +1,9 @@
+# Version: 2.6.4
+## Date: 2026-08-14
+### Changes:
+- Fix: Fixed an issue that could prevent further analysis after a background task finished in the packaged app.
+
+
 # Version: 2.6.3
 ## Date: 2026-08-11
 ### Changes:
