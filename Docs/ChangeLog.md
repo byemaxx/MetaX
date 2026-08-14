@@ -1,3 +1,12 @@
+# Version: 2.6.4
+## Date: 2026-08-14
+### Changes:
+- Fix: Prevented packaged GUI builds from replacing MetaX console capture with invalid system output handles after a background task completes.
+- Fix: Routed background-task output by worker thread so overlapping tasks no longer corrupt or overwrite the process-wide output streams.
+- Fix: Made exception output safe when no Windows console is available and removed temporary logging handlers when workers finish.
+- Test: Added regression coverage for invalid packaged-app console handles, concurrent worker output, exception reporting, and logging-handler cleanup.
+
+
 # Version: 2.6.3
 ## Date: 2026-08-11
 ### Changes:

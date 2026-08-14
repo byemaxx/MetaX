@@ -10,6 +10,88 @@ import os
 import logging
 import inspect
 import threading
+from contextlib import contextmanager
+
+
+class ThreadStreamRouter:
+    """Route writes from registered worker threads without replacing stdout per task.
+
+    ``sys.stdout`` and ``sys.stderr`` are process-wide objects, so assigning them
+    inside a QThread is unsafe when workers overlap.  This proxy stays installed
+    globally and selects an output stream using the current thread id.  Writes
+    from unregistered threads continue to the stream that the GUI had already
+    installed (normally ``ConsoleCapture``).
+    """
+
+    def __init__(self, fallback):
+        self.fallback = fallback
+        self._targets = {}
+        self._lock = threading.RLock()
+
+    def _target_for_current_thread(self):
+        thread_id = threading.get_ident()
+        with self._lock:
+            targets = self._targets.get(thread_id)
+            return targets[-1] if targets else self.fallback
+
+    @contextmanager
+    def redirect_current_thread(self, target):
+        thread_id = threading.get_ident()
+        with self._lock:
+            self._targets.setdefault(thread_id, []).append(target)
+        try:
+            yield
+        finally:
+            with self._lock:
+                targets = self._targets.get(thread_id, [])
+                if targets and targets[-1] is target:
+                    targets.pop()
+                elif target in targets:
+                    targets.remove(target)
+                if not targets:
+                    self._targets.pop(thread_id, None)
+
+    def write(self, text):
+        target = self._target_for_current_thread()
+        if target is None:
+            return len(text)
+        try:
+            result = target.write(text)
+        except (OSError, ValueError):
+            # GUI executables created with pythonw/PyInstaller may inherit a
+            # closed or invalid console handle.  Console output must never make
+            # an analysis fail in that environment.
+            return len(text)
+        return len(text) if result is None else result
+
+    def flush(self):
+        target = self._target_for_current_thread()
+        if target is None:
+            return
+        try:
+            target.flush()
+        except (OSError, ValueError):
+            return
+
+    def __getattr__(self, name):
+        if self.fallback is None:
+            raise AttributeError(name)
+        return getattr(self.fallback, name)
+
+
+_stream_router_install_lock = threading.Lock()
+
+
+def _ensure_thread_stream_router(stream_name):
+    """Return a thread-aware proxy installed on ``sys.<stream_name>``."""
+    with _stream_router_install_lock:
+        current = getattr(sys, stream_name)
+        if isinstance(current, ThreadStreamRouter):
+            return current
+        router = ThreadStreamRouter(current)
+        setattr(sys, stream_name, router)
+        return router
+
 
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
@@ -19,19 +101,32 @@ class EmittingStream(QObject):
         self.original = original
 
     def write(self, text):
-        self.original.write(text)  # 写入原始的stdout或stderr
+        if self.original is not None:
+            try:
+                self.original.write(text)  # 写入原始的stdout或stderr
+            except (OSError, ValueError):
+                # A packaged GUI application may not have a valid console.
+                pass
         self.text_written.emit(str(text))  # 发送信号以更新UI
+        return len(text)
 
     def flush(self):
-        self.original.flush()
+        if self.original is not None:
+            try:
+                self.original.flush()
+            except (OSError, ValueError):
+                pass
         
         
 class LoggingHandler(logging.Handler):
     def __init__(self, signal):
         super().__init__()
         self.text_written_signal = signal
+        self.worker_thread_id = None
 
     def emit(self, record):
+        if record.thread != self.worker_thread_id:
+            return
         log_entry = self.format(record)
         self.text_written_signal.emit(log_entry)
 
@@ -76,8 +171,10 @@ class FunctionExecutor(QMainWindow):
         if self.supports_cancellation:
             self.kwargs.setdefault("cancel_event", self.cancel_event)
         
-        self.stream_out = EmittingStream(sys.stdout)
-        self.stream_err = EmittingStream(sys.stderr)
+        self.stdout_router = _ensure_thread_stream_router("stdout")
+        self.stderr_router = _ensure_thread_stream_router("stderr")
+        self.stream_out = EmittingStream(self.stdout_router.fallback)
+        self.stream_err = EmittingStream(self.stderr_router.fallback)
         self.stream_out.text_written.connect(self.update_progress)
         self.stream_err.text_written.connect(self.update_progress)
         
@@ -94,9 +191,9 @@ class FunctionExecutor(QMainWindow):
         # self.progress_regex = re.compile(r'\d+%\|\S+\s+\d+/\d+\s+\[\d{2}:\d{2}<\d{2}:\d{2},\s+\d+\.\d+it/s')
 
         # 创建 LoggingHandler，并连接到 text_written 信号
-        log_handler = LoggingHandler(self.stream_out.text_written)
-        log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-        logging.getLogger().addHandler(log_handler)
+        self.log_handler = LoggingHandler(self.stream_out.text_written)
+        self.log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+        logging.getLogger().addHandler(self.log_handler)
 
         self.thread.start()
 
@@ -116,39 +213,41 @@ class FunctionExecutor(QMainWindow):
 
             
     def run_function(self):
-        sys.stdout = self.stream_out
-        sys.stderr = self.stream_err
         success = True
-        try:
-            self.result = self.function(*self.args, **self.kwargs)
-        except Exception as e:
-            if self.cancel_event.is_set():
-                self.result = self.CANCELLED_RESULT
-                success = False
-                return
+        self.log_handler.worker_thread_id = threading.get_ident()
+        with (
+            self.stdout_router.redirect_current_thread(self.stream_out),
+            self.stderr_router.redirect_current_thread(self.stream_err),
+        ):
+            try:
+                self.result = self.function(*self.args, **self.kwargs)
+            except Exception as e:
+                if self.cancel_event.is_set():
+                    self.result = self.CANCELLED_RESULT
+                    success = False
+                    return
 
-            import traceback
-            error_message = traceback.format_exc()
-            sys.__stderr__.write(error_message)
-            sys.__stderr__.flush()
-            
-            logging.error(error_message)
-            
-            if self.logger:
-                self.logger.write_log(error_message, 'e')
-                
-            success = False
-            # current function name 
-            current_function = self.function.__name__
-            self.result = f"Error in {current_function}\n\n{str(e)}"
-        finally:
-            if self.cancel_event.is_set():
-                self.result = self.CANCELLED_RESULT
+                import traceback
+                error_message = traceback.format_exc()
+                self.stream_err.write(error_message)
+                self.stream_err.flush()
+
+                logging.error(error_message)
+
+                if self.logger:
+                    self.logger.write_log(error_message, 'e')
+
                 success = False
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-            self.finished.emit(self.result, success)
-            self.thread.quit()
+                # current function name
+                current_function = self.function.__name__
+                self.result = f"Error in {current_function}\n\n{str(e)}"
+            finally:
+                if self.cancel_event.is_set():
+                    self.result = self.CANCELLED_RESULT
+                    success = False
+                logging.getLogger().removeHandler(self.log_handler)
+                self.finished.emit(self.result, success)
+                self.thread.quit()
 
 
     def update_progress(self, text):
