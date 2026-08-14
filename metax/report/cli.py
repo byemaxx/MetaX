@@ -157,18 +157,28 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _success_result(config: AutoReportConfig, result: Any) -> dict[str, Any]:
+    output_directory = Path(result.output_dir).expanduser().resolve()
+    if not output_directory.is_dir():
+        raise RuntimeError(
+            f"Report backend did not produce an output directory: {output_directory}"
+        )
     index_html = Path(result.index_html_path).expanduser().resolve()
     if not index_html.is_file() or index_html.stat().st_size == 0:
         raise RuntimeError(
             f"Report backend did not produce a non-empty index.html: {index_html}"
         )
+    summary_json = Path(result.summary_json_path).expanduser().resolve()
+    if not summary_json.is_file() or summary_json.stat().st_size == 0:
+        raise RuntimeError(
+            f"Report backend did not produce a non-empty summary JSON: {summary_json}"
+        )
     registry = result.registry.to_dict()
     return {
         **_terminal_result("completed", config),
         "outputs": {
-            "output_directory": str(Path(result.output_dir).resolve()),
+            "output_directory": str(output_directory),
             "index_html": str(index_html),
-            "summary_json": str(Path(result.summary_json_path).resolve()),
+            "summary_json": str(summary_json),
             "reproducibility_artifacts": {
                 key: str(Path(path).resolve())
                 for key, path in result.reproducibility_artifacts.items()

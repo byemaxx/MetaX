@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -12,31 +13,45 @@ from metax.report.registry import ResultRegistry
 
 
 def test_report_capabilities_contract(capsys) -> None:
-    assert cli.main(["--capabilities"]) == 0
-
-    payload = json.loads(capsys.readouterr().out)
-    assert payload == {
-        "schema_version": "metax.report_capabilities.v1",
-        "available": True,
-        "metax_version": "2.6.3",
-        "workflow_api_version": "1.0",
-        "result_schema_version": "metax.report_result.v1",
-    }
-
-
-def test_report_entrypoint_capabilities_reflect_dependency_availability(
-    capsys, monkeypatch
-) -> None:
-    monkeypatch.setattr(
-        report_entrypoint,
-        "find_spec",
-        lambda module_name: None if module_name == "jinja2" else object(),
-    )
-
     assert report_entrypoint.main(["--capabilities"]) == 0
 
     payload = json.loads(capsys.readouterr().out)
+    assert payload["schema_version"] == "metax.report_capabilities.v1"
+    assert payload["workflow_api_version"] == "1.0"
+    assert payload["result_schema_version"] == "metax.report_result.v1"
+    assert payload["available"] is (not payload["missing_dependencies"])
+    assert payload["reason"] == ("" if payload["available"] else "MetaX report dependencies are not installed.")
+
+
+def test_report_capabilities_reports_missing_optional_dependency(monkeypatch) -> None:
+    original_find_spec = importlib.util.find_spec
+
+    def find_spec(name: str, package: str | None = None):
+        if name == "inmoose":
+            return None
+        return original_find_spec(name, package)
+
+    monkeypatch.setattr(report_entrypoint.importlib.util, "find_spec", find_spec)
+
+    payload = report_entrypoint.report_capabilities()
+
     assert payload["available"] is False
+    assert "inmoose" in payload["missing_dependencies"]
+    assert payload["reason"] == "MetaX report dependencies are not installed."
+    assert payload["install_hint"] == 'pip install "MetaXTools[report]"'
+
+
+def test_report_capabilities_does_not_import_pyqt(monkeypatch) -> None:
+    seen: list[str] = []
+
+    def find_spec(name: str, package: str | None = None):
+        seen.append(name)
+        return object()
+
+    monkeypatch.setattr(report_entrypoint.importlib.util, "find_spec", find_spec)
+
+    assert report_entrypoint.report_capabilities()["available"] is True
+    assert all("pyqt" not in name.lower() for name in seen)
 
 
 def test_report_result_json_contract(tmp_path: Path, monkeypatch) -> None:
@@ -134,6 +149,44 @@ def test_report_rejects_missing_index_html(tmp_path: Path, monkeypatch) -> None:
     payload = json.loads(result_json.read_text(encoding="utf-8"))
     assert payload["status"] == "failed"
     assert "non-empty index.html" in payload["errors"][0]["message"]
+
+
+def test_report_rejects_missing_summary_json(tmp_path: Path, monkeypatch) -> None:
+    otf_path = tmp_path / "OTF.tsv"
+    otf_path.write_text("Sequence\tIntensity_A\nPEPTIDE\t1\n", encoding="utf-8")
+    result_json = tmp_path / "failed.json"
+    output_dir = tmp_path / "report"
+
+    class IncompleteReport:
+        def __init__(self, config) -> None:
+            self.config = config
+
+        def run(self):
+            output_dir.mkdir()
+            (output_dir / "index.html").write_text("<html>report</html>", encoding="utf-8")
+            return SimpleNamespace(
+                output_dir=output_dir,
+                index_html_path=output_dir / "index.html",
+                summary_json_path=output_dir / "summary.json",
+                registry=ResultRegistry(),
+                reproducibility_artifacts={},
+            )
+
+    monkeypatch.setattr(cli, "AutoOTFReport", IncompleteReport)
+
+    assert cli.main(
+        [
+            "--otf",
+            str(otf_path),
+            "--out",
+            str(output_dir),
+            "--result-json",
+            str(result_json),
+        ]
+    ) == 1
+    payload = json.loads(result_json.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert "non-empty summary JSON" in payload["errors"][0]["message"]
 
 
 def test_report_failure_writes_machine_readable_result(tmp_path: Path, monkeypatch) -> None:
