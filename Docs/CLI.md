@@ -302,11 +302,13 @@ metax-report --config report.yaml
 | `--no-diversity` | Disable alpha- and beta-diversity plots |
 | `--run-network` | Enable heavier taxa-function network plots |
 | `--no-network` | Disable network plots |
-| `--overwrite` | Replace report files in a non-empty output directory |
+| `--overwrite` | Replace an owned report directory for the same OTF input |
 | `--result-json PATH` | Atomically write `metax.report_result.v1` for workflow orchestration |
 | `--capabilities` | Print the report capability contract and exit |
 
 The command prints the generated report `index.html` path on success and returns `0`. A report failure returns `1`; a missing optional report dependency returns `4`. The report directory also contains tables, figures, logs, `summary.json`, `config_used.yaml`, and reproducibility helpers.
+
+Nonempty output directories require a `.metax-report.json` ownership marker for the same OTF input. Legacy reports without that marker and directories containing unrelated top-level files are preserved; choose a new output directory. Keep the OTF and metadata outside the report directory. During replacement, the previous report is retained until generation succeeds and restored if generation raises an exception. A forced process termination or system shutdown can leave a `.previous-*` sibling directory for manual recovery.
 
 ## 6. MGnify Database Builder Module
 

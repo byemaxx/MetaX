@@ -7,6 +7,7 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import pandas as pd
 
@@ -52,6 +53,29 @@ class AutoOTFReport:
 
     def run(self) -> ReportResult:
         self._validate_input_files()
+        output = Path(self.config.report.output_dir).expanduser().resolve()
+        self._validate_output_directory(output)
+        self.config.report.output_dir = str(output)
+        previous = None
+        if output.exists() and any(output.iterdir()):
+            previous = output.with_name(f".{output.name}.previous-{uuid4().hex}")
+            output.rename(previous)
+        try:
+            result = self._run()
+        except BaseException:
+            if previous is not None:
+                if output.exists():
+                    shutil.rmtree(output)
+                previous.rename(output)
+            raise
+        if previous is not None:
+            try:
+                shutil.rmtree(previous)
+            except OSError:
+                logging.getLogger(__name__).warning("Previous report retained at %s", previous)
+        return result
+
+    def _run(self) -> ReportResult:
         paths = ReportPaths(self.config.report.output_dir)
         self._prepare_output_dir(paths)
         logger = self._setup_logging(paths)
@@ -63,11 +87,10 @@ class AutoOTFReport:
         logger.info("Meta path: %s", self.config.input.meta_path)
         logger.info("Output directory: %s", paths.output_dir)
         logger.info("Config: %s", self.config.to_dict())
-        reproducibility_artifacts = save_reproducibility_artifacts(self.config, paths.output_dir)
-        for artifact_name, artifact_path in reproducibility_artifacts.items():
-            logger.info("Saved reproducibility %s: %s", artifact_name, artifact_path)
-
         try:
+            reproducibility_artifacts = save_reproducibility_artifacts(self.config, paths.output_dir)
+            for artifact_name, artifact_path in reproducibility_artifacts.items():
+                logger.info("Saved reproducibility %s: %s", artifact_name, artifact_path)
             with self._redirect_backend_output(logger):
                 tfa = self._init_analyzer()
                 context = ReportContext(
@@ -100,6 +123,10 @@ class AutoOTFReport:
             registry.add_error(str(exc), "AutoOTFReport")
             logger.exception("Fatal report failure")
             raise
+        finally:
+            for handler in logger.handlers[:]:
+                handler.close()
+                logger.removeHandler(handler)
 
     def _validate_input_files(self) -> None:
         input_config = self.config.input
@@ -202,37 +229,47 @@ class AutoOTFReport:
             sample = sample[1:]
         return sample
 
-    def _output_was_nonempty(self) -> bool:
-        output_dir = Path(self.config.report.output_dir)
-        return output_dir.exists() and output_dir.is_dir() and any(output_dir.iterdir())
-
     def _prepare_output_dir(self, paths: ReportPaths) -> None:
-        if paths.output_dir.exists() and not paths.output_dir.is_dir():
-            raise ValueError(f"Output path exists but is not a directory: {paths.output_dir}")
-        if self._output_was_nonempty() and not self.config.report.overwrite:
+        self._validate_output_directory(paths.output_dir.expanduser().resolve())
+        paths.create()
+        marker = paths.output_dir / ".metax-report.json"
+        marker.write_text(json.dumps({
+            "schema_version": "metax.report_directory.v1",
+            "otf_path": str(Path(self.config.input.otf_path).expanduser().resolve()),
+        }), encoding="utf-8")
+
+    def _validate_output_directory(self, output_dir: Path) -> None:
+        if Path(self.config.report.output_dir).is_symlink():
+            raise ValueError("Report output must not be a symbolic link.")
+        if output_dir.exists() and not output_dir.is_dir():
+            raise ValueError(f"Output path exists but is not a directory: {output_dir}")
+        for value in (self.config.input.otf_path, self.config.input.meta_path):
+            if value and Path(value).expanduser().resolve().is_relative_to(output_dir):
+                raise ValueError("Report inputs must be outside the report output directory.")
+        if not output_dir.exists() or not any(output_dir.iterdir()):
+            return
+        if not self.config.report.overwrite:
             raise FileExistsError(
-                f"Output directory is not empty: {paths.output_dir}. "
+                f"Output directory is not empty: {output_dir}. "
                 "Use --overwrite or choose a new output directory."
             )
-        if paths.output_dir.exists() and self.config.report.overwrite:
-            self._clear_previous_report(paths.output_dir)
-        paths.create()
-        test_path = paths.output_dir / ".write_test"
         try:
-            test_path.write_text("ok", encoding="utf-8")
-            test_path.unlink()
-        except OSError as exc:
-            raise OSError(f"Output directory is not writable: {paths.output_dir}") from exc
-
-    def _clear_previous_report(self, output_dir: Path) -> None:
-        for name in ["tables", "stats", "figures", "assets", "logs"]:
-            path = output_dir / name
-            if path.exists():
-                shutil.rmtree(path)
-        for name in ["index.html", "config_used.yaml", "summary.json"]:
-            path = output_dir / name
-            if path.exists():
-                path.unlink()
+            marker = json.loads((output_dir / ".metax-report.json").read_text(encoding="utf-8"))
+            owned = marker == {
+                "schema_version": "metax.report_directory.v1",
+                "otf_path": str(Path(self.config.input.otf_path).expanduser().resolve()),
+            }
+        except (OSError, ValueError):
+            owned = False
+        if not owned:
+            raise FileExistsError(
+                f"Refusing to overwrite a directory not owned by this MetaX report: {output_dir}. "
+                "Choose a new output directory."
+            )
+        generated = {".metax-report.json", "tables", "stats", "figures", "assets", "logs", "index.html",
+                     "config_used.yaml", "summary.json", "run_metax_report.py", "run_metax_report.bat"}
+        if any(path.name not in generated for path in output_dir.iterdir()):
+            raise FileExistsError("Report directory contains unrelated files. Choose a new output directory.")
 
     def _setup_logging(self, paths: ReportPaths) -> logging.Logger:
         logger = logging.getLogger(f"metax.report.auto_otf.{id(self)}")
