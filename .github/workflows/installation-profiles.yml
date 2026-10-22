@@ -53,7 +53,7 @@ jobs:
           python -c "import metax.report; import sys; assert not any(name.startswith('PyQt') for name in sys.modules)"
           python -c "import json, subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--capabilities'], text=True, capture_output=True); assert p.returncode == 0; payload = json.loads(p.stdout); assert payload['available'] is True, payload"
           python -m metax.cli.report --help
-          python -m pytest tests/test_report_cli_contract.py tests/test_auto_report_config.py tests/test_auto_report_workflow.py -q
+          python -m pytest tests/test_report_cli_contract.py tests/test_auto_report_config.py tests/test_auto_report_workflow.py tests/test_report_output_safety.py -q
 
   gui-and-full-metadata:
     runs-on: ubuntu-latest
@@ -74,7 +74,7 @@ jobs:
       - name: Run shared backend and GUI annotation tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest tests/test_manifest_annotation_cli.py tests/test_peptide_annotator_layout.py -q
+        run: python -m pytest tests/test_manifest_annotation_cli.py tests/test_peptide_annotator_layout.py tests/test_gui_startup.py tests/test_gui_launcher.py tests/test_function_executor.py tests/test_metax_updater_dependencies.py -q
 
   windows-annotation:
     runs-on: windows-latest
@@ -106,4 +106,4 @@ jobs:
         run: |
           python -c "import json, subprocess, sys; p = subprocess.run([sys.executable, '-m', 'metax.cli.report', '--capabilities'], text=True, capture_output=True); assert p.returncode == 0; payload = json.loads(p.stdout); assert payload['available'] is True, payload"
           python -m metax.cli.report --help
-          python -m pytest tests/test_report_cli_contract.py -q
+          python -m pytest tests/test_report_cli_contract.py tests/test_report_output_safety.py -q

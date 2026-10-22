@@ -50,9 +50,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QSizePolicy, QLa
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QTimer, QDir, QSettings, QSize
 
-import qtawesome as qta
-
-from qt_material import apply_stylesheet, list_themes, QtStyleTools
+from qt_material import build_stylesheet, list_themes, QtStyleTools
 from PyQt5.QtWidgets import QAction, QMenu
 
 # Direct script execution puts ``metax/gui`` on sys.path instead of the project
@@ -65,22 +63,7 @@ if __package__ in {None, ""}:
     __package__ = "metax.gui"
 
 from metax.utils.version import __version__
-from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
-from metax.utils.metax_updater import Updater
-from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
-from metax.taxafunc_ploter.basic_plot import BasicPlot
-from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
-from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
-from metax.taxafunc_ploter.tukey_plot import TukeyPlot
-from metax.taxafunc_ploter.bar_plot_js import BarPlot
-from metax.taxafunc_ploter.sankey_plot import SankeyPlot
-from metax.taxafunc_ploter.network_plot import NetworkPlot
-from metax.taxafunc_ploter.trends_plot import TrendsPlot
-from metax.taxafunc_ploter.trends_plot_js import TrendsPlot_js
-from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
-from metax.taxafunc_ploter.diversity_plot import DiversityPlot
-from metax.taxafunc_ploter.sunburst_plot import SunburstPlot
-from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
+from metax.utils.metax_updater import Updater, BackgroundUpdateCheck
 
 from metax.gui.metax_gui import ui_main_window, web_dialog
 from metax.gui.metax_gui.matplotlib_figure_canvas import MatplotlibWidget
@@ -142,9 +125,6 @@ from metax.peptide_annotator.peptide_table_prepare import (
 from metax.peptide_annotator.manifest_otf import ManifestOTFAnnotator
 from metax.peptide_annotator.genome_selection_manifest import load_genome_selection_manifest
 
-from metax.database_builder.database_builder_own import build_db
-from metax.database_updater.database_updater import run_db_update
-from metax.database_builder.database_builder_mag import download_and_build_database
 from metax.database_builder.mgnify_sources import mgnify_catalogue_display_names
 
 
@@ -250,6 +230,23 @@ class WorkflowStepsSelectionDialog(QDialog):
 
 ###############   Class MetaXGUI Begin   ###############
 class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
+    MENU_ICONS = {
+        "actionTaxaFuncAnalyzer": "chart-areaspline",
+        "actionPeptide_to_TaxaFunc": "link-variant",
+        "actionDatabase_Builder": "database-plus-outline",
+        "actionDatabase_Update": "database-sync-outline",
+        "actionAbout": "information-outline",
+        "actionRestore_Last_TaxaFunc": "history",
+        "actionRestore_From": "folder-open-outline",
+        "actionSave_As": "content-save-outline",
+        "actionExport_Log_File": "file-export-outline",
+        "action_Show_Console": "console",
+        "actionDebug_Console": "code-braces",
+        "actionCheck_Update": "update",
+        "actionSettings": "cog-outline",
+        "actionTutorial": "book-open-page-variant-outline",
+        "actionExport_Workflow_Notebook": "file-document-multiple-outline",
+    }
     MAX_EAGER_COMBOBOX_ITEMS = 50000
     AUTO_SAVE_MAX_TABLE_MEMORY_MB = 2048
     LARGE_SAVE_WARNING_MEMORY_MB = 4096
@@ -298,7 +295,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
         #check update
         self.update_required = False
-        self.check_update(manual_check_trigger=False)
+        self._update_check = None
         
         self.table_dict = {}
         self.table_provider_dict = {}
@@ -318,7 +315,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
 
-        self.tfa: TaxaFuncAnalyzer = None
+        self.tfa = None
         self.any_table_mode = False
         self.Qthread_result = None
         self.temp_params_dict = {} # 1.save the temp params for thread callback function 2.as a flag to check if the thread is running
@@ -346,21 +343,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         } 
 
 
-        # set icon
-        self.actionTaxaFuncAnalyzer.setIcon(qta.icon('mdi.chart-areaspline'))
-        self.actionPeptide_to_TaxaFunc.setIcon(qta.icon('mdi6.link-variant'))
-        self.actionDatabase_Builder.setIcon(qta.icon('mdi.database'))
-        self.actionDatabase_Update.setIcon(qta.icon('mdi.update'))
-        self.actionAbout.setIcon(qta.icon('mdi.information-outline'))
-        self.actionRestore_Last_TaxaFunc.setIcon(qta.icon('mdi.history'))
-        self.actionRestore_From.setIcon(qta.icon('mdi.restore'))
-        self.actionSave_As.setIcon(qta.icon('mdi.content-save'))
-        self.actionExport_Log_File.setIcon(qta.icon('mdi.export'))
-        self.action_Show_Console.setIcon(qta.icon('mdi.console'))
-        self.actionDebug_Console.setIcon(qta.icon('fa5b.dev'))
-        self.actionCheck_Update.setIcon(qta.icon('mdi.update'))
-        self.actionSettings.setIcon(qta.icon('mdi.cog'))
-        self.actionTutorial.setIcon(qta.icon('mdi6.book-open-page-variant-outline'))
         # set menu bar click event
         self.actionTaxaFuncAnalyzer.triggered.connect(self.swith_stack_page_analyzer)
         self.actionPeptide_to_TaxaFunc.triggered.connect(self.swith_stack_page_pep2taxafunc)
@@ -373,7 +355,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.actionSave_As.triggered.connect(lambda:self.save_metax_obj_to_file(save_path=None, no_message=False, warn_large=True))
         self.actionExport_Workflow_Notebook = QtWidgets.QAction("Export Workflow Notebook", self.MainWindow)
         self.actionExport_Workflow_Notebook.setObjectName("actionExport_Workflow_Notebook")
-        self.actionExport_Workflow_Notebook.setIcon(qta.icon('mdi6.file-document-multiple-outline'))
         self.menuOthers.addAction(self.actionExport_Workflow_Notebook)
         self.actionExport_Workflow_Notebook.triggered.connect(self.export_workflow_notebook)
         self.actionExport_Log_File.triggered.connect(self.export_log_file)
@@ -1467,6 +1448,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
             
 
+    def _set_menu_icons(self):
+        mode = "dark" if "dark" in self.current_theme else "light"
+        for action_name, icon_name in self.MENU_ICONS.items():
+            getattr(self, action_name).setIcon(QIcon(f":/icon/menu/{icon_name}-{mode}.svg"))
+
     def change_theme(self, theme, silent=False, is_load_font_size_from_settings=True):
         if not silent:
             text = f"Changing theme to {theme}...\n\nTheme: {theme}\nFont size: {self.font_size}"
@@ -1614,7 +1600,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # Apply the selected theme
         if "light" in theme:
             self.msgbox_style = "QLabel{min-width: 400px; color: black; font-size: setted_font_size;} QMessageBox{background-color: white;}".replace('setted_font_size', f'{font_size}px')
-            apply_stylesheet(current_app, theme=theme, invert_secondary=True, extra=extra)
+            stylesheet = build_stylesheet(theme=theme, invert_secondary=True, extra=extra)
         else:
             self.msgbox_style = "QLabel{min-width: 400px; color: white; font-size: setted_font_size;} QMessageBox{background-color: #333;}".replace('setted_font_size', f'{font_size}px')
             # set text color to white of QComboBox , QSpinBox and QDoubleSpinBox , lineEdit
@@ -1635,10 +1621,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         color: white;
                         }}
                         '''
-            apply_stylesheet(current_app, theme=theme, extra=extra)
-        # Append your custom styles to the currently applied stylesheet
-        current_stylesheet = current_app.styleSheet()
-        current_app.setStyleSheet(current_stylesheet + custom_css.format(**os.environ))
+            stylesheet = build_stylesheet(theme=theme, extra=extra)
+        # Apply the combined CSS once to avoid restyling every widget twice.
+        if stylesheet is not None:
+            current_app.setStyleSheet(stylesheet + custom_css.format(**os.environ))
+        self._set_menu_icons()
         # update comboBox of basic peptide query
         if self.tfa and getattr(self.tfa, "peptide_annotation_df", None) is not None:
             self._update_basic_peptide_query_combobox()
@@ -2600,8 +2587,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             print("Auto check update is disabled.")
             return
         
+        if self._update_check is not None:
+            return
         updater = Updater(MetaXGUI=self, version=__version__, splash=splash, show_message=show_message, branch=self.update_branch)
-        updater.check_update(show_message=show_message)
+        self._update_check = BackgroundUpdateCheck(updater, show_message, self.MainWindow)
+        self._update_check.finished.connect(self._update_check_finished)
+        self._update_check.start()
+
+    def _update_check_finished(self):
+        self._update_check = None
                 
     def open_tutorial(self):
         # use default browser to open the tutorial link
@@ -3565,6 +3559,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def run_db_builder(self):
+        from metax.database_builder.database_builder_mag import download_and_build_database
         save_path = f'''{self.lineEdit_db_save_path.text()}'''
         meta_path = f'''{self.lineEdit_db_all_meta_path.text()}'''
         mgyg_dir = f'''{self.lineEdit_db_anno_folder.text()}'''
@@ -3879,6 +3874,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         own_db_save_path = os.path.normpath(own_db_save_path)
         self.lineEdit_db_own_db_save_path.setText(own_db_save_path)
     def run_db_builder_own_table(self):
+        from metax.database_builder.database_builder_own import build_db
         anno_path = f'''{self.lineEdit_db_own_anno_path.text()}'''
         taxa_path = f'''{self.lineEdit_db_own_taxa_path.text()}'''
         save_path = f'''{self.lineEdit_db_own_db_save_path.text()}'''
@@ -3926,6 +3922,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.lineEdit_db_update_new_db_path.setText(new_db_path)
     
     def run_db_updater(self):
+        from metax.database_updater.database_updater import run_db_update
         update_type = 'built-in' if self.radioButton_db_update_by_built_in.isChecked() else 'custom'
         built_in_db_name = self.comboBox_db_update_built_in_method.currentText()
         tsv_path = f'''{self.lineEdit_db_update_tsv_path.text()}'''
@@ -4510,6 +4507,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
+        from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
         try:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(False)
             
@@ -5863,6 +5861,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
 
     def plot_basic_list(self, plot_type='heatmap'):
+        from metax.taxafunc_ploter.bar_plot_js import BarPlot
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
+        from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
+        from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
+        from metax.taxafunc_ploter.sankey_plot import SankeyPlot
         group_list = self.comboBox_basic_group.getCheckedItems()
         width = self.spinBox_basic_heatmap_width.value()
         height = self.spinBox_basic_heatmap_height.value()
@@ -6465,6 +6468,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.add_a_list_to_list_window(df_type, aim_list='trends', str_list=items, input_mode = False)
         
     def plot_trends_cluster(self):
+        from metax.taxafunc_ploter.trends_plot import TrendsPlot
         group_list = self.comboBox_trends_group.getCheckedItems()
         width = self.spinBox_trends_width.value()
         height = self.spinBox_trends_height.value()
@@ -6582,6 +6586,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
                 
     def plot_trends_interactive_line(self):
+        from metax.taxafunc_ploter.trends_plot_js import TrendsPlot_js
         cluster_name = self.comboBox_trends_get_cluster_name.currentText()
         cluster_num = int(cluster_name.split(' ')[1]) - 1
         width = self.spinBox_trends_width.value()*100
@@ -6845,6 +6850,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     # baisc stats
 
     def plot_taxa_stats(self):
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
         else:
@@ -6856,6 +6862,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_peptide_num)
 
     def plot_taxa_stats_new_window(self):
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
         font_size = self.spinBox_data_overiew_font_size.value()
 
         theme = self.comboBox_data_overiew_theme.currentText()
@@ -6866,6 +6873,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
 
     def plot_taxa_number(self):
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
         plt.close('all') # close all the figures to make sure the new figure is the first one
         if self.tfa is None:
             QMessageBox.warning(self.MainWindow, 'Warning', 'Please run OTF Analyzer first!')
@@ -6879,6 +6887,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.verticalLayout_overview_plot.addWidget(self.mat_widget_plot_taxa_num)
     
     def plot_taxa_number_new_window(self):
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
         font_size = self.spinBox_data_overiew_font_size.value()
         theme = self.comboBox_data_overiew_theme.currentText()
         peptide_num = self.spinBox_overview_tax_plot_new_window_peptide_num.value()
@@ -6888,6 +6897,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     def plot_peptide_num_in_func(self):
         # remove the old MatplotlibWidget
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
         while self.verticalLayout_overview_func.count():
             item = self.verticalLayout_overview_func.takeAt(0)
             widget = item.widget()
@@ -6929,6 +6939,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         Returns:
         None
         """
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
+        from metax.taxafunc_ploter.diversity_plot import DiversityPlot
+        from metax.taxafunc_ploter.pca_plot_js import PcaPlot_js
+        from metax.taxafunc_ploter.sankey_plot import SankeyPlot
+        from metax.taxafunc_ploter.sunburst_plot import SunburstPlot
+        from metax.taxafunc_ploter.treemap_plot import TreeMapPlot
         def get_title_by_table_name(self, table_name):
             taxa = (self.tfa.taxa_level or 'Taxa').capitalize()
             func = self.tfa.func_name or 'Functions'
@@ -7385,6 +7401,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     # differential analysis
     def plot_top_heatmap(self):
+        from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
         table_name = self.comboBox_top_heatmap_table.currentText()
         width = self.spinBox_top_heatmap_width.value()
         length = self.spinBox_top_heatmap_length.value()
@@ -7584,6 +7601,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     
 
     def get_top_cross_table(self):
+        from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
         table_name = self.comboBox_top_heatmap_table.currentText()
         top_num = self.spinBox_top_heatmap_number.value()
         pvalue = self.doubleSpinBox_top_heatmap_pvalue.value()
@@ -8464,6 +8482,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Error', str(result))
 
     def plot_tukey(self):
+        from metax.taxafunc_ploter.tukey_plot import TukeyPlot
         df = self.table_dict['tukey_test']
         TukeyPlot().plot_tukey(df)
         self._record_gui_action(
@@ -8759,6 +8778,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def plot_deseq2_volcano(self):
+        from metax.taxafunc_ploter.volcano_plot import VolcanoPlot
+        from metax.taxafunc_ploter.volcano_plot_js import VolcanoPlotJS
         try:
             table_name = self.comboBox_deseq2_tables.currentText()
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
@@ -8834,6 +8855,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         '''
         plot_type: network or heatmap
         '''
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
+        from metax.taxafunc_ploter.network_plot import NetworkPlot
         df_type = self.comboBox_co_expr_table.currentText().lower()
         corr_method = self.comboBox_co_expr_corr_method.currentText()
         corr_threshold = self.doubleSpinBox_co_expr_corr_threshold.value()
@@ -8972,6 +8995,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
     #Sankey
     def deseq2_plot_sankey(self):
 
+        from metax.taxafunc_ploter.sankey_plot import SankeyPlot
         try:
             table_name = self.comboBox_deseq2_tables.currentText()
             log2fc_min = self.doubleSpinBox_deseq2_log2fc_min.value()
@@ -9185,6 +9209,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
     def plot_network(self):
+        from metax.taxafunc_ploter.network_plot import NetworkPlot
         width = self.spinBox_network_width.value()
         height = self.spinBox_network_height.value()
         sample_list =  self.tfa.sample_list
@@ -9330,6 +9355,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         pass
     # Plot Heatmap
     def plot_tflink_heatmap(self, return_type = 'fig'):
+        from metax.taxafunc_ploter.heatmap_plot import HeatmapPlot
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
@@ -9469,6 +9495,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
     # Plot Line
     def plot_tflink_bar(self):
+        from metax.taxafunc_ploter.bar_plot_js import BarPlot
         taxa = self.remove_pep_num_str_and_strip(self.comboBox_others_taxa.currentText())
         func = self.remove_pep_num_str_and_strip(self.comboBox_others_func.currentText())
         width = self.spinBox_tflink_width.value()
@@ -9931,6 +9958,7 @@ def runGUI():
     if not ui.update_required:
         MainWindow.show()
         splash.finish(MainWindow)
+        QTimer.singleShot(0, lambda: ui.check_update(manual_check_trigger=False))
         
         # Froce reset the window icon after splash to make the icon show correctly on Taskbar
         MainWindow.setWindowIcon(QIcon(":/icon/logo.png"))

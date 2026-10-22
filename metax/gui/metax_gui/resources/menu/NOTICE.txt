@@ -1,0 +1,4 @@
+Material Design Icons 6.9.96, Pictogrammers / Templarian and contributors.
+Source: https://github.com/Templarian/MaterialDesign
+License: Apache-2.0; see LICENSE-APACHE-2.0.txt.
+These selected font glyphs were converted to static SVG paths and recolored for MetaX.
