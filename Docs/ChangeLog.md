@@ -5,13 +5,16 @@
 - Change: Unified menu icons with clearer symbols and support for light and dark themes.
 
 
+# Version: 2.6.5
+## Date: 2026-10-17
+### Changes:
+- Fix: Safer report replacement protects input files and restores the previous report if generation fails.
+
+
 # Version: 2.6.4
 ## Date: 2026-08-14
 ### Changes:
-- Fix: Prevented packaged GUI builds from replacing MetaX console capture with invalid system output handles after a background task completes.
-- Fix: Routed background-task output by worker thread so overlapping tasks no longer corrupt or overwrite the process-wide output streams.
-- Fix: Made exception output safe when no Windows console is available and removed temporary logging handlers when workers finish.
-- Test: Added regression coverage for invalid packaged-app console handles, concurrent worker output, exception reporting, and logging-handler cleanup.
+- Fix: Fixed an issue that could prevent further analysis after a background task finished in the packaged app.
 
 
 # Version: 2.6.3
