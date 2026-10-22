@@ -1,5 +1,35 @@
 <RCC>
   <qresource prefix="icon">
     <file>logo.png</file>
+    <file>menu/chart-areaspline-light.svg</file>
+    <file>menu/chart-areaspline-dark.svg</file>
+    <file>menu/link-variant-light.svg</file>
+    <file>menu/link-variant-dark.svg</file>
+    <file>menu/database-plus-outline-light.svg</file>
+    <file>menu/database-plus-outline-dark.svg</file>
+    <file>menu/database-sync-outline-light.svg</file>
+    <file>menu/database-sync-outline-dark.svg</file>
+    <file>menu/information-outline-light.svg</file>
+    <file>menu/information-outline-dark.svg</file>
+    <file>menu/history-light.svg</file>
+    <file>menu/history-dark.svg</file>
+    <file>menu/folder-open-outline-light.svg</file>
+    <file>menu/folder-open-outline-dark.svg</file>
+    <file>menu/content-save-outline-light.svg</file>
+    <file>menu/content-save-outline-dark.svg</file>
+    <file>menu/file-export-outline-light.svg</file>
+    <file>menu/file-export-outline-dark.svg</file>
+    <file>menu/console-light.svg</file>
+    <file>menu/console-dark.svg</file>
+    <file>menu/code-braces-light.svg</file>
+    <file>menu/code-braces-dark.svg</file>
+    <file>menu/update-light.svg</file>
+    <file>menu/update-dark.svg</file>
+    <file>menu/cog-outline-light.svg</file>
+    <file>menu/cog-outline-dark.svg</file>
+    <file>menu/book-open-page-variant-outline-light.svg</file>
+    <file>menu/book-open-page-variant-outline-dark.svg</file>
+    <file>menu/file-document-multiple-outline-light.svg</file>
+    <file>menu/file-document-multiple-outline-dark.svg</file>
   </qresource>
 </RCC>

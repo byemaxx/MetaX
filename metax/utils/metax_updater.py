@@ -17,6 +17,8 @@ import pathlib
 import zipfile
 import shutil
 import socket
+import threading
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, Qt
 import urllib.error
 import importlib.metadata as importlib_metadata
 
@@ -47,6 +49,46 @@ UPDATE_ROOT_FILES = (
     "requirements.txt",
 )
 UPDATE_ROOT_DIRS = ("licenses", "metax")
+
+
+class BackgroundUpdateCheck(QObject):
+    finished = pyqtSignal()
+    result_ready = pyqtSignal(object, str)
+
+    def __init__(self, updater, show_message=False, parent=None):
+        super().__init__(parent)
+        self.updater = updater
+        self.show_message = show_message
+        self.result_ready.connect(self._finish, Qt.QueuedConnection)
+
+    def start(self):
+        # A stalled DNS lookup must not hold up GUI shutdown.
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        result, error = None, ""
+        try:
+            result = self.updater.fetch_update()
+        except Exception as exc:
+            error = str(exc) or type(exc).__name__
+        try:
+            self.result_ready.emit(result, error)
+        except RuntimeError:
+            # The window may have been destroyed while the request was pending.
+            pass
+
+    @pyqtSlot(object, str)
+    def _finish(self, result, error):
+        try:
+            if error:
+                self.updater.report_check_error(error, self.show_message)
+            else:
+                self.updater.complete_update_check(result, self.show_message)
+        except Exception as exc:
+            self.updater.report_check_error(str(exc), self.show_message)
+        finally:
+            self.finished.emit()
+            self.deleteLater()
 
 
 class Updater:
@@ -215,12 +257,10 @@ class Updater:
     
     def parse_changelog_md(self):
         # change_log_path = os.path.join(self.remote_path, "ChangeLog.md")
-        change_log_re = urllib.request.urlopen(self.remote_change_log_path)
-        
-        if change_log_re.status != 200:
-            raise Exception(f"Read change log failed: {change_log_re.status}")
-        
-        change_log = change_log_re.read().decode("utf-8")
+        with urllib.request.urlopen(self.remote_change_log_path, timeout=10) as response:
+            if response.status != 200:
+                raise RuntimeError(f"Read change log failed: {response.status}")
+            change_log = response.read().decode("utf-8")
         lines = change_log.split("\n")
         # with open(change_log_path, 'r', encoding='utf-8') as file:
         #     lines = file.readlines()
@@ -559,13 +599,14 @@ class Updater:
             
 
 
-    def update_metax(self):
+    def update_metax(self, change_log_str=None):
         # ask if user wants to update
-        try:
-            change_log_str = self.get_str()
-        except Exception as e:
-            print(f"Read change log failed: {e}")
-            change_log_str = "No change log."
+        if change_log_str is None:
+            try:
+                change_log_str = self.get_str()
+            except Exception as e:
+                print(f"Read change log failed: {e}")
+                change_log_str = "No change log."
 
         api_changed = str(self.current_api) != str(self.remote_api)
         dependency_notice = (
@@ -717,45 +758,47 @@ class Updater:
         else:
             return QMessageBox.No
 
+    def fetch_update(self):
+        """Read update metadata without touching Qt widgets."""
+        with urllib.request.urlopen(self.remote_version_path, timeout=10) as response:
+            if response.status != 200:
+                raise RuntimeError(f"Check update failed: {response.status}")
+            version_text = response.read().decode("utf-8")
+        version = version_text.split("__version__ = '")[1].split("'")[0]
+        try:
+            api = version_text.split("API_version = '")[1].split("'")[0]
+        except IndexError:
+            api = 0
+        changelog = "No change log."
+        if self.compare_version(version, self.current_version):
+            try:
+                changelog = self.get_str()
+            except Exception:
+                pass
+        return version, api, changelog
+
+    def complete_update_check(self, result, show_message=False):
+        self.remote_version, self.remote_api, changelog = result
+        print(f"Remote version: {self.remote_version}. Remote API: {self.remote_api}")
+        if self.compare_version(self.remote_version, self.current_version):
+            print(f"New version is available: {self.current_version} -> {self.remote_version}")
+            self.update_metax(change_log_str=changelog)
+        else:
+            print("MetaX is up to date.")
+            if show_message:
+                QMessageBox.information(self.MainWindow, "Update", f"MetaX is up to date.\n\nCheck version: {self.branch}\n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}")
+
+    def report_check_error(self, error, show_message=False):
+        print(f"Check update failed:\n{error}")
+        if show_message:
+            QMessageBox.warning(self.MainWindow, "Update", "Warning: Github is not available for now. Please try again later or update manually.")
+
     def check_update(self, show_message=False):
         print(f"Checking update from {self.branch} branch...")
-        # check if remote path available
         try:
-            # check if remote path available
-            # __version__ = '1.102.10'
-            # API = 1
-            remote_version_re= urllib.request.urlopen(self.remote_version_path)
-            if remote_version_re.status != 200:
-                print(f"Check update failed: {remote_version_re.status}")
-                return
-            else:
-                remote_version_str = remote_version_re.read().decode("utf-8")
-                self.remote_version = remote_version_str.split("__version__ = '")[1].split("'")[0]
-                try:
-                    remote_version_api = remote_version_str.split("API_version = '")[1].split("'")[0]
-                except Exception as e:
-                    print(f"Check API failed: {e}")
-                    # set API to 0 if failed
-                    remote_version_api = 0
-                    
-                print(f"Remote version: {self.remote_version}. Remote API: {remote_version_api}")
-
-                self.remote_api = remote_version_api    
-                
-                if self.compare_version(self.remote_version, self.current_version): # return True if remote_version > current_version
-                    print(f"New version is available: {self.current_version} -> {self.remote_version}")
-                    self.update_metax()
-                else:
-                    print("MetaX is up to date.")
-                    if show_message:
-                        QMessageBox.information(self.MainWindow, "Update", f"MetaX is up to date.\n\nCheck version: {self.branch}\n\nCurrent version: {self.current_version}\nRemote version: {self.remote_version}")
-
-        except Exception as e:
-            print(f"Check update failed:\n{e}")
-            if show_message:
-                QMessageBox.warning(self.MainWindow, "Update", "Warning: Github is not available for now. Please try again later or update manually.")
-            return
-            
+            self.complete_update_check(self.fetch_update(), show_message)
+        except Exception as exc:
+            self.report_check_error(str(exc), show_message)
 
     #! Have not tested this function
     def change_libs(self):

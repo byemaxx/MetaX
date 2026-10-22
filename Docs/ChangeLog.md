@@ -1,3 +1,10 @@
+# Version: 2.6.6
+## Date: 2026-10-22
+### Changes:
+- Performance: Faster desktop startup and smoother update checks.
+- Change: Unified menu icons with clearer symbols and support for light and dark themes.
+
+
 # Version: 2.6.4
 ## Date: 2026-08-14
 ### Changes:
