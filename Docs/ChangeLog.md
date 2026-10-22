@@ -1,11 +1,14 @@
+# Version: 2.6.6
+## Date: 2026-10-22
+### Changes:
+- Performance: Faster desktop startup and smoother update checks.
+- Change: Unified menu icons with clearer symbols and support for light and dark themes.
+
+
 # Version: 2.6.5
 ## Date: 2026-10-17
 ### Changes:
-- Fix: Refuse report replacement in nonempty directories without a matching MetaX ownership marker, or with unrelated top-level files.
-- Fix: Reject report output directories containing the OTF or sample metadata inputs.
-- Fix: Preserve the previous report until replacement succeeds and restore it on generation exceptions.
-- Fix: Close report log handlers before replacing or restoring report directories on Windows.
-- Test: Cover directory ownership, input conflicts, safe replacement, and failure rollback.
+- Fix: Safer report replacement protects input files and restores the previous report if generation fails.
 
 
 # Version: 2.6.4
