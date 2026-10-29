@@ -33,7 +33,7 @@
     <div class="metric blue">
       <div class="label">Peptides</div>
       <div class="value">{{ dataset_summary.get("n_peptides", 0) }}</div>
-      <div class="hint">Rows kept after basic input loading</div>
+      <div class="hint">Distinct sequences retained across analyzed samples</div>
     </div>
     <div class="metric coral">
       <div class="label">OTF tables</div>
@@ -46,6 +46,57 @@
       <div class="hint">{{ run_summary.n_tables }} tables and {{ run_summary.n_figures }} figures</div>
     </div>
   </div>
+
+  {% set peptide_counts = dataset_summary.get("sample_peptide_counts", []) %}
+  {% if peptide_counts %}
+    {% set peptide_summary = dataset_summary.get("sample_peptide_summary", {}) %}
+    {% set peptide_groups = dataset_summary.get("sample_peptide_groups", []) %}
+    <details class="config-block" id="sample-peptide-details" data-search-scope style="margin-top: 16px;">
+      <summary>Peptides by sample ({{ peptide_counts|length }})
+        <span class="peptide-summary-metrics">Median {{ '%g'|format(peptide_summary.median) }} · Range {{ peptide_summary.min }}–{{ peptide_summary.max }}</span>
+      </summary>
+      {% set max_count = peptide_counts|max(attribute="count") %}
+      {% set scale = max_count.count if max_count.count else 1 %}
+      <div class="section-context">
+        Distinct {{ config.input.peptide_col_name }} values with positive intensity in each sample. Each peptide is counted once per sample.
+      </div>
+      {% if peptide_groups|length > 1 %}
+        <h3>Peptide count by {{ config.analysis.group_meta }}</h3>
+        <p class="muted">Line: minimum to maximum · box: middle 50% · marker: median. All groups share the same scale.</p>
+        <div class="peptide-group-list">
+          {% for group in peptide_groups %}
+            <div class="peptide-group-row">
+              <span>{{ group.group }} <small>({{ group.n_samples }})</small></span>
+              <div class="peptide-range" role="img" aria-label="{{ group.group }}: minimum {{ group.min }}, median {{ group.median }}, maximum {{ group.max }}">
+                <span class="peptide-whisker" style="left: {{ 100 * group.min / scale }}%; width: {{ 100 * (group.max - group.min) / scale }}%"></span>
+                <span class="peptide-box" style="left: {{ 100 * group.q1 / scale }}%; width: {{ 100 * (group.q3 - group.q1) / scale }}%"></span>
+                <span class="peptide-median" style="left: {{ 100 * group.median / scale }}%"></span>
+              </div>
+              <strong>{{ '%g'|format(group.median) }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="toolbar">
+        <input class="search-input" data-artifact-search type="search" aria-label="Search samples" placeholder="Search sample or group">
+        <select class="search-input" data-peptide-sort aria-label="Sort samples">
+          <option value="original">Sample order</option>
+          <option value="high">Most peptides first</option>
+          <option value="low">Fewest peptides first</option>
+        </select>
+      </div>
+      <div class="sample-peptide-list" id="sample-peptide-list">
+        {% for item in peptide_counts %}
+          <div class="sample-peptide-row" data-search-item="{{ (item.sample ~ ' ' ~ item.group)|lower }}" data-count="{{ item.count }}" data-order="{{ loop.index0 }}">
+            <span title="{{ item.sample }}">{{ item.sample }}{% if peptide_groups|length > 1 %}<small>{{ item.group }}</small>{% endif %}</span>
+            <div class="sample-peptide-bar"><span style="width: {{ 100 * item.count / scale }}%"></span></div>
+            <strong>{{ item.count }}</strong>
+          </div>
+        {% endfor %}
+      </div>
+      <a class="action-link" href="tables/qc/sample_qc.tsv">Download per-sample counts</a>
+    </details>
+  {% endif %}
 
   {% if dataset_summary.get("otf_counts") %}
     <div class="section-context" style="margin-top: 16px;">

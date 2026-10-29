@@ -291,7 +291,7 @@ class TableBuilder:
             sample_qc_path,
             sample_qc.set_index("sample") if "sample" in sample_qc.columns else sample_qc,
             "Sample quality summary",
-            "Per-sample intensity totals, feature counts, and missingness.",
+            "Per-sample OTF peptide counts, intensity totals, feature counts, and missingness.",
         )
 
         for table_type in ["taxa", "function", "otf"]:
@@ -317,6 +317,11 @@ class TableBuilder:
             "sample": sample_list,
             "group": [group_map.get(sample, "All") for sample in sample_list],
             "total_intensity": [original_matrix[sample].sum(skipna=True) for sample in sample_list],
+            "peptide_count": [
+                int(self.tfa.original_df.loc[original_matrix[sample].gt(0), self.config.input.peptide_col_name]
+                    .dropna().nunique())
+                for sample in sample_list
+            ],
         }
 
         for table_type in ["taxa", "function", "otf"]:
