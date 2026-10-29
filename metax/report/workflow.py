@@ -363,10 +363,35 @@ class AutoOTFReport:
         else:
             n_groups = 1
 
+        sample_qc = next(item["df"] for item in context.generated_tables["qc"] if item["key"] == "sample_qc")
+        peptide_counts = sample_qc["peptide_count"]
+        peptide_groups = [
+            {
+                "group": str(group),
+                "n_samples": int(len(values)),
+                "min": int(values.min()),
+                "q1": float(values.quantile(0.25)),
+                "median": float(values.median()),
+                "q3": float(values.quantile(0.75)),
+                "max": int(values.max()),
+            }
+            for group, values in sample_qc.groupby("group", sort=True)["peptide_count"]
+        ]
+
         return {
             "n_samples": len(context.tfa.sample_list or []),
             "n_groups": n_groups,
-            "n_peptides": int(context.tfa.original_df.shape[0]),
+            "n_peptides": int(context.tfa.original_df[context.config.input.peptide_col_name].nunique()),
+            "sample_peptide_counts": [
+                {"sample": str(sample), "group": str(row["group"]), "count": int(row["peptide_count"])}
+                for sample, row in sample_qc.iterrows()
+            ],
+            "sample_peptide_summary": {
+                "min": int(peptide_counts.min()),
+                "median": float(peptide_counts.median()),
+                "max": int(peptide_counts.max()),
+            },
+            "sample_peptide_groups": peptide_groups,
             "n_taxa": self._main_taxa_table_rows(context),
             "n_functions": self._first_table_rows(context, "function"),
             "n_otfs": self._first_table_rows(context, "otf"),

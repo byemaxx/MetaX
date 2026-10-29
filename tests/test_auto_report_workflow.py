@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
 from metax.report import AutoOTFReport, AutoReportConfig
+from metax.report.table_builder import TableBuilder
 
 
 def test_auto_report_runs_on_example_dataset(tmp_path: Path):
@@ -77,6 +79,57 @@ def test_auto_report_runs_on_example_dataset(tmp_path: Path):
     assert summary["dataset_summary"]["n_taxa"] == species_rows
     assert summary["dataset_summary"]["main_taxa_level"] == "species"
     assert summary["dataset_summary"]["statistics_backend"].startswith("limma via InMoose")
+    sample_qc = pd.read_csv(result.output_dir / "tables" / "qc" / "sample_qc.tsv", sep="\t")
+    assert summary["dataset_summary"]["sample_peptide_counts"] == [
+        {"sample": row.sample, "group": row.group, "count": row.peptide_count}
+        for row in sample_qc.itertuples()
+    ]
+    peptide_summary = summary["dataset_summary"]["sample_peptide_summary"]
+    assert peptide_summary == {
+        "min": int(sample_qc.peptide_count.min()),
+        "median": float(sample_qc.peptide_count.median()),
+        "max": int(sample_qc.peptide_count.max()),
+    }
+    for group in summary["dataset_summary"]["sample_peptide_groups"]:
+        values = sample_qc.loc[sample_qc.group == group["group"], "peptide_count"]
+        assert group["n_samples"] == len(values)
+        assert group["q1"] == float(values.quantile(0.25))
+        assert group["q3"] == float(values.quantile(0.75))
+    html = result.index_html_path.read_text(encoding="utf-8")
+    assert '<details class="config-block" id="sample-peptide-details"' in html
+    assert 'data-peptide-sort' in html and 'data-artifact-search' in html
+
+
+def test_sample_peptide_count_uses_positive_otf_intensity_and_unique_sequence():
+    config = AutoReportConfig()
+    tfa = SimpleNamespace(
+        sample_list=["S1", "S2"],
+        meta_df=pd.DataFrame({"Sample": ["S1", "S2"]}),
+        original_df=pd.DataFrame({
+            "Sequence": ["PEP_A", "PEP_A", "PEP_B", "PEP_C", None],
+            "S1": [10, 5, 0, None, 7],
+            "S2": [0, 2, 4, -1, 0],
+        }),
+    )
+    builder = TableBuilder(SimpleNamespace(config=config, tfa=tfa, generated_tables={}))
+    counts = builder._build_sample_qc().set_index("sample")["peptide_count"].to_dict()
+    assert counts == {"S1": 1, "S2": 2}
+
+
+def test_total_peptides_counts_distinct_sequences_across_otf_rows():
+    config = AutoReportConfig()
+    context = SimpleNamespace(
+        config=config,
+        tfa=SimpleNamespace(
+            sample_list=["S1"],
+            meta_df=pd.DataFrame({"Sample": ["S1"]}),
+            original_df=pd.DataFrame({"Sequence": ["PEP_A", "PEP_A", "PEP_B"], "S1": [1, 2, 3]}),
+        ),
+        generated_tables={"qc": [{"key": "sample_qc", "df": pd.DataFrame({"group": ["All"], "peptide_count": [2]}, index=["S1"])}]},
+        taxa_levels=[],
+        function_columns=[],
+    )
+    assert AutoOTFReport(config)._dataset_summary(context)["n_peptides"] == 2
 
 
 def test_plot_builder_uses_gui_plotters_only():
