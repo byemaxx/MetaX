@@ -1,16 +1,16 @@
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser, QVBoxLayout, QWidget, QMessageBox
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QTextCursor
 
 import sys
-import re
 import os
 import logging
 import inspect
 import threading
 from contextlib import contextmanager
+from .buffered_output import TextBuffer, trim_document
 
 
 class ThreadStreamRouter:
@@ -99,6 +99,7 @@ class EmittingStream(QObject):
     def __init__(self, original):
         super().__init__()
         self.original = original
+        self.pending = TextBuffer(max_chars=100_000)
 
     def write(self, text):
         if self.original is not None:
@@ -107,8 +108,13 @@ class EmittingStream(QObject):
             except (OSError, ValueError):
                 # A packaged GUI application may not have a valid console.
                 pass
-        self.text_written.emit(str(text))  # 发送信号以更新UI
+        self.pending.write(text)
         return len(text)
+
+    def flush_pending(self):
+        text = self.pending.drain()
+        if text:
+            self.text_written.emit(text)
 
     def flush(self):
         if self.original is not None:
@@ -119,20 +125,21 @@ class EmittingStream(QObject):
         
         
 class LoggingHandler(logging.Handler):
-    def __init__(self, signal):
+    def __init__(self, stream):
         super().__init__()
-        self.text_written_signal = signal
+        self.stream = stream
         self.worker_thread_id = None
 
     def emit(self, record):
         if record.thread != self.worker_thread_id:
             return
         log_entry = self.format(record)
-        self.text_written_signal.emit(log_entry)
+        self.stream.pending.write(log_entry + "\n")
 
 
 class FunctionExecutor(QMainWindow):
     finished = pyqtSignal(object, bool)  # to emit the result and whether the function was successful
+    settled = pyqtSignal()
     CANCELLED_RESULT = "Task cancelled by user."
 
     @classmethod
@@ -140,7 +147,7 @@ class FunctionExecutor(QMainWindow):
         """Return whether a worker result is the cancellation marker."""
         return isinstance(result, str) and result == cls.CANCELLED_RESULT
 
-    def __init__(self, function, *args, logger=None, **kwargs):
+    def __init__(self, function, *args, logger=None, autostart=True, **kwargs):
         super().__init__()
 
         self.function_running = True  # set flag to indicate that the function is running
@@ -161,7 +168,7 @@ class FunctionExecutor(QMainWindow):
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
                 
-        self.thread = QThread()  
+        self.thread = QThread(self)
         self.thread.run = self.run_function  # set the thread's run function to the passed-in function
         self.thread.finished.connect(self.thread_finished)  # connect the thread's finished signal to the thread_finished method
 
@@ -180,22 +187,30 @@ class FunctionExecutor(QMainWindow):
         
         self.result = None # save the result of the function
         self.text_browser = QTextBrowser()
+        self.text_browser.setUndoRedoEnabled(False)
+        self.text_browser.document().setMaximumBlockCount(2000)
         layout = QVBoxLayout()
         layout.addWidget(self.text_browser)
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
-
-        self.progress_text = ''  # save the progress text
-        self.progress_regex = re.compile(r'\d+%|\d+/\d+')  #  match progress text
-        # self.progress_regex = re.compile(r'\d+%\|\S+\s+\d+/\d+\s+\[\d{2}:\d{2}<\d{2}:\d{2},\s+\d+\.\d+it/s')
-
-        # 创建 LoggingHandler，并连接到 text_written 信号
-        self.log_handler = LoggingHandler(self.stream_out.text_written)
+        # Buffer worker log records; the GUI timer drains them in batches.
+        self.log_handler = LoggingHandler(self.stream_out)
         self.log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         logging.getLogger().addHandler(self.log_handler)
 
+        self.output_timer = QTimer(self)
+        self.output_timer.timeout.connect(self.flush_output)
+        self.output_timer.start(100)
+        if autostart:
+            self.start()
+
+    def start(self):
         self.thread.start()
+
+    def flush_output(self):
+        self.stream_out.flush_pending()
+        self.stream_err.flush_pending()
 
     @staticmethod
     def _supports_cancellation(function):
@@ -207,7 +222,6 @@ class FunctionExecutor(QMainWindow):
 
         return any(
             parameter.name == "cancel_event"
-            or parameter.kind is inspect.Parameter.VAR_KEYWORD
             for parameter in parameters
         )
 
@@ -246,31 +260,35 @@ class FunctionExecutor(QMainWindow):
                     self.result = self.CANCELLED_RESULT
                     success = False
                 logging.getLogger().removeHandler(self.log_handler)
-                self.finished.emit(self.result, success)
-                self.thread.quit()
+                self.success = success
 
 
     def update_progress(self, text):
         scroll_bar = self.text_browser.verticalScrollBar()
         at_bottom = scroll_bar.value() == scroll_bar.maximum()
-
-        if self.progress_regex.search(text):
-            cursor = self.text_browser.textCursor()
-            cursor.movePosition(QTextCursor.End)
-            cursor.select(QTextCursor.LineUnderCursor)
-            cursor.removeSelectedText()
-            cursor.insertText(text.strip())
-        else:
-            self.text_browser.append(text)
-        
+        cursor = self.text_browser.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        # Collapse carriage-return progress updates within each batch.
+        lines = [line.rsplit('\r', 1)[-1] for line in text.split('\n')]
+        cursor.insertText('\n'.join(lines))
+        trim_document(self.text_browser, max_chars=100_000)
         if at_bottom:
             scroll_bar.setValue(scroll_bar.maximum())
 
-
     def thread_finished(self):
         self.function_running = False
-        self.close()
-        
+        self.output_timer.stop()
+        self.flush_output()
+        try:
+            # Deliver results on the GUI thread only after the worker has exited.
+            self.finished.emit(self.result, self.success)
+        finally:
+            self.function = None
+            self.args = ()
+            self.kwargs = {}
+            self.result = None
+            self.close()
+            self.settled.emit()
 
     def on_finished(self, result, success):
         if success:
@@ -287,19 +305,13 @@ class FunctionExecutor(QMainWindow):
         return not self.thread.isRunning() or self.supports_cancellation
 
     def forceCloseThread(self):
-        """Cancel a running worker and wait until its QThread has stopped.
-
-        QThread instances must not outlive the Qt application.  Workers that do
-        not support cooperative cancellation are reported to the caller so the
-        application can keep running instead of tearing down underneath them.
-        """
+        """Request cancellation without blocking Qt's event loop."""
         if not self.thread.isRunning():
             return True
         if not self.supports_cancellation:
             return False
 
         self.cancel_event.set()
-        self.thread.wait()
         return not self.thread.isRunning()
             
             

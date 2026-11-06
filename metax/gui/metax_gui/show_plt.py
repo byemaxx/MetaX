@@ -40,6 +40,11 @@ class ExportablePlotDialog(QtWidgets.QDialog):
         if parent and parent.windowIcon():
             self.setWindowIcon(parent.windowIcon())
             
+    def closeEvent(self, event):
+        import matplotlib.pyplot as plt
+        plt.close(self.fig)
+        super().closeEvent(event)
+
     def tight_layout(self):
         self.fig.tight_layout()
         self.canvas.draw()
