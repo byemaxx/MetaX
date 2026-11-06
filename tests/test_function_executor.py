@@ -140,6 +140,7 @@ def test_run_in_new_window_handles_dataframe_result(monkeypatch):
 
         def __init__(self, *args, **kwargs):
             self.finished = FakeSignal()
+            self.settled = FakeSignal()
             FakeExecutor.last_instance = self
 
         @staticmethod
@@ -147,6 +148,12 @@ def test_run_in_new_window_handles_dataframe_result(monkeypatch):
             return FunctionExecutor.is_cancelled_result(result)
 
         def show(self):
+            pass
+
+        def start(self):
+            pass
+
+        def deleteLater(self):
             pass
 
     monkeypatch.setattr(main_gui, "FunctionExecutor", FakeExecutor)

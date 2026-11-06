@@ -284,7 +284,7 @@ def test_progress_window_does_not_force_terminate_worker_threads():
     assert "self.cancel_event.set()" in generic_thread_source
 
 
-def test_application_shutdown_waits_for_cancellable_workers_and_blocks_others():
+def test_application_shutdown_requests_cancellation_without_blocking():
     root = Path(__file__).resolve().parents[1]
     generic_thread_source = (root / "metax" / "gui" / "metax_gui" / "generic_thread.py").read_text(
         encoding="utf-8"
@@ -292,6 +292,6 @@ def test_application_shutdown_waits_for_cancellable_workers_and_blocks_others():
     main_gui_source = (root / "metax" / "gui" / "main_gui.py").read_text(encoding="utf-8")
 
     assert "def canCloseThread(self):" in generic_thread_source
-    assert "self.thread.wait()" in generic_thread_source
+    assert "self.thread.wait()" not in generic_thread_source
     assert "if not self.supports_cancellation:\n            return False" in generic_thread_source
     assert "if any(not executor.canCloseThread() for executor in self.executors):" in main_gui_source
