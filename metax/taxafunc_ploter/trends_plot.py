@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from matplotlib.collections import LineCollection
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ class TrendsPlot:
     def __init__(self, tfobj):
         self.tfobj = tfobj
 
-    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster', font_size=10, num_col=1):
+    def prepare_trends(self, df, num_cluster):
         
         # Load the data
         df = self.tfobj.BasicStats.get_stats_mean_df_by_group(df)
@@ -37,6 +39,13 @@ class TrendsPlot:
         clustered_df = scaled_df.copy()
         clustered_df['Cluster'] = clusters
 
+        return clustered_df
+
+    def plot_trends(self, df, num_cluster, width=15, height=5, title='Cluster', font_size=10,
+                    num_col=1, clustered_df=None):
+        if clustered_df is None:
+            clustered_df = self.prepare_trends(df, num_cluster)
+        n_clusters = num_cluster
         custom_params = {"axes.spines.right": False, "axes.spines.top": False}
         sns.set_theme(style="ticks", rc=custom_params)
         palette = sns.color_palette("dark", n_clusters)
@@ -46,16 +55,21 @@ class TrendsPlot:
             num_row = math.ceil(n_clusters / num_col)
             
             fig, axs = plt.subplots(num_row, num_col, figsize=(width, height * num_row))
-            axs = axs.flatten()  # Flatten the axs array for easy iteration
+            axs = np.atleast_1d(axs).ravel()  # Flatten the axs array for easy iteration
 
             for i in range(n_clusters):
                 cluster_data = clustered_df[clustered_df['Cluster'] == i]
                 avg_data = cluster_data.drop('Cluster', axis=1).mean()
 
-                for j in range(cluster_data.shape[0]):
-                    sns.lineplot(data=cluster_data.iloc[j, :-1], ax=axs[i], color='lightgrey', legend=False)
-
-                sns.lineplot(data=avg_data, ax=axs[i], color=palette[i], linewidth=2)
+                values = cluster_data.drop(columns='Cluster').to_numpy(dtype=float)
+                x = np.arange(values.shape[1])
+                segments = np.empty((len(values), len(x), 2), dtype=float)
+                segments[:, :, 0] = x
+                segments[:, :, 1] = values
+                axs[i].add_collection(LineCollection(segments, colors='lightgrey', linewidths=1.5))
+                axs[i].plot(x, avg_data.to_numpy(), color=palette[i], linewidth=2)
+                axs[i].set_xticks(x, labels=[str(column) for column in avg_data.index])
+                axs[i].autoscale_view()
 
                 axs[i].set_title(f'{title} {i+1}', fontsize=font_size+2, fontweight='bold')
                 axs[i].set_xlabel('Group', fontsize=font_size-2)

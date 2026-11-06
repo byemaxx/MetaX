@@ -9,6 +9,7 @@ import io
 import csv
 import sys
 import subprocess
+from .background_io import run_modal_task
 
 
 def _safe_table_filename(title):
@@ -70,7 +71,10 @@ def export_dataframe_with_dialog(parent, df, title, last_path, save_index=False)
     if export_path == '':
         return last_path, False
 
-    if not export_dataframe_to_path(df, export_path, filetype, save_index=save_index):
+    if not run_modal_task(
+        parent, "Exporting table...",
+        lambda: export_dataframe_to_path(df, export_path, filetype, save_index=save_index),
+    ):
         QMessageBox.critical(parent, 'Error', 'Filetype not supported.')
         return last_path, False
 
@@ -248,12 +252,15 @@ class Ui_Table_view(QtWidgets.QDialog):
         if self._current_display_df is not None and column < len(self._current_display_df.columns):
             display_column = self._current_display_df.columns[column]
             if display_column in self.df.columns:
-                self.df = self.df.sort_values(by=display_column, ascending=ascending)
+                self.df = run_modal_task(self, "Sorting table...",
+                                         lambda: self.df.sort_values(by=display_column, ascending=ascending))
             else:
                 level = min(column, self.df.index.nlevels - 1)
-                self.df = self.df.sort_index(level=level, ascending=ascending)
+                self.df = run_modal_task(self, "Sorting table...",
+                                         lambda: self.df.sort_index(level=level, ascending=ascending))
         else:
-            self.df = self.df.sort_values(by=self.df.columns[column], ascending=ascending)
+            self.df = run_modal_task(self, "Sorting table...",
+                                     lambda: self.df.sort_values(by=self.df.columns[column], ascending=ascending))
         self.current_page = 0
         self.set_pd_to_QTableWidget(self.df, self.tableWidget)
 
