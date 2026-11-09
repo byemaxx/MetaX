@@ -74,7 +74,7 @@ jobs:
       - name: Run shared backend and GUI annotation tests
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest tests/test_manifest_annotation_cli.py tests/test_peptide_annotator_layout.py tests/test_gui_startup.py tests/test_gui_launcher.py tests/test_function_executor.py tests/test_metax_updater_dependencies.py -q
+        run: python -m pytest tests/test_manifest_annotation_cli.py tests/test_peptide_annotator_layout.py tests/test_gui_startup.py tests/test_gui_launcher.py tests/test_function_executor.py tests/test_gui_memory_optimizations.py tests/test_gui_responsiveness.py tests/test_metax_updater_dependencies.py -q
 
   windows-annotation:
     runs-on: windows-latest

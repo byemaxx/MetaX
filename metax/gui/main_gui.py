@@ -27,13 +27,13 @@ app.processEvents()
 import shutil
 import traceback
 import logging
-import pickle
 import datetime
 import subprocess
 from collections import OrderedDict
 import re
 import json
 import ntpath
+import weakref
 from pathlib import Path
 
 
@@ -86,6 +86,7 @@ from metax.gui.metax_gui.cmap_combo_box import CmapComboBox
 from metax.gui.metax_gui.ui_lca_help import UiLcaHelpDialog
 from metax.gui.metax_gui.ui_func_threshold_help import UifuncHelpDialog
 from metax.gui.metax_gui.generic_thread import FunctionExecutor
+from metax.gui.metax_gui.background_io import run_modal_task, load_session, save_session
 from metax.gui.metax_gui.resources import icon_rc  # noqa: F401
 from metax.gui.metax_gui.console_window import ConsoleOutputWindow
 from metax.gui.metax_gui.auto_otf_report_dialog import show_auto_otf_report_dialog
@@ -784,39 +785,60 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return self._get_tfa_peptide_df().shape[0]
 
     def get_table_by_df_type(self, df_type:str | None = None, 
-                             replace_if_two_index:bool = False):
+                             replace_if_two_index:bool = False,
+                             sample_list=None, selected_items=None):
         if df_type is None:
             raise ValueError("Please specify the df_type.")
         
         df_type = df_type.lower()
         dft = None
         if df_type == "taxa":
-            dft =  self.tfa.taxa_df.copy()
+            dft =  self.tfa.taxa_df
         elif df_type in ["func", "function", 'functions']: #? I am not sure I changed all names to functions, so I keep all of them
-            dft =   self.tfa.func_df.copy()
+            dft =   self.tfa.func_df
         elif df_type in ["taxa-func", "taxa-function", 'taxa-functions']:
-            dft =   self.tfa.taxa_func_df.copy()
+            dft =   self.tfa.taxa_func_df
         elif df_type in ["func-taxa", "function-taxa", "functions-taxa"]:
-            dft = self._get_tfa_func_taxa_df().copy()
+            dft = self._get_tfa_func_taxa_df()
         elif df_type in ["peptide", "peptides"]:
-            dft = self._get_tfa_peptide_df().copy()
+            dft = self._get_tfa_peptide_df()
         elif df_type in ["unit-specific peptide features", "peptide annotation features", "peptide-features", "peptide features"]:
-            dft = self._get_tfa_peptide_feature_df().copy()
+            dft = self._get_tfa_peptide_feature_df()
         elif df_type in ["protein", "proteins"]:
             if self.tfa.protein_df is None:
                 raise ValueError("Please set protein table first.")
-            dft =   self.tfa.protein_df.copy()
+            dft =   self.tfa.protein_df
         elif df_type == "custom":
-            dft =   self.tfa.custom_df.copy()
+            dft =   self.tfa.custom_df
         else:
             raise ValueError(f"Invalid df_type: {df_type}")
         
-        # remove peptided-num column
-        if "peptide_num" in dft.columns:
-            dft = dft.drop(columns=["peptide_num"])
-        
-        if replace_if_two_index:
-            dft = self.tfa.replace_if_two_index(dft)
+        rows = slice(None)
+        if selected_items is not None:
+            rows = selected_items
+            if replace_if_two_index and isinstance(dft.index, pd.MultiIndex):
+                rows = [parse_taxa_func_display_item(item) for item in selected_items]
+                if any(item is None or item not in dft.index for item in rows):
+                    # Preserve display-label selection for non-string levels and
+                    # labels containing the display separator itself.
+                    labels = pd.Index([f"{taxa} <{func}>" for taxa, func in dft.index])
+                    positions, missing = labels.get_indexer_non_unique(selected_items)
+                    if len(missing):
+                        raise KeyError([selected_items[index] for index in missing])
+                    dft = dft.iloc[positions]
+                    rows = slice(None)
+        columns = sample_list if sample_list is not None else [
+            column for column in dft.columns if column != "peptide_num"
+        ]
+        if list(columns) == list(dft.columns):
+            columns = slice(None)
+        # Select rows first: a two-axis .loc can copy every row of the chosen columns.
+        selected = dft.loc[rows]
+        dft = selected.loc[:, columns].copy()
+        if replace_if_two_index and isinstance(dft.index, pd.MultiIndex):
+            dft.index = pd.Index(
+                [f"{taxa} <{func}>" for taxa, func in dft.index], name="Taxa-Func"
+            )
         return dft
 
     def _get_index_for_df_type(self, df_type: str):
@@ -990,6 +1012,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         return total / 1024 / 1024
 
     def auto_save_metax_obj_to_file(self) -> bool:
+        if self._session_workers_running():
+            self.logger.write_log("Skip automatic save while another analysis is running.", "w")
+            return False
         table_memory_mb = self._estimate_metax_table_memory_mb()
         if table_memory_mb > self.AUTO_SAVE_MAX_TABLE_MEMORY_MB:
             msg = (
@@ -2048,7 +2073,22 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # enable button after multi table is set  
         self.pushButton_set_multi_table.setEnabled(True)      
         
+    def _session_workers_running(self):
+        return any(executor.function_running or executor.thread.isRunning()
+                   for executor in getattr(self, 'executors', []))
+
+    def _require_idle_session(self):
+        if self._session_workers_running():
+            QMessageBox.warning(
+                self.MainWindow, "Task still running",
+                "Wait for the current analysis to finish before loading or saving a session.",
+            )
+            return False
+        return True
+
     def run_restore_taxafunnc_obj_from_file(self, last=False):
+        if not self._require_idle_session():
+            return False
         if last is False:
             # select a file to load
             file_path, _ = QFileDialog.getOpenFileName(self.MainWindow, "Load MetaX object", self.last_path, "Pickle file (*.pkl)")
@@ -2060,7 +2100,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             self.show_message(f"Loading MetaX object from file saved at [{saved_date}]...", "Loading...")
             print(f"Loading MetaX object from {file_path} at [{saved_date}]...")
             
-            saved_obj = pickle.load(open(file_path, 'rb'))
+            try:
+                saved_obj = run_modal_task(
+                    self.MainWindow, "Loading MetaX session...", lambda: load_session(file_path)
+                )
+            except Exception as error:
+                QMessageBox.warning(self.MainWindow, "Load MetaX object", str(error))
+                return False
             
             # restore settings.ini
             if 'settings' in saved_obj:
@@ -2076,6 +2122,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
     
     def save_metax_obj_to_file(self, save_path=None, no_message=False, warn_large=True):
+        if not self._require_idle_session():
+            return False
         if getattr(self, 'tfa', None) is None:
             QMessageBox.warning(self.MainWindow, "Warning", "OTF object has not been created yet.")
             return False
@@ -2130,8 +2178,15 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
             
         if file_path:
-            with open(file_path, 'wb') as f:
-                pickle.dump(save_dict, f)
+            try:
+                run_modal_task(
+                    self.MainWindow, "Saving MetaX session...",
+                    lambda: save_session(file_path, save_dict),
+                )
+            except Exception as error:
+                self.logger.write_log(f"Failed to save MetaX session: {error}", "e")
+                QMessageBox.warning(self.MainWindow, "Save MetaX object", str(error))
+                return False
             if not no_message:
                 QMessageBox.information(
                     self.MainWindow,
@@ -2149,92 +2204,102 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         
 
     def closeEvent(self, event):
-        # reply = QMessageBox.question(self.MainWindow, "Close MetaX", "Do you want to close MetaX?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        msgBox = QMessageBox(self.MainWindow)
-        msgBox.setWindowTitle("Close MetaX")
-        msgBox.setText("Do you want to save before closing?")
-        save_and_close_button = QPushButton('Save and close', msgBox)
-        direct_close_button = QPushButton('Close without saving', msgBox)
-        do_not_close_button = QPushButton('Cancel', msgBox)
-        msgBox.addButton(save_and_close_button, QMessageBox.YesRole)
-        msgBox.addButton(direct_close_button, QMessageBox.NoRole)
-        msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
-        msgBox.exec()
-        clicked_btn = msgBox.clickedButton()
-        
-        if clicked_btn in [save_and_close_button, direct_close_button]:
-            if any(not executor.canCloseThread() for executor in self.executors):
-                QMessageBox.warning(
-                    self.MainWindow,
-                    "Task still running",
-                    "A task that cannot be stopped safely is still running. "
-                    "Wait for it to finish before closing MetaX.",
-                )
+        pending_save = getattr(self, '_pending_close_save', None)
+        if pending_save is None:
+            msgBox = QMessageBox(self.MainWindow)
+            msgBox.setWindowTitle("Close MetaX")
+            msgBox.setText("Do you want to save before closing?")
+            save_and_close_button = QPushButton('Save and close', msgBox)
+            direct_close_button = QPushButton('Close without saving', msgBox)
+            do_not_close_button = QPushButton('Cancel', msgBox)
+            msgBox.addButton(save_and_close_button, QMessageBox.YesRole)
+            msgBox.addButton(direct_close_button, QMessageBox.NoRole)
+            msgBox.addButton(do_not_close_button, QMessageBox.RejectRole)
+            msgBox.exec()
+            clicked_btn = msgBox.clickedButton()
+            if clicked_btn == do_not_close_button or clicked_btn is None:
                 event.ignore()
                 return
+            save_before_close = clicked_btn == save_and_close_button
+        else:
+            save_before_close = pending_save
 
-            try:
-                if clicked_btn == save_and_close_button:
-                    self.show_message("Saving settings...", "Closing...")
-                    if getattr(self, 'tfa', None) is None:
-                        # save settings.ini only
-                        self.save_basic_settings()
-                    else:
-                        saved = self.save_metax_obj_to_file(
-                            save_path=self.metax_home_path,
-                            no_message=True,
-                            warn_large=True,
-                        )
-                        if not saved:
-                            event.ignore()
-                            return
-                else: # close without saving
+        if any(not executor.canCloseThread() for executor in self.executors):
+            QMessageBox.warning(
+                self.MainWindow,
+                "Task still running",
+                "A task that cannot be stopped safely is still running. "
+                "Wait for it to finish before closing MetaX.",
+            )
+            event.ignore()
+            return
+
+        # Wait for result callbacks and cleanup as well as native thread exit.
+        if self.executors:
+            self._pending_close_save = save_before_close
+            for executor in list(self.executors):
+                executor.forceCloseThread()
+            self.MainWindow.setEnabled(False)
+            QTimer.singleShot(100, self.MainWindow.close)
+            event.ignore()
+            return
+        self._pending_close_save = None
+        if self.MainWindow is not None:
+            self.MainWindow.setEnabled(True)
+
+        try:
+            if save_before_close:
+                self.show_message("Saving settings...", "Closing...")
+                if getattr(self, 'tfa', None) is None:
                     # save settings.ini only
                     self.save_basic_settings()
-
-                # 关闭 self.web_list 中的所有窗口
-                for web_window in self.web_list:
-                    web_window.close()
-                # 关闭 self.table_dialogs 中的所有窗口
-                for table_dialog in self.table_dialogs:
-                    table_dialog.close()
-                # 关闭 self.plt_dialogs 中的所有窗口
-                for plt_dialog in self.plt_dialogs:
-                    plt_dialog.close()
-                
-                # Colos DESeq2 extractor windows
-                if hasattr(self, 'deseq2_extractors'):
-                    for extractor_window in self.deseq2_extractors:
-                        if extractor_window and hasattr(extractor_window, 'close'):
-                            extractor_window.close()
-                    self.deseq2_extractors.clear()
-                
-                # close plt.show() windows
-                plt.close('all')
-                    
-                # 关闭所有子进程
-                for executor in self.executors:
-                    if not executor.forceCloseThread():
+                else:
+                    saved = self.save_metax_obj_to_file(
+                        save_path=self.metax_home_path,
+                        no_message=True,
+                        warn_large=True,
+                    )
+                    if not saved:
                         event.ignore()
                         return
-                                
-                self.logger.write_log("############################## MetaX closed ##############################")
-            except Exception as e:
-                print('Error when closing MetaX: ', e)
-                self.logger.write_log(f'Error when closing MetaX: {e}')
-                QMessageBox.warning(
-                    self.MainWindow,
-                    "Close MetaX",
-                    f"MetaX could not save and close:\n{e}",
-                )
-                event.ignore()
-                return
+            else: # close without saving
+                # save settings.ini only
+                self.save_basic_settings()
 
-            event.accept()
-        else:
+            # 关闭 self.web_list 中的所有窗口
+            for web_window in list(self.web_list):
+                web_window.close()
+            # 关闭 self.table_dialogs 中的所有窗口
+            for table_dialog in list(self.table_dialogs):
+                table_dialog.close()
+            # 关闭 self.plt_dialogs 中的所有窗口
+            for plt_dialog in list(self.plt_dialogs):
+                plt_dialog.close()
+
+            # Colos DESeq2 extractor windows
+            if hasattr(self, 'deseq2_extractors'):
+                for extractor_window in self.deseq2_extractors:
+                    if extractor_window and hasattr(extractor_window, 'close'):
+                        extractor_window.close()
+                self.deseq2_extractors.clear()
+
+            # close plt.show() windows
+            plt.close('all')
+
+            self.logger.write_log("############################## MetaX closed ##############################")
+        except Exception as e:
+            print('Error when closing MetaX: ', e)
+            self.logger.write_log(f'Error when closing MetaX: {e}')
+            QMessageBox.warning(
+                self.MainWindow,
+                "Close MetaX",
+                f"MetaX could not save and close:\n{e}",
+            )
             event.ignore()
+            return
 
-            
+        event.accept()
+
     def make_related_comboboxes_searchable(self):
         comboboxes_attributes = [
             'comboBox_basic_heatmap_selection_list',
@@ -3623,10 +3688,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if success and workflow_step is not None:
                 self._record_async_workflow_step(workflow_step, result)
                 
-        executor = FunctionExecutor(func, *args,logger=self.logger,**kwargs)
+        executor = FunctionExecutor(func, *args, logger=self.logger, autostart=False, **kwargs)
         executor.finished.connect(handle_finished) #connect the signal to the slot
         self.executors.append(executor)
+
+        def release_executor():
+            if executor in self.executors:
+                self.executors.remove(executor)
+            executor.deleteLater()
+
+        executor.settled.connect(release_executor)
         executor.show()
+        executor.start()
+        return executor
 
     def _record_async_workflow_step(self, workflow_step, result):
         recorder = getattr(self, "workflow_recorder", None)
@@ -3738,7 +3812,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.update_trends_select_list()
         
         # set initial value of taxa-func link network selection list
-        self.update_tfnet_select_list()
         self.update_tfnet_select_list()
         
         # restore table names to comboBox after load taxafunc obj
@@ -4295,7 +4368,10 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if table_name in self.table_dict:
                 df = self.table_dict[table_name]
             elif table_name in getattr(self, "table_provider_dict", {}):
-                df = self.table_provider_dict[table_name]()
+                if not self._require_idle_session():
+                    return
+                provider = self.table_provider_dict[table_name]
+                df = run_modal_task(self.MainWindow, "Preparing table...", provider)
                 if df is None:
                     raise ValueError(f"{table_name} table is not available.")
                 self.update_table_dict(table_name, df)
@@ -4307,6 +4383,19 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             QMessageBox.warning(self.MainWindow, 'Warning', f'Error: {e}')
 
     # show table in Ui_Table_view
+    def _track_dialog(self, dialog, collection):
+        dialog.setAttribute(Qt.WA_DeleteOnClose, True)
+        collection.append(dialog)
+        dialog_ref = weakref.ref(dialog)
+
+        def remove_dialog(_object=None):
+            closed_dialog = dialog_ref()
+            if closed_dialog in collection:
+                collection.remove(closed_dialog)
+
+        dialog.destroyed.connect(remove_dialog)
+        return dialog
+
     def show_table(self, df, title='Table'):
 
             
@@ -4319,7 +4408,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         table_dialog.activateWindow()
 
         # add to table_dialogs to show all table_dialogs
-        self.table_dialogs.append(table_dialog)
+        self._track_dialog(table_dialog, self.table_dialogs)
         
     def set_pd_to_QTableWidget(self, df, tableWidget):
         tableWidget.setRowCount(df.shape[0])
@@ -4507,7 +4596,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.logger.write_log(f'set_taxaFuncAnalyzer: {out_msg}')
         
     def set_taxaFuncAnalyzer(self):
-        from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+        if not self._require_idle_session():
+            return
         try:
             self.pushButton_run_taxaFuncAnalyzer.setEnabled(False)
             
@@ -4574,7 +4664,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             taxafunc_params = {'df_path': taxafunc_path, 'meta_path': meta_path, "any_df_mode":any_df_mode, 
                                'peptide_col_name': peptide_col_name, 'protein_col_name': protein_col_name,
                                'sample_col_prefix': sample_col_prefix, 'custom_col_name': custom_col_name}
-            self.tfa = TaxaFuncAnalyzer(**taxafunc_params)
+            def load_analyzer():
+                from metax.taxafunc_analyzer.analyzer import TaxaFuncAnalyzer
+                return TaxaFuncAnalyzer(**taxafunc_params)
+
+            self.tfa = run_modal_task(self.MainWindow, "Loading OTF data...", load_analyzer)
             self.callback_after_set_taxafunc(self.tfa, True)
             
             
@@ -5944,10 +6038,9 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
                 peptide_df = self._get_tfa_peptide_df()
                 if all(peptide in peptide_df.index for peptide in peptides_list):
-                    df = peptide_df.loc[peptides_list].copy()
+                    df = peptide_df.loc[peptides_list, sample_list].copy()
                 else:
-                    df = self._get_tfa_peptide_feature_df().loc[peptides_list].copy()
-                df = df[sample_list]
+                    df = self._get_tfa_peptide_feature_df().loc[peptides_list, sample_list].copy()
                 
             if plot_type == 'sankey':
                 if getattr(self.tfa, "peptide_annotation_df", None) is not None:
@@ -5995,17 +6088,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         # Not plot peptide mode #
         else:
             title = f'{plot_type.capitalize()} of {table_name.capitalize()}'
-            dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
-            dft = dft[sample_list]
-
-            if  len(self.basic_heatmap_list) == 0:
+            if not self.basic_heatmap_list:
                 QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
                 return None
-            elif len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in ['All Taxa', 'All Functions', 
-                                                                                      'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items']:
-                df = dft
-            else:
-                df = dft.loc[self.basic_heatmap_list]
+            all_items = len(self.basic_heatmap_list) == 1 and self.basic_heatmap_list[0] in [
+                'All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items'
+            ]
+            df = self.get_table_by_df_type(
+                df_type=table_name, replace_if_two_index=True, sample_list=sample_list,
+                selected_items=None if all_items else self.basic_heatmap_list,
+            )
         # Done for creating the dataframe for the heatmap #
 
         try:
@@ -6279,8 +6371,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         return
                     
                     # prepare data TSV: reset index so first column is the hierarchical ID
-                    data_df = df.copy()
-                    data_df = data_df.reset_index()
+                    data_df = df.reset_index()
                     # convert DataFrame to TSV string for MetaTree
                     data_tsv = data_df.to_csv(sep='\t', index=False)
 
@@ -6311,10 +6402,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     # open the metatree index in WebDialog and inject TSV via JS after load
                     web = web_dialog.WebDialog(html_index_path, None, theme=self.html_theme)
 
+                    web_ref = weakref.ref(web)
+
                     def _on_load(ok):
-                        if ok:
+                        viewer = web_ref()
+                        if ok and viewer is not None:
                             try:
-                                web.webEngineView.page().runJavaScript(js)
+                                viewer.webEngineView.page().runJavaScript(js)
                                 self.logger.write_log('Injected data to MetaTree', 'i')
                             except Exception:
                                 self.logger.write_log(f'Failed to inject data to MetaTree: {traceback.format_exc()}', 'e')
@@ -6323,7 +6417,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     # show dialog
                     web.resize(int(width * 100), int(height * 100))
                     web.setWindowTitle(f'MetaTree: {table_name}')
-                    self.web_list.append(web)
+                    self._track_dialog(web, self.web_list)
                     web.show()
 
                 except Exception:
@@ -6468,6 +6562,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.add_a_list_to_list_window(df_type, aim_list='trends', str_list=items, input_mode = False)
         
     def plot_trends_cluster(self):
+        if not self._require_idle_session():
+            return
         from metax.taxafunc_ploter.trends_plot import TrendsPlot
         group_list = self.comboBox_trends_group.getCheckedItems()
         width = self.spinBox_trends_width.value()
@@ -6505,30 +6601,20 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 'Selected samples are in the same group, please select at least 2 groups!')
                     return None
                 
-        # get df
-        dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
-        dft = dft[sample_list]
-        if  len(self.trends_cluster_list) == 0:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add taxa, function, taxa-func or peptide to the list!')
+        if not self.trends_cluster_list:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please add items to the list first!')
             return None
-        elif len(self.trends_cluster_list) < num_cluster \
-            and self.trends_cluster_list[0] not in ['All Taxa', 
-                                                    'All Functions', 
-                                                    'All Peptides', 
-                                                    'All Taxa-Functions', 
-                                                    'All Proteins', 'All Items']:
-            QMessageBox.warning(self.MainWindow, 'Warning', 'The number of items in the list is less than the number of clusters!, Please reset the number of clusters or add more items to the list!')
+        all_items = len(self.trends_cluster_list) == 1 and self.trends_cluster_list[0] in [
+            'All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items'
+        ]
+        if not all_items and len(self.trends_cluster_list) < num_cluster:
+            QMessageBox.warning(self.MainWindow, 'Warning', 'Please select at least as many items as clusters.')
             return None
-        elif len(self.trends_cluster_list) == 1 \
-            and self.trends_cluster_list[0] in ['All Taxa', 
-                                                'All Functions', 
-                                                'All Peptides', 
-                                                'All Taxa-Functions', 
-                                                'All Proteins', 'All Items']:
-            df = dft
-        else:
-            df = dft.loc[self.trends_cluster_list]
-        
+        df = self.get_table_by_df_type(
+            table_name, replace_if_two_index=True, sample_list=sample_list,
+            selected_items=None if all_items else self.trends_cluster_list,
+        )
+
         try:
             num_col = self.spinBox_trends_num_col.value()
             if num_col > num_cluster:
@@ -6538,7 +6624,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             df = df.loc[(df!=0).any(axis=1)]
             self.show_message('Plotting trends cluster...')
             # plot trends and get cluster table
-            fig, cluster_df = TrendsPlot(self.tfa).plot_trends(df= df, num_cluster = num_cluster, 
+            plotter = TrendsPlot(self.tfa)
+            cluster_df = run_modal_task(
+                self.MainWindow, "Clustering trends...", lambda: plotter.prepare_trends(df, num_cluster)
+            )
+            fig, cluster_df = plotter.plot_trends(df=df, clustered_df=cluster_df, num_cluster = num_cluster,
                                                                width=width, height=height, title=title
                                                                , font_size=font_size, num_col=num_col)
             # create a dialog to show the figure
@@ -6550,7 +6640,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             plt_dialog.show() # Show the dialog.
             # tight_layout
             plt_dialog.tight_layout()
-            self.plt_dialogs.append(plt_dialog) # Append the dialog to the list
+            self._track_dialog(plt_dialog, self.plt_dialogs) # Append the dialog to the list
             
             # save table to dict
             save_table_name = f'cluster({table_name.lower()})'
@@ -6753,7 +6843,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 web.setWindowTitle(title)
                 
             web.resize(width, height)
-            self.web_list.append(web)
+            self._track_dialog(web, self.web_list)
             web.show()
             
         except Exception:
@@ -9684,7 +9774,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 return
 
             if len(table_names) == 1:
-                df = self.table_dict[table_names[0]].copy().reset_index()
+                df = self.table_dict[table_names[0]].reset_index()
                 self.last_path, _ = export_dataframe_with_dialog(
                     self.MainWindow,
                     df,
@@ -9718,7 +9808,7 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 QApplication.processEvents()
                 filename = self._safe_export_table_name(table_name) + extension
                 export_path = os.path.join(export_dir, filename)
-                df = self.table_dict[table_name].copy().reset_index()
+                df = self.table_dict[table_name].reset_index()
                 export_dataframe_to_path(df, export_path, filetype, save_index=False)
                 exported_count += 1
 
