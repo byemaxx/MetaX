@@ -131,7 +131,7 @@ class HtmlReportBuilder:
         artifact = dict(item)
         path = Path(str(item["path"]))
         artifact["relative_path"] = self._relative_path(path)
-        artifact["category"] = self._category(path)
+        artifact["category"] = self._category(Path(artifact["relative_path"]))
         artifact["result_scope"] = "main" if self._is_main_result(artifact) else "extended"
         artifact["rich_title"] = self._rich_title(str(artifact.get("title", artifact.get("key", ""))))
         alternate_path = artifact.get("alternate_interactive_path")
@@ -324,12 +324,9 @@ class HtmlReportBuilder:
             return str(path).replace("\\", "/")
 
     def _category(self, path: Path) -> str:
-        parts = list(path.parts)
-        for marker in ["tables", "stats", "figures"]:
-            if marker in parts:
-                index = parts.index(marker)
-                if len(parts) > index + 1:
-                    return parts[index + 1]
+        parts = path.parts
+        if len(parts) > 2 and parts[0] in {"tables", "stats", "figures"}:
+            return parts[1]
         return "other"
 
     def _group_by_category(self, artifacts: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -344,20 +341,13 @@ class HtmlReportBuilder:
         stats: list[dict[str, Any]],
     ) -> dict[str, list[dict[str, Any]]]:
         grouped: dict[str, list[dict[str, Any]]] = {}
-        main_results = [
-            item for item in [*tables, *stats] if item.get("result_scope") == "main"
-        ]
-        if main_results:
-            grouped["main_results"] = main_results
         for table in tables:
-            if table.get("result_scope") == "main":
-                continue
             grouped.setdefault(table["category"], []).append(table)
         for stat in stats:
-            if stat.get("result_scope") == "main":
-                continue
             category = f"comparison_{stat.get('category', 'other')}"
             grouped.setdefault(category, []).append(stat)
+        for items in grouped.values():
+            items.sort(key=lambda item: item.get("result_scope") != "main")
         return grouped
 
     def _is_main_result(self, artifact: dict[str, Any]) -> bool:
