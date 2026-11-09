@@ -48,7 +48,7 @@
     h2 { font-size: 18px; }
     h3 { font-size: 14px; }
     p { margin: 0; }
-    button, input { font: inherit; }
+    button, input, select { font: inherit; }
     .app-shell { min-height: 100vh; display: grid; grid-template-columns: 244px minmax(0, 1fr); }
     .sidebar {
       position: sticky;
@@ -155,6 +155,23 @@
     .metric .label { color: var(--subtle); font-size: 12px; text-transform: uppercase; font-weight: 700; }
     .metric .value { font-size: 20px; font-weight: 760; margin-top: 4px; overflow-wrap: anywhere; }
     .metric .hint { color: var(--subtle); font-size: 12px; margin-top: 5px; }
+    .sample-peptide-list { max-height: 430px; overflow: auto; margin: 12px 0; }
+    .sample-peptide-row { display: grid; grid-template-columns: minmax(100px, 220px) minmax(80px, 1fr) 70px; align-items: center; gap: 10px; padding: 5px 0; }
+    .sample-peptide-row > span { overflow-wrap: anywhere; }
+    .sample-peptide-row small { display: block; color: var(--subtle); }
+    .sample-peptide-bar { height: 16px; background: var(--line); border-radius: 5px; overflow: hidden; }
+    .sample-peptide-bar > span { display: block; height: 100%; background: var(--primary); }
+    .sample-peptide-row > strong { text-align: right; }
+    .peptide-summary-metrics { color: var(--subtle); font-weight: 500; margin-left: 8px; }
+    .peptide-group-list { margin: 10px 0 20px; }
+    .peptide-group-row { display: grid; grid-template-columns: minmax(100px, 180px) minmax(120px, 1fr) 70px; align-items: center; gap: 10px; margin: 8px 0; }
+    .peptide-group-row small { color: var(--subtle); }
+    .peptide-group-row > strong { text-align: right; }
+    .peptide-range { position: relative; height: 26px; background: var(--surface-soft); border-radius: 5px; }
+    .peptide-whisker, .peptide-box, .peptide-median { position: absolute; display: block; }
+    .peptide-whisker { top: 12px; height: 2px; background: var(--ink); }
+    .peptide-box { top: 5px; height: 16px; min-width: 3px; background: var(--blue-soft); border: 1px solid var(--blue); border-radius: 3px; }
+    .peptide-median { top: 3px; height: 20px; width: 3px; background: var(--primary); transform: translateX(-50%); }
     .task-card, .figure-tile { display: grid; gap: 10px; }
     .task-top { display: flex; align-items: center; gap: 9px; }
     .task-badge {
@@ -442,6 +459,19 @@
         scope.querySelectorAll("[data-search-item]").forEach((item) => {
           item.style.display = item.dataset.searchItem.includes(query) ? "" : "none";
         });
+      });
+    });
+
+    document.querySelectorAll("[data-peptide-sort]").forEach((select) => {
+      select.addEventListener("change", () => {
+        const list = select.closest("[data-search-scope]").querySelector(".sample-peptide-list");
+        const rows = Array.from(list.children);
+        rows.sort((a, b) => select.value === "high"
+          ? Number(b.dataset.count) - Number(a.dataset.count)
+          : select.value === "low"
+            ? Number(a.dataset.count) - Number(b.dataset.count)
+            : Number(a.dataset.order) - Number(b.dataset.order));
+        list.replaceChildren(...rows);
       });
     });
 
