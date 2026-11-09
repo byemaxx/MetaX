@@ -15,14 +15,12 @@
 
     <div class="tab-strip">
       {% for category, items in result_files_by_category.items() %}
-        {% if category == "main_results" %}
-          {% set label = "Main report results" %}
-        {% elif category == "taxa" %}
+        {% if category == "taxa" %}
           {% set label = "Taxa abundance" %}
         {% elif category == "function" %}
           {% set label = "Function abundance" %}
         {% elif category == "otf" %}
-          {% set label = "OTF tables" %}
+          {% set label = "Taxon–function abundance" %}
         {% elif category == "qc" %}
           {% set label = "Quality checks" %}
         {% elif category == "comparison_taxa" %}
@@ -30,7 +28,7 @@
         {% elif category == "comparison_function" %}
           {% set label = "Function comparisons" %}
         {% elif category == "comparison_otf" %}
-          {% set label = "OTF comparisons" %}
+          {% set label = "Taxon–function comparisons" %}
         {% else %}
           {% set label = category|replace("_", " ")|capitalize %}
         {% endif %}
@@ -45,7 +43,7 @@
             <div class="artifact" data-search-item="{{ (item.title ~ ' ' ~ item.description ~ ' ' ~ item.relative_path)|lower }}">
               <div class="artifact-row">
                 <div>
-                  <div class="artifact-title">{{ item.rich_title|default(item.title)|safe }}</div>
+                  <div class="artifact-title">{{ item.rich_title|default(item.title)|safe }}{% if item.result_scope == "main" %} <span class="count-pill">Main analysis</span>{% endif %}</div>
                   {% if item.description %}<div class="artifact-meta">{{ item.description }}</div>{% endif %}
                   <div class="file-path">{{ item.relative_path }}</div>
                 </div>

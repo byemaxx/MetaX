@@ -15,7 +15,7 @@ def test_auto_report_runs_on_example_dataset(tmp_path: Path):
     config.input.meta_path = str(repo_root / "metax" / "data" / "example_data" / "Example_Meta.tsv")
     config.analysis.group_meta = "Sugar_type"
     config.analysis.control_group = "PBS"
-    config.report.output_dir = str(tmp_path / "example_report")
+    config.report.output_dir = str(tmp_path / "tables" / "example_report")
     config.report.overwrite = True
     config.plots.run_correlation = False
     config.plots.run_heatmap = False
@@ -96,6 +96,12 @@ def test_auto_report_runs_on_example_dataset(tmp_path: Path):
         assert group["q1"] == float(values.quantile(0.25))
         assert group["q3"] == float(values.quantile(0.75))
     html = result.index_html_path.read_text(encoding="utf-8")
+    taxa_panel = html.split('data-tab-panel="tables-taxa"', 1)[1].split('data-tab-panel=', 1)[0]
+    assert 'href="tables/taxa/taxa_table_s.tsv"' in taxa_panel
+    assert 'href="tables/taxa/taxa_table_g.tsv"' in taxa_panel
+    assert '>Main analysis</span>' in taxa_panel
+    comparison_panel = html.split('data-tab-panel="tables-comparison_taxa"', 1)[1].split('data-tab-panel=', 1)[0]
+    assert 'href="stats/taxa/taxa_s_CHO_vs_PBS.tsv"' in comparison_panel
     assert '<details class="config-block" id="sample-peptide-details"' in html
     assert 'data-peptide-sort' in html and 'data-artifact-search' in html
 
