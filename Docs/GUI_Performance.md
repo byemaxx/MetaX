@@ -71,3 +71,33 @@ still have synchronous work. Table views retain their current 100-row pagination
 this change does not introduce a virtual table model or asynchronous search.
 Matplotlib/Qt canvas operations stay on the GUI thread. CPU work holding Python's
 GIL can still delay Python callbacks even when it runs in a worker thread.
+
+## Cancellable interactive basic heatmaps (Windows validation)
+
+Basic heatmap and Taxa-Function link heatmap figure actions now run the existing
+HeatmapPlot method in a dedicated Qt process. A modal progress dialog supports
+cancellation during clustering/rendering. The completed figure retains the
+Matplotlib toolbar, zoom, pan and save controls in its independent window.
+Closing MetaX stops its owned heatmap processes. Cancelled tasks do not record
+a completed workflow action. CLI/report plotting remains unchanged.
+
+Data transfer uses a temporary pickle written off the GUI thread. Cancellation
+during that write waits for serialization to finish before cleanup; clustering
+and rendering can be killed immediately. Existing selection/group preparation
+before the progress dialog remains synchronous. No scientific parameters are
+changed. Processes add startup, disk-transfer and memory overhead; they do not
+reduce the quadratic memory requirements of hierarchical clustering.
+
+Real OTF intensity subsets (384 samples, missing values filled with zero,
+row min-max scaling): 10,000 rows completed through the new entry in 13.40 s,
+with 427 GUI timer ticks and a maximum observed tick gap of 48 ms. A 30,000-row
+task cancelled during clustering exited and cleaned up in 23 ms. These are
+single-run responsiveness checks, not full-workflow benchmarks.
+
+Items Plot and supported Basic Plot actions reuse one idle process or run
+small plots directly. Background progress appears after 700 ms. A process
+that owns an open figure is kept separate from subsequent tasks.
+Co-expression heatmaps and networks also use delayed cancellable progress and
+publish their tables only after the plot succeeds. Statistical-result heatmaps
+and heatmap table-only actions retain their existing paths. Frozen executable
+packaging and non-Windows environments have not been validated for this process entry.

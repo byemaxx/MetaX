@@ -75,7 +75,12 @@ def test_diversity_plot(mock_show, tfa_object):
 def test_network_plot(mock_show, tfa_object):
     tfa_object.set_multi_tables(level='s', quant_method='sum', split_func=True)
     np_plot = NetworkPlot(tfa_object)
-    # Remove p_value since it doesn't exist
-    fig, _ = np_plot.plot_co_expression_network(df_type='taxa', corr_method='pearson', corr_threshold=0.8)
-    # the method returns a tuple (Graph, pd.DataFrame)
-    assert fig is not None
+    samples = tfa_object.sample_list
+    with patch.object(tfa_object, 'get_peptide_df', side_effect=AssertionError('unexpected peptide load')):
+        fig, pairs = np_plot.plot_co_expression_network(
+            df_type='taxa', corr_method='pearson', corr_threshold=0.8, sample_list=samples,
+        )
+    expected = tfa_object.taxa_df.loc[:, samples].T.corr()
+    assert all(expected.loc[x, y] == value for x, y, value in pairs.iloc[:, :3].itertuples(index=False))
+    expected_links = [(x, y) for x, y, value in pairs.iloc[:, :3].itertuples(index=False) if value > 0.8]
+    assert [(link['source'], link['target']) for link in fig.options['series'][0]['links']] == expected_links

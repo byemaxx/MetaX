@@ -546,7 +546,13 @@ class BasicPlot:
         if corr_method not in ['pearson', 'spearman', 'kendall']:
             raise ValueError(f"Invalid correlation method: {corr_method}. Please choose from 'pearson', 'spearman', or 'kendall'.")
         
+        if dft.shape[1] < 2:
+            raise ValueError("Correlation needs at least two samples or groups after grouping. "
+                             "Enable Plot Samples or choose at least two groups.")
         corr = dft.corr(method=corr_method)
+        if cluster and not np.isfinite(corr.to_numpy()).all():
+            raise ValueError("Some correlations are undefined. Check for constant columns "
+                             "or insufficient shared observations, or disable clustering.")
         # mask = np.triu(np.ones_like(corr, dtype=bool))
 
         try:
@@ -879,7 +885,7 @@ class BasicPlot:
             else:
                 cmap = cmap
                 
-            sns_params = {"linewidths":.01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
+            sns_params = {"linewidths": 0 if linecolor == "none" else .01, "cmap":cmap, "cbar_kws":{ "shrink": 0.5},
                             'col_cluster':True if cluster else False,
                             'row_cluster':True if cluster else False,
                             'method':self.linkage_method,

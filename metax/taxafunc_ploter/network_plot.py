@@ -373,7 +373,7 @@ class NetworkPlot:
 
     def plot_co_expression_network(self, df_type:str= 'taxa', corr_method:str = 'pearson', 
                                 corr_threshold:float=0.5, sample_list:list[str]|None = None, 
-                                width:int = 12, height:int = 8, focus_list:list[str] = [], plot_list_only:bool = False,
+                                width:int = 12, height:int = 8, focus_list:list[str] = [], plot_list_only:bool = False, df=None,
                                 ) -> Tuple[Graph, pd.DataFrame]:
         """
         Plots a co-expression network based on the correlation matrix of the specified data type.
@@ -387,14 +387,12 @@ class NetworkPlot:
         if sample_list and len(sample_list) < 2:
             raise ValueError(f"sample_list should have at least 2 samples, but got {len(sample_list)}")
 
-        df_dict = {'taxa': self.tfa.taxa_df, 
-                'functions': self.tfa.func_df, 
-                'taxa-functions': self.tfa.taxa_func_df, 
-                'peptides': self.tfa.get_peptide_df(),
-                'proteins': self.tfa.protein_df,
-                'custom': self.tfa.custom_df}
-        
-        df = df_dict[df_type].copy()
+        if df is None:
+            tables = {'taxa': 'taxa_df', 'functions': 'func_df',
+                      'taxa-functions': 'taxa_func_df', 'proteins': 'protein_df',
+                      'custom': 'custom_df'}
+            df = self.tfa.get_peptide_df() if df_type == 'peptides' else getattr(self.tfa, tables[df_type])
+        df = df.copy()
         if self.rename_taxa:
             print("Renaming taxa to last level")
             df = self.tfa.rename_taxa(df)
@@ -418,18 +416,19 @@ class NetworkPlot:
             raise ValueError(f"corr_method should be pearson or spearman, but got {corr_method}")
         
         # cerate network_df for export to cytoscape from the correlation matrix
-        mask = np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool)
-        network_df = network_df = correlation_matrix.where(mask)
-        # set index name and header name as item1 and item2
+        values = correlation_matrix.to_numpy()
+        upper = np.triu(np.ones(values.shape, dtype=bool), k=1)
+        network_df = correlation_matrix.where(upper)
         network_df.index.name = f'{df_type}1'
         network_df.columns.name = f'{df_type}2'
         network_df = network_df.stack().reset_index()
         network_df.columns = [ f'{df_type}1', f'{df_type}2', 'correlation']
+        focus_list = set(focus_list)
         network_df['item1_focus'] = network_df[f'{df_type}1'].apply(lambda x: 'Y' if x in focus_list else 'N')
         network_df['item2_focus'] = network_df[f'{df_type}2'].apply(lambda x: 'Y' if x in focus_list else 'N')
         # Done creating network_df
             
-        node_sizes = correlation_matrix.apply(lambda x: (x > corr_threshold).sum(), axis=1)
+        node_sizes = (correlation_matrix > corr_threshold).sum(axis=1)
         max_node_size = node_sizes.max()
         min_node_size = node_sizes.min()
         
@@ -437,32 +436,21 @@ class NetworkPlot:
                     {"name": "Normal", "itemStyle": {"normal": {"color": self.co_network_normal_color}}}]
 
         linked_nodes = set()
-        if focus_list:
-            for i in range(len(correlation_matrix)):
-                for j in range(i+1, len(correlation_matrix)):
-                    node_i = correlation_matrix.columns[i]
-                    node_j = correlation_matrix.columns[j]
-                    correlation = correlation_matrix.iloc[i, j]
-                    if correlation > corr_threshold:
-                        if node_i in focus_list or node_j in focus_list:
-                            linked_nodes.add(node_i)
-                            linked_nodes.add(node_j)
-        
         connected_nodes = set()
         links = []
-        # calculate the correlation between each pair of nodes, and create a link if the correlation is above a threshold
-        # the color of the link is determined by the correlation value
-        for i in range(len(correlation_matrix)):
-            for j in range(i+1, len(correlation_matrix)):
-                correlation = correlation_matrix.iloc[i, j]
-                # create a link if the correlation is above a threshold
-                if correlation > corr_threshold:
-                    color = colormaps.get_cmap('viridis')(1 - (correlation - corr_threshold) / corr_threshold) 
-                    color = '#%02x%02x%02x' % (int(color[0]*255), int(color[1]*255), int(color[2]*255))
-                    line_width = (correlation - corr_threshold) / (1 - corr_threshold) * self.line_width * 2
-                    links.append({"source": correlation_matrix.columns[i], "target": correlation_matrix.columns[j], "value": correlation, "lineStyle": {"color": color, "width": line_width}})
-                    connected_nodes.add(correlation_matrix.columns[i])
-                    connected_nodes.add(correlation_matrix.columns[j])
+        labels = correlation_matrix.columns
+        cmap = colormaps.get_cmap('viridis')
+        for i, j in zip(*np.nonzero(upper & (values > corr_threshold))):
+            source, target = labels[i], labels[j]
+            correlation = values[i, j]
+            rgba = cmap(1 - (correlation - corr_threshold) / corr_threshold)
+            color = '#%02x%02x%02x' % tuple(int(c * 255) for c in rgba[:3])
+            line_width = (correlation - corr_threshold) / (1 - corr_threshold) * self.line_width * 2
+            links.append({"source": source, "target": target, "value": correlation,
+                          "lineStyle": {"color": color, "width": line_width}})
+            connected_nodes.update((source, target))
+            if source in focus_list or target in focus_list:
+                linked_nodes.update((source, target))
 
         nodes = []
         for item in correlation_matrix.columns:

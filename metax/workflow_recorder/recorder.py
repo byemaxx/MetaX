@@ -994,7 +994,8 @@ def _gui_action_replay_helper_code() -> str:
                             plot_mean=parameters.get("plot_mean", False),
                             plot_percent=parameters.get("plot_percent", False),
                             sub_meta=parameters.get("sub_meta", "None"),
-                            plt_theme=parameters.get("plt_theme")
+                            plt_theme=parameters.get("plt_theme"),
+                            show_all_x_labels=parameters.get("show_all_labels", (True, True))[0],
                         )
                 if plot_type == "pca":
                     use_3d_pca = parameters.get("use_3d_pca", False)

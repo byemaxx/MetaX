@@ -87,7 +87,8 @@ class BarPlot:
                            title:str|None =None, rename_taxa:bool=False, 
                            show_legend:bool=True, font_size:int=10,
                            rename_sample:bool=True, plot_mean:bool=False,
-                           plot_percent:bool=False, sub_meta:str="None", plt_theme:str='Auto'):
+                           plot_percent:bool=False, sub_meta:str="None", plt_theme:str='Auto',
+                           show_all_x_labels:bool=True):
         
         df, rename_sample = self._get_modfied_df(df, taxon_name, sample_list, func_name, peptide_seq, 
                                                  rename_taxa, rename_sample, plot_mean, sub_meta, plot_percent)
@@ -101,7 +102,18 @@ class BarPlot:
             plt.style.use(plt_theme)
             
         fig, ax = plt.subplots(figsize=(width, height))
-        df.T.plot(kind='bar', stacked=True, ax=ax, color=colormap, width=0.95)
+        sparse_labels = not show_all_x_labels and len(df.columns) > 20
+        df.T.plot(kind='bar', stacked=True, ax=ax, color=colormap, width=0.95,
+                  xticks=[] if sparse_labels else None)
+        if sparse_labels:
+            from matplotlib.ticker import FuncFormatter, MaxNLocator
+
+            labels = df.columns.tolist()
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=16, integer=True))
+            ax.xaxis.set_major_formatter(FuncFormatter(
+                lambda x, _: str(labels[int(x)]) if x == int(x) and 0 <= x < len(labels) else ''
+            ))
+            ax.tick_params(axis='x', labelrotation=90)
 
         ax.set_title(title, fontsize=font_size)
         ax.set_xlabel('Group' if plot_mean else 'Sample', fontsize=font_size)

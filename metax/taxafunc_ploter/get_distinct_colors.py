@@ -1,9 +1,19 @@
 # this script is used to generate distinct colors for plotting
 
+from functools import lru_cache
+
 from distinctipy import distinctipy
 
 import matplotlib.pyplot as plt
 import colorsys
+
+
+@lru_cache(maxsize=16)
+def _distinct_palette(num):
+    return tuple(distinctipy.get_colors(
+        num, exclude_colors=[(1, 1, 1), (0, 1, 0), (1, 0, 0), (0, 0, 0)],
+        pastel_factor=0.7, rng=123,
+    ))
 
 
 class GetDistinctColors:
@@ -63,18 +73,7 @@ class GetDistinctColors:
             
             
         else:
-            # rgb colour values (floats between 0 and 1)
-            RED = (1, 0, 0)
-            GREEN = (0, 1, 0)
-            # BLUE = (0, 0, 1)
-            BLACK = (0, 0, 0)
-            WHITE = (1, 1, 1)
-
-            # generated colours will be as distinct as possible from these colours
-            input_colors = [WHITE, GREEN, RED, BLACK]
-            colors = distinctipy.get_colors(num, exclude_colors= input_colors, pastel_factor=0.7, rng=123)
-            # colors = distinctipy.get_colors(num, exclude_colors= input_colors, rng=123)
-            colors = [self.adjust_color(i, 0.7, 0.9) for i in colors]
+            colors = [self.adjust_color(i, 0.7, 0.9) for i in _distinct_palette(num)]
 
         if convert: # convert to rgb values
             converted_colors = []

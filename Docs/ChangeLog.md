@@ -1,3 +1,11 @@
+# Version: 2.6.7
+## Date: 2026-11-10
+### Changes:
+- New: Supported desktop plots can run in a cancellable background process. Automatic routing keeps fast plots direct or reuses an idle process, and delays the progress dialog for short jobs.
+- Performance: Faster wide stacked bar charts, repeated color generation, and co-expression network construction.
+- Fix: Correlation heatmaps now explain when grouping leaves fewer than two columns or when undefined correlations prevent clustering.
+
+
 # Version: 2.6.6
 ## Date: 2026-10-22
 ### Changes:

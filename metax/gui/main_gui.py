@@ -5954,6 +5954,60 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         self.add_a_list_to_list_window(df_type, aim_list='co_expr', str_list=items, input_mode = False)
             
 
+    def _show_cancellable_basic_heatmap(self, *, delay_ms=0, **arguments):
+        from metax.gui.metax_gui.cancellable_heatmap import show_cancellable_heatmap
+        if not self._require_idle_session():
+            return False
+        options = dict(self.heatmap_params_dict)
+        return show_cancellable_heatmap(self.MainWindow, lambda: (options, arguments), delay_ms)
+
+    def _show_cancellable_basic_plot(self, method, *, delay_ms=0, **arguments):
+        from metax.gui.metax_gui.cancellable_heatmap import show_cancellable_heatmap
+        if not self._require_idle_session():
+            return False
+        arguments['_basic_plot_method'] = method
+        arguments['_sample_metadata'] = {
+            name: getattr(self.tfa, name)
+            for name in ('sample_list', 'group_list', 'meta_df', 'meta_name',
+                         'stat_mean_by_zero_dominant')
+        }
+        options = dict(self.heatmap_params_dict) if method in {'plot_corr_sns', 'plot_items_corr_heatmap'} else {}
+        return show_cancellable_heatmap(self.MainWindow, lambda: (options, arguments), delay_ms)
+
+    def _draw_basic_plot(self, method, **arguments):
+        from metax.gui.metax_gui.cancellable_heatmap import has_idle_plot_process
+        from metax.taxafunc_ploter.basic_plot import BasicPlot
+
+        rows, samples = arguments['df'].shape
+        cells = rows * samples
+        # shortcut: size estimates from local timings, recalibrate for other workloads.
+        if method == 'plot_pca_sns':
+            background = cells >= 5_000_000
+        elif method == 'plot_tsne_sns':
+            background = cells >= 5_000_000 or samples * arguments['n_iter'] >= 750_000
+        elif method == 'plot_box_sns':
+            if arguments['violinplot']:
+                background = cells >= 50_000
+            else:
+                background = cells >= (150_000 if arguments['plot_samples'] else 500_000)
+        else:
+            displayed = samples
+            if arguments['plot_mean'] and arguments['sub_meta'] == 'None':
+                meta = self.tfa.meta_df
+                displayed = meta.loc[meta['Sample'].isin(arguments['df'].columns), self.tfa.meta_name].nunique()
+            sample_limit = 256 if arguments['corr_method'] == 'pearson' and not arguments['cluster'] else 150
+            background = displayed >= sample_limit or cells >= 5_000_000
+            if arguments['corr_method'] == 'kendall':
+                background |= rows * displayed ** 2 >= 1_000_000
+        if method in {'plot_pca_sns', 'plot_tsne_sns'}:
+            background |= arguments['show_label'] and arguments['adjust_label'] and samples >= 100
+        if background or has_idle_plot_process():
+            return self._show_cancellable_basic_plot(method, delay_ms=700, **arguments)
+
+        options = self.heatmap_params_dict if method == 'plot_corr_sns' else {}
+        getattr(BasicPlot(self.tfa, **options), method)(**arguments)
+        return True
+
     def plot_basic_list(self, plot_type='heatmap'):
         from metax.taxafunc_ploter.bar_plot_js import BarPlot
         from metax.taxafunc_ploter.basic_plot import BasicPlot
@@ -6100,6 +6154,35 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             )
         # Done for creating the dataframe for the heatmap #
 
+        def draw(method, direct, **arguments):
+            from metax.gui.metax_gui.cancellable_heatmap import has_idle_plot_process
+
+            rows, columns = arguments['df'].shape
+            # shortcut: conservative size estimates, recalibrate with timings by plot type.
+            cells = rows * columns
+            large = {
+                'plot_basic_heatmap': cells >= 2_000_000
+                or (row_cluster and rows >= 4_000)
+                or (col_cluster and columns >= 1_500),
+                'plot_intensity_bar_sns': cells >= 5_000
+                or (arguments.get('show_all_x_labels', True) and columns >= 384),
+                'plot_intensity_bar_js': rows >= 75 or cells >= 100_000,
+                'plot_pca_sns': cells >= 1_000_000,
+                'plot_pca_pyecharts_3d': cells >= 1_000_000,
+                'plot_intensity_sankey': cells >= 100_000,
+                'plot_upset': cells >= 250_000,
+            }[method]
+            if large or has_idle_plot_process():
+                if method == 'plot_basic_heatmap':
+                    return self._show_cancellable_basic_heatmap(delay_ms=700, **arguments)
+                if method in {'plot_intensity_bar_js', 'plot_pca_pyecharts_3d', 'plot_intensity_sankey'}:
+                    from pyecharts.globals import CurrentConfig
+                    arguments['_html_asset_host'] = CurrentConfig.ONLINE_HOST
+                return self._show_cancellable_basic_plot(
+                    method, delay_ms=700, _html_theme=self.html_theme, **arguments
+                )
+            return direct(**arguments)
+
         try:
             if plot_type == 'heatmap':
                 linecolor = self.comboBox_basic_hetatmap_linecolor.currentText()
@@ -6123,12 +6206,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         pass
 
                 # plot heatmap
-                self.show_message(f'Plotting {plot_type}...')
-                HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+                completed = draw('plot_basic_heatmap', HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap, df=df, title=title, fig_size=(int(width), int(height)),
                                                          scale=scale, row_cluster=row_cluster, col_cluster=col_cluster, 
                                                          cmap=cmap, rename_taxa=rename_taxa, font_size=font_size,
                                                          show_all_labels=show_all_labels,  return_type = 'fig',
                                                          sample_to_group_dict = sample_to_group_dict, linecolor=linecolor)
+                if not completed:
+                    return
                 self._record_gui_action(
                     title=f"Plot Heatmap ({table_name})",
                     action_name="plot_basic_list",
@@ -6166,25 +6250,28 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if reply == QMessageBox.No:
                         return None
-                self.show_message(f'Plotting {plot_type}...')
                 if js_bar:
                     width = width*100
                     height = height*100
-                    pic = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_js(df = df, width=width, height=height, 
+                    pic = draw('plot_intensity_bar_js', BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_js, df = df, width=width, height=height,
                                                                 title= '', rename_taxa=rename_taxa, 
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
                                                                 plot_percent = plot_percent, sub_meta = sub_meta,
                                                                 show_all_labels = show_all_labels, use_3d = use_3d_for_sub_meta)
+                    if pic is False:
+                        return
                                                                 
                     self.save_and_show_js_plot(pic, title)
                 else:
                     plt_theme = self.comboBox_basic_theme.currentText()
-                    ax = BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns(df = df, width=width, height=height,  # noqa: F841
+                    if not draw('plot_intensity_bar_sns', BarPlot(self.tfa, theme=self.html_theme).plot_intensity_bar_sns, df = df, width=width, height=height,
                                                                 title= '', rename_taxa=rename_taxa, 
                                                                 show_legend=show_legend, font_size=font_size,
                                                                 rename_sample=rename_sample, plot_mean = plot_mean,
-                                                                plot_percent = plot_percent, sub_meta = sub_meta, plt_theme = plt_theme)
+                                                                plot_percent = plot_percent, sub_meta = sub_meta, plt_theme = plt_theme,
+                                                                show_all_x_labels=show_all_labels[0]):
+                        return
                 self._record_gui_action(
                     title=f"Plot Intensity Bar ({table_name})",
                     action_name="plot_basic_list",
@@ -6232,12 +6319,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     'All Taxa', 'All Functions', 'All Peptides', 'All Taxa-Functions', 'All Proteins', 'All Items'
                 ] else f'{table_name} (Selected Items)'
 
-                self.show_message('PCA is running, please wait...')
                 if use_3d_pca:
-                    pic = PcaPlot_js(
+                    pic = draw('plot_pca_pyecharts_3d', PcaPlot_js(
                         self.tfa,
                         theme=self.html_theme
-                    ).plot_pca_pyecharts_3d(
+                    ).plot_pca_pyecharts_3d,
                         df=df,
                         title_name=title_name,
                         show_label=show_label,
@@ -6247,9 +6333,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         font_size=font_size,
                         legend_col_num=None,
                     )
+                    if pic is False:
+                        return
                     self.save_and_show_js_plot(pic, f'PCA 3D of {title_name}')
                 else:
-                    BasicPlot(self.tfa).plot_pca_sns(
+                    if not draw(
+                        'plot_pca_sns', BasicPlot(self.tfa).plot_pca_sns,
                         df=df,
                         title_name=title_name,
                         show_label=show_label,
@@ -6258,7 +6347,8 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                         height=height,
                         font_size=font_size,
                         sub_meta=sub_meta,
-                    )
+                    ):
+                        return
                 self._record_gui_action(
                     title=f"Plot PCA ({table_name})",
                     action_name="plot_basic_list",
@@ -6314,17 +6404,18 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', f'{table_name} is not supported to plot Sankey!')
                     return None
                  
-                self.show_message('Plotting Sankey...')
                 if self.checkBox_basic_heatmap_sankey_title.isChecked():
                     title_new = title
                     subtitle = str(sample_list)
                 else:
                     title_new = ''
                     subtitle = ''
-                pic = SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey(df=df, width=width, height=height, 
+                pic = draw('plot_intensity_sankey', SankeyPlot(self.tfa, theme=self.html_theme).plot_intensity_sankey, df=df, width=width, height=height,
                                                                  title=title_new, subtitle=subtitle, font_size=font_size,
                                                                  sub_meta=sub_meta, plot_mean=plot_mean,
                                                                  show_legend=self.checkBox_basic_bar_show_legend.isChecked())
+                if pic is False:
+                    return
                 self.save_and_show_js_plot(pic, title)
                 self._record_gui_action(
                     title=f"Plot Intensity Sankey ({table_name})",
@@ -6429,11 +6520,13 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 show_percentages = self.checkBox_basic_heatmap_plot_upset_show_percentage.isChecked()
                 min_subset_size = self.spinBox_basic_heatmap_plot_upset_min_subset.value()
                 max_subset_rank = self.spinBox_basic_heatmap_plot_upset_max_rank.value()
-                upset_df = BasicPlot(self.tfa).plot_upset(df = df, title_name = table_name, show_label = True,
+                upset_df = draw('plot_upset', BasicPlot(self.tfa).plot_upset, df = df, title_name = table_name, show_label = True,
                                 width=width, height=height, font_size=font_size,
                                 plot_sample = False, sub_meta = sub_meta,
                                 rename_sample = rename_sample, show_percentages = show_percentages,
                                 min_subset_size = min_subset_size, max_subset_rank = max_subset_rank)
+                if upset_df is False:
+                    return
                 # update the table_dict
                 self.update_table_dict(table_name = f'upset_selected({table_name})', df = upset_df)
                 
@@ -6835,7 +6928,11 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             os.makedirs(metax_path, exist_ok=True)
             save_path = os.path.join(metax_path, f'{title.replace(" ", "_")}.html')
             
-            pic.render(save_path)
+            if isinstance(pic, str):
+                with open(save_path, 'w', encoding='utf-8') as handle:
+                    handle.write(pic)
+            else:
+                pic.render(save_path)
             self.logger.write_log(f'html saved: {save_path}', 'i')
 
             web = web_dialog.WebDialog(save_path, None, theme=self.html_theme)
@@ -7083,23 +7180,21 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             if sample_list == []:
                 sample_list = self.tfa.sample_list
                         
-        dft = self.get_table_by_df_type(df_type=table_name, replace_if_two_index = True)
-        df = dft[sample_list]
+        df = self.get_table_by_df_type(df_type=table_name, replace_if_two_index=True, sample_list=sample_list)
         try:
-            self.show_message(f'Plotting {method}...')
             if method == 'pca':
                 row_num = df.shape[0]
                 if row_num < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, PCA cannot be plotted!')
                     return None
-                self.show_message('PCA is running, please wait...')
-                BasicPlot(self.tfa).plot_pca_sns(df=df, title_name=title_name, show_label=show_label, rename_sample = rename_sample,
+                if not self._draw_basic_plot('plot_pca_sns', df=df, title_name=title_name, show_label=show_label, rename_sample = rename_sample,
                                                 width=width, height=height, font_size=font_size, sub_meta = sub_meta,
                                                 font_transparency=font_transparency, 
                                                 adjust_label=adjust_label, 
                                                 theme=theme, 
                                                 legend_col_num=legend_col_num,
-                                                dot_size = dot_size)
+                                                dot_size = dot_size):
+                    return
                 self._record_gui_action(
                     title=f"Plot PCA ({table_name})",
                     action_name="plot_basic_info_sns",
@@ -7124,7 +7219,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 if row_num < 3:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 3, PCA 3D cannot be plotted!')
                     return None
-                self.show_message('PCA is running, please wait...')
                 pic = PcaPlot_js(self.tfa,
                                  theme=self.html_theme
                                  ).plot_pca_pyecharts_3d(df=df, title_name=title_name, show_label = show_label, 
@@ -7155,7 +7249,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 if row_num < 2:
                     QMessageBox.warning(self.MainWindow, 'Warning', 'The number of rows is less than 2, t-SNE cannot be plotted!')
                     return None
-                self.show_message('t-SNE is running, please wait...')
                 # def plot_tsne_sns(self, df, title_name='Table', show_label=True, perplexity=30, n_iter=1000,
                 #                 width=10, height=8, font_size=10, rename_sample:bool=False,
                 #                 font_transparency=0.6, adjust_label:bool=False, theme:str|None=None,
@@ -7169,11 +7262,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     QMessageBox.warning(self.MainWindow, 'Warning', 
                                         f'The perplexity should be less than half of the sample size ({len(sample_list)/2}), please reset it!')
                     return None
-                BasicPlot(self.tfa).plot_tsne_sns(df=df, title_name=title_name, show_label=show_label, perplexity=perplexity, n_iter=n_iter,
+                if not self._draw_basic_plot('plot_tsne_sns', df=df, title_name=title_name, show_label=show_label, perplexity=perplexity, n_iter=n_iter,
                                         width=width, height=height, font_size=font_size, rename_sample = rename_sample,
                                         font_transparency=font_transparency, adjust_label=adjust_label, theme=theme,
                                         sub_meta = sub_meta, legend_col_num=legend_col_num, dot_size=dot_size,
-                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=2025)
+                                        early_exaggeration=early_exaggeration, learning_rate='auto', random_state=2025):
+                    return
                 self._record_gui_action(
                     title=f"Plot t-SNE ({table_name})",
                     action_name="plot_basic_info_sns",
@@ -7205,11 +7299,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 plot_samples = self.checkBox_box_plot_samples.isChecked()
                 violinplot = self.checkBox_box_violinplot.isChecked()
                 log_scale = self.checkBox_box_log_scale.isChecked()
-                BasicPlot(self.tfa).plot_box_sns(df=df, title_name=title_name, show_fliers=show_fliers,
+                if not self._draw_basic_plot('plot_box_sns', df=df, title_name=title_name, show_fliers=show_fliers,
                                                  width=width, height=height, font_size=font_size, theme=theme,
                                                  rename_sample = rename_sample, plot_samples = plot_samples, 
                                                  legend_col_num=legend_col_num, sub_meta = sub_meta,
-                                                 violinplot=violinplot, log_scale=log_scale)
+                                                 violinplot=violinplot, log_scale=log_scale):
+                    return
                 self._record_gui_action(
                     title=f"Plot Box Plot ({table_name})",
                     action_name="plot_basic_info_sns",
@@ -7241,12 +7336,12 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 
                 if cluster:
                     df = self.delete_zero_columns(df)
-                self.show_message('Correlation is running, please wait...')
-                BasicPlot(self.tfa, **self.heatmap_params_dict).plot_corr_sns(df=df, title_name=title_name, cluster= cluster, 
+                if not self._draw_basic_plot('plot_corr_sns', df=df, title_name=title_name, cluster=cluster,
                                                 width=width, height=height, font_size=font_size, 
                                                 show_all_labels=show_all_labels, theme=theme, cmap=cmap,
                                                 rename_sample = rename_sample, corr_method=corr_method, 
-                                                plot_mean = plot_mean, sub_meta = sub_meta)
+                                                plot_mean = plot_mean, sub_meta = sub_meta):
+                    return
                 self._record_gui_action(
                     title=f"Plot Correlation ({table_name})",
                     action_name="plot_basic_info_sns",
@@ -7266,7 +7361,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                 )
 
             elif method == 'alpha_div':
-                self.show_message('Alpha diversity is running, please wait...')
                 metric = self.comboBox_alpha_div_method.currentText()
                 plot_all_samples = self.checkBox_alpha_div_plot_all_samples.isChecked()
                 _ , aplha_diversity_df = DiversityPlot(self.tfa).plot_alpha_diversity(metric= metric,  sample_list=sample_list, 
@@ -7298,7 +7392,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
                     }
                 )
             elif method == "beta_div":
-                self.show_message('Beta diversity is running, please wait...')
                 metric = self.comboBox_beta_div_method.currentText()
                 _ , beta_diversity_distance_matrix = DiversityPlot(self.tfa).plot_beta_diversity(metric= metric,  sample_list=sample_list, width=width, height=height, 
                                                             font_size=font_size, font_transparency = font_transparency,
@@ -8945,8 +9038,6 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
         '''
         plot_type: network or heatmap
         '''
-        from metax.taxafunc_ploter.basic_plot import BasicPlot
-        from metax.taxafunc_ploter.network_plot import NetworkPlot
         df_type = self.comboBox_co_expr_table.currentText().lower()
         corr_method = self.comboBox_co_expr_corr_method.currentText()
         corr_threshold = self.doubleSpinBox_co_expr_corr_threshold.value()
@@ -8981,29 +9072,28 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
 
         if plot_type == 'heatmap':
-            self.show_message('Co-expression heatmap is plotting...\n\n It may take a long time! Please wait...')
             try:
-                print(f'Calculate correlation with {corr_method} method...')
-                df = self.tfa.BasicStats.get_correlation(df_type = df_type, sample_list = sample_list,
-                                                         focus_list = focus_list, plot_list_only = plot_list_only,
-                                                         rename_taxa = rename_taxa, method=corr_method)
-                # save df to table_dict
-                self.update_table_dict(f'{corr_method} correlation heatmap({df_type})', df)
-
                 show_all_labels = (
                     self.checkBox_corr_hetatmap_show_all_labels_x.isChecked(),
                     self.checkBox_corr_hetatmap_show_all_labels_y.isChecked(),
                 )
                 cmap = self.comboBox_corr_hetatmap_cmap.currentText()
-                BasicPlot(self.tfa, **self.heatmap_params_dict).plot_items_corr_heatmap(df=df,
-                                                title_name=f'{corr_method.capitalize()} Correlation of {df_type}',
-                                                cluster=True,
-                                                cmap=cmap,
-                                                width=width, height=height, 
-                                                font_size=font_size, 
-                                                show_all_labels=show_all_labels,
-                                                linecolor=linecolor,
-                                                )
+                result = self._show_cancellable_basic_plot(
+                    'plot_items_corr_heatmap', delay_ms=700,
+                    df=self.tfa.get_df(df_type), cluster=True,
+                    _correlation_options=dict(df_type=df_type, sample_list=sample_list,
+                                              focus_list=focus_list, plot_list_only=plot_list_only,
+                                              rename_taxa=rename_taxa, method=corr_method),
+                    title_name=f'{corr_method.capitalize()} Correlation of {df_type}',
+                    cmap=cmap,
+                    width=width, height=height, font_size=font_size,
+                    show_all_labels=show_all_labels,
+                    linecolor=linecolor,
+                )
+                if result is False:
+                    return
+                self.update_table_dict(f'{corr_method} correlation heatmap({df_type})', result)
+
                 self._record_gui_action(
                     title=f"Plot Co-expression Heatmap ({df_type})",
                     action_name="plot_co_expr",
@@ -9036,17 +9126,35 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
             
         elif plot_type == 'network':   
             try:
-                self.show_message('Co-expression network is plotting...\n\n It may take a long time! Please wait...')
-                pic, corr_df = NetworkPlot(self.tfa,
-                                show_labels=show_labels,
-                                rename_taxa=rename_taxa,
-                                font_size=font_size,
-                                theme=self.html_theme,
-                                **self.tf_link_net_params_dict
-                                ).plot_co_expression_network(df_type= df_type, corr_method=corr_method, 
-                                                                    corr_threshold=corr_threshold, sample_list=sample_list,
-                                                                    width=width, height=height, focus_list=focus_list,
-                                                                    plot_list_only=plot_list_only)
+                from metax.gui.metax_gui.cancellable_heatmap import has_idle_plot_process
+
+                df = self.tfa.get_df(df_type)
+                options = dict(self.tf_link_net_params_dict, show_labels=show_labels,
+                               rename_taxa=rename_taxa, font_size=font_size)
+                arguments = dict(
+                    df=df, df_type=df_type,
+                    corr_method=corr_method, corr_threshold=corr_threshold,
+                    sample_list=sample_list, width=width, height=height,
+                    focus_list=focus_list, plot_list_only=plot_list_only,
+                )
+                # shortcut: calibrated on 763 Taxa, revisit with dense-network timings.
+                direct = (len(df) <= 800 and corr_method == 'pearson'
+                          and corr_threshold >= .8 and not has_idle_plot_process())
+                if direct:
+                    from metax.taxafunc_ploter.network_plot import NetworkPlot
+
+                    result = NetworkPlot(self.tfa, theme=self.html_theme, **options).plot_co_expression_network(**arguments)
+                else:
+                    from pyecharts.globals import CurrentConfig
+
+                    result = self._show_cancellable_basic_plot(
+                        'plot_co_expression_network', delay_ms=700, _network_options=options,
+                        _html_theme=self.html_theme, _html_asset_host=CurrentConfig.ONLINE_HOST,
+                        **arguments,
+                    )
+                if result is False:
+                    return
+                pic, corr_df = result
                 self.save_and_show_js_plot(pic, 'co-expression network')
                 self.update_table_dict(f'co-expression_network({df_type})', corr_df)
                 self._record_gui_action(
@@ -9507,12 +9615,16 @@ class MetaXGUI(ui_main_window.Ui_metaX_main,QtStyleTools):
 
         try:
             self.show_message('Plotting heatmap, please wait...') if return_type == 'fig' else self.show_message('Calculating data, please wait...')
-            fig_res = HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap(df=df, title=title, fig_size=(int(width), int(height)), 
+            plot_heatmap = (self._show_cancellable_basic_heatmap if return_type == 'fig'
+                            else HeatmapPlot(self.tfa, **self.heatmap_params_dict).plot_basic_heatmap)
+            fig_res = plot_heatmap(df=df, title=title, fig_size=(int(width), int(height)),
                                   scale=scale, row_cluster=row_cluster, col_cluster=col_cluster,
                                   cmap=cmap, rename_taxa=rename_taxa, font_size=font_size, show_all_labels=show_all_labels,
                                   return_type = return_type, sample_to_group_dict = sample_to_group_dict, linecolor=linecolor
                                   )
             
+            if return_type == 'fig' and not fig_res:
+                return
             if return_type == 'table':
                 self.show_table(fig_res, title=title.replace('\n', '-'))
             self._record_gui_action(
